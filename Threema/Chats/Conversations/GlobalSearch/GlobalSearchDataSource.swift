@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 // MARK: - Types
 
@@ -33,9 +34,9 @@ enum GlobalSearch {
             case .tokens:
                 nil
             case .conversation:
-                "chats_title".localized
+                #localize("chats_title")
             case .message:
-                "messages".localized
+                #localize("messages")
             }
         }
     }
@@ -100,9 +101,9 @@ class GlobalSearchDataSource: UITableViewDiffableDataSource<GlobalSearch.Section
                 return cell
                 
             case let .conversation(id):
-                var conversation: Conversation?
+                var conversation: ConversationEntity?
                 entityManager.performAndWait {
-                    conversation = entityManager.entityFetcher.existingObject(with: id) as? Conversation
+                    conversation = entityManager.entityFetcher.existingObject(with: id) as? ConversationEntity
                 }
                 
                 guard let conversation else {

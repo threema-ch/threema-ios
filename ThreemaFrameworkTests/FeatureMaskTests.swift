@@ -171,7 +171,8 @@ class FeatureMaskTests: XCTestCase {
                     groupCreator: myIdentityStoreMock.identity
                 )
                 let conversation = dbPreparer.createConversation()
-                conversation.groupID = group.groupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = group.groupId
                 conversation.members = Set(members)
 
                 let message = dbPreparer.createTextMessage(

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaMacros
 
 class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
     @IBOutlet var videoBackgroundView: UIView!
@@ -57,8 +58,8 @@ class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
     }
     
     func addAccessibilityLabels() {
-        videoBackgroundView.accessibilityLabel = BundleUtil.localizedString(forKey: "video")
-        loadingView.accessibilityLabel = BundleUtil.localizedString(forKey: "loading_video")
+        videoBackgroundView.accessibilityLabel = #localize("video")
+        loadingView.accessibilityLabel = #localize("loading_video")
     }
     
     func videoLoaded() {
@@ -87,7 +88,7 @@ class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
         
         activityIndicator.startAnimating()
         
-        loadingVideoText.text = BundleUtil.localizedString(forKey: "loading_video")
+        loadingVideoText.text = #localize("loading_video")
     }
     
     override func layoutSubviews() {
@@ -185,7 +186,7 @@ class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
     }
     
     func handleError() {
-        loadingVideoText.text = BundleUtil.localizedString(forKey: "loading_video_failed")
+        loadingVideoText.text = #localize("loading_video_failed")
         loadingVideoText.isHidden = false
     }
 }

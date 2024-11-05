@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaMacros
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -242,12 +243,12 @@ class ContactTests: XCTestCase {
                 
                 contactEntity.state = NSNumber(integerLiteral: kStateInactive)
                 c = Contact(contactEntity: contactEntity)
-                XCTAssertEqual(c.displayName, "\(s) (\("inactive".localized))")
+                XCTAssertEqual(c.displayName, "\(s) (\(#localize("inactive")))")
                 XCTAssertEqual(contactEntity.displayName, c.displayName)
 
                 contactEntity.state = NSNumber(integerLiteral: kStateInvalid)
                 c = Contact(contactEntity: contactEntity)
-                XCTAssertEqual(c.displayName, "\(s) (\("invalid".localized))")
+                XCTAssertEqual(c.displayName, "\(s) (\(#localize("invalid")))")
                 XCTAssertEqual(contactEntity.displayName, c.displayName)
             }
 

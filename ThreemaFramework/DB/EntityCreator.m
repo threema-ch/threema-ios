@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "EntityCreator.h"
-#import "Conversation.h"
 #import "ErrorHandler.h"
 #import "DatabaseManager.h"
 #import <ThreemaFramework/ThreemaFramework-Swift.h>
@@ -30,6 +29,7 @@
 
 @end
 
+@class ConversationEntity;
 @class MessageMarkers;
 @class MessageHistoryEntryEntity;
 
@@ -44,16 +44,16 @@
     return self;
 }
 
-- (TextMessage *)textMessageFromGroupBox:(GroupTextMessage *)boxMsg {
-    TextMessage *message = [self createTextMessageFromBox: boxMsg];
+- (TextMessageEntity *)textMessageEntityFromGroupBox:(GroupTextMessage *)boxMsg {
+    TextMessageEntity *message = [self createTextMessageEntityFromBox: boxMsg];
     message.text = boxMsg.text;
     message.quotedMessageId = boxMsg.quotedMessageId;
     
     return message;
 }
 
-- (TextMessage *)textMessageFromBox:(BoxTextMessage *)boxMsg {
-    TextMessage *message = [self createTextMessageFromBox: boxMsg];
+- (TextMessageEntity *)textMessageEntityFromBox:(BoxTextMessage *)boxMsg {
+    TextMessageEntity *message = [self createTextMessageEntityFromBox: boxMsg];
     message.text = boxMsg.text;
     message.quotedMessageId = boxMsg.quotedMessageId;
     
@@ -117,8 +117,8 @@
     return message;
 }
 
-- (LocationMessage *)locationMessageFromBox:(BoxLocationMessage *)boxMsg {
-    LocationMessage *message = [self createLocationMessageFromBox:boxMsg];
+- (LocationMessageEntity *)locationMessageEntityFromBox:(BoxLocationMessage *)boxMsg {
+    LocationMessageEntity *message = [self createLocationMessageEntityFromBox:boxMsg];
     message.latitude = [NSNumber numberWithDouble:boxMsg.latitude];
     message.longitude = [NSNumber numberWithDouble:boxMsg.longitude];
     message.accuracy = [NSNumber numberWithDouble:boxMsg.accuracy];
@@ -128,8 +128,8 @@
     return message;
 }
 
-- (LocationMessage *)locationMessageFromGroupBox:(GroupLocationMessage *)boxMsg {
-    LocationMessage *message = [self createLocationMessageFromBox:boxMsg];
+- (LocationMessageEntity *)locationMessageEntityFromGroupBox:(GroupLocationMessage *)boxMsg {
+    LocationMessageEntity *message = [self createLocationMessageEntityFromBox:boxMsg];
     message.latitude = [NSNumber numberWithDouble:boxMsg.latitude];
     message.longitude = [NSNumber numberWithDouble:boxMsg.longitude];
     message.accuracy = [NSNumber numberWithDouble:boxMsg.accuracy];
@@ -151,23 +151,23 @@
     return message;
 }
 
-- (ImageData *)imageData {
-    return (ImageData *)[self createEntityOfType: @"ImageData"];
+- (ImageDataEntity *)imageDataEntity {
+    return (ImageDataEntity *)[self createEntityOfType: @"ImageData"];
 }
 
-- (VideoData *)videoData {
-    return (VideoData *)[self createEntityOfType: @"VideoData"];
+- (VideoDataEntity *)videoDataEntity {
+    return (VideoDataEntity *)[self createEntityOfType: @"VideoData"];
 }
 
-- (FileData *)fileData {
-    return (FileData *)[self createEntityOfType: @"FileData"];
+- (FileDataEntity *)fileDataEntity {
+    return (FileDataEntity *)[self createEntityOfType: @"FileData"];
 }
 
-- (AudioData *)audioData {
-    return (AudioData *)[self createEntityOfType: @"AudioData"];
+- (AudioDataEntity *)audioDataEntity{
+    return (AudioDataEntity *)[self createEntityOfType: @"AudioData"];
 }
 
-- (TextMessage *)textMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)setLastUpdate {
+- (TextMessageEntity *)textMessageEntityForConversationEntity:(ConversationEntity *)conversation setLastUpdate:(BOOL)setLastUpdate {
     BaseMessage *message = [self createEntityOfType: @"TextMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
@@ -176,10 +176,10 @@
         conversation.lastUpdate = [NSDate date];
     }
     
-    return (TextMessage *)message;
+    return (TextMessageEntity *)message;
 }
 
-- (ImageMessageEntity *)imageMessageEntityForConversation:(Conversation *)conversation {
+- (ImageMessageEntity *)imageMessageEntityForConversationEntity:(ConversationEntity *)conversation {
     BaseMessage *message = [self createEntityOfType: @"ImageMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
@@ -188,7 +188,7 @@
     return (ImageMessageEntity *)message;
 }
 
-- (VideoMessageEntity *)videoMessageEntityForConversation:(Conversation *)conversation {
+- (VideoMessageEntity *)videoMessageEntityForConversationEntity:(ConversationEntity *)conversation {
     BaseMessage *message = [self createEntityOfType: @"VideoMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
@@ -197,7 +197,7 @@
     return (VideoMessageEntity *)message;
 }
 
-- (FileMessageEntity *)fileMessageEntityForConversation:(Conversation *)conversation {
+- (FileMessageEntity *)fileMessageEntityForConversationEntity:(ConversationEntity *)conversation {
     BaseMessage *message = [self createEntityOfType: @"FileMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
@@ -206,7 +206,7 @@
     return (FileMessageEntity *)message;
 }
 
-- (AudioMessageEntity *)audioMessageEntityForConversation:(Conversation *)conversation {
+- (AudioMessageEntity *)audioMessageEntityForConversationEntity:(ConversationEntity *)conversation {
     BaseMessage *message = [self createEntityOfType: @"AudioMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
@@ -215,25 +215,27 @@
     return (AudioMessageEntity *)message;
 }
 
-- (LocationMessage *)locationMessageForConversation:(Conversation *)conversation {
+- (LocationMessageEntity *)locationMessageEntityForConversationEntity:(ConversationEntity *)conversation setLastUpdate:(BOOL)setLastUpdate {
     BaseMessage *message = [self createEntityOfType: @"LocationMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
-    conversation.lastUpdate = [NSDate date];
     
-    return (LocationMessage *)message;
+    if (setLastUpdate) {
+        conversation.lastUpdate = [NSDate date];
+    }
+    return (LocationMessageEntity *)message;
 }
 
-- (SystemMessage *)systemMessageForConversation:(Conversation *)conversation {
+- (SystemMessageEntity *)systemMessageEntityForConversationEntity:(ConversationEntity *)conversation {
     BaseMessage *message = [self createEntityOfType: @"SystemMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     
     message.sent = [NSNumber numberWithBool:YES];
       
-    return (SystemMessage *)message;
+    return (SystemMessageEntity *)message;
 }
 
-- (BallotMessage *)ballotMessageForConversation:(Conversation *)conversation {
+- (BallotMessage *)ballotMessageForConversationEntity:(ConversationEntity *)conversation {
     BaseMessage *message = [self createEntityOfType: @"BallotMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
@@ -248,18 +250,18 @@
     return contactEntity;
 }
 
-- (LastGroupSyncRequest *)lastGroupSyncRequest {
-    return (LastGroupSyncRequest *)[self createEntityOfType: @"LastGroupSyncRequest"];
+- (LastGroupSyncRequestEntity *)lastGroupSyncRequestEntity {
+    return (LastGroupSyncRequestEntity *)[self createEntityOfType: @"LastGroupSyncRequest"];
 }
 
-- (Conversation *)conversation {
-    Conversation *conversation = [self createEntityOfType: @"Conversation"];
+- (ConversationEntity *)conversationEntity {
+    ConversationEntity *conversation = [self createEntityOfType: @"Conversation"];
     conversation.lastUpdate = [NSDate date];
     return conversation;
 }
 
-- (Conversation *)conversation:(BOOL)setLastUpdate {
-    Conversation *conversation = [self createEntityOfType: @"Conversation"];
+- (ConversationEntity *)conversationEntity:(BOOL)setLastUpdate {
+    ConversationEntity *conversation = [self createEntityOfType: @"Conversation"];
     if (setLastUpdate) {
         conversation.lastUpdate = [NSDate date];
     }
@@ -282,22 +284,22 @@
     return choice;
 }
 
-- (BallotResult *)ballotResult {
-    BallotResult *result = (BallotResult *)[self createEntityOfType: @"BallotResult"];
+- (BallotResultEntity *)ballotResultEntity {
+    BallotResultEntity *result = (BallotResultEntity *)[self createEntityOfType: @"BallotResult"];
     result.createDate = [NSDate date];
     
     return result;
 }
 
-- (Nonce *)nonceWithData:(NSData *)nonce {
-    Nonce *result = (Nonce *)[self createEntityOfType: @"Nonce"];
+- (NonceEntity *)nonceEntityWithData:(NSData *)nonce {
+    NonceEntity *result = (NonceEntity *)[self createEntityOfType: @"Nonce"];
     result.nonce = nonce;
     
     return result;
 }
 
-- (MessageMarkers *)messageMarkers {
-    MessageMarkers *markers = (MessageMarkers *)[self createEntityOfType:@"MessageMarkers"];
+- (MessageMarkersEntity *)messageMarkersEntity {
+    MessageMarkersEntity *markers = (MessageMarkersEntity *)[self createEntityOfType:@"MessageMarkers"];
     return markers;
 }
 
@@ -328,22 +330,14 @@
     return historyEntry;
 }
 
-- (WebClientSession *)webClientSession {
-    return (WebClientSession *)[self createEntityOfType:@"WebClientSession"];
-}
-
-- (LastLoadedMessageIndex *)lastLoadedMessageIndexWithBaseMessageId:(NSData *)baseMessageId index:(NSInteger)index webClientSession:(WebClientSession*)webClientSession {
-    LastLoadedMessageIndex *lastLoadedMessageIndex = (LastLoadedMessageIndex *)[self createEntityOfType:@"LastLoadedMessageIndex"];
-    lastLoadedMessageIndex.baseMessageId = baseMessageId;
-    lastLoadedMessageIndex.index = [NSNumber numberWithInteger:index];
-    lastLoadedMessageIndex.webClientSession = webClientSession;
-    return lastLoadedMessageIndex;
+- (WebClientSessionEntity *)webClientSessionEntity {
+    return (WebClientSessionEntity *)[self createEntityOfType:@"WebClientSession"];
 }
 
 #pragma mark - private methods
 
-- (TextMessage *)createTextMessageFromBox:(AbstractMessage *)boxMsg {
-    return (TextMessage *)[self createBaseMessageFromBox:boxMsg ofType:@"TextMessage"];
+- (TextMessageEntity *)createTextMessageEntityFromBox:(AbstractMessage *)boxMsg {
+    return (TextMessageEntity *)[self createBaseMessageFromBox:boxMsg ofType:@"TextMessage"];
 }
 
 - (ImageMessageEntity *)createImageMessageEntityFromBox:(AbstractMessage *)boxMsg {
@@ -358,8 +352,8 @@
     return (AudioMessageEntity *)[self createBaseMessageFromBox:boxMsg ofType:@"AudioMessage"];
 }
 
-- (LocationMessage *)createLocationMessageFromBox:(AbstractMessage *)boxMsg {
-    return (LocationMessage *)[self createBaseMessageFromBox:boxMsg ofType:@"LocationMessage"];
+- (LocationMessageEntity *)createLocationMessageEntityFromBox:(AbstractMessage *)boxMsg {
+    return (LocationMessageEntity *)[self createBaseMessageFromBox:boxMsg ofType:@"LocationMessage"];
 }
 
 - (BaseMessage *)createBaseMessageFromBox:(AbstractMessage *)boxMsg ofType:(NSString *)typeName {
@@ -382,7 +376,7 @@
     contactEntity.createdAt = [NSDate date];
 }
 
-- (void)setupBasePropertiesForNewMessage:(BaseMessage *)message inConversation:(Conversation *)conversation {
+- (void)setupBasePropertiesForNewMessage:(BaseMessage *)message inConversation:(ConversationEntity *)conversation {
     message.id = [AbstractMessage randomMessageId];
     message.date = [NSDate date];
     message.isOwn = [NSNumber numberWithBool:YES];

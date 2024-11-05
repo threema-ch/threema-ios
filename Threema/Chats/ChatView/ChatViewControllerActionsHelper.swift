@@ -26,11 +26,11 @@ import UIKit
 /// Not all methods must be properly implemented as long as one has made sure that they are never actually called.
 @objc class ChatViewControllerActionsHelper: NSObject {
     private weak var chatViewController: ChatViewController?
-    public weak var conversation: Conversation?
+    public weak var conversation: ConversationEntity?
     
     var currentLegacyAction: SendMediaAction?
     
-    init(conversation: Conversation, chatViewController: ChatViewController) {
+    init(conversation: ConversationEntity, chatViewController: ChatViewController) {
         self.conversation = conversation
         self.chatViewController = chatViewController
     }
@@ -43,7 +43,7 @@ extension ChatViewControllerActionsHelper: ChatViewControllerActionsProtocol {
         get {
             let message = "\(#function) should not be called"
             assertionFailure(message)
-            DDLogError(message)
+            DDLogError("\(message)")
             return nil
         }
         set(chatContent) {
@@ -72,7 +72,7 @@ extension ChatViewControllerActionsHelper: ChatViewControllerActionsProtocol {
     func setEditing(_ editing: Bool, animated: Bool) {
         let message = "\(#function) should not be called"
         assertionFailure(message)
-        DDLogError(message)
+        DDLogError("\(message)")
     }
     
     var view: UIView? {
@@ -97,7 +97,7 @@ extension ChatViewControllerActionsHelper: ChatViewControllerActionsProtocol {
         get {
             let message = "\(#function) should not be called"
             assertionFailure(message)
-            DDLogError(message)
+            DDLogError("\(message)")
             return nil
         }
         set(storyboard) {
@@ -129,13 +129,13 @@ extension ChatViewControllerActionsHelper: ChatViewControllerActionsProtocol {
     func updateConversation() {
         let message = "\(#function) should not be called"
         assertionFailure(message)
-        DDLogError(message)
+        DDLogError("\(message)")
     }
     
     func updateConversationLastMessage() {
         let message = "\(#function) should not be called"
         assertionFailure(message)
-        DDLogError(message)
+        DDLogError("\(message)")
     }
     
     func object(at indexPath: IndexPath!) -> Any! {

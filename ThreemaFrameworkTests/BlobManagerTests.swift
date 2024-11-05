@@ -37,8 +37,8 @@ class BlobManagerTests: XCTestCase {
     private let testBundle = Bundle(for: BlobManagerTests.self)
     private var context: NSManagedObjectContext!
     private var databasePreparer: DatabasePreparer!
-    private var conversation: Conversation!
-    private var groupConversation: Conversation!
+    private var conversation: ConversationEntity!
+    private var groupConversation: ConversationEntity!
     private var entityManager: EntityManager!
     private var blobManager: BlobManager!
     private let myIdentityStoreMock = MyIdentityStoreMock()
@@ -91,7 +91,8 @@ class BlobManagerTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
                 }
             )
         }
@@ -250,8 +251,8 @@ class BlobManagerTests: XCTestCase {
         
         XCTAssertEqual(actualSyncResult, .downloaded)
         XCTAssertEqual(testThumbnailData, actualThumbnailData)
-        XCTAssertEqual(loadedThumbnailImage.size.width as NSNumber, thumbnail.width)
-        XCTAssertEqual(loadedThumbnailImage.size.height as NSNumber, thumbnail.height)
+        XCTAssertEqual(Int16(loadedThumbnailImage.size.width), thumbnail.width)
+        XCTAssertEqual(Int16(loadedThumbnailImage.size.height), thumbnail.height)
         XCTAssertEqual(testBlobData, actualBlobData)
         XCTAssertEqual(blobProgress, nil)
         XCTAssertEqual(blobError, false)
@@ -480,13 +481,13 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let fileData = databasePreparer.createFileData(data: testBlobData)
+        let fileDataEntity = databasePreparer.createFileDataEntity(data: testBlobData)
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 encryptionKey: encryptionKey,
                 blobID: nil,
-                data: fileData,
+                data: fileDataEntity,
                 thumbnail: nil,
                 isOwn: true
             )
@@ -520,15 +521,15 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let fileData = databasePreparer.createFileData(data: testBlobData)
-        let thumbnailData = databasePreparer.createImageData(data: testThumbnailData, height: 10, width: 10)
+        let fileDataEntity = databasePreparer.createFileDataEntity(data: testBlobData)
+        let thumbnailData = databasePreparer.createImageDataEntity(data: testThumbnailData, height: 10, width: 10)
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 encryptionKey: encryptionKey,
                 blobID: nil,
                 blobThumbnailID: nil,
-                data: fileData,
+                data: fileDataEntity,
                 thumbnail: thumbnailData,
                 isOwn: true
             )
@@ -575,15 +576,15 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let fileData = databasePreparer.createFileData(data: testBlobData)
-        let thumbnailData = databasePreparer.createImageData(data: testThumbnailData, height: 10, width: 10)
+        let fileDataEntity = databasePreparer.createFileDataEntity(data: testBlobData)
+        let thumbnailData = databasePreparer.createImageDataEntity(data: testThumbnailData, height: 10, width: 10)
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 encryptionKey: encryptionKey,
                 blobID: testBlobID,
                 blobThumbnailID: testThumbnailID,
-                data: fileData,
+                data: fileDataEntity,
                 thumbnail: thumbnailData,
                 isOwn: true
             )
@@ -642,15 +643,15 @@ class BlobManagerTests: XCTestCase {
             members: []
         )
                 
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
             for: grp.groupID,
             creator: grp.groupIdentity.creator.string
         ))
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let fileData = databasePreparer.createFileData(data: testBlobData)
-        let thumbnailData = databasePreparer.createImageData(data: testThumbnailData, height: 10, width: 10)
+        let fileDataEntity = databasePreparer.createFileDataEntity(data: testBlobData)
+        let thumbnailData = databasePreparer.createImageDataEntity(data: testThumbnailData, height: 10, width: 10)
 
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -658,7 +659,7 @@ class BlobManagerTests: XCTestCase {
                 encryptionKey: encryptionKey,
                 blobID: testBlobID,
                 blobThumbnailID: testThumbnailID,
-                data: fileData,
+                data: fileDataEntity,
                 thumbnail: thumbnailData,
                 isOwn: true
             )

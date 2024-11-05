@@ -30,14 +30,14 @@ class WebConversationUpdate: WebAbstractMessage {
     
     var mode: String
     
-    init(conversation: Conversation, objectMode: ObjectMode, session: WCSession) {
+    init(conversation: ConversationEntity, objectMode: ObjectMode, session: WCSession) {
         self.mode = objectMode.rawValue
         
         let businessInjector = BusinessInjector()
         var index = 0
         
         if let allConversations = businessInjector.entityManager.entityFetcher
-            .allConversationsSorted() as? [Conversation] {
+            .allConversationsSorted() as? [ConversationEntity] {
             let unarchivedConversations = allConversations
                 .filter { $0.conversationVisibility == .default || $0.conversationVisibility == .pinned }
 
@@ -96,7 +96,7 @@ class WebConversationUpdate: WebAbstractMessage {
         )
     }
     
-    init(conversation: Conversation, contact: ContactEntity?, objectMode: ObjectMode) {
+    init(conversation: ConversationEntity, contact: ContactEntity?, objectMode: ObjectMode) {
         self.mode = objectMode.rawValue
         
         let webConversation = WebConversation(deletedConversation: conversation, contact: contact)
@@ -120,8 +120,8 @@ class WebConversationUpdate: WebAbstractMessage {
     }
 
     private static func indexForConversation(
-        conversation: Conversation,
-        in conversations: [Conversation]
+        conversation: ConversationEntity,
+        in conversations: [ConversationEntity]
     ) -> (found: Bool, index: Int) {
         var index = 0
         var found = false

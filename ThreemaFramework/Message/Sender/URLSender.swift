@@ -30,7 +30,7 @@ import Foundation
     ///   or if the user has explicitly chosen to send this file to be rendered as a file
     ///   - caption: The caption displayed below the file
     ///   - conversation: The conversation to which the file should be sent
-    @objc public static func sendURL(_ url: URL, asFile: Bool, caption: String?, conversation: Conversation) {
+    @objc public static func sendURL(_ url: URL, asFile: Bool, caption: String?, conversation: ConversationEntity) {
         let senderItem: URLSenderItem?
         if asFile {
             let mimeType = UTIConverter.mimeType(fromUTI: UTIConverter.uti(forFileURL: url))

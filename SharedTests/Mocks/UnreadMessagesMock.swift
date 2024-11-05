@@ -22,19 +22,19 @@ import Foundation
 import ThreemaFramework
 
 class UnreadMessagesMock: UnreadMessagesProtocol {
-    func read(for conversation: Conversation, isAppInBackground: Bool) -> Int {
+    func read(for conversation: ConversationEntity, isAppInBackground: Bool) -> Int {
         0
     }
     
-    func read(for messages: [BaseMessage], in conversation: Conversation, isAppInBackground: Bool) -> Int {
+    func read(for messages: [BaseMessage], in conversation: ConversationEntity, isAppInBackground: Bool) -> Int {
         0
     }
     
-    func totalCount(doCalcUnreadMessagesCountOf: Set<Conversation>, withPerformBlockAndWait: Bool) -> Int {
+    func totalCount(doCalcUnreadMessagesCountOf: Set<ConversationEntity>, withPerformBlockAndWait: Bool) -> Int {
         0
     }
     
-    func count(for conversation: Conversation, withPerformBlockAndWait: Bool) -> Int {
+    func count(for conversation: ConversationEntity, withPerformBlockAndWait: Bool) -> Int {
         0
     }
     

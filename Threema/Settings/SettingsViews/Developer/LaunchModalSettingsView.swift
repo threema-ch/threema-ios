@@ -27,12 +27,11 @@ struct LaunchModalSettingsView: View {
 
     var body: some View {
         List {
-            
-            Section("Show Modals") {
+            Section {
                 Button {
                     showNotificationReminderView.toggle()
                 } label: {
-                    Text("Notification Reminder")
+                    Text(verbatim: "Notification Reminder")
                 }
                 .sheet(isPresented: $showNotificationReminderView) {
                     NotificationReminderView()
@@ -41,25 +40,29 @@ struct LaunchModalSettingsView: View {
                 Button {
                     showNotificationTypeSelectionView.toggle()
                 } label: {
-                    Text("Notification Type Selection")
+                    Text(verbatim: "Notification Type Selection")
                 }
                 .sheet(isPresented: $showNotificationTypeSelectionView) {
                     NotificationTypeSelectionView()
                 }
+            } header: {
+                Text(verbatim: "Show Modals")
             }
             
-            Section("Reset") {
+            Section {
                 Button(role: .destructive) {
                     resetNotificationTypeSelection()
                 } label: {
-                    Text("Notification Type Selection")
+                    Text(verbatim: "Notification Type Selection")
                 }
                 
                 Button(role: .destructive) {
                     resetSafeIntroShown()
                 } label: {
-                    Text("Safe Intro")
+                    Text(verbatim: "Safe Intro")
                 }
+            } header: {
+                Text(verbatim: "Reset")
             }
             
             Section {
@@ -67,11 +70,11 @@ struct LaunchModalSettingsView: View {
                     resetNotificationTypeSelection()
                     resetSafeIntroShown()
                 } label: {
-                    Text("Reset All")
+                    Text(verbatim: "Reset All")
                 }
             }
         }
-        .navigationTitle("Launch Modals")
+        .navigationTitle(Text(verbatim: "Launch Modals"))
         .navigationBarTitleDisplayMode(.inline)
     }
     

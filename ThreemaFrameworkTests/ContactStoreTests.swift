@@ -38,6 +38,9 @@ class ContactStoreTests: XCTestCase {
         let expectedPublicKey = MockData.generatePublicKey()
         let expectedFirstName = "Test"
         let expectedLastName = "Tester"
+        let expectedCsi = "Csi"
+        let expectedJobTitle = "JobTitle"
+        let expectedDepartment = "Department"
 
         let userSettingsMock = UserSettingsMock()
         let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
@@ -48,6 +51,9 @@ class ContactStoreTests: XCTestCase {
             publicKey: expectedPublicKey,
             firstname: expectedFirstName,
             lastname: expectedLastName,
+            csi: expectedCsi,
+            jobTitle: expectedJobTitle,
+            department: expectedDepartment,
             acquaintanceLevel: .direct,
             entityManager: em,
             contactSyncer: nil
@@ -58,6 +64,9 @@ class ContactStoreTests: XCTestCase {
         XCTAssertEqual(expectedPublicKey, contactEntity.publicKey)
         XCTAssertEqual(expectedFirstName, contactEntity.firstName)
         XCTAssertEqual(expectedLastName, contactEntity.lastName)
+        XCTAssertEqual(expectedCsi, contactEntity.csi)
+        XCTAssertEqual(expectedJobTitle, contactEntity.jobTitle)
+        XCTAssertEqual(expectedDepartment, contactEntity.department)
         XCTAssertTrue(userSettingsMock.workIdentities.contains(expectedIdentity))
         XCTAssertTrue(userSettingsMock.profilePictureRequestList.contains(where: { $0 as? String == expectedIdentity }))
     }
@@ -110,7 +119,7 @@ class ContactStoreTests: XCTestCase {
             expect.fulfill()
         }
         
-        wait(for: [expect], timeout: 2)
+        wait(for: [expect], timeout: 5)
         XCTAssertTrue(try trustedContact.isSamePublicKey(XCTUnwrap(receivedPublicKey)))
     }
 

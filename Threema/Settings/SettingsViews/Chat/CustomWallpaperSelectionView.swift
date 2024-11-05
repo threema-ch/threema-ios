@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct CustomWallpaperSelectionView: View {
     let conversationID: NSManagedObjectID
@@ -40,7 +41,7 @@ struct CustomWallpaperSelectionView: View {
         List {
             HStack(alignment: .center, spacing: 20) {
                 WallpaperTypeView(
-                    description: "settings_chat_wallpaper_default".localized,
+                    description: #localize("settings_chat_wallpaper_default"),
                     image: $defaultImage, isSelected: $defaultSelected,
                     isSelectingCustom: $customSelected
                 )
@@ -48,7 +49,7 @@ struct CustomWallpaperSelectionView: View {
                     selectDefault()
                 }
                 WallpaperTypeView(
-                    description: "settings_chat_wallpaper_custom".localized,
+                    description: #localize("settings_chat_wallpaper_custom"),
                     image: $customImage,
                     isSelected: $customSelected,
                     isSelectingCustom: $customSelected
@@ -142,7 +143,7 @@ public class CustomWallpaperSelectionViewController: UIViewController {
             hostingController.dismiss(animated: true)
         }
         hostingController.navigationItem.rightBarButtonItem = UIBarButtonItem(systemItem: .close, primaryAction: action)
-        hostingController.navigationItem.title = "settings_chat_wallpaper_title".localized
+        hostingController.navigationItem.title = #localize("settings_chat_wallpaper_title")
 
         return hostingController
     }

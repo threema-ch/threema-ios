@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 @objc class SafeManager: NSObject {
     
@@ -443,8 +444,8 @@ import Foundation
            let retentionDays = safeConfigManager.getRetentionDays() {
             
             let notification = UNMutableNotificationContent()
-            notification.title = BundleUtil.localizedString(forKey: "safe_setup_backup_title")
-            notification.body = BundleUtil.localizedString(forKey: "safe_expired_notification")
+            notification.title = #localize("safe_setup_backup_title")
+            notification.body = #localize("safe_expired_notification")
             notification.categoryIdentifier = "SAFE_SETUP"
             notification.userInfo = ["threema": ["nil": "nil"], "key": notificationKey]
             
@@ -456,7 +457,7 @@ import Foundation
                     let seconds = lastBackup.timeIntervalSinceNow
                     let days = Double(exactly: seconds / Double(oneDayInSeconds))?.rounded(.up)
                     notification.body = String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "safe_failed_notification"),
+                        #localize("safe_failed_notification"),
                         abs(days!)
                     )
                 }
@@ -626,7 +627,7 @@ import Foundation
                                     continuation.resume(throwing: SafeError.backupFailed(
                                         message: error.contains("Payload Too Large") ? BundleUtil
                                             .localizedString(forKey: "safe_upload_size_exceeded") :
-                                            "\(BundleUtil.localizedString(forKey: "safe_upload_failed")) (\(error))"
+                                            "\(#localize("safe_upload_failed")) (\(error))"
                                     ))
                                 }
                                 else {
@@ -720,7 +721,7 @@ import Foundation
             self.logger.logString(message)
             
             self.safeConfigManager
-                .setLastResult("\(BundleUtil.localizedString(forKey: "safe_unsuccessful")): \(message)")
+                .setLastResult("\(#localize("safe_unsuccessful")): \(message)")
 
             completionHandler()
         }
@@ -729,7 +730,7 @@ import Foundation
             
             safeConfigManager
                 .setLastResult(
-                    "\(BundleUtil.localizedString(forKey: "safe_unsuccessful")): \(error.localizedDescription)"
+                    "\(#localize("safe_unsuccessful")): \(error.localizedDescription)"
                 )
 
             completionHandler()
@@ -784,14 +785,14 @@ import Foundation
                                         .setLastResult(
                                             errorMessage.contains("Payload Too Large") ? BundleUtil
                                                 .localizedString(forKey: "safe_upload_size_exceeded") :
-                                                "\(BundleUtil.localizedString(forKey: "safe_upload_failed")) (\(errorMessage))"
+                                                "\(#localize("safe_upload_failed")) (\(errorMessage))"
                                         )
                                 }
                                 else {
                                     self.safeConfigManager.setLastChecksum(self.checksum)
                                     self.safeConfigManager.setLastBackup(Date())
                                     self.safeConfigManager
-                                        .setLastResult(BundleUtil.localizedString(forKey: "safe_successful"))
+                                        .setLastResult(#localize("safe_successful"))
                                     self.safeConfigManager.setLastAlertBackupFailed(nil)
                                 }
                                 
@@ -800,7 +801,7 @@ import Foundation
                         }
                         else {
                             throw SafeError
-                                .backupFailed(message: BundleUtil.localizedString(forKey: "safe_upload_size_exceeded"))
+                                .backupFailed(message: #localize("safe_upload_size_exceeded"))
                         }
                     }
                     catch {
@@ -813,7 +814,7 @@ import Foundation
                         
                         self.safeConfigManager
                             .setLastResult(
-                                "\(BundleUtil.localizedString(forKey: "safe_unsuccessful")): \(error.localizedDescription)"
+                                "\(#localize("safe_unsuccessful")): \(error.localizedDescription)"
                             )
 
                         completionHandler()
@@ -828,7 +829,7 @@ import Foundation
             
             safeConfigManager
                 .setLastResult(
-                    "\(BundleUtil.localizedString(forKey: "safe_unsuccessful")): \(error.localizedDescription)"
+                    "\(#localize("safe_unsuccessful")): \(error.localizedDescription)"
                 )
 
             completionHandler()
@@ -891,7 +892,7 @@ import Foundation
         else {
             completionHandler(
                 SafeError
-                    .restoreFailed(message: BundleUtil.localizedString(forKey: "safe_no_backup_found"))
+                    .restoreFailed(message: #localize("safe_no_backup_found"))
             )
         }
     }
@@ -1009,7 +1010,7 @@ import Foundation
                     completionHandler(
                         SafeError
                             .restoreFailed(
-                                message: "\(BundleUtil.localizedString(forKey: "safe_no_backup_found")) (\(message))"
+                                message: "\(#localize("safe_no_backup_found")) (\(message))"
                             )
                     )
                 }
@@ -1042,7 +1043,7 @@ import Foundation
                 catch {
                     completionHandler(
                         SafeError
-                            .restoreFailed(message: BundleUtil.localizedString(forKey: "safe_no_backup_found"))
+                            .restoreFailed(message: #localize("safe_no_backup_found"))
                     )
                 }
             }
@@ -1102,7 +1103,7 @@ import Foundation
         }
             
         // Show alert once a day, if is last successful backup older than 7 days
-        if safeConfigManager.getLastResult() != BundleUtil.localizedString(forKey: "safe_successful"),
+        if safeConfigManager.getLastResult() != #localize("safe_successful"),
            safeConfigManager.getLastBackup() != nil,
            safeStore.isDateOlderThenDays(date: safeConfigManager.getLastBackup(), days: 7) {
                 
@@ -1118,9 +1119,9 @@ import Foundation
                     
                 UIAlertTemplate.showAlert(
                     owner: topViewController,
-                    title: BundleUtil.localizedString(forKey: "safe_setup_backup_title"),
+                    title: #localize("safe_setup_backup_title"),
                     message: String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "safe_failed_notification"),
+                        #localize("safe_failed_notification"),
                         abs(days)
                     )
                 )
@@ -1129,12 +1130,6 @@ import Foundation
     }
     
     @objc private func trigger() {
-        let businessInjector = BusinessInjector()
-        if businessInjector.userSettings.blockCommunication {
-            DDLogWarn("Communication is blocked")
-            return
-        }
-
         DispatchQueue(label: "backupProcess").async {
 
             // if forced, try to start backup immediately, otherwise when backup process is already running or last
@@ -1144,7 +1139,7 @@ import Foundation
 
                 if self.backupForce, SafeManager.backupIsRunning {
                     self.safeConfigManager
-                        .setLastResult("\(BundleUtil.localizedString(forKey: "safe_unsuccessful")): is already running")
+                        .setLastResult("\(#localize("safe_unsuccessful")): is already running")
                 }
                 else if !self.backupForce, SafeManager.backupIsRunning || !self.safeStore.isDateOlderThenDays(
                     date: self.safeConfigManager.getLastBackup(),

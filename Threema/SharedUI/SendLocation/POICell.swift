@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 class POICell: ThemedCodeTableViewCell, Reusable {
     
@@ -184,9 +185,9 @@ class POICell: ThemedCodeTableViewCell, Reusable {
         
         switch meters {
         case .notAvailable:
-            return BundleUtil.localizedString(forKey: "poi_unavailable")
+            return #localize("poi_unavailable")
         case .notSet:
-            return BundleUtil.localizedString(forKey: "poi_not_marked")
+            return #localize("poi_not_marked")
         case let .distance(value):
             if value <= 10 {
                 return ""
@@ -211,7 +212,7 @@ class POICell: ThemedCodeTableViewCell, Reusable {
             let distance = distanceLabel.text ?? ""
             
             return String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "poi_away"),
+                #localize("poi_away"),
                 distance
             )
         }

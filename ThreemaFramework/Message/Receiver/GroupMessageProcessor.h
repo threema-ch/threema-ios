@@ -20,7 +20,6 @@
 
 #import <Foundation/Foundation.h>
 #import "AbstractGroupMessage.h"
-#import "Conversation.h"
 #import "UserSettings.h"
 
 /// Handling of group messages

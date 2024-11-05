@@ -23,6 +23,7 @@ import Intents
 import SwiftUI
 import ThreemaEssentials
 import ThreemaFramework
+import ThreemaMacros
 
 struct DeveloperSettingsView: View {
         
@@ -42,26 +43,29 @@ struct DeveloperSettingsView: View {
 
     var body: some View {
         List {
-            Section("Local Info") {
+            Section {
                 HStack {
-                    Text("Last sent FeatureMask")
+                    Text(verbatim: "Last sent FeatureMask")
                     Spacer()
-                    Text("\(MyIdentityStore.shared().lastSentFeatureMask)")
+                    Text(verbatim: "\(MyIdentityStore.shared().lastSentFeatureMask)")
                         .foregroundStyle(.secondary)
                 }
             }
+            header: {
+                Text(verbatim: "Local Info")
+            }
             
-            Section("UI") {
+            Section {
                 NavigationLink {
                     UIComponentsView()
                 } label: {
-                    Text("UI Components Debug View")
+                    Text(verbatim: "UI Components Debug View")
                 }
                 
                 NavigationLink {
                     StyleKitView()
                 } label: {
-                    Text("StyleKit Debug View")
+                    Text(verbatim: "StyleKit Debug View")
                 }
                 
                 NavigationLink {
@@ -73,19 +77,19 @@ struct DeveloperSettingsView: View {
                 NavigationLink {
                     IDColorsView()
                 } label: {
-                    Text("ID Colors Debug View")
+                    Text(verbatim: "ID Colors Debug View")
                 }
                 
                 NavigationLink {
                     LaunchModalSettingsView()
                 } label: {
-                    Text("Launch Modals")
+                    Text(verbatim: "Launch Modals")
                 }
                 
                 NavigationLink {
                     AudioErrorDebugView()
                 } label: {
-                    Text("Audio Error Debug View")
+                    Text(verbatim: "Audio Error Debug View")
                 }
                 
                 Button {
@@ -95,13 +99,22 @@ struct DeveloperSettingsView: View {
                     Text(verbatim: "Reset TipKit (Relaunches App)")
                 }
             }
+            header: {
+                Text(verbatim: "UI")
+            }
             
-            Section("Multi-Device") {
+            Section {
+                Button {
+                    showDebugDeviceJoin = true
+                } label: {
+                    Text(verbatim: "Show Device Join Debug View")
+                }
+                
                 Toggle(isOn: $allowSeveralDevices) {
                     VStack(alignment: .leading) {
                         Text(verbatim: "Allow Multiple Linked Devices")
                         Text(
-                            verbatim: "Enable this if you want to link multiple Desktop instances or other iOS devices"
+                            verbatim: "Enable this if you want to link other iOS devices. Multiple Desktop clients are always enabled."
                         )
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -109,22 +122,6 @@ struct DeveloperSettingsView: View {
                 }
                 .onChange(of: allowSeveralDevices) { newValue in
                     UserSettings.shared().allowSeveralLinkedDevices = newValue
-                }
-                
-                Button("Show Device Join Debug View") {
-                    showDebugDeviceJoin = true
-                }
-                
-                // TODO: (IOS-4793) This can probably be removed
-                NavigationLink {
-                    LinkedDevicesView()
-                } label: {
-                    VStack(alignment: .leading) {
-                        Text("settings_list_threema_desktop_title".localized)
-                        Text(verbatim: "Same as in main settings")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
                 }
                 
                 NavigationLink {
@@ -140,28 +137,36 @@ struct DeveloperSettingsView: View {
                     }
                 }
             }
+            header: {
+                Text(verbatim: "Multi-Device")
+            }
             
-            Section("Feature Flags") {
+            Section {
                 Toggle(isOn: $contactList2) {
-                    Text("Enable Contact List 2.0")
+                    Text(verbatim: "Enable Contact List 2.0")
                 }
                 .onChange(of: contactList2) { newValue in
                     UserSettings.shared().contactList2 = newValue
                     exit(1)
                 }
             }
+            header: {
+                Text(verbatim: "Feature Flags")
+            }
             
-            Section("Group Calls") {
+            Section {
                 Toggle(isOn: $groupCallsDebugMessages) {
-                    Text("Send Debug Messages for Group Calls")
+                    Text(verbatim: "Send Debug Messages for Group Calls")
                 }
                 .onChange(of: groupCallsDebugMessages) { newValue in
                     UserSettings.shared().groupCallsDebugMessages = newValue
                 }
             }
-            
+            header: {
+                Text(verbatim: "Group Calls")
+            }
             Section {
-                Button("Terminate All FS Sessions") {
+                Button {
                     let businessInjector = BusinessInjector()
                     let terminator = try! ForwardSecuritySessionTerminator(businessInjector: businessInjector)
                     
@@ -171,9 +176,11 @@ struct DeveloperSettingsView: View {
                             try! terminator.terminateAllSessions(with: contact, cause: .reset)
                         }
                     }
+                } label: {
+                    Text(verbatim: "Terminate All FS Sessions")
                 }
                 
-                Button("🚨 Delete All FS Sessions") {
+                Button {
                     let businessInjector = BusinessInjector()
                     let terminator = try! ForwardSecuritySessionTerminator(businessInjector: businessInjector)
                     
@@ -183,29 +190,33 @@ struct DeveloperSettingsView: View {
                             try! terminator.deleteAllSessions(with: contact)
                         }
                     }
+                } label: {
+                    Text(verbatim: "🚨 Delete All FS Sessions")
                 }
             }
             header: {
-                Text("🚨🚨 FS State Deletion")
+                Text(verbatim: "🚨🚨 FS State Deletion")
             }
             footer: {
-                Text("This will delete data without any additional confirmation!")
+                Text(verbatim: "This will delete data without any additional confirmation!")
                     .bold()
                     .foregroundColor(.red)
             }
             
             // Add this option to testflight for green and blue apps
             if ThreemaEnvironment.env() == .xcode || ThreemaEnvironment.env() == .testFlight {
-                Section("🚨🚨🚨 Data Deletion") {
-                    Button("🚨 Simulate Restore (Delete Keychain)") {
+                Section {
+                    Button {
                         showDeleteKeychainItemsConfirmation = true
+                    } label: {
+                        Text(verbatim: "🚨 Simulate Restore (Delete Keychain)")
                     }
                     .confirmationDialog(
-                        "To restore your ID, you will need an ID Backup or a Threema Safe Backup.",
+                        Text(verbatim: "To restore your ID, you will need an ID Backup or a Threema Safe Backup."),
                         isPresented: $showDeleteKeychainItemsConfirmation,
                         titleVisibility: .visible
                     ) {
-                        Button("Delete Keychain Items", role: .destructive) {
+                        Button {
                             MyIdentityStore.shared().destroyDeviceOnlyKeychainItems()
 
                             if let identity = MyIdentityStore.shared().identity {
@@ -215,40 +226,53 @@ struct DeveloperSettingsView: View {
                             }
 
                             exit(0)
+                        } label: {
+                            Text(verbatim: "Delete Keychain Items")
                         }
                     }
                     message: {
                         Text(
+                            verbatim:
                             "ID private key, device group key and further items will be deleted. This simulates restoring a Finder/iTunes/iCloud backup to a new device (or Quick Start)."
                         )
                     }
                     
-                    Button("🚨 Delete Database, Settings & All Files") {
+                    Button {
                         showDeleteAllDataConfirmation = true
+                    } label: {
+                        Text(verbatim: "🚨 Delete Database, Settings & All Files")
                     }
                     .confirmationDialog(
-                        "Delete Database, Settings & All Files",
+                        Text(verbatim: "Delete Database, Settings & All Files"),
                         isPresented: $showDeleteAllDataConfirmation
                     ) {
-                        Button("Delete Everything", role: .destructive) {
+                        Button {
                             // DB & Files
                             FileUtility.shared.removeItemsInAllDirectories()
                             AppGroup.resetUserDefaults()
                             DatabaseManager().eraseDB()
                             exit(0)
+                        } label: {
+                            Text(verbatim: "Delete Everything")
                         }
                     }
+                } header: {
+                    Text(verbatim: "🚨🚨🚨 Data Deletion")
                 }
             }
             
-            Section("Crash") {
-                Button("Crash the app") {
+            Section {
+                Button {
                     var nilString: String?
                     print(nilString!)
+                } label: {
+                    Text(verbatim: "Crash the app")
                 }
+            } header: {
+                Text(verbatim: "Crash")
             }
         }
-        .navigationBarTitle("Developer Settings", displayMode: .inline)
+        .navigationBarTitle(Text(verbatim: "Developer Settings"), displayMode: .inline)
         .tint(UIColor.primary.color)
         .sheet(isPresented: $showDebugDeviceJoin) {
             DebugDeviceJoinView()

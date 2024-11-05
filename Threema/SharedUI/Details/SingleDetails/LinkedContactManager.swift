@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Contacts
 import ContactsUI
 import Foundation
+import ThreemaMacros
 
 /// Managing the linking between a Threema contact and a system contact (`CNContact`)
 ///
@@ -117,7 +118,10 @@ class LinkedContactManager: NSObject {
     
     private func currentCNContact() -> CNContact? {
         // Only fetch contact if we have access to them
-        guard CNContactStore.authorizationStatus(for: .contacts) == .authorized else {
+        let status = CNContactStore.authorizationStatus(for: .contacts)
+        // TODO: (IOS-4890) Rethink contact linking if limited access is enabled
+        // TODO: (IOS-4889) In order to still compile the code in Xcode 15, we use 4 instead of `.limited`
+        guard status == .authorized || status.rawValue == 4 else {
             return nil
         }
         
@@ -136,7 +140,8 @@ class LinkedContactManager: NSObject {
             return foundContact
         }
         catch {
-            DDLogNotice("Unable to get CNContact from CNContactStore: \(error.localizedDescription)")
+            // This is also hit for linked contacts, that exist but that are not accessible with limited access
+            DDLogNotice("Unable to get CNContact from CNContactStore: \(error)")
         }
         
         return nil
@@ -249,6 +254,7 @@ extension CNContactViewController {
 // MARK: - Link contact
 
 // This is the implemented flow for managing contact linking:
+// TODO: (IOS-4890) Update to reflect new flow with `limited` state (currently it follows the `authorized` path)
 //
 //                                         ┌───────────────────┐
 //                                         │ Current contacts  │
@@ -299,8 +305,7 @@ extension LinkedContactManager {
     /// Manage linking of contact to a `CNContact`
     ///
     /// Complete flow to link new `CNContact` or  manage existing linking. This includes asking for permission if
-    /// there's no access
-    /// to contacts.
+    /// there's no access to contacts.
     ///
     /// (See implementation for flow documentation.)
     ///
@@ -316,6 +321,10 @@ extension LinkedContactManager {
             accessDenied(in: viewController)
         case .restricted:
             accessRestricted(in: viewController)
+        case CNAuthorizationStatus(rawValue: 4): // TODO: (IOS-4889) In order to still compile the code in Xcode 15, we use 4 instead of `.limited`
+            // TODO: (IOS-4890) Rethink contact linking if limited access is enabled
+            // For now we just allow linking, however if the contact is not accessible only a [limited] label appears
+            accessAuthorized(in: view, of: viewController)
         @unknown default:
             // New unknown state. Let's try if we can use it like `.authorized`...
             accessAuthorized(in: view, of: viewController)
@@ -339,13 +348,13 @@ extension LinkedContactManager {
     
     private func accessDenied(in viewController: UIViewController) {
 
-        let localizedOpenSettingsTitle = BundleUtil.localizedString(forKey: "alert_no_access_open_settings")
+        let localizedOpenSettingsTitle = #localize("alert_no_access_open_settings")
         
         if contactIsLinked {
-            let localizedAlertTitle = BundleUtil.localizedString(forKey: "no_linked_contact_access_title")
-            let localizedAlertMessage = BundleUtil.localizedString(forKey: "no_linked_contact_access_message")
+            let localizedAlertTitle = #localize("no_linked_contact_access_title")
+            let localizedAlertMessage = #localize("no_linked_contact_access_message")
                         
-            let localizedUnlinkTitle = BundleUtil.localizedString(forKey: "unlink_contact")
+            let localizedUnlinkTitle = #localize("unlink_contact")
             let unlinkAction = UIAlertAction(title: localizedUnlinkTitle, style: .destructive) { _ in
                 ContactStore.shared().unlink(self.contact)
             }
@@ -375,12 +384,12 @@ extension LinkedContactManager {
     
     private func accessRestricted(in viewController: UIViewController) {
         if contactIsLinked {
-            let localizedAlertTile = BundleUtil.localizedString(forKey: "restricted_contacts_access_title")
+            let localizedAlertTile = #localize("restricted_contacts_access_title")
             let localizedAlertMessage = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "restricted_linked_contact_access_message"),
+                #localize("restricted_linked_contact_access_message"),
                 ThreemaApp.currentName
             )
-            let localizedUnlinkTitle = BundleUtil.localizedString(forKey: "unlink_contact")
+            let localizedUnlinkTitle = #localize("unlink_contact")
             
             UIAlertTemplate.showDestructiveAlert(
                 owner: viewController,
@@ -393,8 +402,8 @@ extension LinkedContactManager {
             )
         }
         else {
-            let localizedAlertTile = BundleUtil.localizedString(forKey: "restricted_contacts_access_title")
-            let localizedAlertMessage = BundleUtil.localizedString(forKey: "restricted_contacts_access_message")
+            let localizedAlertTile = #localize("restricted_contacts_access_title")
+            let localizedAlertMessage = #localize("restricted_contacts_access_message")
             
             UIAlertTemplate.showAlert(
                 owner: viewController,
@@ -408,13 +417,13 @@ extension LinkedContactManager {
         
         var actions = [UIAlertAction]()
         
-        let localizedUnlinkTitle = BundleUtil.localizedString(forKey: "unlink_contact")
+        let localizedUnlinkTitle = #localize("unlink_contact")
         let unlinkAction = UIAlertAction(title: localizedUnlinkTitle, style: .destructive) { _ in
             ContactStore.shared().unlink(self.contact)
         }
         actions.append(unlinkAction)
         
-        let localizedLinkNewTitle = BundleUtil.localizedString(forKey: "link_new_contact")
+        let localizedLinkNewTitle = #localize("link_new_contact")
         let linkNewAction = UIAlertAction(title: localizedLinkNewTitle, style: .default) { _ in
             self.presentCNContactPicker(with: viewController)
         }
@@ -422,7 +431,7 @@ extension LinkedContactManager {
         
         // Only show "Show Contact" action if we found the contact
         if cnContact != nil {
-            let localizedShowContactTitle = BundleUtil.localizedString(forKey: "show_linked_contact")
+            let localizedShowContactTitle = #localize("show_linked_contact")
             let showContactAction = UIAlertAction(title: localizedShowContactTitle, style: .default) { _ in
                 self.presentCurrentCNContact(with: viewController)
             }
@@ -499,6 +508,7 @@ extension LinkedContactManager: CNContactPickerDelegate {
 // MARK: - Link contact text
 
 // How the output is determined:
+// TODO: (IOS-4890) Update to reflect new flow with `limited` state (currently it follows the `authorized` path, but returns "limited" if not accessible/found)
 //
 //                                           ┌──────────────────────┐
 //                                           │ Has linked contact?  │
@@ -530,10 +540,10 @@ extension LinkedContactManager {
     /// Title for linkend contact presentation in UI
     var linkedContactTitle: String {
         if contactIsLinked {
-            return BundleUtil.localizedString(forKey: "linked_contact")
+            return #localize("linked_contact")
         }
         
-        return BundleUtil.localizedString(forKey: "link_contact")
+        return #localize("link_contact")
     }
     
     /// Description for linked contact presentation in UI
@@ -545,23 +555,20 @@ extension LinkedContactManager {
         }
         
         let authorizationStatus = CNContactStore.authorizationStatus(for: .contacts)
-        guard authorizationStatus == .authorized else {
-            if authorizationStatus == .denied || authorizationStatus == .notDetermined {
-                return BundleUtil.localizedString(forKey: "[no access]")
-            }
-            else if authorizationStatus == .restricted {
-                return BundleUtil.localizedString(forKey: "[restricted]")
-            }
-            
-            assertionFailure("unknown contact access status")
-            return "[unknown status]" // This should never be reached
+        switch authorizationStatus {
+        case .notDetermined, .denied:
+            return #localize("[no access]")
+        case .restricted:
+            return #localize("[restricted]")
+        case .authorized:
+            return contactDescription ?? #localize("[not found]")
+        case CNAuthorizationStatus(rawValue: 4): // TODO: (IOS-4889) In order to still compile the code in Xcode 15, we use 4 instead of `.limited`
+            // TODO: (IOS-4890) Rethink contact linking if limited access is enabled
+            return contactDescription ?? #localize("[limited]")
+        @unknown default:
+            assertionFailure("Unknown contact access status")
+            return "[unknown status]"
         }
-        
-        guard let contactDescription else {
-            return BundleUtil.localizedString(forKey: "[not found]")
-        }
-        
-        return contactDescription
     }
     
     private var contactDescription: String? {
@@ -595,6 +602,7 @@ extension LinkedContactManager {
 // MARK: - Edit contact
 
 // The implemented flow for edit contact:
+// TODO: (IOS-4890) Update to reflect new flow with `limited` state (currently it follows the `authorized` path)
 //
 //                              ┌─────────────────────────────┐
 //                              │    Has a linked contact?    │─────No──────────────┐
@@ -673,6 +681,10 @@ extension LinkedContactManager {
             editAccessDenied(in: viewController, provider: provider)
         case .restricted:
             editAccessRestricted(in: viewController, provider: provider)
+        case CNAuthorizationStatus(rawValue: 4): // TODO: (IOS-4889) In order to still compile the code in Xcode 15, we use 4 instead of `.limited`
+            // TODO: (IOS-4890) Rethink contact linking if limited access is enabled
+            // For now we handle it like authorized access and show a not found error if contact is not accessible
+            editAccessAuthorized(in: viewController, provider: provider)
         @unknown default:
             // New unknown state. Let's try if we can use it like `.authorized`...
             editAccessAuthorized(in: viewController, provider: provider)
@@ -699,8 +711,8 @@ extension LinkedContactManager {
         // Can we find the contact?
         guard cnContact != nil else {
             // If not show error and option to unlink
-            let localizedNotFoundTitle = BundleUtil.localizedString(forKey: "linked_contact_not_found_title")
-            let localizedNotFoundMessage = BundleUtil.localizedString(forKey: "linked_contact_not_found_message")
+            let localizedNotFoundTitle = #localize("linked_contact_not_found_title")
+            let localizedNotFoundMessage = #localize("linked_contact_not_found_message")
             
             showUnlinkAndEditActionSheet(
                 title: localizedNotFoundTitle,
@@ -719,17 +731,17 @@ extension LinkedContactManager {
         in viewController: UIViewController,
         provider: @escaping EditContactViewControllerProvider
     ) {
-        let localizedDeniedTitle = BundleUtil.localizedString(forKey: "no_linked_contact_access_title")
-        let localizedDeniedMessage = BundleUtil.localizedString(forKey: "no_linked_contact_access_edit_message")
+        let localizedDeniedTitle = #localize("no_linked_contact_access_title")
+        let localizedDeniedMessage = #localize("no_linked_contact_access_edit_message")
         
-        let localizedUnlinkAndEditActionTitle = BundleUtil.localizedString(forKey: "unlink_and_edit_contact")
+        let localizedUnlinkAndEditActionTitle = #localize("unlink_and_edit_contact")
         let unlinkAndEditAction = UIAlertAction(
             title: localizedUnlinkAndEditActionTitle,
             style: .destructive,
             handler: unlinkAndEditClosure(in: viewController, provider: provider)
         )
         
-        let localizedOpenSettingsTitle = BundleUtil.localizedString(forKey: "alert_no_access_open_settings")
+        let localizedOpenSettingsTitle = #localize("alert_no_access_open_settings")
         let openSettingsAction = UIAlertAction(
             title: localizedOpenSettingsTitle,
             style: .default,
@@ -750,9 +762,9 @@ extension LinkedContactManager {
         provider: @escaping EditContactViewControllerProvider
     ) {
         
-        let localizedRestrictedTitle = BundleUtil.localizedString(forKey: "restricted_contacts_access_title")
+        let localizedRestrictedTitle = #localize("restricted_contacts_access_title")
         let localizedRestrictedMessage = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "restricted_linked_contact_access_edit_message"),
+            #localize("restricted_linked_contact_access_edit_message"),
             ThreemaApp.currentName
         )
         
@@ -770,7 +782,7 @@ extension LinkedContactManager {
         in viewController: UIViewController,
         provider: @escaping EditContactViewControllerProvider
     ) {
-        let localizedUnlinkAndEditActionTitle = BundleUtil.localizedString(forKey: "unlink_and_edit_contact")
+        let localizedUnlinkAndEditActionTitle = #localize("unlink_and_edit_contact")
         let unlinkAndEditAction = unlinkAndEditClosure(in: viewController, provider: provider)
         
         UIAlertTemplate.showDestructiveAlert(

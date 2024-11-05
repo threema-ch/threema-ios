@@ -44,9 +44,9 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 };
 
 
-@class Conversation;
+@class ConversationEntity;
 @class ContactEntity;
-@class MessageMarkers;
+@class MessageMarkersEntity;
 @class MessageHistoryEntryEntity;
 
 @interface BaseMessage : TMAManagedObject
@@ -104,11 +104,11 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 
 @property (nonatomic, retain) NSArray *groupDeliveryReceipts;
 
-@property (nonatomic, retain) Conversation *conversation;
+@property (nonatomic, retain) ConversationEntity *conversation;
 @property (nullable, nonatomic, retain) ContactEntity *sender;
 @property (nullable, nonatomic, retain) NSSet<MessageHistoryEntryEntity *> *historyEntries;
 
-@property (nullable, nonatomic, retain) MessageMarkers *messageMarkers;
+@property (nullable, nonatomic, retain) MessageMarkersEntity *messageMarkers;
 @property (nullable, nonatomic, retain) NSSet<BaseMessage *> *distributedMessages;
 @property (nullable, nonatomic, retain) BaseMessage *distributionListMessage NS_SWIFT_NAME(distributionListMessage);
 

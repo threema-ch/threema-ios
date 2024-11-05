@@ -20,6 +20,7 @@
 
 import MBProgressHUD
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 class SafeServerViewController: IDCreationPageViewController {
@@ -58,24 +59,24 @@ class SafeServerViewController: IDCreationPageViewController {
         hideKeyboardWhenTappedAround()
         keyboardResize = KeyboardResizeCenterY(parent: view, resize: mainContentView)
 
-        titleLabel.text = BundleUtil.localizedString(forKey: "safe_configure_choose_server")
+        titleLabel.text = #localize("safe_configure_choose_server")
         if ThreemaApp.current == .onPrem {
-            descriptionLabel.text = BundleUtil.localizedString(forKey: "safe_configure_server_explain_onprem")
+            descriptionLabel.text = #localize("safe_configure_server_explain_onprem")
         }
         else {
-            descriptionLabel.text = BundleUtil.localizedString(forKey: "safe_configure_server_explain")
+            descriptionLabel.text = #localize("safe_configure_server_explain")
         }
 
-        serverSwitchLabel.text = BundleUtil.localizedString(forKey: "safe_use_default_server")
+        serverSwitchLabel.text = #localize("safe_use_default_server")
         serverField.delegate = self
         serverField.placeholder = "https://server.example.com"
-        serverLabel.text = BundleUtil.localizedString(forKey: "safe_server_authentication")
+        serverLabel.text = #localize("safe_server_authentication")
         serverUsernameField.delegate = self
-        serverUsernameField.placeholder = BundleUtil.localizedString(forKey: "username")
+        serverUsernameField.placeholder = #localize("username")
         serverPasswordField.delegate = self
-        serverPasswordField.placeholder = BundleUtil.localizedString(forKey: "Password")
-        cancelButton.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
-        okButton.setTitle(BundleUtil.localizedString(forKey: "ok"), for: .normal)
+        serverPasswordField.placeholder = #localize("Password")
+        cancelButton.setTitle(#localize("cancel"), for: .normal)
+        okButton.setTitle(#localize("ok"), for: .normal)
 
         let isDefault = server == nil
         serverSwitch.isOn = isDefault
@@ -134,7 +135,7 @@ class SafeServerViewController: IDCreationPageViewController {
                         
                         if let errorMessage {
                             let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
-                            alert.showAlert(errorMessage, title: BundleUtil.localizedString(forKey: "safe_test_server"))
+                            alert.showAlert(errorMessage, title: #localize("safe_test_server"))
                             completion(false)
                             return
                         }

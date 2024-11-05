@@ -19,10 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 extension SettingsView: MainTabViewRepresentable {
     var title: String {
-        "settings".localized
+        #localize("settings")
     }
     
     var symbol: UIImage? {

@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 class NotificationResponse: NSObject {
 
@@ -38,7 +39,7 @@ class NotificationResponse: NSObject {
     private let notificationIdentifier: String
     private let completionHandler: () -> Void
 
-    private var conversation: Conversation?
+    private var conversation: ConversationEntity?
 
     required init(
         businessInjector: BusinessInjectorProtocol,
@@ -68,10 +69,10 @@ class NotificationResponse: NSObject {
             if let threemaDict, let groupIDString = threemaDict["groupId"] as? String,
                let groupCreator = threemaDict["groupCreator"] as? String,
                let groupID = Data(base64Encoded: groupIDString) {
-                self.conversation = entityManager.entityFetcher.conversation(for: groupID, creator: groupCreator)
+                self.conversation = entityManager.entityFetcher.conversationEntity(for: groupID, creator: groupCreator)
             }
             else if let threemaDict, let senderIdentity = threemaDict["from"] as? String {
-                self.conversation = entityManager.entityFetcher.conversation(forIdentity: senderIdentity)
+                self.conversation = entityManager.entityFetcher.conversationEntity(forIdentity: senderIdentity)
             }
             else {
                 DDLogError("Could not find conversation for push notification")
@@ -201,7 +202,7 @@ class NotificationResponse: NSObject {
                 return
             }
            
-            let isGroup = conversation.isGroup()
+            let isGroup = conversation.isGroup
             
             if isGroup {
                 if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
@@ -250,8 +251,8 @@ class NotificationResponse: NSObject {
     
     private func sendThumbUpError() {
         ThreemaUtilityObjC.sendErrorLocalNotification(
-            BundleUtil.localizedString(forKey: "send_notification_message_error_title"),
-            body: BundleUtil.localizedString(forKey: "send_notification_message_error_agree"),
+            #localize("send_notification_message_error_title"),
+            body: #localize("send_notification_message_error_agree"),
             userInfo: userInfo
         )
     }
@@ -269,7 +270,7 @@ class NotificationResponse: NSObject {
                 return
             }
            
-            if conversation.isGroup() {
+            if conversation.isGroup {
                 if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
                    !groupDeliveryReceipts.isEmpty,
                    baseMessage.isMyReaction(.declined) {
@@ -323,8 +324,8 @@ class NotificationResponse: NSObject {
     
     private func sendThumbDownError() {
         ThreemaUtilityObjC.sendErrorLocalNotification(
-            BundleUtil.localizedString(forKey: "send_notification_message_error_title"),
-            body: BundleUtil.localizedString(forKey: "send_notification_message_error_disagree"),
+            #localize("send_notification_message_error_title"),
+            body: #localize("send_notification_message_error_disagree"),
             userInfo: userInfo
         )
     }
@@ -387,7 +388,7 @@ class NotificationResponse: NSObject {
         }
     }
     
-    private func sendUserText(text: String, conversation: Conversation, isConnectionEstablished: Bool) {
+    private func sendUserText(text: String, conversation: ConversationEntity, isConnectionEstablished: Bool) {
         Task {
             await businessInjector.messageSender.sendTextMessage(
                 containing: text,
@@ -404,8 +405,8 @@ class NotificationResponse: NSObject {
 
     private func sendReplyError() {
         ThreemaUtilityObjC.sendErrorLocalNotification(
-            BundleUtil.localizedString(forKey: "send_notification_message_error_title"),
-            body: BundleUtil.localizedString(forKey: "send_notification_message_error_failed"),
+            #localize("send_notification_message_error_title"),
+            body: #localize("send_notification_message_error_failed"),
             userInfo: userInfo
         )
     }

@@ -20,6 +20,7 @@
 
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 
 @objc class ContactListNavigationViewController: ThemedNavigationController {
     init() {
@@ -30,7 +31,7 @@ import ThreemaFramework
         
         navigationBar.prefersLargeTitles = false
         tabBarItem.image = UIImage(systemName: "person.2.fill")
-        tabBarItem.title = "contacts".localized
+        tabBarItem.title = #localize("contacts")
         
         pushViewController(
             ContactListTableViewContainerViewController(),

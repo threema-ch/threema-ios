@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 /// Base class for all chat view cells with a chat bubble background
@@ -878,7 +879,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     // Helpers for the helpers
     
     private var previousMessageIsSystemMessage: Bool {
-        guard let systemMessage = messageAndNeighbors.neighbors?.previousMessage as? SystemMessage else {
+        guard let systemMessage = messageAndNeighbors.neighbors?.previousMessage as? SystemMessageEntity else {
             return false
         }
         
@@ -900,7 +901,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     }
     
     private var nextMessageIsSystemMessage: Bool {
-        guard let systemMessage = messageAndNeighbors.neighbors?.nextMessage as? SystemMessage else {
+        guard let systemMessage = messageAndNeighbors.neighbors?.nextMessage as? SystemMessageEntity else {
             return false
         }
         
@@ -983,14 +984,14 @@ extension ChatViewBaseTableViewCell {
             // We add the status, if the voice message is playing.
             if let voiceCell = self as? ChatViewVoiceMessageTableViewCell,
                voiceCell.isPlaying {
-                status = BundleUtil.localizedString(forKey: "accessibility_voice_message_playing")
+                status = #localize("accessibility_voice_message_playing")
             }
             
             var quote = ""
             if let quotedMessage = message as? QuoteMessageProvider,
                let quoteMessage = quotedMessage.quoteMessage {
                 quote =
-                    "\(BundleUtil.localizedString(forKey: "in_reply_to")) \(quoteMessage.accessibilitySenderAndMessageTypeText) \(quoteMessage.previewText ?? "")."
+                    "\(#localize("in_reply_to")) \(quoteMessage.accessibilitySenderAndMessageTypeText) \(quoteMessage.previewText)."
             }
 
             let editedMessage = message.lastEditedAt != nil ? BundleUtil

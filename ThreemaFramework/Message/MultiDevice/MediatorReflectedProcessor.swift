@@ -129,7 +129,7 @@ protocol MediatorReflectedProcessorProtocol {
                 )
                 return try processor.process(outgoingMessage: outgoingMessage, abstractMessage: abstractMessage)
                     .then {
-                        self.frameworkInjector.nonceGuard.processed(nonces: outgoingMessage.nonces)
+                        try self.frameworkInjector.nonceGuard.processed(nonces: outgoingMessage.nonces)
                         return Promise()
                     }
             }
@@ -165,7 +165,7 @@ protocol MediatorReflectedProcessorProtocol {
                 abstractMessage.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend
                 return try processor.process(incomingMessage: incomingMessage, abstractMessage: abstractMessage)
                     .then {
-                        self.frameworkInjector.nonceGuard.processed(nonce: incomingMessage.nonce)
+                        try self.frameworkInjector.nonceGuard.processed(nonce: incomingMessage.nonce)
                         return Promise()
                     }
             }

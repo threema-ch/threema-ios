@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 public protocol PreviewableMessage: BaseMessage {
     /// For private use only, use `previewText` instead
@@ -38,7 +39,7 @@ extension PreviewableMessage {
     public var previewText: String {
         // If deleted we return the default text
         guard deletedAt == nil else {
-            return "deleted_message".localized
+            return #localize("deleted_message")
         }
         
         return privatePreviewText
@@ -139,8 +140,8 @@ extension PreviewableMessage {
         
         // Add the sender name if specified in PreviewableMessageConfiguration
         let shouldShowName = configuration.includeSender &&
-            (conversation?.isGroup() ?? false) &&
-            !(self is SystemMessage) // TODO: We might need to update this for group calls
+            (conversation?.isGroup ?? false) &&
+            !(self is SystemMessageEntity) // TODO: We might need to update this for group calls
         
         if shouldShowName {
             let attributedName =
@@ -148,7 +149,7 @@ extension PreviewableMessage {
                     NSAttributedString(string: "\(name): ")
                 }
                 else {
-                    NSAttributedString(string: "\(BundleUtil.localizedString(forKey: "me")): ")
+                    NSAttributedString(string: "\(#localize("me")): ")
                 }
             configuredAttributedText.insert(attributedName, at: 0)
         }

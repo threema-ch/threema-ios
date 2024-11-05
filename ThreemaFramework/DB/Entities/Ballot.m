@@ -20,9 +20,9 @@
 
 #import "Ballot.h"
 #import "BallotChoice.h"
-#import "Conversation.h"
 #import "ContactEntity.h"
 #import "MyIdentityStore.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 static NSString *fieldDisplayMode = @"displayMode";
 

@@ -20,6 +20,7 @@
 
 import Foundation
 import GroupCalls
+import ThreemaMacros
 
 @objc public class NavigationBarPromptHandler: NSObject {
     
@@ -69,15 +70,15 @@ import GroupCalls
         
         if isGroupCallActive {
             if let name {
-                return "\(BundleUtil.localizedString(forKey: "group_call_title")): \(name)"
+                return "\(#localize("group_call_title")): \(name)"
             }
             else {
-                return BundleUtil.localizedString(forKey: "group_call_title")
+                return #localize("group_call_title")
             }
         }
         
         if isWebActive {
-            return "🖥 " + BundleUtil.localizedString(forKey: "settings_threema_web_connected")
+            return "🖥 " + #localize("settings_threema_web_connected")
         }
         
         return nil

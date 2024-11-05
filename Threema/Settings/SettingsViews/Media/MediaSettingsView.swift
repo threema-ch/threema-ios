@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct MediaSettingsView: View {
     private let mdmSetup = MDMSetup(setup: false)
@@ -37,7 +38,7 @@ struct MediaSettingsView: View {
                         .environmentObject(settingsStore)
                 } label: {
                     SettingsListItemView(
-                        cellTitle: "settings_media_image_size_title".localized,
+                        cellTitle: #localize("settings_media_image_size_title"),
                         accessoryText: imageSize.rawValue.localized
                     )
                 }
@@ -47,13 +48,13 @@ struct MediaSettingsView: View {
                         .environmentObject(settingsStore)
                 } label: {
                     SettingsListItemView(
-                        cellTitle: "settings_media_video_quality_title".localized,
+                        cellTitle: #localize("settings_media_video_quality_title"),
                         accessoryText: videoQuality.rawValue.localized
                     )
                 }
 
                 Toggle(isOn: $settingsStore.autoSaveMedia) {
-                    Text("settings_media_autosave_title".localized)
+                    Text(#localize("settings_media_autosave_title"))
                 }
                 .disabled(mdmSetup?.existsMdmKey(MDM_KEY_DISABLE_SAVE_TO_GALLERY) ?? false)
                 .onChange(of: settingsStore.autoSaveMedia) { _ in
@@ -70,7 +71,7 @@ struct MediaSettingsView: View {
             }
             updateFooter()
         }
-        .navigationBarTitle("settings_media_title".localized, displayMode: .inline)
+        .navigationBarTitle(#localize("settings_media_title"), displayMode: .inline)
         .tint(UIColor.primary.color)
     }
 
@@ -84,7 +85,7 @@ struct MediaSettingsView: View {
             if !text.isEmpty {
                 text += "\n\n"
             }
-            text += "disabled_by_device_policy".localized
+            text += #localize("disabled_by_device_policy")
         }
 
         footerText = text
@@ -117,13 +118,13 @@ private struct ImageSizePickerView: View {
                 .pickerStyle(.inline)
                 .labelsHidden()
             } footer: {
-                Text("image_resize_share_extension".localized)
+                Text(#localize("image_resize_share_extension"))
             }
             .onChange(of: selectionItem) { newValue in
                 settingsVM.imageSize = newValue.rawValue
             }
         }
-        .navigationTitle("settings_media_image_size_title".localized)
+        .navigationTitle(#localize("settings_media_image_size_title"))
     }
 
     private func pickerItem(_ option: ImageSenderItemSize) -> some View {
@@ -132,10 +133,10 @@ private struct ImageSizePickerView: View {
 
             let resolution = Int(option.resolution)
             let footnote = option != .original ? String(
-                format: "max_x_by_x_pixels".localized,
+                format: #localize("max_x_by_x_pixels"),
                 resolution,
                 resolution
-            ) : "images are not scaled".localized
+            ) : #localize("images are not scaled")
 
             Text(footnote)
                 .font(.footnote)
@@ -155,30 +156,18 @@ private struct VideoQualityPickerView: View {
                     ForEach(VideoSenderItemQuality.allCases, id: \.self) { option in
                         VStack(alignment: .leading) {
                             Text(BundleUtil.localizedString(forKey: option.rawValue))
-
-                            let duration = Int(option.maxDurationInMinutes)
-                            if duration > 0 {
-                                let footnote = String(
-                                    format: "max_x_minutes".localized,
-                                    duration
-                                )
-
-                                Text(footnote)
-                                    .font(.footnote)
-                                    .foregroundColor(.gray)
-                            }
                         }
                     }
                 }
                 .pickerStyle(.inline)
                 .labelsHidden()
             } footer: {
-                Text("still_compressed_note".localized)
+                Text(#localize("still_compressed_note"))
             }
             .onChange(of: selectionItem) { newValue in
                 settingsVM.videoQuality = newValue.rawValue
             }
         }
-        .navigationTitle("settings_media_video_quality_title".localized)
+        .navigationTitle(#localize("settings_media_video_quality_title"))
     }
 }

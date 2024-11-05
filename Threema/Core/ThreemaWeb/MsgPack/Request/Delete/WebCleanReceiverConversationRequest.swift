@@ -45,39 +45,40 @@ class WebCleanReceiverConversationRequest: WebAbstractMessage {
             let entityManager = EntityManager()
             
             if identity != nil {
-                if let conversation = entityManager.entityFetcher.conversation(forIdentity: identity) {
-                    entityManager.performSyncBlockAndSafe {
+                if let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: identity) {
+                    entityManager.performAndWaitSave {
                         entityManager.entityDestroyer.delete(conversation: conversation)
                     }
                 }
             }
             else if groupID != nil {
                 if let conversation = entityManager.entityFetcher.legacyConversation(for: groupID) {
-                    entityManager.performSyncBlockAndSafe {
+                    entityManager.performAndWaitSave {
                         var imageData: Data?
                         var imageHeight: NSNumber?
                         var imageWidth: NSNumber?
                         
                         if let groupImage = conversation.groupImage {
                             imageData = groupImage.data
-                            imageHeight = groupImage.height
-                            imageWidth = groupImage.width
+                            imageHeight = (groupImage.height) as NSNumber
+                            imageWidth = (groupImage.width) as NSNumber
                         }
                         
                         entityManager.entityDestroyer.delete(conversation: conversation)
 
-                        let tmpConversation = entityManager.entityCreator.conversation()
+                        let tmpConversation = entityManager.entityCreator.conversationEntity()
                         tmpConversation?.contact = conversation.contact
                         tmpConversation?.members = conversation.members
-                        tmpConversation?.groupID = conversation.groupID
+                        // swiftformat:disable:next acronyms
+                        tmpConversation?.groupId = conversation.groupID
                         tmpConversation?.groupName = conversation.groupName
                         tmpConversation?.groupMyIdentity = conversation.groupMyIdentity
                         
-                        if imageData != nil {
-                            let tmpImageData = entityManager.entityCreator.imageData()
+                        if let imageData {
+                            let tmpImageData = entityManager.entityCreator.imageDataEntity()
                             tmpImageData?.data = imageData
-                            tmpImageData?.height = imageHeight ?? 0.0
-                            tmpImageData?.width = imageWidth ?? 0.0
+                            tmpImageData?.height = Int16(truncating: imageHeight ?? 0.0)
+                            tmpImageData?.width = Int16(truncating: imageWidth ?? 0.0)
                             tmpConversation?.groupImage = tmpImageData
                             tmpConversation?.groupImageSetDate = conversation.groupImageSetDate
                         }

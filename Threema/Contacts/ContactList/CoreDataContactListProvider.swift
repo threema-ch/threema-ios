@@ -30,7 +30,7 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
     
     var currentSnapshot: AnyPublisher<ContactListSnapshot, Never> { snapshotSubject.eraseToAnyPublisher() }
     private var snapshotSubject: CurrentValueSubject<ContactListSnapshot, Never>
-
+    private var subscriptions: Set<AnyCancellable> = .init()
     private let entityResolver: (Entity) -> BusinessEntity?
     private let entityFetcher: EntityFetcher
     private let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>
@@ -50,6 +50,32 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
         super.init()
         fetchedResultsController.delegate = self
         try? fetchedResultsController.performFetch()
+        
+        BusinessInjector()
+            .settingsStore
+            .blacklist
+            .publisher
+            .sink(receiveValue: { [weak self] _ in
+                guard let self else {
+                    return
+                }
+                try? fetchedResultsController.performFetch()
+            })
+            .store(in: &subscriptions)
+        
+        UserSettings.shared()
+            .publisher(for: \.hideStaleContacts)
+            .sink { [weak self] _ in
+                guard let self else {
+                    return
+                }
+                try? fetchedResultsController.performFetch()
+            }
+            .store(in: &subscriptions)
+    }
+    
+    deinit {
+        subscriptions.removeAll()
     }
  
     func entity(for id: NSManagedObjectID) -> BusinessEntity? {

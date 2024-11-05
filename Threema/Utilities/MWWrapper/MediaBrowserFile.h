@@ -21,7 +21,6 @@
 #import <Foundation/Foundation.h>
 
 #import "MWPhoto.h"
-#import "FileMessageEntity.h"
 
 @class MediaBrowserFile;
 

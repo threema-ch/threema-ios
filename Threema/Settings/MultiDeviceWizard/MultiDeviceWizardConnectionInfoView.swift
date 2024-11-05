@@ -20,13 +20,14 @@
 
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 struct MultiDeviceWizardConnectionInfoView: View {
     var body: some View {
        
         HStack {
             VStack(alignment: .leading) {
-                Text(BundleUtil.localizedString(forKey: "md_wizard_connection_info"))
+                Text(#localize("md_wizard_connection_info"))
             }
             Spacer()
         }

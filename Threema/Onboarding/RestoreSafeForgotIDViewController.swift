@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 class RestoreSafeForgotIDViewController: IDCreationPageViewController {
@@ -42,15 +43,15 @@ class RestoreSafeForgotIDViewController: IDCreationPageViewController {
         hideKeyboardWhenTappedAround()
         keyboardResize = KeyboardResizeCenterY(parent: view, resize: mainContentView)
         
-        descriptionLabel.text = BundleUtil.localizedString(forKey: "safe_search_id_title")
+        descriptionLabel.text = #localize("safe_search_id_title")
         mobileNumberField.delegate = self
-        mobileNumberField.placeholder = BundleUtil.localizedString(forKey: "safe_linked_mobile")
+        mobileNumberField.placeholder = #localize("safe_linked_mobile")
         mobileNumberField.mobile = true
         emailAddressField.delegate = self
-        emailAddressField.placeholder = BundleUtil.localizedString(forKey: "safe_linked_email")
+        emailAddressField.placeholder = #localize("safe_linked_email")
         emailAddressField.capitalization = 0
-        cancelButton.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
-        okButton.setTitle(BundleUtil.localizedString(forKey: "ok"), for: .normal)
+        cancelButton.setTitle(#localize("cancel"), for: .normal)
+        okButton.setTitle(#localize("ok"), for: .normal)
         okButton.deactivated = true
     }
     
@@ -103,7 +104,7 @@ class RestoreSafeForgotIDViewController: IDCreationPageViewController {
                     }
                     else {
                         let alert = IntroQuestionViewHelper(parent: strongSelf, onAnswer: nil)
-                        alert.showAlert(BundleUtil.localizedString(forKey: "safe_no_id_found"))
+                        alert.showAlert(#localize("safe_no_id_found"))
                     }
                 }
             })

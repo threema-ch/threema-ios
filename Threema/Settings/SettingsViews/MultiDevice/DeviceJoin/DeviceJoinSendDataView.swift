@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import SwiftUI
+import ThreemaMacros
 
 struct DeviceJoinSendDataView: View {
     
@@ -27,7 +28,7 @@ struct DeviceJoinSendDataView: View {
 
     @EnvironmentObject private var deviceJoinManager: DeviceJoinManager
 
-    @State private var sendingText = "multi_device_join_sending_data".localized
+    @State private var sendingText = #localize("multi_device_join_sending_data")
     
     @State private var showSendingError = false
     @State private var showThreemaWebError = false
@@ -67,7 +68,7 @@ struct DeviceJoinSendDataView: View {
                     deviceJoinManager.deviceJoin.cancel()
                     showWizard = false
                 } label: {
-                    Label("Cancel", systemImage: "xmark.circle.fill")
+                    Label(#localize("cancel"), systemImage: "xmark.circle.fill")
                         .symbolRenderingMode(.hierarchical)
                         .foregroundColor(.secondary)
                 }
@@ -83,12 +84,12 @@ struct DeviceJoinSendDataView: View {
             Task { @MainActor in
                 try await Task.sleep(seconds: 5)
                 withAnimation {
-                    sendingText = "multi_device_join_sending_continue_on_new_device".localized
+                    sendingText = #localize("multi_device_join_sending_continue_on_new_device")
                 }
                 
                 try await Task.sleep(seconds: 10)
                 withAnimation {
-                    sendingText = "multi_device_join_sending_wait".localized
+                    sendingText = #localize("multi_device_join_sending_wait")
                 }
             }
         }
@@ -104,26 +105,24 @@ struct DeviceJoinSendDataView: View {
             UIApplication.shared.isIdleTimerDisabled = false
         }
         .alert(
-            "multi_device_join_failed_to_send_data_title".localized,
+            #localize("multi_device_join_failed_to_send_data_title"),
             isPresented: $showSendingError
         ) {
-            Button("OK") {
-                deviceJoinManager.deviceJoin.cancel()
+            Button("ok") {
                 showWizard = false
             }
         } message: {
-            Text("multi_device_join_fatal_error_message".localized)
+            Text(#localize("multi_device_join_fatal_error_message"))
         }
         .alert(
-            "multi_device_join_failed_threema_web_title".localized,
+            #localize("multi_device_join_failed_threema_web_title"),
             isPresented: $showThreemaWebError
         ) {
-            Button("OK") {
-                deviceJoinManager.deviceJoin.cancel()
+            Button("ok") {
                 showWizard = false
             }
         } message: {
-            Text("multi_device_join_failed_threema_web_message".localized)
+            Text(#localize("multi_device_join_failed_threema_web_message"))
         }
     }
     
@@ -132,7 +131,7 @@ struct DeviceJoinSendDataView: View {
             // Disconnect all Threema Web Sessions
             if let webClientSessions = BusinessInjector().entityManager.entityFetcher.allActiveWebClientSessions() {
                 for session in webClientSessions {
-                    if let session = session as? WebClientSession {
+                    if let session = session as? WebClientSessionEntity {
                         WCSessionManager.shared.stopSession(session)
                     }
                 }

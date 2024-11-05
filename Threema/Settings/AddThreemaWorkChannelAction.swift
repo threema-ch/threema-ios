@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 enum AddThreemaWorkChannelAction {
     
@@ -34,9 +35,9 @@ enum AddThreemaWorkChannelAction {
         
         UIAlertTemplate.showAlert(
             owner: viewController,
-            title: BundleUtil.localizedString(forKey: "threema_work_channel_intro"),
-            message: BundleUtil.localizedString(forKey: "threema_work_channel_info"),
-            titleOk: BundleUtil.localizedString(forKey: "add_button"),
+            title: #localize("threema_work_channel_intro"),
+            message: #localize("threema_work_channel_info"),
+            titleOk: #localize("add_button"),
             actionOk: { _ in
                 addWorkChannel(in: viewController)
             }
@@ -51,7 +52,7 @@ enum AddThreemaWorkChannelAction {
                 guard let contact else {
                     UIAlertTemplate.showAlert(
                         owner: viewController,
-                        title: BundleUtil.localizedString(forKey: "threema_work_channel_failed"),
+                        title: #localize("threema_work_channel_failed"),
                         message: nil
                     )
                     return
@@ -66,7 +67,7 @@ enum AddThreemaWorkChannelAction {
             }, onError: { error in
                 UIAlertTemplate.showAlert(
                     owner: viewController,
-                    title: BundleUtil.localizedString(forKey: "threema_work_channel_failed"),
+                    title: #localize("threema_work_channel_failed"),
                     message: error.localizedDescription
                 )
             }

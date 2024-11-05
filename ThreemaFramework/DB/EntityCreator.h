@@ -20,49 +20,48 @@
 
 #import <Foundation/Foundation.h>
 
-#import "TextMessage.h"
 #import "BoxTextMessage.h"
 #import "GroupTextMessage.h"
 
-#import "ImageMessageEntity.h"
 #import "BoxImageMessage.h"
 #import "GroupImageMessage.h"
 
-#import "VideoMessageEntity.h"
 #import "BoxVideoMessage.h"
 #import "GroupVideoMessage.h"
 
-#import "AudioMessageEntity.h"
 #import "BoxAudioMessage.h"
 #import "GroupAudioMessage.h"
 
-#import "LocationMessage.h"
 #import "BoxLocationMessage.h"
 #import "GroupLocationMessage.h"
-
-#import "SystemMessage.h"
-
-#import "LastGroupSyncRequest.h"
-#import "GroupEntity.h"
 
 #import "BallotMessage.h"
 #import "BoxBallotCreateMessage.h"
 #import "GroupBallotCreateMessage.h"
 
 #import "BallotChoice.h"
-#import "BallotResult.h"
 
-#import "FileMessageEntity.h"
-#import "Nonce.h"
 
-#import "WebClientSession.h"
-#import "LastLoadedMessageIndex.h"
-
-#import "CallEntity.h"
-#import "GroupCallEntity.h"
-
+@class AudioDataEntity;
+@class AudioMessageEntity;
+@class CallEntity;
 @class DistributionListEntity;
+@class FileMessageEntity;
+@class FileDataEntity;
+@class GroupCallEntity;
+@class GroupEntity;
+@class ImageMessageEntity;
+@class LastGroupSyncRequestEntity;
+@class LocationMessageEntity;
 @class MessageHistoryEntryEntity;
+@class NonceEntity;
+@class MessageMarkersEntity;
+@class BallotResultEntity;
+@class VideoMessageEntity;
+@class VideoDataEntity;
+@class SystemMessageEntity;
+@class TextMessageEntity;
+@class WebClientSessionEntity;
 
 @interface EntityCreator : NSObject
 
@@ -70,8 +69,8 @@
 
 - (instancetype)initWith:(NSManagedObjectContext *) managedObjectContext;
 
-- (TextMessage *)textMessageFromBox:(AbstractMessage *)boxMsg;
-- (TextMessage *)textMessageFromGroupBox:(GroupTextMessage *)boxMsg;
+- (TextMessageEntity *)textMessageEntityFromBox:(AbstractMessage *)boxMsg;
+- (TextMessageEntity *)textMessageEntityFromGroupBox:(GroupTextMessage *)boxMsg;
 
 - (ImageMessageEntity *)imageMessageEntityFromBox:(BoxImageMessage *)boxMsg;
 - (ImageMessageEntity *)imageMessageEntityFromGroupBox:(GroupImageMessage *)boxMsg;
@@ -82,44 +81,44 @@
 - (AudioMessageEntity *)audioMessageEntityFromBox:(BoxAudioMessage *)boxMsg;
 - (AudioMessageEntity *)audioMessageEntityFromGroupBox:(GroupAudioMessage *)boxMsg;
 
-- (LocationMessage *)locationMessageFromBox:(BoxLocationMessage *)boxMsg;
-- (LocationMessage *)locationMessageFromGroupBox:(GroupLocationMessage *)boxMsg;
+- (LocationMessageEntity *)locationMessageEntityFromBox:(BoxLocationMessage *)boxMsg;
+- (LocationMessageEntity *)locationMessageEntityFromGroupBox:(GroupLocationMessage *)boxMsg;
 
 - (BallotMessage *)ballotMessageFromBox:(AbstractMessage *)boxMsg;
 
 - (FileMessageEntity *)fileMessageEntityFromBox:(AbstractMessage *)boxMsg;
 
-- (ImageData *)imageData;
+- (ImageDataEntity *)imageDataEntity;
 
-- (AudioData *)audioData;
+- (AudioDataEntity *)audioDataEntity;
 
-- (VideoData *)videoData;
+- (VideoDataEntity *)videoDataEntity;
 
-- (FileData *)fileData;
+- (FileDataEntity *)fileDataEntity;
 
-- (TextMessage *)textMessageForConversation:(Conversation *)conversation setLastUpdate:(BOOL)setLastUpdate;
+- (TextMessageEntity *)textMessageEntityForConversationEntity:(ConversationEntity *)conversation setLastUpdate:(BOOL)setLastUpdate;
 
-- (ImageMessageEntity *)imageMessageEntityForConversation:(Conversation *)conversation;
+- (ImageMessageEntity *)imageMessageEntityForConversationEntity:(ConversationEntity *)conversation;
 
-- (VideoMessageEntity *)videoMessageEntityForConversation:(Conversation *)conversation;
+- (VideoMessageEntity *)videoMessageEntityForConversationEntity:(ConversationEntity *)conversation;
 
-- (FileMessageEntity *)fileMessageEntityForConversation:(Conversation *)conversation;
+- (FileMessageEntity *)fileMessageEntityForConversationEntity:(ConversationEntity *)conversation;
 
-- (AudioMessageEntity *)audioMessageEntityForConversation:(Conversation *)conversation;
+- (AudioMessageEntity *)audioMessageEntityForConversationEntity:(ConversationEntity *)conversation;
 
-- (LocationMessage *)locationMessageForConversation:(Conversation *)conversation;
+- (LocationMessageEntity *)locationMessageEntityForConversationEntity:(ConversationEntity *)conversation setLastUpdate:(BOOL)setLastUpdate;
 
-- (SystemMessage *)systemMessageForConversation:(Conversation *)conversation;
+- (SystemMessageEntity *)systemMessageEntityForConversationEntity:(ConversationEntity *)conversation;
 
-- (BallotMessage *)ballotMessageForConversation:(Conversation *)conversation;
+- (BallotMessage *)ballotMessageForConversationEntity:(ConversationEntity *)conversation;
 
 - (ContactEntity *)contact;
 
-- (LastGroupSyncRequest *)lastGroupSyncRequest;
+- (LastGroupSyncRequestEntity *)lastGroupSyncRequestEntity;
 
-- (Conversation *)conversation;
+- (ConversationEntity *)conversationEntity;
 
-- (Conversation *)conversation:(BOOL)setLastUpdate;
+- (ConversationEntity *)conversationEntity:(BOOL)setLastUpdate;
 
 - (GroupEntity *)groupEntity;
 
@@ -127,17 +126,15 @@
 
 - (BallotChoice *)ballotChoice;
 
-- (BallotResult *)ballotResult;
+- (BallotResultEntity *)ballotResultEntity;
 
-- (Nonce *)nonceWithData:(NSData*)nonce;
+- (NonceEntity *)nonceEntityWithData:(NSData*)nonce;
 
-- (MessageMarkers *)messageMarkers;
+- (MessageMarkersEntity *)messageMarkersEntity;
 
 - (MessageHistoryEntryEntity *)messageHistoryEntryFor:(BaseMessage *)message NS_SWIFT_NAME(messageHistoryEntry(for:));;
 
-- (WebClientSession *)webClientSession;
-
-- (LastLoadedMessageIndex *)lastLoadedMessageIndexWithBaseMessageId:(NSData *)baseMessageId index:(NSInteger)index webClientSession:(WebClientSession*)webClientSession;
+- (WebClientSessionEntity *)webClientSessionEntity;
 
 - (CallEntity *)callEntity;
 

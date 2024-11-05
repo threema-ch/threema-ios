@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 class RestoreSafeForgotIDChooseViewController: IDCreationPageViewController {
@@ -32,9 +33,9 @@ class RestoreSafeForgotIDChooseViewController: IDCreationPageViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        descriptionLabel.text = BundleUtil.localizedString(forKey: "safe_select_id")
+        descriptionLabel.text = #localize("safe_select_id")
         
-        cancelButton.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
+        cancelButton.setTitle(#localize("cancel"), for: .normal)
         
         if let ids {
             var index = 1

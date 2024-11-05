@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 @objc class CompanyDirectoryViewController: ThemedViewController {
     
@@ -48,11 +49,11 @@ import Foundation
         super.viewDidLoad()
         
         searchBar.sizeToFit()
-        searchBar.placeholder = BundleUtil.localizedString(forKey: "companydirectory_placeholder")
+        searchBar.placeholder = #localize("companydirectory_placeholder")
         
         tableView.setupAutoAdjust()
         
-        noEntriesFoundTitleLabel.text = BundleUtil.localizedString(forKey: "companydirectory_noentries_title")
+        noEntriesFoundTitleLabel.text = #localize("companydirectory_noentries_title")
         noEntriesFoundDescriptionLabel.text = BundleUtil
             .localizedString(forKey: "companydirectory_noentries_description")
         
@@ -198,8 +199,8 @@ import Foundation
                 if theError.code == 100 {
                     UIAlertTemplate.showAlert(
                         owner: self,
-                        title: BundleUtil.localizedString(forKey: "cannot_connect_title"),
-                        message: BundleUtil.localizedString(forKey: "cannot_connect_message")
+                        title: #localize("cannot_connect_title"),
+                        message: #localize("cannot_connect_message")
                     )
                 }
             }
@@ -412,7 +413,7 @@ extension CompanyDirectoryViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if showLoadMore, indexPath.section == sectionTitles.count {
             let cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "LoadMoreCell", for: indexPath)
-            cell.textLabel?.text = BundleUtil.localizedString(forKey: "loadMore")
+            cell.textLabel?.text = #localize("loadMore")
             let image = UIImage(
                 systemName: "chevron.down.circle",
                 withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
@@ -493,6 +494,9 @@ extension CompanyDirectoryViewController: UITableViewDelegate {
                 publicKey: directoryContact.pk,
                 firstname: directoryContact.first,
                 lastname: directoryContact.last,
+                csi: directoryContact.csi,
+                jobTitle: directoryContact.jobTitle,
+                department: directoryContact.department,
                 acquaintanceLevel: .direct
             ) { contactEntity in
                 // show chat

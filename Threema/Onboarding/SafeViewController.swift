@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 @objc class SafeViewController: IDCreationPageViewController, IntroQuestionDelegate {
@@ -53,19 +54,19 @@ import UIKit
         
         hideKeyboardWhenTappedAround()
 
-        titleLabel.text = BundleUtil.localizedString(forKey: "safe_setup_backup_title")
-        descriptionLabel.text = BundleUtil.localizedString(forKey: "safe_setup_backup_description")
+        titleLabel.text = #localize("safe_setup_backup_title")
+        descriptionLabel.text = #localize("safe_setup_backup_description")
         
         passwordField.delegate = self
-        passwordField.placeholder = BundleUtil.localizedString(forKey: "Password")
+        passwordField.placeholder = #localize("Password")
         passwordAgainField.delegate = self
-        passwordAgainField.placeholder = BundleUtil.localizedString(forKey: "password_again")
-        advancedOptionsButton.setTitle(BundleUtil.localizedString(forKey: "safe_advanced_options"), for: .normal)
+        passwordAgainField.placeholder = #localize("password_again")
+        advancedOptionsButton.setTitle(#localize("safe_advanced_options"), for: .normal)
         advancedOptionsButton.isHidden = mdmSetup.isSafeBackupForce() || mdmSetup.isSafeBackupServerPreset()
         
         moreView.mainView = mainContentView
-        moreView.moreButtonTitle = BundleUtil.localizedString(forKey: "more_information")
-        moreView.moreMessageText = BundleUtil.localizedString(forKey: "safe_enable_explain")
+        moreView.moreButtonTitle = #localize("more_information")
+        moreView.moreMessageText = #localize("safe_enable_explain")
         
         passwordAgainOffset = passwordAgainField.frame.origin.y
     }
@@ -106,13 +107,13 @@ import UIKit
                     if try !SafeManager.isPasswordPatternValid(password: password, regExPattern: regExPattern) {
                         if let message = mdmSetup.safePasswordMessage() {
                             let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
-                            alert.showAlert(message, title: BundleUtil.localizedString(forKey: "Password"))
+                            alert.showAlert(message, title: #localize("Password"))
                         }
                         else {
                             let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
                             alert.showAlert(
-                                BundleUtil.localizedString(forKey: "password_bad_guidelines"),
-                                title: BundleUtil.localizedString(forKey: "Password")
+                                #localize("password_bad_guidelines"),
+                                title: #localize("Password")
                             )
                         }
                         return nil
@@ -124,10 +125,10 @@ import UIKit
                     let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
                     alert.showAlert(
                         String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "password_bad_regex"),
+                            #localize("password_bad_regex"),
                             ThreemaApp.currentName
                         ),
-                        title: BundleUtil.localizedString(forKey: "Password")
+                        title: #localize("Password")
                     )
                     return nil
                 }
@@ -136,8 +137,8 @@ import UIKit
                 if password.count < kMinimumPasswordLength {
                     let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
                     alert.showAlert(
-                        BundleUtil.localizedString(forKey: "password_too_short_message"),
-                        title: BundleUtil.localizedString(forKey: "password_too_short_title")
+                        #localize("password_too_short_message"),
+                        title: #localize("password_too_short_title")
                     )
                     return nil
                 }
@@ -148,8 +149,8 @@ import UIKit
                 
                 let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
                 alert.showAlert(
-                    BundleUtil.localizedString(forKey: "password_mismatch_message"),
-                    title: BundleUtil.localizedString(forKey: "password_mismatch_title")
+                    #localize("password_mismatch_message"),
+                    title: #localize("password_mismatch_title")
                 )
                 return nil
             }
@@ -219,9 +220,9 @@ import UIKit
                         }
                     }
                     alert.showConfirm(
-                        BundleUtil.localizedString(forKey: "password_bad_explain"),
-                        noButtonLabel: BundleUtil.localizedString(forKey: "try_again"),
-                        yesButtonLabel: BundleUtil.localizedString(forKey: "continue_anyway")
+                        #localize("password_bad_explain"),
+                        noButtonLabel: #localize("try_again"),
+                        yesButtonLabel: #localize("continue_anyway")
                     )
                     
                     return false
@@ -245,9 +246,9 @@ import UIKit
                 }
             }
             alert.showConfirm(
-                BundleUtil.localizedString(forKey: "safe_disable_confirm"),
-                noButtonLabel: BundleUtil.localizedString(forKey: "yes"),
-                yesButtonLabel: BundleUtil.localizedString(forKey: "no")
+                #localize("safe_disable_confirm"),
+                noButtonLabel: #localize("yes"),
+                yesButtonLabel: #localize("no")
             )
         }
         

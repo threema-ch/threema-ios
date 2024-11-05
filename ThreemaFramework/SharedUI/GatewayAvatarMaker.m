@@ -54,22 +54,12 @@
 }
 
 - (void)refresh {
-    if ([[UserSettings sharedUserSettings] blockCommunication]) {
-        DDLogWarn(@"Communication is blocked");
-        return;
-    }
-
     _forceRefresh = NO;
 
     [self loadCache];
 }
 
 - (void)refreshForced {
-    if ([[UserSettings sharedUserSettings] blockCommunication]) {
-        DDLogWarn(@"Communication is blocked");
-        return;
-    }
-
     _forceRefresh = YES;
     
     [self deleteExpires];

@@ -37,6 +37,8 @@ class ChatBarButton: ThemedCodeButton {
     
     private var defaultColor: () -> UIColor
     
+    private var sfSymbolName: String?
+    
     init(
         sfSymbolName: String,
         accessibilityLabel: String,
@@ -69,10 +71,19 @@ class ChatBarButton: ThemedCodeButton {
     
     // MARK: - Configure
     
+    public func updateButton(with sfSymbolName: String) {
+        configureButton(with: sfSymbolName)
+    }
+    
     private func configureButton(
         with sfSymbolName: String
     ) {
+        guard self.sfSymbolName != sfSymbolName else {
+            return
+        }
+        
         // Content
+        self.sfSymbolName = sfSymbolName
         let image = UIImage(systemName: sfSymbolName)?.withRenderingMode(.alwaysTemplate)
         setImage(image, for: .normal)
         

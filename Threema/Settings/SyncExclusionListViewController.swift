@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 class SyncExclusionListViewController: ThemedTableViewController {
     
@@ -80,6 +81,7 @@ class SyncExclusionListViewController: ThemedTableViewController {
             let cell = tableView.dequeueReusableCell(withIdentifier: "AddCell")!
             cell.imageView?.image = UIImage(systemName: "plus.circle.fill")?
                 .applying(symbolWeight: .regular, symbolScale: .large).withTintColor(.primary)
+            cell.textLabel?.text = #localize("sync_exclusion_add")
             return cell
         }
     }
@@ -99,11 +101,11 @@ class SyncExclusionListViewController: ThemedTableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.row == settingsStore.syncExclusionList.count {
-            let title = BundleUtil.localizedString(forKey: "enter_id_to_exclude")
+            let title = #localize("enter_id_to_exclude")
             let alert = UIAlertController(title: title, message: nil, preferredStyle: .alert)
             alert.addTextField(configurationHandler: nil)
             
-            let okTitle = BundleUtil.localizedString(forKey: "ok")
+            let okTitle = #localize("ok")
             let okAction = UIAlertAction(title: okTitle, style: .default) { _ in
                 self.tableView.deselectRow(at: indexPath, animated: true)
                 
@@ -121,7 +123,7 @@ class SyncExclusionListViewController: ThemedTableViewController {
                 }
                 else {
                     alert.dismiss(animated: true) {
-                        let title = BundleUtil.localizedString(forKey: "settings_privacy_exclusion_list_alert_title")
+                        let title = #localize("settings_privacy_exclusion_list_alert_title")
                         let message = BundleUtil
                             .localizedString(forKey: "settings_privacy_exclusion_list_alert_message")
                         UIAlertTemplate.showAlert(owner: self, title: title, message: message)
@@ -129,7 +131,7 @@ class SyncExclusionListViewController: ThemedTableViewController {
                 }
             }
             
-            let cancelTitle = BundleUtil.localizedString(forKey: "cancel")
+            let cancelTitle = #localize("cancel")
             let cancelAction = UIAlertAction(title: cancelTitle, style: .cancel) { _ in
                 self.tableView.deselectRow(at: indexPath, animated: true)
             }

@@ -46,7 +46,10 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(for: Data([1]), creator: "ECHOECHO"))
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
+            for: Data([1]),
+            creator: "ECHOECHO"
+        ))
         
         // Create Ballot
         let ballot = createLocalBallot()
@@ -88,7 +91,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
             for: Data([1]),
             creator:
             "ECHOECHO"
@@ -133,7 +136,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
             for: Data([1]),
             creator:
             "ECHOECHO"
@@ -155,6 +158,8 @@ class BallotMessageCoderTests: XCTestCase {
         // Encode:
         let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
         boxBallotCreateMessage.fromIdentity = "ECHOECHO"
+        boxBallotCreateMessage.ballotID = ballot.id!
+        
         entityManager.entityDestroyer.delete(ballot: ballot)
 
         // Decode:
@@ -194,7 +199,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
             for: Data([1]),
             creator:
             "ECHOECHO"
@@ -234,8 +239,8 @@ class BallotMessageCoderTests: XCTestCase {
         }
         let choice0 = choices[0]
         let choice1 = choices[1]
-        let results0: [BallotResult] = (Array(choice0.result) as? [BallotResult])!
-        let results1: [BallotResult] = (Array(choice1.result) as? [BallotResult])!
+        let results0: [BallotResultEntity] = (Array(choice0.result) as? [BallotResultEntity])!
+        let results1: [BallotResultEntity] = (Array(choice1.result) as? [BallotResultEntity])!
 
         // Assert:
         // Ballot
@@ -256,7 +261,8 @@ class BallotMessageCoderTests: XCTestCase {
         XCTAssertEqual(results0.count, 3)
 
         for result in results0 {
-            switch result.participantID {
+            // swiftformat:disable:next acronyms
+            switch result.participantId {
             case "ECHOECHO":
                 XCTAssertEqual(result.value, 1)
             case "ECHOECHO1":
@@ -276,7 +282,8 @@ class BallotMessageCoderTests: XCTestCase {
         XCTAssertEqual(results1.count, 3)
 
         for result in results1 {
-            switch result.participantID {
+            // swiftformat:disable:next acronyms
+            switch result.participantId {
             case "ECHOECHO":
                 XCTAssertEqual(result.value, 1)
             case "ECHOECHO1":
@@ -295,7 +302,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
             for: Data([1]),
             creator:
             "ECHOECHO"
@@ -353,7 +360,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Arrange:
         let entityManager = EntityManager(databaseContext: dBContext)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversation(
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
             for: Data([1]),
             creator:
             "ECHOECHO"
@@ -396,10 +403,10 @@ class BallotMessageCoderTests: XCTestCase {
         let choice2 = choices[2]
         let choice3 = choices[3]
 
-        let results0: [BallotResult] = (Array(choice0.result) as? [BallotResult])!
-        let results1: [BallotResult] = (Array(choice0.result) as? [BallotResult])!
-        let results2: [BallotResult] = (Array(choice0.result) as? [BallotResult])!
-        let results3: [BallotResult] = (Array(choice0.result) as? [BallotResult])!
+        let results0: [BallotResultEntity] = (Array(choice0.result) as? [BallotResultEntity])!
+        let results1: [BallotResultEntity] = (Array(choice0.result) as? [BallotResultEntity])!
+        let results2: [BallotResultEntity] = (Array(choice0.result) as? [BallotResultEntity])!
+        let results3: [BallotResultEntity] = (Array(choice0.result) as? [BallotResultEntity])!
 
         // Assert:
         XCTAssertEqual(decodedBallot?.participants.isEmpty, true)
@@ -419,7 +426,7 @@ class BallotMessageCoderTests: XCTestCase {
     
     private func createLocalBallot() -> Ballot {
         let ballot = Ballot(context: preparer.objectContext)
-        ballot.id = Data(base64Encoded: "TestID")
+        ballot.id = MockData.generateBallotID()
         ballot.createDate = Date()
         ballot.creatorID = "MyID"
         ballot.title = "TestBallot"

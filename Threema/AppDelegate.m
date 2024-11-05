@@ -26,7 +26,6 @@
 #import "ServerConnector.h"
 #import "MyIdentityStore.h"
 #import "ContactStore.h"
-#import "Conversation.h"
 #import "UIDefines.h"
 #import "ServerAPIConnector.h"
 #import "UserSettings.h"
@@ -66,7 +65,6 @@
 #import "BoxBallotCreateMessage.h"
 #import "BallotMessageDecoder.h"
 #import "BoxImageMessage.h"
-#import "ImageMessageEntity.h"
 #import "GroupImageMessage.h"
 #import "BoxVideoMessage.h"
 #import "GroupVideoMessage.h"
@@ -587,8 +585,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     NSArray *conversations = [entityManager.entityFetcher allConversations];
     BOOL hasPrivate = false;
     
-    for (Conversation *conversation in conversations) {
-        if (conversation.conversationCategory == ConversationCategoryPrivate) {
+    for (ConversationEntity *conversation in conversations) {
+        if (conversation.category.intValue == ConversationCategoryPrivate) {
             hasPrivate = true;
             break;
         }
@@ -1333,13 +1331,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
     
     [self cleanPushDirectory];
-
-    // Checks is device linking not finished yet
-    if ([[UserSettings sharedUserSettings] blockCommunication]) {
-        [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:[BundleUtil localizedStringForKey:@"multi_device_join_failed_app_closed_title"] message:[NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_join_failed_app_closed_message"], [ThreemaAppObjc appName]] actionOk:^(UIAlertAction * _Nonnull) {
-            [DeviceJoinObjC cleanupFailedJoin];
-        }];
-    }
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application

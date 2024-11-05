@@ -30,7 +30,9 @@
 #define kCallWaitTime 600
 
 @interface EnterCodeViewController ()
-
+@property (weak, nonatomic) IBOutlet UILabel *requestCallLabel;
+@property (weak, nonatomic) IBOutlet UILabel *enterCodeLabel;
+@property (weak, nonatomic) IBOutlet UILabel *abortVerificationLabel;
 @end
 
 @implementation EnterCodeViewController {
@@ -59,6 +61,11 @@
     [self updateView];
     
     [self.codeTextField becomeFirstResponder];
+    self.codeTextField.placeholder = [BundleUtil localizedStringForKey:@"profile_code_code"];
+    self.title = [BundleUtil localizedStringForKey:@"profile_code_link_number"];
+    self.requestCallLabel.text = [BundleUtil localizedStringForKey:@"profile_code_request_call"];
+    self.enterCodeLabel.text = [BundleUtil localizedStringForKey:@"profile_code_enter_code"];
+    self.abortVerificationLabel.text = [BundleUtil localizedStringForKey:@"profile_code_abort_verification"];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {

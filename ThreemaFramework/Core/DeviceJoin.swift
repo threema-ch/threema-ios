@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 /// Implement Device Join Protocol
@@ -52,11 +53,16 @@ public final class DeviceJoin {
     
     private let role: Role
     private let businessInjector: BusinessInjector
+    private let taskManager: TaskManagerProtocol
     
     private var connection: EncryptedRendezvousConnection?
     
     private let serverConnectionHelper = DeviceJoinServerConnectionHelper()
-    private var wasMultiDeviceEnabled: Bool?
+    private var wasMultiDeviceRegistered: Bool?
+    
+    private var cancelableTask: CancelableTask?
+    // Prevent multiple cancelations
+    private var canceled = false
     
     // MARK: - Lifecycle
     
@@ -64,9 +70,15 @@ public final class DeviceJoin {
     /// - Parameters:
     ///   - role: Role of this device
     ///   - businessInjector: Business injector to use
-    public init(role: Role, businessInjector: BusinessInjector = BusinessInjector()) {
+    public convenience init(role: Role, businessInjector: BusinessInjector = BusinessInjector()) {
+        self.init(role: role, businessInjector: businessInjector, taskManager: TaskManager())
+    }
+    
+    /// This is intended for internal testing only
+    init(role: Role, businessInjector: BusinessInjector, taskManager: TaskManagerProtocol) {
         self.role = role
         self.businessInjector = businessInjector
+        self.taskManager = taskManager
     }
     
     // MARK: - Existing Device
@@ -79,7 +91,7 @@ public final class DeviceJoin {
     /// - Parameter urlSafeBase64DeviceGroupJoinRequestOffer: Device group join request offer encodes as URL safe base
     /// 64 string
     /// - Returns: Rendezvous path hash
-    public func connect(urlSafeBase64DeviceGroupJoinRequestOffer: String) async throws -> Data { // Rendezvous Path Hash
+    public func connect(urlSafeBase64DeviceGroupJoinRequestOffer: String) async throws -> Data {
         guard role == .existingDevice else {
             throw Error.notAllowedForRole(role: role)
         }
@@ -112,24 +124,22 @@ public final class DeviceJoin {
             throw Error.notConnected
         }
         
-        // Disconnect
+        // Create MD key if needed
         
-        // Disconnect from server during joining
-        try await serverConnectionHelper.blockCommunicationAndDisconnect()
-        
-        // Enable MD if needed
-
         // Long term Idea: Do creation via MultiDeviceManager and move disabling and more stuff into MultiDeviceManager
         // (from DeviceLinking/ServerConnector)
         
-        // Generate new device group key if multi device was disabled before
+        // Generate new device group key if multi-device was disabled before
         let deviceGroupKey: Data?
         let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: businessInjector.myIdentityStore)
-        wasMultiDeviceEnabled = businessInjector.settingsStore.isMultiDeviceRegistered
-        if !businessInjector.settingsStore.isMultiDeviceRegistered {
+        let localWasMultiDeviceRegistered = businessInjector.settingsStore.isMultiDeviceRegistered
+        wasMultiDeviceRegistered = localWasMultiDeviceRegistered
+        if !localWasMultiDeviceRegistered {
+            DDLogNotice("Create group key")
             deviceGroupKey = deviceGroupKeyManager.create()
         }
         else {
+            DDLogNotice("Load existing key")
             deviceGroupKey = deviceGroupKeyManager.dgk
         }
         
@@ -141,29 +151,73 @@ public final class DeviceJoin {
         // during the first handshake if a device group key exists.
 
         do {
-            // TODO: (IOS-3671) This should be called inside a transaction
-            try await sendInternal(deviceGroupKey: deviceGroupKey, over: connection)
+            if !localWasMultiDeviceRegistered {
+                // Connect/register with mediator, but not chat server
+                // Disconnect from CS
+                DDLogVerbose("Disconnect from CS")
+                await serverConnectionHelper.disconnect()
+                
+                // This should lead to the registration and connection with the mediator server (but not chat server
+                // through mediator)
+                DDLogVerbose("Connect and register with mediator")
+                try await serverConnectionHelper.connectDoNotUnblockIncomingMessages()
+                
+                assert(businessInjector.userSettings.enableMultiDevice)
+                assert(businessInjector.settingsStore.isMultiDeviceRegistered)
+                
+                // Disable PFS
+                // This needs to happen after this device is registered at the mediator. Otherwise the feature mask is
+                // not set correctly. We do it before the join, because otherwise the sender might send messages during
+                // linking that get rejected. However the sender will see that we tried to activate MD.
+                DDLogVerbose("Disable PFS...")
+                try await disablePFSAndTerminateAllSessions()
+            }
+            else {
+                // Disconnect to reconnect without unblocking incoming messages (from CS)
+                // If any other device is connected this will probably be the leader afterwards anyway
+                DDLogVerbose("Disconnect...")
+                await serverConnectionHelper.disconnect()
+                
+                // In theory we should also block the processing of reflected messages. However, this is a known
+                // limitation for now and will probably be replaced by an exclusive lock in the future (IOS-4004)
+                DDLogVerbose("Connect...")
+                try await serverConnectionHelper.connectDoNotUnblockIncomingMessages()
+            }
+            
+            DDLogNotice("Create task...")
+            let newDeviceSyncTask = TaskDefinitionNewDeviceSync { cancelableTask in
+                try await self.transactionSend(
+                    deviceGroupKey: deviceGroupKey,
+                    over: connection,
+                    cancelation: cancelableTask
+                )
+            }
+            
+            DDLogVerbose("Add task...")
+            let (waitTask, localCancelableTask) = taskManager.addWithWait(taskDefinition: newDeviceSyncTask)
+            
+            assert(localCancelableTask != nil, "A new device sync task should always be cancelable")
+            cancelableTask = localCancelableTask
+            
+            DDLogVerbose("Wait for task...")
+            try await waitTask.wait()
+            
+            cancelableTask = nil
+                        
+            // Reconnect to CS
+            DDLogNotice("Reconnect to CS...")
+            businessInjector.serverConnector.unblockIncomingMessages()
+            
+            // Everything should work now...
         }
         catch {
+            DDLogNotice("Send failed: \(error)")
+            
             // Tear down started linking
-            cancel()
+            await cancelInternal()
                         
             throw error
         }
-        
-        // Reconnect to CS
-        try await serverConnectionHelper.unblockCommunicationAndReconnect()
-        
-        // Disable PFS
-        do {
-            try await disablePFSAndTerminateAllSessions()
-        }
-        catch {
-            // We fail silently if this fails
-            DDLogWarn("Disabling PFS and terminating all sessions failed: \(error)")
-        }
-        
-        // Everything should work now...
     }
     
     /// Cancel currently running device join
@@ -175,51 +229,29 @@ public final class DeviceJoin {
             return
         }
         
-        // Close rendezvous connection
-        connection?.close()
-        connection = nil
+        DDLogNotice("cancel")
         
-        // Disable MD again if it was not enabled before
-        if !(wasMultiDeviceEnabled ?? true) {
-            businessInjector.serverConnector.deactivateMultiDevice()
-            FeatureMask.updateLocal() // Needed to activate PFS again
-        }
-        wasMultiDeviceEnabled = nil
+        // Tell the task that it is canceled should lead to it throwing an error if it doesn't already run close to
+        // completion
+        cancelableTask?.cancel()
+        cancelableTask = nil
         
-        // Reconnect to CS
-        Task {
-            do {
-                try await serverConnectionHelper.unblockCommunicationAndReconnect()
-            }
-            catch {
-                DDLogError("Unable to unblock and reconnect: \(error)")
-            }
-        }
-    }
-    
-    /// Cleanup a failed join (i.e. when connections are still blocked)
-    public static func cleanupFailedJoin() {
-        Task {
-            do {
-                try await BusinessInjector().multiDeviceManager.disableMultiDevice()
-            }
-            catch {
-                DDLogError("Unable to cleanup by disabling multi-device: \(error)")
-            }
-            
-            do {
-                try await DeviceJoinServerConnectionHelper().unblockCommunicationAndReconnect()
-            }
-            catch {
-                DDLogError("Unable to cleanup by unblocking the communication: \(error)")
-            }
+        // This is needed, because if we're waiting for the 'registered' message the task can only be canceled if we
+        // close the rendezvous connection
+        // TODO: (IOS-3868) However in general at this point cancelation in the iOS app should not be possible anymore, because we already sent everything to the other device. If we report the state to the UI we could communicate that cancelation should not be possible anymore and remove this
+        Task(priority: .userInitiated) {
+            await cancelInternal()
         }
     }
     
     // MARK: Send helper
     
-    // TODO: (IOS-3671) This should happen inside a transaction
-    private func sendInternal(deviceGroupKey: Data, over connection: EncryptedRendezvousConnection) async throws {
+    // This should always run inside a new device sync transaction
+    private func transactionSend(
+        deviceGroupKey: Data,
+        over connection: EncryptedRendezvousConnection,
+        cancelation task: CancelableTask
+    ) async throws {
         
         //     ED ------- Begin ------> ND   [1]
         
@@ -232,23 +264,35 @@ public final class DeviceJoin {
         DDLogNotice("Send begin")
         DDLogVerbose("Send begin: \(edToNdBeginData)")
         try await connection.send(edToNdBeginData)
+        
+        try checkCancellation(of: task)
 
         //     ED -- common.BlobData -> ND   [0..N]
         
         // Gather data & send all the profile pictures if needed
         DDLogNotice("Send blobs")
         let userProfile = try await gatherUserProfileAndSendPictureIfNeeded(over: connection)
-        let augmentedContacts = try await gatherContactsAndSendProfilePicturesIfNeeded(over: connection)
-        let augmentedGroups = try await gatherGroupsAndSendProfilePicturesIfNeeded(over: connection)
-        
+        try checkCancellation(of: task)
+
+        let augmentedContacts = try await gatherContactsAndSendProfilePicturesIfNeeded(
+            over: connection,
+            cancelation: task
+        )
+        try checkCancellation(of: task)
+        let augmentedGroups = try await gatherGroupsAndSendProfilePicturesIfNeeded(over: connection, cancelation: task)
+        try checkCancellation(of: task)
+
         //     ED --- EssentialData --> ND   [1]
         
         let identityData = try gatherIdentityData()
         let deviceGroupData = Join_EssentialData.DeviceGroupData.with {
             $0.dgk = deviceGroupKey
         }
+        try checkCancellation(of: task)
+
         let cspNonces = try await gatherCSPNonces()
-        
+        try checkCancellation(of: task)
+
         let essentialData = try Join_EssentialData.with {
             // $0.mediatorServer // This is only required for custom servers
             
@@ -267,7 +311,7 @@ public final class DeviceJoin {
             
             $0.contacts = augmentedContacts
             $0.groups = augmentedGroups
-            // $0.distributionLists // Not implemented in iOS
+            // $0.distributionLists // IOS-4366: Not implemented in iOS
             
             $0.cspHashedNonces = cspNonces
             // $0.d2DHashedNonces // IOS-3978: Send nonces from D2D scope
@@ -275,6 +319,8 @@ public final class DeviceJoin {
             $0.mdmParameters = gatherMdmParameters()
         }
         
+        try checkCancellation(of: task)
+
         let edToNdEssentialData = Join_EdToNd.with {
             $0.essentialData = essentialData
         }
@@ -287,6 +333,8 @@ public final class DeviceJoin {
         
         try await connection.send(serializedEdToNdEssentialData)
         
+        try checkCancellation(of: task)
+
         // ED <---- Registered ---- ND   [1]
         
         DDLogNotice("Wait for 'registered' message...")
@@ -312,7 +360,8 @@ public final class DeviceJoin {
     }
     
     private func gatherContactsAndSendProfilePicturesIfNeeded(
-        over connection: EncryptedRendezvousConnection
+        over connection: EncryptedRendezvousConnection,
+        cancelation task: CancelableTask
     ) async throws -> [Join_EssentialData.AugmentedContact] {
         
         let mediatorSyncableContacts = MediatorSyncableContacts()
@@ -325,6 +374,7 @@ public final class DeviceJoin {
             if let profilePicture = deltaContact.image {
                 let profilePictureCommonImage = try await sendBlobImage(data: profilePicture, over: connection)
                 syncContact.userDefinedProfilePicture.updated = profilePictureCommonImage
+                try checkCancellation(of: task)
             }
             
             if let contactProfilePicture = deltaContact.contactImage {
@@ -333,6 +383,7 @@ public final class DeviceJoin {
                     over: connection
                 )
                 syncContact.contactDefinedProfilePicture.updated = contactProfilePictureCommonImage
+                try checkCancellation(of: task)
             }
             
             let augmentedContact = Join_EssentialData.AugmentedContact.with {
@@ -351,7 +402,8 @@ public final class DeviceJoin {
     }
     
     private func gatherGroupsAndSendProfilePicturesIfNeeded(
-        over connection: EncryptedRendezvousConnection
+        over connection: EncryptedRendezvousConnection,
+        cancelation task: CancelableTask
     ) async throws -> [Join_EssentialData.AugmentedGroup] {
         
         // Load groups from Core Data and map them to business objects
@@ -365,7 +417,7 @@ public final class DeviceJoin {
             groups.reserveCapacity(allGroupConversations.count)
             
             for anyGroupConversation in allGroupConversations {
-                guard let groupConversation = anyGroupConversation as? Conversation,
+                guard let groupConversation = anyGroupConversation as? ConversationEntity,
                       let groupID = groupConversation.groupID,
                       let groupCreator = groupConversation.contact?.identity ?? self.businessInjector.myIdentityStore
                       .identity,
@@ -380,6 +432,8 @@ public final class DeviceJoin {
             return groups
         }
         
+        try checkCancellation(of: task)
+
         // Process the loaded groups
             
         var augmentedGroups = [Join_EssentialData.AugmentedGroup]()
@@ -391,6 +445,7 @@ public final class DeviceJoin {
             if let profilePicture {
                 let profilePictureCommonImage = try await sendBlobImage(data: profilePicture, over: connection)
                 syncGroup.profilePicture.updated = profilePictureCommonImage
+                try checkCancellation(of: task)
             }
             
             let augmentedGroup = Join_EssentialData.AugmentedGroup.with {
@@ -450,20 +505,19 @@ public final class DeviceJoin {
     
     private func gatherCSPNonces() async throws -> [Data] {
         try await businessInjector.entityManager.perform {
-            guard let allNonces = self.businessInjector.entityManager.entityFetcher.allNonces() else {
+            guard let allNonceEntities = self.businessInjector.entityManager.entityFetcher.allNonceEntities() else {
                 throw Error.failedToGatherData
             }
             
-            DDLogNotice("Nonces: \(allNonces.count) nonces gathered")
+            DDLogNotice("Nonces: \(allNonceEntities.count) NonceEntities gathered")
             
-            // This removes the `nil` nonces if there are any
-            let nonNilNonces = allNonces.compactMap(\.nonce)
-            DDLogNotice("Nonces: \(allNonces.count - nonNilNonces.count) nonces were nil")
+            let allNonces = allNonceEntities.map(\.nonce)
+            DDLogNotice("Nonces: \(allNonces.count - allNonceEntities.count) nonces were nil")
             
-            let filteredNonces = nonNilNonces.filter {
+            let filteredNonces = allNonces.filter {
                 $0.count == 32
             }
-            DDLogNotice("Nonces: \(nonNilNonces.count - filteredNonces.count) nonces were not 32 bytes")
+            DDLogNotice("Nonces: \(allNonces.count - filteredNonces.count) nonces were not 32 bytes")
 
             return filteredNonces
         }
@@ -506,8 +560,58 @@ public final class DeviceJoin {
         }
     }
     
+    // MARK: Internal cancelation
+    
+    private func checkCancellation(of task: CancelableTask) throws {
+        guard task.isCanceled else {
+            // Nothing to do
+            return
+        }
+        
+        throw TaskExecutionError.taskDropped
+    }
+    
+    // This is needed such that all internal cancelations can be handled here and the task should only be canceled for
+    // external UI calls (via `cancel()`). For internal failure the an error will be thrown from send or inside the
+    // task.
+    private func cancelInternal() async {
+        DDLogNotice("Internal cancel")
+        
+        // Prevent multiple cancelation calls
+        guard !canceled else {
+            DDLogNotice("Already canceled")
+            return
+        }
+        canceled = true
+        
+        // Close rendezvous connection
+        connection?.close()
+        connection = nil
+                        
+        // Disable MD again if it was not enabled before
+        if !(wasMultiDeviceRegistered ?? true) {
+            await serverConnectionHelper.disconnect()
+            
+            businessInjector.serverConnector.deactivateMultiDevice()
+    
+            // Best effort reactivation of PFS
+            await enablePFSBestEffort()
+        }
+        wasMultiDeviceRegistered = nil
+        
+        // Reconnect to CS
+        do {
+            businessInjector.serverConnector.unblockIncomingMessages()
+            try await serverConnectionHelper.connect()
+        }
+        catch {
+            DDLogError("Unable to unblock and reconnect: \(error)")
+        }
+    }
+    
     // MARK: Disable PFS
     
+    // This only works correctly if multi-device is registered
     private func disablePFSAndTerminateAllSessions() async throws {
         // Update feature mask to disable forward secrecy
         await updateFeatureMask()
@@ -557,12 +661,12 @@ public final class DeviceJoin {
                 
                 // Post system message
                 guard let conversation = self.businessInjector.entityManager.entityFetcher
-                    .conversation(forIdentity: contact.identity) else {
+                    .conversationEntity(forIdentity: contact.identity) else {
                     // If we don't have a conversation don't post a system message
                     continue
                 }
                 guard let systemMessage = self.businessInjector.entityManager.entityCreator
-                    .systemMessage(for: conversation) else {
+                    .systemMessageEntity(for: conversation) else {
                     DDLogNotice("Unable to create system message for changing PFS state")
                     continue
                 }
@@ -573,6 +677,51 @@ public final class DeviceJoin {
                 }
             }
         }
+    }
+    
+    // MARK: Enable PFS
+    
+    func enablePFSBestEffort() async {
+        // No need to be connected to server at this point as feature mask update & contact refresh is unrelated to
+        // current chat server connection and FS refresh steps are persisted tasks
+        
+        do {
+            DDLogNotice("Update own feature mask")
+
+            try await FeatureMask.updateLocal()
+            
+            DDLogNotice("Contact status update start")
+            
+            let updateTask: Task<Void, Swift.Error> = Task {
+                try await businessInjector.contactStore.updateStatusForAllContacts(ignoreInterval: true)
+            }
+            
+            // The request time out is 30s thus we wait for 40s for it to complete
+            switch try await Task.timeout(updateTask, 40) {
+            case .result:
+                break
+            case let .error(error):
+                DDLogError("Contact status update error: \(error ?? "nil")")
+            case .timeout:
+                DDLogWarn("Contact status update time out")
+            }
+        }
+        catch {
+            // We should still try the next steps if this fails and don't report this error back to the caller
+            DDLogWarn("Feature mask or contact status update error: \(error)")
+        }
+        
+        // Run refresh steps for all solicitedContactIdentities.
+        // (See _Application Update Steps_ in the Threema Protocols for details.)
+        
+        DDLogNotice("Fetch solicited contacts")
+        let solicitedContactIdentities = await businessInjector.entityManager.perform {
+            self.businessInjector.entityManager.entityFetcher.allSolicitedContactIdentities()
+        }
+        
+        await ForwardSecurityRefreshSteps().run(for: solicitedContactIdentities.map {
+            ThreemaIdentity($0)
+        })
     }
     
     // MARK: - New Device (this is just a draft)

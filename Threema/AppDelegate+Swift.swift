@@ -49,7 +49,7 @@ extension AppDelegate {
                     )
                     return true
                 }
-                else if let group = managedObject as? Conversation {
+                else if let group = managedObject as? ConversationEntity {
                     NotificationCenter.default.post(
                         name: NSNotification.Name(rawValue: kNotificationShowConversation),
                         object: nil,
@@ -66,7 +66,7 @@ extension AppDelegate {
         if let recipient = intent.recipients?.first as? INPerson,
            let identity = recipient.personHandle?.value,
            identity.count == kIdentityLen,
-           let singleConversation = EntityManager().entityFetcher.conversation(forIdentity: identity) {
+           let singleConversation = EntityManager().entityFetcher.conversationEntity(forIdentity: identity) {
             NotificationCenter.default.post(
                 name: NSNotification.Name(rawValue: kNotificationShowConversation),
                 object: nil,

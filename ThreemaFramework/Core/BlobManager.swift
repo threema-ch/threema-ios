@@ -563,7 +563,7 @@ public actor BlobManager: BlobManagerProtocol {
         Task {
             let em = entityManager
             
-            em.performBlockAndWait {
+            em.performAndWait {
                 guard let fetchedMessage = em.entityFetcher.existingObject(with: objectID) as? ThumbnailDisplayMessage
                 else {
                     DDLogInfo("[BlobManager] ThumbnailDisplayMessage of media to be autosaved not found.")
@@ -939,9 +939,9 @@ public actor BlobManager: BlobManagerProtocol {
         
         var isNoteGroup = false
         
-        em.performSyncBlockAndSafe {
+        em.performAndWaitSave {
             guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessageEntity,
-                  message.conversation.isGroup(),
+                  message.conversation.isGroup,
                   let group = self.groupManager.getGroup(conversation: message.conversation),
                   group.isNoteGroup else {
                 return
@@ -993,7 +993,7 @@ extension BlobManager: BlobManagerDelegate {
         
         await BlobManager.state.setProgress(for: objectID, to: newProgress)
         let em = entityManager
-        em.performSyncBlockAndSafe {
+        em.performAndWaitSave {
             guard let blobData = em.entityFetcher.existingObject(with: objectID) as? BlobData else {
                 return
             }

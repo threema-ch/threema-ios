@@ -31,7 +31,7 @@ struct BulletText: View {
     
     var body: some View {
         Label {
-            Text("· \(string)")
+            Text(verbatim: "· \(string)")
         } icon: {
             if showIcon {
                 Image(systemName: "checkmark.circle.fill")

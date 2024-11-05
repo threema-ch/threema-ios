@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 extension StorageManagementConversationView {
     enum Section: Hashable, CaseIterable, Identifiable {
@@ -31,22 +32,22 @@ extension StorageManagementConversationView {
         var localizedTitle: String {
             switch self {
             case .messages:
-                "messages".localized
+                #localize("messages")
             case .files:
-                "files".localized
+                #localize("files")
             case .messageRetention:
-                "automatic_delete".localized
+                #localize("automatic_delete")
             }
         }
         
         var localizedDescription: String {
             switch self {
             case .messages:
-                "delete_messages_explain".localized
+                #localize("delete_messages_explain")
             case .files:
-                "delete_explain".localized
+                #localize("delete_explain")
             case .messageRetention:
-                "automatic_delete_explain".localized
+                #localize("automatic_delete_explain")
             }
         }
         

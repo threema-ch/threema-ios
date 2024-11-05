@@ -1262,7 +1262,8 @@ class GroupManagerTests: XCTestCase {
         let messageFetcher = MessageFetcher(for: group.conversation, with: entityManager)
         XCTAssertEqual(messageFetcher.count(), 4)
 
-        let systemMessageTypes = messageFetcher.messages(at: 0, count: 0).map { ($0 as? SystemMessage)?.type ?? 0 }
+        let systemMessageTypes = messageFetcher.messages(at: 0, count: 0)
+            .map { ($0 as? SystemMessageEntity)?.type ?? 0 }
         XCTAssertEqual(3, systemMessageTypes.filter { $0.intValue == kSystemMessageGroupMemberAdd }.count)
         XCTAssertEqual(kSystemMessageGroupMemberLeave, systemMessageTypes.last?.intValue)
     }
@@ -1407,7 +1408,8 @@ class GroupManagerTests: XCTestCase {
         let messageFetcher = MessageFetcher(for: group.conversation, with: entityManager)
         XCTAssertEqual(messageFetcher.count(), 5)
 
-        let systemMessageTypes = messageFetcher.messages(at: 0, count: 0).map { ($0 as? SystemMessage)?.type ?? 0 }
+        let systemMessageTypes = messageFetcher.messages(at: 0, count: 0)
+            .map { ($0 as? SystemMessageEntity)?.type ?? 0 }
         XCTAssertEqual(3, systemMessageTypes.filter { $0.intValue == kSystemMessageGroupMemberAdd }.count)
         XCTAssertEqual(kSystemMessageGroupCreatorLeft, systemMessageTypes.last?.intValue)
     }
@@ -2623,14 +2625,14 @@ class GroupManagerTests: XCTestCase {
 
         XCTAssertEqual(grp.groupID, expectedGroupIdentity.id)
 
-        let conversation = entityManager.entityFetcher.conversation(
+        let conversation = entityManager.entityFetcher.conversationEntity(
             for: grp.groupID,
             creator: grp.groupIdentity.creator.string
         )
         
         XCTAssertNotNil(conversation)
 
-        let lastMessage = MessageFetcher(for: conversation!, with: entityManager).lastMessage() as! SystemMessage
+        let lastMessage = MessageFetcher(for: conversation!, with: entityManager).lastMessage() as! SystemMessageEntity
         
         XCTAssertEqual(grp.groupIdentity, expectedGroupIdentity)
         XCTAssertEqual(grp.allMemberIdentities.count, 1)
@@ -2680,7 +2682,7 @@ class GroupManagerTests: XCTestCase {
             return
         }
 
-        let conversation = entityManager.entityFetcher.conversation(
+        let conversation = entityManager.entityFetcher.conversationEntity(
             for: grp.groupID,
             creator: grp.groupIdentity.creator.string
         )
@@ -2689,7 +2691,7 @@ class GroupManagerTests: XCTestCase {
         let messageFetcher = MessageFetcher(for: conversation!, with: entityManager)
         var endNoteGroupInfoCount = 0
         for message in messageFetcher.messages(at: 0, count: messageFetcher.count()) {
-            if let tmpMessage = message as? SystemMessage,
+            if let tmpMessage = message as? SystemMessageEntity,
                tmpMessage.type.isEqual(to: NSNumber(value: kSystemMessageEndNoteGroupInfo)) {
                 endNoteGroupInfoCount += 1
             }
@@ -2744,7 +2746,7 @@ class GroupManagerTests: XCTestCase {
             return
         }
 
-        let conversation = entityManager.entityFetcher.conversation(
+        let conversation = entityManager.entityFetcher.conversationEntity(
             for: grp.groupID,
             creator: grp.groupIdentity.creator.string
         )
@@ -2753,7 +2755,7 @@ class GroupManagerTests: XCTestCase {
         let messageFetcher = MessageFetcher(for: conversation!, with: entityManager)
         var startNoteGroupInfoCount = 0
         for message in messageFetcher.messages(at: 0, count: messageFetcher.count()) {
-            if let tmpMessage = message as? SystemMessage,
+            if let tmpMessage = message as? SystemMessageEntity,
                tmpMessage.type.isEqual(to: NSNumber(value: kSystemMessageStartNoteGroupInfo)) {
                 startNoteGroupInfoCount += 1
             }
@@ -2813,7 +2815,7 @@ class GroupManagerTests: XCTestCase {
             return
         }
 
-        let conversation = entityManager.entityFetcher.conversation(
+        let conversation = entityManager.entityFetcher.conversationEntity(
             for: grp.groupID,
             creator: grp.groupIdentity.creator.string
         )
@@ -2823,7 +2825,7 @@ class GroupManagerTests: XCTestCase {
         var startNoteGroupInfoCount = 0
         var endNoteGroupInfoCount = 0
         for message in messageFetcher.messages(at: 0, count: messageFetcher.count()) {
-            if let tmpMessage = message as? SystemMessage {
+            if let tmpMessage = message as? SystemMessageEntity {
                 switch tmpMessage.type.intValue {
                 case kSystemMessageStartNoteGroupInfo:
                     startNoteGroupInfoCount += 1

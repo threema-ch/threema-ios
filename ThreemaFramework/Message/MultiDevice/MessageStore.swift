@@ -145,7 +145,7 @@ class MessageStore: MessageStoreProtocol {
             sender: nil,
             conversation: conversation,
             thumbnail: nil
-        ) as? TextMessage else {
+        ) as? TextMessageEntity else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create text message")
         }
 
@@ -205,7 +205,7 @@ class MessageStore: MessageStoreProtocol {
         createdAt: Date,
         isOutgoing: Bool
     ) throws {
-        var messageReadConversations = Set<Conversation>()
+        var messageReadConversations = Set<ConversationEntity>()
 
         for id in deliveryReceiptMessage.receiptMessageIDs {
             if let messageID = id as? Data {
@@ -679,7 +679,7 @@ class MessageStore: MessageStoreProtocol {
             sender: sender,
             conversation: conversation,
             thumbnail: nil
-        ) as? LocationMessage else {
+        ) as? LocationMessageEntity else {
             throw MediatorReflectedProcessorError
                 .messageNotProcessed(message: "Could not find/create group location message in DB")
         }
@@ -891,7 +891,7 @@ class MessageStore: MessageStoreProtocol {
             sender: sender,
             conversation: conversation,
             thumbnail: nil
-        ) as? TextMessage else {
+        ) as? TextMessageEntity else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create text message")
         }
 
@@ -1034,7 +1034,7 @@ class MessageStore: MessageStoreProtocol {
             sender: nil,
             conversation: conversation,
             thumbnail: nil
-        ) as? LocationMessage else {
+        ) as? LocationMessageEntity else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "Could not find/create location message")
         }
 
@@ -1147,7 +1147,7 @@ class MessageStore: MessageStoreProtocol {
         return Promise { seal in
             Task {
                 let conversationObjectID = await self.frameworkInjector.entityManager.perform {
-                    self.frameworkInjector.entityManager.entityFetcher.conversation(
+                    self.frameworkInjector.entityManager.entityFetcher.conversationEntity(
                         for: groupCallStartMessage.groupID,
                         creator: groupCallStartMessage.groupCreator
                     )?.objectID
@@ -1191,17 +1191,17 @@ class MessageStore: MessageStoreProtocol {
     // MARK: Misc
 
     /// Get poi-address, if is necessary.
-    /// - Parameter message:: Location message to save address
-    private func setPoiAddress(message: LocationMessage?) -> Promise<Void> {
+    /// - Parameter message:: LocationMessageEntity to save address for
+    private func setPoiAddress(message: LocationMessageEntity?) -> Promise<Void> {
         Promise { seal in
             self.frameworkInjector.entityManager.performAndWait {
                 if let message,
                    let msg = self.frameworkInjector.entityManager.entityFetcher
-                   .getManagedObject(by: message.objectID) as? LocationMessage,
+                   .getManagedObject(by: message.objectID) as? LocationMessageEntity,
                    msg.poiAddress == nil,
                    let latitude = Double(exactly: msg.latitude),
-                   let longitude = Double(exactly: msg.longitude),
-                   let accuracy = Double(exactly: msg.accuracy) {
+                   let longitude = Double(exactly: msg.longitude) {
+                    let accuracy = Double(exactly: msg.accuracy ?? 0.0) ?? 0.0
                     ThreemaUtilityObjC.reverseGeocodeNearLatitude(
                         latitude,
                         longitude: longitude,
@@ -1283,7 +1283,7 @@ class MessageStore: MessageStoreProtocol {
 
     private func changedConversationAndGroupEntity(groupID: Data, groupCreatorIdentity: String) {
         frameworkInjector.entityManager.performAndWait {
-            if let conversation = self.frameworkInjector.entityManager.entityFetcher.conversation(
+            if let conversation = self.frameworkInjector.entityManager.entityFetcher.conversationEntity(
                 for: groupID,
                 creator: groupCreatorIdentity
             ) {
@@ -1299,7 +1299,7 @@ class MessageStore: MessageStoreProtocol {
     private func conversationSender(
         forMessage message: AbstractMessage,
         isOutgoing: Bool
-    ) throws -> (conversation: Conversation, sender: ContactEntity?) {
+    ) throws -> (conversation: ConversationEntity, sender: ContactEntity?) {
         var conversationIdentity: String?
         var result = frameworkInjector.entityManager.existingConversationSenderReceiver(for: message)
         if !isOutgoing {

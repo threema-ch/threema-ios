@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct EnterLicenseInfoView: View {
     var dismiss: () -> Void
@@ -37,7 +38,7 @@ struct EnterLicenseInfoView: View {
                                 .padding(.top, 20.0)
                             
                             Text(
-                                "enter_license_infoview_subtitle".localized
+                                #localize("enter_license_infoview_subtitle")
                             )
                             .padding(.horizontal, 10.0)
                             .padding(.bottom, 10.0)
@@ -46,7 +47,7 @@ struct EnterLicenseInfoView: View {
                         }
                         .accessibilityElement(children: .combine)
 
-                        Text(.init("enter_license_infoview_more_link".localized))
+                        Text(.init(#localize("enter_license_infoview_more_link")))
                             .underline()
                             .environment(\.openURL, OpenURLAction(handler: handleWorkURL))
                     }
@@ -66,11 +67,11 @@ struct EnterLicenseInfoView: View {
                                     .aspectRatio(contentMode: .fit)
                                     .padding(.horizontal, 80)
                                 
-                                Text("enter_license_infoview_private_use".localized)
+                                Text(#localize("enter_license_infoview_private_use"))
                                     .font(.title2)
                             }
                             
-                            Text("enter_license_infoview_threema_description".localized)
+                            Text(#localize("enter_license_infoview_threema_description"))
                                 .font(.body)
                                                         
                             Button {
@@ -78,7 +79,7 @@ struct EnterLicenseInfoView: View {
                                     UIApplication.shared.open(url)
                                 }
                             } label: {
-                                Text("enter_license_infoview_appstore_link".localized)
+                                Text(#localize("enter_license_infoview_appstore_link"))
                                     .frame(maxWidth: .infinity)
                             }
                             .buttonStyle(.borderedProminent)
@@ -105,7 +106,7 @@ struct EnterLicenseInfoView: View {
                     Button(action: {
                         dismiss()
                     }) {
-                        Text("enter_license_infoview_login".localized)
+                        Text(#localize("enter_license_infoview_login"))
                     }
                 }
             }

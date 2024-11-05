@@ -149,7 +149,7 @@ final class TaskExecutionSendDeleteEditMessage: TaskExecution, TaskExecutionProt
                             return
                         }
 
-                        var conversation: Conversation
+                        var conversation: ConversationEntity
                         do {
                             conversation = try self.getConversation(for: task)
                         }

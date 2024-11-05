@@ -81,6 +81,10 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     func connectWaitDoNotUnblockIncomingMessages(initiator: ConnectionInitiator) {
         // no-op
     }
+    
+    func unblockIncomingMessages() {
+        // no-op
+    }
 
     func disconnect(initiator: ConnectionInitiator) {
         // no-op
@@ -200,7 +204,7 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
 
     func incomingMessageFinished(_ message: AbstractMessage) { }
 
-    func readMessage(inConversations: Set<Conversation>?) {
+    func readMessage(inConversations: Set<ConversationEntity>?) {
         // no-op
     }
     

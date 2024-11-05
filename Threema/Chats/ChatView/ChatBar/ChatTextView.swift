@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 protocol ChatTextViewDelegate: AnyObject {
@@ -147,7 +148,7 @@ final class ChatTextView: CustomResponderTextView {
     
     private lazy var placeholderLabel: UILabel = {
         let label = UILabel()
-        label.text = BundleUtil.localizedString(forKey: "chat_text_view_placeholder")
+        label.text = #localize("chat_text_view_placeholder")
         label.isHidden = false
         label.isUserInteractionEnabled = false
         label.font = UIFont.preferredFont(forTextStyle: Config.textStyle)
@@ -204,7 +205,7 @@ final class ChatTextView: CustomResponderTextView {
     // MARK: - Configuration
     
     private func configureTextView() {
-        let menuItem = UIMenuItem(title: BundleUtil.localizedString(forKey: "scan_qr"), action: #selector(scanQRCode))
+        let menuItem = UIMenuItem(title: #localize("scan_qr"), action: #selector(scanQRCode))
         UIMenuController.shared.menuItems = [menuItem]
 
         font = UIFont.preferredFont(forTextStyle: Config.textStyle)
@@ -442,7 +443,7 @@ final class ChatTextView: CustomResponderTextView {
     override var keyCommands: [UIKeyCommand]? {
         [
             UIKeyCommand(
-                title: BundleUtil.localizedString(forKey: "hardware_keyboard_send_on_enter_discoverability_title"),
+                title: #localize("hardware_keyboard_send_on_enter_discoverability_title"),
                 action: #selector(sendOnHWKReturn),
                 input: "\r"
             ),
@@ -585,7 +586,7 @@ final class ChatTextView: CustomResponderTextView {
         let qrController = QRScannerViewController()
         
         qrController.delegate = self
-        qrController.title = BundleUtil.localizedString(forKey: "scan_qr")
+        qrController.title = #localize("scan_qr")
         qrController.navigationItem.scrollEdgeAppearance = Colors.defaultNavigationBarAppearance()
 
         let nav = PortraitNavigationController(rootViewController: qrController)
@@ -601,7 +602,7 @@ extension ChatTextView {
 
     override var accessibilityLabel: String? {
         get {
-            BundleUtil.localizedString(forKey: "accessibility_chatbar_label")
+            #localize("accessibility_chatbar_label")
         }
         set {
             // Do nothing
@@ -610,7 +611,7 @@ extension ChatTextView {
     
     override var accessibilityHint: String? {
         get {
-            BundleUtil.localizedString(forKey: "accessibility_chatbar_hint")
+            #localize("accessibility_chatbar_hint")
         }
         set {
             // Do nothing

@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 /// Chat profile view showed in the navigation bar of a chat
@@ -103,7 +104,7 @@ final class ChatProfileView: UIStackView {
     /// Enable colored backgrounds to help debugging
     private static let debug = false
     
-    private let conversation: Conversation
+    private let conversation: ConversationEntity
     private let entityManager: EntityManager
     private lazy var group: Group? = BusinessInjector().groupManager.getGroup(conversation: conversation)
 
@@ -225,7 +226,7 @@ final class ChatProfileView: UIStackView {
     // MARK: - Initialization
     
     init(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         entityManager: EntityManager,
         tapAction: @escaping TapAction
     ) {
@@ -329,7 +330,7 @@ final class ChatProfileView: UIStackView {
     private func configureContentObservers() {
         configureNameObserver()
         
-        if conversation.isGroup() {
+        if conversation.isGroup {
             configureGroupChatObservers()
         }
         else if conversation.distributionList != nil {
@@ -539,7 +540,7 @@ final class ChatProfileView: UIStackView {
         
     override var accessibilityValue: String? {
         get {
-            if !conversation.isGroup() {
+            if !conversation.isGroup {
                 var otherThreemaAccessibilityLabel: String?
                 let accessibilityValue = [
                     conversation.contact?.verificationLevelAccessibilityLabel(),
@@ -571,11 +572,11 @@ final class ChatProfileView: UIStackView {
     
     override var accessibilityHint: String? {
         get {
-            if conversation.isGroup() {
-                BundleUtil.localizedString(forKey: "accessibility_profile_button_hint_group")
+            if conversation.isGroup {
+                #localize("accessibility_profile_button_hint_group")
             }
             else {
-                BundleUtil.localizedString(forKey: "accessibility_profile_button_hint_contact")
+                #localize("accessibility_profile_button_hint_contact")
             }
         }
         set {

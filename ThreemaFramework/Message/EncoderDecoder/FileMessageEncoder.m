@@ -22,6 +22,7 @@
 #import "FileMessageKeys.h"
 #import "NSString+Hex.h"
 #import "JsonUtil.h"
+#import "ThreemaFramework/ThreemaFramework-swift.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -70,8 +71,8 @@
     [dictionary setObject:message.type forKey:JSON_FILE_KEY_TYPE];
     [dictionary setObject:[NSNumber numberWithInt:0] forKey:JSON_FILE_KEY_TYPE_DEPRECATED];
     
-    if (message.correlationId) {
-        [dictionary setObject:message.correlationId forKey:JSON_FILE_KEY_CORRELATION];
+    if (message.correlationID) {
+        [dictionary setObject:message.correlationID forKey:JSON_FILE_KEY_CORRELATION];
     }
 
     NSString *encryptionKeyHex = [NSString stringWithHexData:message.encryptionKey];
@@ -92,17 +93,17 @@
     }
     
     NSMutableDictionary *metaDict = [NSMutableDictionary dictionary];
-    if ([message.duration intValue] > 0) {
-        NSNumber *duration = [[NSNumber alloc] initWithFloat:message.duration.floatValue];
+    if ([message.durationObjc intValue] > 0) {
+        NSNumber *duration = [[NSNumber alloc] initWithFloat:message.durationObjc.floatValue];
         [metaDict setObject:duration forKey:JSON_FILE_KEY_METADATA_DURATION];
     }
     
-    if ([message.height intValue] > 0) {
-        [metaDict setObject:message.height forKey:JSON_FILE_KEY_METADATA_HEIGHT];
+    if ([message.heightObjc intValue] > 0) {
+        [metaDict setObject:message.heightObjc forKey:JSON_FILE_KEY_METADATA_HEIGHT];
     }
     
-    if ([message.width intValue] > 0) {
-        [metaDict setObject:message.width forKey:JSON_FILE_KEY_METADATA_WIDTH];
+    if ([message.widthObjc intValue] > 0) {
+        [metaDict setObject:message.widthObjc forKey:JSON_FILE_KEY_METADATA_WIDTH];
     }
     
     if ([metaDict count] > 0) {

@@ -40,17 +40,17 @@ protocol ChatScrollPositionProvider {
     /// Save current scroll position
     /// - Parameters:
     ///   - scrollPosition: Scroll position information to be stored
-    ///   - conversation: Conversation the scroll position is stored for
-    func save(_ scrollPosition: ChatScrollPositionInfo, for conversation: Conversation)
+    ///   - conversation: ConversationEntity the scroll position is stored for
+    func save(_ scrollPosition: ChatScrollPositionInfo, for conversation: ConversationEntity)
     
     /// Remove saved scroll position if there is any
-    /// - Parameter conversation: Conversation to remove scroll position for
-    func removeSavedPosition(for conversation: Conversation)
+    /// - Parameter conversation: ConversationEntity to remove scroll position for
+    func removeSavedPosition(for conversation: ConversationEntity)
     
     /// Get scroll position information for a conversation
-    /// - Parameter conversation: Conversation to get scroll position for
+    /// - Parameter conversation: ConversationEntity to get scroll position for
     /// - Returns: Scroll position information if there is any for the provided conversation
-    func chatScrollPosition(for conversation: Conversation) -> ChatScrollPositionInfo?
+    func chatScrollPosition(for conversation: ConversationEntity) -> ChatScrollPositionInfo?
 }
 
 /// Store chat scroll position in app group user defaults
@@ -84,7 +84,7 @@ class ChatScrollPosition: NSObject, ChatScrollPositionProvider {
     // MARK: - ChatScrollPositionProvider
     
     // This always works, but might not store the position if encoding of the data fails
-    func save(_ scrollPosition: ChatScrollPositionInfo, for conversation: Conversation) {
+    func save(_ scrollPosition: ChatScrollPositionInfo, for conversation: ConversationEntity) {
         do {
             let encodedData = try encoder.encode(scrollPosition)
             savedScrollPositions[identifier(for: conversation)] = encodedData
@@ -94,12 +94,12 @@ class ChatScrollPosition: NSObject, ChatScrollPositionProvider {
         }
     }
     
-    @objc func removeSavedPosition(for conversation: Conversation) {
+    @objc func removeSavedPosition(for conversation: ConversationEntity) {
         savedScrollPositions.removeValue(forKey: identifier(for: conversation))
     }
     
     // This will always work but return `nil` if no info exists or there was an error
-    func chatScrollPosition(for conversation: Conversation) -> ChatScrollPositionInfo? {
+    func chatScrollPosition(for conversation: ConversationEntity) -> ChatScrollPositionInfo? {
         guard let encodedData = savedScrollPositions[identifier(for: conversation)] else {
             return nil
         }
@@ -117,7 +117,7 @@ class ChatScrollPosition: NSObject, ChatScrollPositionProvider {
     
     // MARK: - Helper
     
-    private func identifier(for conversation: Conversation) -> String {
+    private func identifier(for conversation: ConversationEntity) -> String {
         // We need a string to allow storing it in user defaults
         conversation.objectID.uriRepresentation().absoluteString
     }

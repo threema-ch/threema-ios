@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct MultiDeviceWizardInformationView: View {
     @Environment(\.openURL) var openURL
@@ -35,35 +36,37 @@ struct MultiDeviceWizardInformationView: View {
                     
                     VStack(alignment: .leading, spacing: 0) {
                         MultiDeviceWizardBulletPointView(
-                            text: BundleUtil.localizedString(forKey: "md_wizard_info_download_title"),
+                            text: #localize("md_wizard_info_download_title"),
                             imageName: "arrow.down.circle.fill"
                         )
                         .padding(.bottom, 2.0)
                         
-                        Text(BundleUtil.localizedString(forKey: "md_wizard_info_download_text"))
+                        Text(#localize("md_wizard_info_download_text"))
                         
-                        Link("three.ma/md", destination: URL(string: "https://three.ma/md")!)
-                            .foregroundColor(Color(.primary))
-                            .highPriorityGesture(DragGesture())
+                        Link(destination: URL(string: "https://three.ma/md")!) {
+                            Text(verbatim: "three.ma/md")
+                        }
+                        .foregroundColor(Color(.primary))
+                        .highPriorityGesture(DragGesture())
                     }
                     .padding(.top)
                     .accessibilityElement(children: .combine)
                     
                     VStack(alignment: .leading, spacing: 0) {
                         MultiDeviceWizardBulletPointView(
-                            text: BundleUtil.localizedString(forKey: "md_wizard_info_linking_title"),
+                            text: #localize("md_wizard_info_linking_title"),
                             imageName: "link.circle.fill"
                         )
                         .padding(.bottom, 2.0)
                         
                         Text(LocalizedStringKey(String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "md_wizard_info_linking_text"),
+                            #localize("md_wizard_info_linking_text"),
                             DeviceLinking(businessInjector: injectedBusinessInjector).threemaSafeServer
                         )))
                     }
                     .accessibilityElement(children: .combine)
                     .accessibilityAction(named: Text(String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "accessibility_action_open_link"),
+                        #localize("accessibility_action_open_link"),
                         ThreemaURLProvider.safeWebdav.absoluteString
                     ))) {
                         openURL(ThreemaURLProvider.safeWebdav)
@@ -77,7 +80,7 @@ struct MultiDeviceWizardInformationView: View {
                     dismiss = true
                     wizardVM.cancelLinking()
                 } label: {
-                    Text(BundleUtil.localizedString(forKey: "md_wizard_cancel"))
+                    Text(#localize("md_wizard_cancel"))
                 }
                 .buttonStyle(.bordered)
                 .tint(Color(.primary))
@@ -88,7 +91,7 @@ struct MultiDeviceWizardInformationView: View {
                     MultiDeviceWizardPreparationView(wizardVM: wizardVM, dismiss: $dismiss)
                         
                 } label: {
-                    Text(BundleUtil.localizedString(forKey: "md_wizard_start"))
+                    Text(#localize("md_wizard_start"))
                         .bold()
                 }
                 .buttonStyle(.borderedProminent)
@@ -96,7 +99,7 @@ struct MultiDeviceWizardInformationView: View {
             .padding(.vertical)
         }
         .padding(.horizontal)
-        .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
+        .navigationBarTitle(#localize("md_wizard_header"))
         .navigationBarBackButtonHidden()
         .onAppear {
             wizardVM.advanceState(.information)

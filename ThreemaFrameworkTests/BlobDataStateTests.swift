@@ -24,7 +24,7 @@ import XCTest
 class BlobDataStateTests: XCTestCase {
     
     private var databasePreparer: DatabasePreparer!
-    private var conversation: Conversation!
+    private var conversation: ConversationEntity!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
@@ -44,12 +44,12 @@ class BlobDataStateTests: XCTestCase {
     
     // MARK: - thumbnailState
     
-    private func thumbnailTestImageData() -> ImageData {
+    private func thumbnailTestImageDataEntity() -> ImageDataEntity {
         let testBundle = Bundle(for: BlobDataStateTests.self)
         let testImageURL = testBundle.url(forResource: "Bild-1-1-thumbnail", withExtension: "jpg")!
         let testImageData = try! Data(contentsOf: testImageURL)
         
-        return databasePreparer.createImageData(
+        return databasePreparer.createImageDataEntity(
             data: testImageData,
             height: 512,
             width: 384
@@ -78,7 +78,7 @@ class BlobDataStateTests: XCTestCase {
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(conversation: conversation)
-            fileMessageEntity.thumbnail = thumbnailTestImageData()
+            fileMessageEntity.thumbnail = thumbnailTestImageDataEntity()
         }
         
         XCTAssertEqual(.incoming(.processed), fileMessageEntity.thumbnailState)
@@ -115,7 +115,7 @@ class BlobDataStateTests: XCTestCase {
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                thumbnail: thumbnailTestImageData(),
+                thumbnail: thumbnailTestImageDataEntity(),
                 isOwn: true
             )
             fileMessageEntity.sendFailed = NSNumber(booleanLiteral: true)
@@ -131,7 +131,7 @@ class BlobDataStateTests: XCTestCase {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 progress: NSNumber(floatLiteral: 0),
-                thumbnail: thumbnailTestImageData(),
+                thumbnail: thumbnailTestImageDataEntity(),
                 isOwn: true
             )
             fileMessageEntity.sendFailed = NSNumber(booleanLiteral: true)
@@ -146,7 +146,7 @@ class BlobDataStateTests: XCTestCase {
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                thumbnail: thumbnailTestImageData(),
+                thumbnail: thumbnailTestImageDataEntity(),
                 isOwn: true
             )
         }
@@ -161,7 +161,7 @@ class BlobDataStateTests: XCTestCase {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 progress: NSNumber(floatLiteral: 0),
-                thumbnail: thumbnailTestImageData(),
+                thumbnail: thumbnailTestImageDataEntity(),
                 isOwn: true
             )
         }
@@ -176,7 +176,7 @@ class BlobDataStateTests: XCTestCase {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 progress: NSNumber(floatLiteral: 0.8),
-                thumbnail: thumbnailTestImageData(),
+                thumbnail: thumbnailTestImageDataEntity(),
                 isOwn: true
             )
         }
@@ -193,7 +193,7 @@ class BlobDataStateTests: XCTestCase {
                 blobThumbnailID: MockData.generateBlobID(),
                 isOwn: true
             )
-            fileMessageEntity.thumbnail = databasePreparer.createImageData(data: Data([0]), height: 1, width: 1)
+            fileMessageEntity.thumbnail = databasePreparer.createImageDataEntity(data: Data([0]), height: 1, width: 1)
         }
 
         XCTAssertEqual(.outgoing(.remote), fileMessageEntity.thumbnailState)
@@ -277,11 +277,11 @@ class BlobDataStateTests: XCTestCase {
         var fileMessageEntity: FileMessageEntity!
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
             
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                data: fileData
+                data: fileDataEntity
             )
         }
         
@@ -321,11 +321,11 @@ class BlobDataStateTests: XCTestCase {
         var fileMessageEntity: FileMessageEntity!
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
-                data: fileData,
+                data: fileDataEntity,
                 isOwn: true
             )
         }
@@ -337,12 +337,12 @@ class BlobDataStateTests: XCTestCase {
         var fileMessageEntity: FileMessageEntity!
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 progress: NSNumber(floatLiteral: 0),
-                data: fileData,
+                data: fileDataEntity,
                 isOwn: true
             )
             fileMessageEntity.sendFailed = NSNumber(booleanLiteral: true)
@@ -355,12 +355,12 @@ class BlobDataStateTests: XCTestCase {
         var fileMessageEntity: FileMessageEntity!
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 progress: NSNumber(floatLiteral: 0),
-                data: fileData,
+                data: fileDataEntity,
                 isOwn: true
             )
         }
@@ -372,12 +372,12 @@ class BlobDataStateTests: XCTestCase {
         var fileMessageEntity: FileMessageEntity!
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 progress: NSNumber(floatLiteral: 0.8),
-                data: fileData,
+                data: fileDataEntity,
                 isOwn: true
             )
         }
@@ -395,7 +395,7 @@ class BlobDataStateTests: XCTestCase {
                 blobID: MockData.generateBlobID(),
                 isOwn: true
             )
-            fileMessageEntity.data = databasePreparer.createFileData(data: Data([0]))
+            fileMessageEntity.data = databasePreparer.createFileDataEntity(data: Data([0]))
         }
         
         XCTAssertEqual(.outgoing(.remote), fileMessageEntity.dataState)

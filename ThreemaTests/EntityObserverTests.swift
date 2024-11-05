@@ -51,7 +51,8 @@ class EntityObserverTests: XCTestCase {
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = groupEntity.groupId
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact
                 conversation.groupName = "GRP1"
@@ -60,7 +61,7 @@ class EntityObserverTests: XCTestCase {
 
         let dbCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         let entityManager = EntityManager(databaseContext: dbCnx, myIdentityStore: myIdentityStoreMock)
-        let conversation = entityManager.entityFetcher.conversation(
+        let conversation = entityManager.entityFetcher.conversationEntity(
             for: groupID,
             creator: groupCreatorIdentity
         )
@@ -79,7 +80,7 @@ class EntityObserverTests: XCTestCase {
                 observer = conversation?.observe(\.groupName, options: [.new, .old]) { _, value in
                     var hasValueChanged = false
 
-                    entityManager.performSyncBlockAndSafe {
+                    entityManager.performAndWaitSave {
                         guard !value.isPrior else {
                             return
                         }
@@ -89,7 +90,7 @@ class EntityObserverTests: XCTestCase {
                         hasValueChanged = true
 
                         if let c = entityManager.entityFetcher
-                            .getManagedObject(by: conversation?.objectID) as? Conversation {
+                            .getManagedObject(by: conversation?.objectID) as? ConversationEntity {
                             groupNameChanged = c.groupName
                             groupNameChangedCount += 1
                         }
@@ -104,9 +105,9 @@ class EntityObserverTests: XCTestCase {
             }
 
             startMeasuring()
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 if let c = entityManager.entityFetcher
-                    .getManagedObject(by: conversation?.objectID) as? Conversation {
+                    .getManagedObject(by: conversation?.objectID) as? ConversationEntity {
                     c.groupName = "GRP2"
                 }
             }
@@ -134,7 +135,8 @@ class EntityObserverTests: XCTestCase {
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = groupEntity.groupId
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact
                 conversation.groupName = "GRP1"
@@ -143,7 +145,7 @@ class EntityObserverTests: XCTestCase {
 
         let dbCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         let entityManager = EntityManager(databaseContext: dbCnx, myIdentityStore: myIdentityStoreMock)
-        let conversation: Conversation = entityManager.entityFetcher.conversation(
+        let conversation: ConversationEntity = entityManager.entityFetcher.conversationEntity(
             for: groupID,
             creator: groupCreatorIdentity
         )!
@@ -162,7 +164,7 @@ class EntityObserverTests: XCTestCase {
                     managedObject: conversation,
                     for: [.updated]
                 ) { managedObject, _ in
-                    groupNameChanged = (managedObject as? Conversation)?.groupName
+                    groupNameChanged = (managedObject as? ConversationEntity)?.groupName
                     groupNameChangedCount += 1
 
                     expect.fulfill()
@@ -172,9 +174,9 @@ class EntityObserverTests: XCTestCase {
             }
 
             startMeasuring()
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 if let c = entityManager.entityFetcher
-                    .getManagedObject(by: conversation.objectID) as? Conversation {
+                    .getManagedObject(by: conversation.objectID) as? ConversationEntity {
                     c.groupName = "GRP2"
                 }
             }
@@ -204,7 +206,8 @@ class EntityObserverTests: XCTestCase {
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = groupEntity.groupId
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact
                 conversation.groupName = "GRP1"
@@ -213,7 +216,7 @@ class EntityObserverTests: XCTestCase {
 
         let dbCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         let entityManager = EntityManager(databaseContext: dbCnx, myIdentityStore: myIdentityStoreMock)
-        let conversation: Conversation = entityManager.entityFetcher.conversation(
+        let conversation: ConversationEntity = entityManager.entityFetcher.conversationEntity(
             for: groupID,
             creator: groupCreatorIdentity
         )!
@@ -233,7 +236,7 @@ class EntityObserverTests: XCTestCase {
             expect.fulfill()
         }
 
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             entityManager.entityDestroyer.delete(conversation: conversation)
         }
 
@@ -256,7 +259,8 @@ class EntityObserverTests: XCTestCase {
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = groupEntity.groupId
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact
                 conversation.groupName = "GRP1"
@@ -265,7 +269,7 @@ class EntityObserverTests: XCTestCase {
 
         let dbCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
         let entityManager = EntityManager(databaseContext: dbCnx, myIdentityStore: myIdentityStoreMock)
-        let conversation: Conversation = entityManager.entityFetcher.conversation(
+        let conversation: ConversationEntity = entityManager.entityFetcher.conversationEntity(
             for: groupID,
             creator: groupCreatorIdentity
         )!
@@ -286,7 +290,7 @@ class EntityObserverTests: XCTestCase {
             expect.fulfill()
         }
 
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             entityManager.entityDestroyer.delete(conversation: conversation)
         }
 
@@ -309,7 +313,8 @@ class EntityObserverTests: XCTestCase {
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = groupEntity.groupId
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact
                 conversation.groupName = "GRP1"
@@ -318,7 +323,7 @@ class EntityObserverTests: XCTestCase {
 
         let dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         let entityManager = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
-        let conversation: Conversation = entityManager.entityFetcher.conversation(
+        let conversation: ConversationEntity = entityManager.entityFetcher.conversationEntity(
             for: groupID,
             creator: groupCreatorIdentity
         )!
@@ -331,7 +336,7 @@ class EntityObserverTests: XCTestCase {
             managedObject: conversation,
             for: [.updated]
         ) { managedObject, _ in
-            groupNameChanged = (managedObject as? Conversation)?.groupName
+            groupNameChanged = (managedObject as? ConversationEntity)?.groupName
 
             expect.fulfill()
         }
@@ -343,8 +348,8 @@ class EntityObserverTests: XCTestCase {
         )
 
         DispatchQueue.global(qos: .default).async {
-            backgroundEntityManager.performSyncBlockAndSafe {
-                let conversation: Conversation = backgroundEntityManager.entityFetcher.conversation(
+            backgroundEntityManager.performAndWaitSave {
+                let conversation: ConversationEntity = backgroundEntityManager.entityFetcher.conversationEntity(
                     for: groupID,
                     creator: groupCreatorIdentity
                 )!
@@ -372,7 +377,8 @@ class EntityObserverTests: XCTestCase {
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = groupEntity.groupId
                 conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                 conversation.contact = contact
                 conversation.groupName = "GRP1"
@@ -381,7 +387,7 @@ class EntityObserverTests: XCTestCase {
 
         let dbCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
         let entityManager = EntityManager(databaseContext: dbCnx, myIdentityStore: myIdentityStoreMock)
-        let conversation: Conversation = entityManager.entityFetcher.conversation(
+        let conversation: ConversationEntity = entityManager.entityFetcher.conversationEntity(
             for: groupID,
             creator: groupCreatorIdentity
         )!
@@ -394,7 +400,7 @@ class EntityObserverTests: XCTestCase {
             managedObject: conversation,
             for: [.updated]
         ) { managedObject, _ in
-            groupNameChanged = (managedObject as? Conversation)?.groupName
+            groupNameChanged = (managedObject as? ConversationEntity)?.groupName
 
             // Fullfill only on main context
             if managedObject?.managedObjectContext?.parent == nil {
@@ -402,8 +408,8 @@ class EntityObserverTests: XCTestCase {
             }
         }
 
-        entityManager.performSyncBlockAndSafe {
-            let conversation: Conversation = entityManager.entityFetcher.conversation(
+        entityManager.performAndWaitSave {
+            let conversation: ConversationEntity = entityManager.entityFetcher.conversationEntity(
                 for: groupID,
                 creator: groupCreatorIdentity
             )!

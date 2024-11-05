@@ -23,6 +23,7 @@ import Foundation
 import OSLog
 import ThreemaEssentials
 import ThreemaFramework
+import ThreemaMacros
 
 /// Migrate app to a new version
 ///
@@ -209,7 +210,7 @@ import ThreemaFramework
             // We need to throw a `NSError` with a localized message shown as part of the error body to the user, but we
             // only localize the first sentence such that the rest is easily readable by us.
             let dict = [
-                NSLocalizedDescriptionKey: "\("app_migration_uncompleted".localized) Expected: \(AppMigrationVersion.allCases.last!.rawValue) Actual: \(businessInjector.userSettings.appMigratedToVersion)",
+                NSLocalizedDescriptionKey: "\(#localize("app_migration_uncompleted")) Expected: \(AppMigrationVersion.allCases.last!.rawValue) Actual: \(businessInjector.userSettings.appMigratedToVersion)",
             ]
             let nsError = NSError(domain: "\(type(of: self))", code: 1, userInfo: dict)
             throw nsError
@@ -239,9 +240,9 @@ import ThreemaFramework
         MessageDraftStore.shared.cleanupDrafts()
         AppGroup.userDefaults().removeObject(forKey: "AlreadyDeletedOldDrafts")
 
-        businessInjector.entityManager.performSyncBlockAndSafe {
+        businessInjector.entityManager.performAndWaitSave {
             for conversation in self.businessInjector.entityManager.entityFetcher.allConversations() {
-                guard let conversation = conversation as? Conversation else {
+                guard let conversation = conversation as? ConversationEntity else {
                     continue
                 }
 
@@ -331,7 +332,7 @@ import ThreemaFramework
     private func migrateTo5_2() throws {
         DDLogNotice("[AppMigration] App migration to version 5.2 started")
         os_signpost(.begin, log: osPOILog, name: "5.2 migration")
-        businessInjector.entityManager.performSyncBlockAndSafe {
+        businessInjector.entityManager.performAndWaitSave {
 
             let batch = NSBatchUpdateRequest(entityName: "Conversation")
             batch.resultType = .statusOnlyResultType
@@ -343,7 +344,7 @@ import ThreemaFramework
 
             batch.propertiesToUpdate = [
                 "marked": NSNumber(booleanLiteral: false),
-                "visibility": ConversationVisibility.pinned.rawValue,
+                "visibility": ConversationEntity.Visibility.pinned.rawValue,
             ]
             // if there was a error, the execute function will return nil or a result with the result 0
             if let result = self.businessInjector.entityManager.entityFetcher.execute(batch) {
@@ -385,7 +386,7 @@ import ThreemaFramework
 
         try BusinessInjector().dhSessionStore.executeNull()
 
-        businessInjector.entityManager.performSyncBlockAndSafe {
+        businessInjector.entityManager.performAndWaitSave {
             // Set for all conversations the last update
             let batch = NSBatchUpdateRequest(entityName: "Conversation")
             batch.resultType = .statusOnlyResultType
@@ -556,7 +557,8 @@ import ThreemaFramework
                                     .groupEntities(for: groupID) {
                                     for groupEntity in groupEntities {
                                         if let group = self.businessInjector.groupManager.getGroup(
-                                            groupEntity.groupID,
+                                            // swiftformat:disable:next acronyms
+                                            groupEntity.groupId,
                                             creator: groupEntity.groupCreator ?? myIdentity
                                         ) {
 
@@ -605,13 +607,13 @@ import ThreemaFramework
         DDLogNotice("[AppMigration] App migration to version 5.9 started")
         os_signpost(.begin, log: osPOILog, name: "5.9 migration")
 
-        businessInjector.entityManager.performSyncBlockAndSafe {
+        businessInjector.entityManager.performAndWaitSave {
             if let allFileMessages =
                 self.businessInjector.entityManager.entityFetcher
                     .allFileMessagesWithJsonCaptionButEmptyCaption() as?
                     [FileMessageEntity] {
                 for fileMessage in allFileMessages {
-                    fileMessage.caption = fileMessage.getJSONCaption()
+                    fileMessage.caption = fileMessage.jsonCaption
                 }
             }
         }

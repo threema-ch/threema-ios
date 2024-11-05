@@ -56,8 +56,8 @@ class WebUpdateActiveConversationRequest: WebAbstractMessage {
                 }
             }
             else if identity != nil {
-                let conversation = entityManager.entityFetcher.conversation(forIdentity: identity!)
-                entityManager.performSyncBlockAndSafe {
+                let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: identity!)
+                entityManager.performAndWaitSave {
                     if conversation?.unreadMessageCount == -1 {
                         conversation!.unreadMessageCount = 0
                     }

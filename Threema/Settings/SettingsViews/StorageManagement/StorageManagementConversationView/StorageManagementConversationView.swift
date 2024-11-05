@@ -20,13 +20,14 @@
 
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 struct StorageManagementConversationView: View {
     @Environment(\.sizeCategory) var sizeCategory
     @ObservedObject var messageModel: MessageRetentionManagerModel
     @ObservedObject var model: Model
     
-    init(businessInjector: BusinessInjectorProtocol, conversation: Conversation? = nil) {
+    init(businessInjector: BusinessInjectorProtocol, conversation: ConversationEntity? = nil) {
         self.messageModel = businessInjector.messageRetentionManager as! MessageRetentionManagerModel
         self.model = .init(conversation: conversation, businessInjector: businessInjector)
     }
@@ -40,7 +41,7 @@ struct StorageManagementConversationView: View {
                 
                 if messageModel.isMDM {
                     HStack(alignment: .center) {
-                        Text("disabled_by_device_policy".localized)
+                        Text(#localize("disabled_by_device_policy"))
                             .font(.footnote)
                             .foregroundColor(Color(uiColor: Colors.textLight))
                     }
@@ -49,7 +50,7 @@ struct StorageManagementConversationView: View {
             }
             .padding()
         }
-        .navigationTitle("storage_management".localized)
+        .navigationTitle(#localize("storage_management"))
         .task(model.load)
     }
     
@@ -151,7 +152,7 @@ struct StorageManagementConversationView: View {
                     )
                 )
             }
-            $0.addAction(UIAlertAction(title: "cancel".localized, style: .cancel))
+            $0.addAction(UIAlertAction(title: #localize("cancel"), style: .cancel))
             if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {
                 $0.popoverPresentationController?.sourceRect = view.bounds
                 $0.popoverPresentationController?.sourceView = view

@@ -24,7 +24,7 @@
 #import "BundleUtil.h"
 
 @interface BackupPasswordViewController ()
-
+@property (weak, nonatomic) IBOutlet UILabel *chooseLabel;
 @end
 
 @implementation BackupPasswordViewController
@@ -37,6 +37,11 @@
     
     self.tableView.rowHeight = 85.0;
     self.tableView.estimatedRowHeight = 85.0;
+    
+    self.title = [BundleUtil localizedStringForKey:@"Password"];
+    self.navigationItem.rightBarButtonItem.title = [BundleUtil localizedStringForKey:@"next"];
+    self.chooseLabel.text = [BundleUtil localizedStringForKey:@"backup_password_choose_label"];
+    self.passwordField.placeholder = [BundleUtil localizedStringForKey:@"Password"];
 }
 
 - (void)viewWillAppear:(BOOL)animated {

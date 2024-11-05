@@ -20,6 +20,7 @@
 
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 extension StorageManagementView {
     
@@ -30,7 +31,7 @@ extension StorageManagementView {
         @Environment(\.appContainer.businessInjector)
         private var businessInjector: any BusinessInjectorProtocol
         
-        @State private var conversations: [Conversation] = []
+        @State private var conversations: [ConversationEntity] = []
         
         var body: some View {
             Section {
@@ -65,10 +66,10 @@ extension StorageManagementView {
             @Environment(\.sizeCategory) private var sizeCategory
             @State private var profilePicture: UIImage = ProfilePictureGenerator.unknownContactImage
             @State private var metaData: StorageManagementView.Model.ConversationMetaData = (0, 0)
-            private let conversation: Conversation
+            private let conversation: ConversationEntity
             private let imageSize: CGFloat = 40
             
-            init(conversation: Conversation) {
+            init(conversation: ConversationEntity) {
                 self.conversation = conversation
             }
             
@@ -116,7 +117,7 @@ extension StorageManagementView {
             }
             
             private var threemaTypeOverlay: some View {
-                if let contact = conversation.contact, contact.showOtherThreemaTypeIcon, !conversation.isGroup() {
+                if let contact = conversation.contact, contact.showOtherThreemaTypeIcon, !conversation.isGroup {
                     return AnyView(
                         Image(uiImage: ThreemaUtility.otherThreemaTypeIcon)
                             .resizable()
@@ -131,13 +132,19 @@ extension StorageManagementView {
             }
             
             private var label: String {
-                conversation.displayName ?? ""
+                conversation.displayName
             }
             
             private var detailView: some View {
                 VStack(alignment: sizeCategory.isAccessibilityCategory ? .leading : .trailing, spacing: 8) {
-                    Text("\(metaData.messageCount) \("messages".localized)")
-                    Text("\(metaData.fileCount) \("files".localized)")
+                    Text(verbatim: String.localizedStringWithFormat(
+                        #localize("storage_number_of_messages"),
+                        metaData.messageCount
+                    ))
+                    Text(verbatim: String.localizedStringWithFormat(
+                        #localize("storage_number_of_files"),
+                        metaData.fileCount
+                    ))
                 }
                 .font(.callout)
                 .lineLimit(sizeCategory.isAccessibilityCategory ? nil : 1)
@@ -163,7 +170,7 @@ extension StorageManagementView {
                         businessInjector: businessInjector
                     ),
                     label: {
-                        Text("manage_all_conversations".localized)
+                        Text(#localize("manage_all_conversations"))
                             .lineLimit(nil)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -226,14 +233,14 @@ extension StorageManagementView.StorageSection {
         var label: String {
             switch self {
             case .total:
-                "storage_total".localized
+                #localize("storage_total")
             case .totalInUse:
-                "storage_total_in_use".localized
+                #localize("storage_total_in_use")
             case .totalFree:
-                "storage_total_free".localized
+                #localize("storage_total_free")
             case .threema:
                 String.localizedStringWithFormat(
-                    "storage_threema".localized,
+                    #localize("storage_threema"),
                     ThreemaApp.currentName
                 )
             }

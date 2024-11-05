@@ -57,10 +57,10 @@ import Foundation
     ///
     /// - Parameters:
     ///   - olderThan: All message older than that date will be deleted
-    ///   - conversation: Conversation
+    ///   - conversation: ConversationEntity
     /// - Returns:
     ///   Count of deleted media files
-    public func deleteMedias(olderThan: Date?, for conversation: Conversation? = nil) -> Int? {
+    public func deleteMedias(olderThan: Date?, for conversation: ConversationEntity? = nil) -> Int? {
         var deletedObjects = 0
         var mediaMessageTypes = [
             AudioMessageEntity.self,
@@ -84,7 +84,7 @@ import Foundation
     func deleteMediasOf(
         messageType: (some BaseMessage).Type,
         olderThan: Date?,
-        conversation: Conversation? = nil
+        conversation: ConversationEntity? = nil
     ) -> Int? {
         guard messageType is AudioMessageEntity.Type ||
             messageType is FileMessageEntity.Type ||
@@ -258,21 +258,22 @@ import Foundation
         message.userackDate = nil
         message.groupDeliveryReceipts = nil
 
-        if let message = message as? LocationMessage {
+        if let message = message as? LocationMessageEntity {
             message.latitude = 0
             message.longitude = 0
             message.accuracy = 0
             message.poiAddress = nil
             message.poiName = nil
         }
-        else if let message = message as? TextMessage {
+        else if let message = message as? TextMessageEntity {
             message.text = ""
         }
         else if let message = message as? FileMessageEntity {
             deleteThumbnail(for: message)
-            
-            message.blobID = nil
-            message.blobThumbnailID = nil
+            // swiftformat:disable: acronyms
+            message.blobId = nil
+            message.blobThumbnailId = nil
+            // swiftformat:enable: acronyms
             message.caption = ""
             message.encryptionKey = nil
             message.fileName = ""
@@ -289,10 +290,12 @@ import Foundation
             deleteThumbnail(for: message)
 
             message.encryptionKey = nil
-            message.imageBlobID = nil
+            // swiftformat:disable:next acronyms
+            message.imageBlobId = nil
             message.imageSize = nil
             message.progress = 0
-            message.imageBlobID = nil
+            // swiftformat:disable:next acronyms
+            message.imageBlobId = nil
             message.thumbnail = nil
         }
         else if let message = message as? VideoMessageEntity {
@@ -301,7 +304,8 @@ import Foundation
             message.duration = 0
             message.encryptionKey = nil
             message.progress = 0
-            message.videoBlobID = nil
+            // swiftformat:disable:next acronyms
+            message.videoBlobId = nil
             message.videoSize = nil
             message.duration = 0
         }
@@ -332,12 +336,13 @@ import Foundation
                         self.objCnx.delete(object)
                     }
                     else if message is VideoMessageEntity,
-                            let imageData = object as? ImageData,
-                            let defaultThumbnail = UIImage(named: "threema.video.fill") {
+                            let imageData = object as? ImageDataEntity,
+                            let defaultThumbnail = UIImage(named: "threema.video.fill"),
+                            let data = defaultThumbnail.jpegData(compressionQuality: kJPEGCompressionQualityLow) {
 
-                        imageData.data = defaultThumbnail.jpegData(compressionQuality: kJPEGCompressionQualityLow)
-                        imageData.width = NSNumber(floatLiteral: defaultThumbnail.size.width)
-                        imageData.height = NSNumber(floatLiteral: defaultThumbnail.size.height)
+                        imageData.data = data
+                        imageData.width = Int16(defaultThumbnail.size.width)
+                        imageData.height = Int16(defaultThumbnail.size.height)
                     }
 
                     try self.objCnx.save()
@@ -357,7 +362,7 @@ import Foundation
     ///
     /// - Returns:
     ///    Count of deleted messages
-    public func deleteMessages(olderThan: Date?, for conversation: Conversation? = nil) -> Int? {
+    public func deleteMessages(olderThan: Date?, for conversation: ConversationEntity? = nil) -> Int? {
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
         
         if let conversation {
@@ -411,7 +416,7 @@ import Foundation
     public func deleteMessagesForMessageRetention(olderThan: Date, for conversationsIDs: [NSManagedObjectID]) async {
         await objCnx.perform {
             let conversations = conversationsIDs
-                .compactMap { try? self.objCnx.existingObject(with: $0) as? Conversation }
+                .compactMap { try? self.objCnx.existingObject(with: $0) as? ConversationEntity }
             let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
             fetchMessages.predicate = NSPredicate(
                 format: "conversation IN %@ AND date < %@",
@@ -433,7 +438,7 @@ import Foundation
     public func messagesToBeDeleted(olderThan: Date, for conversationsIDs: [NSManagedObjectID]) async -> Int {
         await objCnx.perform {
             let conversations = conversationsIDs
-                .compactMap { try? self.objCnx.existingObject(with: $0) as? Conversation }
+                .compactMap { try? self.objCnx.existingObject(with: $0) as? ConversationEntity }
             guard !conversations.isEmpty else {
                 return 0
             }
@@ -459,11 +464,11 @@ import Foundation
     /// Delete all kind of messages within conversation.
     ///
     /// - Parameters:
-    ///    - conversation: Delete all message of this conversation
+    ///    - conversation: Delete all message of this ConversationEntity
     ///
     /// - Returns:
     ///    Count of deleted messages
-    @objc public func deleteMessages(of conversation: Conversation) -> Int {
+    @objc public func deleteMessages(of conversation: ConversationEntity) -> Int {
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
         fetchMessages.predicate = NSPredicate(format: "conversation = %@", conversation)
         
@@ -494,7 +499,7 @@ import Foundation
         delete(entity: callEntity)
     }
 
-    @objc public func delete(conversation: Conversation) {
+    @objc public func delete(conversation: ConversationEntity) {
         delete(entity: conversation)
     }
 
@@ -518,20 +523,20 @@ import Foundation
         delete(entity: groupEntity)
     }
 
-    func delete(imageData: ImageData) {
-        delete(entity: imageData)
+    func delete(imageDataEntity: ImageDataEntity) {
+        delete(entity: imageDataEntity)
     }
 
-    func delete(lastGroupSyncRequest: LastGroupSyncRequest) {
-        delete(entity: lastGroupSyncRequest)
+    func delete(lastGroupSyncRequestEntity: LastGroupSyncRequestEntity) {
+        delete(entity: lastGroupSyncRequestEntity)
     }
 
     func delete(messageHistoryEntryEntity: MessageHistoryEntryEntity) {
         delete(entity: messageHistoryEntryEntity)
     }
 
-    public func delete(webClientSession: WebClientSession) {
-        delete(entity: webClientSession)
+    public func delete(webClientSessionEntity: WebClientSessionEntity) {
+        delete(entity: webClientSessionEntity)
     }
 
     /// Delete particular DB object.
@@ -540,7 +545,7 @@ import Foundation
     ///    - object: object to delete
     private func delete(entity object: NSManagedObject) {
         var shouldUpdateConversationContent = false
-        if let conversation = object as? Conversation {
+        if let conversation = object as? ConversationEntity {
             let count = deleteMessages(of: conversation)
             DDLogDebug("\(count) messages deleted from conversation")
             
@@ -550,7 +555,7 @@ import Foundation
             // Remove all conversations and messages for this contact
             if let conversations = contact.conversations {
                 for genericConversation in conversations {
-                    guard let conversation = genericConversation as? Conversation else {
+                    guard let conversation = genericConversation as? ConversationEntity else {
                         fatalError("Can't delete a conversation of a contact, because it's not a conversation object")
                         continue
                     }
@@ -595,8 +600,8 @@ import Foundation
     ///
     /// - Parameter contactEntity: Delete 1:1 conversation of this contact
     public func deleteOneToOneConversation(for contactEntity: ContactEntity) {
-        if let conversations = contactEntity.conversations as? Set<Conversation> {
-            for conversation in conversations.filter({ !$0.isGroup() }) {
+        if let conversations = contactEntity.conversations as? Set<ConversationEntity> {
+            for conversation in conversations.filter({ !$0.isGroup }) {
                 delete(conversation: conversation)
             }
         }
@@ -968,7 +973,8 @@ import Foundation
                 let fetchConversations = NSFetchRequest<NSFetchRequestResult>(entityName: "Conversation")
                 fetchConversations.predicate = NSPredicate(format: "lastMessage IN %@", messages)
 
-                if let conversations = try fetchConversations.execute() as? [Conversation], !conversations.isEmpty {
+                if let conversations = try fetchConversations.execute() as? [ConversationEntity],
+                   !conversations.isEmpty {
                     for conversation in conversations {
                         conversation.lastMessage = nil
                     }

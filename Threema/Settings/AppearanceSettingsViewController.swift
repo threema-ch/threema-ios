@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import SwiftUI
+import ThreemaMacros
 
 class AppearanceSettingsViewController: ThemedTableViewController {
     
@@ -81,18 +82,18 @@ class AppearanceSettingsViewController: ThemedTableViewController {
     }
     
     func updateView() {
-        darkThemeLabel.text = "settings_appearance_dark_theme".localized
-        lightThemeLabel.text = "settings_appearance_light_theme".localized
-        systemThemeLabel.text = "settings_appearance_system_theme".localized
+        darkThemeLabel.text = #localize("settings_appearance_dark_theme")
+        lightThemeLabel.text = #localize("settings_appearance_light_theme")
+        systemThemeLabel.text = #localize("settings_appearance_system_theme")
         
-        darkThemeButton.accessibilityLabel = "settings_appearance_dark_theme".localized
-        lightThemeButton.accessibilityLabel = "settings_appearance_light_theme".localized
-        systemThemeButton.accessibilityLabel = "settings_appearance_system_theme".localized
+        darkThemeButton.accessibilityLabel = #localize("settings_appearance_dark_theme")
+        lightThemeButton.accessibilityLabel = #localize("settings_appearance_light_theme")
+        systemThemeButton.accessibilityLabel = #localize("settings_appearance_system_theme")
         
-        hideStaleContactsLabel.text = "settings_appearance_hide_stale_contacts".localized
-        showProfilePicturesLabel.text = "settings_appearance_show_profile_pictures".localized
-        displayOrderLabel.text = "settings_appearance_display_order".localized
-        showGalleryPreviewLabel.text = "settings_appearance_show_gallery_preview".localized
+        hideStaleContactsLabel.text = #localize("settings_appearance_hide_stale_contacts")
+        showProfilePicturesLabel.text = #localize("settings_appearance_show_profile_pictures")
+        displayOrderLabel.text = #localize("settings_appearance_display_order")
+        showGalleryPreviewLabel.text = #localize("settings_appearance_show_gallery_preview")
         
         showProfilePicturesSwitch.isOn = UserSettings.shared().showProfilePictures
         showGalleryPreviewSwitch.isOn = UserSettings.shared().showGalleryPreview
@@ -134,7 +135,7 @@ class AppearanceSettingsViewController: ThemedTableViewController {
         
         previewLimitSlider.value = UserSettings.shared().previewLimit
         previewLimitLabel.text = String.localizedStringWithFormat(
-            "preview_limit".localized,
+            #localize("preview_limit"),
             previewLimitSlider.value
         )
         previewLimitLabel.isEnabled = showGalleryPreviewSwitch.isOn
@@ -146,17 +147,17 @@ class AppearanceSettingsViewController: ThemedTableViewController {
             systemThemeButton.applySelectedStyle()
             
             themeCell.accessibilityLabel = String.localizedStringWithFormat(
-                "settings_appearance_theme_selected".localized,
-                "settings_appearance_system_theme".localized
+                #localize("settings_appearance_theme_selected"),
+                #localize("settings_appearance_system_theme")
             )
             systemThemeButton.accessibilityLabel = "settings_appearance_system_theme"
-                .localized + ", " + "settings_appearance_theme_active".localized
+                .localized + ", " + #localize("settings_appearance_theme_active")
         }
         else {
             updateButtonSelectionForCurrentTheme()
         }
         
-        appIconLabel.text = "settings_appearance_hide_app_icon".localized
+        appIconLabel.text = #localize("settings_appearance_hide_app_icon")
     }
     
     private func updateButtonSelectionForCurrentTheme() {
@@ -166,21 +167,21 @@ class AppearanceSettingsViewController: ThemedTableViewController {
             darkThemeButton.applySelectedStyle()
             systemThemeButton.applyDeselectStyle()
             themeCell.accessibilityLabel = String.localizedStringWithFormat(
-                "settings_appearance_theme_selected".localized,
-                "settings_appearance_dark_theme".localized
+                #localize("settings_appearance_theme_selected"),
+                #localize("settings_appearance_dark_theme")
             )
             darkThemeButton.accessibilityLabel = "settings_appearance_dark_theme"
-                .localized + ", " + "settings_appearance_theme_active".localized
+                .localized + ", " + #localize("settings_appearance_theme_active")
         case .light, .undefined:
             lightThemeButton.applySelectedStyle()
             darkThemeButton.applyDeselectStyle()
             systemThemeButton.applyDeselectStyle()
             themeCell.accessibilityLabel = String.localizedStringWithFormat(
-                "settings_appearance_theme_selected".localized,
-                "settings_appearance_light_theme".localized
+                #localize("settings_appearance_theme_selected"),
+                #localize("settings_appearance_light_theme")
             )
             lightThemeButton.accessibilityLabel = "settings_appearance_light_theme"
-                .localized + ", " + "settings_appearance_theme_active".localized
+                .localized + ", " + #localize("settings_appearance_theme_active")
         }
     }
 }
@@ -247,7 +248,7 @@ extension AppearanceSettingsViewController {
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if section == 0 {
-            return "settings_appearance_theme_section".localized
+            return #localize("settings_appearance_theme_section")
         }
         return nil
     }
@@ -364,7 +365,7 @@ extension AppearanceSettingsViewController {
         let roundedValue = round(sender.value / 5) * 5
         sender.value = roundedValue
         previewLimitLabel.text = String.localizedStringWithFormat(
-            "preview_limit".localized,
+            #localize("preview_limit"),
             sender.value
         )
         UserSettings.shared()?.previewLimit = sender.value

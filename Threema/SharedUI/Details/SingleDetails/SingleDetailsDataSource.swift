@@ -23,6 +23,7 @@ import Combine
 import MBProgressHUD
 import PromiseKit
 import ThreemaFramework
+import ThreemaMacros
 
 // MARK: - SingleDetailsDataSource.Configuration
 
@@ -278,9 +279,9 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         }
     }
     
-    func sortedGroupMembershipConversations() -> [Conversation]? {
+    func sortedGroupMembershipConversations() -> [ConversationEntity]? {
         contact.groupConversations?
-            .compactMap { $0 as? Conversation }
+            .compactMap { $0 as? ConversationEntity }
             .sortedDescendingByLastUpdatedDate()
     }
     
@@ -358,14 +359,14 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
            contact.canBePickedAsProfilePictureRecipient {
             
             if contact.isProfilePictureRecipient {
-                return BundleUtil.localizedString(forKey: "contact_added_to_profile_picture_list")
+                return #localize("contact_added_to_profile_picture_list")
             }
             else {
-                return BundleUtil.localizedString(forKey: "contact_removed_from_profile_picture_list")
+                return #localize("contact_removed_from_profile_picture_list")
             }
         }
         else if section == .fsActions {
-            return BundleUtil.localizedString(forKey: "forward_security_explainer_footer")
+            return #localize("forward_security_explainer_footer")
         }
         
         return nil
@@ -387,7 +388,7 @@ extension SingleDetailsDataSource {
     
     private func contactQuickActions(in viewController: UIViewController) -> [QuickAction] {
         
-        let localizesMessageTitle = BundleUtil.localizedString(forKey: "message")
+        let localizesMessageTitle = #localize("message")
         
         var contactDetailsQuickActions = [
             QuickAction(
@@ -418,7 +419,7 @@ extension SingleDetailsDataSource {
     
     private func conversationQuickActions(
         in viewController: UIViewController,
-        for conversation: Conversation
+        for conversation: ConversationEntity
     ) -> [QuickAction] {
         var conversationDetailsQuickActions = [QuickAction]()
         
@@ -443,7 +444,7 @@ extension SingleDetailsDataSource {
         
         return QuickAction(
             imageNameProvider: dndImageNameProvider,
-            title: BundleUtil.localizedString(forKey: "doNotDisturb_title"),
+            title: #localize("doNotDisturb_title"),
             accessibilityIdentifier: "SingleDetailsDataSourceDndQuickActionButton"
         ) { [weak self, weak viewController] quickAction in
             guard let strongSelf = self,
@@ -467,7 +468,7 @@ extension SingleDetailsDataSource {
     
     private func searchChatQuickAction(
         in viewController: UIViewController,
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         forStarred: Bool = false
     ) -> [QuickAction] {
         let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
@@ -481,7 +482,7 @@ extension SingleDetailsDataSource {
         
         let quickAction = QuickAction(
             imageName: "magnifyingglass",
-            title: BundleUtil.localizedString(forKey: "search"),
+            title: #localize("search"),
             accessibilityIdentifier: "SingleDetailsDataSourceSearchQuickActionButton"
         ) { [weak singleDetailsViewController] _ in
             singleDetailsViewController?.startChatSearch(forStarred: forStarred)
@@ -501,7 +502,7 @@ extension SingleDetailsDataSource {
         // feature mask) instead of checking when the action is actually triggered?
         let quickAction = QuickAction(
             imageName: "threema.phone.fill",
-            title: BundleUtil.localizedString(forKey: "call"),
+            title: #localize("call"),
             accessibilityIdentifier: "SingleDetailsDataSourceCallQuickActionButton"
         ) { [weak self, weak viewController] _ in
             guard let strongSelf = self else {
@@ -529,8 +530,8 @@ extension SingleDetailsDataSource {
                         // Calls not supported for this contact
                         UIAlertTemplate.showAlert(
                             owner: viewController,
-                            title: BundleUtil.localizedString(forKey: "call_voip_not_supported_title"),
-                            message: BundleUtil.localizedString(forKey: "call_voip_not_supported_text")
+                            title: #localize("call_voip_not_supported_title"),
+                            message: #localize("call_voip_not_supported_text")
                         )
                     }
                     else {
@@ -553,7 +554,7 @@ extension SingleDetailsDataSource {
         
         let quickAction = QuickAction(
             imageName: "qrcode.viewfinder",
-            title: BundleUtil.localizedString(forKey: "scan"),
+            title: #localize("scan"),
             accessibilityIdentifier: "SingleDetailsDataSourceScanQuickActionButton"
         ) { [weak self, weak viewController] quickAction in
             guard let strongSelf = self,
@@ -614,18 +615,21 @@ extension SingleDetailsDataSource {
         return quickActions
     }
     
-    private func hasMedia(for conversation: Conversation) -> Bool {
+    private func hasMedia(for conversation: ConversationEntity) -> Bool {
         businessInjector.entityManager.entityFetcher.countMediaMessages(for: conversation) > 0
     }
     
-    private func hasStarred(in conversation: Conversation) -> Bool {
+    private func hasStarred(in conversation: ConversationEntity) -> Bool {
         businessInjector.entityManager.performAndWait {
             self.businessInjector.entityManager.entityFetcher.countStarredMessages(in: conversation) > 0
         }
     }
     
-    private func mediaQuickAction(for conversation: Conversation, in viewController: UIViewController) -> QuickAction {
-        let localizedMediaString = BundleUtil.localizedString(forKey: "media_overview")
+    private func mediaQuickAction(
+        for conversation: ConversationEntity,
+        in viewController: UIViewController
+    ) -> QuickAction {
+        let localizedMediaString = #localize("media_overview")
         
         return QuickAction(
             imageName: "photo.fill.on.rectangle.fill",
@@ -640,11 +644,11 @@ extension SingleDetailsDataSource {
     }
     
     private func ballotsQuickAction(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         in viewController: UIViewController
     ) -> [QuickAction] {
         
-        let localizedBallotsString = BundleUtil.localizedString(forKey: "ballots")
+        let localizedBallotsString = #localize("ballots")
         
         return [QuickAction(
             imageName: "chart.pie.fill",
@@ -655,11 +659,12 @@ extension SingleDetailsDataSource {
                 return
             }
             
-            guard let ballotViewController = BallotListTableViewController.ballotListViewController(for: conversation)
+            guard let ballotViewController = BallotListTableViewController
+                .ballotListViewController(forConversation: conversation)
             else {
                 UIAlertTemplate.showAlert(
                     owner: weakViewController,
-                    title: BundleUtil.localizedString(forKey: "ballot_load_error"),
+                    title: #localize("ballot_load_error"),
                     message: nil
                 )
                 return
@@ -675,8 +680,8 @@ extension SingleDetailsDataSource {
     private func starredQuickAction() -> QuickAction {
         QuickAction(
             imageName: "star.fill",
-            title: "marker_details_title".localized,
-            accessibilityIdentifier: "marker_details_title".localized
+            title: #localize("marker_details_title"),
+            accessibilityIdentifier: #localize("marker_details_title")
         ) { [weak singleDetailsViewController] _ in
             singleDetailsViewController?.startChatSearch(forStarred: true)
         }
@@ -687,11 +692,11 @@ extension SingleDetailsDataSource {
 
 extension SingleDetailsDataSource {
     
-    private func contentActions(for conversation: Conversation) -> [SingleDetails.Row] {
+    private func contentActions(for conversation: ConversationEntity) -> [SingleDetails.Row] {
         var rows = [SingleDetails.Row]()
         
         if ConversationExporter.canExport(conversation: conversation, entityManager: businessInjector.entityManager) {
-            let localizedExportConversationActionTitle = BundleUtil.localizedString(forKey: "export_chat")
+            let localizedExportConversationActionTitle = #localize("export_chat")
             
             let exportConversationAction = Details.Action(
                 title: localizedExportConversationActionTitle,
@@ -703,10 +708,10 @@ extension SingleDetailsDataSource {
                     return
                 }
                 
-                let localizedTitle = BundleUtil.localizedString(forKey: "include_media_title")
-                let localizedMessage = BundleUtil.localizedString(forKey: "include_media_message")
-                let localizedIncludeMediaTitle = BundleUtil.localizedString(forKey: "include_media")
-                let localizedExcludeMediaTitle = BundleUtil.localizedString(forKey: "without_media")
+                let localizedTitle = #localize("include_media_title")
+                let localizedMessage = #localize("include_media_message")
+                let localizedIncludeMediaTitle = #localize("include_media")
+                let localizedExcludeMediaTitle = #localize("without_media")
                 
                 func exportMediaAction(includeMedia: Bool) -> ((UIAlertAction) -> Void) {{ _ in
                     let exporter = ConversationExporter(
@@ -741,7 +746,7 @@ extension SingleDetailsDataSource {
         
         let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         if messageFetcher.count() > 0 {
-            let localizedActionTitle = BundleUtil.localizedString(forKey: "messages_delete_all_button")
+            let localizedActionTitle = #localize("messages_delete_all_button")
             
             let deleteAllContentAction = Details.Action(
                 title: localizedActionTitle,
@@ -755,9 +760,9 @@ extension SingleDetailsDataSource {
                     return
                 }
                 
-                let localizedTitle = BundleUtil.localizedString(forKey: "messages_delete_all_confirm_title")
-                let localizedMessage = BundleUtil.localizedString(forKey: "messages_delete_all_confirm_message")
-                let localizedDelete = BundleUtil.localizedString(forKey: "delete")
+                let localizedTitle = #localize("messages_delete_all_confirm_title")
+                let localizedMessage = #localize("messages_delete_all_confirm_message")
+                let localizedDelete = #localize("delete")
                 
                 UIAlertTemplate.showDestructiveAlert(
                     owner: strongSingleDetailsViewController,
@@ -769,7 +774,7 @@ extension SingleDetailsDataSource {
                             RunLoop.main.schedule {
                                 let hud = MBProgressHUD(view: tableView)
                                 hud.minShowTime = 1.0
-                                hud.label.text = BundleUtil.localizedString(forKey: "delete_in_progress")
+                                hud.label.text = #localize("delete_in_progress")
                                 tableView.addSubview(hud)
                                 hud.show(animated: true)
                             }
@@ -800,13 +805,24 @@ extension SingleDetailsDataSource {
     private var contactInfo: [SingleDetails.Row] {
         var rows = [SingleDetails.Row]()
         
-        let localizedThreemaID = BundleUtil.localizedString(forKey: "threema_id")
+        if LicenseStore.requiresLicenseKey() {
+            if let jobTitle = contact.jobTitle,
+               !jobTitle.isEmpty {
+                rows.append(.value(label: #localize("job_title"), value: jobTitle))
+            }
+            if let department = contact.department,
+               !department.isEmpty {
+                rows.append(.value(label: #localize("department"), value: department))
+            }
+        }
+        
+        let localizedThreemaID = #localize("threema_id")
         rows.append(.value(label: localizedThreemaID, value: contact.identity))
         rows.append(.verificationLevel(contact: contact))
         rows.append(.publicKey)
         
         if let nickname = contact.publicNickname, !nickname.isEmpty {
-            let localizedNickname = BundleUtil.localizedString(forKey: "nickname")
+            let localizedNickname = #localize("nickname")
             rows.append(.value(label: localizedNickname, value: nickname))
         }
         
@@ -820,7 +836,7 @@ extension SingleDetailsDataSource {
     private var groupRows: [SingleDetails.Row] {
         var sortedGroupMembershipConversations = sortedGroupMembershipConversations()
         if sortedGroupMembershipConversations == nil {
-            sortedGroupMembershipConversations = [Conversation]()
+            sortedGroupMembershipConversations = [ConversationEntity]()
         }
         return sortedGroupMembershipConversations!
             // Only take the some groups at the beginning
@@ -834,7 +850,7 @@ extension SingleDetailsDataSource {
     private var notificationRows: [SingleDetails.Row] {
         var rows = [SingleDetails.Row]()
         
-        let localizedDoNotDisturbTitle = BundleUtil.localizedString(forKey: "doNotDisturb_title")
+        let localizedDoNotDisturbTitle = #localize("doNotDisturb_title")
         let doNotDisturbAction = Details.Action(
             title: localizedDoNotDisturbTitle
         ) { [weak self, weak singleDetailsViewController] _ in
@@ -863,7 +879,7 @@ extension SingleDetailsDataSource {
         }
         rows.append(.doNotDisturb(action: doNotDisturbAction, contact: contact))
         
-        let localizedPlayNotificationSoundTitle = BundleUtil.localizedString(forKey: "notification_sound_title")
+        let localizedPlayNotificationSoundTitle = #localize("notification_sound_title")
         let playSoundBooleanAction = Details.BooleanAction(
             title: localizedPlayNotificationSoundTitle,
             boolProvider: { [weak self] () -> Bool in
@@ -908,13 +924,13 @@ extension SingleDetailsDataSource {
             var defaultString = ""
             
             if UserSettings.shared().sendReadReceipts {
-                defaultString = BundleUtil.localizedString(forKey: "send")
+                defaultString = #localize("send")
             }
             else {
-                defaultString = BundleUtil.localizedString(forKey: "dont_send")
+                defaultString = #localize("dont_send")
             }
             
-            let action1 = UIAlertAction(title: BundleUtil.localizedString(forKey: "send"), style: .default) { _ in
+            let action1 = UIAlertAction(title: #localize("send"), style: .default) { _ in
                 strongSelf.businessInjector.contactStore.update(
                     readReceipt: .send,
                     for: strongSelf.contact,
@@ -923,7 +939,7 @@ extension SingleDetailsDataSource {
                 strongSelf.refresh(sections: [.privacySettings])
             }
             
-            let action2 = UIAlertAction(title: BundleUtil.localizedString(forKey: "dont_send"), style: .default) { _ in
+            let action2 = UIAlertAction(title: #localize("dont_send"), style: .default) { _ in
                 strongSelf.businessInjector.contactStore.update(
                     readReceipt: .doNotSend,
                     for: strongSelf.contact,
@@ -934,7 +950,7 @@ extension SingleDetailsDataSource {
             
             let action3 = UIAlertAction(
                 title: String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "use_default_send"),
+                    #localize("use_default_send"),
                     defaultString
                 ),
                 style: .default
@@ -950,10 +966,10 @@ extension SingleDetailsDataSource {
             UIAlertTemplate.showSheet(
                 owner: strongSingleDetailsViewController,
                 popOverSource: view,
-                title: BundleUtil.localizedString(forKey: "send_readReceipts"),
-                message: BundleUtil.localizedString(forKey: "contactoverride_sheetMessage"),
+                title: #localize("send_readReceipts"),
+                message: #localize("contactoverride_sheetMessage"),
                 actions: [action3, action1, action2],
-                cancelTitle: BundleUtil.localizedString(forKey: "cancel"),
+                cancelTitle: #localize("cancel"),
                 cancelAction: nil
             )
         }
@@ -972,13 +988,13 @@ extension SingleDetailsDataSource {
             var defaultString = ""
             
             if UserSettings.shared().sendTypingIndicator {
-                defaultString = BundleUtil.localizedString(forKey: "send")
+                defaultString = #localize("send")
             }
             else {
-                defaultString = BundleUtil.localizedString(forKey: "dont_send")
+                defaultString = #localize("dont_send")
             }
             
-            let action1 = UIAlertAction(title: BundleUtil.localizedString(forKey: "send"), style: .default) { _ in
+            let action1 = UIAlertAction(title: #localize("send"), style: .default) { _ in
                 strongSelf.businessInjector.contactStore.update(
                     typingIndicator: .send,
                     for: strongSelf.contact,
@@ -987,7 +1003,7 @@ extension SingleDetailsDataSource {
                 strongSelf.refresh(sections: [.privacySettings])
             }
             
-            let action2 = UIAlertAction(title: BundleUtil.localizedString(forKey: "dont_send"), style: .default) { _ in
+            let action2 = UIAlertAction(title: #localize("dont_send"), style: .default) { _ in
                 strongSelf.businessInjector.contactStore.update(
                     typingIndicator: .doNotSend,
                     for: strongSelf.contact,
@@ -998,7 +1014,7 @@ extension SingleDetailsDataSource {
             
             let action3 = UIAlertAction(
                 title: String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "use_default_send"),
+                    #localize("use_default_send"),
                     defaultString
                 ),
                 style: .default
@@ -1014,10 +1030,10 @@ extension SingleDetailsDataSource {
             UIAlertTemplate.showSheet(
                 owner: strongSingleDetailsViewController,
                 popOverSource: view,
-                title: BundleUtil.localizedString(forKey: "send_typingIndicator"),
-                message: BundleUtil.localizedString(forKey: "contactoverride_sheetMessage"),
+                title: #localize("send_typingIndicator"),
+                message: #localize("contactoverride_sheetMessage"),
                 actions: [action3, action1, action2],
-                cancelTitle: BundleUtil.localizedString(forKey: "cancel"),
+                cancelTitle: #localize("cancel"),
                 cancelAction: nil
             )
         }
@@ -1027,7 +1043,7 @@ extension SingleDetailsDataSource {
             let identity = contact.identity
             
             let sendProfilePictureBooleanAction = Details.BooleanAction(
-                title: BundleUtil.localizedString(forKey: "profile_picture_recipient"),
+                title: #localize("profile_picture_recipient"),
                 boolProvider: { [weak self] in
                     self?.contact.isProfilePictureRecipient ?? false
                 },
@@ -1054,7 +1070,7 @@ extension SingleDetailsDataSource {
         
         if contact.isProfilePictureRecipient {
             let sendPictureNowAction = Details.Action(
-                title: BundleUtil.localizedString(forKey: "send_profile_picture")
+                title: #localize("send_profile_picture")
             ) { [weak self] _ in
                 guard let strongSelf = self else {
                     return
@@ -1077,7 +1093,7 @@ extension SingleDetailsDataSource {
         var row = [SingleDetails.Row]()
         
         let wallpaperAction = Details.Action(
-            title: BundleUtil.localizedString(forKey: "settings_chat_wallpaper_title")
+            title: #localize("settings_chat_wallpaper_title")
         ) { [weak self] _ in
             guard let strongSelf = self else {
                 return
@@ -1109,7 +1125,7 @@ extension SingleDetailsDataSource {
 
     private var shareRows: [SingleDetails.Row] {
         let shareAction = Details.Action(
-            title: BundleUtil.localizedString(forKey: "share_contact_id_button")
+            title: #localize("share_contact_id_button")
         ) { [weak self, weak singleDetailsViewController] cell in
             guard let strongSelf = self,
                   let strongSingleDetailsViewController = singleDetailsViewController
@@ -1152,7 +1168,7 @@ extension SingleDetailsDataSource {
     
     private var contactActions: [SingleDetails.Row] {
         let blockContactBooleanAction = Details.BooleanAction(
-            title: BundleUtil.localizedString(forKey: "block_contact"),
+            title: #localize("block_contact"),
             destructive: true,
             boolProvider: { [weak self] in
                 self?.contact.isBlocked ?? false
@@ -1172,7 +1188,7 @@ extension SingleDetailsDataSource {
         )
 
         let deleteContactAction = Details.Action(
-            title: BundleUtil.localizedString(forKey: "delete_contact_button"),
+            title: #localize("delete_contact_button"),
             imageName: nil,
             destructive: true
         ) { [weak self, weak singleDetailsViewController] view in
@@ -1211,7 +1227,7 @@ extension SingleDetailsDataSource {
         }
         
         let clearForwardSecurityAction = Details.Action(
-            title: BundleUtil.localizedString(forKey: "forward_security_clear_sessions"),
+            title: #localize("forward_security_clear_sessions"),
             imageName: nil,
             destructive: false,
             disabled: fsClearSessionsDisabled
@@ -1338,7 +1354,7 @@ extension ContactEntity {
 
 // MARK: - Custom sorting for (group) conversations
 
-extension Array where Element: Conversation {
+extension Array where Element: ConversationEntity {
     /// Sort by last updated date of conversation (descending)
     /// - Returns: Sorted `Conversation` array
     fileprivate func sortedDescendingByLastUpdatedDate() -> Array {

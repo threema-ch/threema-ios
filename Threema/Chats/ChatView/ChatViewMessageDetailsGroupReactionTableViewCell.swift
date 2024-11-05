@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 // Show a group reaction in message details
@@ -26,7 +27,7 @@ final class ChatViewMessageDetailsGroupReactionTableViewCell: ThemedCodeStackTab
     var groupDeliveryReceipt: GroupDeliveryReceipt? {
         didSet {
             if groupDeliveryReceipt?.identity == MyIdentityStore.shared().identity {
-                nameLabel.text = BundleUtil.localizedString(forKey: "me")
+                nameLabel.text = #localize("me")
             }
             else {
                 if let contact = entityManager.entityFetcher.contact(for: groupDeliveryReceipt?.identity) {

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaMacros
 import UIKit
 
 final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewController {
@@ -464,11 +465,11 @@ extension GroupDetailsViewController: UITableViewDelegate {
         switch section {
 
         case .members:
-            let localizedFormatString = BundleUtil.localizedString(forKey: "group_members_section_header")
+            let localizedFormatString = #localize("group_members_section_header")
             title = String.localizedStringWithFormat(localizedFormatString, dataSource.numberOfMembers)
 
             if dataSource.hasMoreMembersToShow {
-                let localizedShowAllTitle = BundleUtil.localizedString(forKey: "show_all_button")
+                let localizedShowAllTitle = #localize("show_all_button")
                 
                 action = Details.Action(title: localizedShowAllTitle) { [weak self] _ in
                     guard let strongSelf = self else {
@@ -481,14 +482,14 @@ extension GroupDetailsViewController: UITableViewDelegate {
             
         case .creator:
             if !group.didCreatorLeave {
-                title = BundleUtil.localizedString(forKey: "group_creator_section_header")
+                title = #localize("group_creator_section_header")
             }
             else {
-                title = BundleUtil.localizedString(forKey: "group_creator_left_section_header")
+                title = #localize("group_creator_left_section_header")
             }
         
         case .notifications:
-            title = BundleUtil.localizedString(forKey: "pushSetting_header")
+            title = #localize("pushSetting_header")
             
         default:
             title = nil
@@ -537,7 +538,7 @@ extension GroupDetailsViewController: UITableViewDelegate {
             action.run(cell)
             
         case let .booleanAction(action):
-            if action.title == "notification_sound_title".localized {
+            if action.title == #localize("notification_sound_title") {
                 dataSource.showDebugInfoTapCounter += 1
             }
             

@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaMacros
 
 class VideoAssetPreviewItem: VideoPreviewItem {
     private var assetItem: AVAsset?
@@ -89,7 +90,7 @@ class VideoAssetPreviewItem: VideoPreviewItem {
         }
         let datetime = DateFormatter.accessibilityDateTime(date)
         let text = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "video_date"),
+            #localize("video_date"),
             datetime
         )
         return text

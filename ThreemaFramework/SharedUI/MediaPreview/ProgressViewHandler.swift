@@ -21,13 +21,14 @@
 import CocoaLumberjackSwift
 import Foundation
 import MBProgressHUD
+import ThreemaMacros
 
 class ProgressViewHandler {
     let view: UIView
     let totalWorkItems: Int64
     let label: String
     
-    var exportSession: SDAVAssetExportSession?
+    var exportSession: AVAssetExportSession?
     
     init(view: UIView, totalWorkItems: Int, label: String) {
         self.view = view
@@ -51,7 +52,7 @@ class ProgressViewHandler {
                 hud.progressObject = po
                 
                 hud.label.text = String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "processing_items_progress"),
+                    #localize("processing_items_progress"),
                     po.completedUnitCount / 100,
                     po.totalUnitCount / 100
                 )
@@ -79,7 +80,7 @@ class ProgressViewHandler {
             let completed = min(po.completedUnitCount / 100 + 1, po.totalUnitCount / 100)
             let total = po.totalUnitCount / 100
             hud.label.text = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "processing_items_progress"),
+                #localize("processing_items_progress"),
                 completed,
                 total
             )

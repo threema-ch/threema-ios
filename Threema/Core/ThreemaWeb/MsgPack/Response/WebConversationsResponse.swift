@@ -28,7 +28,8 @@ class WebConversationsResponse: WebAbstractMessage {
         var conversationArray = [[AnyHashable: Any]]()
 
         let businessInjector = BusinessInjector()
-        let allConversations = businessInjector.entityManager.entityFetcher.allConversationsSorted() as? [Conversation]
+        let allConversations = businessInjector.entityManager.entityFetcher
+            .allConversationsSorted() as? [ConversationEntity]
 
         // Fetch only chats where lastUpdate is not `nil` to avoid showing chats that only contain system messages
         let unarchivedConversations = allConversations?
@@ -40,7 +41,7 @@ class WebConversationsResponse: WebAbstractMessage {
         
         var index = 1
         for conver in unarchivedConversations! {
-            if !conver.isGroup(), conver.contact == nil {
+            if !conver.isGroup, conver.contact == nil {
                 // empty contact in a single conversation, do not send to web
             }
             else {
@@ -57,7 +58,7 @@ class WebConversationsResponse: WebAbstractMessage {
             }
         }
         for conver in archivedConversations! {
-            if !conver.isGroup(), conver.contact == nil {
+            if !conver.isGroup, conver.contact == nil {
                 // empty contact in a single conversation, do not send to web
             }
             else {
@@ -99,14 +100,14 @@ struct WebConversation {
     var isUnread: Bool
     
     init(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         index: Int,
         request: WebConversationsRequest?,
         addAvatar: Bool,
         businessInjector: BusinessInjectorProtocol,
         session: WCSession
     ) {
-        if conversation.isGroup() {
+        if conversation.isGroup {
             self.type = "group"
             self.id = conversation.groupID!.hexEncodedString()
             if let group = businessInjector.groupManager.getGroup(conversation: conversation) {
@@ -159,7 +160,7 @@ struct WebConversation {
             let quality = request != nil ? 0.75 : 0.6
             let size = CGSize(width: maxSize, height: maxSize)
            
-            if conversation.isGroup(),
+            if conversation.isGroup,
                let group = businessInjector.groupManager.getGroup(conversation: conversation) {
                 self.avatar = group.profilePicture.resizedImage(newSize: size)
                     .jpegData(compressionQuality: CGFloat(quality))
@@ -192,8 +193,8 @@ struct WebConversation {
         self.isUnread = conversation.unreadMessageCount == -1
     }
 
-    init(deletedConversation: Conversation, contact: ContactEntity?) {
-        if deletedConversation.isGroup(),
+    init(deletedConversation: ConversationEntity, contact: ContactEntity?) {
+        if deletedConversation.isGroup,
            let groupID = deletedConversation.groupID {
             self.type = "group"
             self.id = groupID.hexEncodedString()

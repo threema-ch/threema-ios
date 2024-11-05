@@ -21,7 +21,6 @@
 #import "MediaConverter.h"
 #import "UIImage+Resize.h"
 #import "UserSettings.h"
-#import "SDAVAssetExportSession.h"
 #import "UIDefines.h"
 #import "ValidationLogger.h"
 #import <ThreemaFramework/ThreemaFramework-Swift.h>
@@ -180,18 +179,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return @[@"low", @"high", @"original"];
 }
 
-+ (NSArray*)videoQualityMaxDurations {
-    int highMaxDuration = (int) [VideoConversionHelper getMaxdurationInMinutesWithVideoBitrate:kVideoBitrateHigh audioBitrate:kAudioBitrateHigh];
-    int lowMaxDuration = (int) [VideoConversionHelper getMaxdurationInMinutesWithVideoBitrate:kVideoBitrateLow audioBitrate:kAudioBitrateLow];
-    
-    return @[[NSNumber numberWithInt:lowMaxDuration], [NSNumber numberWithInt:highMaxDuration]];
-}
-
-/// Returns the maximum duration for a video at the lowest possible quality in minutes.
-+ (double)videoMaxDurationAtCurrentQuality {
-    long long lowMaxDuration = [VideoConversionHelper getMaxdurationInMinutesWithVideoBitrate:kVideoBitrateLow audioBitrate:kAudioBitrateLow];
-    
-    return lowMaxDuration;
++ (double)videoMaxDurationInMinutes {
+    double minutes = [VideoConversionHelper videoMaxDurationInMinutes];
+    return minutes;
 }
 
 + (BOOL)isVideoDurationValidAtUrl:(NSURL *)url {
@@ -199,24 +189,24 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (url == nil) {
         return false;
     }
-    return [VideoConversionHelper videoHasAllowedSizeAt:url];
+    VideoConversionHelper *videoConversionHelper = [VideoConversionHelper new];
+    return [videoConversionHelper videoHasAllowedSizeAt:url];
 }
 
-+ (SDAVAssetExportSession*)convertVideoAsset:(AVAsset*)asset onCompletion:(void(^)(NSURL *url))onCompletion onError:(void(^)(NSError *error))onError {
++ (AVAssetExportSession*)convertVideoAsset:(AVAsset*)asset onCompletion:(void(^)(NSURL *url))onCompletion onError:(void(^)(NSError *error))onError {
     /* convert video to MPEG4 for compatibility with Android */
     
     NSURL *outputURL = [MediaConverter getAssetOutputURL];
     
-    SDAVAssetExportSession *exportSession = [MediaConverter getAVAssetExportSessionFrom:asset outputURL:outputURL];
+    AVAssetExportSession *exportSession = [MediaConverter getAVAssetExportSessionFrom:asset outputURL:outputURL];
     
     [MediaConverter convertVideoWithExportSession:exportSession onCompletion:onCompletion onError:onError];
     
     return exportSession;
 }
 
-+ (void)convertVideoWithExportSession:(SDAVAssetExportSession *)exportSession onCompletion:(void(^)(NSURL *url))onCompletion onError:(void(^)(NSError *error))onError {
++ (void)convertVideoWithExportSession:(AVAssetExportSession *)exportSession onCompletion:(void(^)(NSURL *url))onCompletion onError:(void(^)(NSError *error))onError {
     /* convert video to MPEG4 for compatibility with Android */
-    
     [exportSession exportAsynchronouslyWithCompletionHandler:^(void) {
         DDLogVerbose(@"Export Complete %ld %@ %@", (long)exportSession.status, exportSession.error, exportSession.outputURL);
         if (exportSession.status == AVAssetExportSessionStatusCompleted) {
@@ -235,7 +225,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return outputURL;
 }
 
-+ (SDAVAssetExportSession *)getAVAssetExportSessionFrom:(AVAsset *) asset outputURL:(NSURL *)outputURL {
++ (AVAssetExportSession *)getAVAssetExportSessionFrom:(AVAsset *) asset outputURL:(NSURL *)outputURL {
     
     if (asset == nil) {
         return nil;
@@ -244,8 +234,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (outputURL == nil) {
         return nil;
     }
-    
-    return [VideoConversionHelper getAVAssetExportSessionFrom:asset outputURL:outputURL];
+    VideoConversionHelper *videoConversionHelper = [VideoConversionHelper new];
+    return [videoConversionHelper getAVAssetExportSessionFrom:asset outputURL:outputURL];
 }
 
 + (NSData *)PNGRepresentationFor: (UIImage *) image {

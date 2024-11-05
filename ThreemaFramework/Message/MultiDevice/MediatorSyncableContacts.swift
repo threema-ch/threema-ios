@@ -209,7 +209,7 @@ class MediatorSyncableContacts: NSObject {
         apply(delta)
     }
 
-    func updateConversationCategory(identity: String, value: ConversationCategory?) {
+    func updateConversationCategory(identity: String, value: ConversationEntity.Category?) {
         guard userSettings.enableMultiDevice else {
             return
         }
@@ -220,7 +220,7 @@ class MediatorSyncableContacts: NSObject {
         apply(delta)
     }
 
-    func updateConversationVisibility(identity: String, value: ConversationVisibility?) {
+    func updateConversationVisibility(identity: String, value: ConversationEntity.Visibility?) {
         guard userSettings.enableMultiDevice else {
             return
         }

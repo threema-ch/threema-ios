@@ -28,7 +28,6 @@
 #import "RectUtil.h"
 #import "AppGroup.h"
 #import "LicenseStore.h"
-#import "Conversation.h"
 
 #define LAST_SELECTED_MODE @"ContactGroupPickerLastSelectedMode"
 
@@ -236,7 +235,7 @@ typedef enum : NSUInteger {
     if (self.preselectedConversations != nil) {
         _mode = ModeRecent;
         [self updateDataSourceMode];
-        for (Conversation *conv in self.preselectedConversations) {
+        for (ConversationEntity *conv in self.preselectedConversations) {
             if ([_currentDataSource isKindOfClass:RecentTableDataSource.class]) {
                 [(RecentTableDataSource *) _currentDataSource insertSelectedConversation:conv];
             }
@@ -370,7 +369,7 @@ typedef enum : NSUInteger {
         ContactCell *contactCell = (ContactCell *)cell;
         [contactCell updateColors];
         BOOL found = false;
-        for (Conversation *conversation in [_currentDataSource selectedConversations]) {
+        for (ConversationEntity *conversation in [_currentDataSource selectedConversations]) {
             if (conversation.contact != nil && conversation.contact == contactCell._contact && !conversation.isGroup) {
                 found = true;
             }
@@ -397,7 +396,7 @@ typedef enum : NSUInteger {
         }
         
         BOOL found = false;
-        for (Conversation *conversation in [_currentDataSource selectedConversations]) {
+        for (ConversationEntity *conversation in [_currentDataSource selectedConversations]) {
             if (conversation.groupId != nil && [conversation.groupId isEqualToData:groupCell.group.groupID]) {
                 found = true;
             }

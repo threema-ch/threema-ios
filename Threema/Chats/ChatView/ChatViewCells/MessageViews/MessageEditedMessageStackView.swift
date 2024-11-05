@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 /// Edit message content stack
@@ -164,7 +165,7 @@ final class MessageEditedMessageStackView: UIStackView {
 
     private func updateEditMessage(editMessage: BaseMessage) {
         // Assign Values & configure layout
-        titleLabel.text = BundleUtil.localizedString(forKey: "edit")
+        titleLabel.text = #localize("edit")
 
         updateContent()
         updateLayout()

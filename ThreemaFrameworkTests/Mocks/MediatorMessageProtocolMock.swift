@@ -216,7 +216,7 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
     }
 
     func decryptEnvelope(data: Data) -> D2d_Envelope? {
-        nil
+        try? D2d_Envelope(serializedData: data)
     }
 
     func encryptEnvelope(envelope: D2d_Envelope) -> Data? {

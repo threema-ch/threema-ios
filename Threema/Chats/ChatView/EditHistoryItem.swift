@@ -31,8 +31,8 @@ public struct EditHistoryItem {
     /// If the edit is the current one
     public let isCurrent: Bool
     
-    public init(textMessage: TextMessage) {
-        self.text = textMessage.text ?? ""
+    public init(textMessage: TextMessageEntity) {
+        self.text = textMessage.text
         self.date = textMessage.lastEditedAt ?? textMessage.displayDate
         self.isCurrent = true
     }

@@ -75,4 +75,10 @@ class LinkedDevicesViewModel: ObservableObject {
     func remove(_ device: DeviceInfo) async throws {
         try await businessInjector.multiDeviceManager.drop(device: device)
     }
+    
+    /// Disable multi-device
+    func disableMultiDevice() async throws {
+        try await businessInjector.multiDeviceManager.disableMultiDevice()
+        deviceLimitReached = false
+    }
 }

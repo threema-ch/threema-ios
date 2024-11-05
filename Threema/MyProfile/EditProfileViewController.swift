@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 import ThreemaFramework
+import ThreemaMacros
 
 @objc class EditProfileViewController: ThemedTableViewController {
     
@@ -65,7 +66,7 @@ import ThreemaFramework
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        releaseProfileTo.text = BundleUtil.localizedString(forKey: "release_profilepicture_to")
+        releaseProfileTo.text = #localize("release_profilepicture_to")
         avatarView?.presentingViewController = self
         avatarView?.delegate = self
         avatarView?.canDeleteImage = !mdmSetup.readonlyProfile()
@@ -133,7 +134,7 @@ import ThreemaFramework
         profile.profilePictureContactList = shareWith
                
         if BusinessInjector().settingsStore.isMultiDeviceRegistered {
-            let progressString = BundleUtil.localizedString(forKey: "syncing_profile")
+            let progressString = #localize("syncing_profile")
             let syncHelper = UISyncHelper(viewController: self, progressString: progressString)
             syncHelper.execute(profile: profile)
                 .done {
@@ -152,7 +153,7 @@ import ThreemaFramework
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         let rightButton = UIBarButtonItem(
-            title: BundleUtil.localizedString(forKey: "Save"),
+            title: #localize("Save"),
             style: .done,
             target: self,
             action: #selector(savePressed)
@@ -160,7 +161,7 @@ import ThreemaFramework
         navigationItem.rightBarButtonItem = rightButton
         
         let leftButton = UIBarButtonItem(
-            title: BundleUtil.localizedString(forKey: "Cancel"),
+            title: #localize("cancel"),
             style: .plain,
             target: self,
             action: #selector(cancelPressed)
@@ -200,7 +201,7 @@ import ThreemaFramework
         }
         
         nickNameTextField?.placeholder = MyIdentityStore.shared()?.identity
-        nickNameTextField?.accessibilityLabel = BundleUtil.localizedString(forKey: "id_completed_nickname")
+        nickNameTextField?.accessibilityLabel = #localize("id_completed_nickname")
         
         contactsSettingValue?.text = getLabelForSendProfilePicture(sendProfilePicture: sendProfilePicture)
         
@@ -215,11 +216,11 @@ import ThreemaFramework
     func getLabelForSendProfilePicture(sendProfilePicture: SendProfilePicture) -> String {
         switch sendProfilePicture {
         case SendProfilePictureNone:
-            BundleUtil.localizedString(forKey: "send_profileimage_off")
+            #localize("send_profileimage_off")
         case SendProfilePictureAll:
-            BundleUtil.localizedString(forKey: "send_profileimage_on")
+            #localize("send_profileimage_on")
         case SendProfilePictureContacts:
-            BundleUtil.localizedString(forKey: "send_profileimage_contacts")
+            #localize("send_profileimage_contacts")
         default:
             ""
         }
@@ -244,11 +245,11 @@ extension EditProfileViewController {
     }
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        var footer = BundleUtil.localizedString(forKey: "edit_profile_footer")
+        var footer = #localize("edit_profile_footer")
         
         if mdmSetup.readonlyProfile() || mdmSetup.disableSendProfilePicture() {
             footer.append("\n\n")
-            footer.append(BundleUtil.localizedString(forKey: "disabled_by_device_policy"))
+            footer.append(#localize("disabled_by_device_policy"))
         }
         return footer
     }

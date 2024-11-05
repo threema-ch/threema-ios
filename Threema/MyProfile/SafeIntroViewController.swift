@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 class SafeIntroViewController: ThemedViewController {
@@ -37,12 +38,12 @@ class SafeIntroViewController: ThemedViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        titleLabel.text = BundleUtil.localizedString(forKey: "safe_intro_title")
-        descriptionLabel.text = BundleUtil.localizedString(forKey: "safe_intro_description")
+        titleLabel.text = #localize("safe_intro_title")
+        descriptionLabel.text = #localize("safe_intro_description")
         introCircle.layer.cornerRadius = introCircle.frame.height / 2
-        explainLabel.text = BundleUtil.localizedString(forKey: "safe_intro_explain")
-        cancelButton.setTitle(BundleUtil.localizedString(forKey: "safe_intro_cancel"), for: .normal)
-        okButton.setTitle(BundleUtil.localizedString(forKey: "safe_intro_enable"), for: .normal)
+        explainLabel.text = #localize("safe_intro_explain")
+        cancelButton.setTitle(#localize("safe_intro_cancel"), for: .normal)
+        okButton.setTitle(#localize("safe_intro_enable"), for: .normal)
         
         isModalInPresentation = true
         

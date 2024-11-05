@@ -68,7 +68,7 @@ If you build the Threema OnPrem target, credentials from the [Threema OnPrem](ht
 
 ## <a name="building"></a>Building
 
-To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (15.3+) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
+To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (15.4+) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
 
 ### 1. Install Dependencies
 
@@ -167,8 +167,8 @@ We accept GitHub pull requests. Please refer to <https://threema.ch/open-source/
 
 Threema for iOS is licensed under the GNU Affero General Public License v3.
 
-    Copyright (c) 2012-2023 Threema GmbH
 
+    Copyright (c) 2012-2024 Threema GmbH
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License, version 3,
     as published by the Free Software Foundation.

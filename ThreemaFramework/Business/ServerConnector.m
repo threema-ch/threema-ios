@@ -304,13 +304,11 @@ struct pktExtension {
 #pragma mark - Chat (Mediator) Server connection handling
 
 - (void)connect:(ConnectionInitiator)initiator {
-    if ([[UserSettings sharedUserSettings] blockCommunication]) {
-        DDLogNotice(@"Cannot connect - communication is blocked");
+    if (!doUnblockIncomingMessages) {
+        DDLogNotice(@"Cannot connect - incoming messages are blocked");
         return;
     }
-
-    doUnblockIncomingMessages = YES;
-
+    
     dispatch_async(socketQueue, ^{
         // TODO: Remove comment IOS-3558
         DDLogNotice(@"Entered socket queue in connect.");
@@ -326,13 +324,11 @@ struct pktExtension {
 }
 
 - (void)connectWait:(ConnectionInitiator)initiator {
-    if ([[UserSettings sharedUserSettings] blockCommunication]) {
-        DDLogNotice(@"Cannot connect - communication is blocked");
+    if (!doUnblockIncomingMessages) {
+        DDLogNotice(@"Cannot connect - incoming messages are blocked");
         return;
     }
-
-    doUnblockIncomingMessages = YES;
-
+    
     dispatch_sync(socketQueue, ^{
         // TODO: Remove comment IOS-3558
         DDLogNotice(@"Entered socket queue in connectWait.");
@@ -355,6 +351,17 @@ struct pktExtension {
 
         lastErrorDisplay = nil;
         [self _connect];
+    });
+}
+
+- (void)unblockIncomingMessages {
+    BOOL blockedBefore = (doUnblockIncomingMessages == NO);
+    doUnblockIncomingMessages = YES;
+    
+    dispatch_sync(socketQueue, ^{
+        if (blockedBefore && self.connectionState == ConnectionStateLoggedIn) {
+            [self _unblockIncomingMessagesIfAllowed];
+        }
     });
 }
 
@@ -1054,7 +1061,16 @@ struct pktExtension {
     [self sendPayloadWithType:PLTYPE_SET_CONNECTION_IDLE_TIMEOUT data: [NSData dataWithBytes:&connectionIdleTimeout length:sizeof(UInt16)]];
 }
 
-#pragma mark - Multi Device
+#pragma mark - Unblocking
+
+- (void)_unblockIncomingMessagesIfAllowed {
+    /* Unblock incoming messages if not running multi-device or already promoted to leader */
+    if (doUnblockIncomingMessages && (deviceID == nil || [deviceID length] != kDeviceIdLen || isRolePromotedToLeader)) {
+        [self sendPayloadWithType:PLTYPE_UNBLOCK_INCOMING_MESSAGES data:[NSData data]];
+    }
+}
+
+#pragma mark - Multi-Device
 
 - (BOOL)isMultiDeviceActivated {
     @synchronized (deviceGroupKeys) {
@@ -1071,6 +1087,7 @@ struct pktExtension {
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationSettingStoreSynchronization object:nil];
         deviceGroupKeys = nil;
         deviceID = nil;
+        doUnblockIncomingMessages = YES;
     };
 }
 
@@ -1268,6 +1285,7 @@ struct pktExtension {
     [TaskManager interrupt];
 
     isRolePromotedToLeader = NO;
+    doUnblockIncomingMessages = YES;
     maximumNumberOfDeviceSlots = nil;
 
     if (keepalive_timer != nil) {
@@ -1433,10 +1451,7 @@ struct pktExtension {
                                       echoRequestInterval * NSEC_PER_SEC, NSEC_PER_SEC);
             dispatch_resume(keepalive_timer);
             
-            /* Unblock incoming messages if not running multi device or already promoted to leader */
-            if (doUnblockIncomingMessages && (deviceID == nil || [deviceID length] != kDeviceIdLen || isRolePromotedToLeader)) {
-                [self sendPayloadWithType:PLTYPE_UNBLOCK_INCOMING_MESSAGES data:[NSData data]];
-            }
+            [self _unblockIncomingMessagesIfAllowed];
             
             /* Receive next payload header */
             [socket readWithLength:sizeof(uint16_t) timeout:-1 tag:TAG_PAYLOAD_LENGTH_READ];
@@ -1525,19 +1540,16 @@ struct pktExtension {
                 mediatorServerInInitialQueueSend = NO;
             }
             else if ((int)type == MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_ROLE_PROMOTED_TO_LEADER) {
-                DDLogVerbose(@"Promoted to leader -> unblock incoming chat messages");
+                DDLogVerbose(@"Promoted to leader -> unblock incoming chat messages, if allowed");
 
+                isRolePromotedToLeader = YES;
+                
                 if ([serverConnectorConnectionState connectionState] == ConnectionStateLoggedIn) {
                     /* Unblock incoming messages */
-                    [self sendPayloadWithType:PLTYPE_UNBLOCK_INCOMING_MESSAGES data:[NSData data]];
+                    [self _unblockIncomingMessagesIfAllowed];
 
                     /* Receive next payload header */
                     [socket readWithLength:sizeof(uint16_t) timeout:-1 tag:TAG_PAYLOAD_LENGTH_READ];
-                }
-                else {
-                    // Queue message and send it when logged in
-                    // Unblock incoming messages as soon as we're logged in
-                    isRolePromotedToLeader = YES;
                 }
             }
             else if (result != nil) {

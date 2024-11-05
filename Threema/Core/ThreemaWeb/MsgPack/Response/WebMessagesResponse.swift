@@ -32,7 +32,7 @@ class WebMessagesResponse: WebAbstractMessage {
     init(requestMessage: WebMessagesRequest, session: WCSession) {
         
         let entityManager = EntityManager()
-        var conversation: Conversation?
+        var conversation: ConversationEntity?
         
         let maxMessageCount = Int(kWebPageSize)
         self.messageArray = [[AnyHashable: Any]]()
@@ -40,7 +40,7 @@ class WebMessagesResponse: WebAbstractMessage {
         self.type = requestMessage.type
         self.identity = requestMessage.id
         if type == "contact" {
-            conversation = entityManager.entityFetcher.conversation(forIdentity: requestMessage.id)
+            conversation = entityManager.entityFetcher.conversationEntity(forIdentity: requestMessage.id)
         }
         else {
             conversation = entityManager.entityFetcher.legacyConversation(for: requestMessage.id.hexadecimal)

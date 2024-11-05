@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Conversation.h"
 #import "Ballot.h"
 
 @interface BallotDispatcher : NSObject
@@ -28,6 +27,6 @@
 
 + (void)showViewControllerForBallot:(Ballot *)ballot onNavigationController:(UINavigationController*)navigationController;
 
-+ (void)showBallotCreateViewControllerForConversation:(Conversation *)conversation onNavigationController:(UINavigationController*)navigationController;
++ (void)showBallotCreateViewControllerForConversation:(ConversationEntity *)conversation onNavigationController:(UINavigationController*)navigationController;
 
 @end

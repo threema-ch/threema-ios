@@ -43,9 +43,9 @@ final class AutomaticDeleteTests: XCTestCase {
         // Tests
         let allCases = Option.commonCases
         
-        let createConversation = { (contact: String) -> Conversation in
-            var conversation: Conversation?
-            entityManager.performSyncBlockAndSafe {
+        let createConversation = { (contact: String) -> ConversationEntity in
+            var conversation: ConversationEntity?
+            entityManager.performAndWaitSave {
                 if let contact = entityManager.entityFetcher.contact(for: contact) {
                     conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
                 }
@@ -53,12 +53,12 @@ final class AutomaticDeleteTests: XCTestCase {
             return conversation!
         }
         
-        let createMessages = { (option: Option, conversation: Conversation) in
+        let createMessages = { (option: Option, conversation: ConversationEntity) in
             let total = (option.days ?? 0)
             for index in 0..<total {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .day, value: -(index + 1), to: option.date ?? Date.currentDate)
-                let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
+                let message = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)!
                 message.text = "\(index) - \(texts[index % texts.count])"
                 message.date = date
                 message.sender = conversation.contact
@@ -89,9 +89,9 @@ final class AutomaticDeleteTests: XCTestCase {
 
             let messagesToBeCreated = option.days ?? 0
             let date = option.date ?? Date.currentDate
-            var conversation: Conversation!
+            var conversation: ConversationEntity!
             
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 conversation = createConversation(CONTACT)
                 _ = entityManager.entityDestroyer.deleteMessages(of: conversation)
                 

@@ -29,7 +29,7 @@ final class ChatViewWorkConsumerInfoSystemMessageTableViewCell: ThemedCodeTableV
     /// System message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views.
-    var systemMessage: SystemMessage? {
+    var systemMessage: SystemMessageEntity? {
         didSet {
             updateCell(for: systemMessage)
             updateColors()
@@ -150,7 +150,7 @@ final class ChatViewWorkConsumerInfoSystemMessageTableViewCell: ThemedCodeTableV
         systemMessageBackgroundView.backgroundColor = workConsumerType.backgroundColor
     }
     
-    private func updateCell(for systemMessage: SystemMessage?) {
+    private func updateCell(for systemMessage: SystemMessageEntity?) {
         guard case let .workConsumerInfo(type: workConsumerType) = systemMessage?.systemMessageType else {
             return
         }

@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import MapKit
+import ThreemaMacros
 
 final class SendLocationSearchDataSource: UITableViewDiffableDataSource<SendLocationDetails.Section, PointOfInterest> {
     
@@ -49,7 +50,7 @@ final class SendLocationSearchDataSource: UITableViewDiffableDataSource<SendLoca
         let cell = tableView.dequeueReusableCell(withIdentifier: "DefaultCell", for: indexPath)
 
         cell.textLabel?.text = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "poi_search_prefix"),
+            #localize("poi_search_prefix"),
             poi.name
         )
         

@@ -21,14 +21,15 @@
 #import <Foundation/Foundation.h>
 #import "Old_BlobMessageSender.h"
 #import "URLSenderItem.h"
-#import "FileMessageEntity.h"
+
+@class FileMessageEntity;
 
 @interface Old_FileMessageSender : Old_BlobMessageSender
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(Conversation *)conversation requestId:(NSString *)requestId
+- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation requestId:(NSString *)requestId
     NS_SWIFT_NAME(send(_:in:requestID:));
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(Conversation *)conversation requestId:(NSString *)requestId correlationId:(NSString *)correlationId
+- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation requestId:(NSString *)requestId correlationId:(NSString *)correlationId
     NS_SWIFT_NAME(send(_:in:requestID:correlationID:));
 
 - (void)retryMessage:(FileMessageEntity *)message;

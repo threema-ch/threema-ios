@@ -40,11 +40,6 @@
 #import "GroupImageMessage.h"
 #import "GroupAudioMessage.h"
 #import "GroupSetPhotoMessage.h"
-#import "LocationMessage.h"
-#import "TextMessage.h"
-#import "ImageMessageEntity.h"
-#import "VideoMessageEntity.h"
-#import "AudioMessageEntity.h"
 #import "BoxFileMessage.h"
 #import "GroupFileMessage.h"
 #import "ContactSetPhotoMessage.h"
@@ -54,8 +49,6 @@
 #import "UnknownTypeMessage.h"
 #import "ContactEntity.h"
 #import "ContactStore.h"
-#import "Conversation.h"
-#import "ImageData.h"
 #import "ThreemaUtilityObjC.h"
 #import "ProtocolDefines.h"
 #import "UserSettings.h"
@@ -353,7 +346,7 @@ Process incoming message.
 
     ContactEntity *sender;
     ContactEntity *receiver;
-    __block Conversation *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver];
+    __block ConversationEntity *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver];
 
     if (sender == nil) {
         onError([ThreemaError threemaError:@"Sender not found as contact"]);
@@ -395,7 +388,7 @@ Process incoming message.
         } onError:onError];
     } else if ([amsg isKindOfClass:[BoxLocationMessage class]]) {
         [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
-            LocationMessage *locationMessage = (LocationMessage *)message;
+            LocationMessageEntity *locationMessage = (LocationMessageEntity *)message;
             [self finalizeMessage:locationMessage inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 [self resolveAddressFor:locationMessage onCompletion:^{
                     onCompletion(nil);
@@ -504,7 +497,7 @@ Process incoming message.
         // messages not handled by GroupProcessor, e.g. messages that can be processed after delayed group create
         ContactEntity *sender;
         ContactEntity *receiver;
-        Conversation *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver];
+        ConversationEntity *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver];
 
         if (sender == nil) {
             onError([ThreemaError threemaError:@"Sender not found as contact"]);
@@ -555,7 +548,7 @@ Process incoming message.
         } else if ([amsg isKindOfClass:[GroupLocationMessage class]]) {
             [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
                 [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:^{
-                    [self resolveAddressFor:(LocationMessage*)message onCompletion:onCompletion];
+                    [self resolveAddressFor:(LocationMessageEntity*)message onCompletion:onCompletion];
                 }];
             } onError:onError];
         } else if ([amsg isKindOfClass:[GroupImageMessage class]]) {
@@ -627,12 +620,12 @@ Process incoming message.
     }];
 }
 
-- (void)finalizeMessage:(BaseMessage*)message inConversation:(Conversation*)conversation fromBoxMessage:(AbstractMessage*)boxMessage onCompletion:(void(^_Nonnull)(void))onCompletion {
+- (void)finalizeMessage:(BaseMessage*)message inConversation:(ConversationEntity*)conversation fromBoxMessage:(AbstractMessage*)boxMessage onCompletion:(void(^_Nonnull)(void))onCompletion {
     [messageProcessorDelegate incomingMessageChanged:boxMessage baseMessage:message];
     onCompletion();
 }
 
-- (void)finalizeGroupMessage:(BaseMessage*)message inConversation:(Conversation*)conversation fromBoxMessage:(AbstractGroupMessage*)boxMessage sender:(ContactEntity *)sender onCompletion:(void(^_Nonnull)(void))onCompletion {
+- (void)finalizeGroupMessage:(BaseMessage*)message inConversation:(ConversationEntity*)conversation fromBoxMessage:(AbstractGroupMessage*)boxMessage sender:(ContactEntity *)sender onCompletion:(void(^_Nonnull)(void))onCompletion {
     [messageProcessorDelegate incomingMessageChanged:boxMessage baseMessage:message];
     onCompletion();
 }
@@ -642,7 +635,7 @@ Process incoming message.
     [manager autoSyncBlobsFor:message.objectID];
 }
 
-- (void)processIncomingImageMessage:(nonnull AbstractMessage *)amsg sender:(nonnull ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)processIncomingImageMessage:(nonnull AbstractMessage *)amsg sender:(nonnull ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     
     NSAssert([amsg isKindOfClass:[BoxImageMessage class]] || [amsg isKindOfClass:[GroupImageMessage class]], @"Abstract message type should be BoxImageMessage or GroupImageMessage");
     
@@ -679,7 +672,7 @@ Process incoming message.
     } onError:onError];
 }
 
-- (void)processIncomingVideoMessage:(nonnull AbstractMessage *)amsg sender:(nonnull ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)processIncomingVideoMessage:(nonnull AbstractMessage *)amsg sender:(nonnull ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     
     NSAssert([amsg isKindOfClass:[BoxVideoMessage class]] || [amsg isKindOfClass:[GroupVideoMessage class]], @"Abstract message type should be BoxVideoMessage or GroupVideoMessage");
     
@@ -727,7 +720,7 @@ Process incoming message.
     } onError:onError];
 }
 
-- (void)resolveAddressFor:(LocationMessage*)message onCompletion:(void(^ _Nonnull)(void))onCompletion {
+- (void)resolveAddressFor:(LocationMessageEntity*)message onCompletion:(void(^ _Nonnull)(void))onCompletion {
     // Reverse geocoding (only necessary if there is no POI adress) /
     if (message.poiAddress != nil) {
         onCompletion();
@@ -750,7 +743,7 @@ Process incoming message.
 
 - (void)processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion {
     [entityManager performAsyncBlockAndSafe:^{
-        Conversation *conversation = [[entityManager entityFetcher] conversationForIdentity:[msg fromIdentity]];
+        ConversationEntity *conversation = [[entityManager entityFetcher] conversationEntityForIdentity:[msg fromIdentity]];
 
         for (NSData *receiptMessageId in msg.receiptMessageIds) {
             if (conversation == nil) {
@@ -759,7 +752,7 @@ Process incoming message.
             }
 
             /* Fetch message from DB */
-            BaseMessage *dbmsg = [entityManager.entityFetcher ownMessageWithId: receiptMessageId conversation:conversation];
+            BaseMessage *dbmsg = [entityManager.entityFetcher ownMessageWithId: receiptMessageId conversationEntity:conversation];
             if (dbmsg == nil) {
                 /* This can happen if the user deletes the message before the receipt comes in */
                 DDLogError(@"Cannot find message ID %@ (delivery receipt from %@)", receiptMessageId, msg.fromIdentity);
@@ -797,7 +790,7 @@ Process incoming message.
 
 - (void)processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion {
     [entityManager performAsyncBlockAndSafe:^{
-        Conversation *conversation = [entityManager.entityFetcher conversationForGroupId:msg.groupId creator:msg.groupCreator];
+        ConversationEntity *conversation = [entityManager.entityFetcher conversationEntityForGroupId:msg.groupId creator:msg.groupCreator];
 
         for (NSData *receiptMessageId in msg.receiptMessageIds) {
             if (conversation == nil) {
@@ -806,7 +799,7 @@ Process incoming message.
             }
 
             /* Fetch message from DB */
-            BaseMessage *dbmsg = [entityManager.entityFetcher messageWithId:receiptMessageId conversation:conversation];
+            BaseMessage *dbmsg = [entityManager.entityFetcher messageWithId:receiptMessageId conversationEntity:conversation];
             if (dbmsg == nil) {
                 /* This can happen if the user deletes the message before the receipt comes in */
                 DDLogWarn(@"Cannot find message ID %@ (delivery receipt from %@)", receiptMessageId, msg.fromIdentity);
@@ -1071,11 +1064,11 @@ Process incoming message.
 
 - (void)changedConversationAndGroupEntityWithGroupID:(NSData * _Nonnull)groupID groupCreatorIdentity:(NSString * _Nonnull)groupCreatorIdentity {
     [entityManager performBlockAndWait:^{
-        Conversation *conversation = [entityManager.entityFetcher conversationForGroupId:groupID creator:groupCreatorIdentity];
+        ConversationEntity *conversation = [entityManager.entityFetcher conversationEntityForGroupId:groupID creator:groupCreatorIdentity];
         if (conversation) {
             [messageProcessorDelegate changedManagedObjectID:conversation.objectID];
 
-            GroupEntity *groupEntity = [[entityManager entityFetcher] groupEntityForConversation:conversation];
+            GroupEntity *groupEntity = [[entityManager entityFetcher] groupEntityForConversationEntity:conversation];
             if (groupEntity) {
                 [messageProcessorDelegate changedManagedObjectID:groupEntity.objectID];
             }

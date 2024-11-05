@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 enum ChatViewMessageActionsProvider {
@@ -323,7 +324,7 @@ enum ChatViewMessageActionsProvider {
             }
                 
         return MessageAction(
-            title: "acknowledge".localized,
+            title: #localize("acknowledge"),
             image: image
         ) {
             handler(message, true)
@@ -345,7 +346,7 @@ enum ChatViewMessageActionsProvider {
             }
                 
         return MessageAction(
-            title: "decline".localized,
+            title: #localize("decline"),
             image: image
         ) {
             handler(message, false)
@@ -377,7 +378,7 @@ enum ChatViewMessageActionsProvider {
     
     private static func quoteAction(handler: @escaping DefaultHandler) -> MessageAction {
         MessageAction(
-            title: "quote".localized,
+            title: #localize("quote"),
             image: UIImage(systemName: "quote.bubble"),
             handler: handler
         )
@@ -389,7 +390,7 @@ enum ChatViewMessageActionsProvider {
     private static func copyAction(handler: @escaping DefaultHandler) -> MessageAction {
         // We do not check for MDM values here because we allow copy on text messages but not on file messages
         MessageAction(
-            title: "copy".localized,
+            title: #localize("copy"),
             image: UIImage(systemName: "doc.on.doc"),
             handler: handler
         )
@@ -400,7 +401,7 @@ enum ChatViewMessageActionsProvider {
     /// - Returns: MessageAction
     private static func forwardAction(message: BaseMessage) -> MessageAction {
         MessageAction(
-            title: "forward_menu".localized,
+            title: #localize("forward_menu"),
             image: UIImage(systemName: "arrowshape.turn.up.forward")
         ) {
             let cgPickerWrapper = ContactGroupPickerWrapper(message: message)
@@ -413,7 +414,7 @@ enum ChatViewMessageActionsProvider {
     /// - Returns: MessageAction
     private static func shareAction(view: UIView, shareItems: [Any]) -> MessageAction {
         MessageAction(
-            title: "share_menu".localized,
+            title: #localize("share_menu"),
             image: UIImage(systemName: "square.and.arrow.up")
         ) {
             
@@ -444,7 +445,7 @@ enum ChatViewMessageActionsProvider {
     /// - Parameter text: Text to be spoken when action is selected
     /// - Returns: MessageAction
     private static func speakAction(text: String) -> MessageAction {
-        MessageAction(title: "speak".localized, image: UIImage(systemName: "waveform")) {
+        MessageAction(title: #localize("speak"), image: UIImage(systemName: "waveform")) {
             speechSynthesizerManager.speak(text)
         }
     }
@@ -454,7 +455,7 @@ enum ChatViewMessageActionsProvider {
     /// - Returns: MessageAction
     private static func detailsAction(handler: @escaping DefaultHandler) -> MessageAction {
         MessageAction(
-            title: "details".localized,
+            title: #localize("details"),
             image: UIImage(systemName: "info.circle"),
             handler: handler
         )
@@ -465,7 +466,7 @@ enum ChatViewMessageActionsProvider {
     /// - Returns: MessageAction
     private static func selectAction(handler: @escaping DefaultHandler) -> MessageAction {
         MessageAction(
-            title: "chatview_contextmenu_select".localized,
+            title: #localize("chatview_contextmenu_select"),
             image: UIImage(systemName: "checkmark.circle"),
             handler: handler
         )
@@ -476,7 +477,7 @@ enum ChatViewMessageActionsProvider {
     /// - Returns: MessageAction
     private static func editAction(handler: @escaping DefaultHandler) -> MessageAction {
         MessageAction(
-            title: "edit".localized,
+            title: #localize("edit"),
             image: UIImage(resource: .threemaPencilBubbleLeft),
             handler: handler
         )
@@ -491,14 +492,14 @@ enum ChatViewMessageActionsProvider {
         didDelete: @escaping DefaultHandler
     ) -> MessageAction {
         MessageAction(
-            title: "delete".localized,
+            title: #localize("delete"),
             image: UIImage(systemName: "trash"),
             attributes: .destructive
         ) {
             let businessInjector = BusinessInjector()
             var actions = [UIAlertAction]()
             actions.append(
-                UIAlertAction(title: "message_delete_for_me".localized, style: .destructive) { _ in
+                UIAlertAction(title: #localize("message_delete_for_me"), style: .destructive) { _ in
                     
                     willDelete()
                     
@@ -514,7 +515,7 @@ enum ChatViewMessageActionsProvider {
             if message.supportsRemoteDeletion {
                 actions.append(
                     UIAlertAction(
-                        title: "message_delete_for_everyone".localized,
+                        title: #localize("message_delete_for_everyone"),
                         style: .destructive
                     ) { _ in
 
@@ -572,7 +573,7 @@ enum ChatViewMessageActionsProvider {
             UIAlertTemplate.showSheet(
                 owner: AppDelegate.shared().currentTopViewController(),
                 popOverSource: popOverSource,
-                title: "message_delete_confirm".localized,
+                title: #localize("message_delete_confirm"),
                 actions: actions
             )
         }
@@ -587,24 +588,24 @@ enum ChatViewMessageActionsProvider {
             var firstFive = displayNames.prefix(5)
             let count = displayNames.count - 5
             let countString = String.localizedStringWithFormat(
-                "delete_edit_message_not_sent_to_others".localized,
+                #localize("delete_edit_message_not_sent_to_others"),
                 count
             )
             firstFive.append(countString)
             if let totalSummary = listFormatter.string(from: Array(firstFive)) {
-                summary = "\(totalSummary)\n\("delete_message_requirement".localized)"
+                summary = "\(totalSummary)\n\(#localize("delete_message_requirement"))"
             }
         }
         else {
             if let shortsSummary = listFormatter.string(from: displayNames) {
-                summary = "\(shortsSummary)\n\("delete_message_requirement".localized)"
+                summary = "\(shortsSummary)\n\(#localize("delete_message_requirement"))"
             }
         }
 
-        let message = String.localizedStringWithFormat("delete_message_not_sent_to".localized, summary)
+        let message = String.localizedStringWithFormat(#localize("delete_message_not_sent_to"), summary)
         UIAlertTemplate.showAlert(
             owner: AppDelegate.shared().currentTopViewController(),
-            title: BundleUtil.localizedString(forKey: "delete"),
+            title: #localize("delete"),
             message: message
         )
     }
@@ -613,7 +614,7 @@ enum ChatViewMessageActionsProvider {
 
     private static func saveAction(handler: @escaping DefaultHandler) -> MessageAction {
         MessageAction(
-            title: "save".localized,
+            title: #localize("save"),
             image: UIImage(systemName: "square.and.arrow.down")
         ) {
             
@@ -630,7 +631,7 @@ enum ChatViewMessageActionsProvider {
     
     private static func downloadAction(handler: @escaping DefaultHandler) -> MessageAction {
         MessageAction(
-            title: "download".localized,
+            title: #localize("download"),
             image: UIImage(systemName: "arrow.down.circle"),
             handler: handler
         )
@@ -639,7 +640,7 @@ enum ChatViewMessageActionsProvider {
     private static func retryAction(handler: @escaping DefaultHandler) -> MessageAction {
         // TODO: (IOS-4774) Check if it is retry or cancel
         MessageAction(
-            title: "retry".localized,
+            title: #localize("retry"),
             image: UIImage(systemName: "arrow.clockwise"),
             handler: handler
         )

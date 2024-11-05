@@ -28,7 +28,7 @@ import Foundation
     // MARK: - Overrides
 
     override public func delete(_ object: NSManagedObject) {
-        if let conversation = object as? Conversation {
+        if let conversation = object as? ConversationEntity {
             delete(conversation)
         }
         else if let contact = object as? ContactEntity {
@@ -44,7 +44,7 @@ import Foundation
 
     // MARK: - Private Helper Function
 
-    private func delete(_ conversation: Conversation) {
+    private func delete(_ conversation: ConversationEntity) {
         guard verifyNoLeftOverMessages(in: Set([conversation])) else {
             fatalError()
         }
@@ -54,7 +54,7 @@ import Foundation
 
     private func delete(_ contact: ContactEntity) {
         if let conversationsObjects = contact.conversations {
-            if let conversations = conversationsObjects as? Set<Conversation> {
+            if let conversations = conversationsObjects as? Set<ConversationEntity> {
                 guard verifyNoLeftOverMessages(in: conversations) else {
                     fatalError()
                 }
@@ -62,7 +62,7 @@ import Foundation
         }
 
         if let conversationsObjects = contact.groupConversations {
-            if let conversations = conversationsObjects as? Set<Conversation> {
+            if let conversations = conversationsObjects as? Set<ConversationEntity> {
                 guard verifyNoLeftOverMessages(in: conversations, from: contact) else {
                     fatalError()
                 }
@@ -92,7 +92,7 @@ import Foundation
     /// - Parameter conversation: the conversation to verify
     /// - Returns: true if no messages were found, false if messages were found
     private func verifyNoLeftOverMessages(
-        in conversations: Set<Conversation>,
+        in conversations: Set<ConversationEntity>,
         from contact: ContactEntity? = nil
     ) -> Bool {
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")

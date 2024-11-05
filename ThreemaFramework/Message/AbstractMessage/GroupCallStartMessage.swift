@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
 import SwiftProtobuf
+import ThreemaMacros
 import ThreemaProtocols
 
 @objc public final class GroupCallStartMessage: AbstractGroupMessage {
@@ -65,7 +66,7 @@ import ThreemaProtocols
     }
     
     override public func pushNotificationBody() -> String! {
-        BundleUtil.localizedString(forKey: "group_call_notification_body")
+        #localize("group_call_notification_body")
     }
     
     override public func isContentValid() -> Bool {

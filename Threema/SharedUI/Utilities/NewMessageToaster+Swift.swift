@@ -19,17 +19,18 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 extension NewMessageToaster {
     @objc func accessibilityText(for message: BaseMessage) -> String? {
         guard let previewableMessage = message as? PreviewableMessage else {
             return nil
         }
-        var accessibilityText = BundleUtil.localizedString(forKey: "new_message_accessibility")
+        var accessibilityText = #localize("new_message_accessibility")
         
         if message.isGroupMessage,
            let sender = message.accessibilityMessageSender {
-            accessibilityText += "\(BundleUtil.localizedString(forKey: "from")) "
+            accessibilityText += "\(#localize("from")) "
             accessibilityText += "\(sender). "
         }
         

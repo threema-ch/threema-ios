@@ -131,12 +131,13 @@ class AppMigrationTests: XCTestCase {
         )
 
         let entityManager = EntityManager(databaseContext: dbMainCnx)
-        let conversations: [Conversation] = entityManager.entityFetcher.allConversations() as! [Conversation]
+        let conversations: [ConversationEntity] = entityManager.entityFetcher
+            .allConversations() as! [ConversationEntity]
         XCTAssertEqual(conversations.count, 5)
 
         // Checks for 4.8 migration
         for conversation in ["SENDER01", "SENDER02"]
-            .map({ entityManager.entityFetcher.conversation(forIdentity: $0) }) {
+            .map({ entityManager.entityFetcher.conversationEntity(forIdentity: $0) }) {
             XCTAssertEqual(
                 entityManager.entityFetcher.unreadMessages(for: conversation).count, 1
             )
@@ -148,8 +149,8 @@ class AppMigrationTests: XCTestCase {
         // Own contact should be removed from contact list
         XCTAssertNil(ownContact)
 
-        for conversation in conversations.filter({ $0.isGroup() }) {
-            let ownMember = conversation.members.filter { $0.identity == myIdentityStoreMock.identity }
+        for conversation in conversations.filter(\.isGroup) {
+            let ownMember = conversation.unwrappedMembers.filter { $0.identity == myIdentityStoreMock.identity }
             // Own contact should be removed from group
             XCTAssertEqual(ownMember.count, 0)
         }
@@ -198,7 +199,7 @@ class AppMigrationTests: XCTestCase {
         XCTAssertNil(pushSetting4.periodOffTillDate)
 
         // Checks for 5.9 migration
-        let conversation = entityManager.entityFetcher.conversation(forIdentity: "FILEID01")
+        let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: "FILEID01")
         let fileMessages = entityManager.entityFetcher.fileMessages(for: conversation) as? [FileMessageEntity]
         XCTAssertNotNil(fileMessages)
 
@@ -233,7 +234,7 @@ class AppMigrationTests: XCTestCase {
     private func setupDataForMigrationVersion4_8() {
         let calendar = Calendar.current
 
-        let addTextMessage: (Conversation, String, Bool) -> Void = { conversation, text, read in
+        let addTextMessage: (ConversationEntity, String, Bool) -> Void = { conversation, text, read in
             let date = calendar.date(byAdding: .second, value: +1, to: Date())!
             self.dbPreparer.createTextMessage(
                 conversation: conversation,
@@ -302,9 +303,13 @@ class AppMigrationTests: XCTestCase {
 
                 let conversation = dbPreparer
                     .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                        conversation.groupID = groupEntity.groupID
+                        // swiftformat:disable:next acronyms
+                        conversation.groupId = groupEntity.groupId
                         conversation.groupMyIdentity = self.myIdentityStoreMock.identity
-                        conversation.addMembers([member01, member02, ownContactIdentity])
+                        conversation.members?.insert(member01)
+                        conversation.members?.insert(member02)
+                        conversation.members?.insert(ownContactIdentity)
+                        conversation.lastUpdate = Date(timeIntervalSince1970: 0)
                     }
 
                 dbPreparer.createTextMessage(
@@ -424,15 +429,15 @@ class AppMigrationTests: XCTestCase {
         // Setup mocks
         let calendar = Calendar.current
 
-        let addFileMessage: (Conversation, String) -> Void = { conversation, caption in
+        let addFileMessage: (ConversationEntity, String) -> Void = { conversation, caption in
             let testBundle = Bundle(for: DBLoadTests.self)
             let testImageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
             let testImageData = try? Data(contentsOf: testImageURL!)
-            let dbFile: FileData = self.dbPreparer.createFileData(data: testImageData!)
+            let dbFile: FileDataEntity = self.dbPreparer.createFileDataEntity(data: testImageData!)
 
             let testThumbnailData = MediaConverter.getThumbnailFor(UIImage(data: testImageData!)!)?
                 .jpegData(compressionQuality: 1.0)
-            let testThumbnailFile: ImageData = self.dbPreparer.createImageData(
+            let testThumbnailFile: ImageDataEntity = self.dbPreparer.createImageDataEntity(
                 data: testThumbnailData!,
                 height: 100,
                 width: 100

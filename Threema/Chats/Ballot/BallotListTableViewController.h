@@ -19,13 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Conversation.h"
 #import "ThemedTableViewController.h"
 
 @interface BallotListTableViewController : ThemedTableViewController
 
-@property Conversation *conversation;
+@property ConversationEntity *conversation;
 
-+ (instancetype) ballotListViewControllerForConversation:(Conversation *)conversation;
++ (instancetype) ballotListViewControllerForConversation:(ConversationEntity *)conversation;
 
 @end

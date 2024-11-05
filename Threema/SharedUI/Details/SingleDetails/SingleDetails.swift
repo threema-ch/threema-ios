@@ -22,7 +22,7 @@ enum SingleDetails {
     
     enum State {
         case contactDetails(contact: ContactEntity)
-        case conversationDetails(contact: ContactEntity, conversation: Conversation)
+        case conversationDetails(contact: ContactEntity, conversation: ConversationEntity)
     }
     
     enum Section {

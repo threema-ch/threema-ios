@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct MultiDeviceWizardCodeView: View {
     @Environment(\.dismiss) var dismiss
@@ -45,7 +46,7 @@ struct MultiDeviceWizardCodeView: View {
                     Spacer()
                     Spacer()
                     
-                    Text(BundleUtil.localizedString(forKey: "md_wizard_code_text"))
+                    Text(#localize("md_wizard_code_text"))
                         .bold()
                         .font(.title2)
                         .padding(.bottom)
@@ -71,7 +72,7 @@ struct MultiDeviceWizardCodeView: View {
             Button {
                 dismiss()
             } label: {
-                Text(BundleUtil.localizedString(forKey: "md_wizard_back_identity"))
+                Text(#localize("md_wizard_back_identity"))
             }
             .buttonStyle(.bordered)
             .tint(Color(.primary))
@@ -83,7 +84,7 @@ struct MultiDeviceWizardCodeView: View {
             }
         }
         .padding(.horizontal)
-        .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
+        .navigationBarTitle(#localize("md_wizard_header"))
         .navigationBarBackButtonHidden()
         .onAppear {
             animate = true

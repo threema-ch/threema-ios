@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaMacros
 import UIKit
 
 /// Show an edit view for the provided group
@@ -145,7 +146,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
     }
     
     private func configureNavigationBar() {
-        navigationBarTitle = BundleUtil.localizedString(forKey: "edit_group_title")
+        navigationBarTitle = #localize("edit_group_title")
         
         transparentNavigationBarWhenOnTop = true
         

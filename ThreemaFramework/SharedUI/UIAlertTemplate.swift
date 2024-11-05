@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 @objc public class UIAlertTemplate: NSObject {
     @objc public static func showAlert(
@@ -38,7 +39,7 @@ import Foundation
         actionOk: ((UIAlertAction) -> Void)? = nil
     ) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        let ok = titleOk ?? BundleUtil.localizedString(forKey: "ok")
+        let ok = titleOk ?? #localize("ok")
         alert
             .addAction(UIAlertAction(
                 title: ok,
@@ -130,7 +131,7 @@ import Foundation
             actionOk: { _ in
                 action()
             },
-            titleCancel: "cancel".localized
+            titleCancel: #localize("cancel")
         )
     }
     
@@ -278,7 +279,7 @@ import Foundation
         enableActionsAfter seconds: Int
     ) {
         let initialMessage =
-            "\(message) \n\n \(String.localizedStringWithFormat("alert_enable_actions".localized, seconds))"
+            "\(message) \n\n \(String.localizedStringWithFormat(#localize("alert_enable_actions"), seconds))"
         let alert = UIAlertController(title: title, message: initialMessage, preferredStyle: .alert)
         
         alert.addAction(action1)
@@ -301,7 +302,7 @@ import Foundation
                 else {
                     alert
                         .message =
-                        "\(message) \n\n \(String.localizedStringWithFormat("alert_enable_actions".localized, seconds - secondsPassed))"
+                        "\(message) \n\n \(String.localizedStringWithFormat(#localize("alert_enable_actions"), seconds - secondsPassed))"
                 }
             }
         }
@@ -310,7 +311,7 @@ import Foundation
 
 extension UIAlertTemplate {
     private static func resolveCancelTitle(with optionalTitle: String?) -> String {
-        optionalTitle ?? BundleUtil.localizedString(forKey: "cancel")
+        optionalTitle ?? #localize("cancel")
     }
     
     // Internal helper for shared code

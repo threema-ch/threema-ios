@@ -21,6 +21,7 @@
 #if THREEMA_WORK || THREEMA_ONPREM
     import SwiftUI
     import ThreemaFramework
+    import ThreemaMacros
 
     struct WorkButton: View {
         @State var isTurnedOn = false {
@@ -36,6 +37,7 @@
                 Image("threema.case.\(isTurnedOn ? "circle.fill" : "fill.circle")")
                     .imageScale(.large)
             }
+            .accessibilityLabel(#localize("segmentcontrol_work_contacts"))
         }
     }
 

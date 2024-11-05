@@ -54,6 +54,10 @@ class MockData {
     static func generateReflectID() -> Data {
         BytesUtility.generateRandomBytes(length: ThreemaProtocol.reflectIDLength)!
     }
+    
+    static func generateGCK() -> Data {
+        BytesUtility.generateRandomBytes(length: ThreemaProtocol.gckLength)!
+    }
 
     // MARK: Static data
 

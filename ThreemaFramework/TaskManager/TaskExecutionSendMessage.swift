@@ -52,7 +52,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                 }
 
                 self.frameworkInjector.entityManager.performBlock {
-                    var conversation: Conversation
+                    var conversation: ConversationEntity
                     do {
                         conversation = try self.getConversation(for: task)
                     }
@@ -101,13 +101,13 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
             Promise { seal in
                 var sendMessages = [Promise<AbstractMessage?>]()
 
-                self.frameworkInjector.entityManager.performBlockAndWait {
+                self.frameworkInjector.entityManager.performAndWait {
                     if task.isGroupMessage {
                         // Do not send message for note group
                         if task.isNoteGroup ?? false {
                             task.sendContactProfilePicture = false
 
-                            var conversation: Conversation
+                            var conversation: ConversationEntity
                             do {
                                 conversation = try self.getConversation(for: task)
                             }
@@ -172,7 +172,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                         }
                     }
                     else {
-                        var conversation: Conversation
+                        var conversation: ConversationEntity
                         do {
                             conversation = try self.getConversation(for: task)
                         }
@@ -219,8 +219,8 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                     
                     // Mark (group) message as sent
                     if let msg = filteredSentMessages.first {
-                        self.frameworkInjector.entityManager.performBlockAndWait {
-                            var conversation: Conversation
+                        self.frameworkInjector.entityManager.performAndWait {
+                            var conversation: ConversationEntity
                             do {
                                 conversation = try self.getConversation(for: task)
                             }
@@ -331,7 +331,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                 if let sendContactProfilePicture = task.sendContactProfilePicture,
                    sendContactProfilePicture {
                     // TODO: (IOS-4495) Inject for testing
-                    self.frameworkInjector.entityManager.performBlockAndWait {
+                    self.frameworkInjector.entityManager.performAndWait {
                         ContactPhotoSender(self.frameworkInjector.entityManager)
                             .sendProfilePicture(message: sentMessage)
                     }
@@ -377,7 +377,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
     private func newOutgoingGroupForwardSecurityMode(
         for abstractMessage: AbstractMessage,
         and sentMessages: [AbstractMessage],
-        in conversation: Conversation
+        in conversation: ConversationEntity
     ) throws -> ForwardSecurityMode {
         guard
             let message = frameworkInjector.entityManager.entityFetcher.message(

@@ -22,6 +22,7 @@ import Foundation
 import MBProgressHUD
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 extension ProfileView {
     struct DynamicHeader<Content: View>: View {
@@ -142,7 +143,7 @@ extension ProfileView {
                                 .padding(.leading, inset)
                                 .foregroundColor(foregroundLabelColor)
                                 .accessibilityLabel(
-                                    "\("id_completed_nickname".localized): \(model.nickname)"
+                                    "\(#localize("id_completed_nickname")): \(model.nickname)"
                                 )
                             
                             Text(model.threemaID)
@@ -150,7 +151,7 @@ extension ProfileView {
                                 .padding(.leading, inset)
                                 .foregroundColor(foregroundLabelColor)
                                 .accessibilityLabel(
-                                    "\("my_threema_id".localized): \(model.publicKey.identity)"
+                                    "\(#localize("my_threema_id")): \(model.publicKey.identity)"
                                 )
                             Spacer()
                         }
@@ -231,7 +232,7 @@ extension ProfileView {
                             Image(uiImage: model.profileImage)
                                 .resizable()
                                 .scaledToFit()
-                                .accessibilityLabel("my_profilepicture".localized)
+                                .accessibilityLabel(#localize("my_profilepicture"))
                                 .transformAnchorPreference(key: TrackedFrame.Key.self, value: .bounds) {
                                     $0.append(TrackedFrame(id: "imageFrame", frame: proxy[$1]))
                                 }
@@ -422,11 +423,11 @@ extension ProfileView {
                     VStack {
                         if debugCollapsed {
                             Text(
-                                "SO:\(String(format: "%.2f", scrollOffset)), LO:\(String(format: "%.2f", labelOffset)), IO:\(String(format: "%.2f", imageOffset))"
+                                verbatim: "SO:\(String(format: "%.2f", scrollOffset)), LO:\(String(format: "%.2f", labelOffset)), IO:\(String(format: "%.2f", imageOffset))"
                             )
                         }
                         else {
-                            Text(debugInfoStr)
+                            Text(verbatim: debugInfoStr)
                         }
                     }
                     .font(.caption)

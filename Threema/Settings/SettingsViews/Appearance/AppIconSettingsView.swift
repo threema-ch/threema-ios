@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 struct AppIconSettingsView: View {
     @State var currentlySelected = UIApplication.shared.alternateIconName
@@ -35,7 +36,7 @@ struct AppIconSettingsView: View {
                 }
             }
             header: {
-                Text("settings_appicon_default_header".localized)
+                Text(#localize("settings_appicon_default_header"))
             }
             
             Section {
@@ -44,7 +45,7 @@ struct AppIconSettingsView: View {
                 }
             }
             header: {
-                Text("settings_appicon_legacy_header".localized)
+                Text(#localize("settings_appicon_legacy_header"))
             }
             
             Section {
@@ -52,10 +53,10 @@ struct AppIconSettingsView: View {
                     AppIconMenuItem(icon: icon, currentlySelected: $currentlySelected)
                 }
             } header: {
-                Text("settings_appicon_special_header".localized)
+                Text(#localize("settings_appicon_special_header"))
             }
             .navigationTitle(
-                Text("settings_appearance_hide_app_icon".localized)
+                Text(#localize("settings_appearance_hide_app_icon"))
             )
             .navigationBarTitleDisplayMode(.inline)
         }

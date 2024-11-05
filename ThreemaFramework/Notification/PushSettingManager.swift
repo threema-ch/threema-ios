@@ -123,7 +123,8 @@ public actor PushSettingManager: PushSettingManagerProtocol {
            let baseMessage = pendingUserNotification.baseMessage,
            let group = entityManager.entityFetcher.groupEntity(for: baseMessage.conversation) {
             let creator = group.groupCreator ?? MyIdentityStore.shared().identity
-            return find(forGroup: GroupIdentity(id: group.groupID, creator: ThreemaIdentity(creator!)))
+            // swiftformat:disable:next acronyms
+            return find(forGroup: GroupIdentity(id: group.groupId, creator: ThreemaIdentity(creator!)))
         }
         
         else if let groupCallMessage = pendingUserNotification.abstractMessage as? GroupCallStartMessage {

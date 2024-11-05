@@ -20,9 +20,10 @@
 
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 
 class ShareExtensionHelpers {
-    static func getDescription(for conversations: [Conversation]) -> NSAttributedString {
+    static func getDescription(for conversations: [ConversationEntity]) -> NSAttributedString {
         let attrString = NSMutableAttributedString(
             string: ShareExtensionHelpers.getRecipientListHeading(for: conversations),
             attributes: [NSAttributedString.Key.font: UIFont.preferredFont(forTextStyle: .headline)]
@@ -38,11 +39,11 @@ class ShareExtensionHelpers {
         return attrString
     }
     
-    static func getRecipientListHeading(for conversations: [Conversation]) -> String {
-        "\(BundleUtil.localizedString(forKey: "sending_to")) (\(conversations.count)) : "
+    static func getRecipientListHeading(for conversations: [ConversationEntity]) -> String {
+        "\(#localize("sending_to")) (\(conversations.count)) : "
     }
     
-    static func getRecipientListDescription(for conversations: [Conversation]) -> String {
+    static func getRecipientListDescription(for conversations: [ConversationEntity]) -> String {
         var convDescriptionString = ""
         var second = false
         
@@ -51,12 +52,7 @@ class ShareExtensionHelpers {
                 convDescriptionString.append(", ")
             }
 
-            if let displayName = conversation.displayName {
-                convDescriptionString.append(displayName)
-            }
-            else {
-                convDescriptionString.append(BundleUtil.localizedString(forKey: "unknown_conversation"))
-            }
+            convDescriptionString.append(conversation.displayName)
 
             second = true
         }

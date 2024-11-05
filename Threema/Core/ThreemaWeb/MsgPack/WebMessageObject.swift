@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 class WebMessageObject: NSObject {
@@ -46,9 +47,9 @@ class WebMessageObject: NSObject {
     var reactions: [AnyHashable: [String]]?
     var lastEditedAt: UInt64?
 
-    init(message: BaseMessage, conversation: Conversation, forConversationsRequest: Bool, session: WCSession) {
+    init(message: BaseMessage, conversation: ConversationEntity, forConversationsRequest: Bool, session: WCSession) {
         self.baseMessage = message
-        self.type = conversation.isGroup() ? "group" : "contact"
+        self.type = conversation.isGroup ? "group" : "contact"
         
         self.id = message.id.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
         self.date = Int(message.displayDate.timeIntervalSince1970)
@@ -96,7 +97,7 @@ class WebMessageObject: NSObject {
             self.state = "send-failed"
         }
         
-        if conversation.isGroup() {
+        if conversation.isGroup {
             self.reactions = message.groupReactionsDictForWeb()
         }
 
@@ -107,7 +108,7 @@ class WebMessageObject: NSObject {
         super.init()
         
         switch message {
-        case is TextMessage:
+        case is TextMessageEntity:
             addTextMessage(message)
         case is ImageMessageEntity:
             addImageMessage(message, forConversationsRequest: forConversationsRequest, session: session)
@@ -115,11 +116,11 @@ class WebMessageObject: NSObject {
             addVideoMessage(message, forConversationsRequest: forConversationsRequest, session: session)
         case is AudioMessageEntity:
             addAudioMessage(message)
-        case is LocationMessage:
+        case is LocationMessageEntity:
             addLocationMessage(message)
         case is FileMessageEntity:
             addFileMessage(message, forConversationsRequest: forConversationsRequest, session: session)
-        case is SystemMessage:
+        case is SystemMessageEntity:
             addSystemMessage(message)
         case is BallotMessage:
             addBallotMessage(message)
@@ -128,9 +129,9 @@ class WebMessageObject: NSObject {
         }
     }
     
-    init(message: BaseMessage, conversation: Conversation) {
+    init(message: BaseMessage, conversation: ConversationEntity) {
         self.baseMessage = message
-        if conversation.isGroup() {
+        if conversation.isGroup {
             self.type = "group"
         }
         else {
@@ -144,9 +145,11 @@ class WebMessageObject: NSObject {
         
         self.isOutbox = message.isOwnMessage
         
-        if message is SystemMessage {
-            let systemMessage = message as! SystemMessage
-            if !systemMessage.isCallType() {
+        if let systemMessage = message as? SystemMessageEntity {
+            if case .callMessage = systemMessage.systemMessageType {
+                self.isStatus = false
+            }
+            else {
                 self.isStatus = true
             }
         }
@@ -235,7 +238,7 @@ class WebMessageObject: NSObject {
     }
     
     private func addTextMessage(_ message: BaseMessage) {
-        let textMessage = message as! TextMessage
+        let textMessage = message as! TextMessageEntity
         type = "text"
         body = textMessage.text
         thumbnail = nil
@@ -243,7 +246,8 @@ class WebMessageObject: NSObject {
         statusType = "text"
         var remainingBody: NSString?
         var quotedIdentity: String = MyIdentityStore.shared().identity
-        if let quotedMessageID = textMessage.quotedMessageID {
+        // swiftformat:disable:next acronyms
+        if let quotedMessageID = textMessage.quotedMessageId {
             let entityManager = EntityManager()
             if let quotedMessage = entityManager.entityFetcher.message(
                 with: quotedMessageID,
@@ -268,7 +272,7 @@ class WebMessageObject: NSObject {
             else {
                 quote = [
                     "identity": "",
-                    "text": BundleUtil.localizedString(forKey: "quote_not_found"),
+                    "text": #localize("quote_not_found"),
                     "messageId": quotedMessageID.hexEncodedString(),
                 ]
                 body = textMessage.text
@@ -321,7 +325,7 @@ class WebMessageObject: NSObject {
             }
         }
         
-        if let image = imageMessageEntity.image, let imageCaption = image.getCaption() {
+        if let image = imageMessageEntity.image, let imageCaption = image.caption() {
             caption = imageCaption
         }
     }
@@ -356,7 +360,7 @@ class WebMessageObject: NSObject {
     }
     
     private func addLocationMessage(_ message: BaseMessage) {
-        let locationMessage = message as! LocationMessage
+        let locationMessage = message as! LocationMessageEntity
         type = "location"
         body = nil
         thumbnail = nil
@@ -371,8 +375,9 @@ class WebMessageObject: NSObject {
         body = nil
         thumbnail = nil
         
-        if let fileThumbnail = fileMessageEntity.thumbnail, fileThumbnail.data != nil {
-            if let thumbnailID = fileMessageEntity.blobThumbnailID {
+        if let fileThumbnail = fileMessageEntity.thumbnail {
+            // swiftformat:disable:next acronyms
+            if let thumbnailID = fileMessageEntity.blobThumbnailId {
                 if !session.requestedThumbnails(contains: thumbnailID) {
                     let webThumbnail = WebThumbnail(fileMessageEntity, onlyThumbnail: true)
                     thumbnail = webThumbnail.objectDict()
@@ -393,15 +398,15 @@ class WebMessageObject: NSObject {
         }
         statusType = "text"
         
-        if fileMessageEntity.renderFileImageMessage() {
+        if fileMessageEntity.renderFileImageMessage {
             type = "image"
         }
-        else if fileMessageEntity.renderFileVideoMessage() {
+        else if fileMessageEntity.renderFileVideoMessage {
             type = "video"
             let webVideo = WebVideo(fileMessageEntity)
             video = webVideo.objectDict()
         }
-        else if fileMessageEntity.renderFileAudioMessage() {
+        else if fileMessageEntity.renderFileAudioMessage {
             type = "audio"
             let webAudio = WebAudio(fileMessageEntity)
             audio = webAudio.objectDict()
@@ -418,8 +423,8 @@ class WebMessageObject: NSObject {
     }
     
     private func addSystemMessage(_ message: BaseMessage) {
-        let systemMessage = message as! SystemMessage
-        if systemMessage.isCallType() {
+        let systemMessage = message as! SystemMessageEntity
+        if case .callMessage = systemMessage.systemMessageType {
             // voip
             type = "voipStatus"
             body = nil
@@ -428,10 +433,10 @@ class WebMessageObject: NSObject {
             state = nil
             statusType = "text"
             
-            if systemMessage.arg != nil {
+            if let arg = systemMessage.arg {
                 do {
                     let argDict = try JSONSerialization.jsonObject(
-                        with: systemMessage.arg,
+                        with: arg,
                         options: .allowFragments
                     ) as! [AnyHashable: Any]
                     isOutbox = argDict["CallInitiator"] as! Bool
@@ -448,8 +453,17 @@ class WebMessageObject: NSObject {
             voip = webVoip.objectDict()
         }
         else {
+            
+            body =
+                switch systemMessage.systemMessageType {
+                case let .systemMessage(type):
+                    type.localizedMessage
+                case let .callMessage(type):
+                    type.localizedMessage
+                case let .workConsumerInfo(type):
+                    type.localizedMessage
+                }
             type = "text"
-            body = systemMessage.format()
             thumbnail = nil
             isStatus = true
             caption = nil
@@ -540,9 +554,7 @@ struct WebBlob {
     }
     
     init(audioMessageEntity: AudioMessageEntity) {
-        if let audioMessageData = audioMessageEntity.audio?.data {
-            self.blob = audioMessageData
-        }
+        self.blob = audioMessageEntity.audio?.data
         self.name = audioMessageEntity.blobWebFilename
         self.type = "audio/\(MEDIA_EXTENSION_VIDEO)"
     }
@@ -578,37 +590,36 @@ struct WebThumbnail {
     var image: Data?
     
     init(imageMessageEntity: ImageMessageEntity, onlyThumbnail: Bool) {
-        if !onlyThumbnail, let origImage = imageMessageEntity.image, let origImageData = origImage.data,
-           let tmpPreview = MediaConverter.getWebPreviewData(origImageData) {
-            let size = MediaConverter.getWebThumbnailSize(forImageData: origImageData)
+        if !onlyThumbnail, let origImage = imageMessageEntity.image,
+           let tmpPreview = MediaConverter.getWebPreviewData(origImage.data) {
+            let size = MediaConverter.getWebThumbnailSize(forImageData: origImage.data)
             self.height = Int(size.height)
             self.width = Int(size.width)
             self.preview = tmpPreview
-            self.image = MediaConverter.getWebThumbnailData(origImageData)
+            self.image = MediaConverter.getWebThumbnailData(origImage.data)
         }
-        else if let thumbnail = imageMessageEntity.thumbnail, let thumbnailData = thumbnail.data,
-                let tmpPreview = MediaConverter.getWebPreviewData(thumbnailData) {
-            let size = MediaConverter.getWebThumbnailSize(forImageData: thumbnailData)
+        else if let thumbnail = imageMessageEntity.thumbnail,
+                let tmpPreview = MediaConverter.getWebPreviewData(thumbnail.data) {
+            let size = MediaConverter.getWebThumbnailSize(forImageData: thumbnail.data)
             self.height = Int(size.height)
             self.width = Int(size.width)
             self.preview = tmpPreview
             let thumbnailImageData: Data =
-                if !onlyThumbnail, let image = imageMessageEntity.image,
-                let imageData = image.data {
-                    imageData
+                if !onlyThumbnail, let image = imageMessageEntity.image {
+                    image.data
                 }
                 else {
-                    thumbnailData
+                    thumbnail.data
                 }
             self.image = MediaConverter.getWebThumbnailData(thumbnailImageData)
         }
-        else if let origImage = imageMessageEntity.image, let origImageData = origImage.data,
-                let tmpPreview = MediaConverter.getWebPreviewData(origImageData) {
-            let size = MediaConverter.getWebThumbnailSize(forImageData: origImageData)
+        else if let origImage = imageMessageEntity.image,
+                let tmpPreview = MediaConverter.getWebPreviewData(origImage.data) {
+            let size = MediaConverter.getWebThumbnailSize(forImageData: origImage.data)
             self.height = Int(size.height)
             self.width = Int(size.width)
             self.preview = tmpPreview
-            self.image = MediaConverter.getWebThumbnailData(origImageData)
+            self.image = MediaConverter.getWebThumbnailData(origImage.data)
         }
         else {
             self.height = Int(44)
@@ -634,15 +645,15 @@ struct WebThumbnail {
             self.preview = UIImage(systemName: "questionmark.app.fill")!.pngData()!
         }
         
-        if !onlyThumbnail, let thumbnail = videoMessageEntity.thumbnail, let thumbnailData = thumbnail.data {
-            self.image = MediaConverter.getWebThumbnailData(thumbnailData)
+        if !onlyThumbnail, let thumbnail = videoMessageEntity.thumbnail {
+            self.image = MediaConverter.getWebThumbnailData(thumbnail.data)
         }
     }
     
     init(_ fileMessageEntity: FileMessageEntity, onlyThumbnail: Bool) {
-        if let thumbnail = fileMessageEntity.thumbnail, let thumbnailData = thumbnail.data,
-           let tmpPreview = MediaConverter.getWebPreviewData(thumbnailData) {
-            let size = MediaConverter.getWebThumbnailSize(forImageData: thumbnailData)
+        if let thumbnail = fileMessageEntity.thumbnail,
+           let tmpPreview = MediaConverter.getWebPreviewData(thumbnail.data) {
+            let size = MediaConverter.getWebThumbnailSize(forImageData: thumbnail.data)
             self.height = Int(size.height)
             self.width = Int(size.width)
             self.preview = tmpPreview
@@ -653,8 +664,8 @@ struct WebThumbnail {
             self.preview = UIImage(systemName: "questionmark.app.fill")!.pngData()!
         }
         
-        if !onlyThumbnail, let thumbnail = fileMessageEntity.thumbnail, let thumbnailData = thumbnail.data {
-            self.image = MediaConverter.getWebThumbnailData(thumbnailData)
+        if !onlyThumbnail, let thumbnail = fileMessageEntity.thumbnail {
+            self.image = MediaConverter.getWebThumbnailData(thumbnail.data)
         }
     }
     
@@ -674,13 +685,13 @@ struct WebVideo {
     
     init(_ fileMessageEntity: FileMessageEntity) {
         if let videoDuration = fileMessageEntity.duration {
-            self.duration = videoDuration.intValue
+            self.duration = Int(videoDuration)
         }
         else {
             self.duration = 0
         }
         if let videoSize = fileMessageEntity.fileSize {
-            self.size = videoSize.intValue
+            self.size = Int(truncating: videoSize)
         }
         else {
             self.size = 0
@@ -701,7 +712,7 @@ struct WebAudio {
     
     init(_ fileMessageEntity: FileMessageEntity) {
         if let audioDuration = fileMessageEntity.duration {
-            self.duration = audioDuration.intValue
+            self.duration = Int(audioDuration)
         }
         else {
             self.duration = 0
@@ -720,10 +731,10 @@ struct WebLocation {
     var address: String?
     var description: String?
     
-    init(_ locationMessage: LocationMessage) {
+    init(_ locationMessage: LocationMessageEntity) {
         self.lat = locationMessage.latitude.floatValue
         self.lon = locationMessage.longitude.floatValue
-        self.accuracy = locationMessage.accuracy.floatValue
+        self.accuracy = locationMessage.accuracy?.floatValue ?? 0.0
         self.address = nil
         self.description = locationMessage.poiName
     }
@@ -764,7 +775,7 @@ struct WebVoip {
     var duration: Int?
     var reason: Int?
     
-    init(_ systemMessage: SystemMessage) {
+    init(_ systemMessage: SystemMessageEntity) {
         switch systemMessage.type.intValue {
         case kSystemMessageCallMissed:
             self.status = 1
@@ -775,7 +786,7 @@ struct WebVoip {
         case kSystemMessageCallRejectedTimeout:
             self.status = 3
         case kSystemMessageCallEnded:
-            if systemMessage.haveCallTime() {
+            if systemMessage.callDuration() != nil {
                 self.status = 2
             }
             else {
@@ -787,7 +798,7 @@ struct WebVoip {
             self.status = 2
         }
         
-        if let callTime = systemMessage.callTime() {
+        if let callTime = systemMessage.callDuration() {
             self.duration = Int(DateFormatter.totalSeconds(callTime))
         }
 

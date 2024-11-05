@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 import UIKit
 
 public protocol MessageAccessibility: BaseMessage {
@@ -35,7 +36,7 @@ extension MessageAccessibility {
     public var customAccessibilityLabel: String {
         // If deleted we return the default text
         guard deletedAt == nil else {
-            return "deleted_message".localized
+            return #localize("deleted_message")
         }
         
         return privateCustomAccessibilityLabel

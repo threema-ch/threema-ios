@@ -102,8 +102,8 @@ extension BaseMessage {
             self is FileMessageEntity ||
             self is ImageMessageEntity ||
             self is VideoMessageEntity ||
-            self is LocationMessage ||
-            self is TextMessage
+            self is LocationMessageEntity ||
+            self is TextMessageEntity
     }
     
     /// Is remote deletion of this message allowed?
@@ -172,7 +172,7 @@ extension BaseMessage {
     }
     
     private var userAckState: State? {
-        guard let userackDate else {
+        guard userackDate != nil else {
             return nil
         }
         

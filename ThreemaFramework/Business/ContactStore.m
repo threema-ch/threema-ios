@@ -490,12 +490,12 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
  @param onCompletion: Returns added/updated contact
  @param onError: Error handler
  */
-- (void)addWorkContactAndUpdateFeatureMaskWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(nonnull void(^)(ContactEntity * _Nonnull contactEntity))onCompletion onError:(nonnull void(^)(NSError * _Nonnull error))onError {
+- (void)addWorkContactAndUpdateFeatureMaskWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname csi:(nullable NSString *)csi jobTitle:(nullable NSString *)jobTitle department:(nullable NSString *)department acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(nonnull void(^)(ContactEntity * _Nonnull contactEntity))onCompletion onError:(nonnull void(^)(NSError * _Nonnull error))onError {
     __block MediatorSyncableContacts *mediatorSyncableContacts = [[MediatorSyncableContacts alloc] init];
     __block ContactEntity *contactEntity;
 
     [entityManager performBlockAndWait:^{
-        NSString *contactIdentity = [self addWorkContactWithIdentity:identity publicKey:publicKey firstname:firstname lastname:lastname acquaintanceLevel:acquaintanceLevel entityManager:entityManager contactSyncer:mediatorSyncableContacts];
+        NSString *contactIdentity = [self addWorkContactWithIdentity:identity publicKey:publicKey firstname:firstname lastname:lastname csi:csi jobTitle:jobTitle department:department acquaintanceLevel:acquaintanceLevel entityManager:entityManager contactSyncer:mediatorSyncableContacts];
         
         contactEntity = [[entityManager entityFetcher] contactForId:contactIdentity];
     }];
@@ -531,7 +531,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
  @param acquaintanceLevel: Is `group` contact will be marked as hidden
  @returns: Added/updated identity of contact or nil if public key of already existing contact differs to given public key
  */
-- (nullable NSString *)addWorkContactWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(NSString *)firstname lastname:(NSString *)lastname acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject contactSyncer:(MediatorSyncableContacts*)mediatorSyncableContacts {
+- (nullable NSString *)addWorkContactWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(NSString *)firstname lastname:(NSString *)lastname csi:(NSString *)csi jobTitle:(NSString *)jobTitle department:(NSString *)department acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject contactSyncer:(MediatorSyncableContacts*)mediatorSyncableContacts {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Parameter entityManagerObject should be type of EntityManager");
     EntityManager *em = (EntityManager *)entityManagerObject;
 
@@ -588,6 +588,18 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                     [mediatorSyncableContacts updateLastNameWithIdentity:contact.identity value:contact.lastName];
                 }
             }
+        }
+        
+        // TODO: (IOS-4895) MD support Job Title and Department
+        if ((csi || contact.csi) && ![csi isEqualToString:contact.csi]) {
+            contact.csi = csi;
+        }
+        
+        if ((jobTitle || contact.jobTitle) && ![jobTitle isEqualToString:contact.jobTitle]) {
+            contact.jobTitle = jobTitle;
+        }
+        if ((department || contact.department) && ![department isEqualToString:contact.department]) {
+            contact.department = department;
         }
 
         if (contact.verificationLevel.intValue != kVerificationLevelFullyVerified) {
@@ -840,7 +852,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         if (contact) {
             if (!contact.isContactHidden) {
                 // Prevent deletion if has contact a 1:1 conversation
-                Conversation *conversation = [[em entityFetcher] conversationForContact:contact];
+                ConversationEntity *conversation = [[em entityFetcher] conversationEntityForContact:contact];
                 if (conversation) {
                     DDLogWarn(@"Contact %@ can't be deleted because has a 1:1 conversation", contact.identity);
                     return;
@@ -989,14 +1001,26 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
                         }
                         NSString *firstName = nil;
                         NSString *lastName = nil;
+                        NSString *csi = nil;
+                        NSString *jobTitle = nil;
+                        NSString *department = nil;
                         if (![foundIdentity[@"first"] isEqual:[NSNull null]]) {
                             firstName = foundIdentity[@"first"];
                         }
                         if (![foundIdentity[@"last"] isEqual:[NSNull null]]) {
                             lastName = foundIdentity[@"last"];
                         }
-                        
-                        [self addWorkContactAndUpdateFeatureMaskWithIdentity:identity publicKey:publicKey firstname:firstName lastname:lastName acquaintanceLevel:acquaintanceLevel onCompletion:^(ContactEntity * _Nonnull contactEntity) {
+                        if (![foundIdentity[@"csi"] isEqual:[NSNull null]]) {
+                            csi = foundIdentity[@"csi"];
+                        }
+                        if (![foundIdentity[@"jobTitle"] isEqual:[NSNull null]]) {
+                            jobTitle = foundIdentity[@"jobTitle"];
+                        }
+                        if (![foundIdentity[@"department"] isEqual:[NSNull null]]) {
+                            department = foundIdentity[@"department"];
+                        }
+                                                
+                        [self addWorkContactAndUpdateFeatureMaskWithIdentity:identity publicKey:publicKey firstname:firstName lastname:lastName csi:csi jobTitle:jobTitle department:department acquaintanceLevel:acquaintanceLevel onCompletion:^(ContactEntity * _Nonnull contactEntity) {
                             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                                 onCompletion(publicKey);
                             });
@@ -1183,7 +1207,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     [entityManager performSyncBlockAndSafe:^{
         contact = [entityManager.entityFetcher contactForId:identity];
         if (contact) {
-            ImageData *dbImage = [entityManager.entityCreator imageData];
+            ImageDataEntity *dbImage = [entityManager.entityCreator imageDataEntity];
             dbImage.data = imageData;
             dbImage.width = [NSNumber numberWithInt:image.size.width];
             dbImage.height = [NSNumber numberWithInt:image.size.height];
@@ -1287,11 +1311,6 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     if (ProcessInfoHelper.isRunningForScreenshots)  {
         return;
     }
-
-    if (userSettings.blockCommunication) {
-        DDLogInfo(@"Communication is blocked");
-        return;
-    }
     
     /* Get all entries from the user's address book, hash the e-mail addresses
      and phone numbers and send to the server. */
@@ -1308,16 +1327,33 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
         return;
     }
 
-    if ([CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts] != CNAuthorizationStatusAuthorized) {
-        [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
-            if (granted == YES) {
-                [self synchronizeAddressBookForceFullSync:forceFullSync onCompletion:onCompletion onError:onError];
-            } else {
-                DDLogInfo(@"Address book access has NOT been granted: %@", error);
-                [self processStatusUpdateOnlyWithFullServerSync:forceFullSync ignoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
-            }
-        }];
-        return;
+    if (@available(iOS 18.0, *)) {
+        CNAuthorizationStatus currentStatus = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
+        // TODO: (IOS-4889) In order to still compile the code in Xcode 15, we use 4 instead of `CNAuthorizationStatusLimited`
+        if (currentStatus != CNAuthorizationStatusAuthorized && currentStatus != 4) {
+            [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
+                if (granted == YES) {
+                    [self synchronizeAddressBookForceFullSync:forceFullSync onCompletion:onCompletion onError:onError];
+                } else {
+                    DDLogInfo(@"Address book access has NOT been granted: %@", error);
+                    [self processStatusUpdateOnlyWithFullServerSync:forceFullSync ignoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
+                }
+            }];
+            return;
+        }
+    }
+    else {
+        if ([CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts] != CNAuthorizationStatusAuthorized) {
+            [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
+                if (granted == YES) {
+                    [self synchronizeAddressBookForceFullSync:forceFullSync onCompletion:onCompletion onError:onError];
+                } else {
+                    DDLogInfo(@"Address book access has NOT been granted: %@", error);
+                    [self processStatusUpdateOnlyWithFullServerSync:forceFullSync ignoreMinimumInterval:ignoreMinimumInterval onCompletion:onCompletion onError:onError];
+                }
+            }];
+            return;
+        }
     }
 
     dispatch_async(syncQueue, ^{

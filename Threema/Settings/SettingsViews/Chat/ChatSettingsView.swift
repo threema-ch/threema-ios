@@ -20,6 +20,7 @@
 
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 struct ChatSettingsView: View {
     @EnvironmentObject var settingsVM: SettingsStore
@@ -35,14 +36,14 @@ struct ChatSettingsView: View {
 
             Section {
                 Toggle(isOn: $settingsVM.useBigEmojis) {
-                    Text("settings_chat_bigger_emojis".localized)
+                    Text(#localize("settings_chat_bigger_emojis"))
                 }
                 Toggle(isOn: $settingsVM.sendMessageFeedback) {
-                    Text("settings_chat_send_message_feedback_label".localized)
+                    Text(#localize("settings_chat_send_message_feedback_label"))
                 }
             }
         }
-        .navigationBarTitle("settings_list_chat_title".localized, displayMode: .inline)
+        .navigationBarTitle(#localize("settings_list_chat_title"), displayMode: .inline)
         .tint(UIColor.primary.color)
     }
 }
@@ -73,10 +74,10 @@ struct WallpaperSectionView: View {
     
     var body: some View {
         
-        Section(header: Text("settings_chat_wallpaper_title".localized)) {
+        Section(header: Text(#localize("settings_chat_wallpaper_title"))) {
             HStack(alignment: .center, spacing: 20) {
                 WallpaperTypeView(
-                    description: "settings_chat_wallpaper_empty".localized,
+                    description: #localize("settings_chat_wallpaper_empty"),
                     image: $emptyImage,
                     isSelected: $emptySelected,
                     isSelectingCustom: $isSelectingCustom
@@ -96,7 +97,7 @@ struct WallpaperSectionView: View {
                 }
                 
                 WallpaperTypeView(
-                    description: "settings_chat_wallpaper_custom".localized,
+                    description: #localize("settings_chat_wallpaper_custom"),
                     image: $customImage,
                     isSelected: $customSelected,
                     isSelectingCustom: $isSelectingCustom
@@ -119,7 +120,7 @@ struct WallpaperSectionView: View {
                 Button(role: .destructive) {
                     showDeleteAlert = true
                 } label: {
-                    Text("settings_chat_wallpaper_reset".localized)
+                    Text(#localize("settings_chat_wallpaper_reset"))
                 }
                 Spacer()
             }
@@ -127,15 +128,15 @@ struct WallpaperSectionView: View {
         
         .alert(isPresented: $showDeleteAlert, content: {
             Alert(
-                title: Text("settings_chat_wallpaper_reset".localized),
-                message: Text("settings_chat_wallpaper_reset_all_alert".localized),
+                title: Text(#localize("settings_chat_wallpaper_reset")),
+                message: Text(#localize("settings_chat_wallpaper_reset_all_alert")),
                 primaryButton: .destructive(Text(
                     BundleUtil
                         .localizedString(forKey: "settings_privacy_TIRR_reset_alert_action")
                 )) {
                     settingsVM.wallpaperStore.deleteAllCustom()
                 },
-                secondaryButton: .default(Text("cancel".localized)) {
+                secondaryButton: .default(Text(#localize("cancel"))) {
                     // Noop
                 }
             )

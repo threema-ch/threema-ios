@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import SwiftUI
+import ThreemaMacros
 
 struct ContactsCleanupView: View {
     @StateObject var settingsStore = BusinessInjector().settingsStore as! SettingsStore
@@ -40,7 +41,7 @@ struct ContactsCleanupView: View {
                 } label: {
                     HStack {
                         Spacer()
-                        Text("settings_advanced_contacts_cleanup_log_stats".localized)
+                        Text(#localize("settings_advanced_contacts_cleanup_log_stats"))
                         Spacer()
                     }
                 }
@@ -50,55 +51,55 @@ struct ContactsCleanupView: View {
                     } label: {
                         HStack {
                             Spacer()
-                            Text("settings_advanced_contacts_cleanup_unused".localized)
+                            Text(#localize("settings_advanced_contacts_cleanup_unused"))
                             Spacer()
                         }
                     }
                 }
             } header: {
-                Text("settings_advanced_contacts_cleanup_stats_title".localized)
+                Text(#localize("settings_advanced_contacts_cleanup_stats_title"))
             }
         }
         .alert(
-            "settings_advanced_contacts_cleanup_log_disabled".localized,
+            #localize("settings_advanced_contacts_cleanup_log_disabled"),
             isPresented: $showLogDisabledError
         ) {
-            Button("OK") { }
+            Button("ok") { }
         }
         .alert(
-            "settings_advanced_contacts_cleanup_stats_logged".localized +
-                "settings_advanced_contacts_cleanup_submit_logs".localized,
+            #localize("settings_advanced_contacts_cleanup_stats_logged") +
+                #localize("settings_advanced_contacts_cleanup_submit_logs"),
             isPresented: $showContactStatsLogged
         ) {
-            Button("OK") { }
+            Button("ok") { }
         }
         .alert(
-            "settings_advanced_contacts_cleanup_no_duplicates".localized,
+            #localize("settings_advanced_contacts_cleanup_no_duplicates"),
             isPresented: $showNoDuplicatesError
         ) {
-            Button("OK") { }
+            Button("ok") { }
         }
         .alert(
-            "settings_advanced_contacts_cleanup_in_use_error_title".localized,
+            #localize("settings_advanced_contacts_cleanup_in_use_error_title"),
             isPresented: $showDuplicatesInUseError
         ) {
-            Button("OK") { }
+            Button("ok") { }
         } message: {
             Text(alertMessage)
         }
         .alert(
-            "settings_advanced_contacts_cleanup_error_title".localized,
+            #localize("settings_advanced_contacts_cleanup_error_title"),
             isPresented: $showMultiDeviceEnabledError
         ) {
-            Button("OK") { }
+            Button("ok") { }
         } message: {
-            Text("settings_advanced_contacts_multi_device_enabled_error".localized)
+            Text(#localize("settings_advanced_contacts_multi_device_enabled_error"))
         }
         .alert(
-            "settings_advanced_contacts_cleanup_success_title".localized,
+            #localize("settings_advanced_contacts_cleanup_success_title"),
             isPresented: $showUnusedContactsCleanupDone
         ) {
-            Button("settings_advanced_contacts_cleanup_success_exit".localized) {
+            Button(#localize("settings_advanced_contacts_cleanup_success_exit")) {
                 exitSafeMode()
             }
         } message: {
@@ -184,7 +185,7 @@ struct ContactsCleanupView: View {
                                     ", GroupID=-"
                                 }
                             
-                            let convType = conversation.isGroup() ? "Group" : "OneToOne"
+                            let convType = conversation.isGroup ? "Group" : "OneToOne"
                             let convLastUpdate = conversation.lastUpdate != nil ? ISOFormatter
                                 .string(from: conversation.lastUpdate!) : "-"
                             
@@ -204,14 +205,14 @@ struct ContactsCleanupView: View {
     }
     
     /// Returns all conversations for the contact, empty set if none
-    fileprivate func getAllConversations(contact: ContactEntity) -> Set<Conversation> {
-        let conversations = Set<Conversation>(
+    fileprivate func getAllConversations(contact: ContactEntity) -> Set<ConversationEntity> {
+        let conversations = Set<ConversationEntity>(
             contact
-                .conversations as? Set<Conversation> ?? Set<Conversation>()
+                .conversations as? Set<ConversationEntity> ?? Set<ConversationEntity>()
         )
-        let groupConversations = Set<Conversation>(
+        let groupConversations = Set<ConversationEntity>(
             contact
-                .groupConversations as? Set<Conversation> ?? Set<Conversation>()
+                .groupConversations as? Set<ConversationEntity> ?? Set<ConversationEntity>()
         )
         return conversations.union(groupConversations)
     }
@@ -295,10 +296,10 @@ struct ContactsCleanupView: View {
     ) {
         for duplicateContact in duplicateContacts {
             if let conversations = entityManager.entityFetcher
-                .conversations(forMember: duplicateContact) as? [Conversation], !conversations.isEmpty {
+                .conversations(forMember: duplicateContact) as? [ConversationEntity], !conversations.isEmpty {
                 for conversation in conversations {
-                    conversation.removeMembersObject(duplicateContact)
-                    conversation.addMembersObject(mainContact)
+                    conversation.members?.remove(duplicateContact)
+                    conversation.members?.insert(mainContact)
                 }
                 
                 DDLogNotice(
@@ -455,11 +456,11 @@ struct ContactsCleanupView: View {
                     "Contact cleanup incomplete: \(unremovableContacts.count) duplicates still have one-to-one chats."
                 )
                 
-                let contactNames = unremovableContacts.map { "chat".localizedCapitalized + ": " + $0.displayName }
+                let contactNames = unremovableContacts.map { #localize("chat").capitalized + ": " + $0.displayName }
                     .joined(separator: "\n")
 
                 alertMessage = String(
-                    format: "settings_advanced_contacts_cleanup_still_used_error".localized,
+                    format: #localize("settings_advanced_contacts_cleanup_still_used_error"),
                     removableContacts.count,
                     unremovableContacts.count,
                     contactNames
@@ -470,8 +471,8 @@ struct ContactsCleanupView: View {
             }
                         
             alertMessage = String(
-                format: "settings_advanced_contacts_cleanup_unused_message"
-                    .localized + "settings_advanced_contacts_cleanup_submit_logs".localized,
+                format: #localize("settings_advanced_contacts_cleanup_unused_message")
+                    + #localize("settings_advanced_contacts_cleanup_submit_logs"),
                 removableContacts.count
             )
             showUnusedContactsCleanupDone = true

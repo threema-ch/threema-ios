@@ -82,6 +82,9 @@ class Old_CompanyDirectoryContactCell: UITableViewCell {
             publicKey: contact.pk,
             firstname: contact.first,
             lastname: contact.last,
+            csi: contact.csi,
+            jobTitle: contact.jobTitle,
+            department: contact.department,
             acquaintanceLevel: .direct
         ) { _ in
             self.setupCell()

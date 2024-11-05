@@ -37,7 +37,7 @@ class ChatViewTypingIndicatorInformationProvider: ChatViewTypingIndicatorInforma
     
     // MARK: - Lifecycle
 
-    init(conversation: Conversation, entityManager: EntityManager) {
+    init(conversation: ConversationEntity, entityManager: EntityManager) {
         self.currentlyTyping = conversation.typing.boolValue
         
         setupObservers(conversation: conversation)
@@ -45,7 +45,7 @@ class ChatViewTypingIndicatorInformationProvider: ChatViewTypingIndicatorInforma
     
     // MARK: - Configuration Functions
 
-    private func setupObservers(conversation: Conversation) {
+    private func setupObservers(conversation: ConversationEntity) {
         conversationIsTypingToken = conversation.observe(\.typing, options: .new) { [weak self] _, change in
             self?.currentlyTyping = change.newValue?.boolValue ?? false
             self?.accessibilityTyping(conversation: conversation)
@@ -54,7 +54,7 @@ class ChatViewTypingIndicatorInformationProvider: ChatViewTypingIndicatorInforma
     
     /// Announce the typing indicator for accessibility if the current chat is the top view controller.
     /// - Parameter conversation: Conversation
-    private func accessibilityTyping(conversation: Conversation) {
+    private func accessibilityTyping(conversation: ConversationEntity) {
         guard let topViewController = AppDelegate.shared().currentTopViewController() as? MainTabBarController,
               topViewController.isChatTopViewController() else {
             return

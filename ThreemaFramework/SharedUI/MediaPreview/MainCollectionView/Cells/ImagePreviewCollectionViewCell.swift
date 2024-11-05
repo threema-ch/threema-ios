@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaMacros
 import UIKit
 
 class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDelegate, UIGestureRecognizerDelegate {
@@ -50,8 +51,8 @@ class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDelegate
     }
     
     func addAccessibilityLabels() {
-        imageView.accessibilityLabel = BundleUtil.localizedString(forKey: "image")
-        loadingView.accessibilityLabel = BundleUtil.localizedString(forKey: "loading_image")
+        imageView.accessibilityLabel = #localize("image")
+        loadingView.accessibilityLabel = #localize("loading_image")
     }
     
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
@@ -110,7 +111,7 @@ class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDelegate
             
             self.activityIndicator.startAnimating()
             
-            self.loadingText.text = BundleUtil.localizedString(forKey: "loading_image")
+            self.loadingText.text = #localize("loading_image")
             
             self.activityIndicator.isHidden = false
             self.loadingView.isHidden = false
@@ -151,6 +152,13 @@ class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDelegate
     }
        
     private func setupGIF(data: Data) {
+        for subview in gifContainerView.subviews {
+            // Do not remove the gifPlayImageView (Tag 11)
+            if subview.tag != 11 {
+                subview.removeFromSuperview()
+            }
+        }
+        
         // Setup gif image view
         guard let image = FLAnimatedImage(animatedGIFData: data) else {
             DDLogError("Could not create gif from data")
@@ -248,12 +256,12 @@ class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDelegate
     }
     
     func cannotPreview() {
-        loadingText.text = BundleUtil.localizedString(forKey: "image_preview_cell_cannot_preview")
+        loadingText.text = #localize("image_preview_cell_cannot_preview")
         activityIndicator.stopAnimating()
     }
     
     func handleError() {
-        loadingText.text = BundleUtil.localizedString(forKey: "load_error")
+        loadingText.text = #localize("load_error")
         activityIndicator.stopAnimating()
     }
     

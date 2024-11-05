@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct MultiDeviceWizardSuccessView: View {
     @Binding var dismiss: Bool
@@ -34,12 +35,12 @@ struct MultiDeviceWizardSuccessView: View {
                 .padding(50)
                 .accessibilityHidden(true)
             
-            Text(BundleUtil.localizedString(forKey: "md_wizard_success_title"))
+            Text(#localize("md_wizard_success_title"))
                 .font(.title)
                 .bold()
                 .multilineTextAlignment(.center)
             
-            Text(BundleUtil.localizedString(forKey: "md_wizard_success_text"))
+            Text(#localize("md_wizard_success_text"))
                 .multilineTextAlignment(.center)
 
             Spacer()
@@ -49,7 +50,7 @@ struct MultiDeviceWizardSuccessView: View {
                 dismiss = true
                 
             } label: {
-                Text(BundleUtil.localizedString(forKey: "md_wizard_close"))
+                Text(#localize("md_wizard_close"))
                     .bold()
             }
             .buttonStyle(.borderedProminent)

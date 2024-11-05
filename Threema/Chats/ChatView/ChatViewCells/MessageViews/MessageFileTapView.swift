@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 protocol MessageFileTapViewDelegate: AnyObject {
@@ -300,13 +301,13 @@ final class MessageFileTapView: UIView {
         case .dataDeleted:
             fileIcon.alpha = 0.6
             
-            fileSizeLabel.text = BundleUtil.localizedString(forKey: "file_deleted_title")
+            fileSizeLabel.text = #localize("file_deleted_title")
             fileSizeSizingLabel.text = nil
             
         case .fileNotFound:
             fileIcon.alpha = 0.6
             
-            fileSizeLabel.text = BundleUtil.localizedString(forKey: "file_not_found_title")
+            fileSizeLabel.text = #localize("file_not_found_title")
             fileSizeSizingLabel.text = nil
         }
         

@@ -1,0 +1,1262 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "rm-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "rm-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema OnPrem"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "comment" : "Privacy - Camera Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Váš fotoaparát se používá, když pořizujete fotografii nebo video a posíláte je do konverzace, a taktéž pro skenování QR kódů."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Kamera wird verwendet, um Fotos/Videos aufzunehmen und in einem Chat zu versenden, und um QR-Codes zu scannen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your camera is used when you take a photo or video and send it in a chat, and to scan QR codes."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La cámara se utiliza cuando haces una foto o un vídeo y lo envías a un chat y también para escanear códigos QR."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre appareil photo est utilisé lorsque vous prenez une photo ou une vidéo et que vous l’envoyez dans une conversation, et pour scanner des codes QR."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "D’Kamera wird bruucht, zum Fotis/Videos ufzneh und imene Chat z’verschicke, und zum QR-Codes z’scanne."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La fotocamera viene utilizzata quando scatti una foto o giri un video e l’invii in una chat, nonché per scannerizzare i codici QR."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カメラは写真や動画を撮影してトークで送信したり、QRコードを読み取るときに使われます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카메라는 사진 또는 동영상을 찍고 채팅에서 보낼 때, 그리고 QR 코드를 스캔할 때 사용됩니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je camera wordt gebruikt wanneer je een foto neemt of een video opneemt en deze verstuurt via chat, en wanneer je QR-codes scant."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twój aparat jest używany do robienia zdjęć lub wideo i wysyłania ich na czacie oraz do skanowania kodów QR."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A sua câmera é utilizada quando você tira uma foto ou faz um vídeo e envia em um chat e para digitalizar códigos QR."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A sua câmera é utilizada quando você tira uma foto ou faz um vídeo e envia em um chat e para digitalizar códigos QR."
+          }
+        },
+        "rm-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La camera vegn duvrada per far fotos/videos e trametter en in chat e per scannar codes QR."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваша камера используется, когда вы снимаете фото или видео и посылаете его в чат, а также для сканирования QR-кодов."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaša kamera sa používa keď fotíte alebo natáčate video a posielate ich do konverzácií, alebo keď skenujete QR kódy."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir fotoğraf veya video çekip sohbete gönderdiğinizde, ayrıca kare kodlarını taramak için kameranız kullanılır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Камера потрібна, щоб зробити фото чи відео й надіслати його в діалозі, а також щоб сканувати QR-коди."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当您在会话中拍摄照片或视频时，以及扫描二维码时，都会使用到您的相机。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當您在對話中拍攝照片或視頻時，以及掃描QR碼時，都會取用您的相機。"
+          }
+        }
+      }
+    },
+    "NSContactsUsageDescription" : {
+      "comment" : "Privacy - Contacts Usage Description",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontakty slouží k vyhledávání ostatních uživatelů Threema při zapnuté synchronizaci. Za tímto účelem budou na server Threema odeslány hashe telefonních čísel a e-mailových adres. Samotné informace nejsou na serverech nijak ukládány."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontakte werden verwendet, um andere Threema-Benutzer zu finden, wenn die Synchronisierung eingeschaltet ist. Hashwerte der Telefonnummern und E-Mail-Adressen werden dazu an einen Server von Threema gesendet. Diese Informationen werden nicht auf dem Server gespeichert."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contacts are used to find other Threema users when synchronization is on. Hashes of the phone numbers and email addresses will be uploaded to a Threema server for this purpose. This information is not stored on the servers."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los contactos se utilizan para buscar a otros usuarios de Threema cuando la sincronización está activada. Con este propósito, se subirán los hashes de los números de teléfono y las direcciones de correo electrónico al servidor de Threema. Dicha información no se almacena en los servidores."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les contacts sont utilisés pour trouver d’autres utilisateurs Threema lorsque la synchronisation est activée. À cette fin, les numéros de téléphone et les adresses e-mail seront transférés sous forme hachée sur un serveur Threema. Ces informations ne sont pas conservées sur les serveurs."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontäkt werded bruucht, zum anderi Threema-Nutzer z’finde, wenn d’Synchronisierig iigschalte isch. Hashwert vode Telefonnummere und E-Mail-Adrässe werded dezue anen Server vo Threema gschickt. Die Informatione werded nöd ufem Server gspeicheret."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I contatti vengono utilizzati per trovare altri utenti di Threema quando la sincronizzazione è attiva. Versioni crittografate (hashes) dei numeri di telefono e degli indirizzi e-mail verranno caricate su un server Threema a tale scopo. Queste informazioni non vengono salvate sui server."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "連絡先は同期が行われているときに、他のThreemaユーザーを探すために使われます。電話番号やメールアドレスのハッシュは、このためにThreemaのサーバーにアップロードされます。この情報はサーバーには保存されません。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연락처는 동기화가 켜져 있을 때 다른 Threema 사용자를 찾는 데 사용됩니다. 전화번호와 이메일 주소의 해시는 이를 위해 Threema 서버에 업로드됩니다. 이 정보는 서버에 저장되지 않습니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contactpersonen worden gebruikt om andere Threema-gebruikers te vinden wanneer synchronisatie is ingeschakeld. Hiervoor worden hashes van telefoonnummers en e-mailadressen geüpload naar een Threema-server. Deze informatie wordt niet opgeslagen op de servers."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontakty służą do znajdowania innych użytkowników Threema, gdy synchronizacja jest włączona. W tym celu skróty numerów telefonów i adresów e-mail zostaną przesłane na serwer Threema. Te informacje nie są przechowywane na serwerach."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os contatos são utilizados para encontrar outros usuários do Threema quando a sincronização está ativada. Hashes dos números de telefone e endereços de e-mail serão enviados ao servidor do Threema com este propósito. Esta informação não é armazenada nos servidores."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os contatos são utilizados para encontrar outros usuários do Threema quando a sincronização está ativada. Hashes dos números de telefone e endereços de e-mail serão enviados ao servidor do Threema com este propósito. Esta informação não é armazenada nos servidores."
+          }
+        },
+        "rm-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ils contacts vegnan duvrads per chattar auters utilisaders da Threema, sche la sincronisaziun è activada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контакты используются для поиска других пользователей Threema, когда синхронизация включена. Для этого хэш-коды телефонных номеров и адресов эл. почты загружаются на сервер Threema. Эта информация не сохраняется на серверах."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontakty slúžia k vyhľadávaniu ostatných užíavateľov Threema pri zapnutej synchronizácii. Za týmto účelom budú na server Threema odoslané hashe telefónnych čísiel a emailových adries. Tieto informácie nie sú na serveroch ukladané."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kişiler, eşitleme açıkken diğer Threema kullanıcılarını bulmak için kullanılır. Telefon numaralarının ve e-posta adreslerinin karma değerleri bu amaçla bir Threema sunucusuna yüklenecektir. Bu bilgiler sunucularda saklanmaz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Контакти потрібні, щоб знайти інших користувачів Threema за ввімкненої синхронізації. З цією метою геш-образи телефонних номерів та електронних адрес надсилаються на сервери Threema. Ця інформація не зберігається на серверах."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当同步开启时，联系人权限用于寻找其他 Threema 用户。电话号码和电子邮件地址的哈希值将被上传到 Threema 服务器上用于此目的，这些信息都不会存储在服务器上。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當同步開啟時，聯絡人權限用於尋找其他 Threema 使用者。電話號碼和電子郵件地址的雜湊值將被上傳到 Threema 伺服器上用於此目的，這些訊息都不會儲存在伺服器上。"
+          }
+        }
+      }
+    },
+    "NSFaceIDUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aplikaci Threema můžete odemykat bez zadávání kódu pomocí Face ID."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie können Threema mit Face ID entsperren, ohne Ihren Code einzugeben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can use Face ID to unlock Threema without entering your code."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahora puedes usar Face ID para desbloquear Threema sin introducir tu código."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous pouvez utiliser Face ID pour déverrouiller Threema sans entrer votre code."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie chönd Threema mit Face ID entsperre, ohni Ihre Code iizgeh."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Puoi utilizzare Face ID per sbloccare Threema senza inserire il tuo codice."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face IDを使って、コードを入力せずにThreemaのロックを解除することができます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID를 사용하여 코드를 입력하지 않고 Threema를 잠금 해제할 수 있습니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "U kunt Face ID gebruiken om Threema te ontgrendelen zonder uw code in te voeren."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Możesz użyć Face ID, aby odblokować Threema bez wpisywania kodu."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Você pode usar o seu Face ID para desbloquear o Threema sem inserir o seu código."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Você pode usar o seu Face ID para desbloquear o Threema sem inserir o seu código."
+          }
+        },
+        "rm-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ti pos duvrar Face ID per debloccar Threema senza endatar tes code."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы можете использовать функцию лицевой идентификации, чтобы разблокировать Threema без ввода кода."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na odomknutie Threemy bez zadania vašeho kódu môžete použiť Face ID."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema'nın kilidini açmak için Face ID'yi kullanabilirsiniz."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ви можете розблокувати Threema за допомогою Face ID замість коду."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您可以使用 Face ID 解锁 Threema，而无需输入密码。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您可以使用 Face ID 解鎖 Threema，而無需輸入密碼。"
+          }
+        }
+      }
+    },
+    "NSLocalNetworkUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema používá pro hlasová volání místní síť."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema verwendet das lokale Netzwerk für Anruf-Verbindungen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema uses the local network for call connections."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema usa la red local para las conexiones de llamadas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema utilise le réseau local pour les connexions d’appel."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema bruucht s’lokale Netzwerch für Aruef-Verbindige."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema utilizza la rete locale di connessione per le chiamate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threemaでは、通話接続にローカルネットワークを使用しています。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema는 통화 연결을 위해 로컬 네트워크를 사용합니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema gebruikt het lokale netwerk voor oproepverbindingen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema używa sieci lokalnej do połączeń telefonicznych."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Threema usa a rede local para fazer ligações."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Threema usa a rede local para fazer ligações."
+          }
+        },
+        "rm-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema utilisescha la rait locala per colliaziuns da telefon."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema использует локальную сеть для соединения при звонках."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema využíva pre hlasové volania miestnu sieť."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema, aramalar için yerel ağı kullanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema використовує локальну мережу для дзвінків."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema 使用本地网络进行通话连接。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema 使用本地網路以進行通話連線。"
+          }
+        }
+      }
+    },
+    "NSLocationWhenInUseUsageDescription" : {
+      "comment" : "Privacy - Location When In Use Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaše poloha se používá, když ji odešlete do konverzace, a k zobrazení vaší pozice na mapě."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihr Standort wird verwendet, wenn Sie ihn in einem Chat verschicken, und um Ihre eigene Position auf der Karte darzustellen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your location is used when you send it in a chat, and to display your own location on a map."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu ubicación se utiliza cuando la envías a un chat o para mostrarla en un mapa."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre emplacement est utilisé quand vous l’envoyez dans une conversation et pour afficher votre propre emplacement sur une carte."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ihre Standort wird bruucht, wenn Sie ihn imene Chat verschicked, und zum Ihri eigeni Position uf de Charte darzstelle."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La localizzazione viene utilizzata quando invii la tua posizione in una chat e per mostrare dove ti trovi su una mappa."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "位置情報はトークで送信するときや、地図上に自分の位置を表示するときに使われます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "위치는 채팅에서 보낼 때 사용되며 지도에 자신의 위치를 표시하는 데 사용됩니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je locatie wordt gebruikt wanneer je deze verstuurd via chat en om je locatie op kaarten weer te geven."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twoja lokalizacja jest używana, gdy wyślesz ją na czacie i do wyświetlenia Twojej lokalizacji na mapie."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A sua localização é utilizada quando você a envia em um chat e para exibir a sua própria localização em um mapa."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A sua localização é utilizada quando você a envia em um chat e para exibir a sua própria localização em um mapa."
+          }
+        },
+        "rm-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il lieu vegn duvrà, sche ti al tramettas en in chat e per mussar tia atgna posiziun sin la charta."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Данные о вашем местоположении используются, когда вы посылаете их в чат, а также для показа вашего местоположения на карте."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaša poloha sa používa, ak ju odošlete do konverzácie a na zobrazenie vašej vlastnej polohy na mape."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konumunuz, sohbette gönderdiğinizde ve haritada kendi lokasyonunuzu görüntülemek için kullanılır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваше місцеперебування можна надіслати до діалогу або показати його на мапі."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当您在会话中发送位置时，以及在地图上显示自己的位置，都会使用到您的位置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當您在對話中傳送位置時，以及在地圖上顯示自己的位置，都會取用您的位置。"
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription" : {
+      "comment" : "Privacy - Microphone Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon slouží k nahrávání zvukových zpráv."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Mikrofon wird für die Aufnahme von Sprachnachrichten verwendet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The microphone is used to record audio messages."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El micrófono se utiliza para grabar mensajes de audio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le microphone est utilisé pour enregistrer des messages audio."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "S’Mikrofon wird für d’Ufnahm vo Sprachnachrichte bruucht."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il microfono viene utilizzato per registrare messaggi audio."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マイクは音声メッセージを録音するために使用されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마이크는 오디오 메시지를 녹음하는 데 사용됩니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De microfoon wordt gebruikt om audioberichten op te nemen."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon służy do nagrywania wiadomości audio."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O microfone é utilizado para gravar mensagens em áudio."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O microfone é utilizado para gravar mensagens em áudio."
+          }
+        },
+        "rm-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il microfon vegn duvrà per registrar messadis discurrids."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Микрофон используется для записи аудиосообщений."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikforón sa používa na nahrávanie zvukových správ."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon sesli mesajları kaydetmek için kullanılır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мікрофон потрібен для запису аудіоповідомлень."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "麦克风权限用于录制音频消息。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "麥克風權限用於錄製音訊訊息。"
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryAddUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema může automaticky ukládat přijaté soubory médií do aplikace Fotografie."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema kann eingehende Medien automatisch in der «Fotos»-App speichern."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema can automatically save incoming media files in the Photos app."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema puede guardar automáticamente los archivos multimedia entrantes en la aplicación \"Fotos\"."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema peut sauvegarder automatiquement les fichiers médias reçus dans l’application Photos."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema cha iigehendi Medie automatisch ide «Fotos»-App speichere."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema può salvare automaticamente i media in arrivo e i file nell’app delle fotografie."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threemaは、受信したメディアファイルを写真アプリに自動的に保存することができます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema는 수신 미디어 파일을 자동으로 사진 앱에 저장할 수 있습니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema kan inkomende mediabestanden automatisch in de Foto-app opslaan."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema może automatycznie zapisywać przychodzące pliki multimedialne w aplikacji Zdjęcia."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Threema pode salvar automaticamente os arquivos de mídia recebidos no aplicativo de Fotos."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Threema pode salvar automaticamente os arquivos de mídia recebidos no aplicativo de Fotos."
+          }
+        },
+        "rm-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema po memorisar automaticamain las medias che entran en las registraziuns."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema может автоматически сохранять входящие медиафайлы в приложении «Фотографии»."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema môže automaticky ukladať prichádzajúce súbory médií do aplikácie Fotografie."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema, gelen medya dosyalarını Fotoğraflar uygulamasına otomatik olarak kaydedebilir."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema зможе автоматично зберігати вхідні медіа у застосунку Фотографії."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema 可以将接收到的媒体文件自动保存在 “照片” 应用程序中。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema 可以將收到的多媒體檔案自動儲存至「照片」應用程式中。"
+          }
+        }
+      }
+    },
+    "NSPhotoLibraryUsageDescription" : {
+      "comment" : "Privacy - Photo Library Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "cs" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaše galerie fotografií se používá, když z ní vybíráte nějaký obrázek a posíláte ho do konverzace."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Zugriff auf die Fotos wird verwendet, wenn Sie ein Bild auswählen und in einem Chat versenden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Your photo library is used when you pick an image from it and send it in a chat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La biblioteca de fotos se utiliza para elegir una imagen y enviarla a un chat."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre bibliothèque photo est utilisée quand vous y choisissez une image et que vous l’envoyez dans une conversation."
+          }
+        },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De Zuegriff uf d’Fotis wird bruucht, wenn Sie es Bild uswähled und imene Chat verschicked."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La libreria fotografica viene utilizzata quando scegli un immagine da inviare in una chat."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォトライブラリは、その中から画像を選んでトークで送信する際に使用します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사진 라이브러리는 그것에서 이미지를 선택하고 채팅에서 보낼 때 사용됩니다."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je fotobibliotheek wordt gebruikt wanneer je er een afbeelding uit kiest en deze verstuurd via de chat."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twoja biblioteka zdjęć jest używana, gdy wybierzesz z niej obraz i wyślesz go na czacie."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A sua biblioteca de fotos é utilizada quando você escolhe uma imagem dela e envia em um chat."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A sua biblioteca de fotos é utilizada quando você escolhe uma imagem dela e envia em um chat."
+          }
+        },
+        "rm-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'access a las fotos vegn duvrà per tscherner in maletg ed al trametter en in chat."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваша библиотека фотографий используется, когда вы выбираете из нее изображение и посылаете его в чат."
+          }
+        },
+        "sk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vaša knižnica fotografií sa používa, keď z nej vyberáte obrázok a odošlete ho do konverzácie."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotoğraf kitaplığınız, bir görüntü seçip sohbete gönderdiğinizde kullanılır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "З вашої фотогалереї можна вибрати фотографію та надіслати до діалогу."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当您从照片库中挑选图片并在会话中发送时，就会使用到您的照片库。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "當您從照片庫中挑選圖片並在對話中傳送時，就會取用您的照片庫。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

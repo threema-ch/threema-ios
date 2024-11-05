@@ -1,0 +1,12 @@
+/* (No Comment) */
+"advanced_settings_group_footer" = "Não ative essa configuração, a menos que seja explicitamente instruído pela equipe de suporte da Threema.  Você pode não receber mensagens enquanto essa configuração estiver ativada.";
+
+/* (No Comment) */
+"advanced_settings_group_title" = "Configurações de suporte";
+
+/* (No Comment) */
+"safe_mode_switch" = "Modo de suporte avançado";
+
+/* (No Comment) */
+"sentry_switch" = "Desativar Sentry";
+

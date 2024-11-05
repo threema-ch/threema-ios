@@ -55,7 +55,7 @@ import Foundation
     ) {
         
         let forwarder = MessageForwarder()
-        for case let conversation as Conversation in conversations {
+        for case let conversation as ConversationEntity in conversations {
             forwarder.forward(
                 message,
                 to: conversation,

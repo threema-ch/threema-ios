@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Contacts
+import ThreemaMacros
 import UIKit
 
 class LinkedContactDetailsTableViewCell: ThemedCodeStackTableViewCell {
@@ -48,7 +49,7 @@ class LinkedContactDetailsTableViewCell: ThemedCodeStackTableViewCell {
         label.font = UIFont.preferredFont(forTextStyle: .body)
         
         // Needed to get correct cell height
-        label.text = BundleUtil.localizedString(forKey: "linked_contact")
+        label.text = #localize("linked_contact")
         
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         

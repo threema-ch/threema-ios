@@ -21,8 +21,6 @@
 #import "NewMessageToaster.h"
 #import "BaseMessage.h"
 #import "UserSettings.h"
-#import "SystemMessage.h"
-#import "Conversation.h"
 #import "ContactEntity.h"
 #import "AppDelegate.h"
 #import "UIDefines.h"
@@ -72,7 +70,7 @@
 
             /* No toast if disabled, a system message or passcode showing */
             if (![UserSettings sharedUserSettings].inAppPreview ||
-                [message isKindOfClass:[SystemMessage class]] || [AppDelegate sharedAppDelegate].isAppLocked)
+                [message isKindOfClass:[SystemMessageEntity class]] || [AppDelegate sharedAppDelegate].isAppLocked)
                 return;
             
             /* Are we currently in the foreground? */
@@ -107,7 +105,7 @@
 }
 
 - (void)conversationOpened:(NSNotification*)notification {
-    Conversation *conversation = notification.object;
+    ConversationEntity *conversation = notification.object;
     if (conversation != nil) {
         [NotificationBannerHelper dismissAllNotificationsFor:conversation];
     }

@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
 import ThreemaEssentials
+import ThreemaMacros
 
 /// Used to fetch info from database to create participants in group calls
 public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherProtocol {
@@ -58,7 +59,7 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
         let entityManager = businessInjector.entityManager
         let displayName: String =
             if let localIdentity = identityStore.identity, localIdentity == id.string {
-                "me".localized
+                #localize("me")
             }
             else {
                 entityManager.performAndWait {

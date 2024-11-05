@@ -19,10 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "FileMessageEntity.h"
 #import "BoxFileMessage.h"
 #import "GroupFileMessage.h"
-#import "Conversation.h"
+
+@class FileMessageEntity;
 
 @interface FileMessageEncoder : NSObject
 

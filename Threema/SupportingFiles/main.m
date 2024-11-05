@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     __strong Class appDelegate;
     
 #ifdef DEBUG
-    if (argc > 1 && [[NSString stringWithUTF8String:argv[1]] isEqualToString:@"unit-testing"]) {
+    if (argc > 1 && [[NSString stringWithUTF8String:argv[1]] isEqualToString:@"-isRunningForTests"]) {
         appDelegate = [AppTestDelegate class];
     } else {
         appDelegate = [AppDelegate class];

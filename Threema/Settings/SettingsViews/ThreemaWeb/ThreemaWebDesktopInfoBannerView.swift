@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct ThreemaWebDesktopInfoBannerView: View {
     let onTap: () -> Void
@@ -30,12 +31,12 @@ struct ThreemaWebDesktopInfoBannerView: View {
                 HStack(alignment: .firstTextBaseline) {
                     Image(systemName: "desktopcomputer")
                         .foregroundStyle(.primary)
-                    Text("settings_threema_web_desktop_banner_title".localized)
+                    Text(#localize("settings_threema_web_desktop_banner_title"))
                         .bold()
                     Spacer()
                 }
                 
-                Text("settings_threema_web_desktop_banner_message".localized)
+                Text(#localize("settings_threema_web_desktop_banner_message"))
             }
             
             Button {

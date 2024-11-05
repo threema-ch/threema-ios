@@ -20,6 +20,7 @@
 
 import Foundation
 import Photos
+import ThreemaMacros
 
 // MARK: - FileMessageProvider
 
@@ -70,17 +71,17 @@ public enum FileMessageType {
     public var localizedDescription: String {
         switch self {
         case .image:
-            BundleUtil.localizedString(forKey: "file_message_image")
+            #localize("file_message_image")
         case .sticker, .animatedSticker:
-            BundleUtil.localizedString(forKey: "file_message_sticker")
+            #localize("file_message_sticker")
         case .animatedImage:
-            BundleUtil.localizedString(forKey: "file_message_animated_image")
+            #localize("file_message_animated_image")
         case .video:
-            BundleUtil.localizedString(forKey: "file_message_video")
+            #localize("file_message_video")
         case .voice:
-            BundleUtil.localizedString(forKey: "file_message_voice")
+            #localize("file_message_voice")
         case .file:
-            BundleUtil.localizedString(forKey: "file_message_file")
+            #localize("file_message_file")
         }
     }
 }

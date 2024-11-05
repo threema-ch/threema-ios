@@ -95,7 +95,7 @@
 #pragma mark - ContactPickerDelegate
 
 - (void)contactPicker:(ContactGroupPickerViewController*)contactPicker didPickConversations:(NSSet *)conversations renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {
-    for (Conversation *conversation in conversations) {
+    for (ConversationEntity *conversation in conversations) {
         [URLSender sendURL:_url asFile:sendAsFile caption:contactPicker.additionalTextToSend conversation:conversation];
     }
     

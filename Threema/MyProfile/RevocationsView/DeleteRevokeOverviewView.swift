@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct DeleteRevokeOverviewView: View {
     @Environment(\.dismiss) var dismiss
@@ -31,26 +32,26 @@ struct DeleteRevokeOverviewView: View {
         GeometryReader { proxy in
             ScrollView {
                 VStack {
-                    Text("my_profile_delete_info_title".localized)
+                    Text(#localize("my_profile_delete_info_title"))
                         .bold()
                         .font(.title2)
                     
                     GroupBox(
                         label: Label(
-                            "my_profile_delete_info_delete".localized,
+                            #localize("my_profile_delete_info_delete"),
                             systemImage: "trash.circle.fill"
                         ),
                         content: {
-                            Text("my_profile_delete_info_keep".localized)
+                            Text(#localize("my_profile_delete_info_keep"))
                                 .padding(.top, 4)
                         }
                     )
                     .groupBoxStyle(.info)
                     
                     HStack {
-                        Text("my_profile_delete_info_revoke_info".localized)
+                        Text(#localize("my_profile_delete_info_revoke_info"))
                             .italic() +
-                            Text(.init("my_profile_delete_info_revoke_info_link".localized))
+                            Text(.init(#localize("my_profile_delete_info_revoke_info_link")))
                             .underline()
                             .italic()
                         Spacer()
@@ -67,7 +68,7 @@ struct DeleteRevokeOverviewView: View {
                         Button(role: .destructive, action: {
                             showConfirmationAlert = true
                         }, label: {
-                            Text("my_profile_delete_info_button".localized)
+                            Text(#localize("my_profile_delete_info_button"))
                                 .frame(maxWidth: .infinity)
                         })
                         .buttonStyle(.bordered)
@@ -75,7 +76,7 @@ struct DeleteRevokeOverviewView: View {
                         Button {
                             dismiss()
                         } label: {
-                            Text("cancel".localized)
+                            Text(#localize("cancel"))
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
@@ -87,11 +88,11 @@ struct DeleteRevokeOverviewView: View {
                 .frame(minHeight: proxy.size.height)
             }
             .alert(
-                "my_profile_delete_info_alert_title".localized,
+                #localize("my_profile_delete_info_alert_title"),
                 isPresented: $showConfirmationAlert,
                 actions: {
                     Button(
-                        "my_profile_delete_info_alert_confirm".localized,
+                        #localize("my_profile_delete_info_alert_confirm"),
                         role: .destructive
                     ) {
                         Task { @MainActor in
@@ -100,7 +101,7 @@ struct DeleteRevokeOverviewView: View {
                             tabSelection = 2
                         }
                     }
-                    Button("cancel".localized, role: .cancel) {
+                    Button(#localize("cancel"), role: .cancel) {
                         // Do nothing
                     }
                 }

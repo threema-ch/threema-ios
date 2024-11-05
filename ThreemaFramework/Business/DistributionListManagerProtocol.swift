@@ -24,12 +24,12 @@ public protocol DistributionListManagerProtocol {
     // MARK: - General
 
     func createDistributionList(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         name: String,
         imageData: Data?,
         recipients: Set<Contact>
     ) throws
-    func distributionList(for conversation: Conversation) -> DistributionList?
+    func distributionList(for conversation: ConversationEntity) -> DistributionList?
     
     // MARK: - Update
 

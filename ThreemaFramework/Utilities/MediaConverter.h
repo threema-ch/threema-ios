@@ -20,7 +20,6 @@
 
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
-#import "SDAVAssetExportSession.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -56,13 +55,12 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)isVideoDurationValidAtUrl:(nullable NSURL *)url NS_SWIFT_NAME(isVideoDurationValid(at:));
 
 + (NSArray<NSString *> *)videoQualities;
-+ (NSArray<NSNumber *> *)videoQualityMaxDurations;
-+ (NSTimeInterval)videoMaxDurationAtCurrentQuality;
++ (double)videoMaxDurationInMinutes;
 
-+ (nullable SDAVAssetExportSession *)convertVideoAsset:(nullable AVAsset *)asset onCompletion:(void(^)(NSURL * _Nullable url))onCompletion onError:(void(^)(NSError * _Nullable error))onError;
-+ (void)convertVideoWithExportSession:(nullable SDAVAssetExportSession *)exportSession onCompletion:(void(^)(NSURL * _Nullable url))onCompletion onError:(void(^)(NSError * _Nullable error))onError;
++ (nullable AVAssetExportSession *)convertVideoAsset:(nullable AVAsset *)asset onCompletion:(void(^)(NSURL * _Nullable url))onCompletion onError:(void(^)(NSError * _Nullable error))onError;
++ (void)convertVideoWithExportSession:(nullable AVAssetExportSession *)exportSession onCompletion:(void(^)(NSURL * _Nullable url))onCompletion onError:(void(^)(NSError * _Nullable error))onError;
 
-+ (nullable SDAVAssetExportSession *)getAVAssetExportSessionFrom:(nullable AVAsset *)asset outputURL:(nullable NSURL *)outputURL;
++ (nullable AVAssetExportSession *)getAVAssetExportSessionFrom:(nullable AVAsset *)asset outputURL:(nullable NSURL *)outputURL;
 + (NSURL *)getAssetOutputURL;
 
 #pragma mark - Get image as PNG or JPEG

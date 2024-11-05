@@ -77,6 +77,7 @@ final class RendezvousWebSocketConnection {
         
         do {
             // This will only return if any data is send over the connection or the connections gets closed
+            // On iOS 15 & 16 this might never return if the connection is closed (IOS-4911)
             let message = try await webSocketTask.receive()
             
             switch message {

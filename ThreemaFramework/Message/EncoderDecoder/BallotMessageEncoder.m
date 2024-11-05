@@ -20,12 +20,11 @@
 
 #import "BallotMessageEncoder.h"
 #import "BallotChoice.h"
-#import "BallotResult.h"
 #import "BallotMessage.h"
 #import "BallotKeys.h"
-#import "Conversation.h"
 #import "MyIdentityStore.h"
 #import "JsonUtil.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -117,7 +116,7 @@
     NSMutableArray *resultArray = [NSMutableArray array];
 
     for (NSString *participantId in participants) {
-        BallotResult *result = [choice getResultForId:participantId];
+        BallotResultEntity *result = [choice getResultForId:participantId];
         if (result) {
             [resultArray addObject: result.value];
         } else {
@@ -135,7 +134,7 @@
         
         NSMutableArray *resultArray = [NSMutableArray array];
         
-        BallotResult *ownResult = [choice getOwnResult];
+        BallotResultEntity *ownResult = [choice getOwnResult];
         if (ownResult) {
             [resultArray addObject: choice.id];
             [resultArray addObject: ownResult.value];
@@ -158,7 +157,7 @@
     NSMutableSet *participants = [NSMutableSet set];
     
     for (BallotChoice *choice in ballot.choices) {
-        for (BallotResult *result in choice.result) {
+        for (BallotResultEntity *result in choice.result) {
             [participants addObject: result.participantId];
         }
     }

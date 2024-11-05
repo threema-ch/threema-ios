@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 /// Shows who can see the profile picture and saves possible changes.
 ///
@@ -34,7 +35,7 @@ class ProfilePictureSettingViewController: ThemedTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.title = BundleUtil.localizedString(forKey: "release_profilepicture_to")
+        navigationItem.title = #localize("release_profilepicture_to")
     }
     
     // MARK: - Helper functions
@@ -42,11 +43,11 @@ class ProfilePictureSettingViewController: ThemedTableViewController {
     private func label(for sendProfilePicture: SendProfilePicture) -> String {
         switch sendProfilePicture {
         case SendProfilePictureNone:
-            return BundleUtil.localizedString(forKey: "send_profileimage_off")
+            return #localize("send_profileimage_off")
         case SendProfilePictureAll:
-            return BundleUtil.localizedString(forKey: "send_profileimage_on")
+            return #localize("send_profileimage_on")
         case SendProfilePictureContacts:
-            return BundleUtil.localizedString(forKey: "send_profileimage_contacts")
+            return #localize("send_profileimage_contacts")
         default:
             DDLogError("An invalid SendProfilePicture options was chosen")
             return ""
@@ -93,7 +94,7 @@ extension ProfilePictureSettingViewController {
         
         guard indexPath.section == 0 else {
             let cell = tableView.dequeueReusableCell(withIdentifier: "SendProfilePictureContactsCell", for: indexPath)
-            cell.textLabel?.text = BundleUtil.localizedString(forKey: "profile_picture_recipients")
+            cell.textLabel?.text = #localize("profile_picture_recipients")
             return cell
         }
         
@@ -113,10 +114,10 @@ extension ProfilePictureSettingViewController {
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         if let send = editProfileVC, section == 0, send.sendProfilePicture == SendProfilePictureAll {
-            return BundleUtil.localizedString(forKey: "profileimage_setting_all_footer")
+            return #localize("profileimage_setting_all_footer")
         }
         else if section == 1 {
-            return BundleUtil.localizedString(forKey: "profileimage_setting_contacts_footer")
+            return #localize("profileimage_setting_contacts_footer")
         }
         return nil
     }

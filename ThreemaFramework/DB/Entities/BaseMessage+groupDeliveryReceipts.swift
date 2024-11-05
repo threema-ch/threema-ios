@@ -33,7 +33,7 @@ extension BaseMessage {
     public var messageGroupReactionState: GroupReactionsState {
         
         // We don't show state in system messages
-        if self is SystemMessage {
+        if self is SystemMessageEntity {
             return .none
         }
         

@@ -36,7 +36,7 @@ class WorkContactListProvider: CoreDataContactListProvider<ContactEntity, Contac
     }
 }
 
-class GroupListProvider: CoreDataContactListProvider<Conversation, Group> {
+class GroupListProvider: CoreDataContactListProvider<ConversationEntity, Group> {
     init() {
         super.init(at: \.groupsResultController) {
             BusinessInjector().groupManager.getGroup(conversation: $0)

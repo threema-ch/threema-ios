@@ -125,7 +125,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 conversation: conversation
             )
         }
-        XCTAssertFalse(try XCTUnwrap(baseMessage as? TextMessage).sent.boolValue)
+        XCTAssertFalse(try XCTUnwrap(baseMessage as? TextMessageEntity).sent.boolValue)
     }
 
     func testExecuteTextMessageWithoutReflecting() async throws {
@@ -191,7 +191,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 entityManager.entityFetcher.message(
                     with: messageID,
                     conversation: conversation
-                ) as? TextMessage
+                ) as? TextMessageEntity
             ).sent.boolValue
         )
     }
@@ -469,9 +469,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            conversation.groupID = groupEntity.groupID
+            // swiftformat:disable:next acronyms
+            conversation.groupId = groupEntity.groupId
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-            conversation.addMembers(members)
+            conversation.members = members
 
             let messageID = MockData.generateMessageID()
             self.dbPreparer.createTextMessage(
@@ -622,9 +623,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            conversation.groupID = groupEntity.groupID
+            // swiftformat:disable:next acronyms
+            conversation.groupId = groupEntity.groupId
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-            conversation.addMembers(members)
+            conversation.members = members
 
             let messageID = MockData.generateMessageID()
             self.dbPreparer.createTextMessage(
@@ -776,9 +778,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            conversation.groupID = groupEntity.groupID
+            // swiftformat:disable:next acronyms
+            conversation.groupId = groupEntity.groupId
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-            conversation.addMembers(members)
+            conversation.members = members
 
             let messageID = MockData.generateMessageID()
             self.dbPreparer.createTextMessage(
@@ -880,9 +883,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            conversation.groupID = groupEntity.groupID
+            // swiftformat:disable:next acronyms
+            conversation.groupId = groupEntity.groupId
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-            conversation.addMembers(Set(members))
+            conversation.members = Set(members)
 
             let messageID = MockData.generateMessageID()
             let textMessage = self.dbPreparer.createTextMessage(
@@ -939,7 +943,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let baseMessage = await frameworkInjectorMock.entityManager.perform {
             frameworkInjectorMock.entityManager.entityFetcher.message(with: messageID, conversation: conversation)
         }
-        let textMessage = try XCTUnwrap(baseMessage as? TextMessage)
+        let textMessage = try XCTUnwrap(baseMessage as? TextMessageEntity)
         XCTAssertTrue(textMessage.sent.boolValue)
         XCTAssertFalse(textMessage.sendFailed?.boolValue ?? true)
         XCTAssertEqual(0, textMessage.rejectedBy?.count ?? 0)
@@ -980,9 +984,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             )
-            conversation.groupID = groupEntity.groupID
+            // swiftformat:disable:next acronyms
+            conversation.groupId = groupEntity.groupId
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-            conversation.addMembers(Set(members))
+            conversation.members = Set(members)
 
             let messageID = MockData.generateMessageID()
             let textMessage = self.dbPreparer.createTextMessage(
@@ -1040,7 +1045,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let baseMessage = await frameworkInjectorMock.entityManager.perform {
             frameworkInjectorMock.entityManager.entityFetcher.message(with: messageID, conversation: conversation)
         }
-        let textMessage = try XCTUnwrap(baseMessage as? TextMessage)
+        let textMessage = try XCTUnwrap(baseMessage as? TextMessageEntity)
         XCTAssertTrue(textMessage.sent.boolValue)
         XCTAssertEqual(expectedSendFailedState, textMessage.sendFailed?.boolValue ?? true)
         XCTAssertEqual(0, textMessage.rejectedBy?.count ?? 0)
@@ -1084,9 +1089,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             )
-            conversation.groupID = groupEntity.groupID
+            // swiftformat:disable:next acronyms
+            conversation.groupId = groupEntity.groupId
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-            conversation.addMembers(Set(members))
+            conversation.members = Set(members)
 
             let messageID = MockData.generateMessageID()
             let textMessage = self.dbPreparer.createTextMessage(
@@ -1143,7 +1149,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let baseMessage = await frameworkInjectorMock.entityManager.perform {
             frameworkInjectorMock.entityManager.entityFetcher.message(with: messageID, conversation: conversation)
         }
-        let textMessage = try XCTUnwrap(baseMessage as? TextMessage)
+        let textMessage = try XCTUnwrap(baseMessage as? TextMessageEntity)
         XCTAssertTrue(textMessage.sent.boolValue)
         XCTAssertEqual(expectedSendFailedState, textMessage.sendFailed?.boolValue ?? false)
         XCTAssertEqual(expectedRejectedBy, textMessage.rejectedBy?.map(\.identity))
@@ -1183,9 +1189,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            conversation.groupID = groupEntity.groupID
+            // swiftformat:disable:next acronyms
+            conversation.groupId = groupEntity.groupId
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-            conversation.addMembers(members)
+            conversation.members = members
 
             return Group(
                 myIdentityStore: myIdentityStoreMock,
@@ -1275,7 +1282,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            conversation.groupID = groupEntity.groupID
+            // swiftformat:disable:next acronyms
+            conversation.groupId = groupEntity.groupId
             conversation.groupMyIdentity = myIdentityStoreMock.identity
             /// See `GroupManager` line 227 for why this has to be nil
             conversation.contact = nil
@@ -1341,7 +1349,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 with: messageID,
                 conversation: conversation
             )
-            let textMessage = try XCTUnwrap(baseMessage as? TextMessage)
+            let textMessage = try XCTUnwrap(baseMessage as? TextMessageEntity)
             XCTAssertTrue(textMessage.sent.boolValue)
             // Local messages don't have a remote sent date
             XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
@@ -1427,10 +1435,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
                 let conversation = dbPreparer
                     .createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-                conversation.groupID = groupEntity.groupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = groupEntity.groupId
                 conversation.groupName = broadcastGroupTest[0] as? String
                 conversation.contact = members.first(where: { $0.identity == "*ADMIN01" })
-                conversation.addMembers(members)
+                conversation.members = members
 
                 let messageID = MockData.generateMessageID()
                 self.dbPreparer.createTextMessage(

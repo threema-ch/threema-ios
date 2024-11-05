@@ -21,10 +21,60 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaProtocols
 
 class TaskExecutionBlobTransaction: TaskExecutionTransaction {
     typealias BlobUpload = (uploadID: String, blob: Data)
     typealias BlobUploaded = (uploadID: String, blob: Data, blobID: Data)
+
+    func encryptBlob(data: Data) throws -> (key: Data, nonce: Data, encryptedData: Data) {
+        guard let key = NaClCrypto.shared()?.randomBytes(kBlobKeyLen) else {
+            throw TaskExecutionTransactionError.blobDataEncryptionFailed
+        }
+        let nonce = ThreemaProtocol.nonce01
+        guard let encryptedData = NaClCrypto.shared()?.symmetricEncryptData(data, withKey: key, nonce: nonce) else {
+            throw TaskExecutionTransactionError.blobDataEncryptionFailed
+        }
+        return (key, nonce, encryptedData)
+    }
+
+    func uploadBlob(data: Data?) throws -> Promise<Common_Blob?> {
+        guard let data else {
+            return Promise { $0.fulfill(nil) }
+        }
+
+        var profilePictureBlob: Common_Blob?
+        var encryptedData: BlobUpload
+
+        let encrypted = try encryptBlob(data: data)
+
+        profilePictureBlob = Common_Blob()
+        profilePictureBlob?.nonce = encrypted.nonce
+        profilePictureBlob?.key = encrypted.key
+
+        encryptedData = (
+            "encryptedBlob",
+            encrypted.encryptedData
+        )
+
+        if encryptedData.blob.isEmpty {
+            return Promise { $0.fulfill(nil) }
+        }
+
+        return uploadBlobs(blobs: [encryptedData])
+            .then { uploadedBlobs -> Promise<Common_Blob?> in
+                Promise { seal in
+                    guard let blobID = uploadedBlobs.first?.blobID else {
+                        seal.reject(TaskExecutionTransactionError.blobIDMissing)
+                        return
+                    }
+
+                    profilePictureBlob?.id = blobID
+
+                    seal.fulfill(profilePictureBlob)
+                }
+            }
+    }
 
     func uploadBlobs(blobs: [BlobUpload]) -> Promise<[BlobUploaded]> {
         let uploadBlobItems = blobs.compactMap { blob in

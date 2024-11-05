@@ -172,7 +172,23 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             (
                 { diffableDataSourceSnapshot in
                     XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
-                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
+                    
+                    if #available(iOS 18.0, *) {
+                        // Starting with iOS 18 updating `lastMessage` on `Conversation` leads to the previous last
+                        // message to be marked as reloaded (even tough there is no reverse relationship) and after our
+                        // processing to a reconfigured item and neighboring items. This actually fixes some neighboring
+                        // update issues
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            2
+                        )
+                    }
+                    else {
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            0
+                        )
+                    }
 
                     XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
                     XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 2)
@@ -275,8 +291,24 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                 // Check 1
                 { diffableDataSourceSnapshot in
                     XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
-                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
                     
+                    if #available(iOS 18.0, *) {
+                        // Starting with iOS 18 updating `lastMessage` on `Conversation` leads to the previous last
+                        // message to be marked as reloaded (even tough there is no reverse relationship) and after our
+                        // processing to a reconfigured item and neighboring items. This actually fixes some neighboring
+                        // update issues
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            2
+                        )
+                    }
+                    else {
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            0
+                        )
+                    }
+
                     XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
                     XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 2)
                 },
@@ -289,8 +321,23 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                 // Check 2
                 { diffableDataSourceSnapshot in
                     XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
-                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
-                    
+                    if #available(iOS 18.0, *) {
+                        // Starting with iOS 18 updating `lastMessage` on `Conversation` leads to the previous last
+                        // message to be marked as reloaded (even tough there is no reverse relationship) and after our
+                        // processing to a reconfigured item and neighboring items. This actually fixes some neighboring
+                        // update issues
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            2
+                        )
+                    }
+                    else {
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            0
+                        )
+                    }
+
                     XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
                     XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 3)
                     
@@ -398,14 +445,30 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                 // Check 1
                 { diffableDataSourceSnapshot in
                     XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
-                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
                     
+                    if #available(iOS 18.0, *) {
+                        // Starting with iOS 18 updating `lastMessage` on `Conversation` leads to the previous last
+                        // message to be marked as reloaded (even tough there is no reverse relationship) and after our
+                        // processing to a reconfigured item and neighboring items. This actually fixes some neighboring
+                        // update issues
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            2
+                        )
+                    }
+                    else {
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            0
+                        )
+                    }
+
                     XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
                     XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 2)
                 },
                 {
-                    entityManager.performSyncBlockAndSafe {
-                        conversation.typing = NSNumber(booleanLiteral: true)
+                    entityManager.performAndWaitSave {
+                        conversation.setTyping(to: true)
                         self.internalInitialSetupCompleted = true
                         typingIndicatorInformationProvider.currentlyTyping = true
                     }
@@ -415,8 +478,24 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                 // Check 2
                 { diffableDataSourceSnapshot in
                     XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
-                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
-                    
+                   
+                    if #available(iOS 18.0, *) {
+                        // Starting with iOS 18 updating `lastMessage` on `Conversation` leads to the previous last
+                        // message to be marked as reloaded (even tough there is no reverse relationship) and after our
+                        // processing to a reconfigured item and neighboring items. This actually fixes some neighboring
+                        // update issues
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            2
+                        )
+                    }
+                    else {
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            0
+                        )
+                    }
+
                     XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
                     XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 3)
                     
@@ -435,8 +514,24 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                 { diffableDataSourceSnapshot in
                     // Correct number of reloads
                     XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
-                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
                     
+                    if #available(iOS 18.0, *) {
+                        // Starting with iOS 18 updating `lastMessage` on `Conversation` leads to the previous last
+                        // message to be marked as reloaded (even tough there is no reverse relationship) and after our
+                        // processing to a reconfigured item and neighboring items. This actually fixes some neighboring
+                        // update issues
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            2
+                        )
+                    }
+                    else {
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            0
+                        )
+                    }
+
                     // Correct number of items
                     XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
                     XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 4)
@@ -447,9 +542,9 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                     XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.last, .typingIndicator)
                 },
                 {
-                    entityManager.performSyncBlockAndSafe {
+                    entityManager.performAndWaitSave {
                         typingIndicatorInformationProvider.currentlyTyping = false
-                        conversation.typing = NSNumber(booleanLiteral: false)
+                        conversation.setTyping(to: false)
                     }
                 }
             ),
@@ -458,8 +553,24 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                 { diffableDataSourceSnapshot in
                     // Correct number of reloads
                     XCTAssertEqual(diffableDataSourceSnapshot.reloadedItemIdentifiers.count, 0)
-                    XCTAssertEqual(diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count, 0)
                     
+                    if #available(iOS 18.0, *) {
+                        // Starting with iOS 18 updating `lastMessage` on `Conversation` leads to the previous last
+                        // message to be marked as reloaded (even tough there is no reverse relationship) and after our
+                        // processing to a reconfigured item and neighboring items. This actually fixes some neighboring
+                        // update issues
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            2
+                        )
+                    }
+                    else {
+                        XCTAssertEqual(
+                            diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
+                            0
+                        )
+                    }
+
                     // Correct number of items
                     XCTAssertEqual(diffableDataSourceSnapshot.numberOfSections, 1)
                     XCTAssertEqual(diffableDataSourceSnapshot.itemIdentifiers.count, 3)
@@ -498,18 +609,18 @@ class ChatViewSnapshotProviderTests: XCTestCase {
         waitForExpectations(timeout: 100)
     }
     
-    private func createMessage(in conversation: Conversation, entityManager: EntityManager) {
-        entityManager.performSyncBlockAndSafe {
-            let textMessage = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)!
+    private func createMessage(in conversation: ConversationEntity, entityManager: EntityManager) {
+        entityManager.performAndWaitSave {
+            let textMessage = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)!
             textMessage.text = "Hello World"
         }
     }
     
     private func createContactAndConversation(entityManager: EntityManager, identity: String)
-        -> (contact: ContactEntity, conversation: Conversation) {
+        -> (contact: ContactEntity, conversation: ConversationEntity) {
         var contact: ContactEntity!
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             contact = entityManager.entityCreator.contact()!
             contact.identity = identity
             contact.verificationLevel = 0

@@ -107,7 +107,7 @@
     for (NSDictionary *object in _objects) {
         NSURL *url = object[@"url"];
 
-        for (Conversation *conversation in conversations) {
+        for (ConversationEntity *conversation in conversations) {
             [URLSender sendURL:url asFile:sendAsFile caption:contactPicker.additionalTextToSend conversation:conversation];
         }
         [contactPicker dismissViewControllerAnimated:YES completion:nil];

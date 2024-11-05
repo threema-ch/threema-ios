@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import Photos
 import PromiseKit
+import ThreemaMacros
 
 open class ImagePreviewItem: MediaPreviewItem {
     public typealias PreviewType = Data
@@ -103,7 +104,7 @@ open class ImagePreviewItem: MediaPreviewItem {
     }
     
     override open func getAccessibilityDescription() -> String? {
-        let text = BundleUtil.localizedString(forKey: "image")
+        let text = #localize("image")
         return text
     }
     

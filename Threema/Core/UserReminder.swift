@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 @objc class UserReminder: NSObject {
     private static let debug = false
@@ -125,10 +126,10 @@ import Foundation
             return
         }
         
-        let title = BundleUtil.localizedString(forKey: "create_note_group_info_title")
-        let message = BundleUtil.localizedString(forKey: "create_note_group_info_text")
-        let titleOk = BundleUtil.localizedString(forKey: "remind_me_next_time")
-        let titleCancel = BundleUtil.localizedString(forKey: "ok")
+        let title = #localize("create_note_group_info_title")
+        let message = #localize("create_note_group_info_text")
+        let titleOk = #localize("remind_me_next_time")
+        let titleCancel = #localize("ok")
         
         UIAlertTemplate.showAlert(
             owner: viewController,
@@ -150,8 +151,8 @@ import Foundation
             return
         }
         
-        let title = BundleUtil.localizedString(forKey: "archived_alert_title")
-        let message = BundleUtil.localizedString(forKey: "archived_alert_message")
+        let title = #localize("archived_alert_title")
+        let message = #localize("archived_alert_message")
         
         UIAlertTemplate.showAlert(owner: viewController, title: title, message: message, actionOk: { _ in
             AppGroup.userDefaults().set(true, forKey: key)
@@ -167,8 +168,8 @@ import Foundation
             return
         }
         
-        let title = BundleUtil.localizedString(forKey: "privateChat_alert_title")
-        let message = BundleUtil.localizedString(forKey: "private_delete_info_alert_message")
+        let title = #localize("privateChat_alert_title")
+        let message = #localize("private_delete_info_alert_message")
         
         UIAlertTemplate.showAlert(owner: viewController, title: title, message: message, actionOk: { _ in
             AppGroup.userDefaults().set(true, forKey: key)

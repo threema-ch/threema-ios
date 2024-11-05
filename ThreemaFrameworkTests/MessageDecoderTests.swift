@@ -380,9 +380,9 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertEqual(resultChoice2.name, differentResult[1] as? String)
     }
     
-    private func createConversation() -> (ContactEntity, Conversation) {
+    private func createConversation() -> (ContactEntity, ConversationEntity) {
         var contact: ContactEntity!
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         
         let databasePreparer = DatabasePreparer(context: mainCnx)
         databasePreparer.save {

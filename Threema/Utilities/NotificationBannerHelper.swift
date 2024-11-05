@@ -23,6 +23,7 @@ import GroupCalls
 import MarqueeLabel
 import SnapKit
 import ThreemaFramework
+import ThreemaMacros
 
 @objc class NotificationBannerHelper: NSObject {
     @objc class func newBanner(baseMessage: BaseMessage) {
@@ -37,7 +38,7 @@ import ThreemaFramework
             
             var title = message.conversation.displayName
             
-            if message.conversation.isGroup() {
+            if message.conversation.isGroup {
                 let group = businessInjector.groupManager.getGroup(conversation: baseMessage.conversation)
                 profileImageView.info = .group(group)
             }
@@ -51,7 +52,7 @@ import ThreemaFramework
            
             if let imageMessageEntity = message as? ImageMessageEntity {
                 if let thumbnail = imageMessageEntity.thumbnail {
-                    thumbnailImageView = getThumbnail(for: thumbnail.uiImage)
+                    thumbnailImageView = getThumbnail(for: thumbnail.uiImage())
                 }
             }
             else if message is AudioMessageEntity {
@@ -62,7 +63,7 @@ import ThreemaFramework
                     thumbnailImageView = getThumbnailAudio()
                 }
                 else if let thumbnail = fileMessageEntity.thumbnail {
-                    thumbnailImageView = getThumbnail(for: thumbnail.uiImage)
+                    thumbnailImageView = getThumbnail(for: thumbnail.uiImage())
                     thumbnailImageView?.contentMode = .scaleAspectFit
                 }
             }
@@ -80,7 +81,7 @@ import ThreemaFramework
             }
             
             if message.conversation.conversationCategory == .private {
-                title = BundleUtil.localizedString(forKey: "private_message_label")
+                title = #localize("private_message_label")
                 body = " "
                 thumbnailImageView = nil
                 
@@ -123,12 +124,12 @@ import ThreemaFramework
             var formattedAttributeString: NSMutableAttributedString?
             if message.conversation.groupID != nil {
                 var contactString = ""
-                if !message.isKind(of: SystemMessage.self) {
+                if !message.isKind(of: SystemMessageEntity.self) {
                     if let sender = message.sender {
                         contactString = "\(sender.displayName): "
                     }
                     else {
-                        contactString = "\(BundleUtil.localizedString(forKey: "me")): "
+                        contactString = "\(#localize("me")): "
                     }
                 }
                 
@@ -245,7 +246,7 @@ import ThreemaFramework
         let profilePictureView = ProfilePictureImageView()
         
         if let conversation = businessInjector.entityManager.entityFetcher
-            .existingObject(with: conversationManagedObjectID) as? Conversation,
+            .existingObject(with: conversationManagedObjectID) as? ConversationEntity,
             conversation.conversationCategory != .private,
             let group = businessInjector.groupManager.getGroup(conversation: conversation) {
             profilePictureView.info = .group(group)
@@ -331,7 +332,7 @@ import ThreemaFramework
         }
     }
     
-    @objc class func dismissAllNotifications(for conversation: Conversation) {
+    @objc class func dismissAllNotifications(for conversation: ConversationEntity) {
         DispatchQueue.main.async {
             var identifier: String?
             if let groupID = conversation.groupID {

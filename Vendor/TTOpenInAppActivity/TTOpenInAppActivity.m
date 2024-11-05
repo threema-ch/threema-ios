@@ -199,7 +199,7 @@
         // Display alert
         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:NSLocalizedStringFromTableInBundle(@"No suitable App installed", @"TTOpenInAppActivityLocalizable", [TTOpenInAppActivity bundle], nil)
                                                                        message:message preferredStyle:UIAlertControllerStyleAlert];
-        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTableInBundle(@"OK", @"TTOpenInAppActivityLocalizable", [TTOpenInAppActivity bundle], nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedStringFromTableInBundle(@"ok", @"TTOpenInAppActivityLocalizable", [TTOpenInAppActivity bundle], nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
             // Inform app that the activity has finished
             // Return NO because the service was canceled and did not finish because of an error.
             // http://developer.apple.com/library/ios/#documentation/uikit/reference/UIActivity_Class/Reference/Reference.html

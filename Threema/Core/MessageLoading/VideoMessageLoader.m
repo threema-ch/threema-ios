@@ -33,7 +33,7 @@
     [super updateDBObject:message with:data];
 
     /* Add to photo library */
-    if ([UserSettings sharedUserSettings].autoSaveMedia && message.conversation.conversationCategory != ConversationCategoryPrivate) {
+    if ([UserSettings sharedUserSettings].autoSaveMedia && message.conversation.category.intValue != ConversationCategoryPrivate) {
         /* write video to temp. file */
         NSString *filename = [NSString stringWithFormat:@"%f.%@", [[NSDate date] timeIntervalSinceReferenceDate], MEDIA_EXTENSION_VIDEO];
         NSURL *tmpurl = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:filename]];

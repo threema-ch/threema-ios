@@ -24,4 +24,7 @@ import Foundation
     
     @objc public static var isRunningForScreenshots: Bool = ProcessInfo.processInfo.arguments
         .contains("-isRunningForScreenshots")
+    
+    @objc public static var isRunningForTests: Bool = ProcessInfo.processInfo.arguments
+        .contains("-isRunningForTests")
 }

@@ -26,6 +26,8 @@ public class CompanyDirectoryContact: NSObject {
     @objc var first: String?
     @objc var last: String?
     var csi: String?
+    var jobTitle: String?
+    var department: String?
     var cat: [String]?
     var org: String?
     
@@ -51,6 +53,14 @@ public class CompanyDirectoryContact: NSObject {
         
         if let tmp = dictionary["csi"] as? String {
             self.csi = tmp
+        }
+        
+        if let tmp = dictionary["jobTitle"] as? String {
+            self.jobTitle = tmp
+        }
+        
+        if let tmp = dictionary["department"] as? String {
+            self.department = tmp
         }
         
         if let tmp = dictionary["cat"] as? [String] {

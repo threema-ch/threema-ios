@@ -42,6 +42,8 @@ NSString * const MDM_KEY_LINKED_PHONE = @"th_linked_phone"; // String
 NSString * const MDM_KEY_FIRST_NAME = @"th_firstname"; // String
 NSString * const MDM_KEY_LAST_NAME = @"th_lastname"; // String
 NSString * const MDM_KEY_CSI = @"th_csi"; // String
+NSString * const MDM_KEY_JOB_TITLE = @"th_job_title"; // String
+NSString * const MDM_KEY_DEPARTMENT = @"th_department"; // String
 NSString * const MDM_KEY_CATEGORY = @"th_category"; // String
 NSString * const MDM_KEY_CONTACT_SYNC = @"th_contact_sync"; // Bool
 NSString * const MDM_KEY_READONLY_PROFILE = @"th_readonly_profile"; // Bool
@@ -462,6 +464,39 @@ static NSDictionary *_mdmCacheSetup;
         identityStore.csi = nil;
     }
     
+    // Set the job title to nil if the key is not set or the value is empty
+    // because the user can't edit this value
+    if ([self existsMdmKey:MDM_KEY_JOB_TITLE]) {
+        NSString *jobTitle = [self getMdmConfigurationValueForKey:MDM_KEY_JOB_TITLE];
+        if ([jobTitle isKindOfClass:[NSString class]]) {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues job title is %@", jobTitle);
+            identityStore.jobTitle = jobTitle;
+        } else {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues job title is not a string");
+            identityStore.jobTitle = nil;
+        }
+    } else {
+        DDLogNotice(@"[MDMSetup] loadIDCreationValues job title is missing in MDM");
+        identityStore.jobTitle = nil;
+    }
+    
+    // Set the department to nil if the key is not set or the value is empty
+    // because the user can't edit this value
+    if ([self existsMdmKey:MDM_KEY_DEPARTMENT]) {
+        NSString *department = [self getMdmConfigurationValueForKey:MDM_KEY_DEPARTMENT];
+        if ([department isKindOfClass:[NSString class]]) {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues department is %@", department);
+            identityStore.department = department;
+        } else {
+            DDLogNotice(@"[MDMSetup] loadIDCreationValues department is not a string");
+            identityStore.department = nil;
+        }
+    } else {
+        DDLogNotice(@"[MDMSetup] loadIDCreationValues department is missing in MDM");
+        identityStore.department = nil;
+    }
+    
+    
     // Set the category to nil if the key is not set or the value is empty
     // because the user can't edit this value
     if ([self existsMdmKey:MDM_KEY_CATEGORY]) {
@@ -729,7 +764,7 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (BOOL)isRenewable:(NSString *)mdmKey {
-    NSArray *renewableKeys = @[MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_WEB_HOSTS, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_PASSWORD, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_ONPREM_SERVER, MDM_KEY_KEEP_MESSAGE_DAYS];
+    NSArray *renewableKeys = @[MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_WEB_HOSTS, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_PASSWORD, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_ONPREM_SERVER, MDM_KEY_KEEP_MESSAGE_DAYS];
     return [renewableKeys containsObject:mdmKey];
 }
 

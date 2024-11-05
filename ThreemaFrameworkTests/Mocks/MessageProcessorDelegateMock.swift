@@ -54,7 +54,7 @@ class MessageProcessorDelegateMock: NSObject, MessageProcessorDelegate {
         // no-op
     }
 
-    func readMessage(inConversations: Set<Conversation>?) {
+    func readMessage(inConversations: Set<ConversationEntity>?) {
         // no-op
     }
 

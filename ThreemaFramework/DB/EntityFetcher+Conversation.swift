@@ -77,7 +77,11 @@ extension EntityFetcher {
                 intermediaryPredicate
             }
         
-        var matchingIDs = [(objectID: NSManagedObjectID, date: Date, visibility: ConversationVisibility)]()
+        var matchingIDs = [(
+            objectID: NSManagedObjectID,
+            date: Date,
+            visibility: ConversationEntity.Visibility
+        )]()
         let sortDescriptor = NSSortDescriptor(key: "lastUpdate", ascending: false)
         
         // We only fetch the managed object ID, last update and visibility. The latter two are only used for sorting the
@@ -105,7 +109,8 @@ extension EntityFetcher {
                     for result in results {
                         guard let date = result["lastUpdate"] as? Date,
                               let objectID = result["objectID"] as? NSManagedObjectID,
-                              let visibility = ConversationVisibility(rawValue: (result["visibility"] as? Int) ?? 0)
+                              let visibility = ConversationEntity
+                              .Visibility(rawValue: (result["visibility"] as? Int) ?? 0)
                         else {
                             continue
                         }
@@ -167,10 +172,10 @@ extension EntityFetcher {
     }
     
     func conversationArchivedPredicate() -> NSPredicate {
-        NSPredicate(format: "visibility == %d", ConversationVisibility.archived.rawValue)
+        NSPredicate(format: "visibility == %d", ConversationEntity.Visibility.archived.rawValue)
     }
     
     func conversationNotPrivatePredicate() -> NSPredicate {
-        NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
+        NSPredicate(format: "category != %d", ConversationEntity.Category.private.rawValue)
     }
 }

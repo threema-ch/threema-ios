@@ -72,7 +72,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
             entityManager: entityManager
         )
 
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         if type == "contact" {
             guard let contact = entityManager.entityFetcher.contact(for: id) else {
                 baseMessage = nil
@@ -83,8 +83,8 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
 
             conversation = entityManager.entityFetcher.conversation(for: contact)
             if conversation == nil {
-                entityManager.performSyncBlockAndSafe {
-                    conversation = entityManager.entityCreator.conversation()
+                entityManager.performAndWaitSave {
+                    conversation = entityManager.entityCreator.conversationEntity()
                     conversation?.contact = contact
                 }
             }
@@ -127,7 +127,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
         sendMessage(conversation: conversation, completion: completion)
     }
 
-    private func sendMessage(conversation: Conversation, completion: @escaping () -> Void) {
+    private func sendMessage(conversation: ConversationEntity, completion: @escaping () -> Void) {
         ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
             Task {
                 let businessInjector = BusinessInjector()
@@ -145,7 +145,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
                 
                 completion()
                 if conversation.conversationVisibility == .archived {
-                    conversation.conversationVisibility = .default
+                    conversation.changeVisibility(to: .default)
                 }
             }
         } onTimeout: {

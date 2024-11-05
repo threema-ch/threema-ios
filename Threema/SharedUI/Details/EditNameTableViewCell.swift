@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 // MARK: Delegate
@@ -57,19 +58,19 @@ class EditNameTableViewCell: ThemedCodeTableViewCell {
         didSet {
             switch nameType {
             case .firstName:
-                nameTextField.placeholder = BundleUtil.localizedString(forKey: "first_name_placeholder")
+                nameTextField.placeholder = #localize("first_name_placeholder")
                 nameTextField.textContentType = .givenName
                 maxNumberOfUTF8Bytes = kMaxFirstOrLastNameLength
             case .lastName:
-                nameTextField.placeholder = BundleUtil.localizedString(forKey: "last_name_placeholder")
+                nameTextField.placeholder = #localize("last_name_placeholder")
                 nameTextField.textContentType = .familyName
                 maxNumberOfUTF8Bytes = kMaxFirstOrLastNameLength
             case .groupName:
-                nameTextField.placeholder = BundleUtil.localizedString(forKey: "group_name_placeholder")
+                nameTextField.placeholder = #localize("group_name_placeholder")
                 nameTextField.textContentType = .none
                 maxNumberOfUTF8Bytes = kMaxGroupNameLength
             case .distributionListName:
-                nameTextField.placeholder = BundleUtil.localizedString(forKey: "distribution_list_name_placeholder")
+                nameTextField.placeholder = #localize("distribution_list_name_placeholder")
                 nameTextField.textContentType = .none
                 maxNumberOfUTF8Bytes = kMaxGroupNameLength
             }

@@ -28,6 +28,8 @@ import Foundation
 ///   task run to completion). This might take a while if the network is bad or the task doesn't cooperatively checks
 ///   for cancelation (dropping). If the cancelation was initiated by the user consider updating the UI before this is
 ///   called.
+/// - Right now there is no guarantee that this will be only called once. Especially if the task fails. This should be
+///   improved: IOS-4854
 typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
 
 protocol TaskManagerProtocol: TaskManagerProtocolObjc {
@@ -35,6 +37,12 @@ protocol TaskManagerProtocol: TaskManagerProtocolObjc {
     /// - Parameter taskDefinition: New task definition to add to queue
     /// - Returns: Cancelable task if task can be canceled
     @discardableResult func add(taskDefinition: TaskDefinitionProtocol) -> CancelableTask?
+    
+    /// Add task definition and get a wait & optional cancelable task
+    /// - Parameter taskDefinition: New task definition to add to queue. This should **not** be a task that can be
+    ///                             retried!
+    /// - Returns: Wait task & cancelable task if task can be canceled
+    @discardableResult func addWithWait(taskDefinition: TaskDefinitionProtocol) -> (WaitTask, CancelableTask?)
     
     /// Add task definition
     /// - Parameters:

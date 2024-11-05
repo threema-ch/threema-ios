@@ -38,15 +38,15 @@ extension StorageManagementView {
         // MARK: - Public Functions
         
         /// Provides a profile picture image for a given conversation.
-        /// - Parameter conversation: The `Conversation` object for which to provide the profile picture.
+        /// - Parameter conversation: The `ConversationEntity` object for which to provide the profile picture.
         /// - Returns: An optional `UIImage` representing the profile picture, or `nil` if not available.
-        func profilePictureProvider(_ conversation: Conversation) async -> UIImage {
+        func profilePictureProvider(_ conversation: ConversationEntity) async -> UIImage {
             let entityManager = businessInjector.entityManager
             
             return await entityManager.perform {
-                if conversation.isGroup(),
+                if conversation.isGroup,
                    let group = self.businessInjector.groupManager.getGroup(conversation: conversation) {
-                    return group.profilePicture ?? ProfilePictureGenerator.unknownGroupImage
+                    return group.profilePicture
                 }
                 else if let contact = conversation.contact,
                         let contactEntity = entityManager.entityFetcher.contact(for: contact.identity) {
@@ -59,9 +59,9 @@ extension StorageManagementView {
         }
         
         /// Calculates metadata for a given conversation.
-        /// - Parameter conversation: The `Conversation` object for which to calculate metadata.
+        /// - Parameter conversation: The `ConversationEntity` object for which to calculate metadata.
         /// - Returns: A `ConversationMetaData` tuple containing the message count and file count.
-        func calcMetaData(for conversation: Conversation) async -> ConversationMetaData {
+        func calcMetaData(for conversation: ConversationEntity) async -> ConversationMetaData {
             await Task {
                 let messageFetcher = MessageFetcher(
                     for: conversation,
@@ -78,9 +78,9 @@ extension StorageManagementView {
         /// Retrieves all conversations from the entity manager, filters them by the default category,
         /// and sorts them by the message count in descending order.
         /// The sorted conversations are then assigned to the `conversations` published property.
-        func getAllConversations() -> [Conversation] {
+        func getAllConversations() -> [ConversationEntity] {
             guard let allConversations = businessInjector.entityManager.entityFetcher
-                .allConversations() as? [Conversation] else {
+                .allConversations() as? [ConversationEntity] else {
                 return []
             }
             return allConversations.filter { $0.conversationCategory == .default }.sorted {

@@ -31,6 +31,10 @@ extension BaseMessage {
     
     /// Date that sectioning is based on. (See `sectionDateString`)
     public var sectionDate: Date {
+        guard !willBeDeleted else {
+            return .now
+        }
+        
         if let date {
             return date
         }

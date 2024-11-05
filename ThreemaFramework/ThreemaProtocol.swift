@@ -21,6 +21,7 @@
 // swiftformat:disable acronyms
 
 import Foundation
+import ThreemaMacros
 
 /// Swiftification of constants from from `ProtocolDefines.h`
 public enum ThreemaProtocol {
@@ -32,6 +33,7 @@ public enum ThreemaProtocol {
     public static let groupIDLength = Int(kGroupIdLen)
     public static let ballotIDLength = Int(kBallotIdLen)
     public static let deviceIDLength = Int(kDeviceIdLen)
+    public static let gckLength = Int(kGCKLen)
     public static let publicKeyLength = Int(kNaClCryptoPubKeySize)
     public static let reflectIDLength = MediatorMessageProtocol.MEDIATOR_REFLECT_ID_LENGTH
     
@@ -132,17 +134,17 @@ extension ForwardSecurityMode: CustomStringConvertible {
     public var localizedLabel: String {
         switch self {
         case .none, .outgoingGroupNone:
-            return "forward_security_none".localized
+            return #localize("forward_security_none")
         case .twoDH:
-            return "forward_security_2dh".localized
+            return #localize("forward_security_2dh")
         case .fourDH:
-            return "forward_security_4dh".localized
+            return #localize("forward_security_4dh")
         case .outgoingGroupPartial:
-            return "forward_security_outgoing_group_partial".localized
+            return #localize("forward_security_outgoing_group_partial")
         case .outgoingGroupFull:
-            return "forward_security_outgoing_group_full".localized
+            return #localize("forward_security_outgoing_group_full")
         @unknown default:
-            return "forward_security_none".localized
+            return #localize("forward_security_none")
         }
     }
 }

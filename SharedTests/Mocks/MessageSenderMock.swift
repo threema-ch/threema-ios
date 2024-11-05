@@ -41,7 +41,7 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
 
     func sendTextMessage(
         text: String?,
-        in conversation: Conversation,
+        in conversation: ConversationEntity,
         quickReply: Bool,
         requestID: String?,
         completion: ((BaseMessage?) -> Void)?
@@ -54,7 +54,7 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         accuracy: CLLocationAccuracy,
         poiName: String?,
         poiAddress: String?,
-        in conversation: Conversation
+        in conversation: ConversationEntity
     ) {
         // no-op
     }
@@ -127,7 +127,7 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         return doSendReadReceiptContacts.first(where: { $0 == contactEntity })?.readReceipt ?? .doNotSend == .send
     }
 
-    func doSendReadReceipt(to conversation: Conversation) -> Bool {
+    func doSendReadReceipt(to conversation: ConversationEntity) -> Bool {
         true
     }
 
@@ -135,7 +135,7 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         true
     }
 
-    func doSendTypingIndicator(to conversation: Conversation) -> Bool {
+    func doSendTypingIndicator(to conversation: ConversationEntity) -> Bool {
         true
     }
 }

@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
+import ThreemaMacros
 
 @objc class GroupCallUIHelper: NSObject {
     @objc func setGlobalGroupCallsManagerSingletonUIDelegate() {
@@ -52,13 +53,13 @@ extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
     }
     
     func showGroupCallFullAlert(maxParticipants: Int?, onOK: @escaping () -> Void) {
-        let title = "group_call_alert_full_title".localized
+        let title = #localize("group_call_alert_full_title")
         let message =
             if let maxParticipants {
-                String.localizedStringWithFormat("group_call_alert_full_message_count".localized, maxParticipants)
+                String.localizedStringWithFormat(#localize("group_call_alert_full_message_count"), maxParticipants)
             }
             else {
-                "group_call_alert_full_message".localized
+                #localize("group_call_alert_full_message")
             }
         
         Task { @MainActor in
@@ -92,7 +93,7 @@ extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
         
         guard businessInjector.entityManager.performAndWait({
             if let conversation = businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: conversationManagedObjectID) as? Conversation {
+                .getManagedObject(by: conversationManagedObjectID) as? ConversationEntity {
                 if let group = businessInjector.groupManager.getGroup(conversation: conversation) {
                     // We show a notification anyways when notify when mentioned is set to true
                     if !group.pushSetting.mentioned, !group.pushSetting.canSendPush() {
@@ -120,7 +121,7 @@ extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
                        !curChatVc.isRecording(),
                        !curChatVc.isPlayingAudioMessage() {
                         let accessibilityText =
-                            "\(BundleUtil.localizedString(forKey: "new_message_accessibility"))\(body)"
+                            "\(#localize("new_message_accessibility"))\(body)"
                         UIAccessibility.post(notification: .announcement, argument: accessibilityText)
                     }
                     return

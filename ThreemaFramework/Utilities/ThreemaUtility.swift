@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import CoreLocation
 import Foundation
 import PromiseKit
+import ThreemaMacros
 
 public final class ThreemaUtility: NSObject {
     
@@ -141,10 +142,10 @@ public final class ThreemaUtility: NSObject {
     /// Accessibility label to use if `Contact.showOtherThreemaIcon` is `true`
     public static var otherThreemaTypeAccessibilityLabel: String {
         if isWorkFlavor {
-            BundleUtil.localizedString(forKey: "threema_type_icon_private_accessibility_label")
+            #localize("threema_type_icon_private_accessibility_label")
         }
         else {
-            BundleUtil.localizedString(forKey: "threema_type_icon_work_accessibility_label")
+            #localize("threema_type_icon_work_accessibility_label")
         }
     }
     
@@ -260,8 +261,8 @@ public final class ThreemaUtility: NSObject {
         let unreadMessages = UnreadMessages(entityManager: entityManager, taskManager: TaskManager())
         showLocalNotification(
             identifier: "threemaWeb",
-            title: BundleUtil.localizedString(forKey: "notification_threemaweb_connectionlost_title"),
-            body: BundleUtil.localizedString(forKey: "notification_threemaweb_connectionlost_body"),
+            title: #localize("notification_threemaweb_connectionlost_title"),
+            body: #localize("notification_threemaweb_connectionlost_body"),
             badge: unreadMessages.totalCount(),
             userInfo: nil
         )

@@ -29,7 +29,7 @@ enum VideoURLSenderItemCreatorError: Error {
 }
 
 @objc protocol VideoConversionProgressDelegate {
-    @objc func videoExportSession(exportSession: SDAVAssetExportSession)
+    @objc func videoExportSession(exportSession: AVAssetExportSession)
 }
 
 @objc public class VideoURLSenderItemCreator: NSObject {
@@ -37,8 +37,9 @@ enum VideoURLSenderItemCreatorError: Error {
     @objc public static let temporaryDirectory = "tmpVideoCreator"
     
     @objc var encodeProgressDelegate: VideoConversionProgressDelegate?
-    @objc var exportSession: SDAVAssetExportSession?
+    @objc var exportSession: AVAssetExportSession?
     
+    var timer: Timer? = nil
     func getThumbnail(asset: AVAsset) -> Promise<UIImage> {
         Promise { seal in
             guard let thumbnail = MediaConverter.getThumbnailForVideo(asset) else {
@@ -48,12 +49,8 @@ enum VideoURLSenderItemCreatorError: Error {
             seal.resolve(thumbnail, nil)
         }
     }
-    
-    deinit {
-        exportSession?.removeObserver(self, forKeyPath: "progress")
-    }
-    
-    func getExportSession(asset: AVAsset) -> Promise<SDAVAssetExportSession> {
+        
+    func getExportSession(asset: AVAsset) -> Promise<AVAssetExportSession> {
         Promise { seal in
             let outputURL = MediaConverter.getAssetOutputURL()
             
@@ -62,8 +59,24 @@ enum VideoURLSenderItemCreatorError: Error {
                 seal.reject(VideoURLSenderItemCreatorError.couldNotCreateExportSession)
                 return
             }
-            exportSession.addObserver(self, forKeyPath: "progress", options: .new, context: nil)
+            
             self.exportSession = exportSession
+            
+            DispatchQueue.main.async {
+                self.timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+                    
+                    guard let progress = self.exportSession?.progress else {
+                        timer.invalidate()
+                        return
+                    }
+                    
+                    self.encodeProgressDelegate?.videoExportSession(exportSession: exportSession)
+
+                    if progress > 0.9 {
+                        timer.invalidate()
+                    }
+                }
+            }
             
             seal.fulfill(exportSession)
         }
@@ -75,13 +88,13 @@ enum VideoURLSenderItemCreatorError: Error {
         change: [NSKeyValueChangeKey: Any]?,
         context: UnsafeMutableRawPointer?
     ) {
-        if let exportSession = object as? SDAVAssetExportSession {
+        if let exportSession = object as? AVAssetExportSession {
             encodeProgressDelegate?.videoExportSession(exportSession: exportSession)
         }
     }
     
-    @objc public func getExportSession(for asset: AVAsset) -> SDAVAssetExportSession? {
-        var newExportSession: SDAVAssetExportSession?
+    @objc public func getExportSession(for asset: AVAsset) -> AVAssetExportSession? {
+        var newExportSession: AVAssetExportSession?
         let sema = DispatchSemaphore(value: 0)
         
         DispatchQueue.global(qos: .userInitiated).async {
@@ -103,7 +116,7 @@ enum VideoURLSenderItemCreatorError: Error {
         }
     }
     
-    func convertVideo(on exportSession: SDAVAssetExportSession, asset: AVAsset) -> Promise<URL> {
+    func convertVideo(on exportSession: AVAssetExportSession, asset: AVAsset) -> Promise<URL> {
         self.exportSession = exportSession
         return Promise { seal in
             MediaConverter.convertVideo(with: exportSession, onCompletion: { completionURL in
@@ -165,7 +178,7 @@ enum VideoURLSenderItemCreatorError: Error {
         return senderItem
     }
     
-    @objc func senderItem(from asset: AVAsset, on exportSession: SDAVAssetExportSession) -> URLSenderItem? {
+    @objc func senderItem(from asset: AVAsset, on exportSession: AVAssetExportSession) -> URLSenderItem? {
         var senderItem: URLSenderItem?
         let sema = DispatchSemaphore(value: 0)
         

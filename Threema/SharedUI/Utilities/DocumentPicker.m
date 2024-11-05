@@ -35,7 +35,7 @@
 @interface DocumentPicker () <UIDocumentPickerDelegate, UIDocumentMenuDelegate, UploadProgressDelegate, CNContactPickerDelegate>
 
 @property UIViewController *presentingViewController;
-@property Conversation *conversation;
+@property ConversationEntity *conversation;
 
 @end
 
@@ -43,7 +43,7 @@
 
 static DocumentPicker *pickerStrongReference;
 
-+ (instancetype)documentPickerForViewController:(UIViewController *)presentingViewController conversation:(Conversation *)conversation {
++ (instancetype)documentPickerForViewController:(UIViewController *)presentingViewController conversation:(ConversationEntity *)conversation {
     DocumentPicker *picker = [[DocumentPicker alloc] init];
     picker.presentingViewController = presentingViewController;
     picker.conversation = conversation;
@@ -81,23 +81,48 @@ static DocumentPicker *pickerStrongReference;
 }
 
 - (void)checkPermissionAndShowContactPicker {
-    if ([CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts] == CNAuthorizationStatusAuthorized) {
-        [self showContactPicker];
-    }
-    else if ([CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts] == CNAuthorizationStatusDenied) {
-        [self showContactAlert];
+    
+    if (@available(iOS 18.0, *)) {
+        CNAuthorizationStatus currentStatus = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
+        // TODO: (IOS-4889) In order to still compile the code in Xcode 15, we use 4 instead of `CNAuthorizationStatusLimited`
+        if (currentStatus == CNAuthorizationStatusAuthorized || currentStatus == 4) {
+            [self showContactPicker];
+        }
+        else if (currentStatus == CNAuthorizationStatusDenied) {
+            [self showContactAlert];
+        }
+        else {
+            CNContactStore *cnAddressBook = [CNContactStore new];
+            [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if (granted) {
+                        [self showContactPicker];
+                    } else {
+                        [self showContactAlert];
+                    }
+                });
+            }];
+        }
     }
     else {
-        CNContactStore *cnAddressBook = [CNContactStore new];
-        [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (granted) {
-                    [self showContactPicker];
-                } else {
-                    [self showContactAlert];
-                }
-            });
-        }];
+        if ([CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts] == CNAuthorizationStatusAuthorized) {
+            [self showContactPicker];
+        }
+        else if ([CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts] == CNAuthorizationStatusDenied) {
+            [self showContactAlert];
+        }
+        else {
+            CNContactStore *cnAddressBook = [CNContactStore new];
+            [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if (granted) {
+                        [self showContactPicker];
+                    } else {
+                        [self showContactAlert];
+                    }
+                });
+            }];
+        }
     }
 }
 

@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 public class MessagePermission: NSObject {
     public enum MessagePermissionError: Error {
@@ -50,8 +51,8 @@ public class MessagePermission: NSObject {
     public func canSend(to identity: String) -> (isAllowed: Bool, reason: String?) {
         var result: (isAllowed: Bool, reason: String?) = (false, nil)
 
-        entityManager.performBlockAndWait {
-            guard let conversation = self.entityManager.entityFetcher.conversation(forIdentity: identity) else {
+        entityManager.performAndWait {
+            guard let conversation = self.entityManager.entityFetcher.conversationEntity(forIdentity: identity) else {
                 result = (false, "Conversation for contact (\(identity)) not found.")
                 return
             }
@@ -72,7 +73,7 @@ public class MessagePermission: NSObject {
     ) -> (isAllowed: Bool, reason: String?) {
         var result: (isAllowed: Bool, reason: String?) = (false, nil)
 
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             guard let conversation = self.groupManager.getGroup(groudID, creator: groupCreatorIdentity)?.conversation
             else {
                 result = (
@@ -107,13 +108,13 @@ public class MessagePermission: NSObject {
         return result.isAllowed
     }
 
-    private func canSend(to conversation: Conversation) -> (isAllowed: Bool, reason: String?) {
+    private func canSend(to conversation: ConversationEntity) -> (isAllowed: Bool, reason: String?) {
         // Check for blacklisted contact
         if let identity = conversation.contact?.identity,
            conversation.groupID == nil,
            userSettings.blacklist.contains(identity) {
             DDLogError("Cannot send a message to this contact \(identity) because it is blocked")
-            return (false, BundleUtil.localizedString(forKey: "contact_blocked_cannot_send"))
+            return (false, #localize("contact_blocked_cannot_send"))
         }
 
         // Check that the group was started while we were using the same identity as now
@@ -122,7 +123,7 @@ public class MessagePermission: NSObject {
             DDLogError(
                 "Cannot send a message to this group. This group was created while user were using a different Threema ID. Cannot send any messages to it with your current ID"
             )
-            return (false, BundleUtil.localizedString(forKey: "group_different_identity"))
+            return (false, #localize("group_different_identity"))
         }
 
         // Check for invalid contact
@@ -131,7 +132,7 @@ public class MessagePermission: NSObject {
            let state = contact.state,
            state.intValue == kStateInvalid {
             DDLogError("Cannot send a message to this contact (\(contact.identity) because it is invalid")
-            return (false, BundleUtil.localizedString(forKey: "contact_invalid_cannot_send"))
+            return (false, #localize("contact_invalid_cannot_send"))
         }
 
         // Check group state
@@ -141,12 +142,12 @@ public class MessagePermission: NSObject {
             if group.allMemberIdentities.filter({ $0 != myIdentityStore.identity }).isEmpty,
                !group.isOwnGroup {
                 DDLogError("Cannot send a message because there are no more members in this group")
-                return (false, BundleUtil.localizedString(forKey: "no_more_members"))
+                return (false, #localize("no_more_members"))
             }
 
             if group.didLeave || group.didForcedLeave {
                 DDLogError("Cannot send a message to this group because i left the group, i'm not a member anymore")
-                return (false, BundleUtil.localizedString(forKey: "group_is_not_member"))
+                return (false, #localize("group_is_not_member"))
             }
         }
 

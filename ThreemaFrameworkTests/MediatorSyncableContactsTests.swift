@@ -404,7 +404,7 @@ class MediatorSyncableContactsTests: XCTestCase {
         delta.image = contact.imageData
         delta.contactImage = contact.contactImage?.data
 
-        if let conversation = contact.conversations!.first as? Conversation {
+        if let conversation = contact.conversations!.first as? ConversationEntity {
             delta.syncContact.update(conversation: conversation)
         }
 
@@ -421,7 +421,7 @@ class MediatorSyncableContactsTests: XCTestCase {
             let imageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
             let imageData = (try? Data(contentsOf: imageURL!))!
             let image = UIImage(data: imageData)!
-            let contactImage: ImageData = databasePreparer.createImageData(
+            let contactImage: ImageDataEntity = databasePreparer.createImageDataEntity(
                 data: imageData,
                 height: Int(image.size.height),
                 width: Int(image.size.width)
@@ -438,8 +438,8 @@ class MediatorSyncableContactsTests: XCTestCase {
                 visibility: .default,
                 complete: { conversation in
                     _ = contact.conversations!.insert(conversation)
-                    conversation.conversationVisibility = .default
-                    conversation.conversationCategory = .default
+                    conversation.changeVisibility(to: .default)
+                    conversation.changeCategory(to: .default)
                 }
             )
             contact.publicNickname = "Nickname"

@@ -23,7 +23,7 @@ import ThreemaFramework
 
 class DistributionListManagerMock: NSObject, DistributionListManagerProtocol {
     func createDistributionList(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         name: String,
         imageData: Data?,
         recipients: Set<Contact>
@@ -31,7 +31,7 @@ class DistributionListManagerMock: NSObject, DistributionListManagerProtocol {
         // No-op
     }
     
-    func distributionList(for conversation: Conversation) -> DistributionList? {
+    func distributionList(for conversation: ConversationEntity) -> DistributionList? {
         nil
     }
 

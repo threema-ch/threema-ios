@@ -22,7 +22,7 @@
 
 @protocol ExternalStorageInfo
 
-- (NSString *)getFilename;
+- (nullable NSString *)getFilename;
 
 @end
 

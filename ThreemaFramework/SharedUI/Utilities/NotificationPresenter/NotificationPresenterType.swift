@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 // MARK: - NotificationPresenterStyle
 
@@ -100,159 +101,155 @@ public struct NotificationPresenterType {
     }
 
     public static let generalSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "Done"),
+        notificationText: #localize("Done"),
         notificationStyle: .success
     )
     public static let copySuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_copying_succeeded"),
+        notificationText: #localize("notification_copying_succeeded"),
         notificationStyle: .success
     )
     public static let copyIDSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_copying_id_succeeded"),
+        notificationText: #localize("notification_copying_id_succeeded"),
         notificationStyle: .success
     )
     public static let copyError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_copying_failed"),
+        notificationText: #localize("notification_copying_failed"),
         notificationStyle: .error
     )
     public static let saveSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_saving_succeeded"),
+        notificationText: #localize("notification_saving_succeeded"),
         notificationStyle: .success
     )
     public static let saveError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_saving_failed"),
+        notificationText: #localize("notification_saving_failed"),
         notificationStyle: .error
     )
     public static let saveToPhotosSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_saving_to_photos_succeeded"),
+        notificationText: #localize("notification_saving_to_photos_succeeded"),
         notificationStyle: .success
     )
     public static let saveToPhotosError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_saving_to_photos_failed"),
+        notificationText: #localize("notification_saving_to_photos_failed"),
         notificationStyle: .error
     )
     public static let autosaveMediaError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_autosave_failed"),
+        notificationText: #localize("notification_autosave_failed"),
         notificationStyle: .error
     )
     public static let sendingError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_sending_failed"),
-        notificationStyle: .error
-    )
-    public static let sendingErrorSize = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_sending_failed_size"),
+        notificationText: #localize("notification_sending_failed"),
         notificationStyle: .error
     )
     public static let recordingTooLong = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_recording_too_long"),
+        notificationText: #localize("notification_recording_too_long"),
         notificationStyle: .error
     )
     public static let playingError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_cannot_play_video"),
+        notificationText: #localize("notification_cannot_play_video"),
         notificationStyle: .error
     )
     public static let connectedCallError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_call_failed_connected"),
+        notificationText: #localize("notification_call_failed_connected"),
         notificationStyle: .error
     )
     public static let notConnectedCallError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_call_failed_not_connected"),
+        notificationText: #localize("notification_call_failed_not_connected"),
         notificationStyle: .error
     )
     public static let callCreationError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_call_creation_failed"),
+        notificationText: #localize("notification_call_creation_failed"),
         notificationStyle: .error
     )
     public static let callDisabledError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_call_creation_disabled"),
+        notificationText: #localize("notification_call_creation_disabled"),
         notificationStyle: .error
     )
     public static let profilePictureSentSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_sending_profile_picture_succeeded"),
+        notificationText: #localize("notification_sending_profile_picture_succeeded"),
         notificationStyle: .success
     )
     public static let profilePictureSentError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_sending_profile_picture_failed"),
+        notificationText: #localize("notification_sending_profile_picture_failed"),
         notificationStyle: .error
     )
     public static let settingsSyncPending = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_settings_sync_pending"),
+        notificationText: #localize("notification_settings_sync_pending"),
         notificationStyle: .none
     )
     public static let settingsSyncSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_settings_sync_succeeded"),
+        notificationText: #localize("notification_settings_sync_succeeded"),
         notificationStyle: .success
     )
     public static let groupSyncSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_group_sync_succeeded"),
+        notificationText: #localize("notification_group_sync_succeeded"),
         notificationStyle: .success
     )
     public static let groupSyncError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_group_sync_failed"),
+        notificationText: #localize("notification_group_sync_failed"),
         notificationStyle: .success
     )
     public static let groupCallStartError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_group_call_start_failed"),
+        notificationText: #localize("notification_group_call_start_failed"),
         notificationStyle: .error
     )
     public static let interactionDeleteSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_interaction_delete_succeeded"),
+        notificationText: #localize("notification_interaction_delete_succeeded"),
         notificationStyle: .success
     )
     public static let interactionDeleteError = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_interaction_delete_failed"),
+        notificationText: #localize("notification_interaction_delete_failed"),
         notificationStyle: .error
     )
     public static let revocationFailed = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_revocation_failed"),
+        notificationText: #localize("notification_revocation_failed"),
         notificationStyle: .error
     )
     public static let captionTooLong = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_caption_too_long"),
+        notificationText: #localize("notification_caption_too_long"),
         notificationStyle: .error
     )
     public static let updateWorkDataFailed = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_updateworkdata_failed"),
+        notificationText: #localize("notification_updateworkdata_failed"),
         notificationStyle: .error
     )
     public static let emptyDebugLogSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_empty_debug_log_success"),
+        notificationText: #localize("notification_empty_debug_log_success"),
         notificationStyle: .success
     )
     public static let flushMessageQueueSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_flush_message_queue_succeeded"),
+        notificationText: #localize("notification_flush_message_queue_succeeded"),
         notificationStyle: .success
     )
     public static let resetUnreadCountSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "settings_advanced_successfully_reset_unread_count_label"),
+        notificationText: #localize("settings_advanced_successfully_reset_unread_count_label"),
         notificationStyle: .success
     )
     public static let reregisterNotificationsSuccess = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_reregister_notifications_succeeded"),
+        notificationText: #localize("notification_reregister_notifications_succeeded"),
         notificationStyle: .success
     )
     public static let audioMuted = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_audio_muted"),
+        notificationText: #localize("notification_audio_muted"),
         notificationStyle: .none
     )
     public static let audioUnmuted = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_audio_unmuted"),
+        notificationText: #localize("notification_audio_unmuted"),
         notificationStyle: .none
     )
     public static let videoMuted = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_video_muted"),
+        notificationText: #localize("notification_video_muted"),
         notificationStyle: .none
     )
     public static let videoUnmuted = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "notification_video_unmuted"),
+        notificationText: #localize("notification_video_unmuted"),
         notificationStyle: .none
     )
     public static let safePasswordAccepted = NotificationPresenterType(
-        notificationText: BundleUtil.localizedString(forKey: "threema_safe_company_mdm_password_changed_accepted"),
+        notificationText: #localize("threema_safe_company_mdm_password_changed_accepted"),
         notificationStyle: .success
     )
     public static let noConnection = NotificationPresenterType(
-        notificationText: "cannot_connect_title".localized,
+        notificationText: #localize("cannot_connect_title"),
         notificationStyle: .error
     )
 }
@@ -271,15 +268,15 @@ public struct AccessibilityAnnouncementType {
     }
     
     public static let audioMuted = AccessibilityAnnouncementType(
-        announcementText: BundleUtil.localizedString(forKey: "notification_audio_muted")
+        announcementText: #localize("notification_audio_muted")
     )
     public static let audioUnmuted = AccessibilityAnnouncementType(
-        announcementText: BundleUtil.localizedString(forKey: "notification_audio_unmuted")
+        announcementText: #localize("notification_audio_unmuted")
     )
     public static let videoMuted = AccessibilityAnnouncementType(
-        announcementText: BundleUtil.localizedString(forKey: "notification_video_muted")
+        announcementText: #localize("notification_video_muted")
     )
     public static let videoUnmuted = AccessibilityAnnouncementType(
-        announcementText: BundleUtil.localizedString(forKey: "notification_video_unmuted")
+        announcementText: #localize("notification_video_unmuted")
     )
 }

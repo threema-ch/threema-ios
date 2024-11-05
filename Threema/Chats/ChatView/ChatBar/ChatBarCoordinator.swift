@@ -24,6 +24,7 @@ import GroupCalls
 import SwiftProtobuf
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 import ThreemaProtocols
 import UIKit
 import VisionKit
@@ -60,7 +61,7 @@ final class ChatBarCoordinator {
     
     // MARK: - Private properties
     
-    private var conversation: Conversation
+    private var conversation: ConversationEntity
     private var messageToEdit: EditedMessage? {
         didSet {
             if let baseMessage = messageToEdit as? BaseMessage {
@@ -131,7 +132,7 @@ final class ChatBarCoordinator {
     // MARK: - Lifecycle
     
     init(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         chatViewControllerActionsHelper: ChatViewControllerActionsHelper,
         chatViewController: ChatViewController,
         chatBarCoordinatorDelegate: ChatBarCoordinatorDelegate?,
@@ -202,6 +203,7 @@ final class ChatBarCoordinator {
     
     func updateSettings() {
         updateMessagePermission()
+        chatBar.updateSendButton()
     }
     
     func saveDraft(andDeleteText: Bool = false) {
@@ -320,7 +322,7 @@ final class ChatBarCoordinator {
 
     /// Removes the currently displayed edit message view
     func removeEditedMessageView() {
-        chatBar.updateSendButtonAccessibilityLabel(to: "compose_bar_send_message_button_accessibility_label".localized)
+        chatBar.updateSendButtonAccessibilityLabel(to: #localize("compose_bar_send_message_button_accessibility_label"))
         messageToEdit = nil
         chatBarContainerView.removeEditedMessageView()
         chatBar.removeCurrentText()
@@ -375,12 +377,12 @@ final class ChatBarCoordinator {
 
 extension ChatBarCoordinator {
     private var shouldShowMentionsTableView: Bool {
-        conversation.isGroup()
+        conversation.isGroup
     }
     
     private func addMentionsView() {
         var mentionableMembers: [MentionableIdentity] = [MentionableIdentity()]
-        for member in conversation.members {
+        for member in conversation.unwrappedMembers {
             mentionableMembers.append(MentionableIdentity(
                 identity: member.identity,
                 entityFetcher: businessInjector.entityManager.entityFetcher
@@ -620,8 +622,8 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     }
     
     func showPasteError() {
-        let title = BundleUtil.localizedString(forKey: "pasteErrorMessageTitle")
-        let message = BundleUtil.localizedString(forKey: "pasteErrorMessageMessage")
+        let title = #localize("pasteErrorMessageTitle")
+        let message = #localize("pasteErrorMessageMessage")
         DispatchQueue.main.async {
             UIAlertTemplate.showAlert(
                 owner: AppDelegate.shared().currentTopViewController(),
@@ -746,8 +748,8 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         
         UIAlertTemplate.showAlert(
             owner: chatViewController,
-            title: BundleUtil.localizedString(forKey: "edit_message"),
-            message: BundleUtil.localizedString(forKey: "edit_message_can_not_edit")
+            title: #localize("edit_message"),
+            message: #localize("edit_message_can_not_edit")
         )
     }
     
@@ -763,24 +765,24 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             var firstFive = displayNames.prefix(5)
             let count = displayNames.count - 5
             let countString = String.localizedStringWithFormat(
-                "delete_edit_message_not_sent_to_others".localized,
+                #localize("delete_edit_message_not_sent_to_others"),
                 count
             )
             firstFive.append(countString)
             if let totalSummary = listFormatter.string(from: Array(firstFive)) {
-                summary = "\(totalSummary)\n\("edit_message_requirement".localized)"
+                summary = "\(totalSummary)\n\(#localize("edit_message_requirement"))"
             }
         }
         else {
             if let shortsSummary = listFormatter.string(from: displayNames) {
-                summary = "\(shortsSummary)\n\("edit_message_requirement".localized)"
+                summary = "\(shortsSummary)\n\(#localize("edit_message_requirement"))"
             }
         }
         
-        let message = String.localizedStringWithFormat("edit_message_not_sent_to".localized, summary)
+        let message = String.localizedStringWithFormat(#localize("edit_message_not_sent_to"), summary)
         UIAlertTemplate.showAlert(
             owner: chatViewController,
-            title: BundleUtil.localizedString(forKey: "edit_message"),
+            title: #localize("edit_message"),
             message: message
         )
     }
@@ -792,8 +794,8 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         
         UIAlertTemplate.showAlert(
             owner: chatViewController,
-            title: BundleUtil.localizedString(forKey: "edit_message"),
-            message: BundleUtil.localizedString(forKey: "edit_message_text_to_long")
+            title: #localize("edit_message"),
+            message: #localize("edit_message_text_to_long")
         )
     }
         
@@ -814,7 +816,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         // Only send typing indicator if the conversation has a contact (equivalent to being a group but we want the
         // identity to not be optional)
         // Do not send false twice in a row
-        if !conversation.isGroup(), let identity = conversation.contact?.threemaIdentity,
+        if !conversation.isGroup, let identity = conversation.contact?.threemaIdentity,
            (!startTyping && lastTypingIndicatorState) || startTyping {
             DDLogVerbose("Send typing indicator \(startTyping)")
             businessInjector.messageSender.sendTypingIndicator(typing: startTyping, toIdentity: identity)
@@ -980,7 +982,10 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
             return
         }
         chatViewController.dismiss(animated: true, completion: nil)
-        BallotDispatcher.showBallotCreateViewController(for: conversation, on: chatViewController.navigationController)
+        BallotDispatcher.showBallotCreateViewController(
+            forConversation: conversation,
+            on: chatViewController.navigationController
+        )
     }
     
     func assetsActionHelperDidSelectScanDocument(_ picker: PPAssetsActionHelper) {

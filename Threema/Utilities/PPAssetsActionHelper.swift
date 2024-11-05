@@ -21,6 +21,7 @@
 import CoreLocation
 import Foundation
 import Photos
+import ThreemaMacros
 import UIKit
 
 @objc public protocol PPAssetsActionHelperDelegate: AnyObject {
@@ -115,7 +116,7 @@ public class PPAssetsActionHelper: NSObject {
         )?
             .withTintColor(.primary, renderingMode: .alwaysOriginal)
         let shareLocation = PPOption(
-            withTitle: BundleUtil.localizedString(forKey: "send_location"),
+            withTitle: #localize("send_location"),
             withIcon: shareLocationImage
         ) {
             self.delegate?.assetsActionHelperDidSelectLocation(self)
@@ -128,7 +129,7 @@ public class PPAssetsActionHelper: NSObject {
         )?
             .withTintColor(.primary, renderingMode: .alwaysOriginal)
         let ballotCreate = PPOption(
-            withTitle: BundleUtil.localizedString(forKey: "ballot_create"),
+            withTitle: #localize("ballot_create"),
             withIcon: ballotImage
         ) {
             self.delegate?.assetsActionHelperDidSelectCreateBallot(self)
@@ -144,7 +145,7 @@ public class PPAssetsActionHelper: NSObject {
         )?
             .withTintColor(.primary, renderingMode: .alwaysOriginal)
         let shareFile = PPOption(
-            withTitle: BundleUtil.localizedString(forKey: "share_file"),
+            withTitle: #localize("share_file"),
             withIcon: shareImage
         ) {
             self.delegate?.assetsActionHelperDidSelectShareFile(self)
@@ -152,7 +153,7 @@ public class PPAssetsActionHelper: NSObject {
         options.append(shareFile)
         
         let scanner = PPOption(
-            withTitle: "scan_document".localized,
+            withTitle: #localize("scan_document"),
             withIcon: UIImage(systemName: "doc.viewfinder.fill")
         ) {
             self.delegate?.assetsActionHelperDidSelectScanDocument(self)
@@ -187,14 +188,14 @@ public class PPAssetsActionHelper: NSObject {
         config.maxSelectableAssets = 10
         
         config.useOwnSnapButton = true
-        config.ownSnapButtonText = BundleUtil.localizedString(forKey: "choose_existing")
+        config.ownSnapButtonText = #localize("choose_existing")
         config.ownSnapButtonIcon = UIImage(
             systemName: "photo.fill",
             withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
         )?
             .withTintColor(.primary, renderingMode: .alwaysOriginal)
 
-        config.previewReplacementText = BundleUtil.localizedString(forKey: "take_photo_or_video")
+        config.previewReplacementText = #localize("take_photo_or_video")
         config.previewReplacementIcon = UIImage(
             systemName: "camera.fill",
             withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
@@ -205,7 +206,7 @@ public class PPAssetsActionHelper: NSObject {
         config.tableBackground = Colors.backgroundNavigationController
         
         config.showAdditionalOptionWhenAssetIsSelected = true
-        config.additionalOptionText = BundleUtil.localizedString(forKey: "send_immediately_text")
+        config.additionalOptionText = #localize("send_immediately_text")
         
         let assetsPicker = PPAssetsActionController(with: options, aConfig: config)
         assetsPicker.delegate = self

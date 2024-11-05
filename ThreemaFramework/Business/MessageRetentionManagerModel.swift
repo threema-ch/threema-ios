@@ -127,8 +127,8 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
     }
     
     /// Computes the Conversations to be affected by the deletion
-    private func conversations() -> [Conversation] {
-        let convs = (entityManager.entityFetcher.allConversations() as? [Conversation]) ?? []
+    private func conversations() -> [ConversationEntity] {
+        let convs = (entityManager.entityFetcher.allConversations() as? [ConversationEntity]) ?? []
         return convs.filter {
             // note groups are excluded
             !(groupManager.getGroup(conversation: $0)?.isNoteGroup ?? false)
@@ -137,7 +137,7 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
     
     private func computeUnread() {
         if let conversations = entityManager.entityFetcher
-            .notArchivedConversations() as? [Conversation] {
+            .notArchivedConversations() as? [ConversationEntity] {
             unreadMessages.totalCount(doCalcUnreadMessagesCountOf: Set(conversations))
         }
     }

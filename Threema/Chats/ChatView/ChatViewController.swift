@@ -25,6 +25,7 @@ import OSLog
 import PDFKit
 import ThreemaEssentials
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 import VisionKit
 import WebRTC
@@ -69,7 +70,7 @@ final class ChatViewController: ThemedViewController {
         deprecated: 0.0,
         message: "Must not be used outside of ChatViewController, except in the PPAssetsActionHelperDelegate extension and in MainTabBarController."
     )
-    @objc let conversation: Conversation
+    @objc let conversation: ConversationEntity
     
     private let businessInjector: BusinessInjectorProtocol
     private let entityManager: EntityManager
@@ -210,7 +211,7 @@ final class ChatViewController: ThemedViewController {
     
     private lazy var deleteBarButton: UIBarButtonItem = {
         let button = UIBarButtonItem(
-            title: BundleUtil.localizedString(forKey: "messages_delete_all_button"),
+            title: #localize("messages_delete_all_button"),
             style: .plain,
             target: self,
             action: #selector(showDeleteMessagesAlert)
@@ -220,7 +221,7 @@ final class ChatViewController: ThemedViewController {
     }()
     
     private lazy var cancelBarButton = UIBarButtonItem(
-        title: BundleUtil.localizedString(forKey: "cancel"),
+        title: #localize("cancel"),
         style: .done,
         target: self,
         action: #selector(endMultiselect)
@@ -234,7 +235,7 @@ final class ChatViewController: ThemedViewController {
             action: #selector(startOneToOneCall)
         )
         
-        button.accessibilityLabel = BundleUtil.localizedString(forKey: "call")
+        button.accessibilityLabel = #localize("call")
         button.accessibilityIdentifier = "ChatViewControllerCallBarButtonItem"
         return button
     }()
@@ -247,7 +248,7 @@ final class ChatViewController: ThemedViewController {
             action: #selector(startGroupCall)
         )
         
-        button.accessibilityLabel = BundleUtil.localizedString(forKey: "call")
+        button.accessibilityLabel = #localize("call")
         button.accessibilityIdentifier = "ChatViewControllerGroupCallBarButtonItem"
         return button
     }()
@@ -580,10 +581,10 @@ final class ChatViewController: ThemedViewController {
     
     /// Create a new chat view
     /// - Parameters:
-    ///   - conversation: Conversation to display in chat view
+    ///   - conversation: ConversationEntity to display in chat view
     ///   - businessInjector: Business injector to load messages
     init(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         businessInjector: BusinessInjectorProtocol = BusinessInjector(),
         chatScrollPositionProvider: ChatScrollPositionProvider = ChatScrollPosition.shared,
         showConversationInformation: ShowConversationInformation? = nil
@@ -610,10 +611,10 @@ final class ChatViewController: ThemedViewController {
     
     /// Create a new chat view
     /// - Parameters:
-    ///   - conversation: Conversation to display in chat view
+    ///   - conversation: ConversationEntity to display in chat view
     ///   - showConversationInformation: ShowConversationInformation used for precomposing content
     @objc convenience init(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         showConversationInformation: ShowConversationInformation?
     ) {
         self.init(for: conversation, showConversationInformation: showConversationInformation)
@@ -828,7 +829,7 @@ final class ChatViewController: ThemedViewController {
                 return strongSelf.businessInjector.runInBackgroundAndWait { backgroundBusinessInjector in
                     backgroundBusinessInjector.entityManager.performAndWait {
                         guard let tempConversation = backgroundBusinessInjector.entityManager.entityFetcher
-                            .existingObject(with: strongSelf.conversation.objectID) as? Conversation else {
+                            .existingObject(with: strongSelf.conversation.objectID) as? ConversationEntity else {
                             return false
                         }
                         return tempConversation.isEqualTo(
@@ -1095,7 +1096,7 @@ extension ChatViewController {
             
             navigationItem.rightBarButtonItems = nil
             
-            if conversation.isGroup() {
+            if conversation.isGroup {
                 if let group = businessInjector.groupManager.getGroup(conversation: conversation),
                    businessInjector.settingsStore.enableThreemaGroupCalls, group.isSelfMember, !group.isNoteGroup {
                     navigationItem.rightBarButtonItem = groupCallBarButtonItem
@@ -1164,7 +1165,7 @@ extension ChatViewController {
     /// or new (ballot) message received.
     private func updateOpenBallotsButton() {
         
-        guard conversation.isGroup(), userInterfaceMode == .default else {
+        guard conversation.isGroup, userInterfaceMode == .default else {
             return
         }
         
@@ -1184,7 +1185,7 @@ extension ChatViewController {
     func chatProfileViewTapped() {
         let detailsViewController: UIViewController
         
-        if conversation.isGroup() {
+        if conversation.isGroup {
             guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
                 fatalError("No group conversation found for this conversation")
             }
@@ -1247,11 +1248,12 @@ extension ChatViewController {
     }
     
     @objc private func showBallots() {
-        guard let ballotViewController = BallotListTableViewController.ballotListViewController(for: conversation)
+        guard let ballotViewController = BallotListTableViewController
+            .ballotListViewController(forConversation: conversation)
         else {
             UIAlertTemplate.showAlert(
                 owner: self,
-                title: BundleUtil.localizedString(forKey: "ballot_load_error"),
+                title: #localize("ballot_load_error"),
                 message: nil
             )
             return
@@ -1268,18 +1270,18 @@ extension ChatViewController {
         var alertMessage: String?
         
         if dataSource.hasSelectedObjectIDs() {
-            alertTitle = BundleUtil.localizedString(forKey: "messages_delete_selected_confirm")
+            alertTitle = #localize("messages_delete_selected_confirm")
         }
         else {
-            alertTitle = BundleUtil.localizedString(forKey: "messages_delete_all_confirm_title")
-            alertMessage = BundleUtil.localizedString(forKey: "messages_delete_all_confirm_message")
+            alertTitle = #localize("messages_delete_all_confirm_title")
+            alertMessage = #localize("messages_delete_all_confirm_message")
         }
         
         UIAlertTemplate.showDestructiveAlert(
             owner: self,
             title: alertTitle,
             message: alertMessage,
-            titleDestructive: BundleUtil.localizedString(forKey: "delete")
+            titleDestructive: #localize("delete")
         ) { _ in
             
             if self.dataSource.hasSelectedObjectIDs() {
@@ -1417,7 +1419,7 @@ extension ChatViewController {
                     fatalError(msg)
                 }
                 else {
-                    DDLogError(msg)
+                    DDLogError("\(msg)")
                     assertionFailure(msg)
                 }
             }
@@ -1980,13 +1982,13 @@ extension ChatViewController: UITableViewDelegate {
     private func updateSelectionTitle() {
         
         guard dataSource.hasSelectedObjectIDs() else {
-            deleteBarButton.title = BundleUtil.localizedString(forKey: "messages_delete_all_button")
+            deleteBarButton.title = #localize("messages_delete_all_button")
             return
         }
         
         let count = dataSource.selectedObjectIDsCount()
         deleteBarButton.title = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "delete_n"),
+            #localize("delete_n"),
             count
         )
     }
@@ -2230,7 +2232,7 @@ extension ChatViewController: ChatViewDataSourceDelegate {
             scrollCompletion = nil
         }
         
-        if conversation.isGroup() {
+        if conversation.isGroup {
             updateOpenBallotsButton()
         }
     }
@@ -2721,7 +2723,7 @@ extension ChatViewController: UIScrollViewDelegate {
             
             // We need some extra space to the chat bar for the content/chat bubbles to compensate for the missing
             // spacing from the top of the next bubble.
-            if conversation.isGroup() {
+            if conversation.isGroup {
                 if conversation.lastMessage?.isOwnMessage ?? false {
                     newContentInset.bottom = newBottomInset + ChatViewConfiguration.bottomInset
                 }
@@ -2737,7 +2739,7 @@ extension ChatViewController: UIScrollViewDelegate {
             newScrollbarIndicatorInset.bottom = newBottomInset
         }
         else {
-            if conversation.isGroup() {
+            if conversation.isGroup {
                 newContentInset.bottom = ChatViewConfiguration.groupBottomInset
             }
             else {

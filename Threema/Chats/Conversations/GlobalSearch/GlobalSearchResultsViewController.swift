@@ -198,7 +198,7 @@ extension GlobalSearchResultsViewController: UITableViewDelegate {
         if case let .conversation(conversationID) = dataSource.itemIdentifier(for: indexPath) {
             entityManager.performAndWait {
                 guard let conversation = self.entityManager.entityFetcher
-                    .existingObject(with: conversationID) as? Conversation else {
+                    .existingObject(with: conversationID) as? ConversationEntity else {
                     return
                 }
                 

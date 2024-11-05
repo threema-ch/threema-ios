@@ -1,0 +1,12 @@
+/* (No Comment) */
+"advanced_settings_group_footer" = "N’activez pas ce paramètre à moins que l’équipe d’assistance de Threema ne vous le demande explicitement.  Il se peut que vous ne receviez pas de messages entrants lorsque ce paramètre est activé.";
+
+/* (No Comment) */
+"advanced_settings_group_title" = "Paramètres de support";
+
+/* (No Comment) */
+"safe_mode_switch" = "Mode de support avancé";
+
+/* (No Comment) */
+"sentry_switch" = "Désactiver la sentinelle";
+

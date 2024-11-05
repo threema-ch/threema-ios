@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 @objc protocol RestoreOptionDataViewControllerDelegate {
@@ -46,17 +47,17 @@ class RestoreOptionDataViewController: IDCreationPageViewController {
 
         hideKeyboardWhenTappedAround()
 
-        titleLabel.text = BundleUtil.localizedString(forKey: "restore_option_title")
+        titleLabel.text = #localize("restore_option_title")
         descriptionLabel.text = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "restore_option_data_description"),
+            #localize("restore_option_data_description"),
             ThreemaApp.currentName
         )
-        keepLocalButton.setTitle(BundleUtil.localizedString(forKey: "restore_option_data_keep_data"), for: .normal)
-        keepLocalLabel.text = BundleUtil.localizedString(forKey: "restore_option_data_keep_data_description")
-        deleteLocalButton.setTitle(BundleUtil.localizedString(forKey: "restore_option_data_delete_data"), for: .normal)
-        deleteLocalLabel.text = BundleUtil.localizedString(forKey: "restore_option_data_delete_data_description")
+        keepLocalButton.setTitle(#localize("restore_option_data_keep_data"), for: .normal)
+        keepLocalLabel.text = #localize("restore_option_data_keep_data_description")
+        deleteLocalButton.setTitle(#localize("restore_option_data_delete_data"), for: .normal)
+        deleteLocalLabel.text = #localize("restore_option_data_delete_data_description")
     
-        cancelButton.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
+        cancelButton.setTitle(#localize("cancel"), for: .normal)
         
         // add swipe right for cancel action
         let gestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(swipeAction))
@@ -79,10 +80,10 @@ extension RestoreOptionDataViewController {
         else if sender == deleteLocalButton {
             let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
             let message = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "restore_option_data_delete_data_explain"),
+                #localize("restore_option_data_delete_data_explain"),
                 ThreemaApp.currentName
             )
-            alert.showAlert(message, title: BundleUtil.localizedString(forKey: "safe_restore"))
+            alert.showAlert(message, title: #localize("safe_restore"))
         }
         else if sender == cancelButton {
             delegate?.optionDataCancelled()

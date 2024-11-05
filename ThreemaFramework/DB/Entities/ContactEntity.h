@@ -23,7 +23,7 @@
 
 #import "TMAManagedObject.h"
 
-@class BaseMessage, Conversation, ImageData;
+@class BaseMessage, ConversationEntity, ImageDataEntity;
 
 typedef NS_CLOSED_ENUM(NSInteger, TypingIndicator) {
     TypingIndicatorDefault = 0,
@@ -93,10 +93,14 @@ enum {
 /// TODO(ANDR-2452): Remove the forward security state when most of clients support 1.1 anyway
 @property (nonatomic, retain) NSNumber * forwardSecurityState;
 
+@property (nonatomic, retain, nullable) NSString * csi;
+@property (nonatomic, retain, nullable) NSString * jobTitle;
+@property (nonatomic, retain, nullable) NSString * department;
+
 // MARK: - DB Relationships
 
 /// Image Data received by Threema contact
-@property (nonatomic, retain, nullable) ImageData * contactImage;
+@property (nonatomic, retain, nullable) ImageDataEntity * contactImage;
 @property (nonatomic, retain, nullable) NSSet * conversations;
 @property (nonatomic, retain, nullable) NSSet * groupConversations;
 
@@ -144,13 +148,13 @@ NS_ASSUME_NONNULL_END
 
 @interface ContactEntity (CoreDataGeneratedAccessors)
 
-- (void)addConversationsObject:(nullable Conversation *)value;
-- (void)removeConversationsObject:(nullable Conversation *)value;
+- (void)addConversationsObject:(nullable ConversationEntity *)value;
+- (void)removeConversationsObject:(nullable ConversationEntity *)value;
 - (void)addConversations:(nullable NSSet *)values;
 - (void)removeConversations:(nullable NSSet *)values;
 
-- (void)addGroupConversationsObject:(nullable Conversation *)value;
-- (void)removeGroupConversationsObject:(nullable Conversation *)value;
+- (void)addGroupConversationsObject:(nullable ConversationEntity *)value;
+- (void)removeGroupConversationsObject:(nullable ConversationEntity *)value;
 - (void)addGroupConversations:(nullable NSSet *)values;
 - (void)removeGroupConversations:(nullable NSSet *)values;
 

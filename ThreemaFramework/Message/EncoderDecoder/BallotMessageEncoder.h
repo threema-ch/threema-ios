@@ -23,8 +23,9 @@
 #import "BoxBallotVoteMessage.h"
 #import "GroupBallotCreateMessage.h"
 #import "GroupBallotVoteMessage.h"
-
 #import "Ballot.h"
+
+@class BallotResultEntity;
 
 NS_ASSUME_NONNULL_BEGIN
 

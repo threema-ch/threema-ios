@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 class PublicKeyDetailsTableViewCell: ThemedCodeStackTableViewCell {
@@ -33,7 +34,7 @@ class PublicKeyDetailsTableViewCell: ThemedCodeStackTableViewCell {
             label.numberOfLines = 0
         }
         
-        label.text = BundleUtil.localizedString(forKey: "public_key")
+        label.text = #localize("public_key")
         
         return label
     }()

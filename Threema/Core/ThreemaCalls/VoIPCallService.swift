@@ -23,6 +23,7 @@ import Foundation
 import Intents
 import ThreemaEssentials
 import ThreemaFramework
+import ThreemaMacros
 
 protocol VoIPCallServiceDelegate: AnyObject {
     func callServiceFinishedProcess()
@@ -91,25 +92,25 @@ class VoIPCallService: NSObject {
         /// - Returns: Current localized call state string
         func localizedString() -> String {
             switch self {
-            case .idle: BundleUtil.localizedString(forKey: "call_status_idle")
-            case .sendOffer: BundleUtil.localizedString(forKey: "call_status_wait_ringing")
-            case .receivedOffer: BundleUtil.localizedString(forKey: "call_status_wait_ringing")
-            case .outgoingRinging: BundleUtil.localizedString(forKey: "call_status_ringing")
-            case .incomingRinging: BundleUtil.localizedString(forKey: "call_status_incom_ringing")
-            case .sendAnswer: BundleUtil.localizedString(forKey: "call_status_ringing")
-            case .receivedAnswer: BundleUtil.localizedString(forKey: "call_status_ringing")
-            case .initializing: BundleUtil.localizedString(forKey: "call_status_initializing")
-            case .calling: BundleUtil.localizedString(forKey: "call_status_calling")
-            case .reconnecting: BundleUtil.localizedString(forKey: "call_status_reconnecting")
-            case .ended: BundleUtil.localizedString(forKey: "call_end")
-            case .remoteEnded: BundleUtil.localizedString(forKey: "call_end")
-            case .rejected: BundleUtil.localizedString(forKey: "call_rejected")
-            case .rejectedBusy: BundleUtil.localizedString(forKey: "call_rejected_busy")
-            case .rejectedTimeout: BundleUtil.localizedString(forKey: "call_rejected_timeout")
-            case .rejectedDisabled: BundleUtil.localizedString(forKey: "call_rejected_disabled")
-            case .rejectedOffHours: BundleUtil.localizedString(forKey: "call_rejected")
-            case .rejectedUnknown: BundleUtil.localizedString(forKey: "call_rejected")
-            case .microphoneDisabled: BundleUtil.localizedString(forKey: "call_mic_access")
+            case .idle: #localize("call_status_idle")
+            case .sendOffer: #localize("call_status_wait_ringing")
+            case .receivedOffer: #localize("call_status_wait_ringing")
+            case .outgoingRinging: #localize("call_status_ringing")
+            case .incomingRinging: #localize("call_status_incom_ringing")
+            case .sendAnswer: #localize("call_status_ringing")
+            case .receivedAnswer: #localize("call_status_ringing")
+            case .initializing: #localize("call_status_initializing")
+            case .calling: #localize("call_status_calling")
+            case .reconnecting: #localize("call_status_reconnecting")
+            case .ended: #localize("call_end")
+            case .remoteEnded: #localize("call_end")
+            case .rejected: #localize("call_rejected")
+            case .rejectedBusy: #localize("call_rejected_busy")
+            case .rejectedTimeout: #localize("call_rejected_timeout")
+            case .rejectedDisabled: #localize("call_rejected_disabled")
+            case .rejectedOffHours: #localize("call_rejected")
+            case .rejectedUnknown: #localize("call_rejected")
+            case .microphoneDisabled: #localize("call_mic_access")
             }
         }
     }
@@ -534,7 +535,7 @@ extension VoIPCallService {
         callKitManager.reportIncomingCall(
             uuid: UUID(),
             contactIdentity: identity,
-            contactName: name ?? BundleUtil.localizedString(forKey: "identity_not_found_title"),
+            contactName: name ?? #localize("identity_not_found_title"),
             completion: completion
         )
     }
@@ -638,9 +639,9 @@ extension VoIPCallService {
             DDLogNotice(
                 "VoipCallService: [cid=\(offer.callID.callID)]: Update lastUpdate for conversation"
             )
-            businessInjector.entityManager.performSyncBlockAndSafe {
+            businessInjector.entityManager.performAndWaitSave {
                 if let conversation = self.businessInjector.entityManager.entityFetcher
-                    .conversation(forIdentity: offer.contactIdentity) {
+                    .conversationEntity(forIdentity: offer.contactIdentity) {
                     conversation.lastUpdate = Date.now
                 }
             }
@@ -1188,9 +1189,9 @@ extension VoIPCallService {
                         
                         let entityManager = BusinessInjector().entityManager
                         
-                        entityManager.performSyncBlockAndSafe {
+                        entityManager.performAndWaitSave {
                             if let conversation = entityManager.entityFetcher
-                                .conversation(forIdentity: action.contactIdentity) {
+                                .conversationEntity(forIdentity: action.contactIdentity) {
                                 conversation.lastUpdate = Date.now
                             }
                         }
@@ -1656,8 +1657,8 @@ extension VoIPCallService {
             
             UIAlertTemplate.showAlert(
                 owner: vc,
-                title: BundleUtil.localizedString(forKey: "group_call_error_already_in_call_title"),
-                message: BundleUtil.localizedString(forKey: "group_call_error_already_in_call_message")
+                title: #localize("group_call_error_already_in_call_title"),
+                message: #localize("group_call_error_already_in_call_message")
             )
         }
     }
@@ -2171,7 +2172,7 @@ extension VoIPCallService {
             let notificationType = self.businessInjector.settingsStore.notificationType
             var contact: ContactEntity?
             
-            self.businessInjector.entityManager.performSyncBlockAndSafe {
+            self.businessInjector.entityManager.performAndWaitSave {
                 contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.contactIdentity)
             }
             guard let contact else {
@@ -2192,7 +2193,7 @@ extension VoIPCallService {
                 notification.title = contact.displayName
             }
             
-            notification.body = BundleUtil.localizedString(forKey: "call_missed")
+            notification.body = #localize("call_missed")
             
             // Group notification together with others from the same contact
             notification.threadIdentifier = "SINGLE-\(identity)"
@@ -2300,11 +2301,11 @@ extension VoIPCallService {
             }
             
             var messageRead = true
-            var systemMessage: SystemMessage?
+            var systemMessage: SystemMessageEntity?
             
-            entityManager.performSyncBlockAndSafe {
+            entityManager.performAndWaitSave {
                 let conversation = entityManager.conversation(for: identity, createIfNotExisting: true)
-                systemMessage = entityManager.entityCreator.systemMessage(for: conversation)
+                systemMessage = entityManager.entityCreator.systemMessageEntity(for: conversation)
                 
                 systemMessage?.type = NSNumber(value: kSystemMessageCallEnded)
                 
@@ -2354,7 +2355,7 @@ extension VoIPCallService {
             }
         case .rejected:
             // add call message
-            entityManager.performBlockAndWait {
+            entityManager.performAndWait {
                 guard let identity = self.contactIdentity,
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
                     return
@@ -2364,7 +2365,7 @@ extension VoIPCallService {
             }
         case .rejectedTimeout:
             // add call message
-            entityManager.performBlockAndWait {
+            entityManager.performAndWait {
                 guard let identity = self.contactIdentity,
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
                     return
@@ -2374,7 +2375,7 @@ extension VoIPCallService {
                 utilities.unarchive(conversation)
             }
         case .rejectedBusy:
-            entityManager.performBlockAndWait {
+            entityManager.performAndWait {
                 // add call message
                 guard let identity = self.contactIdentity,
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
@@ -2385,7 +2386,7 @@ extension VoIPCallService {
                 utilities.unarchive(conversation)
             }
         case .rejectedOffHours:
-            entityManager.performBlockAndWait {
+            entityManager.performAndWait {
                 // add call message
                 guard let identity = self.contactIdentity,
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
@@ -2396,7 +2397,7 @@ extension VoIPCallService {
                 utilities.unarchive(conversation)
             }
         case .rejectedUnknown:
-            entityManager.performBlockAndWait {
+            entityManager.performAndWait {
                 // add call message
                 guard let identity = self.contactIdentity,
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
@@ -2408,7 +2409,7 @@ extension VoIPCallService {
             }
         case .rejectedDisabled:
             // add call message
-            entityManager.performBlockAndWait {
+            entityManager.performAndWait {
                 if self.callInitiator {
                     guard let identity = self.contactIdentity,
                           let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
@@ -2422,7 +2423,7 @@ extension VoIPCallService {
                 }
             }
         case .microphoneDisabled:
-            entityManager.performBlockAndWait {
+            entityManager.performAndWait {
                 guard let identity = self.contactIdentity,
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
                     return
@@ -2433,13 +2434,13 @@ extension VoIPCallService {
     }
     
     private func addRejectedMessageToConversation(contactIdentity: String, reason: Int) {
-        var systemMessage: SystemMessage?
+        var systemMessage: SystemMessageEntity?
         
         let entityManager = BusinessInjector().entityManager
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             if let conversation = entityManager.conversation(for: contactIdentity, createIfNotExisting: true),
                let contact = entityManager.entityFetcher.contact(for: contactIdentity) {
-                systemMessage = entityManager.entityCreator.systemMessage(for: conversation)
+                systemMessage = entityManager.entityCreator.systemMessageEntity(for: conversation)
                 systemMessage?.type = NSNumber(value: reason)
                 let callInfo = [
                     "DateString": DateFormatter.shortStyleTimeNoDate(Date()),

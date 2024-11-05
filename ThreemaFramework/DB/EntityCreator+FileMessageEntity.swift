@@ -30,7 +30,7 @@ extension EntityCreator {
     
     public func createFileMessageEntity(
         for item: URLSenderItem,
-        in conversation: Conversation,
+        in conversation: ConversationEntity,
         with origin: BlobOrigin,
         correlationID: String? = nil,
         webRequestID: String? = nil
@@ -40,8 +40,8 @@ extension EntityCreator {
             throw EntityCreatorError.missingData
         }
         
-        // Create file data
-        guard let fileData = fileData() else {
+        // Create file data entity
+        guard let fileData = fileDataEntity() else {
             throw EntityCreatorError.fileDataCreationFailed
         }
         
@@ -74,12 +74,12 @@ extension EntityCreator {
         }
         
         if entity.renderType == .voiceMessage || entity.renderType == .videoMessage {
-            entity.duration = item.getDuration() as NSNumber
+            entity.duration = item.getDuration()
         }
         
         if entity.renderType == .imageMessage || entity.renderType == .videoMessage {
-            entity.height = item.getHeight() as NSNumber
-            entity.width = item.getWidth() as NSNumber
+            entity.height = Int(item.getHeight())
+            entity.width = Int(item.getWidth())
         }
         
         // Thumbnail
@@ -95,10 +95,10 @@ extension EntityCreator {
                 thumbnailData = MediaConverter.jpegRepresentation(for: thumbnailImage)
             }
             
-            if let thumbnail = imageData() {
+            if let thumbnail = imageDataEntity() {
                 thumbnail.data = thumbnailData
-                thumbnail.height = thumbnailImage.size.height as NSNumber
-                thumbnail.width = thumbnailImage.size.width as NSNumber
+                thumbnail.height = Int16(thumbnailImage.size.height)
+                thumbnail.width = Int16(thumbnailImage.size.width)
                 entity.thumbnail = thumbnail
             }
         }

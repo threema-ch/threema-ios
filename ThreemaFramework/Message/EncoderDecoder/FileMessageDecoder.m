@@ -21,7 +21,6 @@
 #import "FileMessageDecoder.h"
 #import "FileMessageKeys.h"
 #import "NSString+Hex.h"
-#import "FileMessageEntity.h"
 #import "EntityCreator.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "ThreemaError.h"
@@ -41,7 +40,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
 
 @interface FileMessageDecoder ()
 
-@property Conversation *conversation;
+@property ConversationEntity *conversation;
 @property ContactEntity *sender;
 @property AbstractMessage *boxMessage;
 @property NSDictionary *json;
@@ -58,7 +57,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
     EntityManager *entityManager;
 }
 
-+ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
++ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
 
     FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError sender:sender conversation:conversation timeoutDownloadThumbnail:timeout];
@@ -68,7 +67,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
     [decoder decodeMessageFromBox:message];
 }
 
-+ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
++ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
 
     FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError sender:sender conversation:conversation timeoutDownloadThumbnail:timeout];
@@ -116,7 +115,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
 
 #pragma mark - private
 
-+ (instancetype)fileMessageDecoderOnCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError * _Nonnull))onError sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail {
++ (instancetype)fileMessageDecoderOnCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError * _Nonnull))onError sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail {
     FileMessageDecoder *decoder = [[FileMessageDecoder alloc] init];
     decoder.onCompletion = onCompletion;
     decoder.onError = onError;
@@ -289,7 +288,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
         }
 
         if (msg.thumbnail == nil && thumbnailData) {
-            ImageData *thumbnail = [entityManager.entityCreator imageData];
+            ImageDataEntity *thumbnail = [entityManager.entityCreator imageDataEntity];
             thumbnail.data = thumbnailData;
             
             // load image to determine size

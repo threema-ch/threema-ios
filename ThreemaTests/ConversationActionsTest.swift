@@ -70,11 +70,11 @@ class ConversationActionsTest: XCTestCase {
     
     private func createConversation(
         unreadMessageCount: Int,
-        category: ConversationCategory,
-        visibility: ConversationVisibility
-    ) -> Conversation {
+        category: ConversationEntity.Category,
+        visibility: ConversationEntity.Visibility
+    ) -> ConversationEntity {
         var contact: ContactEntity!
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         
         dbPreparer.save {
             contact = dbPreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)

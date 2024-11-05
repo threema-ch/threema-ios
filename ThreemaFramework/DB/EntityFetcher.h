@@ -19,18 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Conversation.h"
 #import "Ballot.h"
 #import "AbstractMessage.h"
 #import "AbstractGroupMessage.h"
-#import "GroupEntity.h"
-#import "GroupCallEntity.h"
-#import "LastGroupSyncRequest.h"
-#import "WebClientSession.h"
-#import "LastLoadedMessageIndex.h"
 #import "MyIdentityStore.h"
-#import "Nonce.h"
-@class DistributionListEntity;
+
+@class ConversationEntity, DistributionListEntity, GroupCallEntity, NonceEntity, GroupEntity, LastGroupSyncRequestEntity, WebClientSessionEntity;
 
 typedef enum : NSUInteger {
     ContactsAll,
@@ -60,17 +54,17 @@ typedef enum : NSUInteger {
 
 - (__kindof NSManagedObject *)existingObjectWithIDString:(NSString *)objectIDString;
 
-- (nullable BaseMessage *)ownMessageWithId:(nonnull NSData *)messageId conversation:(nonnull Conversation *)conversation NS_SWIFT_NAME(ownMessage(with:conversation:));
+- (nullable BaseMessage *)ownMessageWithId:(nonnull NSData *)messageId conversationEntity:(nonnull ConversationEntity *)conversation NS_SWIFT_NAME(ownMessage(with:conversation:));
 
-- (nullable BaseMessage *)messageWithId:(nonnull NSData *)messageId conversation:(nonnull Conversation *)conversation NS_SWIFT_NAME(message(with:conversation:));
+- (nullable BaseMessage *)messageWithId:(nonnull NSData *)messageId conversationEntity:(nonnull ConversationEntity *)conversation NS_SWIFT_NAME(message(with:conversation:));
 
-- (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessage *)message inConversation:(Conversation *)conversation;
+- (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessage *)message inConversationEntity:(ConversationEntity *)conversation;
 
-- (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
+- (NSArray *)messagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
 
-- (NSArray *)starredMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
+- (NSArray *)starredMessagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
 
-- (NSArray *)textMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
+- (NSArray *)textMessagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
 
 - (ContactEntity *)contactForId:(NSString *)identity NS_SWIFT_NAME(contact(for:));
 
@@ -153,19 +147,19 @@ typedef enum : NSUInteger {
 
 - (NSString *)displayNameForContactId:(NSString *)identity NS_SWIFT_NAME(displayName(for:));
 
-- (Conversation *)conversationForContact:(ContactEntity *)contact NS_SWIFT_NAME(conversation(for:));
+- (ConversationEntity *)conversationEntityForContact:(ContactEntity *)contact NS_SWIFT_NAME(conversation(for:));
 
-- (Conversation *)conversationForIdentity:(NSString *)identity;
+- (ConversationEntity *)conversationEntityForIdentity:(NSString *)identity;
 
-- (nullable Conversation *)conversationForDistributionList:(nonnull DistributionListEntity *)distributionList;
+- (nullable ConversationEntity *)conversationEntityForDistributionList:(nonnull DistributionListEntity *)distributionList;
 
 - (NSArray *)conversationsForMember:(ContactEntity *)contact;
 
-- (Conversation *)conversationForGroupMessage:(AbstractGroupMessage *)message;
+- (ConversationEntity *)conversationEntityForGroupMessage:(AbstractGroupMessage *)message;
 
-- (nullable Conversation *)conversationForGroupId:(nonnull NSData *)groupId creator:(nonnull NSString *)creator NS_SWIFT_NAME(conversation(for:creator:));
+- (nullable ConversationEntity *)conversationEntityForGroupId:(nonnull NSData *)groupId creator:(nonnull NSString *)creator NS_SWIFT_NAME(conversationEntity(for:creator:));
 
-- (nullable Conversation *)conversationForDistributionListID:(nonnull NSNumber *)distributionListId
+- (nullable ConversationEntity *)conversationEntityForDistributionListID:(nonnull NSNumber *)distributionListId
     NS_SWIFT_NAME(conversation(for:));
 
 - (Ballot *)ballotForBallotId:(NSData *)ballotId NS_SWIFT_NAME(ballot(for:));
@@ -174,7 +168,7 @@ typedef enum : NSUInteger {
 
 - (BOOL)isMessageAlreadyInDb:(AbstractMessage *)message;
 
-- (nullable NSArray<Nonce *> *)allNonces;
+- (nullable NSArray<NonceEntity *> *)allNonceEntities;
 
 - (BOOL)isNonceAlreadyInDB:(NSData *)nonce NS_SWIFT_NAME(isNonceAlreadyInDB(nonce:));
 
@@ -185,13 +179,13 @@ typedef enum : NSUInteger {
 
 - (GroupEntity *)groupEntityForGroupId:(NSData *)groupId groupCreator:(NSString *)groupCreator NS_SWIFT_NAME(groupEntity(for:with:));
 
-- (nullable GroupEntity *)groupEntityForConversation:(nonnull Conversation *)conversation;
+- (nullable GroupEntity *)groupEntityForConversationEntity:(nonnull ConversationEntity *)conversation;
 
-- (nullable DistributionListEntity *)distributionListEntityForConversation:(nonnull Conversation *)conversation;
+- (nullable DistributionListEntity *)distributionListEntityForConversationEntity:(nonnull ConversationEntity *)conversation;
 
 - (nullable DistributionListEntity *) distributionListEntityForDistributionListID:(nonnull NSNumber *)distributionListID;
 
-- (LastGroupSyncRequest *)lastGroupSyncRequestFor:(NSData *)groupId groupCreator:(NSString *)groupCreator sinceDate:(NSDate *)sinceDate;
+- (LastGroupSyncRequestEntity *)lastGroupSyncRequestFor:(NSData *)groupId groupCreator:(NSString *)groupCreator sinceDate:(NSDate *)sinceDate;
 
 - (NSFetchRequest *)fetchRequestForEntity:(NSString *)entityName;
 
@@ -208,31 +202,31 @@ typedef enum : NSUInteger {
 
 - (NSBatchUpdateResult *)executeBatchUpdateRequest:(NSBatchUpdateRequest *)batchUpdateRequest;
 
-- (NSInteger)countBallotsForConversation:(Conversation *)conversation;
+- (NSInteger)countBallotsForConversationEntity:(ConversationEntity *)conversation;
 
-- (NSInteger)countOpenBallotsForConversation:(Conversation *)conversation;
+- (NSInteger)countOpenBallotsForConversationEntity:(ConversationEntity *)conversation;
 
-- (NSArray *)imageMessagesForConversation:(Conversation *)conversation;
+- (NSArray *)imageMessagesForConversationEntity:(ConversationEntity *)conversation;
 
-- (NSArray *)videoMessagesForConversation:(Conversation *)conversation;
+- (NSArray *)videoMessagesForConversationEntity:(ConversationEntity *)conversation;
 
-- (NSArray *)fileMessagesForConversation:(Conversation *)conversation;
+- (NSArray *)fileMessagesForConversationEntity:(ConversationEntity *)conversation;
 
-- (NSArray *)filesMessagesFilteredForPhotoBrowserForConversation:(Conversation *)conversation;
+- (NSArray *)filesMessagesFilteredForPhotoBrowserForConversationEntity:(ConversationEntity *)conversation;
 
-- (NSArray *)unreadMessagesForConversation:(Conversation *)conversation;
+- (NSArray *)unreadMessagesForConversationEntity:(ConversationEntity *)conversation;
 
-- (NSInteger)countMediaMessagesForConversation:(Conversation *)conversation;
+- (NSInteger)countMediaMessagesForConversationEntity:(ConversationEntity *)conversation;
 
-- (NSInteger)countStarredMessagesInConversation:(Conversation *)conversation;
+- (NSInteger)countStarredMessagesInConversationEntity:(ConversationEntity *)conversation;
 
-- (NSInteger)countUnreadMessagesForConversation:(Conversation *)conversation;
+- (NSInteger)countUnreadMessagesForConversationEntity:(ConversationEntity *)conversation;
 
 - (NSInteger)countMessagesForContactWithIdentity:(nonnull NSString *)identity;
 
 - (NSInteger)countMessagesForContact:(nonnull ContactEntity *)contact;
 
-- (NSInteger)countMessagesForContactInConversation:(nonnull ContactEntity *)contact forConversation:(Conversation *)conversation;
+- (NSInteger)countMessagesForContactInConversation:(nonnull ContactEntity *)contact forConversationEntity:(ConversationEntity *)conversation;
 
 - (NSFetchedResultsController *)fetchedResultsControllerForContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members;
 
@@ -247,11 +241,11 @@ typedef enum : NSUInteger {
 
 - (NSInteger)countArchivedConversations;
 
-- (WebClientSession *)webClientSessionForInitiatorPermanentPublicKeyHash:(NSString *)hash;
+- (WebClientSessionEntity *)webClientSessionEntityForInitiatorPermanentPublicKeyHash:(NSString *)hash;
 
-- (WebClientSession *)webClientSessionForPrivateKey:(NSData *)privateKey;
+- (WebClientSessionEntity *)webClientSessionEntityForPrivateKey:(NSData *)privateKey;
 
-- (WebClientSession *)activeWebClientSession;
+- (WebClientSessionEntity *)activeWebClientSessionEntity;
 
 - (NSArray *)allWebClientSessions;
 
@@ -265,7 +259,7 @@ typedef enum : NSUInteger {
 
 - (NSArray *)allFileMessagesWithJsonCaptionButEmptyCaption;
 
-- (nullable Conversation *)legacyConversationForGroupId:(nullable NSData *)groupId NS_SWIFT_NAME(legacyConversation(for:)); DEPRECATED_MSG_ATTRIBUTE("This is deprecated and will be removed together with the web client code. DO NOT USE THIS!");
+- (nullable ConversationEntity *)legacyConversationForGroupId:(nullable NSData *)groupId NS_SWIFT_NAME(legacyConversation(for:)); DEPRECATED_MSG_ATTRIBUTE("This is deprecated and will be removed together with the web client code. DO NOT USE THIS!");
 
 - (NSInteger)countFileMessagesWithNoMIMEType;
 

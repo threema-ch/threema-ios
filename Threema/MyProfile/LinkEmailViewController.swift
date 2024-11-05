@@ -20,9 +20,11 @@
 
 import Foundation
 import MBProgressHUD
+import ThreemaMacros
 
 class LinkEmailViewController: ThemedTableViewController {
     
+    @IBOutlet var emailTextFieldTitle: UILabel!
     @IBOutlet var emailTextField: UITextField!
     var serverName = ""
     
@@ -30,9 +32,11 @@ class LinkEmailViewController: ThemedTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.title = BundleUtil.localizedString(forKey: "link_email_title")
-        navigationItem.rightBarButtonItem?.title = BundleUtil.localizedString(forKey: "save")
-        navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "cancel")
+        navigationItem.title = #localize("link_email_title")
+        navigationItem.rightBarButtonItem?.title = #localize("save")
+        navigationItem.leftBarButtonItem?.title = #localize("cancel")
+        emailTextField.placeholder = #localize("link_email_textfield_placeholder")
+        emailTextFieldTitle.text = #localize("link_email_textfield_title")
         emailTextField.keyboardAppearance = UIKeyboardAppearance.default
         
         ServerInfoProviderFactory.makeServerInfoProvider()
@@ -66,13 +70,13 @@ class LinkEmailViewController: ThemedTableViewController {
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         if ThreemaApp.current == .onPrem {
             return String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "myprofile_link_email_onprem_footer"),
+                #localize("myprofile_link_email_onprem_footer"),
                 serverName,
                 ThreemaApp.currentName
             )
         }
         return String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "myprofile_link_email_footer"),
+            #localize("myprofile_link_email_footer"),
             ThreemaApp.currentName
         )
     }
@@ -98,9 +102,9 @@ class LinkEmailViewController: ThemedTableViewController {
                 if let text = emailTextField.text, !text.isEmpty, !linked {
                     UIAlertTemplate.showAlert(
                         owner: self,
-                        title: BundleUtil.localizedString(forKey: "link_email_sent_title"),
+                        title: #localize("link_email_sent_title"),
                         message: String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "link_email_sent_message"), text
+                            #localize("link_email_sent_message"), text
                         ), actionOk: { [self] _ in
                             dismiss(animated: true)
                         }
@@ -115,8 +119,8 @@ class LinkEmailViewController: ThemedTableViewController {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
                 UIAlertTemplate.showAlert(
                     owner: self,
-                    title: BundleUtil.localizedString(forKey: "invalid_email_address_title"),
-                    message: BundleUtil.localizedString(forKey: "invalid_email_address_message"),
+                    title: #localize("invalid_email_address_title"),
+                    message: #localize("invalid_email_address_message"),
                     actionOk: nil
                 )
             }

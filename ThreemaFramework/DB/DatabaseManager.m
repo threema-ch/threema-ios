@@ -745,7 +745,7 @@ BOOL doMigrateInProgress = false;
     }
     
     if (object.objectID.isTemporaryID) {
-        DDLogError(@"[t-dirty-objects] We are dirtying a temporary ID. This is probably no intended!");
+        DDLogError(@"[t-dirty-objects] We are dirtying a temporary ID. This is probably not intended!");
     }
 
     [self addDirtyObjectID:object.objectID];

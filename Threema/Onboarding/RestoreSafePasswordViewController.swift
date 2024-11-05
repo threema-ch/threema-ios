@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 class RestoreSafePasswordViewController: IDCreationPageViewController {
@@ -38,13 +39,13 @@ class RestoreSafePasswordViewController: IDCreationPageViewController {
         hideKeyboardWhenTappedAround()
         keyboardResize = KeyboardResizeCenterY(parent: view, resize: mainContentView)
 
-        descriptionLabel.text = BundleUtil.localizedString(forKey: "safe_enter_password")
+        descriptionLabel.text = #localize("safe_enter_password")
         passwordField.delegate = self
-        passwordField.placeholder = BundleUtil.localizedString(forKey: "Password")
+        passwordField.placeholder = #localize("Password")
         passwordField.accessibilityIdentifier = "RestoreSafePasswordViewControllerPasswordTextfield"
         passwordField.becomeFirstResponder()
-        cancelButton.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
-        okButton.setTitle(BundleUtil.localizedString(forKey: "ok"), for: .normal)
+        cancelButton.setTitle(#localize("cancel"), for: .normal)
+        okButton.setTitle(#localize("ok"), for: .normal)
         okButton.accessibilityIdentifier = "RestoreSafePasswordViewControllerOkButton"
 
         forgotPasswordTappableLabel.tapDelegate = self
@@ -58,7 +59,7 @@ class RestoreSafePasswordViewController: IDCreationPageViewController {
         ]
         
         let faqLabelText = NSAttributedString(
-            string: BundleUtil.localizedString(forKey: "restore_option_help_link_text"),
+            string: #localize("restore_option_help_link_text"),
             attributes: linkAttributes
         )
         forgotPasswordTappableLabel.attributedText = faqLabelText

@@ -25,7 +25,7 @@
 
 @interface LocationViewController : UIViewController <MKAnnotation, MKMapViewDelegate>
 
-@property (nonatomic, strong) LocationMessage *locationMessage;
+@property (nonatomic, strong) LocationMessageEntity *locationMessage;
 
 @property (weak, nonatomic) IBOutlet MKMapView *mapView;
 @property (weak, nonatomic) IBOutlet UISegmentedControl *mapTypeControl;
@@ -39,6 +39,6 @@
 - (IBAction)gotoUserLocationButtonTapped:(id)sender;
 - (IBAction)gotoLocationButtonTapped:(id)sender;
 
-- (instancetype)initWithLocationMessage:(LocationMessage *)locationMessage;
+- (instancetype)initWithLocationMessage:(LocationMessageEntity *)locationMessage;
 
 @end

@@ -44,6 +44,11 @@ class TaskManagerMock: NSObject, TaskManagerProtocol {
         addedTasks.append(taskDefinition)
         return nil
     }
+    
+    func addWithWait(taskDefinition: TaskDefinitionProtocol) -> (WaitTask, CancelableTask?) {
+        addedTasks.append(taskDefinition)
+        return (DefaultWaitTask(completionTask: Task { }), nil)
+    }
 
     func add(
         taskDefinition: TaskDefinitionProtocol,

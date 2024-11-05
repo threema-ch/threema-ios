@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct CopyLabelModifier: ViewModifier {
     let value: String?
@@ -28,7 +29,7 @@ struct CopyLabelModifier: ViewModifier {
             Button(action: {
                 UIPasteboard.general.string = value ?? ""
             }) {
-                Text("copy".localized)
+                Text(#localize("copy"))
                 Image(systemName: "doc.on.doc")
             }
         } label: {

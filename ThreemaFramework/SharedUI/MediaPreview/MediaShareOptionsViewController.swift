@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 class MediaShareOptionsViewController: ThemedTableViewController {
@@ -47,9 +48,9 @@ class MediaShareOptionsViewController: ThemedTableViewController {
                 
         options!.imageQuality = BundleUtil.localizedString(forKey: UserSettings.shared().imageSize)
         sendAsFileSwitch.isOn = options?.sendAsFile ?? false
-        navigationBar.title = BundleUtil.localizedString(forKey: "more_options")
-        sendAsFileCell.textLabel?.text = BundleUtil.localizedString(forKey: "send_as_file")
-        saveButton.title = BundleUtil.localizedString(forKey: "Done")
+        navigationBar.title = #localize("more_options")
+        sendAsFileCell.textLabel?.text = #localize("send_as_file")
+        saveButton.title = #localize("Done")
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -58,11 +59,11 @@ class MediaShareOptionsViewController: ThemedTableViewController {
     }
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        BundleUtil.localizedString(forKey: "send_as_file_description")
+        #localize("send_as_file_description")
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        BundleUtil.localizedString(forKey: "send_as_file_title")
+        #localize("send_as_file_title")
     }
     
     @IBAction func donePressed(_ sender: Any) {

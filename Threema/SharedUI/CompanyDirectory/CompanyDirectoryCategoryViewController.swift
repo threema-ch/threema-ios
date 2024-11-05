@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 class CompanyDirectoryCategoryViewController: ThemedTableViewController {
     
@@ -39,7 +40,7 @@ class CompanyDirectoryCategoryViewController: ThemedTableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         if indexPath.row == 0 {
-            cell.textLabel?.text = BundleUtil.localizedString(forKey: "all")
+            cell.textLabel?.text = #localize("all")
             cell.accessoryType = companyDirectoryViewController!.filterArray.count == 0 ? .checkmark : .none
         }
         else {

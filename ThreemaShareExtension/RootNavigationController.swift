@@ -24,15 +24,16 @@ import Intents
 import LocalAuthentication
 import PromiseKit
 import ThreemaFramework
+import ThreemaMacros
 
 class RootNavigationController: UINavigationController {
     
-    var recipientConversations: Set<Conversation>?
+    var recipientConversations: Set<ConversationEntity>?
     var passcodeVC: JKLLockScreenViewController?
     var passcodeTryCount = 0
     var isAuthorized = false
     
-    var selectedIdentity: Conversation?
+    var selectedIdentity: ConversationEntity?
     
     let itemLoader = ItemLoader()
     var itemSender = ItemSender()
@@ -79,17 +80,17 @@ class RootNavigationController: UINavigationController {
                         recipientConversations.insert(conversation)
                     }
                     else {
-                        recipientConversations = Set<Conversation>()
+                        recipientConversations = Set<ConversationEntity>()
                         recipientConversations?.insert(conversation)
                     }
                 }
-                else if let group = managedObject as? Conversation {
+                else if let group = managedObject as? ConversationEntity {
                     self.selectedIdentity = group
                     if var recipientConversations {
                         recipientConversations.insert(group)
                     }
                     else {
-                        recipientConversations = Set<Conversation>()
+                        recipientConversations = Set<ConversationEntity>()
                         recipientConversations?.insert(group)
                     }
                 }
@@ -121,7 +122,7 @@ class RootNavigationController: UINavigationController {
         _ = loadItemsFromContext()
         
         if let selectedIdentity {
-            recipientConversations = Set<Conversation>()
+            recipientConversations = Set<ConversationEntity>()
             recipientConversations?.insert(selectedIdentity)
             presentMediaOrTextPreview()
         }
@@ -161,7 +162,7 @@ class RootNavigationController: UINavigationController {
         
         guard let previewViewController else {
             let err = "Could not create preview view controller!"
-            DDLogError(err)
+            DDLogError("\(err)")
             fatalError(err)
         }
         
@@ -185,7 +186,7 @@ class RootNavigationController: UINavigationController {
             completion: { [weak self] data, sendAsFile, captions in
                 guard let dataItems = data as? [URL] else {
                     let err = "Invalid format for data items from media preview"
-                    DDLogError(err)
+                    DDLogError("\(err)")
                     fatalError(err)
                 }
                 
@@ -203,7 +204,7 @@ class RootNavigationController: UINavigationController {
         )
         
         pushViewController(previewViewController, animated: true)
-        let title = BundleUtil.localizedString(forKey: "cancel")
+        let title = #localize("cancel")
         previewViewController.navigationItem.leftBarButtonItem = UIBarButtonItem(
             title: title,
             style: .plain,
@@ -219,21 +220,21 @@ class RootNavigationController: UINavigationController {
     private func presentContactPicker() {
         guard let pickerController = ContactGroupPickerViewController.pickerFromStoryboard(withDelegate: self) else {
             let err = "Could not create sharing UI"
-            DDLogError(err)
+            DDLogError("\(err)")
             fatalError(err)
         }
         
         picker = pickerController.topViewController as? ContactGroupPickerViewController
         guard let picker else {
             let err = "Could not create Contact Picker"
-            DDLogError(err)
+            DDLogError("\(err)")
             fatalError(err)
         }
         picker.delegate = self
         picker.enableMultiSelection = true
         picker.enableTextInput = false
         picker.enableControlView = false
-        picker.rightBarButtonTitle = BundleUtil.localizedString(forKey: "next")
+        picker.rightBarButtonTitle = #localize("next")
         picker.delegateDisablesSearchController = true
         
         navigationItem.backBarButtonItem = nil
@@ -248,7 +249,7 @@ class RootNavigationController: UINavigationController {
             itemLoader.filterTextItems()
             let items = itemLoader.loadItems()
             _ = itemLoader.generatePreviewText(items: items).done { text, range in
-                var convs: [Conversation]?
+                var convs: [ConversationEntity]?
                 if let recipientConversations = self.recipientConversations {
                     convs = Array(recipientConversations)
                 }
@@ -271,8 +272,8 @@ class RootNavigationController: UINavigationController {
         }
         else {
             // Not allowed
-            let err = "illegal item type provided"
-            DDLogError(err)
+            let err = "Illegal item type provided"
+            DDLogError("\(err)")
             fatalError(err)
         }
     }
@@ -280,14 +281,14 @@ class RootNavigationController: UINavigationController {
     @objc private func chooseContacts() {
         guard let pickerController = ContactGroupPickerViewController.pickerFromStoryboard(withDelegate: self) else {
             let err = "Could not create sharing UI"
-            DDLogError(err)
+            DDLogError("\(err)")
             fatalError(err)
         }
         
         picker = pickerController.topViewController as? ContactGroupPickerViewController
         guard let picker else {
             let err = "Could not create Contact Picker"
-            DDLogError(err)
+            DDLogError("\(err)")
             fatalError(err)
         }
         picker.delegate = self
@@ -300,7 +301,7 @@ class RootNavigationController: UINavigationController {
         }
         
         let backButton = UIBarButtonItem()
-        backButton.title = BundleUtil.localizedString(forKey: "back")
+        backButton.title = #localize("back")
         navigationItem.backBarButtonItem = backButton
         
         picker.navigationItem.leftBarButtonItem = nil
@@ -343,8 +344,12 @@ class RootNavigationController: UINavigationController {
         }
     }
     
-    private func presentTextPreview(previewText: String?, selectedText: NSRange?, conversations: [Conversation?]?) {
-        var selectedConversations: [Conversation]?
+    private func presentTextPreview(
+        previewText: String?,
+        selectedText: NSRange?,
+        conversations: [ConversationEntity?]?
+    ) {
+        var selectedConversations: [ConversationEntity]?
         
         if let conversations {
             selectedConversations = conversations.compactMap { $0 }
@@ -361,14 +366,14 @@ class RootNavigationController: UINavigationController {
         }
         
         textPreview.navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: BundleUtil.localizedString(forKey: "send"),
+            title: #localize("send"),
             style: .done,
             target: self,
             action: #selector(sendText)
         )
         
         textPreview.navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: BundleUtil.localizedString(forKey: "cancel"),
+            title: #localize("cancel"),
             style: .plain,
             target: self,
             action: #selector(cancelTapped)
@@ -408,11 +413,11 @@ class RootNavigationController: UINavigationController {
     
     private func showNeedStartAppFirst() {
         let title = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "need_to_start_app_first_title"),
+            #localize("need_to_start_app_first_title"),
             ThreemaApp.currentName
         )
         let message = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "need_to_start_app_first_message"),
+            #localize("need_to_start_app_first_message"),
             ThreemaApp.currentName
         )
         showAlert(with: title, message: message, closeOnOK: true)
@@ -467,15 +472,15 @@ class RootNavigationController: UINavigationController {
                 Task { @MainActor in
                     let title: String! =
                         if LAContext().unlockType() == .faceID {
-                            BundleUtil.localizedString(forKey: "alert_biometrics_changed_title_face")
+                            #localize("alert_biometrics_changed_title_face")
                         }
                         else {
-                            BundleUtil.localizedString(forKey: "alert_biometrics_changed_title_touch")
+                            #localize("alert_biometrics_changed_title_touch")
                         }
                     UIAlertTemplate.showAlert(
                         owner: vc,
                         title: title,
-                        message: BundleUtil.localizedString(forKey: "alert_biometrics_changed_message")
+                        message: #localize("alert_biometrics_changed_message")
                     ) { _ in
                     }
                 }
@@ -497,8 +502,8 @@ class RootNavigationController: UINavigationController {
     
     private func checkContextItems() -> Bool {
         if extensionContext?.inputItems.isEmpty == true {
-            let title = BundleUtil.localizedString(forKey: "error_message_no_items_title")
-            let message = BundleUtil.localizedString(forKey: "error_message_no_items_message")
+            let title = #localize("error_message_no_items_title")
+            let message = #localize("error_message_no_items_message")
             showAlert(with: title, message: message, closeOnOK: true)
             return false
         }
@@ -527,10 +532,6 @@ class RootNavigationController: UINavigationController {
             showNeedStartAppFirst()
             return false
         }
-
-        if UserSettings.shared().blockCommunication {
-            return false
-        }
         
         if !checkPasscode() {
             return false
@@ -550,7 +551,7 @@ class RootNavigationController: UINavigationController {
         }
         guard let viewController = vc else {
             let err = "Could not get view controller to show alert on"
-            DDLogError(err)
+            DDLogError("\(err)")
             fatalError(err)
         }
         UIAlertTemplate.showAlert(owner: viewController, title: title, message: message, actionOk: { _ in
@@ -651,8 +652,8 @@ class RootNavigationController: UINavigationController {
             }
             
             if !self.canConnect() {
-                let title = BundleUtil.localizedString(forKey: "cannot_connect_title")
-                let message = BundleUtil.localizedString(forKey: "cannot_connect_message")
+                let title = #localize("cannot_connect_title")
+                let message = #localize("cannot_connect_message")
                 self.showAlert(with: title, message: message, closeOnOK: false)
             }
         }.ensure(on: DispatchQueue.main) {
@@ -734,13 +735,13 @@ extension RootNavigationController: ContactGroupPickerDelegate {
         renderType: NSNumber!,
         sendAsFile: Bool
     ) {
-        recipientConversations = Set<Conversation>()
+        recipientConversations = Set<ConversationEntity>()
         
         if contactPicker.additionalTextToSend != nil {
             itemSender.addText(text: contactPicker.additionalTextToSend)
         }
         
-        for case let conversation as Conversation in conversations {
+        for case let conversation as ConversationEntity in conversations {
             recipientConversations?.insert(conversation)
         }
         

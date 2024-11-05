@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import PromiseKit
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 class ThreemaWebViewController: ThemedTableViewController {
@@ -67,7 +68,7 @@ class ThreemaWebViewController: ThemedTableViewController {
             ErrorHandler.abortWithError(nil)
         }
         
-        title = BundleUtil.localizedString(forKey: "webClientSession_title")
+        title = #localize("webClientSession_title")
         
         ServerInfoProviderFactory.makeServerInfoProvider()
             .webServer(ipv6: UserSettings.shared().enableIPv6) { webServerInfo, _ in
@@ -99,7 +100,7 @@ class ThreemaWebViewController: ThemedTableViewController {
         cleanupWebClientSessions()
         
         cameraButton.image = UIImage(systemName: "qrcode.viewfinder")!.withTint(.primary)
-        cameraButton.accessibilityLabel = BundleUtil.localizedString(forKey: "scan_qr")
+        cameraButton.accessibilityLabel = #localize("scan_qr")
         
         ThreemaWebQRCodeScanner.shared.delegate = self
         
@@ -141,9 +142,9 @@ class ThreemaWebViewController: ThemedTableViewController {
         NotificationCenter.default.post(name: .showDesktopSettings, object: nil)
     }
     
-    private func presentActionSheetForSession(_ webClientSession: WebClientSession, indexPath: IndexPath) {
+    private func presentActionSheetForSession(_ webClientSession: WebClientSessionEntity, indexPath: IndexPath) {
         let alert = UIAlertController(
-            title: BundleUtil.localizedString(forKey: "webClientSession_actionSheetTitle"),
+            title: #localize("webClientSession_actionSheetTitle"),
             message: nil,
             preferredStyle: .actionSheet
         )
@@ -178,12 +179,12 @@ class ThreemaWebViewController: ThemedTableViewController {
         alert
             .addAction(
                 UIAlertAction(
-                    title: BundleUtil.localizedString(forKey: "webClientSession_actionSheet_renameSession"),
+                    title: #localize("webClientSession_actionSheet_renameSession"),
                     style: .default
                 ) { _ in
                     
                     let renameAlert = UIAlertController(
-                        title: BundleUtil.localizedString(forKey: "webClientSession_sessionName"),
+                        title: #localize("webClientSession_sessionName"),
                         message: nil,
                         preferredStyle: .alert
                     )
@@ -193,12 +194,12 @@ class ThreemaWebViewController: ThemedTableViewController {
                             textfield.text = sessionName
                         }
                         else {
-                            textfield.placeholder = BundleUtil.localizedString(forKey: "webClientSession_unnamed")
+                            textfield.placeholder = #localize("webClientSession_unnamed")
                         }
                     }
                     
                     let saveAction = UIAlertAction(
-                        title: BundleUtil.localizedString(forKey: "save"),
+                        title: #localize("save"),
                         style: .default
                     ) { _ in
                         let textField = renameAlert.textFields![0]
@@ -211,7 +212,7 @@ class ThreemaWebViewController: ThemedTableViewController {
                     renameAlert.addAction(saveAction)
                     
                     let cancelAction = UIAlertAction(
-                        title: BundleUtil.localizedString(forKey: "cancel"),
+                        title: #localize("cancel"),
                         style: .cancel
                     ) { _ in
                         self.tableView.deselectRow(at: indexPath, animated: true)
@@ -224,14 +225,14 @@ class ThreemaWebViewController: ThemedTableViewController {
         
         // Delete action
         alert.addAction(UIAlertAction(
-            title: BundleUtil.localizedString(forKey: "webClientSession_actionSheet_deleteSession"),
+            title: #localize("webClientSession_actionSheet_deleteSession"),
             style: .destructive
         ) { _ in
             self.deleteWebClientSession(webClientSession)
         })
         
         // Cancel action
-        alert.addAction(UIAlertAction(title: BundleUtil.localizedString(forKey: "cancel"), style: .cancel) { _ in
+        alert.addAction(UIAlertAction(title: #localize("cancel"), style: .cancel) { _ in
             self.tableView.deselectRow(at: indexPath, animated: true)
         })
         
@@ -245,12 +246,12 @@ class ThreemaWebViewController: ThemedTableViewController {
     
     /// Will delete all not persistent sessions where are older then 24 hours and not active
     private func cleanupWebClientSessions() {
-        guard let allSessions = entityManager.entityFetcher.allWebClientSessions() as? [WebClientSession] else {
+        guard let allSessions = entityManager.entityFetcher.allWebClientSessions() as? [WebClientSessionEntity] else {
             return
         }
         
         for session in allSessions {
-            if session.permanent?.boolValue == true {
+            if session.permanent.boolValue == true {
                 continue
             }
             
@@ -264,7 +265,7 @@ class ThreemaWebViewController: ThemedTableViewController {
         }
     }
     
-    private func deleteWebClientSession(_ session: WebClientSession) {
+    private func deleteWebClientSession(_ session: WebClientSessionEntity) {
         WCSessionManager.shared.stopAndDeleteSession(session)
         
         if fetchedResultsController!.fetchedObjects!.isEmpty {
@@ -291,7 +292,7 @@ class ThreemaWebViewController: ThemedTableViewController {
         switch sections[section] {
         case .webSessions:
             if !(fetchedResultsController?.fetchedObjects?.isEmpty ?? true) {
-                BundleUtil.localizedString(forKey: "webClientSession_sessions_header")
+                #localize("webClientSession_sessions_header")
             }
             else {
                 nil
@@ -306,18 +307,18 @@ class ThreemaWebViewController: ThemedTableViewController {
         case .web:
             let mdmSetup = MDMSetup(setup: false)!
             if mdmSetup.existsMdmKey(MDM_KEY_DISABLE_WEB) {
-                return BundleUtil.localizedString(forKey: "disabled_by_device_policy")
+                return #localize("disabled_by_device_policy")
             }
             else {
                 return String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "settings_threema_web_connectioninfo"),
+                    #localize("settings_threema_web_connectioninfo"),
                     ThreemaApp.currentName,
                     ThreemaApp.currentName
                 )
             }
         case .webSessions:
             return String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "webClientSession_add_footer"),
+                #localize("webClientSession_add_footer"),
                 ThreemaWebQRCodeScanner.shared.downloadString,
                 ThreemaWebQRCodeScanner.shared.threemaWebServerURL
             )
@@ -339,7 +340,7 @@ class ThreemaWebViewController: ThemedTableViewController {
                 withIdentifier: "WebClientSessionCell",
                 for: indexPath
             ) as! WebClientSessionCell
-            cell.webClientSession = fetchedResultsController!.fetchedObjects![indexPath.row] as? WebClientSession
+            cell.webClientSession = fetchedResultsController!.fetchedObjects![indexPath.row] as? WebClientSessionEntity
             cell.viewController = self
             cell.setupCell()
             return cell
@@ -359,7 +360,7 @@ class ThreemaWebViewController: ThemedTableViewController {
             break // Do nothing
             
         case .webSessions:
-            let webClientSession = fetchedResultsController!.fetchedObjects![indexPath.row] as! WebClientSession
+            let webClientSession = fetchedResultsController!.fetchedObjects![indexPath.row] as! WebClientSessionEntity
             presentActionSheetForSession(webClientSession, indexPath: indexPath)
         }
     }
@@ -374,7 +375,7 @@ class ThreemaWebViewController: ThemedTableViewController {
         forRowAt indexPath: IndexPath
     ) {
         if editingStyle == .delete {
-            let webClientSession = fetchedResultsController!.fetchedObjects![indexPath.row] as! WebClientSession
+            let webClientSession = fetchedResultsController!.fetchedObjects![indexPath.row] as! WebClientSessionEntity
             deleteWebClientSession(webClientSession)
         }
     }
@@ -415,17 +416,17 @@ extension ThreemaWebViewController: ThreemaWebQRCodeScannerDelegate {
            let resultURL = URL(string: result),
            let parsedURL = try? URLParser.parse(url: resultURL),
            case .deviceGroupJoinRequestOffer = parsedURL {
-            title = BundleUtil.localizedString(forKey: "settings_threema_web_multi_device_qr_code_title")
+            title = #localize("settings_threema_web_multi_device_qr_code_title")
             message = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "settings_threema_web_multi_device_qr_code_message"),
-                BundleUtil.localizedString(forKey: "settings"),
-                BundleUtil.localizedString(forKey: "settings_list_threema_desktop_title")
+                #localize("settings_threema_web_multi_device_qr_code_message"),
+                #localize("settings"),
+                #localize("settings_list_threema_desktop_title")
             )
         }
         else {
-            title = BundleUtil.localizedString(forKey: "webClientSession_add_wrong_qr_title")
+            title = #localize("webClientSession_add_wrong_qr_title")
             message = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "webClientSession_add_wrong_qr_message"),
+                #localize("webClientSession_add_wrong_qr_message"),
                 ThreemaWebQRCodeScanner.shared.downloadString,
                 ThreemaWebQRCodeScanner.shared.threemaWebServerURL
             )
@@ -469,7 +470,7 @@ class ThreemaWebQRCodeScanner: QRScannerViewControllerDelegate {
         let nav = PortraitNavigationController(
             rootViewController: QRScannerViewController().then {
                 $0.delegate = self
-                $0.title = BundleUtil.localizedString(forKey: "scan_qr")
+                $0.title = #localize("scan_qr")
                 $0.navigationItem.scrollEdgeAppearance = Colors.defaultNavigationBarAppearance()
             }
         )
@@ -585,8 +586,8 @@ class ThreemaWebQRCodeScanner: QRScannerViewControllerDelegate {
                         let topViewController = AppDelegate.shared()?.currentTopViewController()
                         UIAlertTemplate.showAlert(
                             owner: topViewController!,
-                            title: BundleUtil.localizedString(forKey: "webClient_scan_error_mdm_host_title"),
-                            message: BundleUtil.localizedString(forKey: "webClient_scan_error_mdm_host_message")
+                            title: #localize("webClient_scan_error_mdm_host_title"),
+                            message: #localize("webClient_scan_error_mdm_host_message")
                         ) { _ in
                             AppDelegate.shared().currentTopViewController().map {
                                 $0.dismiss(animated: true, completion: nil)

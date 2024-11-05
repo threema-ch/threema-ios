@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 /// Display a location message
@@ -199,7 +200,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         
         button.setContentCompressionResistancePriority(.required, for: .horizontal)
         
-        button.accessibilityHint = BundleUtil.localizedString(forKey: "accessibility_voiceMessage_speed_hint")
+        button.accessibilityHint = #localize("accessibility_voiceMessage_speed_hint")
         button.accessibilityTraits = .button
 
         return button
@@ -431,11 +432,11 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
                 """
             
         case .dataDeleted:
-            fileSizeLabel.text = BundleUtil.localizedString(forKey: "file_deleted_title")
+            fileSizeLabel.text = #localize("file_deleted_title")
             fileSizeSizingLabel.text = nil
             
         case .fileNotFound:
-            fileSizeLabel.text = BundleUtil.localizedString(forKey: "file_not_found_title")
+            fileSizeLabel.text = #localize("file_not_found_title")
             fileSizeSizingLabel.text = nil
         }
     }
@@ -837,7 +838,7 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
         get {
             if isPlaying {
                 // VoiceOver falls back to traits calling a playing message just "Button" without this
-                return "pause".localized
+                return #localize("pause")
             }
             
             return super.accessibilityLabel

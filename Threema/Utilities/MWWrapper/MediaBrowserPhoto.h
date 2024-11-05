@@ -21,7 +21,8 @@
 #import <Foundation/Foundation.h>
 
 #import "MWPhoto.h"
-#import "ImageMessageEntity.h"
+
+@class ImageMessageEntity;
 
 @interface MediaBrowserPhoto : NSObject <MWPhoto>
 

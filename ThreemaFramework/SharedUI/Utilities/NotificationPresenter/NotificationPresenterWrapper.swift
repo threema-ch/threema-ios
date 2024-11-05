@@ -22,6 +22,7 @@ import Foundation
 import GroupCalls
 import JDStatusBarNotification
 import SwiftUI
+import ThreemaMacros
 
 /// Show unobtrusive notifications in pill-shape
 ///
@@ -121,7 +122,7 @@ import SwiftUI
     @available(*, deprecated, message: "Do not use from Obj-C anymore")
     @objc public func presentIDVerified() {
         let type = NotificationPresenterType(
-            notificationText: BundleUtil.localizedString(forKey: "id_verified_title"),
+            notificationText: #localize("id_verified_title"),
             notificationStyle: .success
         )
         present(type: type)

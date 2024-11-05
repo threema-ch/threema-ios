@@ -24,7 +24,7 @@ import PromiseKit
 
 final class TaskExecutionSettingsSync: TaskExecutionTransaction {
     
-    override func reflectTransactionMessages() throws -> [Promise<Void>] {
+    override func executeTransaction() throws -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionSettingsSync else {
             throw TaskExecutionError.wrongTaskDefinitionType
         }
@@ -32,11 +32,13 @@ final class TaskExecutionSettingsSync: TaskExecutionTransaction {
         let envelope = frameworkInjector.mediatorMessageProtocol
             .getEnvelopeForSettingsUpdate(settings: task.syncSettings)
         
-        return [Promise { try $0.fulfill(_ = reflectMessage(
+        try reflectMessage(
             envelope: envelope,
-            ltReflect: self.taskContext.logReflectMessageToMediator,
-            ltAck: self.taskContext.logReceiveMessageAckFromMediator
-        )) }]
+            ltReflect: taskContext.logReflectMessageToMediator,
+            ltAck: taskContext.logReceiveMessageAckFromMediator
+        )
+
+        return Promise()
     }
 
     override func shouldDrop() throws -> Bool {

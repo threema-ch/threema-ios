@@ -20,7 +20,6 @@
 
 #import "BallotResultMatrixCell.h"
 #import "UIImage+ColoredImage.h"
-#import "BallotResult.h"
 #import "RectUtil.h"
 #import "UIImage+ColoredImage.h"
 #import "BundleUtil.h"
@@ -66,7 +65,7 @@
 }
 
 - (void)updateResultForChoice:(BallotChoice *)choice andParticipant:(NSString *)participant {
-    BallotResult *result = [choice getResultForId: participant];
+    BallotResultEntity *result = [choice getResultForId: participant];
     
     if (result == nil) {
         ;//

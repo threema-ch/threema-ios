@@ -29,7 +29,7 @@ typedef NS_ENUM(NSInteger, BallotDisplayMode) {
 };
 
 
-@class ContactEntity,BallotChoice, BallotMessage, Conversation;
+@class ContactEntity,BallotChoice, BallotMessage, ConversationEntity;
 
 @interface Ballot : TMAManagedObject
 
@@ -47,7 +47,7 @@ typedef NS_ENUM(NSInteger, BallotDisplayMode) {
 
 // Relationships
 @property (nonatomic, retain) NSSet *choices;
-@property (nonatomic, retain) Conversation *conversation;
+@property (nonatomic, retain) ConversationEntity *conversation;
 @property (nonatomic, retain) NSSet *message;
 // Participants are persisted once the ballot is closed
 @property (nonatomic, retain) NSSet *participants;

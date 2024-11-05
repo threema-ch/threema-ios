@@ -83,7 +83,7 @@ public class IntentCreator {
         var recipients = [INPerson]()
         var sender: INPerson?
         
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             guard let fetchedContact else {
                 return
             }
@@ -144,10 +144,10 @@ public class IntentCreator {
         }
         
         var fetchedContact: ContactEntity?
-        var groupConversation: Conversation?
+        var groupConversation: ConversationEntity?
         var isPrivate = false
         
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             if let internalFetchedContact = self.entityManager.entityFetcher.contact(for: contactID) {
                 fetchedContact = internalFetchedContact
                 if let conversation = self.entityManager.conversation(
@@ -158,7 +158,7 @@ public class IntentCreator {
                 }
             }
             
-            if let conversation = self.entityManager.entityFetcher.conversation(
+            if let conversation = self.entityManager.entityFetcher.conversationEntity(
                 for: groupID,
                 creator: creatorID
             ) {
@@ -179,7 +179,7 @@ public class IntentCreator {
         var groupImage: INImage?
         var recipientCount = 0
         
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             contact = fetchedContact?.inPerson ?? nil
 
             guard let groupConversation else {
@@ -188,7 +188,7 @@ public class IntentCreator {
             
             conversationIdentifier = groupConversation.objectID.uriRepresentation().absoluteString
             
-            recipientCount = groupConversation.members.count
+            recipientCount = groupConversation.unwrappedMembers.count
             
             if let fetchedGroupName = groupConversation.groupName {
                 groupName = INSpeakableString(spokenPhrase: fetchedGroupName)

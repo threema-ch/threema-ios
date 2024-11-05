@@ -20,6 +20,7 @@
 
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 struct StorageManagementView: View {
     @StateObject var model: Model
@@ -31,7 +32,7 @@ struct StorageManagementView: View {
             AllConversationSection()
         }
         .navigationBarTitle(
-            "storage_management".localized,
+            #localize("storage_management"),
             displayMode: .inline
         )
         .listStyle(InsetGroupedListStyle())

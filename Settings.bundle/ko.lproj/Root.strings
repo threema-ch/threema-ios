@@ -1,0 +1,12 @@
+/* (No Comment) */
+"advanced_settings_group_footer" = "Threema 지원팀에서 별도로 안내하지 않는 한 이 설정을 활성화하지 마세요.  이 설정이 활성화되어 있으면 수신 메시지를 받지 못할 수 있습니다.";
+
+/* (No Comment) */
+"advanced_settings_group_title" = "지원 설정";
+
+/* (No Comment) */
+"safe_mode_switch" = "고급 지원 모드";
+
+/* (No Comment) */
+"sentry_switch" = "Sentry 비활성화";
+

@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 class SafeDeactivatedViewController: ThemedViewController {
@@ -30,7 +31,7 @@ class SafeDeactivatedViewController: ThemedViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        descriptionLabel.text = BundleUtil.localizedString(forKey: "safe_enable_explain_short")
+        descriptionLabel.text = #localize("safe_enable_explain_short")
         introCircle.layer.cornerRadius = introCircle.frame.height / 2
         
         updateColors()
@@ -57,7 +58,7 @@ extension SafeDeactivatedViewController {
         UIAlertTemplate.showAlert(
             owner: self,
             title: "Threema Safe",
-            message: BundleUtil.localizedString(forKey: "safe_enable_explain")
+            message: #localize("safe_enable_explain")
         )
     }
 }

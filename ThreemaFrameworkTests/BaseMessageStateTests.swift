@@ -24,7 +24,7 @@ import XCTest
 class BaseMessageStateTests: XCTestCase {
     
     private var databasePreparer: DatabasePreparer!
-    private var conversation: Conversation!
+    private var conversation: ConversationEntity!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")

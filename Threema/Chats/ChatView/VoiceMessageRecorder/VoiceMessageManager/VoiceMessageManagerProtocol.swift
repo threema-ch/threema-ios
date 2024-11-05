@@ -48,7 +48,7 @@ protocol VoiceMessageManagerProtocolBase: Actor {
         
     static func requestRecordPermission() async -> Bool
     
-    func sendFile(for conversation: Conversation) async
+    func sendFile(for conversation: ConversationEntity) async
 }
 
 extension VoiceMessageManagerProtocolBase {

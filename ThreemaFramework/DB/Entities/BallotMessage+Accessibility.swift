@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 extension BallotMessage: MessageAccessibility {
     public var privateCustomAccessibilityLabel: String {
@@ -28,16 +29,16 @@ extension BallotMessage: MessageAccessibility {
 
         if !ballot.isClosed() {
             return String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "accessibility_poll_content_open"),
-                BundleUtil.localizedString(forKey: "accessibility_poll_open"),
+                #localize("accessibility_poll_content_open"),
+                #localize("accessibility_poll_open"),
                 ballot.title,
                 ballot.localizedMessageSecondaryText().string
             )
         }
         else {
             return String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "accessibility_poll_content_open"),
-                BundleUtil.localizedString(forKey: "accessibility_poll_closed"),
+                #localize("accessibility_poll_content_open"),
+                #localize("accessibility_poll_closed"),
                 ballot.title,
                 ballot.localizedClosingMessageText
             )
@@ -50,10 +51,10 @@ extension BallotMessage: MessageAccessibility {
         }
 
         if ballot.isClosed() {
-            return BundleUtil.localizedString(forKey: "accessibility_ballotMessage_hint_closed")
+            return #localize("accessibility_ballotMessage_hint_closed")
         }
         else {
-            return BundleUtil.localizedString(forKey: "accessibility_ballotMessage_hint_open")
+            return #localize("accessibility_ballotMessage_hint_open")
         }
     }
 
@@ -62,6 +63,6 @@ extension BallotMessage: MessageAccessibility {
     }
     
     public var accessibilityMessageTypeDescription: String {
-        BundleUtil.localizedString(forKey: "accessibility_pollMessage_description")
+        #localize("accessibility_pollMessage_description")
     }
 }

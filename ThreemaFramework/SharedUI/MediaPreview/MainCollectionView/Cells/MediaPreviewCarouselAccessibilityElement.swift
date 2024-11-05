@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 class MediaPreviewCarouselAccessibilityElement: UIAccessibilityElement {
@@ -30,7 +31,7 @@ class MediaPreviewCarouselAccessibilityElement: UIAccessibilityElement {
     
     override var accessibilityLabel: String? {
         get {
-            let text = BundleUtil.localizedString(forKey: "selected_media_list")
+            let text = #localize("selected_media_list")
             return text
         }
         set {
@@ -41,7 +42,7 @@ class MediaPreviewCarouselAccessibilityElement: UIAccessibilityElement {
     override var accessibilityValue: String? {
         get {
             let text = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "media_item_of"),
+                #localize("media_item_of"),
                 "\(currentMediaItem!.item + 1)",
                 " \(getTotalItems())"
             )

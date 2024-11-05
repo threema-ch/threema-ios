@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 /// Display a call message
@@ -29,7 +30,7 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
     /// Call message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
-    var callMessageAndNeighbors: (message: SystemMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
+    var callMessageAndNeighbors: (message: SystemMessageEntity, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
             updateCell(for: callMessageAndNeighbors?.message)
             
@@ -116,7 +117,7 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
         iconMessageContentView.isUserInteractionEnabled = !editing
     }
     
-    private func updateCell(for callMessage: SystemMessage?) {
+    private func updateCell(for callMessage: SystemMessageEntity?) {
         // By accepting an optional the data is automatically reset when the text message is set to `nil`
         guard case let .callMessage(type: call) = callMessage?.systemMessageType else {
             return
@@ -180,13 +181,13 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
     // MARK: - Accessibility
     
     private func updateAccessibility() {
-        guard let callTime = callMessageAndNeighbors?.message.callTime() else {
+        guard let callDuration = callMessageAndNeighbors?.message.callDuration() else {
             return
         }
     
         metaDataLabel.accessibilityLabel = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "call_duration"),
-            callTime
+            #localize("call_duration"),
+            callDuration
         )
     }
 }

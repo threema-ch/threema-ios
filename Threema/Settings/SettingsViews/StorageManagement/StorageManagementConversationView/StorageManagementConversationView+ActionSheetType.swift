@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 extension StorageManagementConversationView {
     enum ActionSheetType: Int, CaseIterable {
@@ -28,18 +29,18 @@ extension StorageManagementConversationView {
         var title: String {
             switch self {
             case .messages:
-                "delete_messages".localized
+                #localize("delete_messages")
             case .files:
-                "delete_media".localized
+                #localize("delete_media")
             }
         }
             
         var description: String {
             switch self {
             case .messages:
-                "delete_messages_older_than".localized
+                #localize("delete_messages_older_than")
             case .files:
-                "delete_media_older_than".localized
+                #localize("delete_media_older_than")
             }
         }
     }

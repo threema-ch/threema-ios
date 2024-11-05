@@ -149,6 +149,8 @@
     [verifyCount(_mockMyIdentityStore, times(0)) setFirstName:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setLastName:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(0)) setJobTitle:anything()];
+    [verifyCount(_mockMyIdentityStore, times(0)) setDepartment:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setCategory:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDEmail:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDPhone:anything()];
@@ -201,6 +203,8 @@
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:@"Heiri"];
     [verifyCount(_mockMyIdentityStore, times(1)) setLastName:@"Heirassa"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCsi:@"customer-id"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setJobTitle:@"jobtitle"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setDepartment:@"department"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCategory:@"category"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCreateIDEmail:@"linked@email.com"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCreateIDPhone:@"111"];
@@ -264,8 +268,8 @@
     [self setMdm:[self getAllMdmParameters:NO] threemaMdm:oldWorkData];
 
     // new Threema-MDM (override)
-    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
-    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0", @"0"};
+    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
+    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-jobtitle", @"new-department", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0", @"0"};
     NSUInteger countThreemaMdm = sizeof(objectsThreemaMdm) / sizeof(id);
     NSDictionary *threemaMdm = [NSDictionary dictionaryWithObjects:objectsThreemaMdm forKeys:keysThreemaMdm count:countThreemaMdm];
 
@@ -282,6 +286,8 @@
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:@"New-Heiri"];
     [verifyCount(_mockMyIdentityStore, times(1)) setLastName:@"New-Heirassa"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCsi:@"new-customer-id"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setJobTitle:@"new-jobtitle"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setDepartment:@"new-department"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCategory:@"new-category"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCreateIDEmail:@"linked@email.com"]; // not renewable
     [verifyCount(_mockMyIdentityStore, times(1)) setCreateIDPhone:@"111"]; // not renewable
@@ -329,8 +335,8 @@
     [self setMdm:[self getAllMdmParameters:NO] threemaMdm:nil];
     
     // "new" Threema-MDM (override)
-    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
-    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0", @"0"};
+    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
+    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-jobtitle", @"new-department", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0", @"0"};
     NSUInteger countThreemaMdm = sizeof(objectsThreemaMdm) / sizeof(id);
     NSDictionary *threemaMdm = [NSDictionary dictionaryWithObjects:objectsThreemaMdm forKeys:keysThreemaMdm count:countThreemaMdm];
     
@@ -347,6 +353,8 @@
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:@"New-Heiri"];
     [verifyCount(_mockMyIdentityStore, times(1)) setLastName:@"New-Heirassa"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCsi:@"new-customer-id"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setJobTitle:@"new-jobtitle"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setDepartment:@"new-department"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCategory:@"new-category"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCreateIDEmail:@"linked@email.com"]; // not renewable
     [verifyCount(_mockMyIdentityStore, times(1)) setCreateIDPhone:@"111"]; // not renewable
@@ -391,8 +399,8 @@
     // No Company-MDM and no "old" Threema-MDM are equal
     
     // new Threema-MDM (override)
-    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_DISABLE_GROUP_CALLS,MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
-    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0", @"0"};
+    id keysThreemaMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_DISABLE_GROUP_CALLS,MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
+    id objectsThreemaMdm[] = { @"new-tester", @"new-test1234", @"New-Eieri", @"New-Heiri", @"New-Heirassa", @"new-customer-id", @"new-jobtitle", @"new-department", @"new-category", @"new-linked@email.com", @"222", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", @"0", _no, @"http://new-test.com", @"new-server-user", @"new-server-password", @"1", @"EINSZWEI", @"new-^[0-9]{1,15}$", @"New-Wrong-password-pattern", @"new.threema.ch", @"0", @"0"};
     NSUInteger countThreemaMdm = sizeof(objectsThreemaMdm) / sizeof(id);
     NSDictionary *threemaMdm = [NSDictionary dictionaryWithObjects:objectsThreemaMdm forKeys:keysThreemaMdm count:countThreemaMdm];
     
@@ -409,6 +417,8 @@
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:@"New-Heiri"];
     [verifyCount(_mockMyIdentityStore, times(1)) setLastName:@"New-Heirassa"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCsi:@"new-customer-id"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setJobTitle:@"new-jobtitle"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setDepartment:@"new-department"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCategory:@"new-category"];
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDEmail:anything()]; // not renewable
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDPhone:anything()]; // not renewable
@@ -482,6 +492,8 @@
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:anything()];
     [verifyCount(_mockMyIdentityStore, times(1)) setLastName:anything()];
     [verifyCount(_mockMyIdentityStore, times(1)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setJobTitle:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setDepartment:anything()];
     [verifyCount(_mockMyIdentityStore, times(1)) setCategory:anything()];
     
     XCTAssertNil([_mockLicenseStore licenseUsername]);
@@ -542,6 +554,8 @@
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:anything()];
     [verifyCount(_mockMyIdentityStore, times(1)) setLastName:anything()];
     [verifyCount(_mockMyIdentityStore, times(1)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setJobTitle:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setDepartment:anything()];
     [verifyCount(_mockMyIdentityStore, times(1)) setCategory:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDEmail:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDPhone:anything()];
@@ -601,6 +615,8 @@
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:anything()];
     [verifyCount(_mockMyIdentityStore, times(1)) setLastName:anything()];
     [verifyCount(_mockMyIdentityStore, times(1)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setJobTitle:anything()];
+    [verifyCount(_mockMyIdentityStore, times(1)) setDepartment:anything()];
     [verifyCount(_mockMyIdentityStore, times(1)) setCategory:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDEmail:anything()];
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDPhone:anything()];
@@ -649,8 +665,8 @@
     [self setMdm:companyMdm threemaMdm:nil];
     
     // "new" Threema-MDM (override)
-    id keysMdm[] = { MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
-    id objectsMdm[] = { @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"category" ,@"1" ,@"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"new.threema.ch", @"1", @"1"};
+    id keysMdm[] = { MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
+    id objectsMdm[] = { @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"jobtitle", @"department", @"category" ,@"1" ,@"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"new.threema.ch", @"1", @"1"};
     NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
     NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
 
@@ -667,6 +683,8 @@
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:@"Heiri"];
     [verifyCount(_mockMyIdentityStore, times(1)) setLastName:@"Heirassa"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCsi:@"customer-id"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setJobTitle:@"jobtitle"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setDepartment:@"department"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCategory:@"category"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCreateIDEmail:@"company-linked@email.com"]; // not renewable
     [verifyCount(_mockMyIdentityStore, times(1)) setCreateIDPhone:@"555"]; // not renewable
@@ -719,8 +737,8 @@
     [self setMdm:companyMdm threemaMdm:nil];
 
     // "new" Threema-MDM (override)
-    id keysMdm[] = { MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
-    id objectsMdm[] = { @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"category" ,@"1" ,@"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"new.threema.ch", @"1", @"1"};
+    id keysMdm[] = { MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY};
+    id objectsMdm[] = { @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"jobtitle", @"department", @"category" ,@"1" ,@"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"new.threema.ch", @"1", @"1"};
     NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
     NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
     
@@ -736,6 +754,8 @@
     [verifyCount(_mockMyIdentityStore, times(1)) setFirstName:@"Heiri"];
     [verifyCount(_mockMyIdentityStore, times(1)) setLastName:@"Heirassa"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCsi:@"customer-id"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setJobTitle:@"jobtitle"];
+    [verifyCount(_mockMyIdentityStore, times(1)) setDepartment:@"department"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCategory:@"category"];
     [verifyCount(_mockMyIdentityStore, times(1)) setCreateIDEmail:@"company-linked@email.com"]; // not renewable
     [verifyCount(_mockMyIdentityStore, times(1)) setCreateIDPhone:@"555"]; // not renewable
@@ -793,6 +813,8 @@
     [verifyCount(_mockMyIdentityStore, times(0)) setFirstName:anything()]; // not reset
     [verifyCount(_mockMyIdentityStore, times(0)) setLastName:anything()]; // not reset
     [verifyCount(_mockMyIdentityStore, times(0)) setCsi:anything()]; // not reset
+    [verifyCount(_mockMyIdentityStore, times(0)) setJobTitle:anything()]; // not reset
+    [verifyCount(_mockMyIdentityStore, times(0)) setDepartment:anything()]; // not reset
     [verifyCount(_mockMyIdentityStore, times(0)) setCategory:anything()]; // not reset
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDEmail:anything()]; // not reset
     [verifyCount(_mockMyIdentityStore, times(0)) setCreateIDPhone:anything()]; // not reset
@@ -1070,6 +1092,8 @@
     [verifyCount(_mockMyIdentityStore, times(2)) setFirstName:anything()];
     [verifyCount(_mockMyIdentityStore, times(2)) setLastName:anything()];
     [verifyCount(_mockMyIdentityStore, times(2)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setJobTitle:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setDepartment:anything()];
     [verifyCount(_mockMyIdentityStore, times(2)) setCategory:anything()];
 }
 
@@ -1082,8 +1106,8 @@
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
     [mdmSetup loadIDCreationValues];
     
-    id keysCompanyMdm[] = { MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY };
-    id objectsCompanyMdm[] = { @"", @"", @"", @"" };
+    id keysCompanyMdm[] = { MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY };
+    id objectsCompanyMdm[] = { @"", @"", @"", @"", @"", @"" };
     NSUInteger countCompanyMdm = sizeof(objectsCompanyMdm) / sizeof(id);
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     
@@ -1094,6 +1118,8 @@
     [verifyCount(_mockMyIdentityStore, times(2)) setFirstName:anything()];
     [verifyCount(_mockMyIdentityStore, times(2)) setLastName:anything()];
     [verifyCount(_mockMyIdentityStore, times(2)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setJobTitle:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setDepartment:anything()];
     [verifyCount(_mockMyIdentityStore, times(2)) setCategory:anything()];
 }
 
@@ -1112,6 +1138,8 @@
     [verifyCount(_mockMyIdentityStore, times(2)) setFirstName:anything()];
     [verifyCount(_mockMyIdentityStore, times(2)) setLastName:anything()];
     [verifyCount(_mockMyIdentityStore, times(2)) setCsi:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setJobTitle:anything()];
+    [verifyCount(_mockMyIdentityStore, times(2)) setDepartment:anything()];
     [verifyCount(_mockMyIdentityStore, times(2)) setCategory:anything()];
 }
 
@@ -1264,8 +1292,8 @@
 }
 
 - (NSDictionary*)getAllMdmParameters:(BOOL)isThreemaMdm  {
-    id keysMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS,  MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_KEEP_MESSAGE_DAYS};
-    id objectsMdm[] = { @"tester", @"test1234", @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"category", @"linked@email.com", @"111", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"threema.ch", @"1", @"1", @"7"};
+    id keysMdm[] = { MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_LINKED_EMAIL, MDM_KEY_LINKED_PHONE, MDM_KEY_CONTACT_SYNC, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_VIDEO_CALLS,  MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_SKIP_WIZARD, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_RESTORE_ENABLE, MDM_KEY_SAFE_RESTORE_ID, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_WEB_HOSTS, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_KEEP_MESSAGE_DAYS};
+    id objectsMdm[] = { @"tester", @"test1234", @"Eieri", @"Heiri", @"Heirassa", @"customer-id", @"jobtitle", @"department", @"category", @"linked@email.com", @"111", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", @"1", _yes, @"http://test.com", @"server-user", @"server-password", @"0", @"ECHOECHO", @"^[0-9]{1,15}$", @"Wrong-password-pattern", @"threema.ch", @"1", @"1", @"7"};
     
     NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
     NSMutableDictionary *mdm = [NSMutableDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];

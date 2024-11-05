@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "Conversation.h"
 #import "Ballot.h"
 #import "SZTextView.h"
 #import "Old_ThemedViewController.h"
@@ -42,7 +41,7 @@
 
 @property (weak, nonatomic) IBOutlet UITableView *choiceTableView;
 
-+ (instancetype) ballotCreateViewControllerForConversation:(Conversation *)conversation;
++ (instancetype) ballotCreateViewControllerForConversation:(ConversationEntity *)conversation;
 
 + (instancetype) ballotCreateViewControllerForBallot:(Ballot *)ballot;
 

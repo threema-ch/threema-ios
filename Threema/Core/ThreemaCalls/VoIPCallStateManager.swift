@@ -22,6 +22,7 @@ import CallKit
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 import UserNotifications
 
 @objc class VoIPCallStateManager: NSObject {
@@ -268,16 +269,16 @@ import UserNotifications
         provider.reportNewIncomingCall(with: uuid, update: callUpdate, completion: { _ in
             DispatchQueue.main.async {
                 if showWebNotification {
-                    let title = BundleUtil.localizedString(forKey: "webClientSession_error_voip_title")
+                    let title = #localize("webClientSession_error_voip_title")
                     let localizedMessage = String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "webClientSession_error_voip_message"),
+                        #localize("webClientSession_error_voip_message"),
                         ThreemaApp.currentName
                     )
 
                     NotificationManager.showThreemaWebError(title: title, body: localizedMessage)
                 }
                 else {
-                    let localizedMessage = BundleUtil.localizedString(forKey: "new_message_db_requires_migration")
+                    let localizedMessage = #localize("new_message_db_requires_migration")
                     NotificationManager.showThreemaWebError(title: ThreemaApp.currentName, body: localizedMessage)
                 }
             }

@@ -26,20 +26,20 @@ final class MessageDraftStoreMock: MessageDraftStoreProtocol {
     
     var draftStore: [String: ThreemaFramework.Draft] = [:]
     
-    func deleteDraft(for conversation: Conversation) {
+    func deleteDraft(for conversation: ConversationEntity) {
         if let storeKey = storeKey(conversation) {
             draftStore[storeKey] = nil
         }
     }
     
-    func loadDraft(for conversation: Conversation) -> ThreemaFramework.Draft? {
+    func loadDraft(for conversation: ConversationEntity) -> ThreemaFramework.Draft? {
         if let storeKey = storeKey(conversation) {
             return draftStore[storeKey]
         }
         return nil
     }
     
-    func saveDraft(_ draft: ThreemaFramework.Draft, for conversation: Conversation) {
+    func saveDraft(_ draft: ThreemaFramework.Draft, for conversation: ConversationEntity) {
         if let storeKey = storeKey(conversation) {
             draftStore[storeKey] = draft
         }
@@ -49,8 +49,8 @@ final class MessageDraftStoreMock: MessageDraftStoreProtocol {
         // no-op
     }
     
-    func storeKey(_ conversation: Conversation) -> String? {
-        if conversation.isGroup(), let hexStr = conversation.groupID?.hexString {
+    func storeKey(_ conversation: ConversationEntity) -> String? {
+        if conversation.isGroup, let hexStr = conversation.groupID?.hexString {
             let creator = conversation.contact?.identity ?? "*"
             return "\(creator)-\(hexStr)"
         }

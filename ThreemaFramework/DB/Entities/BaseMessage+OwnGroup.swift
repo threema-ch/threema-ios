@@ -32,7 +32,7 @@ extension BaseMessage {
     }
     
     public var isGroupMessage: Bool {
-        guard let isGroup = conversation?.isGroup() else {
+        guard let isGroup = conversation?.isGroup else {
             DDLogError("Conversation is nil so we report that this message is now group")
             return false
         }

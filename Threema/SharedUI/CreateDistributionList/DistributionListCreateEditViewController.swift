@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 
 class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableViewController {
         
@@ -41,7 +42,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     private let businessInjector = BusinessInjector()
     
     private var distributionList: DistributionList?
-    private var conversation: Conversation?
+    private var conversation: ConversationEntity?
 
     // MARK: - Private properties
 
@@ -121,7 +122,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     
     private lazy var cancelButton: UIBarButtonItem = {
         let cancelButton = UIBarButtonItem(
-            title: "Cancel".localized,
+            title: #localize("cancel"),
             style: .plain,
             target: self,
             action: #selector(cancel)
@@ -131,7 +132,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     
     private lazy var saveButton: UIBarButtonItem = {
         let saveButton = UIBarButtonItem(
-            title: "Save".localized,
+            title: #localize("Save"),
             style: .done,
             target: self,
             action: #selector(save)
@@ -186,10 +187,10 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     
     private func configureNavigationBar() {
         if distributionList != nil {
-            navigationBarTitle = "distribution_list_edit".localized
+            navigationBarTitle = #localize("distribution_list_edit")
         }
         else {
-            navigationBarTitle = "distribution_list_create".localized
+            navigationBarTitle = #localize("distribution_list_create")
         }
         
         transparentNavigationBarWhenOnTop = true
@@ -302,7 +303,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
         }
         
         header.title = String.localizedStringWithFormat(
-            "distribution_list_recipients_section_header".localized,
+            #localize("distribution_list_recipients_section_header"),
             recipients.count
         )
     }
@@ -321,11 +322,11 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
         }
         else {
             let entityManager = businessInjector.entityManager
-            var conversation: Conversation?
+            var conversation: ConversationEntity?
                 
             do {
                 entityManager.performAndWaitSave {
-                    conversation = entityManager.entityCreator.conversation()
+                    conversation = entityManager.entityCreator.conversationEntity()
                 }
                     
                 guard let conversation else {
@@ -360,7 +361,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     }
 
     private func addRecipientsAction() -> Details.Action {
-        let localizedAddRecipientsButton = BundleUtil.localizedString(forKey: "group_manage_members_button")
+        let localizedAddRecipientsButton = #localize("group_manage_members_button")
         let action = Details.Action(
             title: localizedAddRecipientsButton,
             imageName: "plus"
@@ -500,7 +501,7 @@ extension DistributionListCreateEditViewController: UITableViewDelegate {
         }
         let headerView: DetailsSectionHeaderView? = tableView.dequeueHeaderFooter()
         headerView?.title = String.localizedStringWithFormat(
-            "distribution_list_recipients_section_header".localized,
+            #localize("distribution_list_recipients_section_header"),
             recipients.count
         )
         return headerView

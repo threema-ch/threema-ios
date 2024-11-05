@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 protocol MessageTextViewDelegate: AnyObject {
@@ -301,7 +302,7 @@ final class MessageTextView: RTLAligningTextView {
                 let actionOpen =
                     UIAccessibilityCustomAction(
                         name: String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "accessibility_action_open_link"),
+                            #localize("accessibility_action_open_link"),
                             attributedText.attributedSubstring(from: result.range).string
                         )
                     ) { _ in
@@ -325,7 +326,7 @@ final class MessageTextView: RTLAligningTextView {
                 let actionOpen =
                     UIAccessibilityCustomAction(
                         name: String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "accessibility_action_call_phone"),
+                            #localize("accessibility_action_call_phone"),
                             attributedText.attributedSubstring(from: result.range).string
                         )
                     ) { _ in
@@ -378,7 +379,7 @@ final class MessageTextView: RTLAligningTextView {
             let actionOpen =
                 UIAccessibilityCustomAction(
                     name: String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "accessibility_action_open_mention"),
+                        #localize("accessibility_action_open_mention"),
                         attributedText.attributedSubstring(from: subrange).string
                     )
                 ) { _ in

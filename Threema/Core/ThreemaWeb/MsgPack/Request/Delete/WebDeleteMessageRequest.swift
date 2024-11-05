@@ -26,7 +26,7 @@ class WebDeleteMessageRequest: WebAbstractMessage {
     let type: String
     var identity: String?
     var groupID: Data?
-    var conversation: Conversation?
+    var conversation: ConversationEntity?
     
     let messageID: Data
     
@@ -47,12 +47,12 @@ class WebDeleteMessageRequest: WebAbstractMessage {
         
         let entityManager = EntityManager()
         if let identity {
-            entityManager.performBlockAndWait {
-                self.conversation = entityManager.entityFetcher.conversation(forIdentity: identity)
+            entityManager.performAndWait {
+                self.conversation = entityManager.entityFetcher.conversationEntity(forIdentity: identity)
             }
         }
         else if let groupID {
-            entityManager.performBlockAndWait {
+            entityManager.performAndWait {
                 self.conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
             }
         }
@@ -79,7 +79,7 @@ class WebDeleteMessageRequest: WebAbstractMessage {
         }
         
         entityManager.performAndWaitSave {
-            if message.isKind(of: BaseMessage.self) || message.isKind(of: SystemMessage.self) {
+            if message.isKind(of: BaseMessage.self) || message.isKind(of: SystemMessageEntity.self) {
                 entityManager.entityDestroyer.delete(baseMessage: message)
 
                 if let conversation = self.conversation {

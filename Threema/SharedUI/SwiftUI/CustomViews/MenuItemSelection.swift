@@ -48,6 +48,7 @@ struct MenuItemSelection<Item: MenuItem>: View {
                 Image(systemName: "chevron.down")
                     .buttonStyle(PlainButtonStyle())
             }
+            .animation(.spring, value: selected)
             .frame(width: 200, height: 44)
         }
     }

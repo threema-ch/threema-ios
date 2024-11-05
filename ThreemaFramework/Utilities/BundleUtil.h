@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable UIImage *)imageNamed:(NSString *)imageName;
 
-+ (NSString *)localizedStringForKey:(NSString *)key;
++ (NSString *)localizedStringForKey:(NSString *)key  __deprecated_msg("Only use in Obj-C. In Swift, use the macro #localize(key) instead.");
 
 + (nullable UIView *)loadXibNamed:(NSString *)name;
 

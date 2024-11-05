@@ -26,7 +26,7 @@
 #import "MDMSetup.h"
 
 @interface LinkMobileNoViewController ()
-
+@property (weak, nonatomic) IBOutlet UILabel *phoneNumberTitleLabel;
 @end
 
 @implementation LinkMobileNoViewController {
@@ -52,6 +52,8 @@
     
     [Colors updateKeyboardAppearanceFor:self.mobileNoTextField];
     
+    self.title = [BundleUtil localizedStringForKey:@"profile_code_link_number"];
+    self.phoneNumberTitleLabel.text = [BundleUtil localizedStringForKey:@"profile_code_phone_number"];
     self.tableView.rowHeight = 85.0;
     self.tableView.estimatedRowHeight = 85.0;
 }

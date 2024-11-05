@@ -295,8 +295,8 @@ class TaskExecutionTransactionTests: XCTestCase {
     }
 
     private class TaskExecutionTransactionToTest: TaskExecutionTransaction {
-        override func reflectTransactionMessages() throws -> [Promise<Void>] {
-            [Promise()]
+        override func executeTransaction() throws -> Promise<Void> {
+            Promise()
         }
         
         override func writeLocal() -> Promise<Void> {

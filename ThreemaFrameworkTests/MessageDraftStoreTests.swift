@@ -26,13 +26,13 @@ import XCTest
 class MessageDraftStoreTests: XCTestCase {
     private var managedObjectContext: NSManagedObjectContext!
     
-    var testConversation: Conversation!
+    var testConversation: ConversationEntity!
     var testDraft: Draft!
     var draftStore: MessageDraftStore!
 
-    private func createConversation() -> (ContactEntity, Conversation) {
+    private func createConversation() -> (ContactEntity, ConversationEntity) {
         var contact: ContactEntity!
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         
         let databasePreparer = DatabasePreparer(context: managedObjectContext)
         databasePreparer.save {

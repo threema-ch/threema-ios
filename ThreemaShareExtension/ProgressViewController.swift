@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 protocol ProgressViewDelegate {
@@ -45,7 +46,7 @@ class ProgressViewController: UIViewController {
         super.viewDidLoad()
         
         itemsToSend = NSMutableDictionary()
-        cancelButton!.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
+        cancelButton!.setTitle(#localize("cancel"), for: .normal)
         
         overrideUserInterfaceStyle = UserSettings.shared().darkTheme ? .dark : .light
     }
@@ -147,10 +148,10 @@ class ProgressViewController: UIViewController {
         var text = ""
         
         if sentCount == totalCount {
-            text = BundleUtil.localizedString(forKey: "finished_sending_title")
+            text = #localize("finished_sending_title")
         }
         else {
-            let sendingText = BundleUtil.localizedString(forKey: "sending_count")
+            let sendingText = #localize("sending_count")
             text = String.localizedStringWithFormat(sendingText, currentItemCount, totalCount)
         }
         

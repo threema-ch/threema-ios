@@ -20,6 +20,7 @@
 
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 
 enum ContactListAddItem: MenuItem {
     case contacts
@@ -31,11 +32,11 @@ enum ContactListAddItem: MenuItem {
     var label: String {
         switch self {
         case .contacts:
-            "contactList_add_contact".localized
+            #localize("contactList_add_contact")
         case .groups:
-            "contactList_add_group".localized
+            #localize("contactList_add_group")
         case .distributionLists:
-            "distribution_list_create".localized
+            #localize("distribution_list_create")
         }
     }
     
@@ -60,5 +61,9 @@ enum ContactListAddItem: MenuItem {
         case .distributionLists:
             ThreemaEnvironment.distributionListsActive
         }
+    }
+    
+    var accessibilityLabel: String? {
+        nil
     }
 }

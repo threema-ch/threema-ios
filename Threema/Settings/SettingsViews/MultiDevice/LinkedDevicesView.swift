@@ -20,9 +20,7 @@
 
 import CocoaLumberjackSwift
 import SwiftUI
-
-// This is a WIP thus some things are not completed:
-// TODO: (IOS-3939 & IOS-4001) UI might be improved when no device is linked, but MD is enabled
+import ThreemaMacros
 
 /// Enable Multi-Device with initial device or show existing linked devices
 struct LinkedDevicesView: View {
@@ -44,7 +42,7 @@ struct LinkedDevicesView: View {
         }
         .environmentObject(linkedDevicesViewModel)
         .navigationBarTitle(
-            Text("settings_list_threema_desktop_title".localized),
+            Text(#localize("settings_list_threema_desktop_title")),
             displayMode: .inline
         )
         .sheet(isPresented: $showWizard) {
@@ -83,7 +81,6 @@ private struct EnabledMultiDeviceListView: View {
                 linkedDevicesState: $linkedDevicesViewModel.state,
                 showRemovingError: $showRemovingError
             )
-            RemoveAllDevicesSection()
         }
         .task {
             linkedDevicesViewModel.state = .refreshing
@@ -96,6 +93,9 @@ private struct EnabledMultiDeviceListView: View {
             if newValue == false {
                 linkedDevicesViewModel.state = .refreshing
                 Task {
+                    // Cancelation can lead to a reconnect. If we don't wait for a bit we always end up with an error
+                    // when we try to refresh the devices
+                    try? await Task.sleep(seconds: 1.5)
                     await linkedDevicesViewModel.refresh()
                 }
             }
@@ -121,17 +121,17 @@ private struct EnabledMultiDeviceListView: View {
             }
         }
         .alert( // This needs to be here as subviews might get replaced/reloaded
-            "Removing Linked Device Failed", // TODO: (IOS-4793) Localize
+            #localize("multi_device_new_linked_device_remove_error_title"),
             isPresented: $showRemovingError
         ) {
-            Button("ok".localized) {
+            Button(#localize("ok")) {
                 linkedDevicesViewModel.state = .refreshing
                 Task {
                     await linkedDevicesViewModel.refresh()
                 }
             }
         } message: {
-            Text("multi_device_new_linked_device_error_message".localized)
+            Text(#localize("multi_device_new_linked_device_error_message"))
         }
     }
 }
@@ -155,6 +155,8 @@ private struct DisabledMultiDeviceListView: View {
 
 private struct LinkedDevicesStateSections: View {
     
+    @Environment(\.editMode) private var editMode
+    
     @Binding var showWizard: Bool
     @Binding var linkedDevicesState: LinkedDevicesViewModel.State
     @Binding var showRemovingError: Bool
@@ -175,29 +177,37 @@ private struct LinkedDevicesStateSections: View {
             Section {
                 // No row
             } footer: {
-                Text("multi_device_new_linked_devices_failed_to_load".localized)
+                Text(#localize("multi_device_new_linked_devices_failed_to_load"))
             }
             
         case let .linkedDevices(devicesInfo: devicesInfo):
             LinkedDevicesSection(devicesInfo: devicesInfo, showRemovingError: $showRemovingError)
             
             if ThreemaEnvironment.allowMultipleLinkedDevices {
-                AddDeviceSection(showWizard: $showWizard)
+                if editMode?.wrappedValue.isEditing ?? false {
+                    RemoveAllDevicesSection()
+                }
+                else {
+                    AddDeviceSection(showWizard: $showWizard)
+                }
             }
             
         case .noLinkedDevices:
             if ThreemaEnvironment.allowMultipleLinkedDevices {
-                // TODO: (IOS-4001) This should not happen anymore
+                // In general each launch a check runs if MD should be disabled. Thus this should never happen. But for
+                // the rare case it does we allow adding a new device or "Remove All Linked Devices" i.e. disabling MD
+                
                 AddDeviceSection(showWizard: $showWizard)
+                
+                RemoveAllDevicesSection()
             }
             else {
                 Section {
-                    // No row
+                    RemoveAllDevicesSection()
                 } footer: {
-                    // TODO: (IOS-3939 & IOS-4001) How do we handle if probably no device is linked, but md enabled?
                     Text(verbatim: String.localizedStringWithFormat(
-                        "multi_device_new_linked_devices_no_other_device".localized,
-                        "multi_device_new_linked_device_remove_all_button".localized
+                        #localize("multi_device_new_linked_devices_no_other_device"),
+                        #localize("multi_device_new_linked_device_remove_all_button")
                     ))
                 }
             }
@@ -279,8 +289,7 @@ private struct LinkedDevicesSection: View {
                         Button(role: .destructive) {
                             remove(device)
                         } label: {
-                            // TODO: (IOS-4793) Localize
-                            Label("Remove", systemImage: "trash")
+                            Label(#localize("multi_device_new_linked_device_list_remove_button"), systemImage: "trash")
                         }
                     }
             }
@@ -294,20 +303,20 @@ private struct LinkedDevicesSection: View {
             }
         } footer: {
             if !ThreemaEnvironment.allowMultipleLinkedDevices {
-                Text("multi_device_new_linked_devices_limitation_info".localized)
+                Text(#localize("multi_device_new_linked_devices_limitation_info"))
             }
         }
     }
     
     private func remove(_ device: DeviceInfo) {
-        linkedDevicesViewModel.state = .refreshing
         Task(priority: .userInitiated) {
             do {
                 try await linkedDevicesViewModel.remove(device)
                 
-                // TODO: (IOS-4001) Deactivate MD if there are no other devices.
+                // Disable MD if there are no other linked devices left
+                linkedDevicesViewModel.businessInjector.multiDeviceManager.disableMultiDeviceIfNeeded()
                 
-                linkedDevicesViewModel.state = .refreshing
+                // We don't switch to refreshing to prevent animation glitches
                 await linkedDevicesViewModel.refresh()
             }
             catch {
@@ -378,7 +387,7 @@ private struct AddDeviceSection: View {
                     showWizard = true
                 }
             } label: {
-                Text("multi_device_new_linked_devices_add_button".localized)
+                Text(#localize("multi_device_new_linked_devices_add_button"))
             }
             .disabled(
                 !duplicateContactIdentities.isEmpty ||
@@ -387,34 +396,34 @@ private struct AddDeviceSection: View {
         } footer: {
             if !duplicateContactIdentities.isEmpty {
                 Text(verbatim: String.localizedStringWithFormat(
-                    "multi_device_linked_duplicate_contacts_desc".localized,
+                    #localize("multi_device_linked_duplicate_contacts_desc"),
                     ListFormatter.localizedString(byJoining: Array(duplicateContactIdentities))
                 ))
             }
             else if linkedDevicesViewModel.deviceLimitReached, ThreemaEnvironment.allowMultipleLinkedDevices {
-                // TODO: (IOS-4793) Localize strings
                 if let numberOfDeviceSlots = linkedDevicesViewModel.businessInjector.multiDeviceManager
                     .maximumNumberOfDeviceSlots {
-                    Text(
-                        "Limit of \(numberOfDeviceSlots - 1) other devices reached. Remove a linked device to add a new device."
-                    )
+                    Text(verbatim: String.localizedStringWithFormat(
+                        #localize("multi_device_new_linked_devices_limit_reached_info_with_count"),
+                        numberOfDeviceSlots - 1
+                    ))
                 }
                 else {
-                    Text("Limit of devices reached. Remove a linked device to add a new device.")
+                    Text(#localize("multi_device_new_linked_devices_limit_reached_info"))
                 }
             }
             else {
-                // TODO: (IOS-4793) Update string
                 Text(verbatim: """
                     \(String.localizedStringWithFormat(
-                    "multi_device_new_linked_device_instructions".localized,
+                    #localize("multi_device_new_linked_device_instructions"),
                     ThreemaApp.appName,
                     DeviceJoinManager.downloadURL
                     ))
                     
                     \(
                     ThreemaEnvironment.allowMultipleLinkedDevices ?
-                    "IOS-4793" : "multi_device_new_linked_devices_limitation_info".localized
+                    #localize("multi_device_new_linked_devices_multiple_desktop_limitation_info") :
+                    #localize("multi_device_new_linked_devices_limitation_info")
                     )
                     """)
             }
@@ -423,10 +432,10 @@ private struct AddDeviceSection: View {
             loadDuplicateContacts()
         }
         .alert(
-            "multi_device_new_linked_own_identity_in_contacts_title".localized,
+            #localize("multi_device_new_linked_own_identity_in_contacts_title"),
             isPresented: $showOwnIdentityInContactsAlert
         ) {
-            Button("multi_device_new_linked_show_contact_button".localized) {
+            Button(#localize("multi_device_new_linked_show_contact_button")) {
                 guard let ownIdentityContact = linkedDevicesViewModel.businessInjector.entityManager.entityFetcher
                     .contact(
                         for: linkedDevicesViewModel.businessInjector.myIdentityStore.identity
@@ -442,11 +451,11 @@ private struct AddDeviceSection: View {
                 )
             }
             
-            Button("cancel".localized, role: .cancel) {
+            Button(#localize("cancel"), role: .cancel) {
                 // no-op
             }
         } message: {
-            Text("multi_device_new_linked_own_identity_in_contacts_message".localized)
+            Text(#localize("multi_device_new_linked_own_identity_in_contacts_message"))
         }
         .sheet(isPresented: $showPasscodeView) {
             LockScreenView(codeEnteredCorrectly: {
@@ -494,22 +503,22 @@ private struct RemoveAllDevicesSection: View {
             Button(role: .destructive) {
                 showDisableMultiDeviceConfirmation = true
             } label: {
-                Text("multi_device_new_linked_device_remove_all_button".localized)
+                Text(#localize("multi_device_new_linked_device_remove_all_button"))
                     .frame(maxWidth: .infinity)
             }
             .disabled(linkedDevicesViewModel.state == .refreshing)
             .confirmationDialog(
-                "multi_device_new_linked_device_remove_all_title".localized,
+                #localize("multi_device_new_linked_device_remove_all_title"),
                 isPresented: $showDisableMultiDeviceConfirmation
             ) {
                 Button(
-                    "multi_device_new_linked_device_remove_all_button".localized,
+                    #localize("multi_device_new_linked_device_remove_all_button"),
                     role: .destructive
                 ) {
                     linkedDevicesViewModel.state = .refreshing
                     Task(priority: .userInitiated) {
                         do {
-                            try await linkedDevicesViewModel.businessInjector.multiDeviceManager.disableMultiDevice()
+                            try await linkedDevicesViewModel.disableMultiDevice()
                         }
                         catch {
                             DDLogError("Error disabling multi device: \(error)")
@@ -521,17 +530,17 @@ private struct RemoveAllDevicesSection: View {
             }
         }
         .alert(
-            "multi_device_new_linked_device_remove_all_error_title".localized,
+            #localize("multi_device_new_linked_device_remove_all_error_title"),
             isPresented: $showRemovingError
         ) {
-            Button("ok".localized) {
+            Button(#localize("ok")) {
                 linkedDevicesViewModel.state = .refreshing
                 Task {
                     await linkedDevicesViewModel.refresh()
                 }
             }
         } message: {
-            Text("multi_device_new_linked_device_error_message".localized)
+            Text(#localize("multi_device_new_linked_device_error_message"))
         }
     }
 }
@@ -579,17 +588,17 @@ private struct LinkedDeviceListView: View {
                 
                 Group {
                     Text(
-                        device.platformDetails ?? "multi_device_new_linked_device_list_no_platform_details".localized
+                        device.platformDetails ?? #localize("multi_device_new_linked_device_list_no_platform_details")
                     )
 
                     // TODO: (IOS-4200) Fix properly
                     // Quick fix for current online state
                     if device.lastLoginAt.millisecondsSince1970 < 1 {
-                        Text("multi_device_new_linked_device_list_currently_active".localized)
+                        Text(#localize("multi_device_new_linked_device_list_currently_active"))
                     }
                     else {
                         Text(verbatim: String.localizedStringWithFormat(
-                            "multi_device_new_linked_device_list_last_active".localized,
+                            #localize("multi_device_new_linked_device_list_last_active"),
                             DateFormatter.relativeLongStyleDateShortStyleTime(device.lastLoginAt)
                         ))
                     }

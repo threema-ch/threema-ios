@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import MBProgressHUD
+import ThreemaMacros
 import UIKit
 
 // MARK: - GroupDetailsDataSource.Configuration
@@ -51,7 +52,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     private let displayMode: GroupDetailsDisplayMode
 
     private let group: Group
-    private let conversation: Conversation
+    private let conversation: ConversationEntity
     
     private weak var groupDetailsViewController: GroupDetailsViewController?
     private weak var tableView: UITableView?
@@ -95,7 +96,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
         self.tableView = tableView
 
         let em = EntityManager()
-        self.conversation = em.entityFetcher.conversation(
+        self.conversation = em.entityFetcher.conversationEntity(
             for: group.groupID,
             creator: group.groupCreatorIdentity
         )!
@@ -343,7 +344,7 @@ extension GroupDetailsDataSource {
         if group.isSelfMember {
             let messageQuickAction = QuickAction(
                 imageName: "threema.lock.bubble.right.fill",
-                title: BundleUtil.localizedString(forKey: "message"),
+                title: #localize("message"),
                 accessibilityIdentifier: "GroupDetailsDataSourceMessageQuickActionButton"
             ) { [weak self] _ in
                 guard let strongSelf = self else {
@@ -395,7 +396,7 @@ extension GroupDetailsDataSource {
         
         return QuickAction(
             imageNameProvider: dndImageNameProvider,
-            title: BundleUtil.localizedString(forKey: "doNotDisturb_title"),
+            title: #localize("doNotDisturb_title"),
             accessibilityIdentifier: "GroupDetailsDataSourceDndQuickActionButton"
         ) { [weak self, weak viewController] quickAction in
             guard let strongSelf = self,
@@ -418,7 +419,7 @@ extension GroupDetailsDataSource {
     
     private func searchChatQuickAction(
         in viewController: UIViewController,
-        for conversation: Conversation
+        for conversation: ConversationEntity
     ) -> QuickAction? {
         let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         guard messageFetcher.count() > 0 else {
@@ -431,7 +432,7 @@ extension GroupDetailsDataSource {
         
         let quickAction = QuickAction(
             imageName: "magnifyingglass",
-            title: BundleUtil.localizedString(forKey: "search"),
+            title: #localize("search"),
             accessibilityIdentifier: "GroupDetailsDataSourceSearchQuickActionButton"
         ) { [weak groupDetailsViewController] _ in
             groupDetailsViewController?.startChatSearch()
@@ -451,7 +452,7 @@ extension GroupDetailsDataSource {
         // feature mask) instead of checking when the action is actually triggered?
         let quickAction = QuickAction(
             imageName: "threema.phone.fill",
-            title: BundleUtil.localizedString(forKey: "group_call_title"),
+            title: #localize("group_call_title"),
             accessibilityIdentifier: "GroupDetailsDataSourceGroupCallQuickActionButton"
         ) { _ in
             GlobalGroupCallManagerSingleton.shared.startGroupCall(
@@ -496,18 +497,21 @@ extension GroupDetailsDataSource {
         return quickActions
     }
     
-    private func hasMedia(for conversation: Conversation) -> Bool {
+    private func hasMedia(for conversation: ConversationEntity) -> Bool {
         businessInjector.entityManager.entityFetcher.countMediaMessages(for: conversation) > 0
     }
     
-    private func hasStarred(in conversation: Conversation) -> Bool {
+    private func hasStarred(in conversation: ConversationEntity) -> Bool {
         businessInjector.entityManager.performAndWait {
             self.businessInjector.entityManager.entityFetcher.countStarredMessages(in: conversation) > 0
         }
     }
     
-    private func mediaQuickAction(for conversation: Conversation, in viewController: UIViewController) -> QuickAction {
-        let localizedMediaString = BundleUtil.localizedString(forKey: "media_overview")
+    private func mediaQuickAction(
+        for conversation: ConversationEntity,
+        in viewController: UIViewController
+    ) -> QuickAction {
+        let localizedMediaString = #localize("media_overview")
         
         return QuickAction(
             imageName: "photo.fill.on.rectangle.fill",
@@ -522,10 +526,10 @@ extension GroupDetailsDataSource {
     }
     
     private func ballotsQuickAction(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         in viewController: UIViewController
     ) -> [QuickAction] {
-        let localizedBallotsString = BundleUtil.localizedString(forKey: "ballots")
+        let localizedBallotsString = #localize("ballots")
         
         return [QuickAction(
             imageName: "chart.pie.fill",
@@ -536,11 +540,12 @@ extension GroupDetailsDataSource {
                 return
             }
             
-            guard let ballotViewController = BallotListTableViewController.ballotListViewController(for: conversation)
+            guard let ballotViewController = BallotListTableViewController
+                .ballotListViewController(forConversation: conversation)
             else {
                 UIAlertTemplate.showAlert(
                     owner: weakViewController,
-                    title: BundleUtil.localizedString(forKey: "ballot_load_error"),
+                    title: #localize("ballot_load_error"),
                     message: nil
                 )
                 return
@@ -556,8 +561,8 @@ extension GroupDetailsDataSource {
     private func starredQuickAction() -> QuickAction {
         QuickAction(
             imageName: "star.fill",
-            title: "marker_details_title".localized,
-            accessibilityIdentifier: "marker_details_title".localized
+            title: #localize("marker_details_title"),
+            accessibilityIdentifier: #localize("marker_details_title")
         ) { [weak groupDetailsViewController] _ in
             groupDetailsViewController?.startChatSearch(forStarred: true)
         }
@@ -598,7 +603,7 @@ extension GroupDetailsDataSource {
         
         // Show add members cell if editing is possible
         if group.isOwnGroup {
-            let localizedAddMembersButton = BundleUtil.localizedString(forKey: "group_manage_members_button")
+            let localizedAddMembersButton = #localize("group_manage_members_button")
             let addMembersAction = Details.Action(
                 title: localizedAddMembersButton,
                 imageName: "plus"
@@ -655,7 +660,7 @@ extension GroupDetailsDataSource {
         var rows = [GroupDetails.Row]()
         
         if ConversationExporter.canExport(conversation: conversation, entityManager: businessInjector.entityManager) {
-            let localizedExportConversationTitle = BundleUtil.localizedString(forKey: "export_chat")
+            let localizedExportConversationTitle = #localize("export_chat")
             
             let exportConversationAction = Details.Action(
                 title: localizedExportConversationTitle,
@@ -667,10 +672,10 @@ extension GroupDetailsDataSource {
                     return
                 }
                 
-                let localizedTitle = BundleUtil.localizedString(forKey: "include_media_title")
-                let localizedMessage = BundleUtil.localizedString(forKey: "include_media_message")
-                let localizedIncludeMediaTitle = BundleUtil.localizedString(forKey: "include_media")
-                let localizedExcludeMediaTitle = BundleUtil.localizedString(forKey: "without_media")
+                let localizedTitle = #localize("include_media_title")
+                let localizedMessage = #localize("include_media_message")
+                let localizedIncludeMediaTitle = #localize("include_media")
+                let localizedExcludeMediaTitle = #localize("without_media")
                 
                 func exportMediaAction(includeMedia: Bool) -> ((UIAlertAction) -> Void) {{ _ in
                     let exporter = ConversationExporter(
@@ -705,7 +710,7 @@ extension GroupDetailsDataSource {
         
         let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         if messageFetcher.count() > 0 {
-            let localizedActionTitle = BundleUtil.localizedString(forKey: "messages_delete_all_button")
+            let localizedActionTitle = #localize("messages_delete_all_button")
             
             let deleteAllContentAction = Details.Action(
                 title: localizedActionTitle,
@@ -718,9 +723,9 @@ extension GroupDetailsDataSource {
                     return
                 }
                 
-                let localizedTitle = BundleUtil.localizedString(forKey: "messages_delete_all_confirm_title")
-                let localizedMessage = BundleUtil.localizedString(forKey: "messages_delete_all_confirm_message")
-                let localizedDelete = BundleUtil.localizedString(forKey: "delete")
+                let localizedTitle = #localize("messages_delete_all_confirm_title")
+                let localizedMessage = #localize("messages_delete_all_confirm_message")
+                let localizedDelete = #localize("delete")
                 
                 UIAlertTemplate.showDestructiveAlert(
                     owner: strongGroupDetailsViewController,
@@ -732,7 +737,7 @@ extension GroupDetailsDataSource {
                             RunLoop.main.schedule {
                                 let hud = MBProgressHUD(view: tableView)
                                 hud.minShowTime = 1.0
-                                hud.label.text = BundleUtil.localizedString(forKey: "delete_in_progress")
+                                hud.label.text = #localize("delete_in_progress")
                                 tableView.addSubview(hud)
                                 hud.show(animated: true)
                             }
@@ -763,7 +768,7 @@ extension GroupDetailsDataSource {
     private var notificationRows: [GroupDetails.Row] {
         var rows = [GroupDetails.Row]()
         
-        let localizedDoNotDisturbTitle = BundleUtil.localizedString(forKey: "doNotDisturb_title")
+        let localizedDoNotDisturbTitle = #localize("doNotDisturb_title")
         let doNotDisturbAction = Details
             .Action(title: localizedDoNotDisturbTitle) { [weak self, weak groupDetailsViewController] _ in
                 guard let strongSelf = self,
@@ -787,7 +792,7 @@ extension GroupDetailsDataSource {
             }
         rows.append(.doNotDisturb(action: doNotDisturbAction, group: group))
         
-        let localizedPlayNotificationSoundTitle = BundleUtil.localizedString(forKey: "notification_sound_title")
+        let localizedPlayNotificationSoundTitle = #localize("notification_sound_title")
         let playSoundBooleanAction = Details.BooleanAction(
             title: localizedPlayNotificationSoundTitle,
             boolProvider: { [weak self] () -> Bool in
@@ -819,7 +824,7 @@ extension GroupDetailsDataSource {
         
         // Allow group sync if I'm the creator
         if group.isOwnGroup {
-            let localizedSynchronizeGroupTitle = BundleUtil.localizedString(forKey: "group_sync_button")
+            let localizedSynchronizeGroupTitle = #localize("group_sync_button")
             let synchronizeGroupAction = Details.Action(
                 title: localizedSynchronizeGroupTitle,
                 imageName: "arrow.triangle.2.circlepath"
@@ -844,7 +849,7 @@ extension GroupDetailsDataSource {
         
         // Only allow cloning if not disabled by mdm
         if let mdmSetup, !mdmSetup.disableCreateGroup() {
-            let localizedCloneGroupTitle = BundleUtil.localizedString(forKey: "group_clone_button")
+            let localizedCloneGroupTitle = #localize("group_clone_button")
             let cloneGroupAction = Details.Action(
                 title: localizedCloneGroupTitle,
                 imageName: "doc.on.doc"
@@ -869,9 +874,9 @@ extension GroupDetailsDataSource {
                 
                 // Confirm cloning
                 
-                let localizedGroupCloneTitle = BundleUtil.localizedString(forKey: "group_clone_title")
-                let localizedGroupCloneMessage = BundleUtil.localizedString(forKey: "group_clone_message")
-                let localizedGroupCloneActionButton = BundleUtil.localizedString(forKey: "group_clone_action_button")
+                let localizedGroupCloneTitle = #localize("group_clone_title")
+                let localizedGroupCloneMessage = #localize("group_clone_message")
+                let localizedGroupCloneActionButton = #localize("group_clone_action_button")
                 
                 UIAlertTemplate.showAlert(
                     owner: strongGroupDetailsViewController,
@@ -903,7 +908,7 @@ extension GroupDetailsDataSource {
         var rows = [GroupDetails.Row]()
         
         if group.canLeave {
-            let localizedGroupTitle = BundleUtil.localizedString(forKey: "group_leave_button")
+            let localizedGroupTitle = #localize("group_leave_button")
             let leaveAction = Details.Action(
                 title: localizedGroupTitle,
                 destructive: true
@@ -931,7 +936,7 @@ extension GroupDetailsDataSource {
             rows.append(.action(leaveAction))
         }
         else if group.canDissolve {
-            let localizedGroupTitle = BundleUtil.localizedString(forKey: "group_dissolve_button")
+            let localizedGroupTitle = #localize("group_dissolve_button")
             let dissolveAction = Details.Action(
                 title: localizedGroupTitle,
                 destructive: true
@@ -959,7 +964,7 @@ extension GroupDetailsDataSource {
             rows.append(.action(dissolveAction))
         }
         
-        let localizedGroupTitle = BundleUtil.localizedString(forKey: "group_delete")
+        let localizedGroupTitle = #localize("group_delete")
         let deleteAction = Details.Action(
             title: localizedGroupTitle,
             destructive: true
@@ -993,7 +998,7 @@ extension GroupDetailsDataSource {
         var row = [GroupDetails.Row]()
         
         let wallpaperAction = Details.Action(
-            title: BundleUtil.localizedString(forKey: "settings_chat_wallpaper_title")
+            title: #localize("settings_chat_wallpaper_title")
         ) { [weak self] _ in
             guard let strongSelf = self else {
                 return

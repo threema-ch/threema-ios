@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 final class VerificationLevelDetailsTableViewCell: ThemedCodeStackTableViewCell {
@@ -53,7 +54,7 @@ final class VerificationLevelDetailsTableViewCell: ThemedCodeStackTableViewCell 
         
         label.font = UIFont.preferredFont(forTextStyle: .body)
         
-        label.text = BundleUtil.localizedString(forKey: "verification_level_title")
+        label.text = #localize("verification_level_title")
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 0

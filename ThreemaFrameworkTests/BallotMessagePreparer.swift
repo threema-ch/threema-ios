@@ -40,11 +40,12 @@ import XCTest
 
             _ = databasePreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.groupID = Data([1])
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = Data([1])
                     conversation.groupMyIdentity = "TESTERID"
                     conversation.contact = contact
                     conversation.groupName = "TestGroup BallotMessageDecoder"
-                    conversation.addMembers([contact])
+                    conversation.members?.insert(contact)
                 }
         }
     }

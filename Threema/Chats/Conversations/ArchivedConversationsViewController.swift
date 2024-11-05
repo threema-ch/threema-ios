@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 class ArchivedConversationsViewController: ThemedTableViewController {
@@ -38,14 +39,14 @@ class ArchivedConversationsViewController: ThemedTableViewController {
         action: #selector(hideToolbar)
     )
     private lazy var selectAllButton = UIBarButtonItem(
-        title: BundleUtil.localizedString(forKey: "select_all"),
+        title: #localize("select_all"),
         style: .plain,
         target: self,
         action: #selector(selectAllRows)
     )
 
     private lazy var toolbarUnarchiveButton = UIBarButtonItem(
-        title: BundleUtil.localizedString(forKey: "unarchive"),
+        title: #localize("unarchive"),
         style: .plain,
         target: self,
         action: #selector(unarchiveSelected)
@@ -64,7 +65,7 @@ class ArchivedConversationsViewController: ThemedTableViewController {
     
     private lazy var utilities = ConversationActions(businessInjector: businessInjector)
         
-    public var selectedConversation: Conversation?
+    public var selectedConversation: ConversationEntity?
     private var allSelected = false
     private var didStartMultiselect = false
     
@@ -94,7 +95,7 @@ class ArchivedConversationsViewController: ThemedTableViewController {
         super.viewDidLoad()
         viewLoadedInBackground = AppDelegate.shared().isAppInBackground()
         
-        navigationItem.title = BundleUtil.localizedString(forKey: "archived_title")
+        navigationItem.title = #localize("archived_title")
         navigationItem.largeTitleDisplayMode = .never
         
         navigationItem.rightBarButtonItem = editButton
@@ -143,7 +144,7 @@ extension ArchivedConversationsViewController {
             DDLogError("Unable to create ConversationTableViewCell for cell at IndexPath: + \(indexPath)")
             fatalError("Unable to create ConversationTableViewCell for cell at IndexPath: + \(indexPath)")
         }
-        cell.setConversation(to: fetchedResultsController.object(at: indexPath) as? Conversation)
+        cell.setConversation(to: fetchedResultsController.object(at: indexPath) as? ConversationEntity)
         cell.setNavigationController(to: navigationController)
         
         return cell
@@ -166,7 +167,7 @@ extension ArchivedConversationsViewController {
             return
         }
         
-        guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+        guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
             DDLogError("Could not select cell because there was no conversation for its indexPath")
             return
         }
@@ -230,7 +231,7 @@ extension ArchivedConversationsViewController {
         _ tableView: UITableView,
         leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+        guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
             return nil
         }
         
@@ -250,7 +251,7 @@ extension ArchivedConversationsViewController {
         _ tableView: UITableView,
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+        guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
             return nil
         }
         
@@ -263,7 +264,7 @@ extension ArchivedConversationsViewController {
         }
         
         unarchiveAction.image = UIImage(resource: .threemaArchiveboxSlashFill)
-        unarchiveAction.accessibilityLabel = BundleUtil.localizedString(forKey: "unarchive")
+        unarchiveAction.accessibilityLabel = #localize("unarchive")
         unarchiveAction.backgroundColor = Colors.gray
         
         // Delete
@@ -283,7 +284,7 @@ extension ArchivedConversationsViewController {
         }
         
         deleteAction.image = UIImage(systemName: "trash.fill")
-        deleteAction.accessibilityLabel = BundleUtil.localizedString(forKey: "delete")
+        deleteAction.accessibilityLabel = #localize("delete")
         
         let configuration = UISwipeActionsConfiguration(actions: [unarchiveAction, deleteAction])
         configuration.performsFirstActionWithFullSwipe = true
@@ -307,7 +308,7 @@ extension ArchivedConversationsViewController {
             return nil
         }
 
-        guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+        guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
             DDLogError("Could not select cell because there was no conversation for its indexPath")
             return nil
         }
@@ -377,7 +378,7 @@ extension ArchivedConversationsViewController {
         // NavBar
         navigationItem.leftBarButtonItem = nil
         navigationItem.rightBarButtonItem = editButton
-        navigationItem.title = BundleUtil.localizedString(forKey: "archived_title")
+        navigationItem.title = #localize("archived_title")
     }
     
     /// Unarchives selected Conversations
@@ -394,7 +395,7 @@ extension ArchivedConversationsViewController {
     /// Selects all Rows of the TableView
     @objc private func selectAllRows() {
         if !allSelected {
-            navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "deselect_all")
+            navigationItem.leftBarButtonItem?.title = #localize("deselect_all")
             allSelected = true
             for section in 0..<tableView.numberOfSections {
                 for row in 0..<tableView.numberOfRows(inSection: section) {
@@ -406,7 +407,7 @@ extension ArchivedConversationsViewController {
             }
         }
         else {
-            navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "select_all")
+            navigationItem.leftBarButtonItem?.title = #localize("select_all")
             allSelected = false
             for section in 0..<tableView.numberOfSections {
                 for row in 0..<tableView.numberOfRows(inSection: section) {
@@ -430,21 +431,21 @@ extension ArchivedConversationsViewController {
         
         if selectedCount == fetchedResultsController.fetchedObjects?.count {
             allSelected = true
-            navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "deselect_all")
-            navigationItem.title = BundleUtil.localizedString(forKey: "all_selected")
+            navigationItem.leftBarButtonItem?.title = #localize("deselect_all")
+            navigationItem.title = #localize("all_selected")
         }
         else if selectedCount != 0 {
             allSelected = false
-            navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "select_all")
+            navigationItem.leftBarButtonItem?.title = #localize("select_all")
             navigationItem.title = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "selected_count"),
+                #localize("selected_count"),
                 selectedCount
             )
         }
         else {
             allSelected = false
-            navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "select_all")
-            navigationItem.title = BundleUtil.localizedString(forKey: "archived_title")
+            navigationItem.leftBarButtonItem?.title = #localize("select_all")
+            navigationItem.title = #localize("archived_title")
             toolbarUnarchiveButton.isEnabled = false
         }
     }
@@ -453,7 +454,7 @@ extension ArchivedConversationsViewController {
 // MARK: - Other
 
 extension ArchivedConversationsViewController {
-    @objc func setSelection(for conversation: Conversation?) {
+    @objc func setSelection(for conversation: ConversationEntity?) {
         guard let conversation,
               let newRow = fetchedResultsController.indexPath(forObject: conversation) else {
             return
@@ -583,7 +584,7 @@ extension ArchivedConversationsViewController {
         guard let objectID: NSManagedObjectID = notification.userInfo?[kKeyObjectID] as? NSManagedObjectID else {
             return
         }
-        if objectID.entity == Conversation.entity() {
+        if objectID.entity == ConversationEntity.entity() {
             DispatchQueue.main.async {
                 self.refreshData()
             }
@@ -614,8 +615,8 @@ extension ArchivedConversationsViewController {
     
     @objc private func updatePredicates() {
         var newPredicate: NSPredicate
-        let archivedPredicate = NSPredicate(format: "visibility == %d", ConversationVisibility.archived.rawValue)
-        let notPrivatePredicate = NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
+        let archivedPredicate = NSPredicate(format: "visibility == %d", ConversationEntity.Visibility.archived.rawValue)
+        let notPrivatePredicate = NSPredicate(format: "category != %d", ConversationEntity.Category.private.rawValue)
         
         if UserSettings.shared().hidePrivateChats {
             

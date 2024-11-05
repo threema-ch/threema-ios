@@ -25,115 +25,60 @@ import ThreemaEssentials
 import ThreemaProtocols
 
 final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
-    var profilePictureBlob: Common_Blob?
 
-    override func prepare() -> Promise<Void> {
-        guard let task = taskDefinition as? TaskDefinitionGroupSync else {
-            return Promise<Void> { $0.reject(TaskExecutionError.wrongTaskDefinitionType) }
-        }
-
-        if let image = task.profilePicture == .updated ? task.image : nil {
-            var encryptedData: BlobUpload
-
-            do {
-                let encrypted = try encrypt(data: image)
-
-                profilePictureBlob = Common_Blob()
-                profilePictureBlob?.nonce = encrypted.nonce
-                profilePictureBlob?.key = encrypted.key
-
-                encryptedData = (
-                    "groupProfileImage",
-                    encrypted.payload
-                )
-            }
-            catch {
-                return Promise<Void> { $0.reject(error) }
-            }
-
-            if encryptedData.blob.isEmpty {
-                return Promise()
-            }
-
-            return firstly {
-                uploadBlobs(blobs: [encryptedData])
-            }.then { [self] uploadedBlobs -> Promise<Void> in
-                Promise { seal in
-                    guard let blobID = uploadedBlobs.first?.blobID else {
-                        seal.reject(TaskExecutionTransactionError.blobIDMissing)
-                        return
-                    }
-
-                    profilePictureBlob?.id = blobID
-                    seal.fulfill_()
-                }
-            }
-        }
-        else {
-            return Promise()
-        }
-    }
-
-    private func encrypt(data: Data) throws -> (key: Data, nonce: Data, payload: Data) {
-        guard let encryptionKey = NaClCrypto.shared()?.randomBytes(kBlobKeyLen) else {
-            throw TaskExecutionTransactionError.blobDataEncryptionFailed
-        }
-        let nonce = ThreemaProtocol.nonce01
-        guard let encryptedProfileImageData = NaClCrypto.shared()?
-            .symmetricEncryptData(data, withKey: encryptionKey, nonce: nonce) else {
-            throw TaskExecutionTransactionError.blobDataEncryptionFailed
-        }
-        return (encryptionKey, nonce, encryptedProfileImageData)
-    }
-
-    override func reflectTransactionMessages() throws -> [Promise<Void>] {
+    override func executeTransaction() throws -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionGroupSync else {
             throw TaskExecutionError.wrongTaskDefinitionType
         }
 
-        switch task.profilePicture {
-        case .updated:
-            if let profilePictureBlob {
-                var commonImage = Common_Image()
-                commonImage.blob = profilePictureBlob
-                task.syncGroup.profilePicture.updated = commonImage
-            }
-        case .removed:
-            task.syncGroup.profilePicture.removed = Common_Unit()
-        case .unchanged:
-            break
-        }
+        return try uploadBlob(data: task.image)
+            .then { blob in
+                try task.checkDropping()
 
-        var syncAction: D2d_GroupSync.OneOf_Action!
-        switch task.syncAction {
-        case .create:
-            var create = D2d_GroupSync.Create()
-            create.group = task.syncGroup
-            syncAction = .create(create)
-        case .delete:
-            var delete = D2d_GroupSync.Delete()
-            delete.groupIdentity = task.syncGroup.groupIdentity
-            syncAction = .delete(delete)
-        case .update:
-            var update = D2d_GroupSync.Update()
-            update.group = task.syncGroup
-            syncAction = .update(update)
-        }
+                switch task.profilePicture {
+                case .updated:
+                    if let blob {
+                        var commonImage = Common_Image()
+                        commonImage.blob = blob
+                        task.syncGroup.profilePicture.updated = commonImage
+                    }
 
-        let envelope = frameworkInjector.mediatorMessageProtocol.getEnvelopeForGroupSync(
-            group: task.syncGroup,
-            syncAction: syncAction
-        )
+                case .removed:
+                    task.syncGroup.profilePicture.removed = Common_Unit()
 
-        return [
-            Promise { try $0.fulfill(
-                _ = reflectMessage(
+                case .unchanged:
+                    break
+                }
+
+                var syncAction: D2d_GroupSync.OneOf_Action!
+                switch task.syncAction {
+                case .create:
+                    var create = D2d_GroupSync.Create()
+                    create.group = task.syncGroup
+                    syncAction = .create(create)
+                case .delete:
+                    var delete = D2d_GroupSync.Delete()
+                    delete.groupIdentity = task.syncGroup.groupIdentity
+                    syncAction = .delete(delete)
+                case .update:
+                    var update = D2d_GroupSync.Update()
+                    update.group = task.syncGroup
+                    syncAction = .update(update)
+                }
+
+                let envelope = self.frameworkInjector.mediatorMessageProtocol.getEnvelopeForGroupSync(
+                    group: task.syncGroup,
+                    syncAction: syncAction
+                )
+
+                try self.reflectMessage(
                     envelope: envelope,
                     ltReflect: self.taskContext.logReflectMessageToMediator,
                     ltAck: self.taskContext.logReceiveMessageAckFromMediator
                 )
-            ) },
-        ]
+
+                return Promise()
+            }
     }
 
     override func checkPreconditions() throws -> Bool {
@@ -153,7 +98,7 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
             ) else {
                 return true
             }
-            return groupEntity.state.intValue == GroupState.left.rawValue
+            return groupEntity.state.intValue == GroupEntity.GroupState.left.rawValue
         }
 
         guard let group = frameworkInjector.groupManager.getGroup(
@@ -202,10 +147,10 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
                 )
         ) || !task.syncGroup.hasUserState
 
-        var category: ConversationCategory?
-        var visibility: ConversationVisibility?
-        frameworkInjector.entityManager.performSyncBlockAndSafe {
-            let conversation = self.frameworkInjector.entityManager.entityFetcher.conversation(
+        var category: ConversationEntity.Category?
+        var visibility: ConversationEntity.Visibility?
+        frameworkInjector.entityManager.performAndWaitSave {
+            let conversation = self.frameworkInjector.entityManager.entityFetcher.conversationEntity(
                 for: group.groupID,
                 creator: group.groupCreatorIdentity
             )
@@ -215,12 +160,12 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
 
         let sameConversationCategory = (
             task.syncGroup.hasConversationCategory && task.syncGroup.conversationCategory
-                .rawValue == category?.rawValue ?? ConversationCategory.default.rawValue
+                .rawValue == category?.rawValue ?? ConversationEntity.Category.default.rawValue
         ) || !task.syncGroup.hasConversationCategory
 
         let sameConversationVisibility = (
             task.syncGroup.hasConversationVisibility && task.syncGroup.conversationVisibility
-                .rawValue == visibility?.rawValue ?? ConversationVisibility.default.rawValue
+                .rawValue == visibility?.rawValue ?? ConversationEntity.Visibility.default.rawValue
         ) || !task.syncGroup.hasConversationVisibility
 
         return sameMembers && sameName && sameProfilePicture && sameImage && sameState && sameConversationCategory &&

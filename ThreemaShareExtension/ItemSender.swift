@@ -23,6 +23,7 @@ import CoreServices
 import Foundation
 import PromiseKit
 import ThreemaFramework
+import ThreemaMacros
 
 protocol SenderItemDelegate: AnyObject {
     func showAlert(with title: String, message: String)
@@ -32,7 +33,7 @@ protocol SenderItemDelegate: AnyObject {
 }
 
 class ItemSender: NSObject {
-    private var recipientConversations: Set<Conversation>?
+    private var recipientConversations: Set<ConversationEntity>?
     var itemsToSend: [URL]?
     var textToSend: String?
     var sendAsFile = false
@@ -80,7 +81,7 @@ class ItemSender: NSObject {
     }
     
     private func sendMediaItems() {
-        let conv: [Conversation] = Array(recipientConversations!)
+        let conv: [ConversationEntity] = Array(recipientConversations!)
         DispatchQueue.global().async {
             var senderItem: URLSenderItem?
             for i in 0..<self.itemsToSend!.count {
@@ -128,7 +129,7 @@ class ItemSender: NSObject {
             guard let item = URLSenderItemCreator.getSenderItem(for: url, maxSize: .large) else {
                 let mimeType = UTIConverter.mimeType(fromUTI: UTIConverter.uti(forFileURL: url)) ?? "unknown type"
                 let msg = "Could not create sender item for item of type \(mimeType)"
-                DDLogError(msg)
+                DDLogError("\(msg)")
                 fatalError(msg)
             }
             senderItem = item
@@ -139,7 +140,7 @@ class ItemSender: NSObject {
         return senderItem
     }
     
-    func sendItemsTo(conversations: Set<Conversation>) {
+    func sendItemsTo(conversations: Set<ConversationEntity>) {
         recipientConversations = conversations
         _ = itemCount().done { itemCount in
             self.totalSendCount = self.recipientConversations!.count * itemCount
@@ -156,13 +157,13 @@ class ItemSender: NSObject {
             }
             else {
                 let err = "No sendable items provided"
-                DDLogError(err)
+                DDLogError("\(err)")
                 fatalError(err)
             }
         }
     }
     
-    private func sendItem(senderItem: Any, toConversation: Conversation, correlationID: String?) {
+    private func sendItem(senderItem: Any, toConversation: ConversationEntity, correlationID: String?) {
         if let senderItem = senderItem as? URLSenderItem {
             sendURLSenderItem(senderItem: senderItem, toConversation: toConversation, correlationID: correlationID)
         }
@@ -173,8 +174,8 @@ class ItemSender: NSObject {
                 sendString(message: message, toConversation: toConversation)
             }
             else {
-                let title = BundleUtil.localizedString(forKey: "error_message_no_items_title")
-                let message = BundleUtil.localizedString(forKey: "error_message_no_items_message")
+                let title = #localize("error_message_no_items_title")
+                let message = #localize("error_message_no_items_message")
                 delegate!.showAlert(with: title, message: message)
                 
                 delegate?.finishedItem(item: progressItemKey(item: message, conversation: toConversation)!)
@@ -183,8 +184,8 @@ class ItemSender: NSObject {
             }
         }
         else {
-            let title = BundleUtil.localizedString(forKey: "error_message_no_items_title")
-            let message = BundleUtil.localizedString(forKey: "error_message_no_items_message")
+            let title = #localize("error_message_no_items_title")
+            let message = #localize("error_message_no_items_message")
             delegate!.showAlert(with: title, message: message)
             
             sentItemCount = sentItemCount! + 1
@@ -192,18 +193,22 @@ class ItemSender: NSObject {
         }
     }
     
-    private func sendURLSenderItem(senderItem: URLSenderItem, toConversation: Conversation, correlationID: String?) {
+    private func sendURLSenderItem(
+        senderItem: URLSenderItem,
+        toConversation: ConversationEntity,
+        correlationID: String?
+    ) {
         sender = Old_FileMessageSender()
         sender!.uploadProgressDelegate = self
         sender!.send(senderItem, in: toConversation, requestID: nil, correlationID: correlationID)
         if toConversation.conversationVisibility == .archived {
-            toConversation.conversationVisibility = .default
+            toConversation.visibility = ConversationEntity.Visibility.default.rawValue as NSNumber
         }
         uploadSema.wait()
         sender = nil
     }
     
-    private func sendString(message: String, toConversation: Conversation) {
+    private func sendString(message: String, toConversation: ConversationEntity) {
         Task { @MainActor in
             self.delegate?.setProgress(
                 progress: 0.1,
@@ -222,13 +227,14 @@ class ItemSender: NSObject {
         }
     }
     
-    private func textMessageCompletionHandler(textMessages: [TextMessage]) {
+    private func textMessageCompletionHandler(textMessages: [TextMessageEntity]) {
         for textMessage in textMessages {
             delegate?
-                .finishedItem(item: [progressItemKey(item: textMessage.text!, conversation: textMessage.conversation)])
+                .finishedItem(item: [progressItemKey(item: textMessage.text, conversation: textMessage.conversation)])
             
             if textMessage.conversation.conversationVisibility == .archived {
-                textMessage.conversation.conversationVisibility = .default
+                textMessage.conversation.visibility = ConversationEntity.Visibility.default
+                    .rawValue as NSNumber
             }
             
             DatabaseManager.db()?.addDirtyObject(textMessage.conversation)
@@ -239,7 +245,7 @@ class ItemSender: NSObject {
         }
     }
     
-    private func progressItemKey(item: String, conversation: Conversation) -> Any? {
+    private func progressItemKey(item: String, conversation: ConversationEntity) -> Any? {
         let hash: NSInteger = (item as AnyObject).hash + conversation.hashValue
         return NSNumber(value: hash)
     }
@@ -297,7 +303,7 @@ extension ItemSender: UploadProgressDelegate {
         }
         sentItemCount! += 1
         
-        let errorTitle = BundleUtil.localizedString(forKey: "error_sending_failed")
+        let errorTitle = #localize("error_sending_failed")
         let errorMessage = Old_FileMessageSender.message(forError: error)
         
         delegate?.showAlert(with: errorTitle, message: errorMessage!)

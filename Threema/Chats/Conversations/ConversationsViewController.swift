@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import OSLog
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 class ConversationsViewController: ThemedTableViewController {
@@ -42,19 +43,19 @@ class ConversationsViewController: ThemedTableViewController {
         action: #selector(showToolbar)
     )
     private lazy var toolbarArchiveButton = UIBarButtonItem(
-        title: BundleUtil.localizedString(forKey: "archive"),
+        title: #localize("archive"),
         style: .plain,
         target: self,
         action: #selector(archiveSelected)
     )
     private lazy var toolbarReadButton = UIBarButtonItem(
-        title: BundleUtil.localizedString(forKey: "mark_read"),
+        title: #localize("mark_read"),
         style: .plain,
         target: self,
         action: #selector(readSelected)
     )
     private lazy var toolbarUnreadButton = UIBarButtonItem(
-        title: BundleUtil.localizedString(forKey: "mark_unread"),
+        title: #localize("mark_unread"),
         style: .plain,
         target: self,
         action: #selector(unreadSelected)
@@ -65,7 +66,7 @@ class ConversationsViewController: ThemedTableViewController {
         action: #selector(hideToolbar)
     )
     private lazy var selectAllButton = UIBarButtonItem(
-        title: BundleUtil.localizedString(forKey: "select_all"),
+        title: #localize("select_all"),
         style: .plain,
         target: self,
         action: #selector(selectAllRows)
@@ -77,7 +78,7 @@ class ConversationsViewController: ThemedTableViewController {
         controller.delegate = globalSearchResultsViewController
         controller.obscuresBackgroundDuringPresentation = false
         
-        controller.searchBar.placeholder = "conversations_global_search_placeholder".localized
+        controller.searchBar.placeholder = #localize("conversations_global_search_placeholder")
         controller.searchBar.scopeButtonTitles = globalSearchResultsViewController.searchScopeButtonTitles
         controller.searchBar.searchTextField.allowsCopyingTokens = false
 
@@ -101,7 +102,7 @@ class ConversationsViewController: ThemedTableViewController {
     private lazy var notificationManager = NotificationManager(businessInjector: businessInjector)
     private lazy var utilities = ConversationActions(businessInjector: businessInjector)
     
-    @objc public var selectedConversation: Conversation?
+    @objc public var selectedConversation: ConversationEntity?
     private var allSelected = false
     private var didStartMultiselect = false
     
@@ -119,12 +120,12 @@ class ConversationsViewController: ThemedTableViewController {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         
-        newChatButton.accessibilityLabel = BundleUtil.localizedString(forKey: "new_message_accessibility")
+        newChatButton.accessibilityLabel = #localize("new_message_accessibility")
         
         addObservers()
         // Sets TabBar Title
-        navigationController?.title = BundleUtil.localizedString(forKey: "chats_title")
-        title = BundleUtil.localizedString(forKey: "chats_title")
+        navigationController?.title = #localize("chats_title")
+        title = #localize("chats_title")
         
         do {
             try fetchedResultsController.performFetch()
@@ -218,7 +219,7 @@ extension ConversationsViewController {
             DDLogError("Unable to create ConversationTableViewCell for cell at IndexPath: + \(indexPath)")
             fatalError("Unable to create ConversationTableViewCell for cell at IndexPath: + \(indexPath)")
         }
-        cell.setConversation(to: fetchedResultsController.object(at: indexPath) as? Conversation)
+        cell.setConversation(to: fetchedResultsController.object(at: indexPath) as? ConversationEntity)
         cell.setNavigationController(to: navigationController)
         return cell
     }
@@ -240,7 +241,7 @@ extension ConversationsViewController {
             return
         }
         
-        guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+        guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
             DDLogError("Could not select cell because there was no conversation for its indexPath")
             return
         }
@@ -313,7 +314,7 @@ extension ConversationsViewController {
         _ tableView: UITableView,
         leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+        guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
             return nil
         }
         
@@ -334,7 +335,7 @@ extension ConversationsViewController {
         _ tableView: UITableView,
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+        guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
             return nil
         }
         
@@ -348,8 +349,8 @@ extension ConversationsViewController {
         }
         
         archiveAction.image = UIImage(systemName: "archivebox.fill")
-        archiveAction.title = BundleUtil.localizedString(forKey: "archive")
-        archiveAction.accessibilityLabel = BundleUtil.localizedString(forKey: "archive")
+        archiveAction.title = #localize("archive")
+        archiveAction.accessibilityLabel = #localize("archive")
         archiveAction.backgroundColor = Colors.gray
         
         // Delete
@@ -370,8 +371,8 @@ extension ConversationsViewController {
         }
         
         deleteAction.image = UIImage(systemName: "trash.fill")
-        deleteAction.title = BundleUtil.localizedString(forKey: "delete")
-        deleteAction.accessibilityLabel = BundleUtil.localizedString(forKey: "delete")
+        deleteAction.title = #localize("delete")
+        deleteAction.accessibilityLabel = #localize("delete")
         
         let configuration = UISwipeActionsConfiguration(actions: [archiveAction, deleteAction])
         
@@ -379,17 +380,17 @@ extension ConversationsViewController {
     }
     
     /// Creates the Pin Action for the ContextMenu
-    /// - Parameter conversation: Conversation for Action
+    /// - Parameter conversation: ConversationEntity for Action
     /// - Returns: ContextualAction for SwipeMenu of Cell
-    private func createPinAction(conversation: Conversation) -> UIContextualAction {
+    private func createPinAction(conversation: ConversationEntity) -> UIContextualAction {
         
         let isPinned = conversation.conversationVisibility == .pinned
         let pinTitle: String =
             if isPinned {
-                BundleUtil.localizedString(forKey: "unpin")
+                #localize("unpin")
             }
             else {
-                BundleUtil.localizedString(forKey: "pin")
+                #localize("pin")
             }
         
         let pinAction = UIContextualAction(style: .normal, title: nil) { _, _, handler in
@@ -418,17 +419,17 @@ extension ConversationsViewController {
     }
     
     /// Creates the Read Action for the ContextMenu
-    /// - Parameter conversation: Conversation for Action
+    /// - Parameter conversation: ConversationEntity for Action
     /// - Returns: ContextualAction for SwipeMenu of Cell
-    private func createReadAction(conversation: Conversation) -> UIContextualAction {
+    private func createReadAction(conversation: ConversationEntity) -> UIContextualAction {
         
         let hasUnread = conversation.unreadMessageCount.intValue != 0
         let unreadTitle: String =
             if hasUnread {
-                BundleUtil.localizedString(forKey: "read")
+                #localize("read")
             }
             else {
-                BundleUtil.localizedString(forKey: "unread")
+                #localize("unread")
             }
         
         let readAction = UIContextualAction(style: .normal, title: nil) { _, _, handler in
@@ -473,7 +474,7 @@ extension ConversationsViewController {
             return nil
         }
 
-        guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+        guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
             DDLogError("Could not select cell because there was no conversation for its indexPath")
             return nil
         }
@@ -544,7 +545,7 @@ extension ConversationsViewController {
         navigationItem.leftBarButtonItem = editButton
         navigationItem.rightBarButtonItem = newChatButton
         navigationItem.searchController = searchController
-        navigationItem.title = BundleUtil.localizedString(forKey: "chats_title")
+        navigationItem.title = #localize("chats_title")
     }
     
     /// Marks selected Conversations as "Read"
@@ -584,7 +585,7 @@ extension ConversationsViewController {
     /// Selects all Rows of the TableView
     @objc private func selectAllRows() {
         if !allSelected {
-            navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "deselect_all")
+            navigationItem.leftBarButtonItem?.title = #localize("deselect_all")
             allSelected = true
             for section in 0..<tableView.numberOfSections {
                 for row in 0..<tableView.numberOfRows(inSection: section) {
@@ -596,7 +597,7 @@ extension ConversationsViewController {
             }
         }
         else {
-            navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "select_all")
+            navigationItem.leftBarButtonItem?.title = #localize("select_all")
             allSelected = false
             for section in 0..<tableView.numberOfSections {
                 for row in 0..<tableView.numberOfRows(inSection: section) {
@@ -622,21 +623,21 @@ extension ConversationsViewController {
         
         if selectedCount == fetchedResultsController.fetchedObjects?.count {
             allSelected = true
-            navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "deselect_all")
-            navigationItem.title = BundleUtil.localizedString(forKey: "all_selected")
+            navigationItem.leftBarButtonItem?.title = #localize("deselect_all")
+            navigationItem.title = #localize("all_selected")
         }
         else if selectedCount != 0 {
             allSelected = false
-            navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "select_all")
+            navigationItem.leftBarButtonItem?.title = #localize("select_all")
             navigationItem.title = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "selected_count"),
+                #localize("selected_count"),
                 selectedCount
             )
         }
         else {
             allSelected = false
-            navigationItem.leftBarButtonItem?.title = BundleUtil.localizedString(forKey: "select_all")
-            navigationItem.title = BundleUtil.localizedString(forKey: "chats_title")
+            navigationItem.leftBarButtonItem?.title = #localize("select_all")
+            navigationItem.title = #localize("chats_title")
             toolbarReadButton.isEnabled = false
             toolbarArchiveButton.isEnabled = false
         }
@@ -653,7 +654,7 @@ extension ConversationsViewController {
         }
         
         for path in selected {
-            guard let conversation = fetchedResultsController.object(at: path) as? Conversation else {
+            guard let conversation = fetchedResultsController.object(at: path) as? ConversationEntity else {
                 continue
             }
             if conversation.unreadMessageCount != 0 {
@@ -678,7 +679,7 @@ extension ConversationsViewController {
         
         let backButton = UIBarButtonItem(title: backButtonTitle, style: .plain, target: nil, action: nil)
         backButton.accessibilityLabel = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "chat_back_button_accessibility"),
+            #localize("chat_back_button_accessibility"),
             unread
         )
         
@@ -687,7 +688,7 @@ extension ConversationsViewController {
         }
     }
     
-    @objc func setSelection(for conversation: Conversation?) {
+    @objc func setSelection(for conversation: ConversationEntity?) {
         guard let conversation,
               let newRow = fetchedResultsController.indexPath(forObject: conversation) else {
             return
@@ -729,7 +730,7 @@ extension ConversationsViewController {
             (navHeight <= BrandingUtils.compactPromptNavBarHeight && textInNavBar),
             navigationItem.titleView != nil {
             navigationItem.titleView = nil
-            title = BundleUtil.localizedString(forKey: "chats_title")
+            title = #localize("chats_title")
         }
         else if (navHeight > BrandingUtils.compactNavBarHeight && !textInNavBar) ||
             (navHeight > BrandingUtils.compactPromptNavBarHeight && textInNavBar),
@@ -759,9 +760,9 @@ extension ConversationsViewController {
             if !KKPasscodeLock.shared().isPasscodeRequired() {
                 UIAlertTemplate.showAlert(
                     owner: self,
-                    title: BundleUtil.localizedString(forKey: "privateChat_alert_title"),
-                    message: BundleUtil.localizedString(forKey: "privateChat_setup_alert_message"),
-                    titleOk: BundleUtil.localizedString(forKey: "privateChat_code_alert_confirm"), actionOk: { _ in
+                    title: #localize("privateChat_alert_title"),
+                    message: #localize("privateChat_setup_alert_message"),
+                    titleOk: #localize("privateChat_code_alert_confirm"), actionOk: { _ in
                         self.lockScreen.presentLockScreenView(
                             viewController: self,
                             enteredCorrectly: {
@@ -803,13 +804,13 @@ extension ConversationsViewController {
         }
     }
     
-    @objc func getFirstConversation() -> Conversation? {
+    @objc func getFirstConversation() -> ConversationEntity? {
         guard let objects = fetchedResultsController.fetchedObjects as NSArray? else {
             return nil
         }
         
         for object in objects {
-            guard let conversation = object as? Conversation else {
+            guard let conversation = object as? ConversationEntity else {
                 continue
             }
             
@@ -834,18 +835,18 @@ extension ConversationsViewController {
             if count > 0 {
                 archivedChatsButton.isHidden = false
                 archivedChatsButton.setTitle(
-                    BundleUtil.localizedString(forKey: "archived_chats") + " ",
+                    #localize("archived_chats") + " ",
                     for: .normal
                 )
                 
-                var chevronImage = UIImage(systemName: "chevron.right")?
+                let chevronImage = UIImage(systemName: "chevron.right")?
                     .applying(symbolWeight: .semibold, symbolScale: .medium)
                 archivedChatsButton.setImage(chevronImage, for: .normal)
                 archivedChatsButton.isEnabled = true
             }
             // swiftformat:disable:next isEmpty
             else if let objects = fetchedResultsController.fetchedObjects as NSArray?, objects.count != 0 {
-                archivedChatsButton.setTitle(BundleUtil.localizedString(forKey: "no_archived_chats"), for: .normal)
+                archivedChatsButton.setTitle(#localize("no_archived_chats"), for: .normal)
                 archivedChatsButton.setImage(nil, for: .normal)
                 archivedChatsButton.isEnabled = false
                 archivedChatsButton.isHidden = false
@@ -930,7 +931,7 @@ extension ConversationsViewController {
         guard let objectID: NSManagedObjectID = notification.userInfo?[kKeyObjectID] as? NSManagedObjectID else {
             return
         }
-        if objectID.entity == Conversation.entity() {
+        if objectID.entity == ConversationEntity.entity() {
             refreshConversationsDelay?.invalidate()
             refreshConversationsDelay = Timer.scheduledTimer(
                 timeInterval: TimeInterval(0.1),
@@ -979,8 +980,8 @@ extension ConversationsViewController {
     /// Updates the Predicates to the default and refreshes the TableView
     @objc private func updatePredicates() {
         var newPredicate: NSPredicate
-        let archivedPredicate = NSPredicate(format: "visibility != %d", ConversationVisibility.archived.rawValue)
-        let privatePredicate = NSPredicate(format: "category != %d", ConversationCategory.private.rawValue)
+        let archivedPredicate = NSPredicate(format: "visibility != %d", ConversationEntity.Visibility.archived.rawValue)
+        let privatePredicate = NSPredicate(format: "category != %d", ConversationEntity.Category.private.rawValue)
         let lastUpdateNotNil = NSPredicate(format: "lastUpdate != nil")
         
         if UserSettings.shared().hidePrivateChats {

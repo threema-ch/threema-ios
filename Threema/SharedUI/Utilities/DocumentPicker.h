@@ -19,13 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Conversation.h"
 
 @interface DocumentPicker : NSObject
 
 @property CGRect popoverSourceRect;
 
-+ (instancetype)documentPickerForViewController:(UIViewController *)presentingViewController conversation:(Conversation *)conversation;
++ (instancetype)documentPickerForViewController:(UIViewController *)presentingViewController conversation:(ConversationEntity *)conversation;
 
 - (void)show;
 

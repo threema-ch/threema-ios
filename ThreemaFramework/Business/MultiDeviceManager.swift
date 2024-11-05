@@ -43,6 +43,9 @@ public protocol MultiDeviceManagerProtocol {
     
     func drop(device: DeviceInfo) -> Promise<Void>
     func disableMultiDevice(runForwardSecurityRefreshSteps: Bool) async throws
+    
+    /// Disable multi-device if we can ensure that no other device is left in the group
+    func disableMultiDeviceIfNeeded()
 }
 
 extension MultiDeviceManagerProtocol {
@@ -59,6 +62,7 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
     private let serverConnector: ServerConnectorProtocol
     private let contactStore: ContactStoreProtocol
     private let userSettings: UserSettingsProtocol
+    private let taskManager: TaskManagerProtocol
     private let entityManager: EntityManager
 
     public var maximumNumberOfDeviceSlots: Int? {
@@ -69,11 +73,13 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
         serverConnector: ServerConnectorProtocol,
         contactStore: ContactStoreProtocol,
         userSettings: UserSettingsProtocol,
+        taskManager: TaskManagerProtocol,
         entityManager: EntityManager
     ) {
         self.serverConnector = serverConnector
         self.contactStore = contactStore
         self.userSettings = userSettings
+        self.taskManager = taskManager
         self.entityManager = entityManager
     }
 
@@ -82,6 +88,7 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
             serverConnector: ServerConnector.shared(),
             contactStore: ContactStore.shared(),
             userSettings: UserSettings.shared(),
+            taskManager: TaskManager(),
             entityManager: EntityManager()
         )
     }
@@ -244,5 +251,14 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
         await ForwardSecurityRefreshSteps().run(for: solicitedContactIdentities.map {
             ThreemaIdentity($0)
         })
+    }
+    
+    public func disableMultiDeviceIfNeeded() {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+        
+        let task = TaskDefinitionDisableMultiDeviceIfNeeded()
+        taskManager.add(taskDefinition: task)
     }
 }

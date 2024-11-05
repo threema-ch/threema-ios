@@ -20,7 +20,6 @@
 
 #import "RecentTableDataSource.h"
 #import "ErrorHandler.h"
-#import "Conversation.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "EntityFetcher.h"
 #import "MyIdentityStore.h"
@@ -71,7 +70,7 @@
 }
 
 - (void)selectedCellAtIndexPath:(NSIndexPath *)indexPath selected:(BOOL)selected {
-    Conversation *conversation = [_fetchedResultsController objectAtIndexPath:indexPath];
+    ConversationEntity *conversation = [_fetchedResultsController objectAtIndexPath:indexPath];
     
     if (selected) {
         if (![_selectedConversations containsObject:conversation]) {
@@ -84,7 +83,7 @@
     }
 }
 
-- (void)insertSelectedConversation:(Conversation *) conversation {
+- (void)insertSelectedConversation:(ConversationEntity *) conversation {
     [_selectedConversations addObject:conversation];
 }
 
@@ -109,7 +108,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    Conversation *conversation = [_fetchedResultsController objectAtIndexPath:indexPath];
+    ConversationEntity *conversation = [_fetchedResultsController objectAtIndexPath:indexPath];
     if ([conversation isGroup]) {
         Group *group = [groupManager getGroupWithConversation:conversation];
         GroupCell *cell = [tableView dequeueReusableCellWithIdentifier:@"GroupCell"];
@@ -130,7 +129,7 @@
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    Conversation *conversation = [_fetchedResultsController objectAtIndexPath:indexPath];
+    ConversationEntity *conversation = [_fetchedResultsController objectAtIndexPath:indexPath];
     NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
                           conversation, kKeyConversation,
                           nil];

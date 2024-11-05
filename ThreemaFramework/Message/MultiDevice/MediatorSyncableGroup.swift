@@ -79,7 +79,7 @@ actor MediatorSyncableGroup {
         update(identity: identity, state: group.state)
     }
 
-    func update(identity: GroupIdentity, conversationCategory: ConversationCategory?) {
+    func update(identity: GroupIdentity, conversationCategory: ConversationEntity.Category?) {
         guard userSettings.enableMultiDevice else {
             return
         }
@@ -89,7 +89,7 @@ actor MediatorSyncableGroup {
         setSyncGroup(sGroup)
     }
 
-    func update(identity: GroupIdentity, conversationVisibility: ConversationVisibility?) {
+    func update(identity: GroupIdentity, conversationVisibility: ConversationEntity.Visibility?) {
         guard userSettings.enableMultiDevice else {
             return
         }
@@ -140,7 +140,7 @@ actor MediatorSyncableGroup {
         task?.image = profilePicture
     }
 
-    func update(identity: GroupIdentity, state: GroupState) {
+    func update(identity: GroupIdentity, state: GroupEntity.GroupState) {
         guard userSettings.enableMultiDevice else {
             return
         }

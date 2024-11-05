@@ -23,6 +23,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class TextMessageEntity;
+
 @interface MessageActivityItem : NSObject <UIActivityItemSource>
 
 + (instancetype)activityItemFor:(nullable BaseMessage *)message;

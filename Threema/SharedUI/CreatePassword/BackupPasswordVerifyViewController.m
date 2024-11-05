@@ -25,7 +25,7 @@
 #import "Threema-Swift.h"
 
 @interface BackupPasswordVerifyViewController ()
-
+@property (weak, nonatomic) IBOutlet UILabel *enterAgainLabel;
 @end
 
 @implementation BackupPasswordVerifyViewController {
@@ -40,6 +40,11 @@
     
     self.tableView.rowHeight = 85.0;
     self.tableView.estimatedRowHeight = 85.0;
+    
+    self.title = [BundleUtil localizedStringForKey:@"password_again"];
+    self.navigationItem.rightBarButtonItem.title = [BundleUtil localizedStringForKey:@"next"];
+    self.enterAgainLabel.text = [BundleUtil localizedStringForKey:@"backup_password_verify_enter_again_label"];
+    self.passwordField.placeholder = [BundleUtil localizedStringForKey:@"Password"];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -124,6 +129,10 @@
         return NO;
     }
     return YES;
+}
+
+-(NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
+    return [BundleUtil localizedStringForKey:@"backup_password_verify_footer"];
 }
 
 @end

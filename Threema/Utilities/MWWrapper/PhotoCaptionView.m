@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "PhotoCaptionView.h"
-#import "ImageMessageEntity.h"
 #import "RectUtil.h"
 #import "TextStyleUtils.h"
 
@@ -37,7 +36,7 @@
 - (UIView *)customViewInRect:(CGRect)rect {
     ImageMessageEntity *imageMessageEntity = (ImageMessageEntity*)self.message;
     
-    NSString *caption = [imageMessageEntity.image getCaption];
+    NSString *caption = [imageMessageEntity.image caption];
     if (caption) {
         _textView = [self createTextViewInRect:rect];
         _textView.autoresizingMask = UIViewAutoresizingFlexibleWidth;

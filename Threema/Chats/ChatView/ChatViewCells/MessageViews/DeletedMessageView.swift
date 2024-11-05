@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 final class DeletedMessageView: UILabel {
     override init(frame: CGRect) {
@@ -45,7 +46,7 @@ final class DeletedMessageView: UILabel {
 
         lineBreakMode = .byWordWrapping
 
-        text = BundleUtil.localizedString(forKey: "deleted_message")
+        text = #localize("deleted_message")
     }
 
     // MARK: - Update

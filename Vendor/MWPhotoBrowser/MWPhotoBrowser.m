@@ -1255,7 +1255,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     NSUInteger numberOfPhotos = [self numberOfPhotos];
     if (_gridController) {
         if (_gridController.selectionMode) {
-            self.title = NSLocalizedString(@"Select Photos", nil);
+            self.title = NSLocalizedString(@"mw_select_photos_title", nil);
         } else {
             NSString *photosText;
             if (numberOfPhotos == 1) {
@@ -1791,7 +1791,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     if (!self.displaySelectionButtons) {
         self.displaySelectionButtons = YES;
         self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:[BundleUtil localizedStringForKey:@"mwphotobrowser_select_all"] style:UIBarButtonItemStylePlain target:self action:@selector(selectAllButtonPressed:)];
-        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Cancel", nil) style:UIBarButtonItemStylePlain target:self action:@selector(selectButtonPressed:)];
+        self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"cancel", nil) style:UIBarButtonItemStylePlain target:self action:@selector(selectButtonPressed:)];
         _deleteMultipleButton.enabled = false;
         _actionMultipleButton.enabled = false;
         [self.view addSubview:_gridToolbar];
@@ -2043,7 +2043,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         NSString *filename = [[FileUtility shared] getTemporarySendableFileNameWithBase:@"image"];
         NSURL *photoUrl = [photo urlForExportData:filename];
         
-        for (Conversation *conversation in conversations) {
+        for (ConversationEntity *conversation in conversations) {
             [URLSender sendURL:photoUrl asFile:sendAsFile caption:contactPicker.additionalTextToSend conversation:conversation];
         }
         [contactPicker dismissViewControllerAnimated:YES completion:nil];

@@ -20,6 +20,7 @@
 
 import QuartzCore
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 class MeContactDetailsViewController: ThemedTableViewController {
@@ -99,7 +100,7 @@ class MeContactDetailsViewController: ThemedTableViewController {
         if name == nil {
             name = MyIdentityStore.shared().identity
         }
-        title = "@\(BundleUtil.localizedString(forKey: "me"))"
+        title = "@\(#localize("me"))"
         nameLabel.text = name
         headerView.accessibilityLabel = name
         
@@ -107,7 +108,7 @@ class MeContactDetailsViewController: ThemedTableViewController {
         imageView.contentMode = .scaleAspectFill
         imageView.layer.masksToBounds = true
         imageView.layer.cornerRadius = imageView.bounds.size.width / 2
-        imageView.accessibilityLabel = BundleUtil.localizedString(forKey: "my_profilepicture")
+        imageView.accessibilityLabel = #localize("my_profilepicture")
         
         tableView.reloadData()
     }
@@ -137,7 +138,7 @@ class MeContactDetailsViewController: ThemedTableViewController {
         }
         else {
             let cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: "PublicKeyCell", for: indexPath)
-            cell.textLabel?.text = BundleUtil.localizedString(forKey: "public_key")
+            cell.textLabel?.text = #localize("public_key")
             return cell
         }
     }

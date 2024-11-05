@@ -103,7 +103,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             var ballotID: Data!
             var group: Group!
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                conversation.groupID = groupEntity.groupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = groupEntity.groupId
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
 
                 let ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()!
@@ -336,9 +337,10 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                 groupCreator: "MEMBER01"
             )
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            conversation.groupID = groupEntity.groupID
+            // swiftformat:disable:next acronyms
+            conversation.groupId = groupEntity.groupId
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
-            conversation.addMembers(members)
+            conversation.members?.formUnion(members)
 
             let ballotID = MockData.generateBallotID()
             let ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()

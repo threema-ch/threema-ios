@@ -126,7 +126,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         let messageFound: Bool = entityManager.performAndWaitSave {
             // 2. Lookup the message for `message_id` in the `group` and let `message` be
             //    the result.
-            guard let conversation = self.entityManager.entityFetcher.conversation(
+            guard let conversation = self.entityManager.entityFetcher.conversationEntity(
                 for: groupIdentity.id,
                 creator: groupIdentity.creator.string
             ) else {
@@ -147,7 +147,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             //    add `sender` to the list of group members requesting a re-send for
             //    `message`.
             switch message {
-            case is TextMessage, is LocationMessage, is FileMessageEntity, is BallotMessage:
+            case is TextMessageEntity, is LocationMessageEntity, is FileMessageEntity, is BallotMessage:
                 guard let contactEntity = self.entityManager.entityFetcher.contact(for: sender.string) else {
                     DDLogError("[ForwardSecurity] Unable to find contact entity for \(sender.string)")
                     return true
@@ -197,7 +197,8 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         entityManager.performAndWaitSave { [self] in
             // 1. Lookup the message for `message_id` in the associated 1:1 conversation
             //    and let `message` be the result.
-            guard let conversation = entityManager.entityFetcher.conversation(forIdentity: contact.identity) else {
+            guard let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: contact.identity)
+            else {
                 DDLogError(
                     "[ForwardSecurity] Conversation for rejected message ID \(rejectedMessageID.hexString) not found"
                 )
@@ -217,7 +218,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             // 3. If the _when rejected_ property associated to `message` allows to
             //    re-send after confirmation, mark `message` with _re-send requested_.
             switch message {
-            case is TextMessage, is LocationMessage, is FileMessageEntity, is BallotMessage:
+            case is TextMessageEntity, is LocationMessageEntity, is FileMessageEntity, is BallotMessage:
                 message.sendFailed = NSNumber(booleanLiteral: true)
             // TODO: (IOS-4253) Handle call offer, call answer & call ringing and abort call.
             default:
@@ -348,7 +349,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         
         // See `first4DhMessageReceived(session:contact:)` for an explanation of why this is not
         // `performBlockSyncAndSafe`.
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             guard let contact = self.entityManager.entityFetcher.contact(for: contact.identity) else {
                 DDLogError(
                     "[ForwardSecurity] Could not find contact (\(contact.identity)) when attempting to post negotiated version update"
@@ -398,7 +399,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         if session.outgoingAppliedVersion == .v10 {
             // See `first4DhMessageReceived(session:contact:)` for an explanation of why this is not
             // `performBlockSyncAndSafe`.
-            entityManager.performBlockAndWait {
+            entityManager.performAndWait {
                 guard let contact = self.entityManager.entityFetcher.contact(for: contactIdentity) else {
                     DDLogError(
                         "[ForwardSecurity] Could not fetch contact (\(contactIdentity)) when attempting to update the forward security state"
@@ -480,14 +481,14 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             ) {
                 if !allowDuplicates {
                     let messageFetcher = MessageFetcher(for: conversation, with: self.entityManager)
-                    if let lastSystemMessage = messageFetcher.lastMessage() as? SystemMessage,
+                    if let lastSystemMessage = messageFetcher.lastMessage() as? SystemMessageEntity,
                        lastSystemMessage.type.intValue == reason {
                         DDLogNotice("[ForwardSecurity] Don't post duplicate system message for \(reason)")
                         return
                     }
                 }
                 
-                let systemMessage = self.entityManager.entityCreator.systemMessage(for: conversation)
+                let systemMessage = self.entityManager.entityCreator.systemMessageEntity(for: conversation)
                 systemMessage?.type = NSNumber(value: reason)
                 systemMessage?.arg = arg?.data(using: .utf8)
                 systemMessage?.remoteSentDate = Date()

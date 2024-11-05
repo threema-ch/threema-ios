@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 protocol ChatBarViewDelegate: AnyObject {
@@ -69,7 +70,7 @@ final class ChatBarView: UIView {
     // MARK: - Private properties
     
     private let markupParser = MarkupParser()
-    private let conversation: Conversation
+    private let conversation: ConversationEntity
     private let precomposedText: String?
     
     private var voiceMessageController: VoiceMessageRecorderViewController?
@@ -108,7 +109,7 @@ final class ChatBarView: UIView {
     private lazy var plusButton: ChatBarButton = {
         let imageButton = ChatBarButton(
             sfSymbolName: "plus.circle.fill",
-            accessibilityLabel: BundleUtil.localizedString(forKey: "compose_bar_attachment_button_accessibility_label"),
+            accessibilityLabel: #localize("compose_bar_attachment_button_accessibility_label"),
             defaultColor: { Colors.backgroundChatBarButton },
             customScalableSize: Config.plusButtonSize
         ) { [weak self] _ in
@@ -180,7 +181,7 @@ final class ChatBarView: UIView {
     private lazy var recordButton = {
         let button = ChatBarButton(
             sfSymbolName: "mic.fill",
-            accessibilityLabel: BundleUtil.localizedString(forKey: "compose_bar_record_button_accessibility_label"),
+            accessibilityLabel: #localize("compose_bar_record_button_accessibility_label"),
             defaultColor: { Colors.backgroundChatBarButton }
         ) { [weak self] _ in
             guard let strongSelf = self else {
@@ -200,7 +201,7 @@ final class ChatBarView: UIView {
     
     private lazy var cameraButton = ChatBarButton(
         sfSymbolName: "camera.fill",
-        accessibilityLabel: BundleUtil.localizedString(forKey: "compose_bar_camera_button_accessibility_label"),
+        accessibilityLabel: #localize("compose_bar_camera_button_accessibility_label"),
         defaultColor: { Colors.backgroundChatBarButton }
     ) { [weak self] _ in
         guard let strongSelf = self else {
@@ -238,7 +239,7 @@ final class ChatBarView: UIView {
     
     private lazy var imagePickerButton = ChatBarButton(
         sfSymbolName: "photo.fill",
-        accessibilityLabel: BundleUtil.localizedString(forKey: "compose_bar_image_picker_button_accessibility_label"),
+        accessibilityLabel: #localize("compose_bar_image_picker_button_accessibility_label"),
         defaultColor: { Colors.backgroundChatBarButton }
     ) { [weak self] _ in
         guard let strongSelf = self else {
@@ -254,7 +255,11 @@ final class ChatBarView: UIView {
     
     // MARK: - Lifecycle
     
-    init(conversation: Conversation, mentionsDelegate: MentionsTableViewDelegate, precomposedText: String? = nil) {
+    init(
+        conversation: ConversationEntity,
+        mentionsDelegate: MentionsTableViewDelegate,
+        precomposedText: String? = nil
+    ) {
         self.conversation = conversation
         self.precomposedText = precomposedText
         
@@ -445,6 +450,14 @@ final class ChatBarView: UIView {
         sendButton.accessibilityLabel = text
     }
     
+    func updateSendButton() {
+        sendButton
+            .updateButton(
+                with: (chatBarViewDelegate?.isEditedMessageSet() ?? false) ? "checkmark.circle.fill" :
+                    "arrow.up.circle.fill"
+            )
+    }
+    
     // MARK: - Animations
     
     private func showSendButton() {
@@ -456,6 +469,8 @@ final class ChatBarView: UIView {
     }
     
     private func showOrHideRightButtonsStackView(hide: Bool) {
+        updateSendButton()
+        
         guard recordButton.isHidden != hide else {
             return
         }

@@ -40,7 +40,7 @@
 #define kExtensionDataMaxLength = 256
 #define kVouchLen 32
 #define kEphemeralKeyHashLen 32
-
+#define kGCKLen 32
 #define kConnectTimeout 15
 #define kReadTimeout 20
 #define kWriteTimeout 20

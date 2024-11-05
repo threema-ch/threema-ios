@@ -142,19 +142,7 @@ public class ThreemaEnvironment: NSObject {
             return false
         }
         
-        guard ThreemaEnvironment.env() != .xcode else {
-            let businessInjector = BusinessInjector()
-            return businessInjector.userSettings.allowSeveralLinkedDevices
-        }
-        
-        // Don't enable it for any public version
-        switch ThreemaApp.current {
-        case .threema, .work, .onPrem:
-            return false
-        case .green, .blue:
-            let businessInjector = BusinessInjector()
-            return businessInjector.userSettings.allowSeveralLinkedDevices
-        }
+        return true
     }
     
     // MARK: CallKit

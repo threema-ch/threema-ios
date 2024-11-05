@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 /// Show and change `PushSetting` for a conversation or contact
@@ -90,7 +91,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
             
             case .foreverButton:
                 let periodButtonCell: PeriodButtonCell = tableView.dequeueCell(for: indexPath)
-                periodButtonCell.textLabel?.text = BundleUtil.localizedString(forKey: "doNotDisturb_on_forever")
+                periodButtonCell.textLabel?.text = #localize("doNotDisturb_on_forever")
                 return periodButtonCell
             
             case .notifyWhenMentionedSetting:
@@ -147,7 +148,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
             // Show reset title when DND is active
             if section == .selectPeriod,
                strongSelf.pushSetting.type == .offPeriod || strongSelf.pushSetting.type == .off {
-                return BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_reset")
+                return #localize("doNotDisturb_onPeriod_reset")
             }
         
             return nil
@@ -164,14 +165,14 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
                 
             case .notifyWhenMentionedSetting:
                 if strongSelf.pushSetting.mentioned {
-                    return BundleUtil.localizedString(forKey: "doNotDisturb_mention_footer_on")
+                    return #localize("doNotDisturb_mention_footer_on")
                 }
                 else {
-                    return BundleUtil.localizedString(forKey: "doNotDisturb_mention_footer_off")
+                    return #localize("doNotDisturb_mention_footer_off")
                 }
                 
             case .notificationPlaySoundSetting:
-                return BundleUtil.localizedString(forKey: "doNotDisturb_notification_sound_footer")
+                return #localize("doNotDisturb_notification_sound_footer")
                 
             default:
                 return nil
@@ -185,8 +186,8 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
             return nil
         }
         
-        let localizedInfo = BundleUtil.localizedString(forKey: "doNotDisturb_offHours_info")
-        let localizedDetailsFormatString = BundleUtil.localizedString(forKey: "doNotDisturb_offHours_details")
+        let localizedInfo = #localize("doNotDisturb_offHours_info")
+        let localizedDetailsFormatString = #localize("doNotDisturb_offHours_details")
     
         guard let localizedWeekdaysList = localizedOffHoursWeekdays() else {
             return localizedInfo
@@ -284,7 +285,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
 extension DoNotDisturbViewController {
     
     private func configureNavigationBar() {
-        navigationBarTitle = BundleUtil.localizedString(forKey: "doNotDisturb_title")
+        navigationBarTitle = #localize("doNotDisturb_title")
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close,

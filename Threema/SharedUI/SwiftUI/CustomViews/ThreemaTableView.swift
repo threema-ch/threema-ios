@@ -62,12 +62,12 @@ struct ThreemaTableView<Content: View>: View {
 #Preview {
     ThreemaTableView {
         Section {
-            Text("A 1")
-            Text("B 1")
+            Text(verbatim: "A 1")
+            Text(verbatim: "B 1")
         }
         Section {
-            Text("A 2")
-            Text("B 2")
+            Text(verbatim: "A 2")
+            Text(verbatim: "B 2")
         }
     }
 }

@@ -22,6 +22,8 @@ import XCTest
 @testable import ThreemaFramework
 
 class NonceGuardTests: XCTestCase {
+    private let myIdentityStore = MyIdentityStoreMock()
+    
     private var entityManager: EntityManager!
     private var dbPreparer: DatabasePreparer!
 
@@ -33,7 +35,10 @@ class NonceGuardTests: XCTestCase {
 
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
 
-        entityManager = EntityManager(databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: nil))
+        entityManager = EntityManager(
+            databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: nil),
+            myIdentityStore: myIdentityStore
+        )
         dbPreparer = DatabasePreparer(context: mainCnx)
 
         ddLoggerMock = DDLoggerMock()
@@ -46,15 +51,16 @@ class NonceGuardTests: XCTestCase {
     }
 
     func testIsProcessed() throws {
-        let nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))!
+        let nonce = MockData.generateMessageNonce()
+        let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentityStore: myIdentityStore)
         entityManager.performAndWaitSave {
-            _ = self.entityManager.entityCreator.nonce(with: nonce)
+            _ = self.entityManager.entityCreator.nonceEntity(with: hashedNonce)
         }
 
         let expectedIncomingMessage = BoxTextMessage()
         expectedIncomingMessage.nonce = nonce
 
-        let nonceGuard = NonceGuard(entityManager: entityManager)
+        let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertTrue(result)
@@ -62,9 +68,9 @@ class NonceGuardTests: XCTestCase {
 
     func testIsProcessedNoNonceStored() throws {
         let expectedIncomingMessage = BoxTextMessage()
-        expectedIncomingMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))
+        expectedIncomingMessage.nonce = MockData.generateMessageNonce()
 
-        let nonceGuard = NonceGuard(entityManager: entityManager)
+        let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertFalse(result)
@@ -73,7 +79,7 @@ class NonceGuardTests: XCTestCase {
     func testIsProcessedNonceIsNil() throws {
         let expectedIncomingMessage = BoxTextMessage()
 
-        let nonceGuard = NonceGuard(entityManager: entityManager)
+        let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertTrue(result)
@@ -84,15 +90,16 @@ class NonceGuardTests: XCTestCase {
     }
 
     func testIsProcessedReflected() throws {
-        let nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))!
+        let nonce = MockData.generateMessageNonce()
+        let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentityStore: myIdentityStore)
         entityManager.performAndWaitSave {
-            _ = self.entityManager.entityCreator.nonce(with: nonce)
+            _ = self.entityManager.entityCreator.nonceEntity(with: hashedNonce)
         }
 
         let expectedIncomingMessage = BoxTextMessage()
         expectedIncomingMessage.nonce = nonce
 
-        let nonceGuard = NonceGuard(entityManager: entityManager)
+        let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertTrue(result)
@@ -100,9 +107,9 @@ class NonceGuardTests: XCTestCase {
 
     func testIsProcessedNoNonceStoredReflected() throws {
         let expectedIncomingMessage = BoxTextMessage()
-        expectedIncomingMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))
+        expectedIncomingMessage.nonce = MockData.generateMessageNonce()
 
-        let nonceGuard = NonceGuard(entityManager: entityManager)
+        let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
 
         XCTAssertFalse(result)
@@ -110,9 +117,9 @@ class NonceGuardTests: XCTestCase {
 
     func testProcessed() throws {
         let expectedIncomingMessage = BoxTextMessage()
-        expectedIncomingMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))
+        expectedIncomingMessage.nonce = MockData.generateMessageNonce()
 
-        let nonceGuard = NonceGuard(entityManager: entityManager)
+        let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         try nonceGuard.processed(message: expectedIncomingMessage)
 
         XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: expectedIncomingMessage.nonce))
@@ -121,16 +128,15 @@ class NonceGuardTests: XCTestCase {
     func testProcessedNonceIsNil() throws {
         let expectedIncomingMessage = BoxTextMessage()
 
-        let nonceGuard = NonceGuard(entityManager: entityManager)
+        let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
 
         XCTAssertThrowsError(
             try nonceGuard.processed(message: expectedIncomingMessage),
             "Message nonce is nil"
         ) { error in
-            if case NonceGuard.NonceGuardError
-                .messageNonceIsNil(
-                    message: "Can't store nonce of message \(expectedIncomingMessage.loggingDescription)"
-                ) = error { }
+            if case NonceGuard.NonceGuardError.messageNonceIsNil(
+                message: "Can't store nonce of message \(expectedIncomingMessage.loggingDescription)"
+            ) = error { }
             else {
                 XCTFail("Wrong error message")
             }
@@ -139,9 +145,9 @@ class NonceGuardTests: XCTestCase {
 
     func testProcessedReflected() throws {
         let expectedIncomingMessage = BoxTextMessage()
-        expectedIncomingMessage.nonce = BytesUtility.generateRandomBytes(length: Int(kNaClCryptoNonceSize))
+        expectedIncomingMessage.nonce = MockData.generateMessageNonce()
 
-        let nonceGuard = NonceGuard(entityManager: entityManager)
+        let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         try nonceGuard.processed(message: expectedIncomingMessage)
 
         XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: expectedIncomingMessage.nonce))
@@ -150,11 +156,12 @@ class NonceGuardTests: XCTestCase {
     func testDoNotStoreSameNonceTwice() throws {
         let nonce = MockData.generateMessageNonce()
         
-        let nonceGuard = NonceGuard(entityManager: entityManager)
-        nonceGuard.processed(nonces: [nonce, nonce])
+        let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
+        try nonceGuard.processed(nonces: [nonce, nonce])
 
-        let matchedDBNonces = entityManager.entityFetcher.allNonces()?.filter {
-            $0.nonce == nonce
+        let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentityStore: myIdentityStore)
+        let matchedDBNonces = entityManager.entityFetcher.allNonceEntities()?.filter {
+            $0.nonce == hashedNonce
         }
         
         XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: nonce))

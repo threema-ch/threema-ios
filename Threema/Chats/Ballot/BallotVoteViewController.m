@@ -21,7 +21,6 @@
 #import "BallotVoteViewController.h"
 #import "BallotVoteTableCell.h"
 #import "BallotChoice.h"
-#import "BallotResult.h"
 #import "MyIdentityStore.h"
 #import "Ballot.h"
 #import "RectUtil.h"
@@ -214,9 +213,9 @@
 - (BOOL)resultForChoiceAt:(NSInteger)index {
     BallotChoice *choice = [_choices objectAtIndex:index];
     
-    BallotResult *result = [choice getOwnResult];
+    BallotResultEntity *result = [choice getOwnResult];
     if (result) {
-        return [result boolValue];
+        return result.boolValue;
     }
     
     return NO;

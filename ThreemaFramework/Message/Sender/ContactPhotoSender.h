@@ -22,7 +22,7 @@
 #import "Old_BlobUploadDelegate.h"
 #import "AbstractMessage.h"
 
-@class Conversation, ContactEntity;
+@class ConversationEntity, ContactEntity;
 
 NS_ASSUME_NONNULL_BEGIN
 

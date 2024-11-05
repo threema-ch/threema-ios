@@ -29,7 +29,7 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
     /// System message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views.
-    var systemMessageAndNeighbors: (message: SystemMessage?, neighbors: ChatViewDataSource.MessageNeighbors?) {
+    var systemMessageAndNeighbors: (message: SystemMessageEntity?, neighbors: ChatViewDataSource.MessageNeighbors?) {
         didSet {
             updateCell(for: systemMessageAndNeighbors.message)
         }
@@ -134,7 +134,7 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
         systemMessageBackgroundView.backgroundColor = Colors.systemMessageBackground
     }
     
-    private func updateCell(for systemMessage: SystemMessage?) {
+    private func updateCell(for systemMessage: SystemMessageEntity?) {
         guard case let .systemMessage(type: infoType) = systemMessage?.systemMessageType else {
             return
         }
@@ -200,7 +200,7 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
     // Helper for the helpers
     
     private var previousMessageIsSystemMessage: Bool {
-        guard let systemMessage = systemMessageAndNeighbors.neighbors?.previousMessage as? SystemMessage else {
+        guard let systemMessage = systemMessageAndNeighbors.neighbors?.previousMessage as? SystemMessageEntity else {
             return false
         }
         
@@ -222,7 +222,7 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
     }
         
     private var nextMessageIsSystemMessage: Bool {
-        guard let systemMessage = systemMessageAndNeighbors.neighbors?.nextMessage as? SystemMessage else {
+        guard let systemMessage = systemMessageAndNeighbors.neighbors?.nextMessage as? SystemMessageEntity else {
             return false
         }
         

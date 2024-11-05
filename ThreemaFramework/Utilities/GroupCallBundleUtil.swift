@@ -20,6 +20,7 @@
 
 import Foundation
 import GroupCalls
+import ThreemaMacros
 
 class GroupCallBundleUtil: GroupCallBundleUtilProtocol {
     static let shared = GroupCallBundleUtil()

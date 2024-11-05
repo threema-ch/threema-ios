@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 extension SettingsView {
     
@@ -37,7 +38,7 @@ extension SettingsView {
                             action: {
                                 model.giveFeedback()
                             },
-                            title: "settings_feedback".localized,
+                            title: #localize("settings_feedback"),
                             image: .systemImage("ant.fill")
                         )
                         .popoverTip(TipKitManager.ThreemaBetaFeedbackTip())
@@ -47,7 +48,7 @@ extension SettingsView {
                             action: {
                                 model.giveFeedback()
                             },
-                            title: "settings_feedback".localized,
+                            title: #localize("settings_feedback"),
                             image: .systemImage("ant.fill")
                         )
                     }
@@ -112,9 +113,9 @@ extension SettingsView {
                     locked: true,
                     destination: {
                         uiViewController(KKPasscodeSettingsViewController(style: .insetGrouped))
-                            .threemaNavigationBar("settings_list_passcode_lock_title".localized)
+                            .threemaNavigationBar(#localize("settings_list_passcode_lock_title"))
                     },
-                    title: "settings_list_passcode_lock_title".localized,
+                    title: #localize("settings_list_passcode_lock_title"),
                     accessoryText: (isPasswordRequired ? "On" : "Off").localized,
                     image: .systemImage("lock.fill")
                 )
@@ -171,7 +172,7 @@ extension SettingsView {
                             }, label: {
                                 Image(systemName: "qrcode.viewfinder")
                             })
-                            .accessibilityLabel("webClientSession_add".localized)
+                            .accessibilityLabel(#localize("webClientSession_add"))
                         }
                     }
                     .asAnyView
@@ -206,7 +207,7 @@ extension SettingsView {
                 .appending(sc.isProxyConnection ? " (Proxy)" : "")
             
             return SettingsListItemView(
-                cellTitle: "settings_list_network_title".localized,
+                cellTitle: #localize("settings_list_network_title"),
                 accessoryText: statusText
             )
         }
@@ -215,7 +216,7 @@ extension SettingsView {
         private var version: some View {
             HStack {
                 SettingsListItemView(
-                    cellTitle: "settings_list_version_title".localized
+                    cellTitle: #localize("settings_list_version_title")
                 )
                 Spacer()
                 Text(ThreemaUtility.appAndBuildVersionPretty)
@@ -226,7 +227,7 @@ extension SettingsView {
 
         private var license: some View {
             SettingsListItemView(
-                cellTitle: "settings_list_settings_license_username_title".localized,
+                cellTitle: #localize("settings_list_settings_license_username_title"),
                 accessoryText: LicenseStore.shared().licenseUsername
             )
         }
@@ -268,13 +269,13 @@ extension SettingsView {
             }
         
             private var title: String {
-                "settings_threema_work".localized
+                #localize("settings_threema_work")
             }
             
             private var label: SettingsListImageItemView {
                 .init(
                     cellTitle: title,
-                    subCellTitle: "settings_threema_work_subtitle".localized,
+                    subCellTitle: #localize("settings_threema_work_subtitle"),
                     image: Image(uiImage: UIImage(resource: .threemaWorkSettings))
                 )
             }
@@ -291,20 +292,23 @@ extension SettingsView {
                                 UIApplication.shared.open(link, options: [:], completionHandler: nil)
                                 
                             },
-                            title: String.localizedStringWithFormat("settings_list_rate".localized, ThreemaApp.appName),
+                            title: String.localizedStringWithFormat(
+                                #localize("settings_list_rate"),
+                                ThreemaApp.appName
+                            ),
                             image: .systemImage("star.fill")
                         )
                     }
                     SectionItem(
                         action: inviteFriends,
-                        title: "settings_list_invite_a_friend_title".localized,
+                        title: #localize("settings_list_invite_a_friend_title"),
                         image: .systemImage("person.2.wave.2.fill")
                     )
                     SectionItem(
                         action: {
                             topViewController.map { AddThreemaChannelAction.run(in: $0) }
                         },
-                        title: "settings_list_threema_channel_title".localized,
+                        title: #localize("settings_list_threema_channel_title"),
                         image: .systemImage("antenna.radiowaves.left.and.right")
                     )
                 }
@@ -373,7 +377,7 @@ extension SettingsView {
                             UIApplication.shared.open(link, options: [:], completionHandler: nil)
                             
                         },
-                        title: String.localizedStringWithFormat("settings_list_rate".localized, ThreemaApp.appName),
+                        title: String.localizedStringWithFormat(#localize("settings_list_rate"), ThreemaApp.appName),
                         image: .systemImage("star.fill")
                     )
                 }
@@ -382,7 +386,7 @@ extension SettingsView {
                         action: {
                             topViewController.map { AddThreemaWorkChannelAction.run(in: $0) }
                         },
-                        title: "settings_list_threema_work_channel_title".localized,
+                        title: #localize("settings_list_threema_work_channel_title"),
                         image: .systemImage("antenna.radiowaves.left.and.right")
                     )
                 }

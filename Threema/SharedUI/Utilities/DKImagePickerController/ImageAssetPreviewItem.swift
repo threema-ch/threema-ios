@@ -20,6 +20,7 @@
 
 import Foundation
 import PromiseKit
+import ThreemaMacros
 
 class ImageAssetPreviewItem: ImagePreviewItem {
     private typealias Asset = (filename: String, uti: String, imageData: Data)
@@ -152,7 +153,7 @@ class ImageAssetPreviewItem: ImagePreviewItem {
             return nil
         }
         let datetime = DateFormatter.accessibilityDateTime(date)
-        let text = String.localizedStringWithFormat(BundleUtil.localizedString(forKey: "imagedate_date"), datetime)
+        let text = String.localizedStringWithFormat(#localize("imagedate_date"), datetime)
         return text
     }
 }

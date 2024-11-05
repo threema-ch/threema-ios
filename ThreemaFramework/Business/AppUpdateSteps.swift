@@ -127,7 +127,7 @@ public struct AppUpdateSteps {
                 createIfNotExisting: false,
                 setLastUpdate: false
             ) {
-                let systemMessage = backgroundBusinessInjector.entityManager.entityCreator.systemMessage(
+                let systemMessage = backgroundBusinessInjector.entityManager.entityCreator.systemMessageEntity(
                     for: conversation
                 )
                 systemMessage?.type = NSNumber(value: kSystemMessageFsIllegalSessionState)

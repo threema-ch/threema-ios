@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 /// Thumbnail view with a tap gesture recognizer that overlays associated state and metadata information
@@ -278,7 +279,7 @@ final class MessageThumbnailTapView: UIView {
             
         case .fileNotFound:
             metadataView.symbolName = nil
-            metadataView.metadataString = BundleUtil.localizedString(forKey: "file_not_found_title")
+            metadataView.metadataString = #localize("file_not_found_title")
             metadataBlurBackgroundContainerView.isHidden = false
             
         case .dataDeleted:

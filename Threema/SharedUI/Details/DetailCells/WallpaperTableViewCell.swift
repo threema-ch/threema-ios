@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 class WallpaperTableViewCell: ThemedCodeStackTableViewCell {
@@ -31,7 +32,7 @@ class WallpaperTableViewCell: ThemedCodeStackTableViewCell {
                 return
             }
             titleLabel.text = action.title
-            stateLabel.text = BundleUtil.localizedString(forKey: "settings_chat_wallpaper_default")
+            stateLabel.text = #localize("settings_chat_wallpaper_default")
             stateLabel.textColor = Colors.textLight
         }
     }
@@ -42,10 +43,10 @@ class WallpaperTableViewCell: ThemedCodeStackTableViewCell {
                 return
             }
             if isDefault {
-                stateLabel.text = BundleUtil.localizedString(forKey: "settings_chat_wallpaper_default")
+                stateLabel.text = #localize("settings_chat_wallpaper_default")
             }
             else {
-                stateLabel.text = BundleUtil.localizedString(forKey: "settings_chat_wallpaper_custom")
+                stateLabel.text = #localize("settings_chat_wallpaper_custom")
             }
         }
     }

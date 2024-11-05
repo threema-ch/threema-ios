@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 class SafeActivatedViewController: ThemedTableViewController {
@@ -59,16 +60,16 @@ class SafeActivatedViewController: ThemedTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        serverNameLabel.text = BundleUtil.localizedString(forKey: "safe_server_name")
-        maxBackupBytesLabel.text = BundleUtil.localizedString(forKey: "safe_max_backup_size")
-        retentionDaysLabel.text = BundleUtil.localizedString(forKey: "safe_retention")
-        lastBackupLabel.text = BundleUtil.localizedString(forKey: "safe_last_backup")
-        backupSizeLabel.text = BundleUtil.localizedString(forKey: "safe_size")
-        lastResultLabel.text = BundleUtil.localizedString(forKey: "safe_result")
+        serverNameLabel.text = #localize("safe_server_name")
+        maxBackupBytesLabel.text = #localize("safe_max_backup_size")
+        retentionDaysLabel.text = #localize("safe_retention")
+        lastBackupLabel.text = #localize("safe_last_backup")
+        backupSizeLabel.text = #localize("safe_size")
+        lastResultLabel.text = #localize("safe_result")
 
-        explainButton.accessibilityLabel = BundleUtil.localizedString(forKey: "safe_learn_more")
-        backupNowButtonLabel.text = BundleUtil.localizedString(forKey: "safe_backup_now")
-        changePasswordButtonLabel.text = BundleUtil.localizedString(forKey: "safe_change_password")
+        explainButton.accessibilityLabel = #localize("safe_learn_more")
+        backupNowButtonLabel.text = #localize("safe_backup_now")
+        changePasswordButtonLabel.text = #localize("safe_change_password")
         
         activityIndicator.hidesWhenStopped = true
         
@@ -159,11 +160,11 @@ class SafeActivatedViewController: ThemedTableViewController {
         maxBackupBytesValueLabel.text = safeConfigManager.getMaxBackupBytes() != nil ? String
             .localizedStringWithFormat("%1.2f KB", Float(safeConfigManager.getMaxBackupBytes()!) / 1024) : hyphen
         retentionDaysValueLabel.text = safeConfigManager.getRetentionDays() != nil ? String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "number_of_days"),
+            #localize("number_of_days"),
             safeConfigManager.getRetentionDays()!
         ) : hyphen
         backupSizeValueLabel.text = safeConfigManager.getBackupSize() != nil ? String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "%1.2f KB"),
+            "%1.2f KB",
             Float(safeConfigManager.getBackupSize()!) / 1024
         ) : hyphen
         lastBackupValueLabel.text = safeConfigManager.getLastBackup() != nil ? DateFormatter
@@ -210,7 +211,7 @@ class SafeActivatedViewController: ThemedTableViewController {
 
         backupNowButtonLabel.textColor = .primary
         
-        if lastResultValueLabel.text == BundleUtil.localizedString(forKey: "safe_successful") {
+        if lastResultValueLabel.text == #localize("safe_successful") {
             lastResultValueLabel.textColor = Colors.green
         }
         else if lastResultValueLabel.text != "-" {
@@ -237,7 +238,7 @@ class SafeActivatedViewController: ThemedTableViewController {
                 UIAlertTemplate.showAlert(
                     owner: self,
                     title: "Threema Safe",
-                    message: BundleUtil.localizedString(forKey: "safe_enable_explain")
+                    message: #localize("safe_enable_explain")
                 )
             case 1:
                 backupNow()
@@ -264,7 +265,7 @@ class SafeActivatedViewController: ThemedTableViewController {
         if indexPath.section == 2, indexPath.row == 2, safeManager.isSafePasswordDefinedByAdmin() {
             cell.isUserInteractionEnabled = false
             changePasswordButtonLabel.isEnabled = false
-            changePasswordButtonLabel.text = "safe_change_password_disabled".localized
+            changePasswordButtonLabel.text = #localize("safe_change_password_disabled")
         }
         updateColors()
     }
@@ -276,7 +277,7 @@ extension SafeActivatedViewController {
         UIAlertTemplate.showAlert(
             owner: self,
             title: "Threema Safe",
-            message: BundleUtil.localizedString(forKey: "safe_enable_explain")
+            message: #localize("safe_enable_explain")
         )
     }
 }

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 class MentionsTableViewCell: ThemedCodeTableViewCell {
     // MARK: Subviews
@@ -72,7 +73,7 @@ class MentionsTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func configureAccessibility() {
-        accessibilityHint = BundleUtil.localizedString(forKey: "mentions_table_view_cell_accessibility_hint")
+        accessibilityHint = #localize("mentions_table_view_cell_accessibility_hint")
     }
     
     private func configureLayout() {

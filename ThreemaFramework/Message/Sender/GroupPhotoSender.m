@@ -20,7 +20,6 @@
 
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "GroupPhotoSender.h"
-#import "Conversation.h"
 #import "NaClCrypto.h"
 #import "MyIdentityStore.h"
 #import "GroupSetPhotoMessage.h"

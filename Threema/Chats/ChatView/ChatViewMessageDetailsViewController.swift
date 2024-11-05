@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaMacros
 import UIKit
 
 /// Show detailed information about the provided message
@@ -133,7 +134,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                 return strongSelf.configuredCell(
                     in: tableView,
                     at: indexPath,
-                    text: BundleUtil.localizedString(forKey: "message_display_status_deleted_message"),
+                    text: #localize("message_display_status_deleted_message"),
                     secondaryText: DateFormatter.shortStyleDateTime(message.deletedAt),
                     image: UIImage(systemName: "trash")?.withTintColor(Colors.text, renderingMode: .alwaysOriginal)
                 )
@@ -142,7 +143,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                 return strongSelf.configuredCell(
                     in: tableView,
                     at: indexPath,
-                    text: BundleUtil.localizedString(forKey: "message_display_status_edited_message"),
+                    text: #localize("message_display_status_edited_message"),
                     secondaryText: DateFormatter.shortStyleDateTime(message.lastEditedAt),
                     image: UIImage(resource: .threemaPencilBubbleLeft)
                         .withTintColor(Colors.text, renderingMode: .alwaysOriginal)
@@ -161,7 +162,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                 return strongSelf.configuredCell(
                     in: tableView,
                     at: indexPath,
-                    text: BundleUtil.localizedString(forKey: "detailView_consumed"),
+                    text: #localize("detailView_consumed"),
                     secondaryText: secondaryText,
                     image: image
                 )
@@ -187,7 +188,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                 return strongSelf.configuredCell(
                     in: tableView,
                     at: indexPath,
-                    text: BundleUtil.localizedString(forKey: "detailView_group_file_size"),
+                    text: #localize("detailView_group_file_size"),
                     secondaryText: secondaryText,
                     image: image
                 )
@@ -201,7 +202,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                 return strongSelf.configuredCell(
                     in: tableView,
                     at: indexPath,
-                    text: BundleUtil.localizedString(forKey: "forward_security"),
+                    text: #localize("forward_security"),
                     secondaryText: ForwardSecurityMode(rawValue: message.forwardSecurityMode.uintValue)?.localizedLabel
                 )
                 
@@ -209,7 +210,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                 let cell = strongSelf.configuredCell(
                     in: tableView,
                     at: indexPath,
-                    text: BundleUtil.localizedString(forKey: "detailView_messageID"),
+                    text: #localize("detailView_messageID"),
                     secondaryText: strongSelf.message?.id.hexString
                 )
                 // A message ID can be selected for copying and showing debug info
@@ -230,17 +231,17 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
             return switch section {
             case let .groupAcknowledgements(count):
                 String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "detailView_group_acknowledged"),
+                    #localize("detailView_group_acknowledged"),
                     count
                 )
             case let .groupDeclines(count):
                 String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "detailView_group_declined"),
+                    #localize("detailView_group_declined"),
                     count
                 )
             case .editHistory:
                 if let entries = message?.historyEntries, !entries.isEmpty {
-                    "detailView_edit_history_header".localized
+                    #localize("detailView_edit_history_header")
                 }
                 else {
                     nil
@@ -256,7 +257,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
             }
             
             return String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "detailView_created_footer"),
+                #localize("detailView_created_footer"),
                 DateFormatter.shortStyleDateTime(message.date)
             )
         }
@@ -278,7 +279,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        navigationBarTitle = BundleUtil.localizedString(forKey: "detailView_title")
+        navigationBarTitle = #localize("detailView_title")
         
         configureTableView()
         configureDataSource()
@@ -517,7 +518,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         
         snapshot.appendSections([.messageStates])
         // Show nothing for SystemMessages
-        if message is SystemMessage {
+        if message is SystemMessageEntity {
             // Empty
         }
         // Don't show delivered and read state for outgoing group messages as this is not set
@@ -561,7 +562,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         
         snapshot.appendSections([.metadata])
         // Show PFS mode for all messages except non-call system messages
-        if let systemMessage = message as? SystemMessage {
+        if let systemMessage = message as? SystemMessageEntity {
             switch systemMessage.systemMessageType {
             case .callMessage:
                 snapshot.appendItems([.perfectForwardSecrecy])
@@ -592,7 +593,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         
         // Add content of message first
         switch message {
-        case let textMessage as TextMessage:
+        case let textMessage as TextMessageEntity:
             let item = EditHistoryItem(textMessage: textMessage)
             rows.append(.historyItem(item))
             

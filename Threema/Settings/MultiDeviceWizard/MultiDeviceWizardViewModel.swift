@@ -184,7 +184,7 @@ class MultiDeviceWizardViewModel: ObservableObject {
     
     private func pfsEnabledContacts() -> [ContactEntity] {
         var pfsEnabledContacts = [ContactEntity]()
-        businessInjector.entityManager.performBlockAndWait {
+        businessInjector.entityManager.performAndWait {
             guard let allContacts = self.businessInjector.entityManager.entityFetcher.allContacts() as? [ContactEntity]
             else {
                 return
@@ -198,7 +198,7 @@ class MultiDeviceWizardViewModel: ObservableObject {
     private func disablePFS(for contacts: [ContactEntity]) throws {
         let sessionTerminator = try ForwardSecuritySessionTerminator(businessInjector: businessInjector)
         
-        businessInjector.entityManager.performSyncBlockAndSafe {
+        businessInjector.entityManager.performAndWaitSave {
             for contact in contacts {
                 // Disable PFS
                 contact.forwardSecurityState = NSNumber(value: ForwardSecurityState.off.rawValue)
@@ -213,12 +213,12 @@ class MultiDeviceWizardViewModel: ObservableObject {
                 
                 // Post system message
                 guard let conversation = self.businessInjector.entityManager.entityFetcher
-                    .conversation(forIdentity: contact.identity) else {
+                    .conversationEntity(forIdentity: contact.identity) else {
                     // If we don't have a conversation don't post a system message
                     continue
                 }
                 guard let systemMessage = self.businessInjector.entityManager.entityCreator
-                    .systemMessage(for: conversation) else {
+                    .systemMessageEntity(for: conversation) else {
                     DDLogNotice("Unable to create system message for changing PFS state")
                     continue
                 }

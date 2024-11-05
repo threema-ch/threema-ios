@@ -142,7 +142,7 @@ public final class MessageProvider: NSObject {
     ///   - entityManager: Main context to fetch data used in UI
     ///   - backgroundEntityManager: Background context to fetch meta data information on
     public convenience init(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         around date: Date?,
         entityManager: EntityManager = EntityManager(),
         backgroundEntityManager: EntityManager = EntityManager(withChildContextForBackgroundProcess: true)
@@ -171,7 +171,7 @@ public final class MessageProvider: NSObject {
     /// `context` is the context on which the `NSFetchedResultsController` is run. This is necessary due to how db
     /// access is currently setup where most requests run on the main thread.
     public init(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         around date: Date?,
         entityManager: EntityManager,
         backgroundEntityManager: EntityManager,
@@ -275,7 +275,7 @@ public final class MessageProvider: NSObject {
         
         backgroundEntityManager.performBlock { [weak self] in
             guard let conversation = self?.backgroundEntityManager.entityFetcher
-                .existingObject(with: self?.conversationObjectID) as? Conversation,
+                .existingObject(with: self?.conversationObjectID) as? ConversationEntity,
                 let lastUpdate = conversation.lastUpdate else {
                 return
             }
@@ -675,6 +675,11 @@ extension MessageProvider: NSFetchedResultsControllerDelegate {
 
         // Identify the cells neighboring the reloaded cells. Neighbors must be reloaded as well as they may be grouped
         // together.
+        // If a new message is added, but not marked as reloaded (maybe due to an update of the new message) neighboring
+        // updates will not happen until the provider is recreated. Before iOS 18 this could happen especially when
+        // sending message while being offline. This is kind of fixed because starting with iOS 18 updating
+        // `lastMessage` on `Conversation` also leads to a reload of the previous assigned message which is, by
+        // accident, normally the message that needs the neighboring update.
         for reloadedItemIdentifier in snapshot.reloadedItemIdentifiers {
 
             guard let index = newSnapshot.indexOfItem(reloadedItemIdentifier) else {

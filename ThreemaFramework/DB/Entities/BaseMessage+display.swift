@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 extension BaseMessage {
     
@@ -181,26 +182,26 @@ extension BaseMessage {
         public func localizedLabel(for message: BaseMessage) -> String {
             switch self {
             case .none:
-                BundleUtil.localizedString(forKey: "message_display_status_none")
+                #localize("message_display_status_none")
             case .userAcknowledged:
-                BundleUtil.localizedString(forKey: "message_display_status_user_acknowledged")
+                #localize("message_display_status_user_acknowledged")
             case .userDeclined:
-                BundleUtil.localizedString(forKey: "message_display_status_user_declined")
+                #localize("message_display_status_user_declined")
             case .sending:
-                BundleUtil.localizedString(forKey: "message_display_status_sending")
+                #localize("message_display_status_sending")
             case .sent:
-                BundleUtil.localizedString(forKey: "message_display_status_sent")
+                #localize("message_display_status_sent")
             case .delivered:
                 if message.isOwnMessage {
-                    BundleUtil.localizedString(forKey: "message_display_status_delivered")
+                    #localize("message_display_status_delivered")
                 }
                 else {
-                    BundleUtil.localizedString(forKey: "message_display_status_delivered_incoming")
+                    #localize("message_display_status_delivered_incoming")
                 }
             case .read:
-                BundleUtil.localizedString(forKey: "message_display_status_read")
+                #localize("message_display_status_read")
             case .failed:
-                BundleUtil.localizedString(forKey: "message_display_status_failed")
+                #localize("message_display_status_failed")
             }
         }
         
@@ -210,19 +211,19 @@ extension BaseMessage {
             case .none:
                 ""
             case .userAcknowledged:
-                BundleUtil.localizedString(forKey: "accessibility_status_acknowledged_plus_time")
+                #localize("accessibility_status_acknowledged_plus_time")
             case .userDeclined:
-                BundleUtil.localizedString(forKey: "accessibility_status_declined_plus_time")
+                #localize("accessibility_status_declined_plus_time")
             case .sending:
-                BundleUtil.localizedString(forKey: "accessibility_status_sending_plus_time")
+                #localize("accessibility_status_sending_plus_time")
             case .sent:
-                BundleUtil.localizedString(forKey: "accessibility_status_sent_plus_time")
+                #localize("accessibility_status_sent_plus_time")
             case .delivered:
-                BundleUtil.localizedString(forKey: "accessibility_status_delivered_plus_time")
+                #localize("accessibility_status_delivered_plus_time")
             case .read:
-                BundleUtil.localizedString(forKey: "accessibility_status_read_plus_time")
+                #localize("accessibility_status_read_plus_time")
             case .failed:
-                BundleUtil.localizedString(forKey: "accessibility_status_failed_plus_time")
+                #localize("accessibility_status_failed_plus_time")
             }
         }
     }
@@ -261,7 +262,7 @@ extension BaseMessage {
     public var messageDisplayState: DisplayState {
         
         // We don't show state in system messages
-        if self is SystemMessage {
+        if self is SystemMessageEntity {
             return .none
         }
         

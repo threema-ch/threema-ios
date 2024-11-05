@@ -45,7 +45,7 @@
     }
 }
 
-+ (void)showBallotCreateViewControllerForConversation:(Conversation *)conversation onNavigationController:(UINavigationController*)navigationController {
++ (void)showBallotCreateViewControllerForConversation:(ConversationEntity *)conversation onNavigationController:(UINavigationController*)navigationController {
     BallotCreateViewController *viewController = [BallotCreateViewController ballotCreateViewControllerForConversation: conversation];
     ModalNavigationController *modalNav = [[ModalNavigationController alloc] initWithRootViewController:viewController];
     modalNav.modalInPresentation = YES;

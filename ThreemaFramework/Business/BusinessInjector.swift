@@ -138,6 +138,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
             serverConnector: serverConnector,
             contactStore: contactStore,
             userSettings: userSettings,
+            taskManager: taskManager,
             entityManager: entityManager
         )
 
@@ -269,7 +270,10 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     private(set) lazy var userNotificationCenterManager: UserNotificationCenterManagerProtocol =
         UserNotificationCenterManager()
 
-    private(set) lazy var nonceGuard: NonceGuardProtocol = NonceGuard(entityManager: backgroundEntityManager)
+    private(set) lazy var nonceGuard: NonceGuardProtocol = NonceGuard(
+        myIdentityStore: myIdentityStore,
+        entityManager: backgroundEntityManager
+    )
 
     private(set) lazy var blobUploader: BlobUploaderProtocol =
         BlobUploader(blobURL: BlobURL(serverConnector: self.serverConnector, userSettings: self.userSettings))

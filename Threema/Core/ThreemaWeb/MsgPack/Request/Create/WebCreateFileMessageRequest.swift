@@ -118,7 +118,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
     }
     
     func sendMessage(completion: @escaping () -> Void) {
-        var conversation: Conversation?
+        var conversation: ConversationEntity?
         let entityManager = EntityManager()
         if type == "contact" {
             let contact = entityManager.entityFetcher.contact(for: id)
@@ -131,8 +131,8 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
 
             conversation = entityManager.entityFetcher.conversation(for: contact)
             if conversation == nil {
-                entityManager.performSyncBlockAndSafe {
-                    conversation = entityManager.entityCreator.conversation()
+                entityManager.performAndWaitSave {
+                    conversation = entityManager.entityCreator.conversationEntity()
                     conversation?.contact = contact
                 }
             }
@@ -263,7 +263,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
     private func sendMessage(
         sender: Old_FileMessageSender,
         item: URLSenderItem?,
-        conversation: Conversation?,
+        conversation: ConversationEntity?,
         completion: @escaping () -> Void
     ) {
         ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
@@ -271,7 +271,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
             completion()
             if let conversation,
                conversation.conversationVisibility == .archived {
-                conversation.conversationVisibility = .default
+                conversation.changeVisibility(to: .default)
             }
         } onTimeout: {
             DDLogError("Sending file message timed out")

@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaEssentials
+import ThreemaMacros
 
 public protocol UserNotificationManagerProtocol {
     func userNotificationContent(_ pendingUserNotification: PendingUserNotification) -> UserNotificationContent?
@@ -153,8 +154,8 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     /// - Returns: User notification for user notification center
     public func threemaWebNotificationContent(payload: [AnyHashable: Any]) -> UNMutableNotificationContent {
         let notificationContent = UNMutableNotificationContent()
-        notificationContent.title = BundleUtil.localizedString(forKey: "notification.threemaweb.connect.title")
-        notificationContent.body = BundleUtil.localizedString(forKey: "notification.threemaweb.connect.body")
+        notificationContent.title = #localize("notification.threemaweb.connect.title")
+        notificationContent.body = #localize("notification.threemaweb.connect.body")
         notificationContent.userInfo = payload
 
         if let pushSound = userSettings.pushSound, pushSound != "none" {
@@ -190,7 +191,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         let isPrivate = isPrivate(content: from)
         
         if isPrivate {
-            to.title = BundleUtil.localizedString(forKey: "private_message_label")
+            to.title = #localize("private_message_label")
             to.body = ""
         }
         
@@ -241,14 +242,10 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     // MARK: - Private functions
     
     private func saveAttachment(
-        _ image: ImageData,
+        _ image: ImageDataEntity,
         _ id: String,
         _ stage: UserNotificationStage
     ) -> (name: String, url: URL)? {
-        guard let imageData = image.data else {
-            return nil
-        }
-        
         if let tmpDirectory = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).last {
             let attachmentDirectory = "\(tmpDirectory)/PushImages"
             let attachmentName = "PushImage_\(id)_\(stage)"
@@ -268,7 +265,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                     try fileManager.removeItem(at: attachmentURL)
                 }
                 
-                try imageData.write(to: attachmentURL, options: .completeFileProtectionUntilFirstUserAuthentication)
+                try image.data.write(to: attachmentURL, options: .completeFileProtectionUntilFirstUserAuthentication)
                 
                 return (name: attachmentName, url: attachmentURL)
             }
@@ -350,7 +347,8 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         if let baseMessage = pendingUserNotification.baseMessage,
            let conversation = baseMessage.conversation,
            let group = entityManager.entityFetcher.groupEntity(for: conversation) {
-            return (group.groupID.base64EncodedString(), group.groupCreator ?? MyIdentityStore.shared().identity)
+            // swiftformat:disable:next acronyms
+            return (group.groupId.base64EncodedString(), group.groupCreator ?? MyIdentityStore.shared().identity)
         }
         else if let abstractMessage = pendingUserNotification.abstractMessage as? AbstractGroupMessage {
             return (abstractMessage.groupID.base64EncodedString(), abstractMessage.groupCreator)
@@ -377,7 +375,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     private func nickname(for pendingUserNotification: PendingUserNotification) -> String {
         if let baseMessage = pendingUserNotification.baseMessage,
            let conversation = baseMessage.conversation {
-            if conversation.isGroup() {
+            if conversation.isGroup {
                 if let contact = entityManager.entityFetcher.contact(for: pendingUserNotification.senderIdentity),
                    let publicNickname = contact.publicNickname {
                     return publicNickname
@@ -390,7 +388,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 }
             }
         }
-        return pendingUserNotification.senderIdentity ?? "unknown".localized
+        return pendingUserNotification.senderIdentity ?? #localize("unknown")
     }
     
     private func titleWithPreview(for pendingUserNotification: PendingUserNotification, fromName: String) -> String {
@@ -401,18 +399,18 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         else if pendingUserNotification.abstractMessage != nil {
             if let isGroup = pendingUserNotification.isGroupMessage, isGroup {
                 if let groupCallStartMessage = pendingUserNotification.abstractMessage as? GroupCallStartMessage {
-                    if let groupConversation = entityManager.entityFetcher.conversation(
+                    if let groupConversation = entityManager.entityFetcher.conversationEntity(
                         for: groupCallStartMessage.groupID,
                         creator: groupCallStartMessage.groupCreator
                     ) {
-                        return groupConversation.groupName ?? "new_message_unknown_group".localized
+                        return groupConversation.groupName ?? #localize("new_message_unknown_group")
                     }
                     else {
                         return fromName
                     }
                 }
                 else {
-                    return BundleUtil.localizedString(forKey: "new_group_message")
+                    return #localize("new_group_message")
                 }
             }
             else {
@@ -442,7 +440,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                     switch settingsStore.notificationType {
                     case .restrictive, .balanced:
                         return String.localizedStringWithFormat(
-                            "group_call_notification_body_preview".localized,
+                            #localize("group_call_notification_body_preview"),
                             fromName
                         )
                     case .complete:
@@ -475,7 +473,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     
     private func isPrivate(content: UserNotificationContent) -> Bool {
         if let senderID = content.senderID,
-           let conversation = entityManager.entityFetcher.conversation(forIdentity: senderID) {
+           let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: senderID) {
             return conversation.conversationCategory == .private
         }
         return false
@@ -485,7 +483,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         guard let baseMessage = pendingUserNotification.baseMessage else {
             return nil
         }
-        var image: ImageData? = (baseMessage as? FileMessageEntity)?.thumbnail
+        var image: ImageDataEntity? = (baseMessage as? FileMessageEntity)?.thumbnail
         if image == nil {
             image = (baseMessage as? VideoMessageEntity)?.thumbnail
         }

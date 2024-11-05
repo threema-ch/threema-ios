@@ -34,7 +34,9 @@
 #import "BundleUtil.h"
 
 @interface AddContactViewController ()
-
+@property (weak, nonatomic) IBOutlet UILabel *enterManuallyLabel;
+@property (weak, nonatomic) IBOutlet UILabel *scanIDLabel;
+@property (weak, nonatomic) IBOutlet UILabel *inviteFriendLabel;
 @end
 
 @implementation AddContactViewController {
@@ -44,17 +46,24 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    self.title = [BundleUtil localizedStringForKey:@"add_contact_title"];
+
     if (![ScanIdentityController canScan]) {
         self.scanIdentityCell.selectionStyle = UITableViewCellSelectionStyleNone;
         self.scanIdentityCell.imageView.alpha = 0.4;
         self.scanIdentityCell.textLabel.alpha = 0.4;
     }
     
+    self.enterManuallyLabel.text = [BundleUtil localizedStringForKey:@"add_contact_enter_manually"];
+    self.identityTextField.placeholder = [BundleUtil localizedStringForKey:@"add_contact_ID_placeholder"];
     self.identityTextField.accessibilityIdentifier = @"AddContactViewControllerCTextField";
     
     // Tint icon appropriately
+    self.scanIDLabel.text = [BundleUtil localizedStringForKey:@"add_contact_scan"];
     self.scanIdentityCell.imageView.image = [self.scanIdentityCell.imageView.image imageWithTint:UIColor.primary];
     
+    self.inviteFriendLabel.text = [BundleUtil localizedStringForKey:@"add_contact_invite_friend"];
+
     [Colors updateKeyboardAppearanceFor:self.identityTextField];
     
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(applicationDidEnterBackground:) name: UIApplicationDidEnterBackgroundNotification object: nil];

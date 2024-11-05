@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 extension StorageManagementConversationView {
     
@@ -72,7 +73,7 @@ extension StorageManagementConversationView {
         
         var body: some View {
             Button(action: action) {
-                Text("manage".localized)
+                Text(#localize("manage"))
                     .font(.headline)
                     .padding(4)
                     .frame(maxWidth: .infinity)

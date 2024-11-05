@@ -174,12 +174,11 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
 
     func testReceivedGroupTextMessage() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
-
-        let groupEntity = GroupEntity(context: dbMainCnx.current)
-        groupEntity.groupID = MockData.generateGroupID()
+        let groupID = MockData.generateGroupID()
+        let groupEntity = GroupEntity(context: dbMainCnx.current, groupID: groupID, state: 0)
         groupEntity.groupCreator = nil
 
-        let conversation = Conversation(context: dbMainCnx.current)
+        let conversation = ConversationEntity(context: dbMainCnx.current)
         conversation.contact = nil
         conversation.groupMyIdentity = myIdentityStoreMock.identity
 
@@ -204,7 +203,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
 
         let expectedIncomingGroupTextMessage = GroupTextMessage()
-        expectedIncomingGroupTextMessage.groupID = groupEntity.groupID
+        // swiftformat:disable:next acronyms
+        expectedIncomingGroupTextMessage.groupID = groupEntity.groupId
         expectedIncomingGroupTextMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
         expectedIncomingGroupTextMessage.nonce = MockData.generateMessageNonce()
         expectedIncomingGroupTextMessage.fromIdentity = "ECHOECHO"
@@ -270,11 +270,11 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
     func testReceivedGroupRenameMessage() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
-        let groupEntity = GroupEntity(context: dbMainCnx.current)
-        groupEntity.groupID = MockData.generateGroupID()
+        let groupID = MockData.generateGroupID()
+        let groupEntity = GroupEntity(context: dbMainCnx.current, groupID: groupID, state: 0)
         groupEntity.groupCreator = nil
 
-        let conversation = Conversation(context: dbMainCnx.current)
+        let conversation = ConversationEntity(context: dbMainCnx.current)
         conversation.contact = nil
         conversation.groupMyIdentity = myIdentityStoreMock.identity
 
@@ -299,7 +299,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
 
         let expectedIncomingGroupRenameMessage = GroupRenameMessage()
-        expectedIncomingGroupRenameMessage.groupID = groupEntity.groupID
+        // swiftformat:disable:next acronyms
+        expectedIncomingGroupRenameMessage.groupID = groupEntity.groupId
         expectedIncomingGroupRenameMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
         expectedIncomingGroupRenameMessage.nonce = MockData.generateMessageNonce()
         expectedIncomingGroupRenameMessage.fromIdentity = "ECHOECHO"

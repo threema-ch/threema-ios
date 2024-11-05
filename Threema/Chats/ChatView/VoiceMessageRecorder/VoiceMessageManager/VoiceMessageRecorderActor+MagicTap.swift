@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 extension VoiceMessageRecorderActor {
     nonisolated func handleMagicTap() {
@@ -26,13 +27,13 @@ extension VoiceMessageRecorderActor {
             if await isPlaying {
                 await pause()
                 await MainActor.run {
-                    UIAccessibility.post(notification: .announcement, argument: "pause".localized)
+                    UIAccessibility.post(notification: .announcement, argument: #localize("pause"))
                 }
             }
             else if await isRecording {
                 await stop()
                 await MainActor.run {
-                    UIAccessibility.post(notification: .announcement, argument: "stop".localized)
+                    UIAccessibility.post(notification: .announcement, argument: #localize("stop"))
                 }
             }
             else {

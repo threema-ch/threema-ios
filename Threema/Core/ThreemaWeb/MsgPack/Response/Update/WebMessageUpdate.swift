@@ -37,12 +37,12 @@ class WebMessagesUpdate: WebAbstractMessage {
     init(
         _ requestID: String? = nil,
         baseMessage: BaseMessage,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         objectMode: ObjectMode,
         session: WCSession
     ) {
         
-        if conversation.isGroup(), let groupID = conversation.groupID {
+        if conversation.isGroup, let groupID = conversation.groupID {
             self.type = "group"
             self.id = groupID.hexEncodedString()
         }

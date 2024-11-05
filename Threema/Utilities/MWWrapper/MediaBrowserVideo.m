@@ -21,7 +21,6 @@
 #import "MediaBrowserVideo.h"
 #import <AVFoundation/AVFoundation.h>
 #import <MediaPlayer/MediaPlayer.h> 
-#import "VideoMessageEntity.h"
 #import "VideoMessageLoader.h"
 #import "NSString+Hex.h"
 #import "BundleUtil.h"

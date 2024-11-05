@@ -26,9 +26,9 @@ class UnreadMessagesTests: XCTestCase {
     
     private var mainCnx: NSManagedObjectContext!
     
-    private var testDataConversation1: Conversation!
-    private var testDataConversation2: Conversation!
-    private var testDataConversation3: Conversation!
+    private var testDataConversation1: ConversationEntity!
+    private var testDataConversation2: ConversationEntity!
+    private var testDataConversation3: ConversationEntity!
 
     override func setUpWithError() throws {
         // necessary for ValidationLogger

@@ -65,7 +65,7 @@ final class ChatViewSnapshotProvider {
     
     private let entityManager: EntityManager
     private let messageProvider: MessageProvider
-    private let conversation: Conversation
+    private let conversation: ConversationEntity
    
     private var refreshAndWaitOnce = false
     
@@ -90,7 +90,7 @@ final class ChatViewSnapshotProvider {
     // MARK: - Lifecycle
     
     init(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         entityManager: EntityManager,
         messageProvider: MessageProvider,
         unreadMessagesSnapshot: UnreadMessagesStateManager,
@@ -577,11 +577,11 @@ final class ChatViewSnapshotProvider {
     
     // MARK: Helper Functions for Database Objects
     
-    private func isCurrentlyTyping(conversation: Conversation) -> Bool {
+    private func isCurrentlyTyping(conversation: ConversationEntity) -> Bool {
         var isTyping = false
         entityManager.performAndWait {
             if let conversation = self.entityManager.entityFetcher
-                .existingObject(with: conversation.objectID) as? Conversation {
+                .existingObject(with: conversation.objectID) as? ConversationEntity {
                 isTyping = conversation.typing.boolValue
             }
         }

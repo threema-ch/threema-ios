@@ -27,10 +27,6 @@
 		<key>NSExtensionPrincipalClass</key>
 		<string>$(PRODUCT_MODULE_NAME).NotificationService</string>
 	</dict>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Threema can automatically save incoming media to the photo library.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Your photo library is used when you pick an image from it and send it in a chat.</string>
 	<key>ThreemaAppGroupIdentifier</key>
 	<string>group.ch.threema.red</string>
 	<key>ThreemaWorkVersion</key>

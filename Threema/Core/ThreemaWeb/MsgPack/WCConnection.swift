@@ -27,7 +27,7 @@ enum WCConnectionState: Int {
 }
 
 protocol WCConnectionDelegate: WCSession {
-    func currentWebClientSession() -> WebClientSession?
+    func currentWebClientSession() -> WebClientSessionEntity?
     func currentWCSession() -> WCSession
     func currentMessageQueue() -> WebMessageQueue
 }
@@ -112,13 +112,7 @@ extension WCConnection {
             let loop = salty_event_loop_new()
             let remote = salty_event_loop_get_remote(loop)
             
-            guard let initiatorPermanentPublicKey = currentWebClientSession.initiatorPermanentPublicKey else {
-                DDLogError("[Threema Web] InitiatorPermanentPublicKey is nil. Can not start web session.")
-                currentWebClientSession.isConnecting = false
-                WCSessionManager.shared.removeWCSessionFromRunning(self.delegate.currentWCSession())
-                return
-            }
-            let ippk: UnsafePointer<UInt8> = initiatorPermanentPublicKey.withUnsafeBytes {
+            let ippk: UnsafePointer<UInt8> = currentWebClientSession.initiatorPermanentPublicKey.withUnsafeBytes {
                 $0.bindMemory(to: UInt8.self).baseAddress!
             }
             
@@ -253,7 +247,7 @@ extension WCConnection {
         
         let serverPermanentPublicKey = delegate.currentWebClientSession()!.serverPermanentPublicKey
         
-        let u8PtrServerPermanentPublicKey: UnsafePointer<UInt8> = serverPermanentPublicKey!.withUnsafeBytes {
+        let u8PtrServerPermanentPublicKey: UnsafePointer<UInt8> = serverPermanentPublicKey.withUnsafeBytes {
             $0.bindMemory(to: UInt8.self).baseAddress!
         }
         
@@ -301,8 +295,8 @@ extension WCConnection {
             return
         }
         
-        let saltyRTCHost: NSString = delegate.currentWebClientSession()!.saltyRTCHost! as NSString
-        let saltyRTCPort = delegate.currentWebClientSession()!.saltyRTCPort!.intValue
+        let saltyRTCHost: NSString = delegate.currentWebClientSession()!.saltyRTCHost as NSString
+        let saltyRTCPort = delegate.currentWebClientSession()!.saltyRTCPort.intValue
         
         WebClientSessionStore.shared.updateWebClientSession(
             session: delegate.currentWebClientSession()!,

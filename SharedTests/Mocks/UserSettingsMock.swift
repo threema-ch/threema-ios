@@ -26,12 +26,13 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     override init() {
         // no-op
     }
-
+    
     init(
         blacklist: [Any]? = nil,
         enableIPv6: Bool = false,
         enableMultiDevice: Bool = false,
-        blockUnknown: Bool = false
+        blockUnknown: Bool = false,
+        videoQuality: String = "original"
     ) {
         if let blacklist {
             self.blacklist = NSOrderedSet(array: blacklist)
@@ -39,6 +40,7 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
         self.enableIPv6 = enableIPv6
         self.enableMultiDevice = enableMultiDevice
         self.blockUnknown = blockUnknown
+        self.videoQuality = videoQuality
     }
 
     var appMigratedToVersion = 0

@@ -25,8 +25,8 @@ class ChatScrollPositionTests: XCTestCase {
     
     private var managedObjectContext: NSManagedObjectContext!
 
-    private lazy var conversation1: Conversation = {
-        var conversation: Conversation!
+    private lazy var conversation1: ConversationEntity = {
+        var conversation: ConversationEntity!
         
         let databasePreparer = DatabasePreparer(context: managedObjectContext)
         databasePreparer.save {
@@ -41,8 +41,8 @@ class ChatScrollPositionTests: XCTestCase {
         return conversation
     }()
     
-    private lazy var conversation2: Conversation = {
-        var conversation: Conversation!
+    private lazy var conversation2: ConversationEntity = {
+        var conversation: ConversationEntity!
         
         let databasePreparer = DatabasePreparer(context: managedObjectContext)
         databasePreparer.save {

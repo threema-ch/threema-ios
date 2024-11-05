@@ -26,7 +26,7 @@ class EntityCreatorTests: XCTestCase {
     private let testBundle = Bundle(for: EntityCreatorTests.self)
     private var context: NSManagedObjectContext!
     private var databasePreparer: DatabasePreparer!
-    private var conversation: Conversation!
+    private var conversation: ConversationEntity!
     private var entityManager: EntityManager!
     private var businessInjector: FrameworkInjectorProtocol!
     
@@ -68,7 +68,7 @@ class EntityCreatorTests: XCTestCase {
         // Act
         var createdFileMessageEntity: FileMessageEntity?
 
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             createdFileMessageEntity = try? self.entityManager.entityCreator.createFileMessageEntity(
                 for: senderItem,
                 in: self.conversation,
@@ -81,8 +81,8 @@ class EntityCreatorTests: XCTestCase {
         // Assert
         let fileMessageEntity = try XCTUnwrap(createdFileMessageEntity)
         
-        XCTAssertEqual(fileMessageEntity.width, NSNumber(floatLiteral: senderItem.getWidth()))
-        XCTAssertEqual(fileMessageEntity.height, NSNumber(floatLiteral: senderItem.getHeight()))
+        XCTAssertEqual(fileMessageEntity.width, Int(senderItem.getWidth()))
+        XCTAssertEqual(fileMessageEntity.height, Int(senderItem.getHeight()))
 
         generalFileMessageAssertions(
             fileMessageEntity: fileMessageEntity,
@@ -106,7 +106,7 @@ class EntityCreatorTests: XCTestCase {
         // Act
         var createdFileMessageEntity: FileMessageEntity?
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             createdFileMessageEntity = try? self.entityManager.entityCreator.createFileMessageEntity(
                 for: senderItem,
                 in: self.conversation,
@@ -119,9 +119,9 @@ class EntityCreatorTests: XCTestCase {
         // Assert
         let fileMessageEntity = try XCTUnwrap(createdFileMessageEntity)
         
-        XCTAssertEqual(fileMessageEntity.width, NSNumber(floatLiteral: senderItem.getWidth()))
-        XCTAssertEqual(fileMessageEntity.height, NSNumber(floatLiteral: senderItem.getHeight()))
-        XCTAssertEqual(fileMessageEntity.duration, NSNumber(floatLiteral: senderItem.getDuration()))
+        XCTAssertEqual(fileMessageEntity.width, Int(senderItem.getWidth()))
+        XCTAssertEqual(fileMessageEntity.height, Int(senderItem.getHeight()))
+        XCTAssertEqual(fileMessageEntity.duration, Double(senderItem.getDuration()))
 
         generalFileMessageAssertions(
             fileMessageEntity: fileMessageEntity,
@@ -143,7 +143,7 @@ class EntityCreatorTests: XCTestCase {
         // Act
         var createdFileMessageEntity: FileMessageEntity?
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             createdFileMessageEntity = try? self.entityManager.entityCreator.createFileMessageEntity(
                 for: senderItem,
                 in: self.conversation,
@@ -176,7 +176,7 @@ class EntityCreatorTests: XCTestCase {
         // Act
         var createdFileMessageEntity: FileMessageEntity?
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             createdFileMessageEntity = try? self.entityManager.entityCreator.createFileMessageEntity(
                 for: senderItem,
                 in: self.conversation,

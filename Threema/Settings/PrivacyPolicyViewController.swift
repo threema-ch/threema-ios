@@ -18,11 +18,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
+
 class PrivacyPolicyViewController: SettingsWebViewViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         url = ThreemaURLProvider.privacyPolicy.absoluteString
         
-        title = BundleUtil.localizedString(forKey: "settings_list_privacy_policy_title")
+        title = #localize("settings_list_privacy_policy_title")
     }
 }

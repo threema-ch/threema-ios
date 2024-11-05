@@ -11,7 +11,7 @@
   "defaultOptions" : {
     "commandLineArgumentEntries" : [
       {
-        "argument" : "unit-testing"
+        "argument" : "-isRunningForTests"
       },
       {
         "argument" : "-com.apple.CoreData.SQLDebug 1",

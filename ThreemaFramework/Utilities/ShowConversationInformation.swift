@@ -21,7 +21,7 @@
 import Foundation
 
 public class ShowConversationInformation: NSObject {
-    @objc public let conversation: Conversation
+    @objc public let conversation: ConversationEntity
     @objc public let forceCompose: Bool
     @objc public let precomposedText: String?
     @objc public let image: UIImage?
@@ -33,7 +33,7 @@ public class ShowConversationInformation: NSObject {
     }
     
     init(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         forceCompose: Bool = true,
         precomposedText: String? = nil,
         image: UIImage? = nil,
@@ -51,15 +51,21 @@ public class ShowConversationInformation: NSObject {
             return nil
         }
         
-        var resolvedConversation: Conversation?
+        var resolvedConversation: ConversationEntity?
 
-        if let conversation = info[kKeyConversation] as? Conversation {
+        if let conversation = info[kKeyConversation] as? ConversationEntity {
             resolvedConversation = conversation
         }
         else if let contact = info[kKeyContact] as? ContactEntity {
             let em = EntityManager()
-            em.performBlockAndWait {
+            em.performAndWait {
                 resolvedConversation = em.conversation(for: contact.identity, createIfNotExisting: true)
+            }
+        }
+        else if let identity = info[kKeyContactIdentity] as? String {
+            let em = EntityManager()
+            em.performBlockAndWait {
+                resolvedConversation = em.conversation(for: identity, createIfNotExisting: true)
             }
         }
         else {

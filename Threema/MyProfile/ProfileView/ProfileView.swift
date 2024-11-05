@@ -22,6 +22,7 @@ import Foundation
 import MBProgressHUD
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 struct ProfileView: View {
     @ObservedObject var model = ProfileViewModel()
@@ -64,10 +65,10 @@ struct ProfileView: View {
         Button(
             action: editAction,
             label: {
-                Text("profile_edit".localized)
+                Text(#localize("profile_edit"))
             }
         )
-        .accessibilityLabel("edit_profile".localized)
+        .accessibilityLabel(#localize("edit_profile"))
     }
     
     @ViewBuilder
@@ -77,7 +78,7 @@ struct ProfileView: View {
                 Image(systemName: "qrcode.viewfinder")
             })
             .tint(UIColor.primary.color)
-            .accessibilityLabel("scan_identity".localized)
+            .accessibilityLabel(#localize("scan_identity"))
         }
     }
     
@@ -91,8 +92,8 @@ struct ProfileView: View {
             
             UIAlertTemplate.showAlert(
                 owner: topViewController,
-                title: "not_connected_for_edit_profile_title".localized,
-                message: "not_connected_for_edit_profile_message".localized
+                title: #localize("not_connected_for_edit_profile_title"),
+                message: #localize("not_connected_for_edit_profile_message")
             )
         }
         else {
@@ -126,7 +127,7 @@ struct ProfileView: View {
         UIAlertTemplate.showAlert(
             owner: topViewController,
             title: "",
-            message: "disabled_by_device_policy".localized
+            message: #localize("disabled_by_device_policy")
         )
     }
 }

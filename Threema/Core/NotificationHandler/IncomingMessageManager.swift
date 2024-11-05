@@ -95,7 +95,7 @@ import ThreemaFramework
     ///     - threemaDic: Dictionary of threema push
     ///     - completion: Completion block of notification
     @objc func incomingPush(threemaDic: [String: Any], completion: @escaping () -> Void) {
-        businessInjector.entityManager.performBlockAndWait {
+        businessInjector.entityManager.performAndWait {
             guard let threemaPushNotification = try? ThreemaPushNotification(from: threemaDic),
                   let pendingUserNotification = self.pendingUserNotificationManager.pendingUserNotification(
                       for: threemaPushNotification,
@@ -259,7 +259,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     }
     
     func incomingMessageStarted(_ message: AbstractMessage) {
-        businessInjector.entityManager.performBlockAndWait {
+        businessInjector.entityManager.performAndWait {
             if let pendingUserNotification = self.backgroundPendingUserNotificationManager.pendingUserNotification(
                 for: message,
                 stage: .abstract
@@ -318,7 +318,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
             for: message,
             stage: .final
         ) {
-            businessInjector.entityManager.performBlockAndWait {
+            businessInjector.entityManager.performAndWait {
                 self.show(
                     pendingUserNotification: pendingUserNotification,
                     pendingUserNotificationManager: self.backgroundPendingUserNotificationManager,
@@ -336,7 +336,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
     }
     
-    func readMessage(inConversations: Set<Conversation>?) {
+    func readMessage(inConversations: Set<ConversationEntity>?) {
         if let inConversations, !inConversations.isEmpty {
             businessInjector.unreadMessages.totalCount(doCalcUnreadMessagesCountOf: inConversations)
         }
@@ -395,7 +395,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 databaseManager.addDirtyObject(contactEntity)
             }
             
-            if let conversation = self.businessInjector.entityManager.entityFetcher.conversation(
+            if let conversation = self.businessInjector.entityManager.entityFetcher.conversationEntity(
                 forIdentity: message.fromIdentity
             ) {
                 databaseManager.addDirtyObject(conversation)

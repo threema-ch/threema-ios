@@ -240,25 +240,10 @@ final class TaskQueue {
             
             item.taskDefinition.create(frameworkInjector: injector).execute()
                 .done {
-                    if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                        if let reflectMessageError = self.frameworkInjector.serverConnector.reflectMessage(
-                            self.frameworkInjector.mediatorMessageProtocol.encodeReflectedAck(reflectID: task.reflectID)
-                        ) as? NSError {
-                            
-                            guard ThreemaProtocolError.notLoggedIn.rawValue != reflectMessageError.code else {
-                                self.failed(item: item, error: reflectMessageError, enableSpoolingDelay: true)
-                                return
-                            }
-                            
-                            DDLogError(
-                                "\(item.taskDefinition) sending server ack of incoming reflected message failed: \(reflectMessageError)"
-                            )
-                        }
-                    }
-                    
                     self.done(item: item)
                 }
                 .catch(on: .global()) { error in
+                    // Note: Setting a breakpoint on the next line might not actually stop when an error is caught
                     switch error {
                         
                     case MessageProcessorError.unknownMessageType(session: _):
@@ -302,33 +287,11 @@ final class TaskQueue {
                         DDLogNotice("\(item.taskDefinition) reported dropped error")
                         self.dropped(item: item)
                         
+                    case let nsError as NSError where nsError.code == ThreemaProtocolError.notLoggedIn.rawValue:
+                        self.failed(item: item, error: nsError, enableSpoolingDelay: true)
+
                     default:
-                        if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-                            DDLogNotice("\(item.taskDefinition) discard reflected message: \(error)")
-                            
-                            try? self.frameworkInjector.nonceGuard.processed(reflectedEnvelope: task.reflectedEnvelope)
-                            
-                            if let reflectMessageError = self.frameworkInjector.serverConnector
-                                .reflectMessage(
-                                    self.frameworkInjector.mediatorMessageProtocol
-                                        .encodeReflectedAck(reflectID: task.reflectID)
-                                ) as? NSError {
-
-                                guard ThreemaProtocolError.notLoggedIn.rawValue != reflectMessageError.code else {
-                                    self.failed(item: item, error: reflectMessageError, enableSpoolingDelay: true)
-                                    return
-                                }
-
-                                DDLogError(
-                                    "\(item.taskDefinition) sending server ack of incoming reflected message failed: \(reflectMessageError)"
-                                )
-                            }
-                            
-                            self.done(item: item)
-                        }
-                        else {
-                            self.failed(item: item, error: error, enableSpoolingDelay: false)
-                        }
+                        self.failed(item: item, error: error, enableSpoolingDelay: false)
                     }
                 }
         }
@@ -504,22 +467,6 @@ final class TaskQueue {
                 try? frameworkInjector.dhSessionStore.updateDHSessionRatchets(session: session, peer: true)
             }
         }
-        else if let task = item.taskDefinition as? TaskDefinitionReceiveReflectedMessage {
-            DDLogNotice("\(task) discard reflected message: \(error)")
-            
-            try? frameworkInjector.nonceGuard.processed(reflectedEnvelope: task.reflectedEnvelope)
-            
-            if let reflectMessageError = frameworkInjector.serverConnector.reflectMessage(
-                frameworkInjector.mediatorMessageProtocol.encodeReflectedAck(reflectID: task.reflectID)
-            ) as? NSError {
-                guard ThreemaProtocolError.notLoggedIn.rawValue != reflectMessageError.code else {
-                    failed(item: item, error: reflectMessageError, enableSpoolingDelay: true)
-                    return
-                }
-                
-                DDLogError("\(item.taskDefinition) done \(reflectMessageError)")
-            }
-        }
         else {
             DDLogError("\(item.taskDefinition) \(error)")
         }
@@ -623,6 +570,7 @@ final class TaskQueue {
         }
         
         var retry = false
+        var dequeued = false
 
         taskQueueQueue.sync {
             DDLogError("\(item.taskDefinition) failed \(error)")
@@ -658,12 +606,15 @@ final class TaskQueue {
                     retry = true
                 }
                 else if item.taskDefinition is TaskDefinitionReceiveMessage ||
-                    item.taskDefinition is TaskDefinitionReceiveReflectedMessage,
+                    item.taskDefinition is TaskDefinitionReceiveReflectedMessage ||
+                    item.taskDefinition is TaskDefinitionNewDeviceSync,
                     !spoolingDelay {
 
                     // Remove/chancel task processing of failed incoming message, try again with next server connection!
                     DDLogVerbose("\(item.taskDefinition) removed from queue")
                     _ = queue.dequeue()
+                    
+                    dequeued = true
                 }
 
                 if item.taskDefinition.type == .persistent {
@@ -677,9 +628,12 @@ final class TaskQueue {
         }
 
         if !retry, !spoolingDelay {
-            DDLogWarn(
-                "\(item.taskDefinition) This should never be reached expect for tests, because these task are not removed they will block the queue"
-            )
+            if !dequeued {
+                DDLogWarn(
+                    "\(item.taskDefinition) This should never be reached expect for tests, because these task are not removed they will block the queue and/or the completion handler will be called multiple times"
+                )
+            }
+            // TODO: (IOS-4854) This contributes to the fact that sometimes the completion handler is called multiple times, because not all of these tasks are actually dequeued
             item.completionHandler?(item.taskDefinition, error)
         }
 

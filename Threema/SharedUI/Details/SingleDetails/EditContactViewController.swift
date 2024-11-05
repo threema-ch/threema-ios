@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 /// Show an edit view for the provided contact
@@ -166,7 +167,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     }
     
     private func configureNavigationBar() {
-        navigationBarTitle = BundleUtil.localizedString(forKey: "edit_contact_title")
+        navigationBarTitle = #localize("edit_contact_title")
         
         transparentNavigationBarWhenOnTop = true
         

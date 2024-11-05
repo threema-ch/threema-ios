@@ -1,0 +1,12 @@
+/* (No Comment) */
+"advanced_settings_group_footer" = "除非收到由 Threema 支持团队发出明确的指示，否则请勿启用此设置。启用此设置后，您可能无法收到传入消息。";
+
+/* (No Comment) */
+"advanced_settings_group_title" = "支持设置";
+
+/* (No Comment) */
+"safe_mode_switch" = "高级支持模式";
+
+/* (No Comment) */
+"sentry_switch" = "停用 Sentry";
+

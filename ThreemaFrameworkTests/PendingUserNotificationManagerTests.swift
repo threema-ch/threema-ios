@@ -254,8 +254,8 @@ class PendingUserNotificationManagerTests: XCTestCase {
 
         let sender = ContactEntity(context: dbMainCnx.current)
         sender.identity = expectedFromIdentity
-        let baseMessage = TextMessage(context: dbMainCnx.current)
-        baseMessage.conversation = Conversation(context: dbMainCnx.current)
+        let baseMessage = TextMessageEntity(context: dbMainCnx.current, text: "")
+        baseMessage.conversation = ConversationEntity(context: dbMainCnx.current)
         baseMessage.sender = sender
         baseMessage.id = expectedEditedMessageID
 
@@ -326,8 +326,8 @@ class PendingUserNotificationManagerTests: XCTestCase {
 
         let sender = ContactEntity(context: dbMainCnx.current)
         sender.identity = expectedFromIdentity
-        let baseMessage = TextMessage(context: dbMainCnx.current)
-        baseMessage.conversation = Conversation(context: dbMainCnx.current)
+        let baseMessage = TextMessageEntity(context: dbMainCnx.current, text: "")
+        baseMessage.conversation = ConversationEntity(context: dbMainCnx.current)
         baseMessage.sender = sender
         baseMessage.id = expectedEditedMessageID
 
@@ -414,8 +414,8 @@ class PendingUserNotificationManagerTests: XCTestCase {
 
             let sender = ContactEntity(context: dbMainCnx.current)
             sender.identity = expectedFromIdentity
-            let baseMessage = TextMessage(context: dbMainCnx.current)
-            baseMessage.conversation = Conversation(context: dbMainCnx.current)
+            let baseMessage = TextMessageEntity(context: dbMainCnx.current, text: "")
+            baseMessage.conversation = ConversationEntity(context: dbMainCnx.current)
             baseMessage.sender = sender
             baseMessage.id = expectedDeletedMessageID
 

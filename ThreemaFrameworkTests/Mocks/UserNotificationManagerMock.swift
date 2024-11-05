@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 @testable import ThreemaFramework
 
 class UserNotificationManagerMock: UserNotificationManagerProtocol {
@@ -40,8 +41,8 @@ class UserNotificationManagerMock: UserNotificationManagerProtocol {
     
     func threemaWebNotificationContent(payload: [AnyHashable: Any]) -> UNMutableNotificationContent {
         let notificationContent = UNMutableNotificationContent()
-        notificationContent.title = BundleUtil.localizedString(forKey: "notification.threemaweb.connect.title")
-        notificationContent.body = BundleUtil.localizedString(forKey: "notification.threemaweb.connect.body")
+        notificationContent.title = #localize("notification.threemaweb.connect.title")
+        notificationContent.body = #localize("notification.threemaweb.connect.body")
         notificationContent.userInfo = payload
 
         return notificationContent

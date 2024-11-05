@@ -152,14 +152,14 @@ class MediatorMessageProcessorTests: XCTestCase {
     
     func testProcessReflected() {
 
-        let messageReflected =
+        let expectedReflectedMessage =
             Data(
                 base64Encoded: "ggAAABAAAABrAgAAOdq1mnABAAByNgeC13aJplJlX+cv+jaZcTO0oUpqDeZNu9uFLPxl1L4e5tm1R7ZSBo8LFBhEnfP6ckPX1Eqyonirb3JPDrMRXiu6ugDjVPrzUPY3K50hG4sKIjXvUVvX/zMWkefgCcJtRPjFcB+5Tjv5VBKQ/25unQl3TCCSSmtDBftU+vDdAEnfJ3ReaQ8poPd9bg=="
             )!
 
         var type = UInt8()
         let result = mmp?.process(
-            message: messageReflected,
+            message: expectedReflectedMessage,
             messageType: &type,
             receivedAfterInitialQueueSend: false,
             maxDeviceSlots: nil
@@ -175,9 +175,7 @@ class MediatorMessageProcessorTests: XCTestCase {
 
         let task = taskManagerMock.addedTasks
             .first { $0 as? TaskDefinitionReceiveReflectedMessage != nil } as! TaskDefinitionReceiveReflectedMessage
-        XCTAssertEqual(task.reflectedEnvelope.outgoingMessage.conversation.contact, "ECHOECHO")
-        XCTAssertEqual(task.reflectedEnvelope.outgoingMessage.type, .text)
-        XCTAssertEqual(String(decoding: task.reflectedEnvelope.outgoingMessage.body, as: UTF8.self), "Muttis diweiss")
+        XCTAssertEqual(task.reflectedMessage, expectedReflectedMessage)
     }
 }
 
@@ -220,7 +218,7 @@ extension MediatorMessageProcessorTests: MessageProcessorDelegate {
 
     func outgoingMessageFinished(_ message: AbstractMessage) { }
 
-    func readMessage(inConversations: Set<Conversation>?) {
+    func readMessage(inConversations: Set<ConversationEntity>?) {
         // no-op
     }
 

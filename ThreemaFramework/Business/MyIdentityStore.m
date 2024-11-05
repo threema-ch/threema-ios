@@ -268,6 +268,8 @@ static MyIdentityStore *instance;
     [[AppGroup userDefaults] removeObjectForKey:@"FirstName"];
     [[AppGroup userDefaults] removeObjectForKey:@"LastName"];
     [[AppGroup userDefaults] removeObjectForKey:@"CSI"];
+    [[AppGroup userDefaults] removeObjectForKey:@"JobTitle"];
+    [[AppGroup userDefaults] removeObjectForKey:@"Department"];
     [[AppGroup userDefaults] removeObjectForKey:@"Category"];
     [[AppGroup userDefaults] removeObjectForKey:@"CompanyName"];
     [[AppGroup userDefaults] removeObjectForKey:@"DirectoryCategories"];
@@ -514,6 +516,30 @@ static MyIdentityStore *instance;
 - (void)setCsi:(NSString *)csi {
     DDLogWarn(@"[MyIdentityStore] set new csi %@, old was %@", csi, [[AppGroup userDefaults] stringForKey:@"CSI"]);
     [[AppGroup userDefaults] setObject:csi forKey:@"CSI"];
+    [[AppGroup userDefaults] synchronize];
+}
+
+- (NSString *)jobTitle {
+    NSString *value = [[AppGroup userDefaults] stringForKey:@"JobTitle"];
+    DDLogWarn(@"[MyIdentityStore] get job title %@", value);
+    return value;
+}
+
+- (void)setJobTitle:(NSString *)jobTitle {
+    DDLogWarn(@"[MyIdentityStore] set new job title %@, old was %@", jobTitle, [[AppGroup userDefaults] stringForKey:@"JobTitle"]);
+    [[AppGroup userDefaults] setObject:jobTitle forKey:@"JobTitle"];
+    [[AppGroup userDefaults] synchronize];
+}
+
+- (NSString *)department {
+    NSString *value = [[AppGroup userDefaults] stringForKey:@"Department"];
+    DDLogWarn(@"[MyIdentityStore] get department %@", value);
+    return value;
+}
+
+- (void)setDepartment:(NSString *)department {
+    DDLogWarn(@"[MyIdentityStore] set new department %@, old was %@", department, [[AppGroup userDefaults] stringForKey:@"Department"]);
+    [[AppGroup userDefaults] setObject:department forKey:@"Department"];
     [[AppGroup userDefaults] synchronize];
 }
 

@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import MBProgressHUD
 import PromiseKit
+import ThreemaMacros
 
 class UISyncHelper {
     private let viewController: UIViewController
@@ -83,12 +84,12 @@ class UISyncHelper {
         DispatchQueue.main.async {
             MBProgressHUD.hide(for: self.getViewForHud(), animated: true)
             
-            let title = BundleUtil.localizedString(forKey: "sync_error_title")
-            var message = BundleUtil.localizedString(forKey: "sync_error_general_message")
+            let title = #localize("sync_error_title")
+            var message = #localize("sync_error_general_message")
             var canRetry = true
             
             if let error = error as? TaskExecutionTransactionError, error == .sameTransactionInProgress {
-                message = BundleUtil.localizedString(forKey: "sync_error_same_transaction_error")
+                message = #localize("sync_error_same_transaction_error")
                 canRetry = false
             }
             
@@ -97,13 +98,13 @@ class UISyncHelper {
                     owner: self.viewController,
                     title: title,
                     message: message,
-                    titleOk: BundleUtil.localizedString(forKey: "retry"),
+                    titleOk: #localize("retry"),
                     actionOk: { _ in
                         // Do nothing and let the user hit done again
                         self.shouldShowGraceTime = false
                         self.execProfileSync?()
                     },
-                    titleCancel: BundleUtil.localizedString(forKey: "cancel")
+                    titleCancel: #localize("cancel")
                 ) { _ in
                     // Dismiss without saving
                     self.seal?.reject(error)

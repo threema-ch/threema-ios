@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 class CompanyDirectoryCellView: UIStackView {
     
@@ -54,7 +55,7 @@ class CompanyDirectoryCellView: UIStackView {
     
     private lazy var companyDirectoryDescriptionLabel: UILabel = {
         let label = UILabel()
-        label.text = BundleUtil.localizedString(forKey: "companydirectory_description")
+        label.text = #localize("companydirectory_description")
         label.adjustsFontForContentSizeCategory = true
         label.font = UIFont.preferredFont(forTextStyle: .subheadline)
         label.numberOfLines = 2
@@ -105,7 +106,7 @@ class CompanyDirectoryCellView: UIStackView {
         companyProfilePictureView.layer.cornerRadius = configuration.maxProfilePictureSize / 2
         
         companyNameLabel.text = MyIdentityStore.shared().companyName
-        companyDirectoryDescriptionLabel.text = BundleUtil.localizedString(forKey: "companydirectory_description")
+        companyDirectoryDescriptionLabel.text = #localize("companydirectory_description")
         
         layoutIfNeeded()
         

@@ -21,7 +21,6 @@
 import Foundation
 import ThreemaProtocols
 
-// TODO: (IOS-3671) Implement
 class TaskDefinitionNewDeviceSync: TaskDefinition,
     TaskDefinitionTransactionProtocol {
     override func create(
@@ -48,20 +47,29 @@ class TaskDefinitionNewDeviceSync: TaskDefinition,
     }
     
     override var description: String {
-        "<\(Swift.type(of: self))"
+        "<\(Swift.type(of: self))>"
     }
+    
+    typealias JoinHandler = (CancelableTask) async throws -> Void
     
     var scope: D2d_TransactionScope.Scope {
         .newDeviceSync
     }
     
-    // TODO: Do we need to store anything?
+    /// Closure executed during transaction
+    let join: JoinHandler
     
-    init() {
+    /// Create new device sync transaction task
+    /// - Parameter join: Closure to execute during transaction. If it throws the transaction will be aborted.
+    init(join: @escaping JoinHandler) {
+        self.join = join
+        
         super.init(type: .dropOnDisconnect)
+        
+        self.retry = false
     }
     
     required init(from decoder: Decoder) throws {
-        fatalError("init(from:) has not been implemented")
+        fatalError("This task should never be persisted")
     }
 }

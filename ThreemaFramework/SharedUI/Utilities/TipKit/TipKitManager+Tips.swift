@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 import TipKit
 
 @available(iOSApplicationExtension 17.0, *)
@@ -28,19 +29,19 @@ extension TipKitManager {
     public struct ThreemaTypeTip: Tip {
         public var title: Text {
             if LicenseStore.requiresLicenseKey() {
-                Text("contact_threema_title".localized)
+                Text(#localize("contact_threema_title"))
             }
             else {
-                Text("contact_threema_work_title".localized)
+                Text(#localize("contact_threema_work_title"))
             }
         }
 
         public var message: Text? {
             if LicenseStore.requiresLicenseKey() {
-                Text("contact_threema_info".localized)
+                Text(#localize("contact_threema_info"))
             }
             else {
-                Text("contact_threema_work_info".localized)
+                Text(#localize("contact_threema_work_info"))
             }
         }
 
@@ -54,11 +55,11 @@ extension TipKitManager {
     /// Tip shown for users using TestFlight
     public struct ThreemaBetaFeedbackTip: Tip {
         public var title: Text {
-            Text("testflight_feedback_title".localized)
+            Text(#localize("testflight_feedback_title"))
         }
 
         public var message: Text? {
-            Text("testflight_feedback_description".localized)
+            Text(#localize("testflight_feedback_description"))
         }
 
         public var image: Image? {

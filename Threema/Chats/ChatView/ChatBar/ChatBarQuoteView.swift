@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 protocol ChatBarQuoteViewDelegate: AnyObject {
@@ -53,14 +54,14 @@ final class ChatBarQuoteView: UIView {
     private lazy var closeQuoteButton: ChatBarButton = {
         let button = ChatBarButton(
             sfSymbolName: "xmark.circle.fill",
-            accessibilityLabel: BundleUtil.localizedString(forKey: "chat_bar_quote_close_button"),
+            accessibilityLabel: #localize("chat_bar_quote_close_button"),
             defaultColor: { Colors.backgroundButton },
             action: { [weak self] _ in
                 self?.delegate?.quoteDismissed()
             }
         )
-        button.accessibilityLabel = BundleUtil.localizedString(forKey: "accessibility_chatbar_close_quote_button_label")
-        button.accessibilityHint = BundleUtil.localizedString(forKey: "accessibility_chatbar_close_quote_button_hint")
+        button.accessibilityLabel = #localize("accessibility_chatbar_close_quote_button_label")
+        button.accessibilityHint = #localize("accessibility_chatbar_close_quote_button_hint")
         
         return button
     }()
@@ -128,7 +129,7 @@ final class ChatBarQuoteView: UIView {
             return
         }
         quoteView.accessibilityLabel = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "accessibility_chatbar_quote_label"),
+            #localize("accessibility_chatbar_quote_label"),
             message.accessibilitySenderAndMessageTypeText
         )
     }

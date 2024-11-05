@@ -56,7 +56,7 @@ class GroupTests: XCTestCase {
         // Setup initial group in DB
 
         var groupEntity: GroupEntity!
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         var member03: ContactEntity!
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
@@ -80,9 +80,10 @@ class GroupTests: XCTestCase {
             )
             conversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.groupID = expectedGroupID
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = expectedGroupID
                     conversation.groupMyIdentity = myIdentityStoreMock.identity
-                    conversation.addMembers([member01, member02])
+                    conversation.members?.formUnion([member01, member02])
                 }
         }
 
@@ -100,8 +101,8 @@ class GroupTests: XCTestCase {
         XCTAssertEqual(group.allMemberIdentities.count, 3)
         XCTAssertNil(group.name)
         XCTAssertNil(group.old_ProfilePicture)
-        XCTAssertEqual(group.conversationCategory, .default)
-        XCTAssertEqual(group.conversationVisibility, .default)
+        XCTAssertEqual(group.conversationCategory, ConversationEntity.Category.default)
+        XCTAssertEqual(group.conversationVisibility, ConversationEntity.Visibility.default)
         XCTAssertNil(group.lastUpdate)
         XCTAssertNil(group.lastMessageDate)
 
@@ -110,22 +111,22 @@ class GroupTests: XCTestCase {
         let dateNow = Date()
 
         let entityManager = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
-        entityManager.performSyncBlockAndSafe {
-            let imageData = entityManager.entityCreator.imageData()
+        entityManager.performAndWaitSave {
+            let imageData = entityManager.entityCreator.imageDataEntity()
             imageData?.data = Data([0])
 
-            let message = entityManager.entityCreator.textMessage(for: conversation, setLastUpdate: true)
+            let message = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)
             message?.text = "123"
             message?.date = dateNow
 
             groupEntity.lastPeriodicSync = dateNow
             conversation.groupName = "Test group 123"
             conversation.groupImage = imageData
-            conversation.addMembersObject(member03)
+            conversation.members?.insert(member03)
             conversation.lastUpdate = dateNow
             conversation.lastMessage = message
-            conversation.conversationCategory = .private
-            conversation.conversationVisibility = .archived
+            conversation.changeCategory(to: .private)
+            conversation.changeVisibility(to: .archived)
         }
 
         // Check changed group properties
@@ -134,8 +135,8 @@ class GroupTests: XCTestCase {
         XCTAssertEqual(group.allMemberIdentities.count, 4)
         XCTAssertEqual(group.name, "Test group 123")
         XCTAssertNotNil(group.old_ProfilePicture)
-        XCTAssertEqual(group.conversationCategory, .private)
-        XCTAssertEqual(group.conversationVisibility, .archived)
+        XCTAssertEqual(group.conversationCategory, ConversationEntity.Category.private)
+        XCTAssertEqual(group.conversationVisibility, ConversationEntity.Visibility.archived)
         XCTAssertEqual(group.lastUpdate, dateNow)
         XCTAssertEqual(group.lastMessageDate, dateNow)
     }
@@ -146,7 +147,7 @@ class GroupTests: XCTestCase {
 
         // Setup initial group in DB
         var groupEntity: GroupEntity!
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         dbPreparer.save {
             groupEntity = dbPreparer.createGroupEntity(
                 groupID: expectedGroupID,
@@ -154,7 +155,8 @@ class GroupTests: XCTestCase {
             )
             conversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.groupID = expectedGroupID
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = expectedGroupID
                     conversation.groupMyIdentity = myIdentityStoreMock.identity
                 }
         }
@@ -171,10 +173,11 @@ class GroupTests: XCTestCase {
         XCTAssertEqual(group.groupIdentity.id, expectedGroupID)
         XCTAssertEqual(group.groupIdentity.creator.string, myIdentityStoreMock.identity)
 
-        // Change group property `GroupEntity.groupID` in DB
+        // Change group property `GroupEntity.groupId` in DB
         let entityManager = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
-        entityManager.performSyncBlockAndSafe {
-            groupEntity.groupID = MockData.generateGroupID()
+        entityManager.performAndWaitSave {
+            // swiftformat:disable:next acronyms
+            groupEntity.groupId = MockData.generateGroupID()
         }
 
         // Check changed group properties
@@ -183,8 +186,9 @@ class GroupTests: XCTestCase {
         XCTAssertTrue(ddLoggerMock.exists(message: "Group identity mismatch"))
 
         // Change group property `Conversation.groupID` in DB
-        entityManager.performSyncBlockAndSafe {
-            conversation.groupID = MockData.generateGroupID()
+        entityManager.performAndWaitSave {
+            // swiftformat:disable:next acronyms
+            conversation.groupId = MockData.generateGroupID()
         }
 
         // Check changed group properties
@@ -200,7 +204,7 @@ class GroupTests: XCTestCase {
         )
         
         var groupEntity: GroupEntity!
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
@@ -267,9 +271,18 @@ class GroupTests: XCTestCase {
                 visibility: .default,
                 complete: { conversation in
                     conversation.contact = member03
-                    conversation
-                        .addMembers([member01, member02, member03, member04, member05, member06, member07, member08])
-                    conversation.groupID = groupID
+                    conversation.members?.formUnion([
+                        member01,
+                        member02,
+                        member03,
+                        member04,
+                        member05,
+                        member06,
+                        member07,
+                        member08,
+                    ])
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = groupID
                 }
             )
         }
@@ -351,7 +364,7 @@ class GroupTests: XCTestCase {
         )
         
         var groupEntity: GroupEntity!
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
@@ -396,8 +409,9 @@ class GroupTests: XCTestCase {
                 visibility: .default,
                 complete: { conversation in
                     conversation.contact = member03
-                    conversation.addMembers([member01, member02, member03, member04])
-                    conversation.groupID = groupID
+                    conversation.members?.formUnion([member01, member02, member03, member04])
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = groupID
                     conversation.groupMyIdentity = myIdentityStoreMock.identity
                 }
             )
@@ -711,7 +725,7 @@ class GroupTests: XCTestCase {
         XCTAssertFalse(group.willBeDeleted)
 
         let em = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
-        em.performBlockAndWait {
+        em.performAndWait {
             em.entityDestroyer.delete(groupEntity: groupEntity)
         }
 
@@ -774,9 +788,9 @@ class GroupTests: XCTestCase {
         groupID: Data,
         members: Set<ContactEntity>,
         myIdentity: String
-    ) -> (conversation: Conversation, groupEntity: GroupEntity) {
+    ) -> (conversation: ConversationEntity, groupEntity: GroupEntity) {
 
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         var groupEntity: GroupEntity!
 
         dbPreparer.save {
@@ -784,9 +798,10 @@ class GroupTests: XCTestCase {
             groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: nil)
             conversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.groupID = groupID
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = groupID
                     conversation.groupMyIdentity = myIdentity
-                    conversation.addMembers(members)
+                    conversation.members?.formUnion(members)
                 }
         }
 

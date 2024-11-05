@@ -63,12 +63,14 @@ class ContactListDataSource<
     }
     
     private let sectionIndexEnabled: Bool
+    private var contentUnavailable: (show: () -> Void, hide: () -> Void)?
     
     init(
         provider: Provider,
         cellProvider: CellProvider,
         in tableView: UITableView,
-        sectionIndexEnabled: Bool = true
+        sectionIndexEnabled: Bool = true,
+        contentUnavailableConfiguration: ThreemaTableContentUnavailableView.Configuration? = nil
     ) {
         self.sectionIndexEnabled = sectionIndexEnabled
         cellProvider.registerCells(in: tableView)
@@ -76,16 +78,13 @@ class ContactListDataSource<
             tableView: tableView,
             cellProvider: contentProvider(cellProvider, provider)
         )
-        subscribe(to: provider)
-    }
-    
-    private func subscribe(to provider: Provider) {
-        snapshotSubscription = provider.currentSnapshot.sink { [weak self] snapshot in
-            guard let self else {
-                return
-            }
-            apply(snapshot)
+        
+        if let contentUnavailableConfiguration {
+            self.contentUnavailable = tableView
+                .setupContentUnavailableView(configuration: contentUnavailableConfiguration)
         }
+        
+        subscribe(to: provider)
     }
     
     deinit {
@@ -102,5 +101,19 @@ class ContactListDataSource<
     
     override func tableView(_ tableView: UITableView, sectionForSectionIndexTitle title: String, at index: Int) -> Int {
         tableIndexTitles.firstIndex(of: title) ?? 0
+    }
+    
+    private func subscribe(to provider: Provider) {
+        snapshotSubscription = provider.currentSnapshot.sink { [weak self] snapshot in
+            guard let self else {
+                return
+            }
+            apply(snapshot)
+            didUpdate(snapshot: snapshot)
+        }
+    }
+    
+    private func didUpdate(snapshot: Provider.ContactListSnapshot) {
+        (snapshot.itemIdentifiers.count <= 0 ? contentUnavailable?.show : contentUnavailable?.hide)?()
     }
 }

@@ -33,6 +33,8 @@ extern NSString * const MDM_KEY_LINKED_PHONE;
 extern NSString * const MDM_KEY_FIRST_NAME;
 extern NSString * const MDM_KEY_LAST_NAME;
 extern NSString * const MDM_KEY_CSI;
+extern NSString * const MDM_KEY_JOB_TITLE;
+extern NSString * const MDM_KEY_DEPARTMENT;
 extern NSString * const MDM_KEY_CATEGORY;
 extern NSString * const MDM_KEY_CONTACT_SYNC;
 extern NSString * const MDM_KEY_READONLY_PROFILE;

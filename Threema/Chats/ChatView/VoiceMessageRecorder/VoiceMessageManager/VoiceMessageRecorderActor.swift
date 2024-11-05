@@ -107,7 +107,7 @@ actor VoiceMessageRecorderActor: VoiceMessageManagerProtocolBase {
     
     // MARK: - Public Functions
     
-    func sendFile(for conversation: Conversation) async {
+    func sendFile(for conversation: ConversationEntity) async {
         recordingStateSubject.send(.none)
         player?.stop()
         await stop()
@@ -361,7 +361,7 @@ extension VoiceMessageRecorderActor {
         }
     }
     
-    private nonisolated func sendItem(for conversation: Conversation, with url: URL) async throws {
+    private nonisolated func sendItem(for conversation: ConversationEntity, with url: URL) async throws {
         guard let item = URLSenderItem(
             url: url,
             type: UTType.audio.identifier,

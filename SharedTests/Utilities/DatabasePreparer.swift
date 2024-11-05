@@ -59,7 +59,7 @@ class DatabasePreparer {
     }
 
     @discardableResult func createBallot(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         ballotID: Data = MockData.generateBallotID()
     ) -> Ballot {
         let ballot = createEntity(objectType: Ballot.self)
@@ -69,7 +69,7 @@ class DatabasePreparer {
     }
     
     @discardableResult func createBallotMessage(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         ballot: Ballot,
         ballotState: Int = Int(kBallotMessageStateOpenBallot),
         date: Date = Date(),
@@ -127,17 +127,18 @@ class DatabasePreparer {
         groupID: Data? = nil,
         typing: Bool = false,
         unreadMessageCount: Int = 0,
-        category: ConversationCategory = .default,
-        visibility: ConversationVisibility = .default,
-        complete: ((Conversation) -> Void)? = nil
-    ) -> Conversation {
-        let conversation = createEntity(objectType: Conversation.self)
+        category: ConversationEntity.Category = .default,
+        visibility: ConversationEntity.Visibility = .default,
+        complete: ((ConversationEntity) -> Void)? = nil
+    ) -> ConversationEntity {
+        let conversation = createEntity(objectType: ConversationEntity.self)
         conversation.contact = contactEntity
-        conversation.groupID = groupID
-        conversation.typing = NSNumber(booleanLiteral: typing)
+        // swiftformat:disable:next acronyms
+        conversation.groupId = groupID
+        conversation.setTyping(to: typing)
         conversation.unreadMessageCount = NSNumber(integerLiteral: unreadMessageCount)
-        conversation.conversationCategory = category
-        conversation.conversationVisibility = visibility
+        conversation.changeCategory(to: category)
+        conversation.changeVisibility(to: visibility)
  
         complete?(conversation)
         
@@ -146,7 +147,8 @@ class DatabasePreparer {
     
     @discardableResult func createGroupEntity(groupID: Data, groupCreator: String?) -> GroupEntity {
         let groupEntity = createEntity(objectType: GroupEntity.self)
-        groupEntity.groupID = groupID
+        // swiftformat:disable:next acronyms
+        groupEntity.groupId = groupID
         groupEntity.groupCreator = groupCreator
         groupEntity.state = NSNumber(integerLiteral: 0)
         return groupEntity
@@ -158,34 +160,34 @@ class DatabasePreparer {
         return distributionListEntity
     }
     
-    @discardableResult func createImageData(data: Data, height: Int, width: Int) -> ImageData {
-        let imageData = createEntity(objectType: ImageData.self)
+    @discardableResult func createImageDataEntity(data: Data, height: Int, width: Int) -> ImageDataEntity {
+        let imageData = createEntity(objectType: ImageDataEntity.self)
         imageData.data = data
-        imageData.height = NSNumber(integerLiteral: height)
-        imageData.width = NSNumber(integerLiteral: width)
+        imageData.height = Int16(height)
+        imageData.width = Int16(width)
         return imageData
     }
     
-    @discardableResult func createAudioData(data: Data?) -> AudioData {
-        let audioData = createEntity(objectType: AudioData.self)
-        audioData.data = data
-        return audioData
+    @discardableResult func createAudioDataEntity(data: Data) -> AudioDataEntity {
+        let audioDataEntity = createEntity(objectType: AudioDataEntity.self)
+        audioDataEntity.data = data
+        return audioDataEntity
     }
     
-    @discardableResult func createVideoData(data: Data) -> VideoData {
-        let videoData = createEntity(objectType: VideoData.self)
-        videoData.data = data
-        return videoData
+    @discardableResult func createVideoDataEntity(data: Data) -> VideoDataEntity {
+        let videoDataEntity = createEntity(objectType: VideoDataEntity.self)
+        videoDataEntity.data = data
+        return videoDataEntity
     }
     
-    @discardableResult func createFileData(data: Data) -> FileData {
-        let fileData = createEntity(objectType: FileData.self)
-        fileData.data = data
-        return fileData
+    @discardableResult func createFileDataEntity(data: Data) -> FileDataEntity {
+        let fileDataEntity = createEntity(objectType: FileDataEntity.self)
+        fileDataEntity.data = data
+        return fileDataEntity
     }
     
     @discardableResult func createAudioMessageEntity(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         duration: Int,
         complete: ((AudioMessageEntity) -> Void)?
     ) -> AudioMessageEntity {
@@ -202,9 +204,9 @@ class DatabasePreparer {
     }
     
     @discardableResult func createImageMessageEntity(
-        conversation: Conversation,
-        image: ImageData,
-        thumbnail: ImageData,
+        conversation: ConversationEntity,
+        image: ImageDataEntity,
+        thumbnail: ImageDataEntity,
         date: Date = Date(),
         delivered: Bool = true,
         id: Data = MockData.generateMessageID(),
@@ -234,7 +236,7 @@ class DatabasePreparer {
     }
 
     @discardableResult func createLocationMessage(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         accuracy: Double,
         latitude: Double,
         longitude: Double,
@@ -243,8 +245,8 @@ class DatabasePreparer {
         id: Data = MockData.generateMessageID(),
         isOwn: Bool,
         sender: ContactEntity? = nil
-    ) -> LocationMessage {
-        let locationMessage = createEntity(objectType: LocationMessage.self)
+    ) -> LocationMessageEntity {
+        let locationMessage = createEntity(objectType: LocationMessageEntity.self)
         locationMessage.conversation = conversation
         locationMessage.accuracy = NSNumber(value: accuracy)
         locationMessage.latitude = NSNumber(value: latitude)
@@ -263,12 +265,12 @@ class DatabasePreparer {
     }
 
     @discardableResult func createSystemMessage(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         type: Int,
         date: Date = Date(),
         id: Data = MockData.generateMessageID()
-    ) -> SystemMessage {
-        let systemMessage = createEntity(objectType: SystemMessage.self)
+    ) -> SystemMessageEntity {
+        let systemMessage = createEntity(objectType: SystemMessageEntity.self)
         systemMessage.conversation = conversation
         systemMessage.type = NSNumber(integerLiteral: type)
         systemMessage.date = date
@@ -282,7 +284,7 @@ class DatabasePreparer {
     }
 
     @discardableResult func createTextMessage(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         text: String = "Test message",
         date: Date = Date(),
         delivered: Bool = true,
@@ -294,8 +296,8 @@ class DatabasePreparer {
         userack: Bool = false,
         sender: ContactEntity?,
         remoteSentDate: Date? // can be set to nil for outgoing messages
-    ) -> TextMessage {
-        let textMessage = createEntity(objectType: TextMessage.self)
+    ) -> TextMessageEntity {
+        let textMessage = createEntity(objectType: TextMessageEntity.self)
         textMessage.conversation = conversation
         textMessage.text = text
         textMessage.date = date
@@ -312,10 +314,10 @@ class DatabasePreparer {
     }
     
     @discardableResult func createVideoMessageEntity(
-        conversation: Conversation,
-        video: VideoData?,
+        conversation: ConversationEntity,
+        video: VideoDataEntity?,
         duration: Int,
-        thumbnail: ImageData,
+        thumbnail: ImageDataEntity,
         date: Date = Date(),
         delivered: Bool = true,
         id: Data = MockData.generateMessageID(),
@@ -346,13 +348,13 @@ class DatabasePreparer {
     }
     
     @discardableResult func createFileMessageEntity(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         encryptionKey: Data? = nil,
         blobID: Data? = nil,
         blobThumbnailID: Data? = nil,
         progress: NSNumber? = nil,
-        data: FileData? = nil,
-        thumbnail: ImageData? = nil,
+        data: FileDataEntity? = nil,
+        thumbnail: ImageDataEntity? = nil,
         mimeType: String? = nil,
         type: NSNumber? = nil,
         messageID: Data = MockData.generateMessageID(),
@@ -368,8 +370,10 @@ class DatabasePreparer {
         
         fileMessage.conversation = conversation
         fileMessage.encryptionKey = encryptionKey
-        fileMessage.blobID = blobID
-        fileMessage.blobThumbnailID = blobThumbnailID
+        // swiftformat:disable: acronyms
+        fileMessage.blobId = blobID
+        fileMessage.blobThumbnailId = blobThumbnailID
+        // swiftformat:enable: acronyms
         fileMessage.progress = progress
         fileMessage.data = data
         fileMessage.thumbnail = thumbnail
@@ -393,15 +397,16 @@ class DatabasePreparer {
         groupID: Data,
         groupCreatorIdentity: String,
         members: [String]
-    ) throws -> (ContactEntity, GroupEntity, Conversation) {
+    ) throws -> (ContactEntity, GroupEntity, ConversationEntity) {
         save {
             let contactEntity = createContact(identity: groupCreatorIdentity)
             let groupEntity = createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             let conversation = createConversation()
-            conversation.groupID = groupEntity.groupID
+            // swiftformat:disable:next acronyms
+            conversation.groupId = groupEntity.groupId
             conversation.contact = contactEntity
             for identity in members {
-                conversation.members.insert(createContact(identity: identity))
+                conversation.members?.insert(createContact(identity: identity))
             }
 
             return (contactEntity, groupEntity, conversation)
@@ -414,22 +419,22 @@ class DatabasePreparer {
         if objectType is ContactEntity.Type {
             entityName = "Contact"
         }
-        else if objectType is Conversation.Type {
+        else if objectType is ConversationEntity.Type {
             entityName = "Conversation"
         }
         else if objectType is GroupEntity.Type {
             entityName = "Group"
         }
-        else if objectType is ImageData.Type {
+        else if objectType is ImageDataEntity.Type {
             entityName = "ImageData"
         }
-        else if objectType is AudioData.Type {
+        else if objectType is AudioDataEntity.Type {
             entityName = "AudioData"
         }
-        else if objectType is VideoData.Type {
+        else if objectType is VideoDataEntity.Type {
             entityName = "VideoData"
         }
-        else if objectType is FileData.Type {
+        else if objectType is FileDataEntity.Type {
             entityName = "FileData"
         }
         else if objectType is Ballot.Type {
@@ -438,10 +443,10 @@ class DatabasePreparer {
         else if objectType is BallotMessage.Type {
             entityName = "BallotMessage"
         }
-        else if objectType is SystemMessage.Type {
+        else if objectType is SystemMessageEntity.Type {
             entityName = "SystemMessage"
         }
-        else if objectType is TextMessage.Type {
+        else if objectType is TextMessageEntity.Type {
             entityName = "TextMessage"
         }
         else if objectType is AudioMessageEntity.Type {
@@ -450,7 +455,7 @@ class DatabasePreparer {
         else if objectType is ImageMessageEntity.Type {
             entityName = "ImageMessage"
         }
-        else if objectType is LocationMessage.Type {
+        else if objectType is LocationMessageEntity.Type {
             entityName = "LocationMessage"
         }
         else if objectType is VideoMessageEntity.Type {

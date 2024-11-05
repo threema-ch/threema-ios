@@ -29,7 +29,6 @@
 #import "CreateGroupNavigationController.h"
 #import "ContactStore.h"
 #import "EntityFetcher.h"
-#import "ImageData.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -76,7 +75,7 @@
         NSString *cloneGroupCreator = ((CreateGroupNavigationController *)self.navigationController).cloneGroupCreator;
         if (cloneGroupId) {
             EntityManager *entityManager = [[EntityManager alloc] init];
-            Conversation *conversation = [entityManager.entityFetcher conversationForGroupId:cloneGroupId creator:cloneGroupCreator];
+            ConversationEntity *conversation = [entityManager.entityFetcher conversationEntityForGroupId:cloneGroupId creator:cloneGroupCreator];
             
             if (conversation) {
                 _nameTextField.text = conversation.groupName;

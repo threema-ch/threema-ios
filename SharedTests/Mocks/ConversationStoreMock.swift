@@ -25,27 +25,27 @@ import ThreemaProtocols
 class ConversationStoreMock: NSObject, ConversationStoreProtocol, ConversationStoreInternalProtocol {
     // MARK: ConversationStoreProtocol
 
-    func pin(_ conversation: Conversation) {
+    func pin(_ conversation: ConversationEntity) {
         // no-op
     }
 
-    func unpin(_ conversation: Conversation) {
+    func unpin(_ conversation: ConversationEntity) {
         // no-op
     }
 
-    func makePrivate(_ conversation: Conversation) {
+    func makePrivate(_ conversation: ConversationEntity) {
         // no-op
     }
 
-    func makeNotPrivate(_ conversation: Conversation) {
+    func makeNotPrivate(_ conversation: ConversationEntity) {
         // no-op
     }
 
-    func archive(_ conversation: Conversation) {
+    func archive(_ conversation: ConversationEntity) {
         // no-op
     }
 
-    func unarchive(_ conversation: Conversation) {
+    func unarchive(_ conversation: ConversationEntity) {
         // no-op
     }
 

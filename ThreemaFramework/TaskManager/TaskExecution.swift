@@ -46,6 +46,7 @@ enum TaskExecutionError: Error {
     case multiDeviceNotSupported
     case nonceGenerationFailed
     case taskDropped
+    case decryptMessageFailed(reflectID: String)
 }
 
 extension TaskDefinition {
@@ -867,26 +868,26 @@ class TaskExecution: NSObject {
     ///
     /// - Parameter task: Task definition
     /// - Returns: Conversation or nil
-    func getConversation(for task: TaskDefinitionProtocol) throws -> Conversation {
-        var conversation: Conversation?
+    func getConversation(for task: TaskDefinitionProtocol) throws -> ConversationEntity {
+        var conversation: ConversationEntity?
 
         if let task = task as? TaskDefinitionSendBaseMessage,
            let groupCreatorIdentity = task.groupCreatorIdentity ?? frameworkInjector.myIdentityStore.identity {
             conversation = task.isGroupMessage ? frameworkInjector.entityManager.entityFetcher
-                .conversation(
+                .conversationEntity(
                     for: task.groupID!,
                     creator: groupCreatorIdentity
                 ) : frameworkInjector.entityManager.entityFetcher
-                .conversation(forIdentity: task.receiverIdentity)
+                .conversationEntity(forIdentity: task.receiverIdentity)
         }
         else if let task = task as? TaskDefinitionSendDeleteEditMessage,
                 let groupCreatorIdentity = task.groupCreatorIdentity ?? frameworkInjector.myIdentityStore.identity {
             conversation = task.isGroupMessage ? frameworkInjector.entityManager.entityFetcher
-                .conversation(
+                .conversationEntity(
                     for: task.groupID!,
                     creator: groupCreatorIdentity
                 ) : frameworkInjector.entityManager.entityFetcher
-                .conversation(forIdentity: task.receiverIdentity)
+                .conversationEntity(forIdentity: task.receiverIdentity)
         }
         else if let task = task as? TaskDefinitionSendBallotVoteMessage {
             conversation = frameworkInjector.entityManager.entityFetcher
@@ -901,16 +902,16 @@ class TaskExecution: NSObject {
         else if let task = task as? TaskDefinitionSendDeliveryReceiptsMessage {
             if task.toIdentity != frameworkInjector.myIdentityStore.identity {
                 conversation = frameworkInjector.entityManager.entityFetcher
-                    .conversation(forIdentity: task.toIdentity)
+                    .conversationEntity(forIdentity: task.toIdentity)
             }
             else if task.fromIdentity != frameworkInjector.myIdentityStore.identity {
                 conversation = frameworkInjector.entityManager.entityFetcher
-                    .conversation(forIdentity: task.fromIdentity)
+                    .conversationEntity(forIdentity: task.fromIdentity)
             }
         }
         else if let task = task as? TaskDefinitionSendGroupDeliveryReceiptsMessage,
                 let groupID = task.groupID, let creator = task.groupCreatorIdentity {
-            conversation = frameworkInjector.entityManager.entityFetcher.conversation(
+            conversation = frameworkInjector.entityManager.entityFetcher.conversationEntity(
                 for: groupID,
                 creator: creator
             )
@@ -940,18 +941,18 @@ class TaskExecution: NSObject {
         
         if let task = task as? TaskDefinitionSendBaseMessage,
            let conversation = task.isGroupMessage ? frameworkInjector.entityManager.entityFetcher
-           .conversation(
+           .conversationEntity(
                for: task.groupID!,
                creator: task.groupCreatorIdentity!
            ) : frameworkInjector.entityManager.entityFetcher
-           .conversation(forIdentity: task.receiverIdentity),
+           .conversationEntity(forIdentity: task.receiverIdentity),
            let message = frameworkInjector.entityManager.entityFetcher.message(
                with: task.messageID,
                conversation: conversation
            ) {
             task.messageType = "\(type(of: message))"
 
-            if let message = message as? TextMessage {
+            if let message = message as? TextMessageEntity {
                 let msg: AbstractMessage = task.isGroupMessage ? GroupTextMessage() : BoxTextMessage()
                 msg.fromIdentity = fromIdentity
                 msg.toIdentity = toIdentity
@@ -962,17 +963,19 @@ class TaskExecution: NSObject {
                    let msg = msg as? GroupTextMessage {
                     
                     msg.text = message.text
-                    msg.quotedMessageID = message.quotedMessageID
+                    // swiftformat:disable:next acronyms
+                    msg.quotedMessageID = message.quotedMessageId
                     msg.groupID = task.groupID
                     msg.groupCreator = task.groupCreatorIdentity
                 }
                 else if let msg = msg as? BoxTextMessage {
                     msg.text = message.text
-                    msg.quotedMessageID = message.quotedMessageID
+                    // swiftformat:disable:next acronyms
+                    msg.quotedMessageID = message.quotedMessageId
                 }
                 return msg
             }
-            else if let message = message as? LocationMessage {
+            else if let message = message as? LocationMessageEntity {
                 let msg: AbstractMessage = task.isGroupMessage ? GroupLocationMessage() : BoxLocationMessage()
                 msg.fromIdentity = fromIdentity
                 msg.toIdentity = toIdentity
@@ -1037,8 +1040,8 @@ class TaskExecution: NSObject {
                 msg.date = message.date
                 if task.isGroupMessage,
                    let msg = msg as? GroupImageMessage {
-                    
-                    msg.blobID = message.imageBlobID
+                    // swiftformat:disable:next acronyms
+                    msg.blobID = message.imageBlobId
                     msg.encryptionKey = message.encryptionKey
                     msg.size = UInt32(exactly: message.imageSize!)!
                     
@@ -1046,7 +1049,8 @@ class TaskExecution: NSObject {
                     msg.groupCreator = task.groupCreatorIdentity
                 }
                 else if let msg = msg as? BoxImageMessage {
-                    msg.blobID = message.imageBlobID
+                    // swiftformat:disable:next acronyms
+                    msg.blobID = message.imageBlobId
                     msg.imageNonce = message.imageNonce
                     msg.size = UInt32(exactly: message.imageSize!)!
                 }
@@ -1060,8 +1064,8 @@ class TaskExecution: NSObject {
                 msg.date = message.date
                 if task.isGroupMessage,
                    let msg = msg as? GroupAudioMessage {
-                    
-                    msg.audioBlobID = message.audioBlobID
+                    // swiftformat:disable:next acronyms
+                    msg.audioBlobID = message.audioBlobId
                     msg.encryptionKey = message.encryptionKey
                     msg.audioSize = UInt32(exactly: message.audioSize!)!
                     msg.duration = UInt16(message.duration.floatValue)
@@ -1070,7 +1074,8 @@ class TaskExecution: NSObject {
                     msg.groupCreator = task.groupCreatorIdentity
                 }
                 else if let msg = msg as? BoxAudioMessage {
-                    msg.audioBlobID = message.audioBlobID
+                    // swiftformat:disable:next acronyms
+                    msg.audioBlobID = message.audioBlobId
                     msg.encryptionKey = message.encryptionKey
                     msg.audioSize = UInt32(exactly: message.audioSize!)!
                     msg.duration = UInt16(message.duration.floatValue)
@@ -1105,8 +1110,8 @@ class TaskExecution: NSObject {
                 msg.date = message.date
                 if task.isGroupMessage,
                    let msg = msg as? GroupVideoMessage {
-                    
-                    msg.videoBlobID = message.videoBlobID
+                    // swiftformat:disable:next acronyms
+                    msg.videoBlobID = message.videoBlobId
                     msg.encryptionKey = message.encryptionKey
                     msg.videoSize = UInt32(exactly: message.videoSize!)!
                     msg.duration = UInt16(message.duration.floatValue)
@@ -1114,7 +1119,8 @@ class TaskExecution: NSObject {
                     msg.groupCreator = task.groupCreatorIdentity
                 }
                 else if let msg = msg as? BoxVideoMessage {
-                    msg.videoBlobID = message.videoBlobID
+                    // swiftformat:disable:next acronyms
+                    msg.videoBlobID = message.videoBlobId
                     msg.encryptionKey = message.encryptionKey
                     msg.videoSize = UInt32(exactly: message.videoSize!)!
                     msg.duration = UInt16(message.duration.floatValue)

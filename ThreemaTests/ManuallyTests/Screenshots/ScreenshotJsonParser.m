@@ -21,7 +21,6 @@
 #import "ScreenshotJsonParser.h"
 #import "MyIdentityStore.h"
 #import "ContactEntity.h"
-#import "Conversation.h"
 #import "NSString+Hex.h"
 #import "MediaConverter.h"
 #import "ProtocolDefines.h"
@@ -37,6 +36,8 @@
 #import <ThreemaFramework/FileMessageEncoder.h>
 #import <ThreemaFramework/QuoteUtil.h>
 #import <CommonCrypto/CommonDigest.h>
+#import <ThreemaFramework/Constants.h>
+
 
 #import <UIKit/UIImage.h>
 
@@ -74,7 +75,7 @@
     
     [_entityManager performSyncBlockAndSafe:^{
         NSArray *conversations = [_entityManager.entityFetcher allConversations];
-        for (Conversation* conversation in conversations) {
+        for (ConversationEntity* conversation in conversations) {
             [[_entityManager entityDestroyer] deleteWithConversation:conversation];
         }
 
@@ -213,7 +214,7 @@
     
     NSArray *conversationData = [data objectForKey:@"conversation"];
     if (conversationData) {
-        Conversation *conversation = [_entityManager.entityCreator conversation];
+        ConversationEntity *conversation = [_entityManager.entityCreator conversationEntity];
         conversation.contact = contact;
         
         [self handleConversation:conversation data:conversationData];
@@ -222,7 +223,7 @@
     }
 }
 
-- (void)handleConversation:(Conversation *)conversation data:(NSArray *)data {
+- (void)handleConversation:(ConversationEntity *)conversation data:(NSArray *)data {
     for (NSDictionary *messageData in data) {
         NSString *type = [messageData objectForKey:@"type"];
         
@@ -283,9 +284,9 @@
     }
 }
 
-- (Conversation *)createGroupConversationFromData:(NSDictionary *)groupData {
+- (ConversationEntity *)createGroupConversationFromData:(NSDictionary *)groupData {
     GroupEntity *groupEntity = [_entityManager.entityCreator groupEntity];
-    Conversation *conversation = [_entityManager.entityCreator conversation];
+    ConversationEntity *conversation = [_entityManager.entityCreator conversationEntity];
     
     NSString *groupId = [groupData objectForKey:@"id"];
     conversation.groupId = [groupId decodeHex];
@@ -301,7 +302,7 @@
     
     NSData *avatar = [self localizedFileForKey:@"avatar" in:groupData];
     if (avatar) {
-        ImageData *dbImage = [_entityManager.entityCreator imageData];
+        ImageDataEntity *dbImage = [_entityManager.entityCreator imageDataEntity];
         dbImage.data = avatar;
         conversation.groupImage = dbImage;
     }
@@ -311,7 +312,7 @@
     
     NSArray *memberNames = [groupData objectForKey:@"members"];
     NSSet *members = [self groupMembersFrom:memberNames];
-    [conversation addMembers:members];
+    [[conversation members] setByAddingObjectsFromSet:members];
 
     return conversation;
 }
@@ -329,7 +330,7 @@
 
 - (void)handleGroups:(NSDictionary *)groupsData {
     for (NSDictionary *groupData in groupsData) {
-        Conversation *conversation = [self createGroupConversationFromData:groupData];
+        ConversationEntity *conversation = [self createGroupConversationFromData:groupData];
         
         NSArray *conversationData = [groupData objectForKey:@"conversation"];
         if (conversationData) {
@@ -340,9 +341,9 @@
 
 
 /// Handle text and parse QuoteV1 into QuoteV2
-- (BaseMessage *)handleTextMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
+- (BaseMessage *)handleTextMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
     BaseMessage *lastMessage = conversation.lastMessage;
-    TextMessage *message = [_entityManager.entityCreator textMessageForConversation:conversation setLastUpdate: YES];
+    TextMessageEntity *message = [_entityManager.entityCreator textMessageEntityForConversationEntity:conversation setLastUpdate: YES];
     message.text = [self localizedStringForKey:@"content" in:messageData];
     if ([message.text containsString:@"> "]) {
         message.quotedMessageId = lastMessage.id;
@@ -355,8 +356,8 @@
     return message;
 }
 
-- (BaseMessage *)handleImageMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
-    FileMessageEntity *message = [_entityManager.entityCreator fileMessageEntityForConversation:conversation];
+- (BaseMessage *)handleImageMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+    FileMessageEntity *message = [_entityManager.entityCreator fileMessageEntityForConversationEntity:conversation];
 
     NSDictionary *captions = messageData[@"caption"];
     NSString *caption = nil;
@@ -375,20 +376,20 @@
     message.mimeType = @"image/jpeg";
     message.mimeTypeThumbnail = @"image/jpeg";
 
-    FileData *fileData = [_entityManager.entityCreator fileData];
+    FileDataEntity *fileData = [_entityManager.entityCreator fileDataEntity];
     NSData *data = [self localizedFileForKey:@"content" in:messageData];
     if (data) {
         fileData.data = data;
 
         UIImage *image = [UIImage imageWithData:data];
-        message.width = [NSNumber numberWithInt:image.size.width];
-        message.height = [NSNumber numberWithInt:image.size.height];
+        message.widthObjc = [NSNumber numberWithInt:image.size.width];
+        message.heightObjc = [NSNumber numberWithInt:image.size.height];
         UIImage *thumbnail = [MediaConverter getThumbnailForImage:image];
         NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, kJPEGCompressionQualityLow);
-        ImageData *dbThumbnail = [_entityManager.entityCreator imageData];
+        ImageDataEntity *dbThumbnail = [_entityManager.entityCreator imageDataEntity];
         dbThumbnail.data = thumbnailData;
-        dbThumbnail.width = [NSNumber numberWithInt:thumbnail.size.width];
-        dbThumbnail.height = [NSNumber numberWithInt:thumbnail.size.height];
+        dbThumbnail.width = thumbnail.size.width;
+        dbThumbnail.height = thumbnail.size.height;
         message.thumbnail = dbThumbnail;
 
     } else {
@@ -404,8 +405,8 @@
     return message;
 }
 
-- (BaseMessage *)handleAudioMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
-    AudioMessageEntity *message = [_entityManager.entityCreator audioMessageEntityForConversation:conversation];
+- (BaseMessage *)handleAudioMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+    AudioMessageEntity *message = [_entityManager.entityCreator audioMessageEntityForConversationEntity:conversation];
     
     unsigned char digest[CC_SHA256_DIGEST_LENGTH];
     message.encryptionKey = [NSData dataWithBytes:digest length:16];
@@ -415,16 +416,16 @@
 
     NSData *data = [self localizedFileForKey:@"content" in:messageData];
     if (data) {
-        AudioData *audioData = [_entityManager.entityCreator audioData];
-        audioData.data = data;
-        message.audio = audioData;
+        AudioDataEntity *audioDataEntity = [_entityManager.entityCreator audioDataEntity];
+        audioDataEntity.data = data;
+        message.audio = audioDataEntity;
     }
     
     return message;
 }
 
-- (BaseMessage *)handleLocationMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
-    LocationMessage *message = [_entityManager.entityCreator locationMessageForConversation:conversation];
+- (BaseMessage *)handleLocationMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+    LocationMessageEntity *message = [_entityManager.entityCreator locationMessageEntityForConversationEntity:conversation setLastUpdate:YES];
     NSArray *location = [self localizedArrayForKey:@"content" in:messageData];
     if (location.count == 4) {
         message.latitude = location[0];
@@ -436,22 +437,22 @@
     return message;
 }
 
-- (BaseMessage *)handleFileMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
-    FileMessageEntity *message = [_entityManager.entityCreator fileMessageEntityForConversation:conversation];
+- (BaseMessage *)handleFileMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+    FileMessageEntity *message = [_entityManager.entityCreator fileMessageEntityForConversationEntity:conversation];
     message.fileName = [self localizedStringForKey:@"content" in:messageData];
     message.fileSize = [NSNumber numberWithInt:2308565];
     message.mimeType = [messageData objectForKey:@"mime-type"];
     
     // Add some random data
-    FileData *fileData = [_entityManager.entityCreator fileData];
+    FileDataEntity *fileData = [_entityManager.entityCreator fileDataEntity];
     fileData.data = [[NaClCrypto sharedCrypto] randomBytes:10];
     [message setData:fileData];
 
     return message;
 }
 
-- (BaseMessage *)handleCallMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
-    SystemMessage *message = [_entityManager.entityCreator systemMessageForConversation:conversation];
+- (BaseMessage *)handleCallMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+    SystemMessageEntity *message = [_entityManager.entityCreator systemMessageEntityForConversationEntity:conversation];
     
     BOOL outgoing = ((NSNumber *)[messageData objectForKey:@"out"]).boolValue;
     NSDictionary *callData = [messageData objectForKey:@"content"];
@@ -472,8 +473,8 @@
     return message;
 }
 
-- (BaseMessage *)handleBallotMessage:(NSDictionary *)messageData inConversation:(Conversation *)conversation {
-    BallotMessage *message = [_entityManager.entityCreator ballotMessageForConversation:conversation];
+- (BaseMessage *)handleBallotMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+    BallotMessage *message = [_entityManager.entityCreator ballotMessageForConversationEntity:conversation];
     
     NSDictionary *ballotData = [messageData objectForKey:@"content"];
 
@@ -518,7 +519,7 @@
     NSString *identity;
     
     while ((identity = [enumerator nextObject])) {
-        BallotResult *ballotResult = [_entityManager.entityCreator ballotResult];
+        BallotResultEntity *ballotResult = [_entityManager.entityCreator ballotResultEntity];
         ballotResult.value = [voteData objectForKey:identity];
 
         if ([identity isEqualToString:@"$"]) {

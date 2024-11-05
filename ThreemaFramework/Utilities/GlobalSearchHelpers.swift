@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 public enum GlobalSearchConversationScope: Int {
     case all
@@ -29,13 +30,13 @@ public enum GlobalSearchConversationScope: Int {
     public var title: String {
         switch self {
         case .all:
-            "all".localized
+            #localize("all")
         case .oneToOne:
-            "one_to_one_chat".localized
+            #localize("one_to_one_chat")
         case .groups:
-            "groups".localized
+            #localize("groups")
         case .archived:
-            "archived_title".localized
+            #localize("archived_title")
         }
     }
 }
@@ -57,19 +58,19 @@ public enum GlobalSearchMessageToken: Identifiable, CaseIterable {
     public var title: String {
         switch self {
         case .star:
-            "conversations_global_search_token_starred".localized
+            #localize("conversations_global_search_token_starred")
             
         case .text:
-            "conversations_global_search_token_text".localized
+            #localize("conversations_global_search_token_text")
             
         case .caption:
-            "conversations_global_search_token_captions".localized
+            #localize("conversations_global_search_token_captions")
             
         case .poll:
-            "conversations_global_search_token_polls".localized
+            #localize("conversations_global_search_token_polls")
             
         case .location:
-            "conversations_global_search_token_locations".localized
+            #localize("conversations_global_search_token_locations")
         }
     }
     

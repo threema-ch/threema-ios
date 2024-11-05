@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct MultiDeviceWizardIdentityView: View {
     @ObservedObject var wizardVM: MultiDeviceWizardViewModel
@@ -35,12 +36,12 @@ struct MultiDeviceWizardIdentityView: View {
                 VStack(spacing: 0) {
                     Spacer()
                     
-                    Text(BundleUtil.localizedString(forKey: "md_wizard_start_desktop"))
+                    Text(#localize("md_wizard_start_desktop"))
                         .font(.title3)
                         .multilineTextAlignment(.center)
                         .padding(.bottom, 30)
                     
-                    Text(BundleUtil.localizedString(forKey: "md_wizard_identity_text"))
+                    Text(#localize("md_wizard_identity_text"))
                         .bold()
                         .font(.title2)
                         .padding(.bottom)
@@ -67,7 +68,7 @@ struct MultiDeviceWizardIdentityView: View {
                     dismiss = true
                     wizardVM.cancelLinking()
                 } label: {
-                    Text(BundleUtil.localizedString(forKey: "md_wizard_cancel"))
+                    Text(#localize("md_wizard_cancel"))
                 }
                 .buttonStyle(.bordered)
                 .tint(Color(.primary))
@@ -78,14 +79,14 @@ struct MultiDeviceWizardIdentityView: View {
                     MultiDeviceWizardCodeView(wizardVM: wizardVM, dismissModal: $dismiss)
                     
                 } label: {
-                    Text(BundleUtil.localizedString(forKey: "md_wizard_next"))
+                    Text(#localize("md_wizard_next"))
                         .bold()
                 }
                 .buttonStyle(.borderedProminent)
             }
         }
         .padding(.horizontal)
-        .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
+        .navigationBarTitle(#localize("md_wizard_header"))
         .navigationBarBackButtonHidden()
         .onAppear {
             wizardVM.advanceState(.identity)

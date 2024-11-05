@@ -126,7 +126,8 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                dbConversation.groupID = dbGroup.groupID
+                // swiftformat:disable:next acronyms
+                dbConversation.groupId = dbGroup.groupId
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
             }
@@ -197,7 +198,8 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                dbConversation.groupID = dbGroup.groupID
+                // swiftformat:disable:next acronyms
+                dbConversation.groupId = dbGroup.groupId
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
             }
@@ -273,7 +275,8 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                dbConversation.groupID = dbGroup.groupID
+                // swiftformat:disable:next acronyms
+                dbConversation.groupId = dbGroup.groupId
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
                 dbConversation.contact = dbCreator
@@ -353,7 +356,8 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                dbConversation.groupID = dbGroup.groupID
+                // swiftformat:disable:next acronyms
+                dbConversation.groupId = dbGroup.groupId
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
                 dbConversation.contact = dbCreator
@@ -429,7 +433,8 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                dbConversation.groupID = dbGroup.groupID
+                // swiftformat:disable:next acronyms
+                dbConversation.groupId = dbGroup.groupId
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
             }
@@ -505,7 +510,8 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                dbConversation.groupID = dbGroup.groupID
+                // swiftformat:disable:next acronyms
+                dbConversation.groupId = dbGroup.groupId
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
                 dbConversation.contact = dbCreator
@@ -583,7 +589,8 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                dbConversation.groupID = dbGroup.groupID
+                // swiftformat:disable:next acronyms
+                dbConversation.groupId = dbGroup.groupId
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
                 dbConversation.contact = dbCreator

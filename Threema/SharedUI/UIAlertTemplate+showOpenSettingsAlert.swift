@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaMacros
 import UIKit
 
 // TODO: Move this into `UIAlertTemplate` if no more Objective-C is needed
@@ -34,30 +35,30 @@ extension NoAccessAlertType {
     fileprivate var localizedTitle: String {
         switch self {
         case .camera:
-            BundleUtil.localizedString(forKey: "alert_no_access_title_camera")
+            #localize("alert_no_access_title_camera")
         case .contacts:
-            BundleUtil.localizedString(forKey: "alert_no_access_title_contacts")
+            #localize("alert_no_access_title_contacts")
         case .location:
-            BundleUtil.localizedString(forKey: "alert_no_access_title_location")
+            #localize("alert_no_access_title_location")
         case .preciseLocation:
-            BundleUtil.localizedString(forKey: "alert_no_access_title_location_precise")
+            #localize("alert_no_access_title_location_precise")
         case .microphone:
-            BundleUtil.localizedString(forKey: "alert_no_access_title_microphone")
+            #localize("alert_no_access_title_microphone")
         }
     }
     
     fileprivate var localizedMessage: String {
         switch self {
         case .camera:
-            BundleUtil.localizedString(forKey: "alert_no_access_message_camera")
+            #localize("alert_no_access_message_camera")
         case .contacts:
-            BundleUtil.localizedString(forKey: "alert_no_access_message_contacts")
+            #localize("alert_no_access_message_contacts")
         case .location:
-            BundleUtil.localizedString(forKey: "alert_no_access_message_location")
+            #localize("alert_no_access_message_location")
         case .preciseLocation:
-            BundleUtil.localizedString(forKey: "alert_no_access_message_location_precise")
+            #localize("alert_no_access_message_location_precise")
         case .microphone:
-            BundleUtil.localizedString(forKey: "alert_no_access_message_microphone")
+            #localize("alert_no_access_message_microphone")
         }
     }
 }
@@ -86,7 +87,7 @@ extension UIAlertTemplate {
         )
 
         alert.addAction(UIAlertAction(
-            title: BundleUtil.localizedString(forKey: "alert_no_access_open_settings"),
+            title: #localize("alert_no_access_open_settings"),
             style: .default,
             handler: { _ in
                 guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
@@ -101,7 +102,7 @@ extension UIAlertTemplate {
         ))
 
         alert.addAction(UIAlertAction(
-            title: BundleUtil.localizedString(forKey: "cancel"),
+            title: #localize("cancel"),
             style: .cancel,
             handler: { _ in actionCancel?() }
         ))

@@ -60,7 +60,7 @@
 
  @param inConversations Recalculate count of unread messages in this conversations
  */
-- (void)readMessage:(nullable NSSet<Conversation *> *)inConversations
+- (void)readMessage:(nullable NSSet<ConversationEntity *> *)inConversations
 NS_SWIFT_NAME(readMessage(inConversations:));
 
 /**

@@ -20,6 +20,7 @@
 
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 import WebRTC
 
@@ -154,12 +155,12 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
     }
     
     private func setupLocalizables() {
-        title = BundleUtil.localizedString(forKey: "webrtc_diagnostics.title")
-        descriptionLabel.text = BundleUtil.localizedString(forKey: "webrtc_diagnostics.description")
-        finishLabel.text = BundleUtil.localizedString(forKey: "webrtc_diagnostics.done")
+        title = #localize("webrtc_diagnostics.title")
+        descriptionLabel.text = #localize("webrtc_diagnostics.description")
+        finishLabel.text = #localize("webrtc_diagnostics.done")
         
-        startButton.setTitle(BundleUtil.localizedString(forKey: "webrtc_diagnostics.start"), for: .normal)
-        copyButton.setTitle(BundleUtil.localizedString(forKey: "webrtc_diagnostics.copyToClipboard"), for: .normal)
+        startButton.setTitle(#localize("webrtc_diagnostics.start"), for: .normal)
+        copyButton.setTitle(#localize("webrtc_diagnostics.copyToClipboard"), for: .normal)
     }
     
     private func startDiagnostic() {
@@ -398,7 +399,7 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
         UIAlertTemplate.showAlert(
             owner: self,
             title: nil,
-            message: BundleUtil.localizedString(forKey: "webrtc_diagnostics.copy")
+            message: #localize("webrtc_diagnostics.copy")
         )
     }
     

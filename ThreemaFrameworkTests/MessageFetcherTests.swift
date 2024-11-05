@@ -24,7 +24,7 @@ import XCTest
 class MessageFetcherTests: XCTestCase {
 
     private var databasePreparer: DatabasePreparer!
-    private var conversation: Conversation!
+    private var conversation: ConversationEntity!
 
     private var entityManager: EntityManager!
     private var messageFetcher: MessageFetcher!
@@ -110,14 +110,14 @@ class MessageFetcherTests: XCTestCase {
         XCTAssertEqual(messages.count, count)
         
         for (index, message) in messages.enumerated() {
-            let textMessage = try XCTUnwrap(message as? TextMessage)
+            let textMessage = try XCTUnwrap(message as? TextMessageEntity)
             
             XCTAssertEqual(textMessage.text, testTextMessages[offset + index])
         }
     }
     
     func testMessagesAtOffsetWithEmptyConversation() {
-        var emptyConversation: Conversation!
+        var emptyConversation: ConversationEntity!
         databasePreparer.save {
             emptyConversation = databasePreparer.createConversation(
                 typing: false,
@@ -146,7 +146,7 @@ class MessageFetcherTests: XCTestCase {
         let expectedTextMessages: [String] = testTextMessages.reversed()
         
         for (index, message) in messages.enumerated() {
-            let textMessage = try XCTUnwrap(message as? TextMessage)
+            let textMessage = try XCTUnwrap(message as? TextMessageEntity)
             
             XCTAssertEqual(textMessage.text, expectedTextMessages[offset + index])
         }
@@ -182,7 +182,7 @@ class MessageFetcherTests: XCTestCase {
         // Unread messages are always sorted descending, thus we need to reverse the inserted messages
         let expectedUnreadMessages: [String] = unreadTextMessages.reversed()
         for (index, message) in unreadMessages.enumerated() {
-            let textMessage = try XCTUnwrap(message as? TextMessage)
+            let textMessage = try XCTUnwrap(message as? TextMessageEntity)
             
             XCTAssertEqual(textMessage.text, expectedUnreadMessages[index])
         }
@@ -223,7 +223,7 @@ class MessageFetcherTests: XCTestCase {
     // MARK: Last display message
 
     func testLastDisplayMessageIsTextMessage() throws {
-        let result = try XCTUnwrap(messageFetcher.lastDisplayMessage() as? TextMessage)
+        let result = try XCTUnwrap(messageFetcher.lastDisplayMessage() as? TextMessageEntity)
 
         XCTAssertEqual(
             "Dolor praesentium sed xquia natus ad quod impedit ex quibusdam temporibus. Qui blanditiis rerum et sapiente praesentium ut corporis totam?",
@@ -237,7 +237,7 @@ class MessageFetcherTests: XCTestCase {
             databasePreparer.createSystemMessage(conversation: conversation, type: kFsDebugMessage)
         }
 
-        let result = try XCTUnwrap(messageFetcher.lastDisplayMessage() as? TextMessage)
+        let result = try XCTUnwrap(messageFetcher.lastDisplayMessage() as? TextMessageEntity)
 
         XCTAssertEqual(
             "Dolor praesentium sed xquia natus ad quod impedit ex quibusdam temporibus. Qui blanditiis rerum et sapiente praesentium ut corporis totam?",
@@ -251,7 +251,7 @@ class MessageFetcherTests: XCTestCase {
             databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageGroupCreatorLeft)
         }
 
-        let result = try XCTUnwrap(messageFetcher.lastDisplayMessage() as? SystemMessage)
+        let result = try XCTUnwrap(messageFetcher.lastDisplayMessage() as? SystemMessageEntity)
 
         XCTAssertEqual(kSystemMessageGroupCreatorLeft, result.type.intValue)
     }
@@ -259,7 +259,7 @@ class MessageFetcherTests: XCTestCase {
     // MARK: Last message
     
     func testLastMessageIsTextMessage() throws {
-        let result = try XCTUnwrap(messageFetcher.lastMessage() as? TextMessage)
+        let result = try XCTUnwrap(messageFetcher.lastMessage() as? TextMessageEntity)
     
         XCTAssertEqual(
             "Dolor praesentium sed xquia natus ad quod impedit ex quibusdam temporibus. Qui blanditiis rerum et sapiente praesentium ut corporis totam?",
@@ -273,7 +273,7 @@ class MessageFetcherTests: XCTestCase {
             databasePreparer.createSystemMessage(conversation: conversation, type: kFsDebugMessage)
         }
     
-        let result = try XCTUnwrap(messageFetcher.lastMessage() as? SystemMessage)
+        let result = try XCTUnwrap(messageFetcher.lastMessage() as? SystemMessageEntity)
     
         XCTAssertEqual(kFsDebugMessage, result.type.intValue)
     }
@@ -284,7 +284,7 @@ class MessageFetcherTests: XCTestCase {
             databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageGroupCreatorLeft)
         }
     
-        let result = try XCTUnwrap(messageFetcher.lastMessage() as? SystemMessage)
+        let result = try XCTUnwrap(messageFetcher.lastMessage() as? SystemMessageEntity)
     
         XCTAssertEqual(kSystemMessageGroupCreatorLeft, result.type.intValue)
     }

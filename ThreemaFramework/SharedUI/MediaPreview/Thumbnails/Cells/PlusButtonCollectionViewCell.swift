@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 class PlusButtonCollectionViewCell: UICollectionViewCell {
     @IBOutlet var imageView: UIImageView!
@@ -47,7 +48,7 @@ class PlusButtonCollectionViewCell: UICollectionViewCell {
     override var accessibilityLabel: String? {
         set { }
         get {
-            BundleUtil.localizedString(forKey: "addButton")
+            #localize("media_preview_accessibility_plus_button")
         }
     }
 }

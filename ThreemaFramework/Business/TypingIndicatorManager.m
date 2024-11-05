@@ -78,10 +78,10 @@
             }
             
             [entityManager performSyncBlockAndSafe:^{
-                for (Conversation *conversation in conversations) {
+                for (ConversationEntity *conversation in conversations) {
                     if (conversation.typing.boolValue && ((conversation.lastTypingStart != nil && [conversation.lastTypingStart timeIntervalSinceNow] < -kTypingIndicatorTimeout))) {
                         DDLogVerbose(@"Reset typing indicator on conversation with %@", conversation.contact.identity);
-                        conversation.typing = [NSNumber numberWithBool:NO];
+                        [conversation setTypingTo:NO];
                     }
                 }
             }];
@@ -92,13 +92,13 @@
 - (void)setTypingIndicatorForIdentity:(NSString*)identity typing:(BOOL)typing {
     dispatch_async(dispatch_get_main_queue(), ^{
         EntityManager *entityManager = [[EntityManager alloc] init];
-        Conversation *conversation = [entityManager.entityFetcher conversationForIdentity:identity];
+        ConversationEntity *conversation = [entityManager.entityFetcher conversationEntityForIdentity:identity];
         if (conversation == nil) {
             DDLogInfo(@"No conversation with identity %@ found", identity);
             return;
         }
         
-        conversation.typing = [NSNumber numberWithBool:typing];
+        [conversation setTypingTo:typing];
     });
 }
 

@@ -30,7 +30,7 @@
 @interface Old_BlobMessageSender : NSObject <Old_BlobUploadDelegate>
 
 @property BaseMessage<BlobData> *message;
-@property Conversation *conversation;
+@property ConversationEntity *conversation;
 @property NSString *fileNameFromWeb;
 
 @property id<UploadProgressDelegate> uploadProgressDelegate;
@@ -41,7 +41,7 @@
 
 #pragma mark - abstract methods
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(Conversation *)conversation;
+- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation;
 
 - (void)sendMessage:(NSArray *)bolbIds;
 

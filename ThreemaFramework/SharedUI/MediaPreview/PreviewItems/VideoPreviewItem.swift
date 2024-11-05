@@ -22,11 +22,12 @@ import CocoaLumberjackSwift
 import Foundation
 import Photos
 import PromiseKit
+import ThreemaMacros
 
 open class VideoPreviewItem: MediaPreviewItem, MediaPreviewItemProtocol {
     public typealias PreviewType = URL
     
-    var exportSession: SDAVAssetExportSession?
+    var exportSession: AVAssetExportSession?
     var isConverted = false
     
     // MARK: Private Properties
@@ -100,7 +101,7 @@ open class VideoPreviewItem: MediaPreviewItem, MediaPreviewItemProtocol {
     }
     
     override open func getAccessibilityDescription() -> String? {
-        let text = BundleUtil.localizedString(forKey: "video")
+        let text = #localize("video")
         return text
     }
     
@@ -114,7 +115,7 @@ open class VideoPreviewItem: MediaPreviewItem, MediaPreviewItemProtocol {
     
     // MARK: Private functions
     
-    private func convertVideo(exportSession: SDAVAssetExportSession) -> Promise<URL> {
+    private func convertVideo(exportSession: AVAssetExportSession) -> Promise<URL> {
         Promise { seal in
             autoreleasepool {
                 isConverting = true

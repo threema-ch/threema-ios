@@ -223,26 +223,15 @@ class MediatorMessageProcessor: NSObject {
         case .reflected:
             DDLogInfo("Reflected")
 
-            // Decode and decrypt incoming reflected message
-            let (reflectID, reflectedEnvelopeData, reflectedAt) = MediatorMessageProtocol.decodeReflected(message)
-            DDLogNotice("[MSG] Incoming reflected message (reflect ID \(reflectID.hexString))")
+            // Add task for processing incoming reflected message
+            let task = TaskDefinitionReceiveReflectedMessage(
+                reflectedMessage: message,
+                receivedAfterInitialQueueSend: receivedAfterInitialQueueSend,
+                maxBytesToDecrypt: maxBytesToDecrypt,
+                timeoutDownloadThumbnail: timeoutDownloadThumbnail
+            )
+            taskManager.add(taskDefinition: task)
 
-            if let reflectedEnvelope = mediatorMessageProtocol.decryptEnvelope(data: reflectedEnvelopeData) {
-                // Add task for processing incoming reflected message
-                let task = TaskDefinitionReceiveReflectedMessage(
-                    reflectID: reflectID,
-                    reflectedEnvelope: reflectedEnvelope,
-                    reflectedAt: reflectedAt,
-                    receivedAfterInitialQueueSend: receivedAfterInitialQueueSend,
-                    maxBytesToDecrypt: maxBytesToDecrypt,
-                    timeoutDownloadThumbnail: timeoutDownloadThumbnail
-                )
-                taskManager.add(taskDefinition: task)
-            }
-            else {
-                DDLogError("Envelope could not be decrypted for reflected message (reflect ID: \(reflectID.hexString))")
-            }
-            
             return nil
             
         // case .reflectedAck:

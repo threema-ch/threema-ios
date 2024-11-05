@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 // MARK: - EditProfilePictureView.Configuration
@@ -116,14 +117,14 @@ class EditProfilePictureView: UIStackView {
     
     private lazy var takePictureButton = CircleButton(
         sfSymbolName: "camera",
-        accessibilityLabel: BundleUtil.localizedString(forKey: "take_photo")
+        accessibilityLabel: #localize("take_photo")
     ) { [weak self] button in
         self?.showImagePicker(for: .camera, in: button)
     }
     
     private lazy var choosePictureButton = CircleButton(
         sfSymbolName: "photo.on.rectangle",
-        accessibilityLabel: BundleUtil.localizedString(forKey: "choose_existing_photo")
+        accessibilityLabel: #localize("choose_existing_photo")
     ) { [weak self] button in
         self?.showImagePicker(for: .photoLibrary, in: button)
     }
@@ -154,7 +155,7 @@ class EditProfilePictureView: UIStackView {
         
         if UIImagePickerController.isSourceTypeAvailable(.camera) {
             actions.append(UIAccessibilityCustomAction(
-                name: BundleUtil.localizedString(forKey: "take_photo"),
+                name: #localize("take_photo"),
                 target: self,
                 selector: #selector(accessibilityShowCameraPicker)
             ))
@@ -162,7 +163,7 @@ class EditProfilePictureView: UIStackView {
         
         if UIImagePickerController.isSourceTypeAvailable(.photoLibrary) {
             actions.append(UIAccessibilityCustomAction(
-                name: BundleUtil.localizedString(forKey: "choose_existing_photo"),
+                name: #localize("choose_existing_photo"),
                 target: self,
                 selector: #selector(accessibilityShowLibraryPicker)
             ))
@@ -172,7 +173,7 @@ class EditProfilePictureView: UIStackView {
     }()
     
     private lazy var accessibilityDeleteAction = UIAccessibilityCustomAction(
-        name: BundleUtil.localizedString(forKey: "delete"),
+        name: #localize("delete"),
         target: self,
         selector: #selector(accessibilityDeleteProfilePicture)
     )
@@ -244,11 +245,11 @@ class EditProfilePictureView: UIStackView {
         isAccessibilityElement = true
         
         if isEditable {
-            accessibilityLabel = BundleUtil.localizedString(forKey: "edit_avatar_edit_picture_accessibility_label")
+            accessibilityLabel = #localize("edit_avatar_edit_picture_accessibility_label")
         }
         else {
-            accessibilityLabel = BundleUtil.localizedString(forKey: "edit_avatar_picture_accessibility_label")
-            accessibilityValue = BundleUtil.localizedString(forKey: "edit_avatar_picture_not_editable_accessibility")
+            accessibilityLabel = #localize("edit_avatar_picture_accessibility_label")
+            accessibilityValue = #localize("edit_avatar_picture_not_editable_accessibility")
         }
     }
     
@@ -384,8 +385,8 @@ extension EditProfilePictureView: UINavigationControllerDelegate, UIImagePickerC
             if let presentingViewController {
                 UIAlertTemplate.showAlert(
                     owner: presentingViewController,
-                    title: BundleUtil.localizedString(forKey: "edit_avatar_no_image_found_title"),
-                    message: BundleUtil.localizedString(forKey: "edit_avatar_no_image_found_message")
+                    title: #localize("edit_avatar_no_image_found_title"),
+                    message: #localize("edit_avatar_no_image_found_message")
                 )
             }
             

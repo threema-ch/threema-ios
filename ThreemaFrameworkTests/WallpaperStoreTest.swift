@@ -27,10 +27,10 @@ class WallpaperStoreTest: XCTestCase {
 
     private let wallpaperStore = WallpaperStore.shared
 
-    private var conversation1: Conversation!
+    private var conversation1: ConversationEntity!
     private var conversationID1: NSManagedObjectID!
 
-    private var conversation2: Conversation!
+    private var conversation2: ConversationEntity!
     private var conversationID2: NSManagedObjectID!
     
     private var mainCnx: NSManagedObjectContext!
@@ -75,11 +75,11 @@ class WallpaperStoreTest: XCTestCase {
     private func createConversation(
         id: String,
         unreadMessageCount: Int,
-        category: ConversationCategory,
-        visibility: ConversationVisibility
-    ) -> Conversation {
+        category: ConversationEntity.Category,
+        visibility: ConversationEntity.Visibility
+    ) -> ConversationEntity {
         var contact: ContactEntity!
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
 
         let databasePreparer = DatabasePreparer(context: mainCnx)
         databasePreparer.save {

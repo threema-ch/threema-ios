@@ -110,9 +110,9 @@ import PromiseKit
                     return
                 }
                 
-                self.entityManager.performSyncBlockAndSafe {
+                self.entityManager.performAndWaitSave {
                     guard let conversation = self.entityManager.entityFetcher
-                        .existingObject(with: conversationManagedObjectID) as? Conversation,
+                        .existingObject(with: conversationManagedObjectID) as? ConversationEntity,
                         let msg = self.entityManager.entityFetcher.message(
                             with: videoMessageID,
                             conversation: conversation
@@ -139,15 +139,15 @@ import PromiseKit
                     )
 
                     if let thumbnailData,
-                       let thumbnailImage = UIImage(data: thumbnailData) {
-                        let thumbnailJpegData = thumbnailImage.jpegData(compressionQuality: 1.0)
+                       let thumbnailImage = UIImage(data: thumbnailData),
+                       let thumbnailJpegData = thumbnailImage.jpegData(compressionQuality: 1.0) {
                         
-                        let thumbnail: ImageData? = msg.thumbnail == nil ? self.entityManager.entityCreator
-                            .imageData() : msg.thumbnail
+                        let thumbnail: ImageDataEntity? = msg.thumbnail == nil ? self.entityManager.entityCreator
+                            .imageDataEntity() : msg.thumbnail
                         
                         thumbnail?.data = thumbnailJpegData
-                        thumbnail?.width = NSNumber(value: Float(thumbnailImage.size.width))
-                        thumbnail?.height = NSNumber(value: Float(thumbnailImage.size.height))
+                        thumbnail?.width = Int16(thumbnailImage.size.width)
+                        thumbnail?.height = Int16(thumbnailImage.size.height)
 
                         msg.thumbnail = thumbnail
 

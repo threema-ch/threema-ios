@@ -20,6 +20,7 @@
 
 import MBProgressHUD
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 import WebKit
 
@@ -112,8 +113,8 @@ class SettingsWebViewViewController: UIViewController, WKNavigationDelegate {
         MBProgressHUD.hide(for: view, animated: true)
         UIAlertTemplate.showAlert(
             owner: self,
-            title: BundleUtil.localizedString(forKey: "cannot_connect_title"),
-            message: BundleUtil.localizedString(forKey: "cannot_connect_message")
+            title: #localize("cannot_connect_title"),
+            message: #localize("cannot_connect_message")
         ) { _ in
             self.navigationController?.dismiss(animated: true, completion: nil)
         }

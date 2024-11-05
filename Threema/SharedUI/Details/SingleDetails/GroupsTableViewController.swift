@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 /// Show a simple list of all the provided groups
@@ -46,7 +47,7 @@ final class GroupsTableViewController: ThemedTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        navigationItem.title = BundleUtil.localizedString(forKey: "groups")
+        navigationItem.title = #localize("groups")
                 
         tableView.registerCell(GroupCell.self)
     }

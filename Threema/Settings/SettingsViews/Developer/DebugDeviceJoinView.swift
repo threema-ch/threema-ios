@@ -54,19 +54,26 @@ struct DebugDeviceJoinView: View {
         List {
             Section {
                 HStack {
-                    TextField("Join URL", text: $deviceJoinURLString)
+                    TextField(text: $deviceJoinURLString) {
+                        Text(verbatim: "Join URL")
+                    }
                     
                     Button {
                         isShowingScanner = true
                     } label: {
-                        Label("Scan", systemImage: "qrcode")
-                            .labelStyle(IconOnlyLabelStyle())
+                        Label {
+                            Text(verbatim: "Scan")
+                        }
+                        icon: {
+                            Image(systemName: "qrcode")
+                        }
+                        .labelStyle(IconOnlyLabelStyle())
                     }
                 }
                 .disabled(joinState != .initial)
                 
                 if joinState == .initial || joinState == .connecting {
-                    Button("Connect") {
+                    Button {
                         Task {
                             joinState = .connecting
                             do {
@@ -93,11 +100,13 @@ struct DebugDeviceJoinView: View {
                                 logMessages.append(.init(message: "Error connecting: \(error)"))
                             }
                         }
+                    } label: {
+                        Text(verbatim: "Connect")
                     }
                     .disabled(joinState != .initial)
                 }
                 else if joinState == .connected || joinState == .joining {
-                    Button("Send Join Data") {
+                    Button {
                         Task {
                             joinState = .joining
                             
@@ -111,6 +120,8 @@ struct DebugDeviceJoinView: View {
                                 logMessages.append(.init(message: "Error sending join data: \(error)"))
                             }
                         }
+                    } label: {
+                        Text(verbatim: "Send Join Data")
                     }
                     .disabled(joinState != .connected)
                 }

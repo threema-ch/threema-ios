@@ -73,6 +73,46 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
             return nil
         }
     }
+    
+    func addWithWait(taskDefinition: TaskDefinitionProtocol) -> (WaitTask, CancelableTask?) {
+        assert(!taskDefinition.retry, "For retry tasks the completion handler might be called multiple times")
+        
+        // This is a bit crazy, but the best we could come up with
+        let completionTask: Task<Void, Error> = Task {
+            try await withCheckedThrowingContinuation { continuation in
+                TaskManager.addTaskQueue.async {
+                    do {
+                        try self.add(task: taskDefinition) { _, error in
+                            if let error {
+                                continuation.resume(throwing: error)
+                            }
+                            else {
+                                continuation.resume()
+                            }
+                        }
+                    }
+                    catch {
+                        DDLogError("Failed add task to queue \(error)")
+                    }
+                    
+                    self.spool()
+                }
+            }
+        }
+        
+        let waitTask = DefaultWaitTask(completionTask: completionTask)
+        
+        assert(taskDefinition is TaskDefinition, "We always expect a `TaskDefinition`")
+        
+        // Only drop on disconnect tasks are cancelable
+        if let task = taskDefinition as? TaskDefinition, task.type == .dropOnDisconnect {
+            let cancelableTask = CancelableDropOnDisconnectTask(taskDefinition: task, serverConnector: serverConnector)
+            return (waitTask, cancelableTask)
+        }
+        else {
+            return (waitTask, nil)
+        }
+    }
 
     func add(
         taskDefinition: TaskDefinitionProtocol,

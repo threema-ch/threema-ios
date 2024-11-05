@@ -26,7 +26,6 @@
 #import "UserSettings.h"
 #import "BaseMessage.h"
 #import "BundleUtil.h"
-#import "TextMessage.h"
 #import "LicenseStore.h"
 #import "NonceHasher.h"
 #import "UTIConverter.h"
@@ -86,15 +85,15 @@
     return managedObject;
 }
 
-- (BaseMessage *)ownMessageWithId:(NSData *)messageId conversation:(Conversation *)conversation {
+- (BaseMessage *)ownMessageWithId:(NSData *)messageId conversationEntity:(ConversationEntity *)conversation {
     return [self singleEntityNamed:@"Message" withPredicate: @"id == %@ AND conversation == %@ AND isOwn == YES", messageId, conversation];
 }
 
-- (BaseMessage *)messageWithId:(NSData *)messageId conversation:(Conversation *)conversation {
+- (BaseMessage *)messageWithId:(NSData *)messageId conversationEntity:(ConversationEntity *)conversation {
     return [self singleEntityNamed:@"Message" withPredicate: @"id == %@ AND conversation == %@", messageId, conversation];
 }
 
-- (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessage *)message inConversation:(Conversation *)conversation {
+- (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessage *)message inConversationEntity:(ConversationEntity *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
     NSArray *textMessages = [self entitiesNamed:@"TextMessage" fetchLimit:0 sortedBy:sortDescriptors withPredicate: @"text contains[cd] %@ AND conversation == %@ && date < %@", searchText, conversation, message.date];
     NSArray *imageMessages = [self entitiesNamed:@"ImageMessage" fetchLimit:0 sortedBy:sortDescriptors withPredicate: @"conversation == %@ && date < %@", conversation, message.date];
@@ -124,11 +123,11 @@
 ///   - searchText: The text to search for
 ///   - conversation: The conversation to search in
 ///   - fetchLimit: The maximum number of items to fetch for each kind of item. This currently results in |{textMessages U ballotMessages U fileMessages}| items, i.e. no more than 3 times the fetchLimit.
-- (NSArray *)messagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
-    NSArray *textMessages = [self textMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
-    NSArray *ballotMessages = [self ballotMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
-    NSArray *fileMessages = [self fileMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
-    NSArray *locationMessages = [self locationMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+- (NSArray *)messagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+    NSArray *textMessages = [self textMessagesContaining:searchText inConversationEntity:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *ballotMessages = [self ballotMessagesContaining:searchText inConversationEntity:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *fileMessages = [self fileMessagesContaining:searchText inConversationEntity:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *locationMessages = [self locationMessagesContaining:searchText inConversationEntity:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
     
     if ([ballotMessages count] > 0 || [fileMessages count] > 0 || [locationMessages count] > 0) {
         NSMutableArray *allMessages = [NSMutableArray arrayWithArray:textMessages];
@@ -144,7 +143,7 @@
     }
 }
 
-- (NSArray *)textMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+- (NSArray *)textMessagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
     
     if (conversation == nil) {
@@ -156,7 +155,7 @@
     return [self entitiesNamed:@"TextMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"text contains[cd] %@ AND conversation == %@", searchText, conversation];
 }
 
-- (NSArray *)ballotMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+- (NSArray *)ballotMessagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
     
     if (conversation == nil) {
@@ -168,7 +167,7 @@
     return [self entitiesNamed:@"BallotMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"ballot.title contains[cd] %@ AND conversation == %@", searchText, conversation];
 }
 
-- (NSArray *)fileMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+- (NSArray *)fileMessagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
     
     if (conversation == nil) {
@@ -181,7 +180,7 @@
     return [self entitiesNamed:@"FileMessage" fetchLimit:fetchLimit sortedBy:sortDescriptors withPredicate: @"(fileName contains[cd] %@ || caption contains[cd] %@) AND conversation == %@", searchText, searchText, conversation];
 }
 
-- (NSArray *)locationMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+- (NSArray *)locationMessagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
     
     if (conversation == nil) {
@@ -204,11 +203,11 @@
 ///   - searchText: The text to search for
 ///   - conversation: The conversation to search in
 ///   - fetchLimit: The maximum number of items to fetch for each kind of item. This currently results in |{textMessages U ballotMessages U fileMessages}| items, i.e. no more than 3 times the fetchLimit.
-- (NSArray *)starredMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
-    NSArray *textMessages = [self starredTextMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
-    NSArray *ballotMessages = [self starredBallotMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
-    NSArray *fileMessages = [self starredFileMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
-    NSArray *locationMessages = [self starredLocationMessagesContaining:searchText inConversation:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+- (NSArray *)starredMessagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+    NSArray *textMessages = [self starredTextMessagesContaining:searchText inConversationEntity:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *ballotMessages = [self starredBallotMessagesContaining:searchText inConversationEntity:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *fileMessages = [self starredFileMessagesContaining:searchText inConversationEntity:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
+    NSArray *locationMessages = [self starredLocationMessagesContaining:searchText inConversationEntity:conversation filterPredicate:filterPredicate fetchLimit:fetchLimit];
     
     if ([ballotMessages count] > 0 || [fileMessages count] > 0 || [locationMessages count] > 0) {
         NSMutableArray *allMessages = [NSMutableArray arrayWithArray:textMessages];
@@ -224,7 +223,7 @@
     }
 }
 
-- (NSArray *)starredTextMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+- (NSArray *)starredTextMessagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
     
     if (conversation == nil) {
@@ -241,7 +240,7 @@
     }
 }
 
-- (NSArray *)starredBallotMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+- (NSArray *)starredBallotMessagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
     
     if (conversation == nil) {
@@ -259,7 +258,7 @@
     }
 }
 
-- (NSArray *)starredFileMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+- (NSArray *)starredFileMessagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
     
     if (conversation == nil) {
@@ -277,7 +276,7 @@
     }
 }
 
-- (NSArray *)starredLocationMessagesContaining:(NSString *)searchText inConversation:(Conversation *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
+- (NSArray *)starredLocationMessagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
     
     if (conversation == nil) {
@@ -295,15 +294,15 @@
     }
 }
 
-- (Conversation *)conversationForContact:(ContactEntity *)contact {
+- (ConversationEntity *)conversationEntityForContact:(ContactEntity *)contact {
     return [self singleEntityNamed:@"Conversation" withPredicate: @"contact == %@ AND groupId == nil", contact];
 }
 
-- (Conversation *)conversationForIdentity:(NSString *)identity {
+- (ConversationEntity *)conversationEntityForIdentity:(NSString *)identity {
     return [self singleEntityNamed:@"Conversation" withPredicate: @"contact.identity == %@ AND groupId == nil", identity];
 }
 
-- (Conversation *)conversationForDistributionList:(DistributionListEntity *)distributionList {
+- (ConversationEntity *)conversationEntityForDistributionList:(DistributionListEntity *)distributionList {
     return [self singleEntityNamed:@"Conversation" withPredicate: @"distributionList.distributionListID == %@", distributionList.distributionListIDObjC];
 }
 
@@ -311,12 +310,12 @@
     return [self allEntitiesNamed:@"Conversation" sortedBy:nil withPredicate: @"%@ IN members", contact];
 }
 
-- (Conversation *)conversationForGroupMessage:(AbstractGroupMessage *)message {
+- (ConversationEntity *)conversationEntityForGroupMessage:(AbstractGroupMessage *)message {
     /* is this a group that we started? */
-    return [self conversationForGroupId:message.groupId creator:message.groupCreator];
+    return [self conversationEntityForGroupId:message.groupId creator:message.groupCreator];
 }
 
-- (Conversation *)conversationForGroupId:(NSData *)groupId creator:(NSString *)creator {
+- (ConversationEntity *)conversationEntityForGroupId:(NSData *)groupId creator:(NSString *)creator {
     if ([creator isEqualToString:[self->myIdentityStore identity]]) {
         return [self singleEntityNamed:@"Conversation" withPredicate: @"contact == nil AND groupId == %@", groupId];
     } else {
@@ -324,7 +323,7 @@
     }
 }
 
-- (Conversation *)conversationForDistributionListID:(NSNumber *)distributionListID  {
+- (ConversationEntity *)conversationEntityForDistributionListID:(NSNumber *)distributionListID  {
     return [self singleEntityNamed:@"Conversation" withPredicate: @"distributionList.distributionListID == %@", distributionListID];
 }
 
@@ -397,7 +396,7 @@
 - (nonnull NSSet<NSString *> *)allSolicitedContactIdentities {
     // Fetch relevant conversations
     NSArray *nonGroupConversationsWithLastUpdate = [self allEntitiesNamed:@"Conversation" sortedBy:nil withPredicate:@"groupId == nil AND lastUpdate != nil"];
-    NSArray<Conversation *> *allActiveGroupConversations = [self allActiveGroupConversations];
+    NSArray<ConversationEntity *> *allActiveGroupConversations = [self allActiveGroupConversations];
 
     // Prepare predicates
     
@@ -442,7 +441,7 @@
 // to load all active groups and group conversations and then match them against each other.
 //
 // This is private for now, but might be made public in the future if it is needed in another place.
-- (nonnull NSArray<Conversation *> *)allActiveGroupConversations {
+- (nonnull NSArray<ConversationEntity *> *)allActiveGroupConversations {
     NSArray *allActiveGroups = [self allActiveGroups];
 
     if (allActiveGroups.count == 0) {
@@ -471,8 +470,8 @@
         return [[NSArray alloc] init];
     }
     
-    NSMutableArray<Conversation *> *allActiveGroupConversations = [[NSMutableArray alloc] initWithCapacity:allActiveGroupIDsAndCreators.count];
-    for (Conversation *conversation in allGroupConversations) {
+    NSMutableArray<ConversationEntity *> *allActiveGroupConversations = [[NSMutableArray alloc] initWithCapacity:allActiveGroupIDsAndCreators.count];
+    for (ConversationEntity *conversation in allGroupConversations) {
         NSString *idAndCreator = nil;
         if (conversation.contact != nil) {
             idAndCreator = [NSString stringWithFormat:groupIdentityFormatString, conversation.groupId, conversation.contact.identity];
@@ -550,7 +549,7 @@
     
     for (NSString *searchWord in searchWords) {
         if (searchWord.length > 0) {
-            NSPredicate *predicate = [NSPredicate predicateWithFormat:@"firstName contains[cd] %@ or lastName contains[cd] %@ or identity contains[c] %@ or publicNickname contains[cd] %@", searchWord, searchWord, searchWord, searchWord];
+            NSPredicate *predicate = [NSPredicate predicateWithFormat:@"firstName contains[cd] %@ or lastName contains[cd] %@ or identity contains[c] %@ or publicNickname contains[cd] %@ or jobTitle contains[cd] %@ or department contains[cd] %@", searchWord, searchWord, searchWord, searchWord, searchWord, searchWord];
             [predicates addObject:predicate];
         }
     }
@@ -745,15 +744,15 @@
     return [self singleEntityNamed:@"Ballot" withPredicate: @"id == %@", ballotId];
 }
 
-- (NSInteger)countBallotsForConversation:(Conversation *)conversation {
+- (NSInteger)countBallotsForConversationEntity:(ConversationEntity *)conversation {
     return [self countEntityNamed:@"Ballot" withPredicate:@"conversation == %@", conversation];
 }
 
-- (NSInteger)countOpenBallotsForConversation:(Conversation *)conversation {
+- (NSInteger)countOpenBallotsForConversationEntity:(ConversationEntity *)conversation {
     return [self countEntityNamed:@"Ballot" withPredicate:@"conversation == %@ && state == %d", conversation, kBallotStateOpen];
 }
 
-- (NSInteger)countMediaMessagesForConversation:(Conversation *)conversation {
+- (NSInteger)countMediaMessagesForConversationEntity:(ConversationEntity *)conversation {
     NSInteger numImages = [self countEntityNamed:@"ImageMessage" withPredicate:@"conversation == %@", conversation];
     NSInteger numVideos = [self countEntityNamed:@"VideoMessage" withPredicate:@"conversation == %@", conversation];
     NSInteger numFiles = [self countEntityNamed:@"FileMessage" withPredicate:@"conversation == %@", conversation];
@@ -761,11 +760,11 @@
     return numImages + numVideos + numFiles;
 }
 
-- (NSInteger)countStarredMessagesInConversation:(Conversation *)conversation {
+- (NSInteger)countStarredMessagesInConversationEntity:(ConversationEntity *)conversation {
     return [self countEntityNamed:@"Message" withPredicate:@"conversation == %@ AND messageMarkers.star == 1", conversation];
 }
 
-- (NSInteger)countUnreadMessagesForConversation:(Conversation *)conversation {
+- (NSInteger)countUnreadMessagesForConversationEntity:(ConversationEntity *)conversation {
     return [self countEntityNamed:@"Message" withPredicate:@"isOwn == NO AND read == NO AND conversation == %@ ", conversation];
 }
 
@@ -777,26 +776,26 @@
     return [self countEntityNamed:@"Message" withPredicate:@"sender == %@", contact];
 }
 
-- (NSInteger)countMessagesForContactInConversation:(nonnull ContactEntity *)contact forConversation:(Conversation *)conversation {
+- (NSInteger)countMessagesForContactInConversationEntity:(nonnull ContactEntity *)contact forConversation:(ConversationEntity *)conversation {
     return [self countEntityNamed:@"Message" withPredicate:@"sender == %@ AND conversation == %@", contact, conversation];
 }
 
-- (NSArray *)imageMessagesForConversation:(Conversation *)conversation {
+- (NSArray *)imageMessagesForConversationEntity:(ConversationEntity *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
     return [self allEntitiesNamed:@"ImageMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@ AND image.data != nil", conversation];
 }
 
-- (NSArray *)videoMessagesForConversation:(Conversation *)conversation {
+- (NSArray *)videoMessagesForConversationEntity:(ConversationEntity *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
     return [self allEntitiesNamed:@"VideoMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@ AND video.data != nil", conversation];
 }
 
-- (NSArray *)fileMessagesForConversation:(Conversation *)conversation {
+- (NSArray *)fileMessagesForConversationEntity:(ConversationEntity *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
     return [self allEntitiesNamed:@"FileMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@", conversation];
 }
 
-- (NSArray *)filesMessagesFilteredForPhotoBrowserForConversation:(Conversation *)conversation {
+- (NSArray *)filesMessagesFilteredForPhotoBrowserForConversationEntity:(ConversationEntity *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
     
     NSString *gifMimeType = [UTIConverter mimeTypeFromUTI:UTTYPE_GIF_IMAGE];
@@ -808,7 +807,7 @@
     return [self allEntitiesNamed:@"FileMessage" sortedBy:sortDescriptors withPredicate:@"(conversation == %@) AND (type != 2) AND !(mimeType IN %@) AND data.data != nil", conversation, filteredMimeTypes];
 }
 
-- (NSArray *)unreadMessagesForConversation:(Conversation *)conversation {
+- (NSArray *)unreadMessagesForConversationEntity:(ConversationEntity *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
     return [self allEntitiesNamed:@"Message" sortedBy:sortDescriptors withPredicate:@"isOwn == NO AND read == NO AND conversation == %@ ", conversation];
 }
@@ -833,15 +832,22 @@
     return result != nil;
 }
 
-- (NSArray<Nonce *> *)allNonces {
+- (NSArray<NonceEntity *> *)allNonceEntities {
     return [self allEntitiesNamed:@"Nonce" sortedBy:nil withPredicate:nil];
 }
 
 - (BOOL)isNonceAlreadyInDB:(NSData *)nonce {
     id result;
     
-    NSData *hashedNonce = [NonceHasher hashedNonce:nonce];
-    result = [self singleEntityNamed:@"Nonce" withPredicate:@"nonce == %@ OR nonce == %@", nonce, hashedNonce];
+    NSData *hashedNonce = [NonceHasher hashedNonce:nonce myIdentityStore:myIdentityStore];
+    
+    if (hashedNonce == nil) {
+        // We throw away messages with duplicate nonces and we don't want this to happen whenever hashing fails. Thus
+        // we will return false in these cases.
+        return false;
+    }
+    
+    result = [self singleEntityNamed:@"Nonce" withPredicate:@"nonce == %@", hashedNonce];
     
     return result != nil;
 }
@@ -866,7 +872,7 @@
     }
 }
 
-- (GroupEntity *)groupEntityForConversation:(Conversation *)conversation {
+- (GroupEntity *)groupEntityForConversationEntity:(ConversationEntity *)conversation {
     /* is this a group that we started? */
     if (conversation.isGroup) {
         if (conversation.contact) {
@@ -879,7 +885,7 @@
     return nil;
 }
 
-- (DistributionListEntity *) distributionListEntityForConversation:(Conversation *)conversation {
+- (DistributionListEntity *) distributionListEntityForConversationEntity:(ConversationEntity *)conversation {
     return [self singleEntityNamed:@"DistributionList" withPredicate: @"conversation == %@", conversation];
 }
 
@@ -888,7 +894,7 @@
   
 }
 
-- (LastGroupSyncRequest *)lastGroupSyncRequestFor:(NSData *)groupId groupCreator:(NSString *)groupCreator sinceDate:(NSDate *)sinceDate {
+- (LastGroupSyncRequestEntity *)lastGroupSyncRequestFor:(NSData *)groupId groupCreator:(NSString *)groupCreator sinceDate:(NSDate *)sinceDate {
     return [self singleEntityNamed:@"LastGroupSyncRequest" withPredicate: @"groupId == %@ AND groupCreator == %@ AND lastSyncRequest >= %@", groupId, groupCreator, sinceDate];
 }
 
@@ -1171,15 +1177,15 @@
     return fetchedResultsController;
 }
 
-- (WebClientSession *)webClientSessionForInitiatorPermanentPublicKeyHash:(NSString *)hash {
+- (WebClientSessionEntity *)webClientSessionEntityForInitiatorPermanentPublicKeyHash:(NSString *)hash {
     return [self singleEntityNamed:@"WebClientSession" withPredicate:@"initiatorPermanentPublicKeyHash == %@", hash];
 }
 
-- (WebClientSession *)webClientSessionForPrivateKey:(NSData *)privateKey {
+- (WebClientSessionEntity *)webClientSessionEntityForPrivateKey:(NSData *)privateKey {
     return [self singleEntityNamed:@"WebClientSession" withPredicate:@"privateKey == %@", privateKey];
 }
 
-- (WebClientSession *)activeWebClientSession {
+- (WebClientSessionEntity *)activeWebClientSessionEntity {
     return [self singleEntityNamed:@"WebClientSession" withPredicate:@"active == YES"];
 }
 
@@ -1308,7 +1314,7 @@
     return [self executeFetchRequest:fetchRequest];
 }
 
-- (Conversation *)legacyConversationForGroupId:(NSData *)groupId {
+- (ConversationEntity *)legacyConversationForGroupId:(NSData *)groupId {
     return [self singleEntityNamed:@"Conversation" withPredicate: @"groupId == %@", groupId];
 }
 

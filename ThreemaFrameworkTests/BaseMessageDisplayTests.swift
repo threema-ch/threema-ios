@@ -24,7 +24,7 @@ import XCTest
 class BaseMessageDisplayTests: XCTestCase {
     
     private var databasePreparer: DatabasePreparer!
-    private var conversation: Conversation!
+    private var conversation: ConversationEntity!
     
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
@@ -139,7 +139,8 @@ class BaseMessageDisplayTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
                 }
             )
             
@@ -191,7 +192,8 @@ class BaseMessageDisplayTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
                 }
             )
             
@@ -368,7 +370,8 @@ class BaseMessageDisplayTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
                 }
             )
             
@@ -484,7 +487,8 @@ class BaseMessageDisplayTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
                 }
             )
             

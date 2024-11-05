@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct DeleteRevokeSuccessView: View {
     
@@ -28,32 +29,32 @@ struct DeleteRevokeSuccessView: View {
         GeometryReader { proxy in
             ScrollView {
                 VStack {
-                    Text("my_profile_delete_identity_summary_view_removed_title".localized)
+                    Text(#localize("my_profile_delete_identity_summary_view_removed_title"))
                         .bold()
                         .font(.title2)
                     
                     if successViewType == .delete {
                         GroupBox(
                             label: Label(
-                                "my_profile_delete_identity_summary_view_removed_success".localized,
+                                #localize("my_profile_delete_identity_summary_view_removed_success"),
                                 systemImage: "checkmark.shield.fill"
                             ),
                             content: {
                                 VStack(alignment: .leading) {
                                     Label {
-                                        Text("my_profile_delete_bullet_id".localized)
+                                        Text(#localize("my_profile_delete_bullet_id"))
                                     } icon: {
                                         Image(systemName: "checkmark.circle.fill")
                                             .foregroundColor(Colors.green.color)
                                     }
                                     Label {
-                                        Text("my_profile_delete_bullet_chats".localized)
+                                        Text(#localize("my_profile_delete_bullet_chats"))
                                     } icon: {
                                         Image(systemName: "checkmark.circle.fill")
                                             .foregroundColor(Colors.green.color)
                                     }
                                     Label {
-                                        Text("my_profile_delete_bullet_picture".localized)
+                                        Text(#localize("my_profile_delete_bullet_picture"))
                                     } icon: {
                                         Image(systemName: "checkmark.circle.fill")
                                             .foregroundColor(Colors.green.color)
@@ -63,7 +64,7 @@ struct DeleteRevokeSuccessView: View {
                                 .padding(.leading, 24.0)
                                 .padding(.bottom)
                                 
-                                Text("my_profile_delete_identity_summary_view_restart".localized)
+                                Text(#localize("my_profile_delete_identity_summary_view_restart"))
                             }
                         )
                         .groupBoxStyle(.info)
@@ -71,25 +72,25 @@ struct DeleteRevokeSuccessView: View {
                     else {
                         GroupBox(
                             label: Label(
-                                "my_profile_delete_identity_summary_view_removed_server_success".localized,
+                                #localize("my_profile_delete_identity_summary_view_removed_server_success"),
                                 systemImage: "checkmark.shield.fill"
                             ),
                             content: {
                                 VStack(alignment: .leading) {
                                     Label {
-                                        Text("my_profile_delete_bullet_id".localized)
+                                        Text(#localize("my_profile_delete_bullet_id"))
                                     } icon: {
                                         Image(systemName: "checkmark.circle.fill")
                                             .foregroundColor(Colors.green.color)
                                     }
                                     Label {
-                                        Text("my_profile_delete_bullet_safe".localized)
+                                        Text(#localize("my_profile_delete_bullet_safe"))
                                     } icon: {
                                         Image(systemName: "checkmark.circle.fill")
                                             .foregroundColor(Colors.green.color)
                                     }
                                     Label {
-                                        Text("my_profile_delete_bullet_linked".localized)
+                                        Text(#localize("my_profile_delete_bullet_linked"))
                                     } icon: {
                                         Image(systemName: "checkmark.circle.fill")
                                             .foregroundColor(Colors.green.color)
@@ -99,14 +100,14 @@ struct DeleteRevokeSuccessView: View {
                                 .padding(.leading, 24.0)
                                 
                                 Label {
-                                    Text("my_profile_delete_identity_summary_view_removed_threema_id".localized)
+                                    Text(#localize("my_profile_delete_identity_summary_view_removed_threema_id"))
                                 } icon: {
                                     Image(systemName: "exclamationmark.triangle.fill")
                                         .foregroundStyle(Colors.white.color, Colors.red.color)
                                 }
                                 .padding(.vertical)
                                 
-                                Text("my_profile_delete_identity_summary_view_restart_new".localized)
+                                Text(#localize("my_profile_delete_identity_summary_view_restart_new"))
                             }
                         )
                         
@@ -118,7 +119,7 @@ struct DeleteRevokeSuccessView: View {
                     Button {
                         exit(1)
                     } label: {
-                        Text("my_profile_delete_identity_summary_view_close".localized)
+                        Text(#localize("my_profile_delete_identity_summary_view_close"))
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)

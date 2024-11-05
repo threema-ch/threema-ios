@@ -26,7 +26,7 @@
 
 @interface DeleteConversationAction ()
 
-@property Conversation *conversation;
+@property ConversationEntity *conversation;
 @property (copy) void (^onCompletion)(BOOL didCancel);
 
 @end
@@ -37,7 +37,7 @@
     EntityManager *entityManager;
 }
 
-+ (instancetype)deleteActionForConversation:(Conversation *)conversation {
++ (instancetype)deleteActionForConversation:(ConversationEntity *)conversation {
     DeleteConversationAction *action = [[DeleteConversationAction alloc] init];
     action.conversation = conversation;
     return action;

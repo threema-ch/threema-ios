@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 
 public protocol NotificationManagerProtocol {
     func updateUnreadMessagesCount()
@@ -149,7 +150,7 @@ public protocol NotificationManagerProtocol {
                         if let groupIDString = threemaPayload["groupId"] as? String,
                            let groupID = Data(base64Encoded: groupIDString),
                            let groupCreator = threemaPayload["groupCreator"] as? String,
-                           let conversation = businessInjector.entityManager.entityFetcher.conversation(
+                           let conversation = businessInjector.entityManager.entityFetcher.conversationEntity(
                                for: groupID,
                                creator: groupCreator
                            ) {
@@ -160,7 +161,7 @@ public protocol NotificationManagerProtocol {
                         }
                         else {
                             if let groups = businessInjector.entityManager.entityFetcher
-                                .conversations(forMember: contact) as? [Conversation],
+                                .conversations(forMember: contact) as? [ConversationEntity],
                                 groups.count == 1 {
                                 info = [
                                     kKeyConversation: groups.first!,
@@ -307,9 +308,9 @@ public protocol NotificationManagerProtocol {
 
 extension NotificationManager {
     @objc final class func showNoAccessToDatabaseNotification(completionHandler: @escaping () -> Void) {
-        let title = BundleUtil.localizedString(forKey: "new_message_no_access_title")
+        let title = #localize("new_message_no_access_title")
         let message = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "new_message_no_access_message"),
+            #localize("new_message_no_access_message"),
             ThreemaApp.currentName
         )
         ThreemaUtilityObjC.sendErrorLocalNotification(title, body: message, userInfo: nil) {
@@ -318,9 +319,9 @@ extension NotificationManager {
     }
     
     final class func showNoMicrophonePermissionNotification() {
-        let title = BundleUtil.localizedString(forKey: "call_voip_not_supported_title")
+        let title = #localize("call_voip_not_supported_title")
         let message = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "alert_no_access_message_microphone"),
+            #localize("alert_no_access_message_microphone"),
             ThreemaApp.currentName
         )
         ThreemaUtilityObjC.sendErrorLocalNotification(title, body: message, userInfo: nil)
@@ -369,7 +370,7 @@ extension NotificationManager {
         webPayload: [AnyHashable: Any],
         withCompletionHandler completionHandler: ((_ options: UNNotificationPresentationOptions) -> Void)? = nil
     ) {
-        var currentSession: WebClientSession?
+        var currentSession: WebClientSessionEntity?
         
         if let hash = webPayload[webClientSessionKey] as? String {
             currentSession = WebClientSessionStore.shared.webClientSessionForHash(hash)
@@ -387,18 +388,17 @@ extension NotificationManager {
               let sessionVersion = currentSession.version,
               sessionVersion.intValue >= protocolVersion else {
             NotificationManager.showThreemaWebError(
-                title: BundleUtil.localizedString(forKey: "webClientSession_error_updateApp_title"),
-                body: BundleUtil.localizedString(forKey: "webClientSession_error_updateApp_message")
+                title: #localize("webClientSession_error_updateApp_title"),
+                body: #localize("webClientSession_error_updateApp_message")
             )
             completionHandler?([])
             return
         }
         
-        guard let selfHosted = currentSession.selfHosted,
-              !selfHosted.boolValue else {
+        guard !currentSession.selfHosted.boolValue else {
             NotificationManager.showThreemaWebError(
-                title: BundleUtil.localizedString(forKey: "webClientSession_error_updateServer_title"),
-                body: BundleUtil.localizedString(forKey: "webClientSession_error_updateServer_message")
+                title: #localize("webClientSession_error_updateServer_title"),
+                body: #localize("webClientSession_error_updateServer_message")
             )
             completionHandler?([])
             return
@@ -406,8 +406,8 @@ extension NotificationManager {
         
         guard sessionVersion.intValue == protocolVersion else {
             NotificationManager.showThreemaWebError(
-                title: BundleUtil.localizedString(forKey: "webClientSession_error_wrongVersion_title"),
-                body: BundleUtil.localizedString(forKey: "webClientSession_error_wrongVersion_message")
+                title: #localize("webClientSession_error_wrongVersion_title"),
+                body: #localize("webClientSession_error_wrongVersion_message")
             )
             completionHandler?([])
             return

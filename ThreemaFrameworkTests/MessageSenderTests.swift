@@ -186,11 +186,11 @@ class MessageSenderTests: XCTestCase {
             let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             
-            let fileData = dbPreparer.createFileData(data: testItemData)
+            let fileDataEntity = dbPreparer.createFileDataEntity(data: testItemData)
             
             return dbPreparer.createFileMessageEntity(
                 conversation: conversation,
-                data: fileData,
+                data: fileDataEntity,
                 mimeType: "application/octet-stream",
                 type: 0
             )
@@ -306,9 +306,10 @@ class MessageSenderTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { conversation in
-                conversation.groupID = expectedGroupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = expectedGroupID
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
-                conversation.addMembers(Set(members))
+                conversation.members?.formUnion(members)
             }
             
             let textMessage = dbPreparer.createTextMessage(
@@ -397,9 +398,10 @@ class MessageSenderTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { conversation in
-                conversation.groupID = expectedGroupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = expectedGroupID
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
-                conversation.addMembers(Set(members))
+                conversation.members = Set(members)
             }
             
             let textMessage = dbPreparer.createTextMessage(
@@ -493,9 +495,10 @@ class MessageSenderTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { conversation in
-                conversation.groupID = expectedGroupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = expectedGroupID
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
-                conversation.addMembers(Set(members))
+                conversation.members = Set(members)
             }
             
             let textMessage = dbPreparer.createTextMessage(
@@ -580,7 +583,7 @@ class MessageSenderTests: XCTestCase {
                 visibility: .default
             ) { conversation in
                 conversation.distributionList = distributionList
-                conversation.addMembers(Set(recipients))
+                conversation.members = Set(recipients)
             }
             
             return conversation
@@ -902,8 +905,8 @@ class MessageSenderTests: XCTestCase {
                 groupID: expectedGroupIdentity.id,
                 groupCreator: nil
             )
-
-            let conversation = dbPreparer.createConversation(groupID: groupEntity.groupID)
+            // swiftformat:disable:next acronyms
+            let conversation = dbPreparer.createConversation(groupID: groupEntity.groupId)
             return (groupEntity, dbPreparer.createTextMessage(
                 conversation: conversation,
                 isOwn: false,
@@ -953,8 +956,8 @@ class MessageSenderTests: XCTestCase {
                 groupID: expectedGroupIdentity.id,
                 groupCreator: nil
             )
-
-            let conversation = dbPreparer.createConversation(groupID: groupEntity.groupID)
+            // swiftformat:disable:next acronyms
+            let conversation = dbPreparer.createConversation(groupID: groupEntity.groupId)
             return (groupEntity, dbPreparer.createTextMessage(
                 conversation: conversation,
                 id: expectedMessageID,
@@ -1018,7 +1021,8 @@ class MessageSenderTests: XCTestCase {
 
         var objectID: NSManagedObjectID!
         dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
-            conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+            // swiftformat:disable:next acronyms
+            conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
             objectID = conversation.objectID
         }
         let expectation = XCTestExpectation()
@@ -1055,8 +1059,9 @@ class MessageSenderTests: XCTestCase {
 
         var objectID: NSManagedObjectID!
         dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
-            conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-            conversation.conversationCategory = .private
+            // swiftformat:disable:next acronyms
+            conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+            conversation.changeCategory(to: .private)
             objectID = conversation.objectID
         }
         let expectation = XCTestExpectation()
@@ -1096,7 +1101,8 @@ class MessageSenderTests: XCTestCase {
 
         var objectID: NSManagedObjectID!
         dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
-            conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+            // swiftformat:disable:next acronyms
+            conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
             objectID = conversation.objectID
         }
         

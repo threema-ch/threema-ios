@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 class ConversationsViewControllerHelper {
@@ -49,7 +50,7 @@ class ConversationsViewControllerHelper {
         // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are
         // given in order of selection
         for indexPath in indexPaths.sorted().reversed() {
-            guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+            guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
                 return
             }
             let utilities = ConversationActions(businessInjector: businessInjector)
@@ -77,7 +78,7 @@ class ConversationsViewControllerHelper {
         // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are
         // given in order of selection
         for indexPath in indexPaths.sorted().reversed() {
-            guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+            guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
                 return
             }
             let utilities = ConversationActions(businessInjector: businessInjector)
@@ -105,7 +106,7 @@ class ConversationsViewControllerHelper {
         // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are
         // given in order of selection
         for indexPath in indexPaths.sorted().reversed() {
-            guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+            guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
                 return
             }
             Task {
@@ -135,7 +136,7 @@ class ConversationsViewControllerHelper {
         // Sort and reverse in order to edit conversations from bottom to top in tableView, because the indexPaths are
         // given in order of selection
         for indexPath in indexPaths.sorted().reversed() {
-            guard let conversation = fetchedResultsController.object(at: indexPath) as? Conversation else {
+            guard let conversation = fetchedResultsController.object(at: indexPath) as? ConversationEntity else {
                 return
             }
             let utilities = ConversationActions(businessInjector: businessInjector)
@@ -151,7 +152,7 @@ class ConversationsViewControllerHelper {
     ///   - deleteHiddenContacts: True delete hidden contacts where member of the group
     /// - See also: DeleteConversationAction (legacy code)
     private static func deleteConversation(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         group: Group?
     ) {
         if let group {
@@ -188,7 +189,7 @@ class ConversationsViewControllerHelper {
     ///   - owner: ViewController to Display Alert
     ///   - handler: Handler to execute when action Completes
     static func handleDeletion(
-        of conversation: Conversation,
+        of conversation: ConversationEntity,
         owner: UIViewController,
         cell: UITableViewCell? = nil,
         singleFunction: SingleFunction? = nil,
@@ -213,10 +214,10 @@ class ConversationsViewControllerHelper {
         else if let distributionList = conversation.distributionList {
             // Conversation Delete Action
             if conversation.conversationCategory == .private {
-                sheetTitle = BundleUtil.localizedString(forKey: "private_delete_info_alert_message")
+                sheetTitle = #localize("private_delete_info_alert_message")
             }
             else {
-                sheetTitle = BundleUtil.localizedString(forKey: "distribution_list_delete_sheet_title")
+                sheetTitle = #localize("distribution_list_delete_sheet_title")
             }
             sheetMessage = nil
             
@@ -235,13 +236,13 @@ class ConversationsViewControllerHelper {
                 actions: actions
             )
         }
-        else if !conversation.isGroup() {
+        else if !conversation.isGroup {
             // Conversation Delete Action
             if conversation.conversationCategory == .private {
-                sheetTitle = BundleUtil.localizedString(forKey: "private_delete_info_alert_message")
+                sheetTitle = #localize("private_delete_info_alert_message")
             }
             else {
-                sheetTitle = BundleUtil.localizedString(forKey: "conversation_delete_confirm")
+                sheetTitle = #localize("conversation_delete_confirm")
             }
             sheetMessage = nil
             
@@ -280,7 +281,7 @@ class ConversationsViewControllerHelper {
     ///   - handler: Handler to execute when action Completes
     /// - See also: DeleteConversationAction (legacy code)
     private static func handleGroupDeletion(
-        of conversation: Conversation,
+        of conversation: ConversationEntity,
         owner: UIViewController,
         cell: UITableViewCell?,
         singleFunction: SingleFunction?,
@@ -303,10 +304,10 @@ class ConversationsViewControllerHelper {
                     switch singleFunction {
                     case .delete:
                         sheetTitle = String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "group_dissolve_delete_sheet_title"),
+                            #localize("group_dissolve_delete_sheet_title"),
                             conversation.groupName ?? ""
                         )
-                        sheetMessage = BundleUtil.localizedString(forKey: "group_dissolve_delete_sheet_message")
+                        sheetMessage = #localize("group_dissolve_delete_sheet_message")
                         let dissolveAndDeleteAction = createGroupConversationDissolveAndDeleteAlertAction(
                             group: group,
                             handler: handler
@@ -314,10 +315,10 @@ class ConversationsViewControllerHelper {
                         actions.append(dissolveAndDeleteAction)
                     case .leaveDissolve:
                         sheetTitle = String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "group_dissolve_sheet_title"),
+                            #localize("group_dissolve_sheet_title"),
                             conversation.groupName ?? ""
                         )
-                        sheetMessage = BundleUtil.localizedString(forKey: "group_dissolve_sheet_message")
+                        sheetMessage = #localize("group_dissolve_sheet_message")
                         let dissolveAction = createGroupConversationDissolveAlertAction(
                             group: group,
                             handler: handler
@@ -329,10 +330,10 @@ class ConversationsViewControllerHelper {
                     switch singleFunction {
                     case .delete:
                         sheetTitle = String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "group_leave_delete_sheet_title"),
+                            #localize("group_leave_delete_sheet_title"),
                             conversation.groupName ?? ""
                         )
-                        sheetMessage = BundleUtil.localizedString(forKey: "group_leave_delete_sheet_message")
+                        sheetMessage = #localize("group_leave_delete_sheet_message")
                         
                         let leaveAndDeleteAction = createGroupConversationLeaveAndDeleteAlertAction(
                             group: group,
@@ -341,10 +342,10 @@ class ConversationsViewControllerHelper {
                         actions.append(leaveAndDeleteAction)
                     case .leaveDissolve:
                         sheetTitle = String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "group_leave_sheet_title"),
+                            #localize("group_leave_sheet_title"),
                             conversation.groupName ?? ""
                         )
-                        sheetMessage = BundleUtil.localizedString(forKey: "group_leave_sheet_message")
+                        sheetMessage = #localize("group_leave_sheet_message")
 
                         let leaveAction = createGroupConversationLeaveAlertAction(
                             group: group,
@@ -358,10 +359,10 @@ class ConversationsViewControllerHelper {
                 // Double function
                 if group.isOwnGroup {
                     sheetTitle = String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "group_dissolve_delete_sheet_title"),
+                        #localize("group_dissolve_delete_sheet_title"),
                         conversation.groupName ?? ""
                     )
-                    sheetMessage = BundleUtil.localizedString(forKey: "group_dissolve_sheet_message")
+                    sheetMessage = #localize("group_dissolve_sheet_message")
                     let dissolveAction = createGroupConversationDissolveAlertAction(
                         group: group,
                         handler: handler
@@ -375,10 +376,10 @@ class ConversationsViewControllerHelper {
                 }
                 else {
                     sheetTitle = String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "group_leave_delete_sheet_title"),
+                        #localize("group_leave_delete_sheet_title"),
                         conversation.groupName ?? ""
                     )
-                    sheetMessage = BundleUtil.localizedString(forKey: "group_leave_sheet_message")
+                    sheetMessage = #localize("group_leave_sheet_message")
 
                     let leaveAction = createGroupConversationLeaveAlertAction(
                         group: group,
@@ -396,7 +397,7 @@ class ConversationsViewControllerHelper {
         }
         else {
             sheetTitle = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "group_delete_sheet_title"),
+                #localize("group_delete_sheet_title"),
                 conversation.groupName ?? ""
             )
             
@@ -423,11 +424,11 @@ class ConversationsViewControllerHelper {
     ///   - handler: Handler to be called after Action is completed
     /// - Returns: UIAlertAction
     private static func createSingleConversationDeleteAlertAction(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         handler: @escaping (Bool) -> Void
     ) -> UIAlertAction {
         let deleteAction = UIAlertAction(
-            title: BundleUtil.localizedString(forKey: conversation.isGroup() ? "group_delete_button" : "delete"),
+            title: #localize(conversation.isGroup ? "group_delete_button" : "delete"),
             style: .destructive
         ) { _ in
             
@@ -446,7 +447,7 @@ class ConversationsViewControllerHelper {
         handler: @escaping (Bool) -> Void
     ) -> UIAlertAction {
         let deleteAction = UIAlertAction(
-            title: "Delete".localized,
+            title: #localize("delete"),
             style: .destructive
         ) { _ in
             
@@ -468,7 +469,7 @@ class ConversationsViewControllerHelper {
         handler: @escaping (Bool) -> Void
     ) -> UIAlertAction {
         let leaveAction = UIAlertAction(
-            title: BundleUtil.localizedString(forKey: "group_leave_button"),
+            title: #localize("group_leave_button"),
             style: .destructive
         ) { _ in
             
@@ -488,7 +489,7 @@ class ConversationsViewControllerHelper {
         handler: @escaping (Bool) -> Void
     ) -> UIAlertAction {
         let leaveAndDeleteAction = UIAlertAction(
-            title: BundleUtil.localizedString(forKey: "group_leave_and_delete_button"),
+            title: #localize("group_leave_and_delete_button"),
             style: .destructive
         ) { _ in
             BusinessInjector().groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
@@ -513,7 +514,7 @@ class ConversationsViewControllerHelper {
         handler: @escaping (Bool) -> Void
     ) -> UIAlertAction {
         let dissolveAction = UIAlertAction(
-            title: BundleUtil.localizedString(forKey: "group_dissolve_button"),
+            title: #localize("group_dissolve_button"),
             style: .destructive
         ) { _ in
             BusinessInjector().groupManager.dissolve(groupID: group.groupID, to: nil)
@@ -533,13 +534,13 @@ class ConversationsViewControllerHelper {
         handler: @escaping (Bool) -> Void
     ) -> UIAlertAction {
         let dissolveAndDeleteAction = UIAlertAction(
-            title: BundleUtil.localizedString(forKey: "group_dissolve_and_delete_button"),
+            title: #localize("group_dissolve_and_delete_button"),
             style: .destructive
         ) { _ in
             let businessInjector = BusinessInjector()
             businessInjector.groupManager.dissolve(groupID: group.groupID, to: nil)
 
-            guard let conversation = businessInjector.entityManager.entityFetcher.conversation(
+            guard let conversation = businessInjector.entityManager.entityFetcher.conversationEntity(
                 for: group.groupIdentity.id,
                 creator: group.groupIdentity.creator.string
             ) else {
@@ -567,7 +568,7 @@ class ConversationsViewControllerHelper {
     /// - Returns: UIContextualAction for Swipe-Menu
     static func createPrivateAction(
         viewController: UIViewController,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         lockScreenWrapper: LockScreen,
         businessInjector: BusinessInjectorProtocol
     ) -> UIContextualAction {
@@ -605,11 +606,11 @@ class ConversationsViewControllerHelper {
         let privateTitle: String
         
         if isPrivate {
-            privateTitle = BundleUtil.localizedString(forKey: "remove_private")
+            privateTitle = #localize("remove_private")
             privateAction.image = UIImage(systemName: "lock.slash.fill")
         }
         else {
-            privateTitle = BundleUtil.localizedString(forKey: "make_private")
+            privateTitle = #localize("make_private")
             privateAction.image = UIImage(systemName: "lock.fill")
         }
         privateAction.title = privateTitle
@@ -624,9 +625,9 @@ class ConversationsViewControllerHelper {
     private static func presentNoPasscodeAlert(viewController: UIViewController) {
         UIAlertTemplate.showAlert(
             owner: viewController,
-            title: BundleUtil.localizedString(forKey: "privateChat_alert_title"),
-            message: BundleUtil.localizedString(forKey: "privateChat_code_alert_message"),
-            titleOk: BundleUtil.localizedString(forKey: "privateChat_code_alert_confirm"),
+            title: #localize("privateChat_alert_title"),
+            message: #localize("privateChat_code_alert_message"),
+            titleOk: #localize("privateChat_code_alert_confirm"),
             actionOk: { _ in
                 // Open Passcode Modal
                 guard let tabBarController = AppDelegate.getMainTabBarController() as? MainTabBarController else {
@@ -647,14 +648,14 @@ class ConversationsViewControllerHelper {
     ///   - businessInjector: BusinessInjector handling changes of the Conversation
     private static func showPrivateChatInfoAlert(
         viewController: UIViewController,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         businessInjector: BusinessInjectorProtocol
     ) {
         UIAlertTemplate.showAlert(
             owner: viewController,
-            title: BundleUtil.localizedString(forKey: "privateChat_set_alert_title"),
-            message: BundleUtil.localizedString(forKey: "privateChat_set_alert_message"),
-            titleOk: BundleUtil.localizedString(forKey: "make_private"),
+            title: #localize("privateChat_set_alert_title"),
+            message: #localize("privateChat_set_alert_message"),
+            titleOk: #localize("make_private"),
             actionOk: { _ in
                 businessInjector.conversationStore.makePrivate(conversation)
             }

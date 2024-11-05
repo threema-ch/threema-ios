@@ -19,10 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "BallotResultMatrixView.h"
-#import "Conversation.h"
 #import "ContactEntity.h"
 #import "BallotChoice.h"
-#import "BallotResult.h"
 #import "RectUtil.h"
 #import "MyIdentityStore.h"
 #import "BallotMatrixLabelView.h"

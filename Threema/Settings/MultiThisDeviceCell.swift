@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 class MultiThisDeviceCell: MultiDeviceCell {
     
@@ -61,9 +62,9 @@ class MultiThisDeviceCell: MultiDeviceCell {
 
                 UIAlertTemplate.showAlert(
                     owner: parentViewController!,
-                    title: BundleUtil.localizedString(forKey: "multi_device_linked_duplicate_contacts_title"),
+                    title: #localize("multi_device_linked_duplicate_contacts_title"),
                     message: String(
-                        format: BundleUtil.localizedString(forKey: "multi_device_linked_duplicate_contacts_desc"),
+                        format: #localize("multi_device_linked_duplicate_contacts_desc"),
                         duplicateIdentitiesDesc
                     )
                 )
@@ -77,9 +78,9 @@ class MultiThisDeviceCell: MultiDeviceCell {
         else {
             UIAlertTemplate.showAlert(
                 owner: parentViewController!,
-                title: BundleUtil.localizedString(forKey: "multi_device_linked_devices_removed_devices_title"),
-                message: BundleUtil.localizedString(forKey: "multi_device_linked_devices_removed_devices_message"),
-                titleOk: BundleUtil.localizedString(forKey: "multi_device_linked_devices_removed_devices_ok")
+                title: #localize("multi_device_linked_devices_removed_devices_title"),
+                message: #localize("multi_device_linked_devices_removed_devices_message"),
+                titleOk: #localize("multi_device_linked_devices_removed_devices_ok")
             ) { _ in
                 self.parentViewController?.activityIndicator.hidesWhenStopped = true
                 self.parentViewController?.activityIndicator.startAnimating()
@@ -125,7 +126,7 @@ class MultiThisDeviceCell: MultiDeviceCell {
     private func platformIconTapped(tapGestureRecognizer: UITapGestureRecognizer) {
         let bi = BusinessInjector()
         let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: bi.myIdentityStore)
-        if deviceGroupKeyManager.dgk != nil, !bi.userSettings.blockCommunication {
+        if deviceGroupKeyManager.dgk != nil {
             MultiDeviceWizardManager.shared.showWizard(
                 on: (parentViewController?.navigationController)!,
                 additionalLinking: true

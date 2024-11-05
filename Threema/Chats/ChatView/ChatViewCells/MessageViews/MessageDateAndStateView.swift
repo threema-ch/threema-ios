@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 /// Show appropriate date/time and status symbol if any for provided message
@@ -245,10 +246,10 @@ final class MessageDateAndStateView: UIView {
         
         if message.lastEditedAt != nil {
             if let dateLabelText = dateLabel.text {
-                dateLabel.text = "\("edited_message_state".localized) • \(dateLabelText)"
+                dateLabel.text = "\(#localize("edited_message_state")) • \(dateLabelText)"
             }
             else {
-                dateLabel.text = "edited_message_state".localized
+                dateLabel.text = #localize("edited_message_state")
             }
         }
         

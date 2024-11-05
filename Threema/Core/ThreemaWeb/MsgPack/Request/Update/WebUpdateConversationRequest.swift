@@ -66,14 +66,14 @@ class WebUpdateConversationRequest: WebAbstractMessage {
                     return
                 }
                 
-                entityManager.performSyncBlockAndSafe {
-                    conversation!.conversationVisibility = self.isStarred! ? .pinned : .default
+                entityManager.performAndWaitSave {
+                    conversation!.changeVisibility(to: self.isStarred! ? .pinned : .default)
                 }
                 
                 self.ack!.success = true
             }
             else if identity != nil {
-                let conversation = entityManager.entityFetcher.conversation(forIdentity: identity!)
+                let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: identity!)
                 if conversation == nil {
                     ack!.success = false
                     ack!.error = "invalidConversation"
@@ -86,8 +86,8 @@ class WebUpdateConversationRequest: WebAbstractMessage {
                     return
                 }
                 
-                entityManager.performSyncBlockAndSafe {
-                    conversation!.conversationVisibility = self.isStarred! ? .pinned : .default
+                entityManager.performAndWaitSave {
+                    conversation!.changeVisibility(to: self.isStarred! ? .pinned : .default)
                 }
                 
                 self.ack!.success = true

@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "BaseMessage.h"
-#import "Conversation.h"
 
 @implementation BaseMessage
 

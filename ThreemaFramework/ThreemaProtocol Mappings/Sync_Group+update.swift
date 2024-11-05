@@ -31,7 +31,7 @@ extension Sync_Group {
         return syncGroup
     }
 
-    mutating func update(conversationCategory: ConversationCategory?) {
+    mutating func update(conversationCategory: ConversationEntity.Category?) {
         if let conversationCategory,
            let category = Sync_ConversationCategory(rawValue: conversationCategory.rawValue) {
             self.conversationCategory = category
@@ -41,7 +41,7 @@ extension Sync_Group {
         }
     }
 
-    mutating func update(conversationVisibility: ConversationVisibility?) {
+    mutating func update(conversationVisibility: ConversationEntity.Visibility?) {
         if let conversationVisibility,
            let visibility = Sync_ConversationVisibility(rawValue: conversationVisibility.rawValue) {
             self.conversationVisibility = visibility
@@ -73,7 +73,7 @@ extension Sync_Group {
         }
     }
 
-    mutating func update(state: GroupState) {
+    mutating func update(state: GroupEntity.GroupState) {
         switch state {
         case .active:
             userState = .member

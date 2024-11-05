@@ -25,8 +25,8 @@ import ThreemaProtocols
 
 protocol NonceGuardProtocol: NonceGuardProtocolObjc {
     func isProcessed(d2dIncomingMessage message: D2d_IncomingMessage) throws -> Bool
-    func processed(nonce: Data)
-    func processed(nonces: [Data])
+    func processed(nonce: Data) throws
+    func processed(nonces: [Data]) throws
     func processed(message: AbstractMessage) throws
     func processed(boxedMessage: BoxedMessage) throws
     func processed(reflectedEnvelope message: D2d_Envelope) throws
@@ -44,12 +44,15 @@ class NonceGuard: NSObject, NonceGuardProtocol {
 
     enum NonceGuardError: Error {
         case messageNonceIsNil(message: String)
+        case hashingFailed
     }
 
+    private let myIdentityStore: MyIdentityStoreProtocol
     private let entityManager: EntityManager
 
     @objc
-    required init(entityManager: EntityManager) {
+    required init(myIdentityStore: MyIdentityStoreProtocol, entityManager: EntityManager) {
+        self.myIdentityStore = myIdentityStore
         self.entityManager = entityManager
         super.init()
     }
@@ -91,7 +94,7 @@ class NonceGuard: NSObject, NonceGuardProtocol {
                 .messageNonceIsNil(message: "Can't store nonce of message \(message.loggingDescription)")
         }
 
-        processed(nonce: nonce)
+        try processed(nonce: nonce)
     }
 
     /// Outgoing message nonce will be stored in DB.
@@ -104,7 +107,7 @@ class NonceGuard: NSObject, NonceGuardProtocol {
                 .messageNonceIsNil(message: "Can't store nonce of message \(message.loggingDescription)")
         }
 
-        processed(nonce: nonce)
+        try processed(nonce: nonce)
     }
 
     /// Incoming reflected message nonce(s) will be stored in DB.
@@ -114,9 +117,9 @@ class NonceGuard: NSObject, NonceGuardProtocol {
     func processed(reflectedEnvelope message: D2d_Envelope) throws {
         switch message.content {
         case let .incomingMessage(incomingMessage):
-            processed(nonce: incomingMessage.nonce)
+            try processed(nonce: incomingMessage.nonce)
         case let .outgoingMessage(outgoingMessage):
-            processed(nonces: outgoingMessage.nonces)
+            try processed(nonces: outgoingMessage.nonces)
         default:
             throw NonceGuardError
                 .messageNonceIsNil(message: "Can't store nonce of message \(message.loggingDescription)")
@@ -125,21 +128,26 @@ class NonceGuard: NSObject, NonceGuardProtocol {
 
     /// Nonce will be stored in DB.
     /// - Parameter nonce: Message nonce
-    func processed(nonce: Data) {
-        processed(nonces: [nonce])
+    func processed(nonce: Data) throws {
+        try processed(nonces: [nonce])
     }
 
     /// Nonces will be stored in DB.
     /// - Parameter nonce: Message nonces
-    func processed(nonces: [Data]) {
-        entityManager.performAndWaitSave {
+    func processed(nonces: [Data]) throws {
+        try entityManager.performAndWaitSave {
             for nonce in nonces {
                 guard !self.entityManager.isMessageNonceAlreadyInDB(nonce: nonce) else {
                     DDLogError("Nonce is already in DB")
                     continue
                 }
-
-                self.entityManager.entityCreator.nonce(with: NonceHasher.hashedNonce(nonce))
+                
+                // As soon as hashing of a nonce fails we'll report an error and stop processing them
+                guard let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentityStore: self.myIdentityStore) else {
+                    throw NonceGuardError.hashingFailed
+                }
+                
+                self.entityManager.entityCreator.nonceEntity(with: hashedNonce)
             }
         }
     }

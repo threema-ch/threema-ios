@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct MultiDeviceWizardView: View {
     @Environment(\.dismiss) var dismiss
@@ -36,7 +37,7 @@ struct MultiDeviceWizardView: View {
             )
             .padding(.horizontal)
             .navigationBarTitleDisplayMode(.inline)
-            .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
+            .navigationBarTitle(#localize("md_wizard_header"))
         }
         .onAppear {
             if UIDevice.current.userInterfaceIdiom == .phone {
@@ -56,34 +57,34 @@ struct MultiDeviceWizardView: View {
             }
         })
         
-        .alert(BundleUtil.localizedString(forKey: "md_wizard_error_title"), isPresented: $wizardVM.shouldDismiss) {
-            Button(BundleUtil.localizedString(forKey: "ok"), role: .cancel) {
+        .alert(#localize("md_wizard_error_title"), isPresented: $wizardVM.shouldDismiss) {
+            Button(#localize("ok"), role: .cancel) {
                 wizardVM.cancelLinking()
                 dismiss()
             }
         } message: {
-            Text(BundleUtil.localizedString(forKey: "md_wizard_error_text"))
+            Text(#localize("md_wizard_error_text"))
         }
         
-        .alert(BundleUtil.localizedString(forKey: "md_wizard_timeout_title"), isPresented: $wizardVM.didTimeout) {
-            Button(BundleUtil.localizedString(forKey: "ok"), role: .cancel) {
+        .alert(#localize("md_wizard_timeout_title"), isPresented: $wizardVM.didTimeout) {
+            Button(#localize("ok"), role: .cancel) {
                 wizardVM.cancelLinking()
                 dismiss()
             }
         } message: {
-            Text(BundleUtil.localizedString(forKey: "md_wizard_error_text"))
+            Text(#localize("md_wizard_error_text"))
         }
 
         .alert(
-            BundleUtil.localizedString(forKey: "md_wizard_could_not_connect_title"),
+            #localize("md_wizard_could_not_connect_title"),
             isPresented: $wizardVM.didDisconnect
         ) {
-            Button(BundleUtil.localizedString(forKey: "ok"), role: .cancel) {
+            Button(#localize("ok"), role: .cancel) {
                 wizardVM.cancelLinking()
                 dismiss()
             }
         } message: {
-            Text(BundleUtil.localizedString(forKey: "md_wizard_error_text"))
+            Text(#localize("md_wizard_error_text"))
         }
     }
 }

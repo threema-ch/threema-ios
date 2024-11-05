@@ -21,7 +21,7 @@
 #import "Old_FileMessageSender.h"
 #import "EntityCreator.h"
 #import "EntityFetcher.h"
-#import "ThreemaFramework/ThreemaFramework-Swift.h"
+#import "ThreemaFramework/ThreemaFramework-swift.h"
 #import "NaClCrypto.h"
 #import "BoxFileMessage.h"
 #import "GroupFileMessage.h"
@@ -68,11 +68,11 @@
     return [self init:tm groupManager:[[GroupManager alloc] initWithEntityManager:em taskManagerObjc:tm] entityManager:em];
 }
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(Conversation *)conversation {
+- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation {
     [self sendItem:item inConversation:conversation requestId:nil];
 }
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(Conversation *)conversation requestId:(NSString *)requestId {
+- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation requestId:(NSString *)requestId {
     _item = item;
     self.conversation = conversation;
     _webRequestId = requestId;
@@ -80,7 +80,7 @@
     [self scheduleUpload];
 }
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(Conversation *)conversation requestId:(NSString *)requestId correlationId:(NSString *)correlationId {
+- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation requestId:(NSString *)requestId correlationId:(NSString *)correlationId {
     _item = item;
     self.conversation = conversation;
     _webRequestId = requestId;
@@ -124,12 +124,12 @@
     NSData *encryptionKey = [[NaClCrypto sharedCrypto] randomBytes:kBlobKeyLen];
 
     [entityManager performSyncBlockAndSafe:^{
-        FileData *fileData = [entityManager.entityCreator fileData];
+        FileDataEntity *fileData = [entityManager.entityCreator fileDataEntity];
         fileData.data = data;
         
-        Conversation *conversationOwnContext = (Conversation *)[entityManager.entityFetcher getManagedObjectById:self.conversation.objectID];
+        ConversationEntity *conversationOwnContext = (ConversationEntity *)[entityManager.entityFetcher getManagedObjectById:self.conversation.objectID];
         
-        FileMessageEntity *message = [entityManager.entityCreator fileMessageEntityForConversation:conversationOwnContext];
+        FileMessageEntity *message = [entityManager.entityCreator fileMessageEntityForConversationEntity:conversationOwnContext];
         message.fileSize = [NSNumber numberWithInteger:data.length];
         if (self.fileNameFromWeb != nil) {
             message.fileName = self.fileNameFromWeb;
@@ -156,13 +156,13 @@
         
         if ([message sendAsFileVideoMessage] || [message sendAsFileAudioMessage]) {
             // add duration
-            message.duration = [[NSNumber alloc] initWithFloat:[_item getDuration]];
+            message.durationObjc = [[NSNumber alloc] initWithFloat:[_item getDuration]];
         }
         
         if ([message renderFileImageMessage]) {
             // add height and width
-            message.height = [[NSNumber alloc] initWithFloat:[_item getHeight]];
-            message.width = [[NSNumber alloc] initWithFloat:[_item getWidth]];
+            message.heightObjc = [[NSNumber alloc] initWithFloat:[_item getHeight]];
+            message.widthObjc = [[NSNumber alloc] initWithFloat:[_item getWidth]];
         }
         
         message.data = fileData;
@@ -170,7 +170,7 @@
         message.progress = @0; // Set progress 0 to indicate upload will be started
         message.sendFailed = [NSNumber numberWithBool:NO];
         message.webRequestId = _webRequestId;
-        message.correlationId = _correlationId;
+        message.correlationID = _correlationId;
         if (thumbnailImage) {
                 NSData *thumbnailData = nil;
                 if ([UTIConverter isPNGImageMimeType:message.mimeType]) {
@@ -182,7 +182,7 @@
                     thumbnailData = [MediaConverter JPEGRepresentationFor:thumbnailImage];
                 }
 
-                ImageData *dbThumbnail = [entityManager.entityCreator imageData];
+                ImageDataEntity *dbThumbnail = [entityManager.entityCreator imageDataEntity];
                 dbThumbnail.data = thumbnailData;
                 dbThumbnail.height = [NSNumber numberWithInt:thumbnailImage.size.height];
                 dbThumbnail.width = [NSNumber numberWithInt:thumbnailImage.size.width];

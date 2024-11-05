@@ -22,10 +22,10 @@ import ThreemaFramework
 import UIKit
 
 class ContactListNavigationItem: UINavigationItem {
-    private weak var delegate: ContactListNavigationBarItemDelegate?
+    private weak var delegate: ContactListActionDelegate?
     private lazy var contactAddMenu = UIMenu(delegate?.add ?? { _ in })
-    private lazy var contactListFilter = ContactListFilterMenuView(delegate?.filterChanged ?? { _ in })
-    #if THREEMA_WORK || THREEMA_ONPREM
+    private lazy var contactListFilter = ScrollableMenuView(delegate?.filterChanged ?? { _ in })
+    #if THREEMA_WORK
         private lazy var switchWorkContacts = WorkButtonView(delegate?.didToggleWorkContacts ?? { _ in })
         var shouldShowWorkButton = true {
             willSet {
@@ -34,12 +34,13 @@ class ContactListNavigationItem: UINavigationItem {
         }
     #endif
     
-    init(delegate: ContactListNavigationBarItemDelegate? = nil) {
+    init(delegate: ContactListActionDelegate? = nil) {
         self.delegate = delegate
         super.init(title: "")
+
         titleView = contactListFilter.view
         rightBarButtonItem = UIBarButtonItem(systemItem: .add, menu: contactAddMenu)
-        #if THREEMA_WORK || THREEMA_ONPREM
+        #if THREEMA_WORK
             leftBarButtonItem = UIBarButtonItem(customView: switchWorkContacts.view)
         #endif
     }

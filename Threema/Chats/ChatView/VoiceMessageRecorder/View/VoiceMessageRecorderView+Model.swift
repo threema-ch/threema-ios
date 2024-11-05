@@ -23,6 +23,7 @@ import CocoaLumberjackSwift
 import DSWaveformImage
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 // MARK: - VoiceMessageRecorderView.Model
 
@@ -46,9 +47,9 @@ extension VoiceMessageRecorderView {
         var voiceMessageManager: VoiceMessageRecorderActor
         let shouldDrawSilence: Bool
         
-        private let conversation: Conversation
+        private let conversation: ConversationEntity
         
-        convenience init(conversation: Conversation, audioFile: URL? = nil) {
+        convenience init(conversation: ConversationEntity, audioFile: URL? = nil) {
             let voiceMessageManager = VoiceMessageRecorderActor()
             self.init(
                 recordingState: .none,
@@ -76,7 +77,7 @@ extension VoiceMessageRecorderView {
         private init(
             recordingState: RecordingState,
             shouldDrawSilence: Bool,
-            conversation: Conversation,
+            conversation: ConversationEntity,
             voiceMessageManager: VoiceMessageRecorderActor
         ) {
             self.recordingState = recordingState
@@ -177,10 +178,10 @@ extension VoiceMessageRecorderView.Model: VoiceMessageAudioRecorderDelegate {
             guard let error = error as? VoiceMessageError else {
                 NotificationPresenterWrapper.shared.present(
                     type: .init(
-                        notificationText: "voice_recorder_recording_error".localized,
+                        notificationText: #localize("voice_recorder_recording_error"),
                         notificationStyle: .error
                     ),
-                    subtitle: "voice_recorder_error_message".localized
+                    subtitle: #localize("voice_recorder_error_message")
                 )
                 return
             }

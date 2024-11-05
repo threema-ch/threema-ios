@@ -20,6 +20,7 @@
 
 import Foundation
 import MBProgressHUD
+import ThreemaMacros
 import UIKit
 
 class SafeSetupViewController: ThemedViewController {
@@ -79,9 +80,9 @@ class SafeSetupViewController: ThemedViewController {
             UIAlertTemplate.showConfirm(
                 owner: self,
                 popOverSource: safeSwitch!,
-                title: BundleUtil.localizedString(forKey: "safe_deactivate"),
-                message: BundleUtil.localizedString(forKey: "safe_deactivate_explain"),
-                titleOk: BundleUtil.localizedString(forKey: "deactivate"),
+                title: #localize("safe_deactivate"),
+                message: #localize("safe_deactivate_explain"),
+                titleOk: #localize("deactivate"),
                 actionOk: { _ in
                     DispatchQueue.main.async {
                         MBProgressHUD.showAdded(to: self.view, animated: true)
@@ -92,7 +93,7 @@ class SafeSetupViewController: ThemedViewController {
                         MBProgressHUD.hide(for: self.view, animated: true)
                     }
                 },
-                titleCancel: BundleUtil.localizedString(forKey: "cancel"),
+                titleCancel: #localize("cancel"),
                 actionCancel: { _ in self.safeSwitch.isOn = true }
             )
             return false

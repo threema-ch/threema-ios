@@ -32,8 +32,6 @@
 #import "AppGroup.h"
 #import "JKLLockScreenViewController.h"
 
-#import "PreviewImageViewController.h"
-
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 #else
@@ -106,6 +104,25 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         // We check for modals to be shown
         [LaunchModalManager.shared checkLaunchModals];
+    }
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    if ([AppLaunchTasks lastLaunchedVersionChanged] && ![[UserSettings sharedUserSettings] jbDetectionDismissed]) {
+        JBDetector* detector = [JBDetector new];
+        if (detector.detectJB) {
+            [UIAlertTemplate showAlertWithOwner:[AppDelegate.sharedAppDelegate currentTopViewController]
+                                          title:[BundleUtil localizedStringForKey:@"alert_jb_detected_title"]
+                                        message:[BundleUtil localizedStringForKey:@"alert_jb_detected_message"]
+                                        titleOk:[BundleUtil localizedStringForKey:@"push_reminder_not_now"]
+                                       actionOk:^(UIAlertAction * _Nonnull action) {
+                [[UserSettings sharedUserSettings] setJbDetectionDismissed:YES];
+            }
+                                    titleCancel:[BundleUtil localizedStringForKey:@"Dismiss"]
+                                   actionCancel:nil];
+        }
     }
 }
 
@@ -242,11 +259,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self switchContact];
 }
 
-- (void)switchConversation:(Conversation *)conversation notification:(NSNotification *) notification{
+- (void)switchConversation:(ConversationEntity *)conversation notification:(NSNotification *) notification{
     
     // New ChatView iPad
     ChatViewController *chatViewController = nil;
-    Conversation *conv = conversation;
+    ConversationEntity *conv = conversation;
     if (conversation == nil) {
         conv = _conversationsViewController.selectedConversation ? _conversationsViewController.selectedConversation : [_conversationsViewController getFirstConversation];
     }
@@ -257,7 +274,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     
     if (chatViewController && conv.willBeDeleted == NO) {
-        if ([chatViewController conversation].conversationCategory == ConversationCategoryPrivate && !AppDelegate.sharedAppDelegate.isAppLocked){
+        if ([chatViewController conversation].category.intValue == ConversationCategoryPrivate && !AppDelegate.sharedAppDelegate.isAppLocked){
             [self presentPasscodeView];
             
         } else {
@@ -515,7 +532,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)selectedConversation:(NSNotification*)notification {
     [self hideModal];
-    Conversation *conv = [self getConversationForNotificationInfo:notification.userInfo];
+    ConversationEntity *conv = [self getConversationForNotificationInfo:notification.userInfo];
 
     if (conv == nil) {
         DDLogError(@"Unable to show chat because conversation is nil");
@@ -568,8 +585,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)deletedConversation:(NSNotification*)notification {
     if (SYSTEM_IS_IPAD) {
-        Conversation *deletedConversation = notification.userInfo[kKeyConversation];
-        Conversation *selectedConversation = [_conversationsViewController selectedConversation];
+        ConversationEntity *deletedConversation = notification.userInfo[kKeyConversation];
+        ConversationEntity *selectedConversation = [_conversationsViewController selectedConversation];
         if (selectedConversation == deletedConversation) {
             if (self.selectedIndex == kChatTabBarIndex) {
                 [self switchConversation: nil notification:notification];
@@ -593,17 +610,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
-- (Conversation *)getConversationForNotificationInfo:(NSDictionary *)info {
-    __block Conversation *conversation = [info objectForKey:kKeyConversation];
+- (ConversationEntity *)getConversationForNotificationInfo:(NSDictionary *)info {
+    __block ConversationEntity *conversation = [info objectForKey:kKeyConversation];
     __block ContactEntity *notificationContact = [info objectForKey:kKeyContact];
+    __block NSString *notificationContactIdentity = [info objectForKey:kKeyContactIdentity];
     if (conversation == nil) {
         EntityManager *entityManager = [[EntityManager alloc] init];
-        [entityManager performSyncBlockAndSafe:^{
-            ContactEntity *contact = (ContactEntity *)[entityManager.entityFetcher getManagedObjectById:notificationContact.objectID];
-            if (contact) {
-                conversation = [entityManager conversationForContact:contact createIfNotExisting:YES];
-            }
-        }];
+        if (notificationContact == nil) {
+            conversation = [entityManager conversationFor:notificationContactIdentity createIfNotExisting:YES];
+        } else {
+            [entityManager performSyncBlockAndSafe:^{
+                ContactEntity *contact = (ContactEntity *)[entityManager.entityFetcher getManagedObjectById:notificationContact.objectID];
+                if (contact) {
+                    conversation = [entityManager conversationForContact:contact createIfNotExisting:YES];
+                }
+            }];
+        }
     }
     
     return conversation;
@@ -644,9 +666,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if ([controller isKindOfClass:[UINavigationController class]]) {
         UINavigationController *navigationController = (UINavigationController*)controller;
         if ([navigationController.topViewController isKindOfClass:[MWPhotoBrowser class]]) {
-            [navigationController dismissViewControllerAnimated:YES completion:nil];
-        }
-        else if ([navigationController.topViewController isKindOfClass:[PreviewImageViewController class]]) {
             [navigationController dismissViewControllerAnimated:YES completion:nil];
         }
         else if ([navigationController.topViewController isKindOfClass:[SingleDetailsViewController class]]
@@ -691,7 +710,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)resetDisplayedChat {
     if (SYSTEM_IS_IPAD) {
-        Conversation *selectedConversation = [_conversationsViewController selectedConversation];
+        ConversationEntity *selectedConversation = [_conversationsViewController selectedConversation];
         [self switchConversation:selectedConversation notification:nil];
     } else {
         if (self.selectedIndex == kChatTabBarIndex) {
@@ -787,12 +806,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]
         && _conversationsViewController != nil
         && _conversationsViewController.selectedConversation != nil) {
-        Conversation *conversation = _conversationsViewController.selectedConversation;
+        ConversationEntity *conversation = _conversationsViewController.selectedConversation;
         ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation: conversation showConversationInformation:nil];
         [navigationController setViewControllers:@[chatViewController]];
     }
     else {
-        Conversation *conversation = [_conversationsViewController getFirstConversation];
+        ConversationEntity *conversation = [_conversationsViewController getFirstConversation];
         ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation: conversation showConversationInformation:nil];
         [navigationController setViewControllers:@[chatViewController]];
         [_conversationsViewController setSelectionFor: conversation];

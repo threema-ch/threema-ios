@@ -20,6 +20,7 @@
 
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 typealias ContactListFilterMenuView = UIHostingController<MenuItemSelection<ContactListFilterItem>>
 
@@ -44,11 +45,11 @@ extension ContactListFilterItem: MenuItem {
     var label: String {
         switch self {
         case .contacts:
-            "segmentcontrol_contacts".localized
+            #localize("segmentcontrol_contacts")
         case .groups:
-            "segmentcontrol_groups".localized
+            #localize("segmentcontrol_groups")
         case .distributionLists:
-            "segmentcontrol_distribution_list".localized
+            #localize("segmentcontrol_distribution_list")
         }
     }
     
@@ -69,6 +70,17 @@ extension ContactListFilterItem: MenuItem {
             true
         case .distributionLists:
             ThreemaEnvironment.distributionListsActive
+        }
+    }
+    
+    var accessibilityLabel: String? {
+        switch self {
+        case .contacts:
+            #localize("segmentcontrol_contacts")
+        case .groups:
+            #localize("segmentcontrol_groups")
+        case .distributionLists:
+            #localize("segmentcontrol_distribution_list")
         }
     }
 }

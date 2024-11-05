@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 /// Custom view to show a ballot icon with an open ballots count badge
@@ -148,7 +149,7 @@ class BallotWithOpenCountButton: ThemedCodeButton {
     
     private func updateAccessibilityLabel() {
         accessibilityLabel = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "ballots_with_open_count_accessibility"),
+            #localize("ballots_with_open_count_accessibility"),
             openBallotsCount
         )
     }

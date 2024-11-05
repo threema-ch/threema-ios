@@ -20,6 +20,7 @@
 
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 
 final class ChatViewMessageDetailsMessageHistoryTableViewCell: ThemedCodeTableViewCell {
     
@@ -111,7 +112,7 @@ final class ChatViewMessageDetailsMessageHistoryTableViewCell: ThemedCodeTableVi
             messageLabel.font = UIFont.preferredFont(forTextStyle: .body)
         }
         else {
-            messageLabel.text = "detailView_edit_history_no_caption".localized
+            messageLabel.text = #localize("detailView_edit_history_no_caption")
             messageLabel.font = UIFont.preferredFont(forTextStyle: .body).italic()
         }
         
@@ -125,7 +126,7 @@ final class ChatViewMessageDetailsMessageHistoryTableViewCell: ThemedCodeTableVi
             }
         
         if historyItem.isCurrent {
-            dateLabel.text = "\("detailView_edit_history_current".localized) • \(dateLabelText)"
+            dateLabel.text = "\(#localize("detailView_edit_history_current")) • \(dateLabelText)"
         }
         else {
             dateLabel.text = dateLabelText

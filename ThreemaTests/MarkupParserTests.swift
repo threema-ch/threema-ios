@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import XCTest
 
 @testable import Threema
@@ -396,7 +397,7 @@ class MarkupParserTests: XCTestCase {
     
     func testPreviewString() {
         let testString = "Hello @[@@@@@@@@]. How *are* _you_?"
-        let expectedString = "Hello @\(BundleUtil.localizedString(forKey: "mentions_all")). How are you?"
+        let expectedString = "Hello @\(#localize("all")). How are you?"
         
         let parsedString = MarkupParser().previewString(for: testString, font: .preferredFont(forTextStyle: .body))
         

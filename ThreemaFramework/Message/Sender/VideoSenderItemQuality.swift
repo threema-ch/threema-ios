@@ -22,21 +22,4 @@ import Foundation
 
 public enum VideoSenderItemQuality: String, CaseIterable {
     case low, high, original
-
-    public var maxDurationInMinutes: Int64 {
-        switch self {
-        case .low:
-            VideoConversionHelper.getMaxdurationInMinutes(
-                videoBitrate: Int64(kVideoBitrateLow),
-                audioBitrate: Int64(kAudioBitrateLow)
-            )
-        case .high:
-            VideoConversionHelper.getMaxdurationInMinutes(
-                videoBitrate: Int64(kVideoBitrateHigh),
-                audioBitrate: Int64(kAudioBitrateHigh)
-            )
-        case .original:
-            0
-        }
-    }
 }

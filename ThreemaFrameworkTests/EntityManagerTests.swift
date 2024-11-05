@@ -43,7 +43,7 @@ final class EntityManagerTests: XCTestCase {
         abstractMessage.text = "test"
 
         var sender: ContactEntity?
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         var message: BaseMessage?
 
         let databasePreparer = DatabasePreparer(context: mainCnx)
@@ -105,7 +105,7 @@ final class EntityManagerTests: XCTestCase {
 
         XCTAssertNotNil(resultMessage)
         XCTAssertEqual(resultMessage?.objectID, message?.objectID)
-        XCTAssertEqual((resultMessage as? TextMessage)?.text, "test 123")
+        XCTAssertEqual((resultMessage as? TextMessageEntity)?.text, "test 123")
     }
 
     func testExistingConversationSenderReceiverAndGetOrCreateMessageIfNotExists() {
@@ -115,7 +115,7 @@ final class EntityManagerTests: XCTestCase {
         abstractMessage.text = "test"
 
         var sender: ContactEntity?
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
 
         let databasePreparer = DatabasePreparer(context: mainCnx)
         databasePreparer.save {
@@ -184,7 +184,7 @@ final class EntityManagerTests: XCTestCase {
 
         let expec = expectation(description: "Expec")
 
-        var result: (conversation: Conversation?, sender: ContactEntity?, receiver: ContactEntity?)
+        var result: (conversation: ConversationEntity?, sender: ContactEntity?, receiver: ContactEntity?)
 
         DispatchQueue.global().async {
             let entityManager =
@@ -313,14 +313,14 @@ final class EntityManagerTests: XCTestCase {
                 myIdentityStore: MyIdentityStoreMock()
             )
 
-            var editedMessage: TextMessage? = nil
+            var editedMessage: TextMessageEntity? = nil
 
             if testCase.isThrowingError {
                 XCTAssertThrowsError(
                     editedMessage = try entityManager.editMessage(
                         for: editMessage,
                         conversation: conversation
-                    ) as? TextMessage
+                    ) as? TextMessageEntity
                 ) { error in
                     XCTAssertEqual(error as? ThreemaProtocolError, .messageSenderMismatch)
                 }
@@ -331,7 +331,7 @@ final class EntityManagerTests: XCTestCase {
                     editedMessage = try entityManager.editMessage(
                         for: editMessage,
                         conversation: conversation
-                    ) as? TextMessage
+                    ) as? TextMessageEntity
                 )
                 XCTAssertNotNil(editedMessage?.lastEditedAt)
                 XCTAssertEqual(editedMessage?.text, expectedText)

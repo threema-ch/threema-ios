@@ -24,7 +24,7 @@ import Foundation
 @objc public class WCSession: NSObject {
     
     var privateKey: Data?
-    var webClientSession: WebClientSession?
+    var webClientSession: WebClientSessionEntity?
     var messageQueue: WebMessageQueue
     
     private var connection: WCConnection?
@@ -36,13 +36,13 @@ import Foundation
     
     private(set) var webClientProcessQueue: DispatchQueue
     
-    public init(webClientSession: WebClientSession) {
+    public init(webClientSession: WebClientSessionEntity) {
         self.webClientSession = webClientSession
         self.privateKey = webClientSession.privateKey
         var hash = webClientSession.initiatorPermanentPublicKeyHash
         
         if hash == nil {
-            hash = WCSession.ccSha256(data: webClientSession.initiatorPermanentPublicKey!).hexEncodedString()
+            hash = WCSession.ccSha256(data: webClientSession.initiatorPermanentPublicKey).hexEncodedString()
             WebClientSessionStore.shared.updateWebClientSession(session: webClientSession, hash: hash!)
         }
         self.webClientProcessQueue = DispatchQueue(label: "ch.threema.webClientProcessQueue", attributes: [])
@@ -206,7 +206,7 @@ extension WCSession: MessageCompleteDelegate {
 // MARK: - WCConnectionDelegate
 
 extension WCSession: WCConnectionDelegate {
-    func currentWebClientSession() -> WebClientSession? {
+    func currentWebClientSession() -> WebClientSessionEntity? {
         webClientSession
     }
     

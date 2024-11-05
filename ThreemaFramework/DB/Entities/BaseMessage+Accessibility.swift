@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 extension BaseMessage {
     /// Contains the sender and message type
@@ -32,14 +33,14 @@ extension BaseMessage {
         // Sent by me, style: "Your Message"
         if message.isOwnMessage {
             text = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "accessibility_senderDescription_ownMessage"),
+                #localize("accessibility_senderDescription_ownMessage"),
                 message.accessibilityMessageTypeDescription
             )
         }
         // Sent by other, style: "Phil's Message"
         else if message.isGroupMessage {
             text = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "accessibility_senderDescription_otherMessage_group"),
+                #localize("accessibility_senderDescription_otherMessage_group"),
                 message.accessibilityMessageTypeDescription,
                 // Quickfix: Sender should never be `nil` for a message in a group that is not my own
                 message.sender?.displayName ?? ""
@@ -72,7 +73,7 @@ extension BaseMessage {
         }
         
         if let marked = messageMarkers?.star.boolValue, marked {
-            resolvedString += "marker_accessibility_label".localized
+            resolvedString += #localize("marker_accessibility_label")
         }
         
         return resolvedString
@@ -85,10 +86,10 @@ extension BaseMessage {
         
         let myReactionString =
             if isMyReaction(.acknowledged) {
-                "\(BundleUtil.localizedString(forKey: "accessibility_status_group_acknowledged_my_reaction")), "
+                "\(#localize("accessibility_status_group_acknowledged_my_reaction")), "
             }
             else if isMyReaction(.declined) {
-                "\(BundleUtil.localizedString(forKey: "accessibility_status_group_declined_my_reaction")), "
+                "\(#localize("accessibility_status_group_declined_my_reaction")), "
             }
             else {
                 // We have to use a empty string when there is no own reaction. Otherwise the app will crash because a
@@ -99,18 +100,15 @@ extension BaseMessage {
         let ack = groupReactionsCount(of: .acknowledged)
         let dec = groupReactionsCount(of: .declined)
         if ack > 0, dec > 0 {
-            let statusString = BundleUtil
-                .localizedString(forKey: "accessibility_status_group_acknowledged_declined_plus_time")
+            let statusString = #localize("accessibility_status_group_acknowledged_declined_plus_time")
             return "\(String.localizedStringWithFormat(statusString, ack, dec, myReactionString, dateString))."
         }
         else if ack > 0 {
-            let statusString = BundleUtil
-                .localizedString(forKey: "accessibility_status_group_acknowledged_plus_time")
+            let statusString = #localize("accessibility_status_group_acknowledged_plus_time")
             return "\(String.localizedStringWithFormat(statusString, ack, myReactionString, dateString))."
         }
         else if dec > 0 {
-            let statusString = BundleUtil
-                .localizedString(forKey: "accessibility_status_group_declined_plus_time")
+            let statusString = #localize("accessibility_status_group_declined_plus_time")
             return "\(String.localizedStringWithFormat(statusString, dec, myReactionString, dateString))."
         }
         
@@ -120,7 +118,7 @@ extension BaseMessage {
     /// Contains the sender.
     public var accessibilityMessageSender: String? {
         guard !isOwnMessage else {
-            return BundleUtil.localizedString(forKey: "me")
+            return #localize("me")
         }
         
         if isGroupMessage {

@@ -25,10 +25,10 @@ import UIKit
 class TextPreviewViewController: UIViewController, UITextViewDelegate {
     var previewText: String?
     var selectedText: NSRange?
-    var selectedConversations: [Conversation]?
+    var selectedConversations: [ConversationEntity]?
     var bottomLayoutConstraint: NSLayoutConstraint?
     
-    init(previewText: String?, selectedText: NSRange? = nil, selectedConversations: [Conversation]? = nil) {
+    init(previewText: String?, selectedText: NSRange? = nil, selectedConversations: [ConversationEntity]? = nil) {
         self.previewText = previewText
         self.selectedText = selectedText
         self.selectedConversations = selectedConversations

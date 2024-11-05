@@ -45,7 +45,7 @@ class WebDeleteGroupRequest: WebAbstractMessage {
             return
         }
         
-        if conversation.isGroup() {
+        if conversation.isGroup {
             guard let group = backgroundBusinessInjector.groupManager.getGroup(conversation: conversation) else {
                 ack!.success = false
                 ack!.error = "invalidGroup"

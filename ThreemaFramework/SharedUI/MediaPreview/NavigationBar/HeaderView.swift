@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 class HeaderView: UIView {
     private lazy var touchAnimator = UIViewPropertyAnimator.barButtonHighlightAnimator(for: self)
@@ -87,7 +88,7 @@ class HeaderView: UIView {
         stackView.distribution = .equalCentering
         stackView.alignment = .leading
         
-        titleLabel.text = BundleUtil.localizedString(forKey: "preview")
+        titleLabel.text = #localize("preview")
         titleLabel.isAccessibilityElement = false
         titleLabel.font = UIFont.preferredFont(forTextStyle: .headline)
         titleLabel.textAlignment = .center
@@ -118,7 +119,7 @@ class HeaderView: UIView {
             
             optionsLabel.isAccessibilityElement = false
             
-            let titleString = BundleUtil.localizedString(forKey: "mediapreview_options").appending(" ")
+            let titleString = #localize("mediapreview_options").appending(" ")
             let attributedTitleString = NSMutableAttributedString(string: titleString)
             let range = (titleString as NSString).range(of: titleString)
             
@@ -206,12 +207,12 @@ class HeaderView: UIView {
         let tmpTitle: String? =
             if mediaPreviewItems.count > 1 {
                 String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "multiple_media_items"),
+                    #localize("multiple_media_items"),
                     mediaPreviewItems.count
                 )
             }
             else {
-                BundleUtil.localizedString(forKey: "media_item")
+                #localize("media_item")
             }
         
         guard let title = tmpTitle else {
@@ -221,6 +222,6 @@ class HeaderView: UIView {
         
         titleLabel.text = title
         viewButton.accessibilityLabel = title
-        viewButton.accessibilityValue = BundleUtil.localizedString(forKey: "mediapreview_options")
+        viewButton.accessibilityValue = #localize("mediapreview_options")
     }
 }

@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import MBProgressHUD
+import ThreemaMacros
 import UIKit
 
 @objc protocol RestoreSafeViewControllerDelegate {
@@ -55,17 +56,17 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
 
         hideKeyboardWhenTappedAround()
         
-        titleLabel.text = BundleUtil.localizedString(forKey: "safe_restore")
-        descriptionLabel.text = BundleUtil.localizedString(forKey: "safe_restore_enter_id")
-        forgotIDButton.setTitle(BundleUtil.localizedString(forKey: "safe_forgot_your_id"), for: .normal)
+        titleLabel.text = #localize("safe_restore")
+        descriptionLabel.text = #localize("safe_restore_enter_id")
+        forgotIDButton.setTitle(#localize("safe_forgot_your_id"), for: .normal)
         identityField.delegate = self
-        identityField.placeholder = BundleUtil.localizedString(forKey: "safe_threema_id")
+        identityField.placeholder = #localize("safe_threema_id")
         identityField.threemaID = true
         identityField.accessibilityIdentifier = "RestoreSafeViewControllerIdentityTextField"
-        expertOptionsButton.setTitle(BundleUtil.localizedString(forKey: "safe_advanced_options"), for: .normal)
+        expertOptionsButton.setTitle(#localize("safe_advanced_options"), for: .normal)
 
-        cancelButton.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
-        okButton.setTitle(BundleUtil.localizedString(forKey: "restore"), for: .normal)
+        cancelButton.setTitle(#localize("cancel"), for: .normal)
+        okButton.setTitle(#localize("restore"), for: .normal)
         okButton.accessibilityIdentifier = "RestoreSafeViewControllerRestoreButton"
         
         forgotIDButton.setTitleColor(Colors.primaryWizard, for: .normal)
@@ -145,7 +146,7 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
         if identifier == "RestoreSafePassword" {
             guard let identity = identityField.text, identity.count == 8 else {
                 let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
-                alert.showAlert(BundleUtil.localizedString(forKey: "invalid_threema_id"))
+                alert.showAlert(#localize("invalid_threema_id"))
                 return false
             }
         }
@@ -291,11 +292,11 @@ extension RestoreSafeViewController {
                             let alert = IntroQuestionViewHelper(parent: self, onAnswer: { _, _ in
                                 self.delegate?.restoreSafeDone()
                             })
-                            alert.showAlert(message, title: BundleUtil.localizedString(forKey: "safe_restore_failed"))
+                            alert.showAlert(message, title: #localize("safe_restore_failed"))
                         case let .restoreFailed(message):
                             DDLogError("\(message)")
                             let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
-                            alert.showAlert(message, title: BundleUtil.localizedString(forKey: "safe_restore_failed"))
+                            alert.showAlert(message, title: #localize("safe_restore_failed"))
                         default: break
                         }
                     }

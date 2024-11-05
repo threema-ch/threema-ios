@@ -21,13 +21,14 @@
 #import <Foundation/Foundation.h>
 #import "BoxFileMessage.h"
 #import "GroupFileMessage.h"
-#import "Conversation.h"
+
+@class ConversationEntity;
 
 @interface FileMessageDecoder : NSObject
 
-+ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError *err))onError;
++ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError *err))onError;
 
-+ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError *err))onError;
++ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError *err))onError;
 
 + (nullable NSString *)decodeFilenameFromBox:(nonnull BoxFileMessage *)message;
 

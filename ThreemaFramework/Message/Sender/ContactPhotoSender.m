@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ContactPhotoSender.h"
-#import "Conversation.h"
 #import "NaClCrypto.h"
 #import "MyIdentityStore.h"
 #import "ContactSetPhotoMessage.h"

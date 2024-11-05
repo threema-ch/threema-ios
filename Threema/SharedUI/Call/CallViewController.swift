@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 import WebRTC
 
 class CallViewController: UIViewController {
@@ -414,43 +415,43 @@ extension CallViewController {
         var timerString = ""
         switch state {
         case .idle:
-            timerString = BundleUtil.localizedString(forKey: "call_status_wait_ringing")
+            timerString = #localize("call_status_wait_ringing")
         case .sendOffer:
-            timerString = BundleUtil.localizedString(forKey: "call_status_wait_ringing")
+            timerString = #localize("call_status_wait_ringing")
         case .receivedOffer:
-            timerString = BundleUtil.localizedString(forKey: "call_status_wait_ringing")
+            timerString = #localize("call_status_wait_ringing")
         case .outgoingRinging:
-            timerString = BundleUtil.localizedString(forKey: "call_status_ringing")
+            timerString = #localize("call_status_ringing")
         case .incomingRinging:
-            timerString = BundleUtil.localizedString(forKey: "call_status_incom_ringing")
+            timerString = #localize("call_status_incom_ringing")
         case .sendAnswer:
-            timerString = BundleUtil.localizedString(forKey: "call_status_ringing")
+            timerString = #localize("call_status_ringing")
         case .receivedAnswer:
-            timerString = BundleUtil.localizedString(forKey: "call_status_ringing")
+            timerString = #localize("call_status_ringing")
         case .initializing:
-            timerString = BundleUtil.localizedString(forKey: "call_status_initializing")
+            timerString = #localize("call_status_initializing")
         case .calling:
-            timerString = BundleUtil.localizedString(forKey: "call_status_calling")
+            timerString = #localize("call_status_calling")
         case .reconnecting:
             if oldState != .remoteEnded, oldState != .ended {
-                timerString = BundleUtil.localizedString(forKey: "call_status_reconnecting")
+                timerString = #localize("call_status_reconnecting")
             }
         case .ended, .remoteEnded:
-            timerString = BundleUtil.localizedString(forKey: "call_end")
+            timerString = #localize("call_end")
         case .rejected:
-            timerString = BundleUtil.localizedString(forKey: "call_rejected")
+            timerString = #localize("call_rejected")
         case .rejectedBusy:
-            timerString = BundleUtil.localizedString(forKey: "call_rejected_busy")
+            timerString = #localize("call_rejected_busy")
         case .rejectedTimeout:
-            timerString = BundleUtil.localizedString(forKey: "call_rejected_timeout")
+            timerString = #localize("call_rejected_timeout")
         case .rejectedOffHours:
-            timerString = BundleUtil.localizedString(forKey: "call_rejected")
+            timerString = #localize("call_rejected")
         case .rejectedUnknown:
-            timerString = BundleUtil.localizedString(forKey: "call_rejected")
+            timerString = #localize("call_rejected")
         case .rejectedDisabled:
-            timerString = BundleUtil.localizedString(forKey: "call_rejected_disabled")
+            timerString = #localize("call_rejected_disabled")
         case .microphoneDisabled:
-            timerString = BundleUtil.localizedString(forKey: "call_mic_access")
+            timerString = #localize("call_mic_access")
         }
         DispatchQueue.main.async {
             self.timerLabel?.text = timerString
@@ -763,7 +764,7 @@ extension CallViewController {
                 cameraButton?.setImage(cameraButtonImage, for: .normal)
                 cameraButton?.setImage(cameraButtonImage, for: .selected)
                 cameraButton?.setImage(cameraButtonImage, for: .highlighted)
-                cameraButton?.accessibilityLabel = BundleUtil.localizedString(forKey: "call_camera_deactivate_button")
+                cameraButton?.accessibilityLabel = #localize("call_camera_deactivate_button")
                 cameraButton?.isHidden = isCallInitiator && !UserSettings.shared().enableVideoCall
                 cameraButton?.alpha = 0.9
             }
@@ -793,7 +794,7 @@ extension CallViewController {
             self.debugLabel.isHidden = true
             self.cellularWarningButton.isHidden = true
         
-            self.timerLabel.text = BundleUtil.localizedString(forKey: "call_status_incom_ringing")
+            self.timerLabel.text = #localize("call_status_incom_ringing")
         }
     }
     
@@ -1494,17 +1495,17 @@ extension CallViewController {
             .localizedString(forKey: muteButton.isSelected ? "call_unmute" : "call_mute")
         speakerButton.accessibilityLabel = BundleUtil
             .localizedString(forKey: speakerButton.tag == 1 ? "call_earpiece" : "call_speaker")
-        endButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_end")
-        acceptButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_accept")
-        rejectButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_reject")
-        hideButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_hide_call")
+        endButton.accessibilityLabel = #localize("call_end")
+        acceptButton.accessibilityLabel = #localize("call_accept")
+        rejectButton.accessibilityLabel = #localize("call_reject")
+        hideButton.accessibilityLabel = #localize("call_hide_call")
         
         cameraButton.accessibilityLabel = BundleUtil
             .localizedString(
                 forKey: isLocalVideoActive ? "call_camera_deactivate_button" :
                     "call_camera_activate_button"
             )
-        cameraSwitchButton.accessibilityLabel = BundleUtil.localizedString(forKey: "call_camera_switch_to_back_button")
+        cameraSwitchButton.accessibilityLabel = #localize("call_camera_switch_to_back_button")
     }
     
     /// It will play the problem sound
@@ -1691,8 +1692,8 @@ extension CallViewController {
     @IBAction func showCellularWarningAction() {
         UIAlertTemplate.showAlert(
             owner: self,
-            title: BundleUtil.localizedString(forKey: "call_threema_cellular_instead_of_wifi_title"),
-            message: BundleUtil.localizedString(forKey: "call_threema_cellular_instead_of_wifi_text")
+            title: #localize("call_threema_cellular_instead_of_wifi_title"),
+            message: #localize("call_threema_cellular_instead_of_wifi_text")
         )
     }
         

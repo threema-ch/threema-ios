@@ -4,7 +4,19 @@
       "id" : "FE86ED23-24DF-447E-BF1A-E2E019D240D3",
       "name" : "Configuration 1",
       "options" : {
-
+        "commandLineArgumentEntries" : [
+          {
+            "argument" : "-isRunningForTests"
+          },
+          {
+            "argument" : "-com.apple.CoreData.SQLDebug 1",
+            "enabled" : false
+          },
+          {
+            "argument" : "-com.apple.CoreData.ConcurrencyDebug 1",
+            "enabled" : false
+          }
+        ]
       }
     }
   ],

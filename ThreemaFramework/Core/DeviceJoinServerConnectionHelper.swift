@@ -46,32 +46,11 @@ class DeviceJoinServerConnectionHelper: NSObject {
         self.businessInjector.serverConnector.unregisterConnectionStateDelegate(delegate: self)
     }
     
-    // MARK: - Block and disconnect
+    // MARK: - Disconnect
     
-    /// Block communications to the services: Threema Calls, MDM, Web, Safe,
-    /// Contact-Sync and Chat Server. Disconnect Threema Web and Chat Server connection.
-    /// - Throws: If there are still active web client sessions
-    func blockCommunicationAndDisconnect() async throws {
-        guard !businessInjector.userSettings.blockCommunication else {
-            DDLogInfo("Communication is already blocked")
-            return
-        }
-        
-        let webClientSessions = businessInjector.entityManager.entityFetcher.allActiveWebClientSessions()
-        
-        guard webClientSessions?.isEmpty ?? true else {
-            throw DeviceJoinServerConnectionHelperError.existingActiveWebSessions
-        }
-        
-        businessInjector.userSettings.blockCommunication = true
-
-        await disconnect()
-    }
-    
-    // Disconnect to server (waits until connection state has changed to disconnected).
-    private func disconnect() async {
-        // swiftformat:disable:next all
-        return await withCheckedContinuation { continuation in
+    /// Disconnect from server (waits until connection state has changed to disconnected)
+    func disconnect() async {
+        await withCheckedContinuation { continuation in
             guard businessInjector.serverConnector.connectionState != .disconnected else {
                 return continuation.resume()
             }
@@ -81,27 +60,12 @@ class DeviceJoinServerConnectionHelper: NSObject {
         }
     }
     
-    // MARK: - Unblock and reconnect
+    // MARK: - Connect
     
-    /// Unblock communications to the services: Threema Calls, MDM, Web, Safe,
-    /// Contact-Sync and Chat Server.
-    func unblockCommunicationAndReconnect() async throws {
-        guard businessInjector.userSettings.blockCommunication else {
-            DDLogInfo("Communication is not blocked")
-            return
-        }
-
-        businessInjector.userSettings.blockCommunication = false
-        
-        try await connectWait()
-    }
-    
-    // TODO: We will need that when we implement the transaction (IOS-3671)
     /// Connect to Chat (Mediator) server (waits until connection state has changed to logged in) without receiving any
     /// messages.
-    private func connectWaitDoNotUnblockIncomingMessages() async throws {
-        // swiftformat:disable:next all
-        return try await withCheckedThrowingContinuation { continuation in
+    func connectDoNotUnblockIncomingMessages() async throws {
+        try await withCheckedThrowingContinuation { continuation in
             guard businessInjector.serverConnector.connectionState != .loggedIn else {
                 return continuation.resume()
             }
@@ -112,9 +76,8 @@ class DeviceJoinServerConnectionHelper: NSObject {
     }
 
     /// Connect to Chat (Mediator) server (waits until connection state has changed to logged in).
-    private func connectWait() async throws {
-        // swiftformat:disable:next all
-        return try await withCheckedThrowingContinuation { continuation in
+    func connect() async throws {
+        try await withCheckedThrowingContinuation { continuation in
             guard businessInjector.serverConnector.connectionState != .loggedIn else {
                 return continuation.resume()
             }

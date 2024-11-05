@@ -20,10 +20,11 @@
 
 #import "BallotChoice.h"
 #import "Ballot.h"
-#import "BallotResult.h"
 #import "MyIdentityStore.h"
-#import "Conversation.h"
 #import "ContactEntity.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
+
+@class BallotResultEntity;
 
 @implementation BallotChoice
 
@@ -36,13 +37,13 @@
 @dynamic result;
 @dynamic totalVotes;
 
-- (BallotResult *)getOwnResult {
+- (BallotResultEntity *)getOwnResult {
     NSString *myId = [MyIdentityStore sharedMyIdentityStore].identity;
     return [self getResultForId: myId];
 }
 
-- (BallotResult *)getResultForId:(NSString *)contactId {
-    for (BallotResult *result in self.result) {
+- (BallotResultEntity *)getResultForId:(NSString *)contactId {
+    for (BallotResultEntity *result in self.result) {
         if ([result.participantId isEqualToString: contactId]) {
             return result;
         }
@@ -53,13 +54,13 @@
 
 - (void)removeResultForContact:(NSString *)contactId {
     NSMutableSet *matchingResults = [NSMutableSet set];
-    for (BallotResult *result in self.result) {
+    for (BallotResultEntity *result in self.result) {
         if ([result.participantId isEqualToString: contactId]) {
             [matchingResults addObject: result];
         }
     }
 
-    for (BallotResult *result in matchingResults) {
+    for (BallotResultEntity *result in matchingResults) {
         [self removeResultObject:result];
         [self.managedObjectContext deleteObject:result];
     }
@@ -67,7 +68,7 @@
 
 - (NSInteger)totalCountOfResultsTrue {
     NSInteger count = 0;
-    for (BallotResult *result in self.result) {
+    for (BallotResultEntity *result in self.result) {
         if (result.boolValue && [self isParticipantGroupMember:result.participantId]) {
             count++;
         }
@@ -78,7 +79,7 @@
 
 - (NSSet*)participantIdsForResultsTrue {
     NSMutableSet *set = [NSMutableSet set];
-    for (BallotResult *result in self.result) {
+    for (BallotResultEntity *result in self.result) {
         if (result.boolValue && [self isParticipantGroupMember:result.participantId]) {
             [set addObject:result.participantId];
         }
@@ -89,7 +90,7 @@
 
 - (NSSet *)getAllParticipantIds {
     NSMutableSet *set = [NSMutableSet set];
-    for (BallotResult *result in self.result) {
+    for (BallotResultEntity *result in self.result) {
         if ([self isParticipantGroupMember:result.participantId]) {
             [set addObject:result.participantId];
         }

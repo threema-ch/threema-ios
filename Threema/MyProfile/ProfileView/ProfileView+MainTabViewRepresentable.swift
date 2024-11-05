@@ -19,10 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 extension ProfileView: MainTabViewRepresentable {
     var title: String {
-        "myIdentity".localized
+        #localize("myIdentity")
     }
     
     var symbol: UIImage? {

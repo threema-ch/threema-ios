@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 class ProtectedDataUnavailableViewController: UIViewController {
     
@@ -28,13 +29,13 @@ class ProtectedDataUnavailableViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        errorTextLabel.text = BundleUtil.localizedString(forKey: "protectedDataUnavailable_error_text")
-        exitButton.setTitle(BundleUtil.localizedString(forKey: "protectedDataUnavailable_exitbutton"), for: .normal)
+        errorTextLabel.text = #localize("protectedDataUnavailable_error_text")
+        exitButton.setTitle(#localize("protectedDataUnavailable_exitbutton"), for: .normal)
         exitButton.setTitle(
-            BundleUtil.localizedString(forKey: "protectedDataUnavailable_exitbutton"),
+            #localize("protectedDataUnavailable_exitbutton"),
             for: .highlighted
         )
-        exitButton.setTitle(BundleUtil.localizedString(forKey: "protectedDataUnavailable_exitbutton"), for: .selected)
+        exitButton.setTitle(#localize("protectedDataUnavailable_exitbutton"), for: .selected)
     }
     
     @IBAction func exitButtonPressed(_ sender: Any) {

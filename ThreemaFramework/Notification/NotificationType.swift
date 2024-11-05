@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 public enum NotificationType: Equatable, CaseIterable, Hashable {
    
@@ -61,24 +62,24 @@ public enum NotificationType: Equatable, CaseIterable, Hashable {
     public var previewTitle: String {
         switch self {
         case .restrictive:
-            BundleUtil.localizedString(forKey: "settings_notification_type_preview_restrictive_title")
+            #localize("settings_notification_type_preview_restrictive_title")
         case .balanced:
-            BundleUtil.localizedString(forKey: "settings_notification_type_preview_balanced_title")
+            #localize("settings_notification_type_preview_balanced_title")
         case .complete:
-            BundleUtil.localizedString(forKey: "settings_notification_type_preview_complete_title")
+            #localize("settings_notification_type_preview_complete_title")
         }
     }
     
     public var previewDescription: String {
         switch self {
         case .restrictive:
-            return BundleUtil.localizedString(forKey: "settings_notification_type_preview_restrictive_description")
+            return #localize("settings_notification_type_preview_restrictive_description")
         case .balanced:
-            return BundleUtil.localizedString(forKey: "settings_notification_type_preview_balanced_description")
+            return #localize("settings_notification_type_preview_balanced_description")
         case .complete:
             let faqURLString = BundleUtil.object(forInfoDictionaryKey: "ThreemaNotificationInfo") as! String
             return String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "settings_notification_type_preview_complete_description"),
+                #localize("settings_notification_type_preview_complete_description"),
                 faqURLString
             )
         }
@@ -87,19 +88,19 @@ public enum NotificationType: Equatable, CaseIterable, Hashable {
     public var previewSenderName: String {
         switch self {
         case .restrictive:
-            BundleUtil.localizedString(forKey: "settings_notification_type_preview_restrictive_sender_name")
+            #localize("settings_notification_type_preview_restrictive_sender_name")
         case .balanced:
-            BundleUtil.localizedString(forKey: "settings_notification_type_preview_balanced_sender_name")
+            #localize("settings_notification_type_preview_balanced_sender_name")
         case .complete:
-            BundleUtil.localizedString(forKey: "settings_notification_type_preview_complete_sender_name")
+            #localize("settings_notification_type_preview_complete_sender_name")
         }
     }
     
     public var previewMessageTextWithPreviewOn: String {
-        BundleUtil.localizedString(forKey: "settings_notification_type_preview_message_text")
+        #localize("settings_notification_type_preview_message_text")
     }
     
     public var previewMessageTextWithPreviewOff: String {
-        BundleUtil.localizedString(forKey: "chat_text_view_placeholder")
+        #localize("chat_text_view_placeholder")
     }
 }

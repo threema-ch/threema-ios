@@ -20,6 +20,7 @@
 
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 extension ProfileView {
     struct QRCodeView: View {
@@ -42,7 +43,7 @@ extension ProfileView {
                             .aspectRatio(contentMode: .fit)
                             .accessibilityIgnoresInvertColors(true)
                             .padding(20)
-                            .accessibilityLabel("profile_big_qr_code".localized)
+                            .accessibilityLabel(#localize("profile_big_qr_code"))
                             .background {
                                 Color.white
                             }
@@ -62,7 +63,7 @@ extension ProfileView {
                         orientation = UIDevice.current.orientation
                     }
                 }
-                .accessibilityLabel("profile_big_qr_code_cover_view".localized)
+                .accessibilityLabel(#localize("profile_big_qr_code_cover_view"))
                 .ignoresSafeArea()
                 VStack {
                     HStack {
@@ -76,7 +77,7 @@ extension ProfileView {
                             in: RoundedRectangle(cornerRadius: 10, style: .continuous)
                         )
                     }
-                    .accessibilityLabel("close".localized)
+                    .accessibilityLabel(#localize("close"))
                     .accessibilityFocused($isCloseFocused)
                     Spacer()
                 }.padding()

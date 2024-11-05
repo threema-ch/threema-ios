@@ -26,63 +26,31 @@ import ThreemaProtocols
 /// Reflect my profile data to mediator server.
 final class TaskExecutionProfileSync: TaskExecutionBlobTransaction {
 
-    override func prepare() -> Promise<Void> {
-        guard let task = taskDefinition as? TaskDefinitionProfileSync else {
-            return Promise<Void> { $0.reject(TaskExecutionError.wrongTaskDefinitionType) }
-        }
-
-        if task.syncUserProfile.hasProfilePicture {
-            switch task.syncUserProfile.profilePicture.image {
-            case .removed:
-                break
-            case .updated:
-                let encryptionKey = NaClCrypto.shared().randomBytes(kBlobKeyLen)!
-                let nonce = ThreemaProtocol.nonce01
-                let encryptedProfileImageData: BlobUpload = (
-                    "profileImage",
-                    NaClCrypto.shared().symmetricEncryptData(
-                        task.profileImage,
-                        withKey: encryptionKey,
-                        nonce: nonce
-                    )
-                )
-
-                return uploadBlobs(blobs: [encryptedProfileImageData])
-                    .then { uploadedBlobs -> Promise<Void> in
-                        if let blobID = uploadedBlobs.first?.blobID {
-                            task.syncUserProfile.profilePicture.updated.blob = Common_Blob()
-                            task.syncUserProfile.profilePicture.updated.blob.id = blobID
-                            task.syncUserProfile.profilePicture.updated.blob.key = encryptionKey
-                            task.syncUserProfile.profilePicture.updated.blob.nonce = nonce
-
-                            return Promise()
-                        }
-                        else {
-                            throw TaskExecutionTransactionError.blobIDMissing
-                        }
-                    }
-            case .none:
-                break
-            }
-        }
-
-        return Promise()
-    }
-    
-    override func reflectTransactionMessages() throws -> [Promise<Void>] {
+    override func executeTransaction() throws -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionProfileSync else {
             throw TaskExecutionError.wrongTaskDefinitionType
         }
         
-        let envelope = frameworkInjector.mediatorMessageProtocol.getEnvelopeForProfileUpdate(
-            userProfile: task.syncUserProfile
-        )
-        
-        return [Promise { try $0.fulfill(_ = reflectMessage(
-            envelope: envelope,
-            ltReflect: self.taskContext.logReflectMessageToMediator,
-            ltAck: self.taskContext.logReceiveMessageAckFromMediator
-        )) }]
+        return try uploadBlob(data: task.profileImage)
+            .then { blob in
+                try task.checkDropping()
+
+                if case .updated = task.syncUserProfile.profilePicture.image, let blob {
+                    task.syncUserProfile.profilePicture.updated.blob = blob
+                }
+
+                let envelope = self.frameworkInjector.mediatorMessageProtocol.getEnvelopeForProfileUpdate(
+                    userProfile: task.syncUserProfile
+                )
+
+                try self.reflectMessage(
+                    envelope: envelope,
+                    ltReflect: self.taskContext.logReflectMessageToMediator,
+                    ltAck: self.taskContext.logReceiveMessageAckFromMediator
+                )
+
+                return Promise()
+            }
     }
     
     override func shouldDrop() throws -> Bool {

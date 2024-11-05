@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 import QuickLook
+import ThreemaMacros
 
 class DocumentPreviewItem: MediaPreviewItem {
     
@@ -120,11 +121,11 @@ class DocumentPreviewItem: MediaPreviewItem {
     }
     
     override func getAccessibilityDescription() -> String? {
-        let type = type ?? BundleUtil.localizedString(forKey: "unknown_file_type")
-        let fileSizeDescription = fileSizeDescription ?? BundleUtil.localizedString(forKey: "unknown_file_size")
-        let name = originalFilename ?? BundleUtil.localizedString(forKey: "unknown_file_name")
+        let type = type ?? #localize("unknown_file_type")
+        let fileSizeDescription = fileSizeDescription ?? #localize("unknown_file_size")
+        let name = originalFilename ?? #localize("unknown_file_name")
         
-        return name + type + BundleUtil.localizedString(forKey: "document") + fileSizeDescription
+        return name + type + #localize("document") + fileSizeDescription
     }
 }
 

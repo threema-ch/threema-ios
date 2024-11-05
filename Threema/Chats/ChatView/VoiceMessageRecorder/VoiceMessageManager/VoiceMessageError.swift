@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaFramework
+import ThreemaMacros
 
 enum VoiceMessageError: Equatable {
     // Audio Session
@@ -69,24 +70,24 @@ extension VoiceMessageError: LocalizedError {
     var failureReason: String? {
         switch self {
         case .callStateNotIdle:
-            "voice_recorder_call_state_not_idle_message".localized
+            #localize("voice_recorder_call_state_not_idle_message")
         case .recordingCancelled:
             nil
         default:
-            "voice_recorder_error_message".localized
+            #localize("voice_recorder_error_message")
         }
     }
 
     var localizedDescription: String {
         switch self {
         case .callStateNotIdle:
-            "voice_recorder_call_state_not_idle".localized
+            #localize("voice_recorder_call_state_not_idle")
         case .playbackFailure:
-            "voice_recorder_playback_failure".localized
+            #localize("voice_recorder_playback_failure")
         case .recordingCancelled:
-            "voice_recorder_recording_cancelled".localized
+            #localize("voice_recorder_recording_cancelled")
         default:
-            "voice_recorder_recording_error".localized
+            #localize("voice_recorder_recording_error")
         }
     }
 }

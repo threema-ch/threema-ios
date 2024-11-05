@@ -217,7 +217,8 @@ class MessagePermissionTests: XCTestCase {
             )
             let dbConversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
-                    dbConversation.groupID = groupEntity.groupID
+                    // swiftformat:disable:next acronyms
+                    dbConversation.groupId = groupEntity.groupId
                     dbConversation.groupMyIdentity = oldGroupMyIdentity
                 }
 
@@ -269,7 +270,8 @@ class MessagePermissionTests: XCTestCase {
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
                     dbConversation.contact = dbContactGroupCreator
                     dbConversation.groupMyIdentity = self.myIdentityStoreMock.identity
-                    dbConversation.groupID = dbGroup.groupID
+                    // swiftformat:disable:next acronyms
+                    dbConversation.groupId = dbGroup.groupId
                 }
 
             group = Group(
@@ -312,7 +314,8 @@ class MessagePermissionTests: XCTestCase {
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
                     dbConversation.contact = nil
                     dbConversation.groupMyIdentity = self.myIdentityStoreMock.identity
-                    dbConversation.groupID = dbGroup.groupID
+                    // swiftformat:disable:next acronyms
+                    dbConversation.groupId = dbGroup.groupId
                 }
 
             group = Group(
@@ -345,7 +348,7 @@ class MessagePermissionTests: XCTestCase {
         let groupCreatorIdentity = "CREATOR1"
         let groupMember = "MEMBER01"
 
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         var group: Group!
 
         dbPreparer.save {
@@ -371,7 +374,8 @@ class MessagePermissionTests: XCTestCase {
             dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
                     dbConversation.contact = dbContactGroupCreator
-                    dbConversation.groupID = dbGroup.groupID
+                    // swiftformat:disable:next acronyms
+                    dbConversation.groupId = dbGroup.groupId
                     dbConversation.members = Set<ContactEntity>([dbContactGroupMember])
 
                     conversation = dbConversation

@@ -19,13 +19,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 extension BaseMessage {
     
     /// Readable name of the sender
     @objc public var localizedSenderName: String {
         if isOwnMessage {
-            BundleUtil.localizedString(forKey: "me")
+            #localize("me")
         }
         else {
             if let sender {

@@ -315,7 +315,8 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
             )
             let conversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.groupID = groupID
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = groupID
                     conversation.contact = groupCreator
                 }
             let groupEntity = dbPreparer.createGroupEntity(

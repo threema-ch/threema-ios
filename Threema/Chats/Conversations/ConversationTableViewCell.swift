@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Combine
 import GroupCalls
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 // MARK: - ConversationTableViewCell.Configuration
@@ -235,7 +236,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         var buttonConfig = UIButton.Configuration.bordered()
         let imageConfig = UIImage.SymbolConfiguration(scale: .small)
-        buttonConfig.title = BundleUtil.localizedString(forKey: "group_call_join_button_title")
+        buttonConfig.title = #localize("group_call_join_button_title")
         buttonConfig.buttonSize = .small
         buttonConfig.cornerStyle = .capsule
 
@@ -375,7 +376,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     // MARK: - Internal state
     
-    private(set) var conversation: Conversation? {
+    private(set) var conversation: ConversationEntity? {
         willSet {
             removeAllObjectObservers()
             group = nil
@@ -388,7 +389,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 return
             }
             
-            if conversation.isGroup(),
+            if conversation.isGroup,
                let businessGroup = businessInjector.groupManager.getGroup(conversation: conversation) {
                 profilePictureView.info = .group(businessGroup)
                 group = businessGroup
@@ -529,8 +530,8 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     /// Set the conversation that is displayed in this cell
     ///
-    /// - Parameter conversation: Conversation that is shown in this cell
-    func setConversation(to conversation: Conversation?) {
+    /// - Parameter conversation: ConversationEntity that is shown in this cell
+    func setConversation(to conversation: ConversationEntity?) {
         self.conversation = conversation
     }
     
@@ -553,7 +554,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         // Show lock icon for private chats
         guard conversation.conversationCategory != .private else {
             previewLabel
-                .attributedText = NSAttributedString(string: BundleUtil.localizedString(forKey: "private_chat_label"))
+                .attributedText = NSAttributedString(string: #localize("private_chat_label"))
             dateDraftLabel.text = nil
             return
         }
@@ -569,7 +570,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         backgroundColor = .clear
         
         if let conversation,
-           !conversation.isGroup(),
+           !conversation.isGroup,
            let contact = conversation.contact,
            let state = contact.state,
            state.intValue == kStateInactive || state.intValue == kStateInvalid {
@@ -667,7 +668,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 
         updateSeparatorInset()
         
-        if conversation.isGroup(), businessInjector.settingsStore.enableThreemaGroupCalls {
+        if conversation.isGroup, businessInjector.settingsStore.enableThreemaGroupCalls {
             updateGroupCallButton()
         }
         else {
@@ -694,9 +695,9 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                     }
                     
                     var isEqual: Bool?
-                    strongSelf.businessInjector.entityManager.performBlockAndWait {
+                    strongSelf.businessInjector.entityManager.performAndWait {
                         guard let tempConversation = strongSelf.businessInjector.entityManager.entityFetcher
-                            .existingObject(with: conversation.objectID) as? Conversation else {
+                            .existingObject(with: conversation.objectID) as? ConversationEntity else {
                             return
                         }
                         isEqual = tempConversation.isEqualTo(
@@ -743,15 +744,16 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func updateTitleLabel() {
-        guard let conversation,
-              let displayName = conversation.displayName else {
+        guard let conversation else {
             // This should not occur, but we assign an empty string to make the firstBaseline alignment of
             // dateDraftLabel work anyways.
             nameLabel.attributedText = NSAttributedString(string: " ")
             return
         }
         
-        guard !conversation.isGroup() else {
+        let displayName = conversation.displayName
+        
+        guard !conversation.isGroup else {
             // Group conversation
             if let group,
                !group.isSelfMember {
@@ -812,7 +814,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
         
         // Groups
-        if conversation.isGroup() {
+        if conversation.isGroup {
             // Check is group a note group
             if let group,
                group.isNoteGroup {
@@ -872,7 +874,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             tint: Colors.textLight
         ) {
             updateColorsForDateDraftLabel(isDraft: true)
-            dateDraftLabel.text = BundleUtil.localizedString(forKey: "draft").uppercased()
+            dateDraftLabel.text = #localize("draft").uppercased()
             previewLabel.attributedText = draft
         }
         else {
@@ -893,7 +895,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             }
             else {
                 previewLabel.attributedText = NSAttributedString(
-                    string: BundleUtil.localizedString(forKey: "private_chat_label")
+                    string: #localize("private_chat_label")
                 )
             }
         }
@@ -921,7 +923,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         var isTyping = false
         
         if let conversation,
-           !conversation.isGroup(),
+           !conversation.isGroup,
            conversation.conversationCategory != .private {
             isTyping = conversation.typing.boolValue
         }
@@ -981,27 +983,27 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         if pushSetting.type == .on,
            pushSetting.muted {
             accessibilityText +=
-                "\(BundleUtil.localizedString(forKey: "notification_sound_header")) \(BundleUtil.localizedString(forKey: "doNotDisturb_off")). "
+                "\(#localize("notification_sound_header")) \(#localize("doNotDisturb_off")). "
         }
         else if pushSetting.type == .off,
                 !pushSetting.mentioned {
             accessibilityText +=
-                "\(BundleUtil.localizedString(forKey: "doNotDisturb_title")) \(BundleUtil.localizedString(forKey: "doNotDisturb_on")). "
+                "\(#localize("doNotDisturb_title")) \(#localize("doNotDisturb_on")). "
         }
         else if pushSetting.type == .off,
                 pushSetting.mentioned {
             accessibilityText +=
-                "\(BundleUtil.localizedString(forKey: "doNotDisturb_title")) \(BundleUtil.localizedString(forKey: "doNotDisturb_on")), \(BundleUtil.localizedString(forKey: "doNotDisturb_mention")). "
+                "\(#localize("doNotDisturb_title")) \(#localize("doNotDisturb_on")), \(#localize("doNotDisturb_mention")). "
         }
         else if pushSetting.type == .offPeriod,
                 !pushSetting.mentioned {
             accessibilityText +=
-                "\(BundleUtil.localizedString(forKey: "doNotDisturb_title")) \(BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_time")) \(DateFormatter.getFullDate(for: pushSetting.periodOffTillDate)). "
+                "\(#localize("doNotDisturb_title")) \(#localize("doNotDisturb_onPeriod_time")) \(DateFormatter.getFullDate(for: pushSetting.periodOffTillDate)). "
         }
         else if pushSetting.type == .offPeriod,
                 pushSetting.mentioned {
             accessibilityText +=
-                "\(BundleUtil.localizedString(forKey: "doNotDisturb_title")) \(BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_time")) \(DateFormatter.getFullDate(for: pushSetting.periodOffTillDate)), \(BundleUtil.localizedString(forKey: "doNotDisturb_mention"))"
+                "\(#localize("doNotDisturb_title")) \(#localize("doNotDisturb_onPeriod_time")) \(DateFormatter.getFullDate(for: pushSetting.periodOffTillDate)), \(#localize("doNotDisturb_mention"))"
         }
         
         if let draft = MessageDraftStore.shared.loadDraft(for: conversation)?.string {
@@ -1011,9 +1013,9 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
         
         if conversation.conversationCategory == .private {
-            accessibilityText += "\(BundleUtil.localizedString(forKey: "private_chat_accessibility")). "
+            accessibilityText += "\(#localize("private_chat_accessibility")). "
             if conversation.unreadMessageCount.intValue > 0 {
-                accessibilityText += "\(BundleUtil.localizedString(forKey: "unread")). "
+                accessibilityText += "\(#localize("unread")). "
             }
             accessibilityLabel = accessibilityText
             return
@@ -1023,17 +1025,17 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             accessibilityText += "\(DateFormatter.accessibilityRelativeDayTime(lastMessage.displayDate)). "
             
             if conversation.unreadMessageCount.intValue > 0 {
-                accessibilityText += "\(BundleUtil.localizedString(forKey: "unread")). "
+                accessibilityText += "\(#localize("unread")). "
             }
             if let sender = lastMessage.accessibilityMessageSender {
-                accessibilityText += "\(BundleUtil.localizedString(forKey: "from")) "
+                accessibilityText += "\(#localize("from")) "
                 accessibilityText += "\(sender). "
             }
             accessibilityText += "\(lastMessage.previewText). "
         }
         
         if conversation.conversationVisibility == .pinned {
-            accessibilityText += "\(BundleUtil.localizedString(forKey: "pinned_conversation"))."
+            accessibilityText += "\(#localize("pinned_conversation"))."
         }
         accessibilityLabel = accessibilityText
     }
@@ -1045,19 +1047,19 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         var accessibilityText = accessibilityString
         if conversation.conversationCategory == .private {
-            accessibilityText += "\(BundleUtil.localizedString(forKey: "private_chat_accessibility")). "
+            accessibilityText += "\(#localize("private_chat_accessibility")). "
             if conversation.unreadMessageCount.intValue > 0 {
-                accessibilityText += "\(BundleUtil.localizedString(forKey: "unread")). "
+                accessibilityText += "\(#localize("unread")). "
             }
             accessibilityLabel = accessibilityText
             return
         }
         
         if conversation.unreadMessageCount.intValue > 0 {
-            accessibilityText += "\(BundleUtil.localizedString(forKey: "unread")). "
+            accessibilityText += "\(#localize("unread")). "
         }
         
-        accessibilityText += "\(BundleUtil.localizedString(forKey: "draft")). "
+        accessibilityText += "\(#localize("draft")). "
         accessibilityText += "\(draft). "
         
         accessibilityLabel = accessibilityText
@@ -1113,7 +1115,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 return
             }
             
-            if let conversation = notification.userInfo?[kKeyConversation] as? Conversation,
+            if let conversation = notification.userInfo?[kKeyConversation] as? ConversationEntity,
                conversation.objectID == self?.conversation?.objectID {
                 strongSelf.updateLastMessagePreview()
                 strongSelf.updateColors()
@@ -1148,11 +1150,11 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             self?.updateTypingIndicator()
         }
 
-        observeConversation(\.conversationVisibility, callOnCreation: false) { [weak self] in
+        observeConversation(\.visibility, callOnCreation: false) { [weak self] in
             self?.updatePinImage()
         }
 
-        observeConversation(\.conversationCategory, callOnCreation: false) { [weak self] in
+        observeConversation(\.category, callOnCreation: false) { [weak self] in
             self?.updateDisplayStateImage()
             self?.updateLastMessagePreview()
         }
@@ -1190,7 +1192,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 self?.updateLastMessagePreview()
             }
         }
-        else if let lastMessage = conversation?.lastMessage as? TextMessage {
+        else if let lastMessage = conversation?.lastMessage as? TextMessageEntity {
             observeLastMessage(lastMessage, keyPath: \.text, callOnCreation: false) { [weak self] in
                 self?.updateLastMessagePreview()
             }
@@ -1206,7 +1208,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
 
         if let conversation,
-           conversation.isGroup() {
+           conversation.isGroup {
             return
         }
 
@@ -1248,7 +1250,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
     private func observeConversation(
-        _ keyPath: KeyPath<Conversation, some Any>,
+        _ keyPath: KeyPath<ConversationEntity, some Any>,
         callOnCreation: Bool = true,
         changeHandler: @escaping () -> Void
     ) {
@@ -1370,7 +1372,7 @@ extension ConversationTableViewCell {
         }
         
         guard let conversation,
-              conversation.isGroup() else {
+              conversation.isGroup else {
             return
         }
         
@@ -1399,7 +1401,7 @@ extension ConversationTableViewCell {
             return false
         }
         
-        guard conversation.isGroup() else {
+        guard conversation.isGroup else {
             return false
         }
         

@@ -109,13 +109,13 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
                 return
             }
             
-        case let locationMessage as LocationMessage:
+        case let locationMessage as LocationMessageEntity:
             showLocationDetails(locationMessage: locationMessage)
         
         case let ballotMessage as BallotMessage:
             showBallot(ballotMessage: ballotMessage)
         
-        case let systemMessage as SystemMessage:
+        case let systemMessage as SystemMessageEntity:
             switch systemMessage.systemMessageType {
             case .callMessage:
                 startVoIPCall(callMessage: systemMessage)
@@ -147,7 +147,8 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         playerViewController.player = player
         playerViewController.delegate = self
         let voipCallState = VoIPCallStateManager.shared.currentCallState()
-        if voipCallState == .idle {
+        if voipCallState == .idle,
+           !NavigationBarPromptHandler.isGroupCallActive {
             previousAudioSessionCategory = AVAudioSession.sharedInstance().category
             try? AVAudioSession.sharedInstance().setCategory(.playback)
         }
@@ -157,7 +158,7 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         }
     }
     
-    private func showLocationDetails(locationMessage: LocationMessage) {
+    private func showLocationDetails(locationMessage: LocationMessageEntity) {
         // Opens the location of a location message in a modal
         guard let locationVC = LocationViewController(locationMessage: locationMessage) else {
             return
@@ -180,7 +181,7 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         }
     }
     
-    private func startVoIPCall(callMessage: SystemMessage) {
+    private func startVoIPCall(callMessage: SystemMessageEntity) {
         // Starts a VoIP Call if contact supports it
         if UserSettings.shared()?.enableThreemaCall == true,
            let contact = callMessage.conversation?.contact {
@@ -247,7 +248,8 @@ extension ChatViewDefaultMessageTapActionProvider: AVPlayerViewControllerDelegat
     private func resetAudioSessionAndCleanUpVideoFile() {
         // Reset audio category and resume other playing audio
         let currentCallState = VoIPCallStateManager.shared.currentCallState()
-        if currentCallState == .idle {
+        if currentCallState == .idle,
+           !NavigationBarPromptHandler.isGroupCallActive {
             do {
                 try AVAudioSession.sharedInstance().setCategory(previousAudioSessionCategory ?? .soloAmbient)
                 try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)

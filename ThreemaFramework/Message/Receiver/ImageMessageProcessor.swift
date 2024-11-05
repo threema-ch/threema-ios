@@ -159,9 +159,9 @@ import PromiseKit
                     
                     var message: BaseMessage?
                     
-                    self.entityManager.performSyncBlockAndSafe {
+                    self.entityManager.performAndWaitSave {
                         guard let conversation = self.entityManager.entityFetcher
-                            .getManagedObject(by: conversationManagedObjectID) as? Conversation,
+                            .getManagedObject(by: conversationManagedObjectID) as? ConversationEntity,
                             let msg = self.entityManager.entityFetcher
                             .message(with: imageMessageID, conversation: conversation) as? ImageMessageEntity else {
                             seal.reject(
@@ -173,24 +173,27 @@ import PromiseKit
                         message = msg
                         msg.blobData = imageData
 
-                        let thumbnail = self.entityManager.entityCreator.imageData()
-                        thumbnail?.data = thumbnailData
-                        if let width = thumbnailImage?.size.width {
-                            thumbnail?.width = NSNumber(value: Float(width))
-                        }
-                        if let height = thumbnailImage?.size.height {
-                            thumbnail?.height = NSNumber(value: Float(height))
+                        if let thumbnailData, let thumbnail = self.entityManager.entityCreator.imageDataEntity() {
+                            thumbnail.data = thumbnailData
+                            if let width = thumbnailImage?.size.width {
+                                thumbnail.width = Int16(width)
+                            }
+                            if let height = thumbnailImage?.size.height {
+                                thumbnail.height = Int16(height)
+                            }
+                            
+                            msg.thumbnail = thumbnail
                         }
                         
-                        msg.thumbnail = thumbnail
-
                         // Mark blob as done, if is group message and Multi Device is activated then always on `local`
                         // origin
                         if !msg.isGroupMessage,
-                           let id = msg.imageBlobID {
+                           // swiftformat:disable:next acronyms
+                           let id = msg.imageBlobId {
                             self.blobDownloader.markDownloadDone(for: id, origin: msg.blobOrigin)
                         }
-                        else if let id = msg.imageBlobID,
+                        // swiftformat:disable:next acronyms
+                        else if let id = msg.imageBlobId,
                                 self.userSettings.enableMultiDevice {
                             self.blobDownloader.markDownloadDone(for: id, origin: .local)
                         }

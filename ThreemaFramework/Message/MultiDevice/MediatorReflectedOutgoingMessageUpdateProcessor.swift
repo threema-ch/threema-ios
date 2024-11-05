@@ -72,7 +72,7 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
         let id = messageID.littleEndianData
 
         guard let conversation = frameworkInjector.entityManager.entityFetcher
-            .conversation(forIdentity: receiverIdentity),
+            .conversationEntity(forIdentity: receiverIdentity),
             let message = frameworkInjector.entityManager.entityFetcher.ownMessage(
                 with: id,
                 conversation: conversation
@@ -99,7 +99,7 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
     ) throws {
         let id = messageID.littleEndianData
 
-        guard let conversation = frameworkInjector.entityManager.entityFetcher.conversation(
+        guard let conversation = frameworkInjector.entityManager.entityFetcher.conversationEntity(
             for: receiverGroupID.littleEndianData,
             creator: receiverGroupCreator
         ),

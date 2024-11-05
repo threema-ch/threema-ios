@@ -35,7 +35,7 @@ class AppLaunchTasks: NSObject {
     
     // Did the version or build change since the last launch? (This also detects changes between Store, TestFlight and
     // Xcode builds.)
-    private static var lastLaunchedVersionChanged: Bool {
+    @objc public static var lastLaunchedVersionChanged: Bool {
         let lastVersion = AppGroup.userDefaults().string(forKey: "LastLaunchedAppVersionAndBuild")
         let currentVersion = ThreemaUtility.appAndBuildVersion
         
@@ -99,6 +99,12 @@ class AppLaunchTasks: NSObject {
                 await backgroundBusinessInjector.messageRetentionManager.deleteOldMessages()
                 NotificationManager(businessInjector: backgroundBusinessInjector).updateUnreadMessagesCount()
 
+                // This allows to disable multi-device if MD linking failed with a crash or if all other devices left
+                // the MD group
+                if launchEvent == .didFinishLaunching {
+                    backgroundBusinessInjector.multiDeviceManager.disableMultiDeviceIfNeeded()
+                }
+                
                 AppLaunchTasks.isRunningQueue.async {
                     AppLaunchTasks.isRunning = false
                 }
@@ -122,7 +128,7 @@ class AppLaunchTasks: NSObject {
 
         await backgroundBusinessInjector.entityManager.performSave {
             guard let conversations = self.backgroundBusinessInjector.entityManager.entityFetcher
-                .allConversations() as? [Conversation] else {
+                .allConversations() as? [ConversationEntity] else {
                 return
             }
 

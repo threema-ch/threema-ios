@@ -49,7 +49,7 @@ extension Sync_Contact {
         )
     }
 
-    mutating func update(conversation: Conversation) {
+    mutating func update(conversation: ConversationEntity) {
         update(conversationCategory: Sync_ConversationCategory(rawValue: conversation.conversationCategory.rawValue))
         update(conversationVisibility: Sync_ConversationVisibility(
             rawValue: conversation.conversationVisibility

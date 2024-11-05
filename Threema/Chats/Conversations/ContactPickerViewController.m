@@ -381,7 +381,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)showConversationForGroup:(Group *)group {
-    Conversation *conversation = group.conversation;
+    ConversationEntity *conversation = group.conversation;
     NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
                           conversation, kKeyConversation,
                           [NSNumber numberWithBool:YES], kKeyForceCompose,
@@ -391,7 +391,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)showConversationForDistributionList:(DistributionListEntity *)distributionList {
-    Conversation *conversation = distributionList.conversation;
+    ConversationEntity *conversation = distributionList.conversation;
     NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
                           conversation, kKeyConversation,
                           [NSNumber numberWithBool:YES], kKeyForceCompose,

@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ContactEntity.h"
-#import "Conversation.h"
 #import "UserSettings.h"
 #import "BaseMessage.h"
 #import "ContactUtil.h"
@@ -63,6 +62,9 @@ static NSString *fieldHidden = @"hidden";
 @dynamic profilePictureBlobID;
 @dynamic forwardSecurityState;
 @dynamic rejectedMessages;
+@dynamic csi;
+@dynamic jobTitle;
+@dynamic department;
 
 - (NSString *)displayName {
     NSMutableString *displayName = [ContactUtil nameFromFirstname:self.firstName lastname:self.lastName];
@@ -206,9 +208,9 @@ static NSString *fieldHidden = @"hidden";
 - (void)postPFSNotSupportedSystemMessage {
     EntityManager *entityManager = [[EntityManager alloc] init];
     [entityManager performSyncBlockAndSafe:^{
-            Conversation *conversation = [[entityManager entityFetcher] conversationForContact:self];
+        ConversationEntity *conversation = [[entityManager entityFetcher] conversationEntityForContact:self];
         if (conversation != nil) {
-            SystemMessage *systemMessage = [entityManager.entityCreator systemMessageForConversation:conversation];
+            SystemMessageEntity *systemMessage = [entityManager.entityCreator systemMessageEntityForConversationEntity:conversation];
             systemMessage.type = [NSNumber numberWithInt:kSystemMessageFsNotSupportedAnymore];
             systemMessage.remoteSentDate = [NSDate date];
             if (systemMessage.isAllowedAsLastMessage) {
@@ -303,14 +305,12 @@ static NSString *fieldHidden = @"hidden";
 - (void)setImageData:(NSData *)imageData {
     [self willChangeValueForKey:@"imageData"];
     [self setPrimitiveValue:imageData forKey:@"imageData"];
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationContactImageChanged object:self];
     [self didChangeValueForKey:@"imageData"];
 }
 
-- (void)setContactImage:(ImageData *)contactImage {
+- (void)setContactImage:(ImageDataEntity *)contactImage {
     [self willChangeValueForKey:@"contactImage"];
     [self setPrimitiveValue:contactImage forKey:@"contactImage"];
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationContactImageChanged object:self];
     [self didChangeValueForKey:@"contactImage"];
 }
 

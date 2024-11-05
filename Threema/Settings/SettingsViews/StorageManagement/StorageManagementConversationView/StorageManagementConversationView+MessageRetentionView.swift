@@ -20,6 +20,7 @@
 
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 extension StorageManagementConversationView {
     struct MessageRetentionView: View {
@@ -65,14 +66,14 @@ extension StorageManagementConversationView {
         @ViewBuilder
         private var picker: some View {
             HStack {
-                Text("automatic_delete_label".localized)
+                Text(#localize("automatic_delete_label"))
                     .font(.callout)
                 Spacer()
             }
             
             Picker(
                 selection: $selection,
-                label: Text("automatic_delete_label".localized)
+                label: Text(#localize("automatic_delete_label"))
             ) {
                 ForEach(options) {
                     Text($0.localizedTitleDescription).tag($0)
@@ -93,7 +94,7 @@ extension StorageManagementConversationView {
                 isPresented: $showConfirmationDialog,
                 titleVisibility: .visible,
                 actions: {
-                    Button("cancel".localized, role: .cancel) {
+                    Button(#localize("cancel"), role: .cancel) {
                         reset()
                     }
                     Button(confirmationButtonTitle, role: selection == .forever ? nil : .destructive) {
@@ -109,14 +110,14 @@ extension StorageManagementConversationView {
         }
         
         private var confirmationDialogTitle: String {
-            let titleOn = "automatic_delete_on_confirmation_title".localized
-            let titleOff = "automatic_delete_off_confirmation_title".localized
+            let titleOn = #localize("automatic_delete_on_confirmation_title")
+            let titleOff = #localize("automatic_delete_off_confirmation_title")
             return selection == .forever ? titleOff : titleOn
         }
         
         private var confirmationButtonTitle: String {
-            let confirmOn = "automatic_delete_on_confirmation_button".localized
-            let confirmOff = "automatic_delete_off_confirmation_button".localized
+            let confirmOn = #localize("automatic_delete_on_confirmation_button")
+            let confirmOff = #localize("automatic_delete_off_confirmation_button")
             return selection == .forever ? confirmOff : confirmOn
         }
         
@@ -128,14 +129,14 @@ extension StorageManagementConversationView {
             let deleteMessage =
                 if let toBeDeleted, toBeDeleted > 0 {
                     String.localizedStringWithFormat(
-                        "automatic_delete_confirmation_message_immediate_deletion".localized,
+                        #localize("automatic_delete_confirmation_message_immediate_deletion"),
                         toBeDeleted,
                         selection.localizedDescription
                     )
                 }
                 else {
                     String.localizedStringWithFormat(
-                        "automatic_delete_confirmation_message_no_immediate_deletion".localized,
+                        #localize("automatic_delete_confirmation_message_no_immediate_deletion"),
                         selection.localizedDescription
                     )
                 }

@@ -23,136 +23,64 @@ import XCTest
 @testable import ThreemaFramework
 
 class VideoConversationHelperTests: XCTestCase {
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-        
-        AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
+
+    func testGetEstimatedVideoFileSize() throws {
+        let testBundle = Bundle(for: VideoConversationHelperTests.self)
+        let testVideoURL = try XCTUnwrap(testBundle.url(forResource: "Video-1", withExtension: "mp4"))
+
+        let userSettingsMock = UserSettingsMock(videoQuality: "original")
+        let videoConversionHelper = VideoConversionHelper(userSettings: userSettingsMock)
+
+        let size = try XCTUnwrap(videoConversionHelper.getEstimatedVideoFileSize(for: testVideoURL))
+
+        XCTAssertEqual(30_134_549.0, size)
     }
-    
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-    
-    func testBitrateDoesNotIncrease() throws {
-        let originalVideoBitrate = 100
-        let originalAudioBitrate = 100
-        let originalAudioChannels = 2
-        let duration = 5
-        let videoSize = 10
-        let qualitySetting = VideoConversionHelper.VideoQualitySetting.high
+
+    func testVideoQualityOriginal() throws {
+        let testBundle = Bundle(for: VideoConversationHelperTests.self)
+        let testVideoURL = try XCTUnwrap(testBundle.url(forResource: "Video-1", withExtension: "mp4"))
+        let asset = AVAsset(url: testVideoURL)
         
-        let newBitrate = VideoConversionHelper.getHighestPossibleBitrate(
-            userChosenQuality: qualitySetting,
-            duration: duration,
-            audioBitrate: originalAudioBitrate,
-            audioChannels: originalAudioChannels,
-            videoBitrate: originalVideoBitrate,
-            videoSize: videoSize
+        let userSettingsMock = UserSettingsMock(videoQuality: "original")
+        let videoConversionHelper = VideoConversionHelper(userSettings: userSettingsMock)
+
+        let exportSession = videoConversionHelper.getAVAssetExportSession(
+            from: asset,
+            outputURL: FileManager.default.temporaryDirectory
         )
         
-        XCTAssertEqual(originalVideoBitrate, Int(newBitrate!.videoRate))
+        XCTAssertEqual(exportSession?.presetName, "AVAssetExportPresetPassthrough")
     }
     
-    func testChooseMedium() throws {
-        let originalVideoBitrate = 1_500_000
-        let originalAudioBitrate = 1_500_000
-        let originalAudioChannels = 2
-        let duration = 5 * 60
-        let videoSize = 1920
-        let qualitySetting = VideoConversionHelper.VideoQualitySetting.high
+    func testVideoQualityLow() throws {
+        let testBundle = Bundle(for: VideoConversationHelperTests.self)
+        let testVideoURL = try XCTUnwrap(testBundle.url(forResource: "Video-1", withExtension: "mp4"))
+        let asset = AVAsset(url: testVideoURL)
         
-        guard let newBitrate = VideoConversionHelper.getHighestPossibleBitrate(
-            userChosenQuality: qualitySetting,
-            duration: duration,
-            audioBitrate: originalAudioBitrate,
-            audioChannels: originalAudioChannels,
-            videoBitrate: originalVideoBitrate,
-            videoSize: videoSize
-        ) else {
-            XCTFail()
-            return
-        }
-        
-        XCTAssertEqual(newBitrate.videoRate, VideoConversionHelper.movieRateMedium.videoRate)
-    }
-    
-    func testChooseLow() throws {
-        let originalVideoBitrate = 1_500_000
-        let originalAudioBitrate = 1_500_000
-        let originalAudioChannels = 2
-        let duration = 10 * 60
-        let videoSize = 1920
-        let qualitySetting = VideoConversionHelper.VideoQualitySetting.high
-        
-        print(
-            VideoConversionHelper
-                .getMaxdurationInMinutes(
-                    videoBitrate: Int64(kVideoBitrateMedium),
-                    audioBitrate: Int64(kAudioBitrateMedium)
-                )
+        let userSettingsMock = UserSettingsMock(videoQuality: "low")
+        let videoConversionHelper = VideoConversionHelper(userSettings: userSettingsMock)
+
+        let exportSession = videoConversionHelper.getAVAssetExportSession(
+            from: asset,
+            outputURL: FileManager.default.temporaryDirectory
         )
         
-        guard let newBitrate = VideoConversionHelper.getHighestPossibleBitrate(
-            userChosenQuality: qualitySetting,
-            duration: duration,
-            audioBitrate: originalAudioBitrate,
-            audioChannels: originalAudioChannels,
-            videoBitrate: originalVideoBitrate,
-            videoSize: videoSize
-        ) else {
-            XCTFail()
-            return
-        }
-        
-        XCTAssertEqual(newBitrate.videoRate, VideoConversionHelper.movieRateLow.videoRate)
+        XCTAssertEqual(exportSession?.presetName, "AVAssetExportPresetLowQuality")
     }
     
-    func testIntegrityStillAllowed() throws {
-        let originalVideoBitrate: Int64 = 250_000
-        let originalAudioChannels = 1
-        let originalAudioBitrate: Int64 = 50000
-        let videoSize: Int32 = 500
+    func testVideoQualityHigh() throws {
+        let testBundle = Bundle(for: VideoConversationHelperTests.self)
+        let testVideoURL = try XCTUnwrap(testBundle.url(forResource: "Video-1", withExtension: "mp4"))
+        let asset = AVAsset(url: testVideoURL)
         
-        let duration = VideoConversionHelper.getMaxdurationInMinutes(
-            videoBitrate: originalVideoBitrate,
-            audioBitrate: originalAudioBitrate
-        ) * 60
-        
-        guard let newBitrate = VideoConversionHelper.getHighestPossibleBitrate(
-            userChosenQuality: VideoConversionHelper.VideoQualitySetting.original,
-            duration: Int(duration),
-            audioBitrate: Int(originalAudioBitrate),
-            audioChannels: originalAudioChannels,
-            videoBitrate: Int(originalVideoBitrate),
-            videoSize: Int(videoSize)
-        ) else {
-            XCTFail()
-            return
-        }
-        
-        XCTAssertEqual(Int64(newBitrate.videoRate), originalVideoBitrate)
-    }
-    
-    func testIntegrityNotAllowedAnymore() throws {
-        let originalVideoBitrate: Int64 = 250_000
-        let originalAudioBitrate: Int64 = 50000
-        let originalAudioChannels = 2
-        let videoSize: Int32 = 500
-        
-        let duration = VideoConversionHelper.getMaxdurationInMinutes(
-            videoBitrate: originalVideoBitrate,
-            audioBitrate: originalAudioBitrate
-        ) * 60 + 60
-        
-        let newBitrate = VideoConversionHelper.getHighestPossibleBitrate(
-            userChosenQuality: VideoConversionHelper.VideoQualitySetting.original,
-            duration: Int(duration),
-            audioBitrate: Int(originalAudioBitrate),
-            audioChannels: 2,
-            videoBitrate: Int(originalVideoBitrate),
-            videoSize: Int(videoSize)
+        let userSettingsMock = UserSettingsMock(videoQuality: "high")
+        let videoConversionHelper = VideoConversionHelper(userSettings: userSettingsMock)
+
+        let exportSession = videoConversionHelper.getAVAssetExportSession(
+            from: asset,
+            outputURL: FileManager.default.temporaryDirectory
         )
         
-        XCTAssertNil(newBitrate)
+        XCTAssertEqual(exportSession?.presetName, "AVAssetExportPresetMediumQuality")
     }
 }

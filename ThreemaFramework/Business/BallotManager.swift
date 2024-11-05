@@ -50,13 +50,15 @@ public class BallotManager: NSObject {
             return
         }
         
-        for ballotResult in choice.result as! Set<BallotResult> {
-            if !participantIDs.contains(ballotResult.participantID) {
+        for ballotResult in choice.result as! Set<BallotResultEntity> {
+            // swiftformat:disable acronyms
+            if !participantIDs.contains(ballotResult.participantId) {
                 DDLogWarn(
-                    "[Ballot] [\(ballot.id.hexString)] Removed vote (\(ballotResult.participantID ?? "nil") from ballot"
+                    "[Ballot] [\(ballot.id.hexString)] Removed vote (\(ballotResult.participantId) from ballot"
                 )
-                choice.removeResult(forContact: ballotResult.participantID)
+                choice.removeResult(forContact: ballotResult.participantId)
             }
+            // swiftformat:enable acronyms
         }
     }
     
@@ -85,9 +87,10 @@ public class BallotManager: NSObject {
             result.modifyDate = Date()
         }
         else {
-            let newResult = entityManager.entityCreator.ballotResult()
+            let newResult = entityManager.entityCreator.ballotResultEntity()
             newResult?.value = newValue
-            newResult?.participantID = contactID
+            // swiftformat:disable:next acronyms
+            newResult?.participantId = contactID
             
             choice.addResultObject(newResult)
         }
@@ -96,7 +99,7 @@ public class BallotManager: NSObject {
     
     @objc public func addVoteSystemMessage(
         ballotTitle: String,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         contactID: String,
         showIntermediateResults: Bool,
         updatedVote: Bool
@@ -110,7 +113,7 @@ public class BallotManager: NSObject {
         )
         let json = try? JSONEncoder().encode(voteInfo)
         
-        let sysMsg = entityManager.entityCreator.systemMessage(for: conversation)
+        let sysMsg = entityManager.entityCreator.systemMessageEntity(for: conversation)
         let date = Date()
         sysMsg?.type = NSNumber(integerLiteral: updatedVote ? kSystemMessageVoteUpdated : kSystemMessageVote)
         sysMsg?.arg = json

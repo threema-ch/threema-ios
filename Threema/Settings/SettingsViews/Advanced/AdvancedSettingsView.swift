@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import MBProgressHUD
 import SwiftUI
+import ThreemaMacros
 
 struct AdvancedSettingsView: View {
     @EnvironmentObject var settingsVM: SettingsStore
@@ -41,30 +42,30 @@ struct AdvancedSettingsView: View {
 
             Section {
                 Toggle(isOn: $settingsVM.enableIPv6) {
-                    Text("settings_advanced_ipv6_title".localized)
+                    Text(#localize("settings_advanced_ipv6_title"))
                 }
                 .onChange(of: settingsVM.enableIPv6) { _ in
                     ServerConnector.shared().reconnect()
                 }
             } header: {
-                Text("settings_advanced_networking_section_header".localized)
+                Text(#localize("settings_advanced_networking_section_header"))
             }
             
             // MARK: Sensor
 
             Section {
                 Toggle(isOn: $settingsVM.enableProximityMonitoring) {
-                    Text("settings_advanced_proximity_monitoring_title".localized)
+                    Text(#localize("settings_advanced_proximity_monitoring_title"))
                 }
             } header: {
-                Text("settings_advanced_proximity_monitoring_section_header".localized)
+                Text(#localize("settings_advanced_proximity_monitoring_section_header"))
             } footer: {
                 if settingsVM.enableProximityMonitoring {
-                    Text("settings_advanced_proximity_monitoring_section_footer_on".localized)
+                    Text(#localize("settings_advanced_proximity_monitoring_section_footer_on"))
                 }
                 else {
                     Text(
-                        "settings_advanced_proximity_monitoring_section_footer_off".localized
+                        #localize("settings_advanced_proximity_monitoring_section_footer_off")
                     )
                 }
             }
@@ -73,7 +74,7 @@ struct AdvancedSettingsView: View {
 
             Section {
                 Toggle(isOn: $settingsVM.validationLogging) {
-                    Text("settings_advanced_debug_log_title".localized)
+                    Text(#localize("settings_advanced_debug_log_title"))
                 }
                 .onChange(of: settingsVM.validationLogging) { newValue in
                     if newValue {
@@ -86,7 +87,7 @@ struct AdvancedSettingsView: View {
                 }
                 
                 HStack {
-                    Text("settings_advanced_debug_log_size_title".localized)
+                    Text(#localize("settings_advanced_debug_log_size_title"))
                     Spacer()
                     Text(
                         LogManager.logFileSize(LogManager.debugLogFile),
@@ -98,7 +99,7 @@ struct AdvancedSettingsView: View {
                 Button {
                     shareLog()
                 } label: {
-                    Text("settings_advanced_debug_log_share_title".localized)
+                    Text(#localize("settings_advanced_debug_log_share_title"))
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                         .edgesIgnoringSafeArea(.leading)
@@ -108,16 +109,16 @@ struct AdvancedSettingsView: View {
                 Button {
                     showDeleteDebugLogSheet()
                 } label: {
-                    Text("settings_advanced_debug_log_clear_log_title".localized)
+                    Text(#localize("settings_advanced_debug_log_clear_log_title"))
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                 }
                 .disabled(!hasDebugLog())
                 .actionSheet(isPresented: $showConfirmationSheet) {
                     ActionSheet(
-                        title: Text("debug_log_clear".localized),
+                        title: Text(#localize("debug_log_clear")),
                         buttons: [
-                            .destructive(Text("debug_log_clear".localized)) {
+                            .destructive(Text(#localize("debug_log_clear"))) {
                                 LogManager.deleteLogFile(LogManager.debugLogFile)
                                 LogManager.deleteLogFile(LogManager.validationLogFile)
                                 NotificationPresenterWrapper.shared.present(type: .emptyDebugLogSuccess)
@@ -127,7 +128,7 @@ struct AdvancedSettingsView: View {
                     )
                 }
             } header: {
-                Text("settings_advanced_debug_log_section_header".localized)
+                Text(#localize("settings_advanced_debug_log_section_header"))
             }
             
             // MARK: Sentry
@@ -142,7 +143,7 @@ struct AdvancedSettingsView: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.3)
                             .contextMenu(ContextMenu(menuItems: {
-                                Button("copy".localized, action: {
+                                Button(#localize("copy"), action: {
                                     UIPasteboard.general.string = settingsVM.sentryAppDevice ?? "-"
                                 })
                             }))
@@ -156,14 +157,14 @@ struct AdvancedSettingsView: View {
                 Button {
                     reregisterPushNotifications()
                 } label: {
-                    Text("settings_advanced_reregister_notifications_label".localized)
+                    Text(#localize("settings_advanced_reregister_notifications_label"))
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
                 }
             } header: {
-                Text("settings_advanced_reregister_push_notifications_header_title".localized)
+                Text(#localize("settings_advanced_reregister_push_notifications_header_title"))
             } footer: {
-                Text("settings_advanced_reregister_push_notifications_footer_title".localized)
+                Text(#localize("settings_advanced_reregister_push_notifications_footer_title"))
             }
             
             // MARK: Other settings
@@ -174,7 +175,7 @@ struct AdvancedSettingsView: View {
                         .ignoresSafeArea(.all)
                         .navigationBarTitle("webrtc_diagnostics.title", displayMode: .inline)
                 } label: {
-                    Text("settings_advanced_webrtc_diagnostics_title".localized)
+                    Text(#localize("settings_advanced_webrtc_diagnostics_title"))
                 }
                 
                 NavigationLink {
@@ -182,13 +183,13 @@ struct AdvancedSettingsView: View {
                         .ignoresSafeArea(.all)
                         .navigationBarTitle("settings_advanced_orphaned_files_cleanup", displayMode: .inline)
                 } label: {
-                    Text("settings_advanced_orphaned_files_cleanup".localized)
+                    Text(#localize("settings_advanced_orphaned_files_cleanup"))
                 }
 
                 NavigationLink {
                     ContactsCleanupView(settingsStore: settingsVM)
                 } label: {
-                    Text(BundleUtil.localizedString(forKey: "settings_advanced_contacts_cleanup"))
+                    Text(#localize("settings_advanced_contacts_cleanup"))
                 }
 
                 Button {
@@ -196,12 +197,12 @@ struct AdvancedSettingsView: View {
                 } label: {
                     HStack {
                         Spacer()
-                        Text("settings_advanced_flush_message_queue".localized)
+                        Text(#localize("settings_advanced_flush_message_queue"))
                         Spacer()
                     }
                 }
             } header: {
-                Text("settings_advanced_other_section_header".localized)
+                Text(#localize("settings_advanced_other_section_header"))
             }
             
             // MARK: Safe mode Settings
@@ -236,7 +237,7 @@ struct AdvancedSettingsView: View {
                             if let allConversations = NSSet(
                                 array: businessInjector.entityManager
                                     .entityFetcher.allConversations()
-                            ) as? Set<Conversation> {
+                            ) as? Set<ConversationEntity> {
                                 businessInjector.unreadMessages.totalCount(
                                     doCalcUnreadMessagesCountOf: allConversations,
                                     withPerformBlockAndWait: true
@@ -246,7 +247,7 @@ struct AdvancedSettingsView: View {
                                     let unreadMessagesCount = businessInjector.entityManager.entityFetcher
                                         .countUnreadMessages(for: conversation)
                                     DDLogNotice(
-                                        "[Advanced Support Mode] Conversation \(conversation.displayName ?? "?") has \(unreadMessagesCount) unread messages. Unread message state on conversation is \(conversation.unreadMessageCount)"
+                                        "[Advanced Support Mode] Conversation \(conversation.displayName) has \(unreadMessagesCount) unread messages. Unread message state on conversation is \(conversation.unreadMessageCount)"
                                     )
                                 }
                             }
@@ -263,7 +264,7 @@ struct AdvancedSettingsView: View {
                     } label: {
                         HStack {
                             Spacer()
-                            Text(BundleUtil.localizedString(forKey: "settings_advanced_reset_unread_count_label"))
+                            Text(#localize("settings_advanced_reset_unread_count_label"))
                             Spacer()
                         }
                     }
@@ -273,18 +274,18 @@ struct AdvancedSettingsView: View {
                     } label: {
                         HStack {
                             Spacer()
-                            Text("settings_advanced_reset_fs_db_label".localized)
+                            Text(#localize("settings_advanced_reset_fs_db_label"))
                             Spacer()
                         }
                     }
                 } header: {
-                    Text("settings_advanced_support_settings_header_title".localized)
+                    Text(#localize("settings_advanced_support_settings_header_title"))
                 } footer: {
-                    Text("settings_advanced_support_settings_footer_title".localized)
+                    Text(#localize("settings_advanced_support_settings_footer_title"))
                 }
             }
         }
-        .navigationBarTitle("settings_advanced".localized, displayMode: .inline)
+        .navigationBarTitle(#localize("settings_advanced"), displayMode: .inline)
         .tint(UIColor.primary.color)
         .onAppear {
             logMIME()

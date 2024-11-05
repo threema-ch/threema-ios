@@ -37,8 +37,8 @@
  */
 - (instancetype)initWith:(NSObject *)entityManagerObject;
 
-- (void)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError;
-- (void)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError;
+- (void)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError;
+- (void)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError;
 
 + (NSString *)decodeCreateBallotTitleFromBox:(BoxBallotCreateMessage *)boxMessage;
 + (NSNumber *)decodeNotificationCreateBallotStateFromBox:(BoxBallotCreateMessage *)boxMessage;

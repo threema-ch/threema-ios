@@ -347,7 +347,7 @@ final class EntityFetcherTests: XCTestCase {
             members: Set(memberIdentities.map(\.string))
         )
         let group = try XCTUnwrap(tempGroup)
-        XCTAssertEqual(GroupState.forcedLeft, group.state)
+        XCTAssertEqual(GroupEntity.GroupState.forcedLeft, group.state)
                 
         // Run
         

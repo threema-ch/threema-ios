@@ -20,6 +20,7 @@
 
 import Foundation
 import SnapKit
+import ThreemaMacros
 
 class MultiDeviceCell: ThemedCodeStackTableViewCell {
     
@@ -59,7 +60,7 @@ class MultiDeviceCell: ThemedCodeStackTableViewCell {
 
             platformDetailsLabel.text = deviceInfo.platformDetails
             lastLoginAtLabel.text = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "multi_device_linked_devices_last_login"),
+                #localize("multi_device_linked_devices_last_login"),
                 DateFormatter.relativeLongStyleDateShortStyleTime(deviceInfo.lastLoginAt)
             )
         }

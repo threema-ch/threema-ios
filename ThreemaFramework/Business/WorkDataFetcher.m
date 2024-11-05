@@ -44,14 +44,6 @@
 }
 
 + (void)checkUpdateWorkDataForce:(BOOL)force sendForce:(BOOL)sendForce onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError*))onError {
-    if ([[UserSettings sharedUserSettings] blockCommunication]) {
-        DDLogWarn(@"Communication is blocked");
-        if (onCompletion != nil) {
-            onCompletion();
-        }
-        return;
-    }
-
     if (![LicenseStore requiresLicenseKey]) {
         if (onCompletion != nil) {
             onCompletion();
@@ -202,6 +194,9 @@
                 for (NSDictionary *workContact in workContacts) {
                     NSString *firstName = nil;
                     NSString *lastName = nil;
+                    NSString *csi = nil;
+                    NSString *jobTitle = nil;
+                    NSString *department = nil;
                     
                     if (workContact[@"first"] != nil && workContact[@"first"] != [NSNull null]) {
                         firstName = workContact[@"first"];
@@ -211,10 +206,22 @@
                         lastName = workContact[@"last"];
                     }
                     
+                    if (workContact[@"csi"] != nil && workContact[@"csi"] != [NSNull null]) {
+                        csi = workContact[@"csi"];
+                    }
+                    
+                    if (workContact[@"jobTitle"] != nil && workContact[@"jobTitle"] != [NSNull null]) {
+                        jobTitle = workContact[@"jobTitle"];
+                    }
+                    
+                    if (workContact[@"department"] != nil && workContact[@"department"] != [NSNull null]) {
+                        department = workContact[@"department"];
+                    }
+                                        
                     NSString *identity = workContact[@"id"];
                     NSData *publicKey = [[NSData alloc] initWithBase64EncodedString:workContact[@"pk"] options:0];
                     
-                    BatchAddWorkContact *batchAddWorkContact = [[BatchAddWorkContact alloc] initWithIdentity:identity publicKey:publicKey firstName:firstName lastName:lastName];
+                    BatchAddWorkContact *batchAddWorkContact = [[BatchAddWorkContact alloc] initWithIdentity:identity publicKey:publicKey firstName:firstName lastName:lastName csi:csi jobTitle:jobTitle department:department];
                     
                     [batchAddWorkContacts addObject:batchAddWorkContact];
                     [workContactIds addObject:identity];
@@ -250,13 +257,6 @@
     if ([LicenseStore requiresLicenseKey] == NO) {
         DDLogWarn(@"No license is required");
         onCompletion();
-        return;
-    }
-
-    if ([[UserSettings sharedUserSettings] blockCommunication]) {
-        NSError *error = [ThreemaError threemaError:@"Communication is blocked"];
-        DDLogError(@"Work API fetch failed: %@", error);
-        onError(error);
         return;
     }
 

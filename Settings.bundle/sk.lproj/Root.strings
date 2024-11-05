@@ -1,0 +1,12 @@
+/* (No Comment) */
+"advanced_settings_group_footer" = "Toto nastavenie neaktivujte, pokiaľ vám to výslovne neodporučí tím podpory spoločnosti Threema.  Ak je toto nastavenie aktivované, nemusíte dostávať prichádzajúce správy.";
+
+/* (No Comment) */
+"advanced_settings_group_title" = "Nastavenia podpory";
+
+/* (No Comment) */
+"safe_mode_switch" = "Pokročilý režim podpory";
+
+/* (No Comment) */
+"sentry_switch" = "Deaktivovať Sentry";
+

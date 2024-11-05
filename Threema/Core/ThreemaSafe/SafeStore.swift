@@ -23,6 +23,7 @@ import Foundation
 import Gzip
 import ThreemaEssentials
 import ThreemaFramework
+import ThreemaMacros
 
 @objc class SafeStore: NSObject {
     private let safeConfigManager: SafeConfigManagerProtocol
@@ -216,7 +217,7 @@ import ThreemaFramework
                     range: NSRange(location: 0, length: server.count)
                 )
                 if !regexResult.isEmpty {
-                    return BundleUtil.localizedString(forKey: "safe_use_default_server")
+                    return #localize("safe_use_default_server")
                 }
             }
             catch {
@@ -226,7 +227,7 @@ import ThreemaFramework
             return safeConfigManager.getCustomServer() != nil ? safeConfigManager.getCustomServer()! : server
         }
         else {
-            return BundleUtil.localizedString(forKey: "safe_use_default_server")
+            return #localize("safe_use_default_server")
         }
     }
     
@@ -379,7 +380,7 @@ import ThreemaFramework
 
         // get contacts
         var jContacts = [SafeJsonParser.SafeBackupData.Contact]()
-        privateEntityManager.performBlockAndWait {
+        privateEntityManager.performAndWait {
             let allContacts = privateEntityManager.entityFetcher.allContacts() ?? []
             for item in allContacts {
                 // do not backup me as contact
@@ -410,7 +411,7 @@ import ThreemaFramework
                     
                     if let conversations = contact.conversations {
                         for conversation in conversations {
-                            guard let conversation = conversation as? Conversation else {
+                            guard let conversation = conversation as? ConversationEntity else {
                                 continue
                             }
                             if conversation.conversationCategory == .private {
@@ -435,11 +436,11 @@ import ThreemaFramework
         
         // get groups
         var jGroups = [SafeJsonParser.SafeBackupData.Group]()
-        privateEntityManager.performBlockAndWait {
+        privateEntityManager.performAndWait {
             let conversations = privateEntityManager.entityFetcher.allGroupConversations() ?? []
             
             for item in conversations {
-                guard let conversation = item as? Conversation,
+                guard let conversation = item as? ConversationEntity,
                       let groupID = conversation.groupID,
                       let group = self.groupManager.getGroup(
                           groupID,
@@ -556,7 +557,7 @@ import ThreemaFramework
         }
         
         guard safeBackupData.info.version == 1 else {
-            throw SafeError.restoreFailed(message: BundleUtil.localizedString(forKey: "safe_version_mismatch"))
+            throw SafeError.restoreFailed(message: #localize("safe_version_mismatch"))
         }
         
         // Restore identity store
@@ -564,7 +565,7 @@ import ThreemaFramework
               let secretKey = Data(base64Encoded: privateKey) else {
                 
             DDLogError("Private key could not be restored")
-            throw SafeError.restoreFailed(message: BundleUtil.localizedString(forKey: "safe_no_backup_found"))
+            throw SafeError.restoreFailed(message: #localize("safe_no_backup_found"))
         }
         
         MyIdentityStore.shared().restore(fromBackup: identity, withSecretKey: secretKey, onCompletion: {
@@ -671,14 +672,14 @@ import ThreemaFramework
                 DDLogError("Safe restore error:update identity store failed")
                 completionHandler(
                     SafeError
-                        .restoreFailed(message: BundleUtil.localizedString(forKey: "safe_no_backup_found"))
+                        .restoreFailed(message: #localize("safe_no_backup_found"))
                 )
             })
         }) { _ in
             DDLogError("Safe restore error:update restore identity store failed")
             completionHandler(
                 SafeError
-                    .restoreFailed(message: BundleUtil.localizedString(forKey: "safe_no_backup_found"))
+                    .restoreFailed(message: #localize("safe_no_backup_found"))
             )
         }
     }
@@ -775,7 +776,7 @@ import ThreemaFramework
                                     // check is contact already stored, could be when Threema MDM sync was running (it's
                                     // a bug, should not before restore is finished)
                                     if let contact = entityManager.entityFetcher.contact(for: bContact.identity) {
-                                        entityManager.performSyncBlockAndSafe {
+                                        entityManager.performAndWaitSave {
                                             contact.verificationLevel = Int32(bContact.verification ?? 0) as NSNumber
                                             contact.firstName = bContact.firstname
                                             contact.lastName = bContact.lastname
@@ -785,7 +786,7 @@ import ThreemaFramework
                                         contactForConversation = contact
                                     }
                                     else {
-                                        entityManager.performSyncBlockAndSafe {
+                                        entityManager.performAndWaitSave {
                                             if let contact = entityManager.entityCreator.contact(),
                                                let bIdentity = bContact.identity {
                                                 contact.identity = bIdentity.uppercased()
@@ -869,7 +870,7 @@ import ThreemaFramework
                                                 }
 
                                                 if let isPrivate = bContact.private, isPrivate {
-                                                    conversation.conversationCategory = .private
+                                                    conversation.changeCategory(to: .private)
                                                 }
                                             }
                                         }
@@ -898,7 +899,7 @@ import ThreemaFramework
                     DDLogError("Safe error while request identities:\(error.localizedDescription)")
                     completionHandler(
                         SafeError
-                            .restoreError(message: BundleUtil.localizedString(forKey: "safe_restore_error"))
+                            .restoreError(message: #localize("safe_restore_error"))
                     )
                 }
             }
@@ -935,7 +936,7 @@ import ThreemaFramework
                                 return
                             }
 
-                            var category: ConversationCategory = .default
+                            var category: ConversationEntity.Category = .default
 
                             if let isPrivate = bGroup.private,
                                isPrivate {
@@ -944,7 +945,7 @@ import ThreemaFramework
 
                             await entityManager.performSave {
                                 group.conversation.groupName = bGroup.groupname
-                                group.conversation.conversationCategory = category
+                                group.conversation.changeCategory(to: category)
 
                                 if let lastUpdate = bGroup.lastUpdate {
                                     group.conversation.lastUpdate = Date(millisecondsSince1970: lastUpdate)

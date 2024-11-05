@@ -23,6 +23,7 @@ import CocoaLumberjackSwift
 import PromiseKit
 import ThreemaEssentials
 import ThreemaFramework
+import ThreemaMacros
 import UserNotifications
 
 class NotificationService: UNNotificationServiceExtension {
@@ -283,9 +284,9 @@ class NotificationService: UNNotificationServiceExtension {
         var badge = 0
         if recalculateBadgeCount {
             conversationsChangedQueue.sync {
-                var recalculateConversations: Set<Conversation>?
+                var recalculateConversations: Set<ConversationEntity>?
                 if let conversationsChanged, let conversations = backgroundBusinessInjector.entityManager.entityFetcher
-                    .notArchivedConversations() as? [Conversation] {
+                    .notArchivedConversations() as? [ConversationEntity] {
 
                     recalculateConversations = Set(conversations.filter { conversationsChanged.contains($0.objectID) })
                 }
@@ -364,22 +365,12 @@ class NotificationService: UNNotificationServiceExtension {
             ThreemaUtility.showLocalNotification(
                 identifier: "ErrorMessage",
                 title: "",
-                body: BundleUtil.localizedString(forKey: "new_message_db_requires_migration"),
+                body: #localize("new_message_db_requires_migration"),
                 badge: 1,
                 userInfo: nil
             ) {
                 self.applyContent(nil, recalculateBadgeCount: false)
             }
-            return false
-        }
-
-        guard !backgroundBusinessInjector.userSettings.blockCommunication else {
-            DDLogWarn("[Push] Communication is blocked")
-
-            let content = UNMutableNotificationContent()
-            content.body = "Communication is blocked"
-            applyContent(content, recalculateBadgeCount: false)
-
             return false
         }
 
@@ -479,7 +470,7 @@ class NotificationService: UNNotificationServiceExtension {
         NotificationService.stopProcessingGroup = nil
 
         let content = UNMutableNotificationContent()
-        content.body = BundleUtil.localizedString(forKey: "new_message_invalid_license")
+        content.body = #localize("new_message_invalid_license")
         applyContent(content)
     }
     
@@ -525,9 +516,9 @@ class NotificationService: UNNotificationServiceExtension {
     }
     
     private func showNoAccessToKeychainLocalNotification(onCompletion: @escaping () -> Void) {
-        let title = BundleUtil.localizedString(forKey: "new_message_no_access_title")
+        let title = #localize("new_message_no_access_title")
         let message = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "new_message_no_access_message"),
+            #localize("new_message_no_access_message"),
             ThreemaApp.appName
         )
         
@@ -695,7 +686,7 @@ extension NotificationService: MessageProcessorDelegate {
         }
     }
 
-    func readMessage(inConversations: Set<Conversation>?) {
+    func readMessage(inConversations: Set<ConversationEntity>?) {
         conversationsChangedQueue.async {
             inConversations?.forEach { conversation in
                 self.conversationsChanged?.insert(conversation.objectID)
@@ -748,7 +739,7 @@ extension NotificationService: MessageProcessorDelegate {
                 databaseManager.addDirtyObject(contactEntity)
             }
             
-            if let conversation = self.backgroundBusinessInjector.entityManager.entityFetcher.conversation(
+            if let conversation = self.backgroundBusinessInjector.entityManager.entityFetcher.conversationEntity(
                 forIdentity: message.fromIdentity
             ) {
                 databaseManager.addDirtyObject(conversation)
@@ -910,7 +901,7 @@ extension NotificationService: MessageProcessorDelegate {
             }
         }
         
-        content.body = BundleUtil.localizedString(forKey: "call_missed")
+        content.body = #localize("call_missed")
         
         // Group notifications together with others from the same contact
         content.threadIdentifier = "SINGLE-\(contactIdentity)"

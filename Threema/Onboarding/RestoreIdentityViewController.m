@@ -80,7 +80,7 @@
     _cancelButton.layer.cornerRadius = 3;
     
     [_doneButton setTitle:[BundleUtil localizedStringForKey:@"Done"] forState:UIControlStateNormal];
-    [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"Cancel"] forState:UIControlStateNormal];
+    [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"cancel"] forState:UIControlStateNormal];
     _doneButton.backgroundColor = Colors.primaryWizard;
     [_doneButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     

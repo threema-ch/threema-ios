@@ -83,7 +83,6 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, readwrite) BOOL allowSeveralLinkedDevices;
 @property (nonatomic, strong) NSOrderedSet *workIdentities;
 @property (nonatomic, strong) NSArray *profilePictureRequestList;
-@property (nonatomic, readwrite) BOOL blockCommunication;
 
 @property (nonatomic, readwrite) BOOL enableIPv6;
 @property (nonatomic, readwrite) BOOL disableProximityMonitoring;
@@ -142,7 +141,7 @@ enum AcceptPrivacyPolicyVariant {
 @property (nonatomic, readwrite) BOOL workInfoShown;
 @property (nonatomic, readwrite) BOOL desktopInfoBannerShown;
 @property (nonatomic, readwrite) BOOL resetTipKitOnNextLaunch;
-
+@property (nonatomic, readwrite) BOOL jbDetectionDismissed;
 
 @property (nonatomic, readwrite) BOOL contactList2;
 

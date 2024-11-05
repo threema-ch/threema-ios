@@ -61,7 +61,7 @@ import Foundation
             let uti = UTIConverter.uti(forFileURL: url)
             let mimeType = UTIConverter.mimeType(fromUTI: uti)
             let isVideo = UTIConverter.isVideoMimeType(mimeType) || UTIConverter.isMovieMimeType(mimeType)
-            let estimatedVideoFileSize = VideoConversionHelper.getEstimatedVideoFileSize(for: url)
+            let estimatedVideoFileSize = VideoConversionHelper().getEstimatedVideoFileSize(for: url)
             
             let isValidVideoDuration: Bool =
                 if isVideo {

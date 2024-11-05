@@ -104,7 +104,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (NSSet *)selectedConversations {
     NSMutableSet *conversations = [NSMutableSet setWithCapacity:[_selectedGroups count]];
     for (Group *group in _selectedGroups) {
-        Conversation *conversationEntity = [[_entityManager entityFetcher] conversationForGroupId:group.groupID creator:group.groupCreatorIdentity];
+        ConversationEntity *conversationEntity = [[_entityManager entityFetcher] conversationEntityForGroupId:group.groupID creator:group.groupCreatorIdentity];
         [conversations addObject:conversationEntity];
     }
     return conversations;
@@ -114,7 +114,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     NSMutableArray *groups = [NSMutableArray arrayWithCapacity: [conversations count]];
     
-    for (Conversation *conversation in conversations) {
+    for (ConversationEntity *conversation in conversations) {
         Group *grp = [groupManager getGroupWithConversation:conversation];
         if ([grp didLeave] == NO) {
             [groups addObject:grp];
@@ -189,7 +189,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (Group *)groupAtIndexPath:(NSIndexPath *)indexPath {
-    Conversation *conversation;
+    ConversationEntity *conversation;
     if (_filteredGroups) {
         conversation = [_filteredGroups objectAtIndex:indexPath.row];
     } else {
@@ -233,8 +233,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return;
     }
     
-    if ([anObject isKindOfClass:[Conversation class]]) {
-        anObject = [groupManager getGroupWithConversation:(Conversation*)anObject];
+    if ([anObject isKindOfClass:[ConversationEntity class]]) {
+        anObject = [groupManager getGroupWithConversation:(ConversationEntity*)anObject];
     }
 
     [_fetchedResultsControllerDelegate controller:controller didChangeObject:anObject atIndexPath:indexPath forChangeType:type newIndexPath:newIndexPath];

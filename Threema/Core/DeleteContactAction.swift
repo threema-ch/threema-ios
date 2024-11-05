@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaEssentials
+import ThreemaMacros
 
 /// Delete action for a contact
 ///
@@ -103,8 +104,8 @@ class DeleteContactAction: NSObject {
         let isGroupMember = businessInjector.entityManager.entityFetcher.groupConversations(for: contact) != nil
 
         // Does contact have an existing 1:1 chat conversation?
-        if let conversations = contact.conversations as? Set<Conversation>,
-           !conversations.filter({ !$0.isGroup() }).isEmpty {
+        if let conversations = contact.conversations as? Set<ConversationEntity>,
+           !conversations.filter({ !$0.isGroup }).isEmpty {
             // Existing conversation. Can it also be deleted?
             showDeleteWithConversationSheet(
                 in: view,
@@ -145,7 +146,7 @@ extension DeleteContactAction {
         completion: CompletionHandler?
     ) {
         let deleteAlertAction = UIAlertAction(
-            title: BundleUtil.localizedString(forKey: "delete_contact_existing_conversation_button"),
+            title: #localize("delete_contact_existing_conversation_button"),
             style: .destructive
         ) { _ in
             self.deleteContact(exclude: nil, completion: completion)
@@ -154,14 +155,14 @@ extension DeleteContactAction {
         let sheetTitle =
             if isGroupMember {
                 String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "delete_contact_existing_conversation_is_group_member_title"),
+                    #localize("delete_contact_existing_conversation_is_group_member_title"),
                     contactName,
                     contactName
                 )
             }
             else {
                 String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "delete_contact_existing_conversation_title"),
+                    #localize("delete_contact_existing_conversation_title"),
                     contactName
                 )
             }
@@ -194,20 +195,20 @@ extension DeleteContactAction {
             }
             else {
                 String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "delete_contact_confirmation_with_exclusion_message"),
+                    #localize("delete_contact_confirmation_with_exclusion_message"),
                     contact.displayName
                 )
             }
 
         let deleteWithoutExclusionAction = UIAlertAction(
-            title: BundleUtil.localizedString(forKey: "delete_contact_button"),
+            title: #localize("delete_contact_button"),
             style: .destructive
         ) { _ in
             self.deleteContact(exclude: false, completion: completion)
         }
         
         let deleteWithExclusionAction = UIAlertAction(
-            title: BundleUtil.localizedString(forKey: "delete_contact_confirmation_with_exclusion_button"),
+            title: #localize("delete_contact_confirmation_with_exclusion_button"),
             style: .destructive
         ) { _ in
             self.deleteContact(exclude: true, completion: completion)
@@ -217,7 +218,7 @@ extension DeleteContactAction {
             owner: viewController,
             popOverSource: view,
             title: localizedMessage,
-            message: BundleUtil.localizedString(forKey: "exclude_deleted_id_message"),
+            message: #localize("exclude_deleted_id_message"),
             actions: [deleteWithoutExclusionAction, deleteWithExclusionAction],
             cancelAction: { _ in completion?(false) }
         )
@@ -232,7 +233,7 @@ extension DeleteContactAction {
         let localizedMessage: String? =
             if isGroupMember {
                 String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "delete_contact_is_group_member_title"),
+                    #localize("delete_contact_is_group_member_title"),
                     contact.displayName,
                     contact.displayName
                 )
@@ -242,7 +243,7 @@ extension DeleteContactAction {
             }
 
         let deleteAction = UIAlertAction(
-            title: BundleUtil.localizedString(forKey: "delete_contact_button"),
+            title: #localize("delete_contact_button"),
             style: .destructive
         ) { _ in
             self.deleteContact(exclude: false, completion: completion)
@@ -273,7 +274,7 @@ extension DeleteContactAction {
         // Remove left drafts
         if let conversations = contact.conversations {
             for genericConversation in conversations {
-                guard let conversation = genericConversation as? Conversation else {
+                guard let conversation = genericConversation as? ConversationEntity else {
                     continue
                 }
                 MessageDraftStore.shared.deleteDraft(for: conversation)
@@ -363,7 +364,7 @@ extension DeleteContactAction {
             // This will only be called if no decision was taken so far
             // Should person be added to exclusion list?
             let localizedTitle = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "exclude_deleted_id_title"),
+                #localize("exclude_deleted_id_title"),
                 tempContactDisplayName
             )
             
@@ -371,8 +372,8 @@ extension DeleteContactAction {
                 // There should always be a root view controller at this point
                 owner: AppDelegate.shared().window.rootViewController!,
                 title: localizedTitle,
-                message: BundleUtil.localizedString(forKey: "exclude_deleted_id_message"),
-                titleOk: BundleUtil.localizedString(forKey: "exclude_deleted_id_exclude_button"),
+                message: #localize("exclude_deleted_id_message"),
+                titleOk: #localize("exclude_deleted_id_exclude_button"),
                 actionOk: { _ in
                     self.excludeContact(with: contactIdentity)
                 }

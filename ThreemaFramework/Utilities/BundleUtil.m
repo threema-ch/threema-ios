@@ -144,13 +144,9 @@
 }
 
 + (NSString *)localizedStringForKey:(NSString *)key {
-    NSString *value = [[self frameworkBundle] localizedStringForKey:key value:nil table:nil];
+    NSString *value = NSLocalizedString(key, nil);
 
     if (value && [value isEqualToString:key] == NO) {
-        return value;
-    } else if ((value = [[self mainBundle] localizedStringForKey:key value:nil table:nil]) && ([value isEqualToString:key] == NO)) {
-        return value;
-    } else if ((value = NSLocalizedString(key, nil)) && ([value isEqualToString:key] == NO)) {
         return value;
     }
     else {
@@ -158,16 +154,15 @@
     }
 }
 
-/// Get the english localized string for backup (main and framework bundle)
-/// If the key can't be find in the english translations it will return the key
+/// Get the english localized string for backup
+/// If the key can't be found in the english translations, it will return the key itself
 /// @param key Key of the localized string
 + (NSString *)enLocalizedStringForKey:(NSString *)key {
-    // use the en translation as fallback
     NSString *value = key;
 
     NSString *enPath = [[self mainBundle] pathForResource:@"en" ofType:@"lproj"];
     if (enPath == nil) {
-        return NSLocalizedString(key, nil);
+        return key;
     }
 
     id enBundle = [NSBundle bundleWithPath:enPath];
@@ -175,69 +170,10 @@
         return value;
     }
     else {
-        return [BundleUtil enFrameworkLocalizedStringForKey:key];
+        return key;
     }
 }
 
-/// Get the english localized string for backup (framework bundle)
-/// If the key can't be find in the english translations it will return the key
-/// @param key Key of the localized string
-+ (NSString *)enFrameworkLocalizedStringForKey:(NSString *)key {
-    // use the en translation as fallback
-    NSString *value = key;
-    
-    NSString *enFrameworkPath = [[self frameworkBundle] pathForResource:@"en" ofType:@"lproj"];
-    if (enFrameworkPath == nil) {
-        return NSLocalizedString(key, nil);
-    }
-    
-    id enFrameworkBundle = [NSBundle bundleWithPath:enFrameworkPath];
-    if ((value = NSLocalizedStringFromTableInBundle(key, nil, enFrameworkBundle, nil)) && ([value isEqualToString:key] == NO)) {
-        return value;
-    } else {
-        return [BundleUtil enShareExtensionLocalizedStringForKey:key];
-    }
-}
-
-/// Get the english localized string for backup (share extension bundle)
-/// If the key can't be find in the english translations it will return the key
-/// @param key Key of the localized string
-+ (NSString *)enShareExtensionLocalizedStringForKey:(NSString *)key {
-    // use the en translation as fallback
-    NSString *value = key;
-    
-    NSString *enShareExtensionPath = [[self shareExtensionBundle] pathForResource:@"en" ofType:@"lproj"];
-    if (enShareExtensionPath == nil) {
-        return NSLocalizedString(key, nil);
-    }
-
-    id enShareExtensionBundle = [NSBundle bundleWithPath:enShareExtensionPath];
-    if ((value = NSLocalizedStringFromTableInBundle(key, nil, enShareExtensionBundle, nil)) && ([value isEqualToString:key] == NO)) {
-        return value;
-    } else {
-        return [BundleUtil enNotificationExtensionLocalizedStringForKey:key];
-    }
-}
-
-/// Get the english localized string for backup (notification extension bundle)
-/// If the key can't be find in the english translations it will return the key
-/// @param key Key of the localized string
-+ (NSString *)enNotificationExtensionLocalizedStringForKey:(NSString *)key {
-    // use the en translation as fallback
-    NSString *value = key;
-
-    NSString *enNotificationExtensionPath = [[self notificationExtensionBundle] pathForResource:@"en" ofType:@"lproj"];
-    if (enNotificationExtensionPath == nil) {
-        return NSLocalizedString(key, nil);
-    }
-
-    id enNotificationExtensionBundle = [NSBundle bundleWithPath:enNotificationExtensionPath];
-    if ((value = NSLocalizedStringFromTableInBundle(key, nil, enNotificationExtensionBundle, nil)) && ([value isEqualToString:key] == NO)) {
-        return value;
-    } else {
-        return NSLocalizedString(key, nil);
-    }
-}
 
 + (UIView *)loadXibNamed:(NSString *)name {
     NSBundle *bundle = [NSBundle mainBundle];

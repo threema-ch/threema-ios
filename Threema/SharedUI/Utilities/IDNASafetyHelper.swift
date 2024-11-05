@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 import UIKit
 
 @objc class IDNASafetyHelper: NSObject {
@@ -47,18 +48,18 @@ import UIKit
     
     private class func showAlert(url: URL, viewController: UIViewController) {
         let body = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "url_warning_body"),
+            #localize("url_warning_body"),
             url.host!.idnaDecoded!,
             url.host!
         )
         let alert = UIAlertController(
-            title: BundleUtil.localizedString(forKey: "url_warning_title"),
+            title: #localize("url_warning_title"),
             message: body,
             preferredStyle: .alert
         )
         alert
             .addAction(UIAlertAction(
-                title: BundleUtil.localizedString(forKey: "ok"),
+                title: #localize("ok"),
                 style: .default,
                 handler: { _ in
                     UIApplication.shared.open(url as URL, options: [:], completionHandler: nil)
@@ -66,7 +67,7 @@ import UIKit
             ))
         alert
             .addAction(UIAlertAction(
-                title: BundleUtil.localizedString(forKey: "cancel"),
+                title: #localize("cancel"),
                 style: .cancel,
                 handler: nil
             ))

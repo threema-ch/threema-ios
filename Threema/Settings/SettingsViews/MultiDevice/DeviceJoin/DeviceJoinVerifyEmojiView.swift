@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct DeviceJoinVerifyEmojiView: View {
 
@@ -38,8 +39,8 @@ struct DeviceJoinVerifyEmojiView: View {
                 VStack(alignment: .center) {
                     
                     DeviceJoinHeaderView(
-                        title: "multi_device_join_trust_new_device_title".localized,
-                        description: "multi_device_join_trust_new_device_info".localized
+                        title: #localize("multi_device_join_trust_new_device_title"),
+                        description: #localize("multi_device_join_trust_new_device_info")
                     )
                     .padding(.bottom, 24)
                     
@@ -53,7 +54,7 @@ struct DeviceJoinVerifyEmojiView: View {
                             .frame(maxWidth: !dynamicTypeSize.isAccessibilitySize ? 250 : nil)
                             .padding(.bottom, 24)
                             
-                            Button("multi_device_join_no_match_button".localized) {
+                            Button(#localize("multi_device_join_no_match_button")) {
                                 showNoMatchAlert = true
                             }
                         }
@@ -62,11 +63,11 @@ struct DeviceJoinVerifyEmojiView: View {
                         // This should never happen
                         VStack {
                             Text(
-                                "An unexpected error occurred. Please restart the app on the new device and try again."
+                                verbatim: "An unexpected error occurred. Please restart the app on the new device and try again."
                             )
                             .multilineTextAlignment(.center)
                             
-                            Button("OK") {
+                            Button("ok") {
                                 deviceJoinManager.deviceJoin.cancel()
                                 showWizard = false
                             }
@@ -92,7 +93,7 @@ struct DeviceJoinVerifyEmojiView: View {
                         
                         Label(
                             String.localizedStringWithFormat(
-                                "multi_device_join_sending_info".localized,
+                                #localize("multi_device_join_sending_info"),
                                 ThreemaApp.appName
                             ),
                             systemImage: "info.circle"
@@ -115,19 +116,19 @@ struct DeviceJoinVerifyEmojiView: View {
                     deviceJoinManager.deviceJoin.cancel()
                     showWizard = false
                 } label: {
-                    Label("Cancel", systemImage: "xmark.circle.fill")
+                    Label(#localize("cancel"), systemImage: "xmark.circle.fill")
                         .symbolRenderingMode(.hierarchical)
                         .foregroundColor(.secondary)
                 }
             }
         }
-        .alert("multi_device_join_no_match_title".localized, isPresented: $showNoMatchAlert) {
-            Button("ok".localized) {
+        .alert(#localize("multi_device_join_no_match_title"), isPresented: $showNoMatchAlert) {
+            Button(#localize("ok")) {
                 deviceJoinManager.deviceJoin.cancel()
                 showWizard = false
             }
         } message: {
-            Text("multi_device_join_no_match_message".localized)
+            Text(#localize("multi_device_join_no_match_message"))
         }
     }
 }

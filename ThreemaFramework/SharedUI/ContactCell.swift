@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaMacros
 import UIKit
 
 /// Cell to represent any contact shown in a list
@@ -238,6 +239,8 @@ public final class ContactCell: ThemedCodeTableViewCell {
             containerStack.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
             containerStack.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
             containerStack.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            identityLabel.widthAnchor.constraint(lessThanOrEqualTo: secondLineStack.widthAnchor, multiplier: 0.6),
+            identityLabel.widthAnchor.constraint(greaterThanOrEqualTo: secondLineStack.widthAnchor, multiplier: 0.2),
         ])
     }
     
@@ -255,7 +258,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
         
         profilePictureView.info = .me
         otherThreemaTypeIcon.isHidden = true
-        nameLabel.contact = nil // BundleUtil.localizedString(forKey: "me")
+        nameLabel.contact = nil // #localize("me")
         verificationLevelImageView.image = nil
         verificationLevelImageView.accessibilityLabel = nil
         
@@ -298,9 +301,30 @@ public final class ContactCell: ThemedCodeTableViewCell {
            publicNickname != contact.identity.string {
             nickname = publicNickname
         }
-        metadataLabel.text = nickname
         
-        identityLabel.text = contact.identity.string
+        if LicenseStore.requiresLicenseKey() {
+            metadataLabel.text =
+                if let jobTitle = contact.jobTitle,
+                !jobTitle.isEmpty {
+                    jobTitle
+                }
+                else {
+                    nickname
+                }
+            
+            identityLabel.text =
+                if let department = contact.department,
+                !department.isEmpty {
+                    department
+                }
+                else {
+                    contact.identity.string
+                }
+        }
+        else {
+            metadataLabel.text = nickname
+            identityLabel.text = contact.identity.string
+        }
         
         if contact.isActive {
             containerStack.alpha = 1
@@ -322,7 +346,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
         
         otherThreemaTypeIcon.isHidden = true
         
-        nameLabel.text = BundleUtil.localizedString(forKey: "(unknown)")
+        nameLabel.text = #localize("(unknown)")
         
         verificationLevelImageView.image = nil
         verificationLevelImageView.accessibilityLabel = nil

@@ -49,7 +49,7 @@ class TaskExecutionReflectIncomingMessageTests: XCTestCase {
         expectedProcessedMessage.nonce = MockData.generateMessageNonce()
 
         var contactEntity: ContactEntity!
-        var textMessage: TextMessage!
+        var textMessage: TextMessageEntity!
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
@@ -143,7 +143,7 @@ class TaskExecutionReflectIncomingMessageTests: XCTestCase {
         expectedProcessedMessage.nonce = MockData.generateMessageNonce()
 
         var contactEntity: ContactEntity!
-        var textMessage: TextMessage!
+        var textMessage: TextMessageEntity!
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),

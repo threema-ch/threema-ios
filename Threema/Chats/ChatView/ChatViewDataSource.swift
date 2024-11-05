@@ -23,6 +23,7 @@ import Combine
 import CoreData
 import PromiseKit
 import ThreemaFramework
+import ThreemaMacros
 
 protocol ChatViewDataSourceDelegate: AnyObject {
     /// Called before a new snapshot is applied
@@ -136,7 +137,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
 
     // MARK: - Private properties
     
-    private let conversation: Conversation
+    private let conversation: ConversationEntity
     private weak var delegate: ChatViewDataSourceDelegate?
     private weak var chatViewTableViewCellDelegate: ChatViewTableViewCellDelegateProtocol?
     private weak var chatViewTableViewVoiceMessageCellDelegate: ChatViewTableViewVoiceMessageCellDelegateProtocol?
@@ -220,7 +221,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     ///   - afterFirstSnapshotApply: Closure called only on first apply to data source snapshot (this will be called on
     ///                              the main queue)
     init(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         in tableView: UITableView,
         delegate: ChatViewDataSourceDelegate,
         chatViewTableViewCellDelegate: ChatViewTableViewCellDelegateProtocol,
@@ -720,8 +721,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
                 return
             }
             
-            if let message = message as? SystemMessage,
-               case SystemMessage.SystemMessageType.workConsumerInfo = message.systemMessageType {
+            if let message = message as? SystemMessageEntity,
+               case SystemMessageEntity.SystemMessageType.workConsumerInfo = message.systemMessageType {
                 canEdit = false
             }
         }
@@ -845,7 +846,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     
     private func showDeletedNotification(count: Int) {
         let type = NotificationPresenterType(notificationText: String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "notification_deleted_messages_count"),
+            #localize("notification_deleted_messages_count"),
             count
         ), notificationStyle: .success)
         

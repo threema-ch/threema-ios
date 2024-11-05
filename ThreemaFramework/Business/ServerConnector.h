@@ -64,6 +64,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)connect:(ConnectionInitiator)initiator NS_SWIFT_NAME(connect(initiator:));
 - (void)connectWait:(ConnectionInitiator)initiator NS_SWIFT_NAME(connectWait(initiator:));
 - (void)connectWaitDoNotUnblockIncomingMessages:(ConnectionInitiator)initiator NS_SWIFT_NAME(connectWaitDoNotUnblockIncomingMessages(initiator:));
+/// Unblock receiving incoming messages
+- (void)unblockIncomingMessages;
+
 - (void)disconnect:(ConnectionInitiator)initiator NS_SWIFT_NAME(disconnect(initiator:));
 
 /**

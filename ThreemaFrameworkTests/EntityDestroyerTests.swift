@@ -135,8 +135,8 @@ class EntityDestroyerTests: XCTestCase {
     func testDeleteMessageContentOfFileMessageEntity() throws {
         let dbPreparer = DatabasePreparer(context: objCnx)
         let message = dbPreparer.save {
-            let data = dbPreparer.createFileData(data: Data([11, 22]))
-            let thumbnail = dbPreparer.createImageData(data: Data([33]), height: 33, width: 33)
+            let data = dbPreparer.createFileDataEntity(data: Data([11, 22]))
+            let thumbnail = dbPreparer.createImageDataEntity(data: Data([33]), height: 33, width: 33)
             let message = dbPreparer.createFileMessageEntity(
                 conversation: dbPreparer.createConversation(),
                 data: data,
@@ -165,8 +165,8 @@ class EntityDestroyerTests: XCTestCase {
     func testDeleteMessageContentOfImageMessageEntity() throws {
         let dbPreparer = DatabasePreparer(context: objCnx)
         let message = dbPreparer.save {
-            let image = dbPreparer.createImageData(data: Data([11, 22]), height: 22, width: 22)
-            let thumbnail = dbPreparer.createImageData(data: Data([33]), height: 33, width: 33)
+            let image = dbPreparer.createImageDataEntity(data: Data([11, 22]), height: 22, width: 22)
+            let thumbnail = dbPreparer.createImageDataEntity(data: Data([33]), height: 33, width: 33)
             let message = dbPreparer.createImageMessageEntity(
                 conversation: dbPreparer.createConversation(),
                 image: image,
@@ -194,8 +194,8 @@ class EntityDestroyerTests: XCTestCase {
                 visibility: .default,
                 complete: nil
             )
-            let video = dbPreparer.createVideoData(data: Data([11, 22]))
-            let thumbnail = dbPreparer.createImageData(data: Data([33]), height: 33, width: 33)
+            let video = dbPreparer.createVideoDataEntity(data: Data([11, 22]))
+            let thumbnail = dbPreparer.createImageDataEntity(data: Data([33]), height: 33, width: 33)
             let message = dbPreparer.createVideoMessageEntity(
                 conversation: conversation,
                 video: video,
@@ -231,12 +231,12 @@ class EntityDestroyerTests: XCTestCase {
             return
         }
         
-        guard let conversations = fetchedContact.conversations as? Set<Conversation> else {
+        guard let conversations = fetchedContact.conversations as? Set<ConversationEntity> else {
             XCTFail()
             return
         }
         
-        guard let groupConversations = fetchedContact.groupConversations as? Set<Conversation> else {
+        guard let groupConversations = fetchedContact.groupConversations as? Set<ConversationEntity> else {
             XCTFail()
             return
         }
@@ -267,7 +267,7 @@ class EntityDestroyerTests: XCTestCase {
         for i in 0..<100 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
+                    .textMessageEntity(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
                 
@@ -278,7 +278,7 @@ class EntityDestroyerTests: XCTestCase {
         for i in 0..<100 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: remainingContactAndConversation.conversation, setLastUpdate: true)!
+                    .textMessageEntity(for: remainingContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = remainingContactAndConversation.contact
                 message.text = "Text \(i)"
             }
@@ -338,14 +338,15 @@ class EntityDestroyerTests: XCTestCase {
             for i in 0..<100 {
                 _ = DatabasePreparer(context: self.databaseMainCnx.main)
                     .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                        conversation.groupID = BytesUtility.generateRandomBytes(length: 32)!
+                        // swiftformat:disable:next acronyms
+                        conversation.groupId = BytesUtility.generateRandomBytes(length: 32)!
                         conversation.groupMyIdentity = deletableContactAndConversation.contact.identity
                         conversation.groupName = "TestGroup \(i)"
-                        conversation.addMembers(Set(members))
+                        conversation.members?.formUnion(members)
                         
                         for i in 0..<100 {
                             for member in members {
-                                let message = entityManager.entityCreator.textMessage(
+                                let message = entityManager.entityCreator.textMessageEntity(
                                     for: conversation, setLastUpdate: true
                                 )!
                                 message.sender = member
@@ -363,7 +364,7 @@ class EntityDestroyerTests: XCTestCase {
         for i in 0..<100 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
+                    .textMessageEntity(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
                 
@@ -373,7 +374,7 @@ class EntityDestroyerTests: XCTestCase {
         
         for i in 0..<100 {
             entityManager.performAndWaitSave {
-                let message = entityManager.entityCreator.textMessage(for: conversation2, setLastUpdate: true)!
+                let message = entityManager.entityCreator.textMessageEntity(for: conversation2, setLastUpdate: true)!
                 message.sender = members.first!
                 message.text = "Text \(i)"
                 
@@ -427,14 +428,15 @@ class EntityDestroyerTests: XCTestCase {
             for i in 0..<10 {
                 _ = DatabasePreparer(context: self.databaseMainCnx.main)
                     .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                        conversation.groupID = BytesUtility.generateRandomBytes(length: 32)!
+                        // swiftformat:disable:next acronyms
+                        conversation.groupId = BytesUtility.generateRandomBytes(length: 32)!
                         conversation.groupMyIdentity = deletableContactAndConversation.contact.identity
                         conversation.groupName = "TestGroup \(i)"
-                        conversation.addMembers(Set(members))
+                        conversation.members?.formUnion(members)
 
                         for i in 0..<10 {
                             for member in members {
-                                let message = entityManager.entityCreator.textMessage(
+                                let message = entityManager.entityCreator.textMessageEntity(
                                     for: conversation,
                                     setLastUpdate: true
                                 )!
@@ -458,7 +460,7 @@ class EntityDestroyerTests: XCTestCase {
         for i in 0..<10 {
             entityManager.performAndWaitSave {
                 let message = entityManager.entityCreator
-                    .textMessage(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
+                    .textMessageEntity(for: deletableContactAndConversation.conversation, setLastUpdate: true)!
                 message.sender = deletableContactAndConversation.contact
                 message.text = "Text \(i)"
 
@@ -468,7 +470,7 @@ class EntityDestroyerTests: XCTestCase {
 
         for i in 0..<10 {
             entityManager.performAndWaitSave {
-                let message = entityManager.entityCreator.textMessage(for: conversation2, setLastUpdate: true)!
+                let message = entityManager.entityCreator.textMessageEntity(for: conversation2, setLastUpdate: true)!
                 message.sender = members.first!
                 message.text = "Text \(i)"
 
@@ -503,7 +505,7 @@ class EntityDestroyerTests: XCTestCase {
     }
 
     func testDeleteMessagesAndNullifyLastMessage() throws {
-        var conversation: Conversation?
+        var conversation: ConversationEntity?
         var lastMessage: BaseMessage?
 
         let dp = DatabasePreparer(context: objCnx)
@@ -640,7 +642,7 @@ extension EntityDestroyerTests {
     }
     
     private func createContactAndConversation(entityManager: EntityManager, identity: String)
-        -> (contact: ContactEntity, conversation: Conversation) {
+        -> (contact: ContactEntity, conversation: ConversationEntity) {
         var contact: ContactEntity!
         
         entityManager.performAndWaitSave {
@@ -667,7 +669,7 @@ extension EntityDestroyerTests {
         // Setup DB for testing, insert 10 video messages
         let dbPreparer = DatabasePreparer(context: objCnx)
         dbPreparer.save {
-            let thumbnail = dbPreparer.createImageData(data: Data([22]), height: 22, width: 22)
+            let thumbnail = dbPreparer.createImageDataEntity(data: Data([22]), height: 22, width: 22)
             
             let userCalendar = Calendar.current
             let toDate = Date()
@@ -681,7 +683,7 @@ extension EntityDestroyerTests {
 
                 dbPreparer.createVideoMessageEntity(
                     conversation: dbPreparer.createConversation(),
-                    video: dbPreparer.createVideoData(data: Data([1])),
+                    video: dbPreparer.createVideoDataEntity(data: Data([1])),
                     duration: 10,
                     thumbnail: thumbnail,
                     date: date!,

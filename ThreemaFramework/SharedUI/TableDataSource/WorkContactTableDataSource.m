@@ -217,11 +217,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (NSSet *)selectedConversations {
     NSMutableSet *conversations = [NSMutableSet setWithCapacity:[_selectedWorkContacts count]];
     for (ContactEntity *contact in _selectedWorkContacts) {
-        __block Conversation *conversation = [_entityManager.entityFetcher conversationForContact:contact];
+        __block ConversationEntity *conversation = [_entityManager.entityFetcher conversationEntityForContact:contact];
         if (conversation == nil) {
             // create & immediately save
             [_entityManager performSyncBlockAndSafe:^{
-                conversation = [_entityManager.entityCreator conversation];
+                conversation = [_entityManager.entityCreator conversationEntity];
                 conversation.contact = contact;
             }];
         }

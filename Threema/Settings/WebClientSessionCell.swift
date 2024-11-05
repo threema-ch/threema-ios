@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 class WebClientSessionCell: UITableViewCell {
     @IBOutlet var browserIcon: UIImageView!
@@ -26,7 +27,7 @@ class WebClientSessionCell: UITableViewCell {
     @IBOutlet var browserLabel: UILabel!
     @IBOutlet var infoLabel: UILabel!
         
-    var webClientSession: WebClientSession!
+    var webClientSession: WebClientSessionEntity!
     var viewController: ThreemaWebViewController!
     
     func setupCell() {
@@ -38,16 +39,16 @@ class WebClientSessionCell: UITableViewCell {
             browserLabel.text = webClientSession.name
         }
         else {
-            browserLabel.text = BundleUtil.localizedString(forKey: "webClientSession_unnamed")
+            browserLabel.text = #localize("webClientSession_unnamed")
         }
         
         let info: String
-        let localizedSavedString = (webClientSession.permanent?.boolValue ?? false) ? BundleUtil
+        let localizedSavedString = webClientSession.permanent.boolValue ? BundleUtil
             .localizedString(forKey: "webClientSession_saved") : BundleUtil
             .localizedString(forKey: "webClientSession_notSaved")
         if let lastConnenction = webClientSession.lastConnection {
             info = """
-                \(BundleUtil.localizedString(forKey: "webClientSession_lastUse")): \(DateFormatter
+                \(#localize("webClientSession_lastUse")): \(DateFormatter
                 .shortStyleDateTime(lastConnenction))
                 \(localizedSavedString)
                 """
@@ -95,9 +96,9 @@ class WebClientSessionCell: UITableViewCell {
             )
             accessoryView?.tintColor = .primary
             cellAccessibility.append(". ")
-            cellAccessibility.append(BundleUtil.localizedString(forKey: "status_loggedIn"))
+            cellAccessibility.append(#localize("status_loggedIn"))
             cellAccessibilityActions.append(UIAccessibilityCustomAction(
-                name: BundleUtil.localizedString(forKey: "webClientSession_actionSheet_stopSession"),
+                name: #localize("webClientSession_actionSheet_stopSession"),
                 target: self,
                 selector: #selector(handleStopSession)
             ))
@@ -109,7 +110,7 @@ class WebClientSessionCell: UITableViewCell {
         accessibilityLabel = cellAccessibility
         
         cellAccessibilityActions.append(UIAccessibilityCustomAction(
-            name: BundleUtil.localizedString(forKey: "webClientSession_actionSheet_renameSession"),
+            name: #localize("webClientSession_actionSheet_renameSession"),
             target: self,
             selector: #selector(handleRenameSession)
         ))
@@ -123,7 +124,7 @@ class WebClientSessionCell: UITableViewCell {
     
     @objc private func handleRenameSession() {
         let renameAlert = UIAlertController(
-            title: BundleUtil.localizedString(forKey: "webClientSession_sessionName"),
+            title: #localize("webClientSession_sessionName"),
             message: nil,
             preferredStyle: .alert
         )
@@ -132,10 +133,10 @@ class WebClientSessionCell: UITableViewCell {
                 textfield.text = sessionName
             }
             else {
-                textfield.placeholder = BundleUtil.localizedString(forKey: "webClientSession_unnamed")
+                textfield.placeholder = #localize("webClientSession_unnamed")
             }
         }
-        let saveAction = UIAlertAction(title: BundleUtil.localizedString(forKey: "save"), style: .default) { _ in
+        let saveAction = UIAlertAction(title: #localize("save"), style: .default) { _ in
             let textField = renameAlert.textFields![0]
             WebClientSessionStore.shared.updateWebClientSession(
                 session: self.webClientSession,
@@ -144,7 +145,7 @@ class WebClientSessionCell: UITableViewCell {
         }
         renameAlert.addAction(saveAction)
         
-        let cancelAction = UIAlertAction(title: BundleUtil.localizedString(forKey: "cancel"), style: .cancel)
+        let cancelAction = UIAlertAction(title: #localize("cancel"), style: .cancel)
         renameAlert.addAction(cancelAction)
         
         viewController.present(renameAlert, animated: true)

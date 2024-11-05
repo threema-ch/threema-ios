@@ -225,7 +225,7 @@ extension EntityFetcher {
     // MARK: - Predicates
     
     func baseMessageNoPrivatePredicate() -> NSPredicate {
-        NSPredicate(format: "conversation.category != %d", ConversationCategory.private.rawValue)
+        NSPredicate(format: "conversation.category != %d", ConversationEntity.Category.private.rawValue)
     }
     
     func baseMessageDateRangePredicate(from start: Date, to end: Date) -> NSPredicate {
@@ -244,7 +244,10 @@ extension EntityFetcher {
     }
     
     func messageConversationArchivedPredicate() -> NSPredicate {
-        NSPredicate(format: "conversation.visibility == %d", ConversationVisibility.archived.rawValue)
+        NSPredicate(
+            format: "conversation.visibility == %d",
+            ConversationEntity.Visibility.archived.rawValue
+        )
     }
     
     func messageMarkerStarredPredicate() -> NSPredicate {

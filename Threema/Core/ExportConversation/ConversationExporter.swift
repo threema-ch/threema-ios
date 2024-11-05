@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import MBProgressHUD
 import ThreemaFramework
+import ThreemaMacros
 import ZipArchive
 
 class ConversationExporter: NSObject, PasswordCallback {
@@ -33,8 +34,8 @@ class ConversationExporter: NSObject, PasswordCallback {
     }
     
     private var password: String?
-    private lazy var conversation: Conversation? = entityManager.entityFetcher
-        .existingObject(with: conversationObjectID) as? Conversation
+    private lazy var conversation: ConversationEntity? = entityManager.entityFetcher
+        .existingObject(with: conversationObjectID) as? ConversationEntity
 
     private var conversationObjectID: NSManagedObjectID
     private var entityManager: EntityManager
@@ -47,7 +48,7 @@ class ConversationExporter: NSObject, PasswordCallback {
     
     private lazy var displayName: String = {
         var displayName = ""
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             displayName = self.conversation?.displayName ?? ""
         }
         return displayName
@@ -76,10 +77,10 @@ class ConversationExporter: NSObject, PasswordCallback {
     }
     
     /// Check if a conversation can be exported
-    /// - Parameter conversation: Conversation to export
+    /// - Parameter conversation: ConversationEntity to export
     /// - Parameter entityManager: EntityManager to load all messages
     /// - Returns: Can the passed conversation be exported?
-    static func canExport(conversation: Conversation, entityManager: EntityManager) -> Bool {
+    static func canExport(conversation: ConversationEntity, entityManager: EntityManager) -> Bool {
         let mdmSetup = MDMSetup(setup: false)
         
         if let exportDisabled = mdmSetup?.disableExport(), exportDisabled {
@@ -93,7 +94,7 @@ class ConversationExporter: NSObject, PasswordCallback {
     /// Exports a conversation
     func exportConversation() {
         emailSubject = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "conversation_log_subject"),
+            #localize("conversation_log_subject"),
             displayName
         )
         ZipFileContainer.cleanFiles()
@@ -282,7 +283,7 @@ extension ConversationExporter {
             
             po.completedUnitCount += 1
             hud.label.text = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "export_progress_label"),
+                #localize("export_progress_label"),
                 po.completedUnitCount,
                 po.totalUnitCount
             )
@@ -300,7 +301,7 @@ extension ConversationExporter {
             for message in messages {
                 var success = false
                 
-                entityManager.performBlockAndWait {
+                entityManager.performAndWait {
                     success = self.addMessage(message: message)
                 }
                 
@@ -425,7 +426,8 @@ extension ConversationExporter {
         log.append(date)
         log.append(": ")
         
-        if let textMessage = baseMessage as? TextMessage, let quoteID = textMessage.quotedMessageID,
+        // swiftformat:disable:next acronyms
+        if let textMessage = baseMessage as? TextMessageEntity, let quoteID = textMessage.quotedMessageId,
            let quoteMessage = entityManager.entityFetcher.message(
                with: quoteID,
                conversation: baseMessage.conversation
@@ -438,7 +440,7 @@ extension ConversationExporter {
                 log.append("\(contact.displayName): ")
             }
             else {
-                log.append("\(BundleUtil.localizedString(forKey: "me")): ")
+                log.append("\(#localize("me")): ")
             }
                 
             log.append("\"\(quoteMessage.previewText)\"] ")
@@ -469,9 +471,9 @@ extension ConversationExporter {
     /// Shows an alert with an error code
     /// - Parameter errorCode: the error code shown in the alert
     func showGeneralAlert(errorCode: Int) {
-        let title = BundleUtil.localizedString(forKey: "chat_export_failed_title")
+        let title = #localize("chat_export_failed_title")
         let message = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "chat_export_failed_message"),
+            #localize("chat_export_failed_message"),
             errorCode
         )
         
@@ -486,9 +488,9 @@ extension ConversationExporter {
         let needed = ByteCountFormatter.string(fromByteCount: chatSize, countStyle: .file)
         let free = ByteCountFormatter.string(fromByteCount: freeStorage, countStyle: .file)
         
-        let title = BundleUtil.localizedString(forKey: "not_enough_storage_title")
+        let title = #localize("not_enough_storage_title")
         let message = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "amount_of_free_storage_needed"),
+            #localize("amount_of_free_storage_needed"),
             needed,
             free
         )
@@ -499,7 +501,7 @@ extension ConversationExporter {
     /// Presents the password request UI
     func requestPassword() {
         let passwordTrigger = CreatePasswordTrigger(on: viewController)
-        passwordTrigger?.passwordAdditionalText = BundleUtil.localizedString(forKey: "password_description_export")
+        passwordTrigger?.passwordAdditionalText = #localize("password_description_export")
         passwordTrigger?.passwordCallback = self
         
         passwordTrigger?.presentPasswordUI()
@@ -561,11 +563,11 @@ extension ConversationExporter {
                 let progress = Progress(totalUnitCount: Int64(totalWork))
                 hud.progressObject = progress
                 
-                hud.button.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
+                hud.button.setTitle(#localize("cancel"), for: .normal)
                 hud.button.addTarget(self, action: #selector(self.progressHUDCancelPressed), for: .touchUpInside)
                 
                 hud.label.text = String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "export_progress_label"),
+                    #localize("export_progress_label"),
                     0,
                     totalWork
                 )

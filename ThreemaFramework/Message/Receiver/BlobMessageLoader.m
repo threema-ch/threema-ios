@@ -26,10 +26,7 @@
 #import "UserSettings.h"
 #import "MediaConverter.h"
 #import "BundleUtil.h"
-#import "FileMessageEntity.h"
-#import "ImageMessageEntity.h"
 #import "ValidationLogger.h"
-#import "Conversation.h"
 #import "UTIConverter.h"
 #import "ServerConnector.h"
 
@@ -171,15 +168,15 @@
     message.sendFailed = [NSNumber numberWithBool:NO];
 
     /* Add to photo library */
-    if ([UserSettings sharedUserSettings].autoSaveMedia && [message isKindOfClass:FileMessageEntity.class] && message.conversation.conversationCategory != ConversationCategoryPrivate) {
+    if ([UserSettings sharedUserSettings].autoSaveMedia && [message isKindOfClass:FileMessageEntity.class] && message.conversation.category != ConversationCategoryPrivate) {
         FileMessageEntity *fileMessageEntity = (FileMessageEntity *)message;
         NSString *filename = [[FileUtility shared] getTemporaryFileName];
-        __block NSURL *tmpFileUrl = [fileMessageEntity tmpURL:filename];
+        __block NSURL *tmpFileUrl = [fileMessageEntity tempFileURLWithFallBackFileName:filename];
         if (tmpFileUrl == nil) {
             DDLogError(@"No tmpFileUrl to export to and thus unable to save to photos library");
             return;
         }
-        [fileMessageEntity exportDataToURL:tmpFileUrl];
+        [fileMessageEntity exportDataTo:tmpFileUrl];
 
         BOOL isVideo = [UTIConverter isVideoMimeType:fileMessageEntity.mimeType] || [UTIConverter isMovieMimeType:fileMessageEntity.mimeType];
         BOOL isImage = [UTIConverter isImageMimeType:fileMessageEntity.mimeType];

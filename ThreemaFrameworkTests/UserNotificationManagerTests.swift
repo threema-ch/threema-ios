@@ -250,7 +250,7 @@ class UserNotificationManagerTests: XCTestCase {
         let expectedSenderID = ThreemaIdentity("0S9AE6CP")
         let expectedFromName = "red99"
         let expectedTitle: String? = "red99"
-        let expectedBody = "Message"
+        let expectedBody = "new_message"
         let expectedAttachmentName: String? = nil
         let expectedAttachmentURL: URL? = nil
         let expectedCmd = "newmsg"
@@ -327,7 +327,7 @@ class UserNotificationManagerTests: XCTestCase {
         let expectedSenderID = ThreemaIdentity(trustedContact.identity!)
         let expectedFromName = "*3MAPUSH"
         let expectedTitle: String? = "*3MAPUSH"
-        let expectedBody = "Message"
+        let expectedBody = "new_message"
         let expectedAttachmentName: String? = nil
         let expectedAttachmentURL: URL? = nil
         let expectedCmd = "newmsg"
@@ -401,7 +401,7 @@ class UserNotificationManagerTests: XCTestCase {
 
         for testFlags in testsFlags {
             // Create base message for mocking
-            var textMessage: TextMessage!
+            var textMessage: TextMessageEntity!
             databasePreparer.save {
                 let contact = databasePreparer.createContact(
                     publicKey: Data([1]),
@@ -461,7 +461,7 @@ class UserNotificationManagerTests: XCTestCase {
         let expectedSenderID = ThreemaIdentity("0S9AE6CP")
         let expectedFromName = "0S9AE6CP"
         let expectedTitle: String? = "0S9AE6CP"
-        let expectedBody = "Message"
+        let expectedBody = "new_message"
         let expectedAttachmentName: String? = nil
         let expectedAttachmentURL: URL? = nil
         let expectedCmd = "newmsg"
@@ -563,7 +563,7 @@ class UserNotificationManagerTests: XCTestCase {
         settingsStoreMock.notificationType = .restrictive
 
         // Create message for mocking
-        var textMessage: TextMessage!
+        var textMessage: TextMessageEntity!
         databasePreparer.save {
             let contactGroupCreator = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
@@ -580,7 +580,8 @@ class UserNotificationManagerTests: XCTestCase {
             let group = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator.string)
             databasePreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.groupID = group.groupID
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = group.groupId
                     conversation.contact = contactGroupCreator
                     conversation.groupName = expectedTitle
 
@@ -654,7 +655,7 @@ class UserNotificationManagerTests: XCTestCase {
         let expectedSenderID = ThreemaIdentity("0S9AE6CP")
         let expectedFromName = "0S9AE6CP"
         let expectedTitle: String? = "0S9AE6CP"
-        let expectedBody = "Message"
+        let expectedBody = "new_message"
         let expectedAttachmentName: String? = nil
         let expectedAttachmentURL: URL? = nil
         let expectedCmd = "newmsg"
@@ -719,14 +720,14 @@ class UserNotificationManagerTests: XCTestCase {
                 "pushDecrypt": false,
                 "expectedFromName": "Hans Muster",
                 "expectedTitle": "Hans Muster",
-                "expectedBody": "Message",
+                "expectedBody": "new_message",
             ],
             [
                 "pushShowNickname": true,
                 "pushDecrypt": false,
                 "expectedFromName": "red99",
                 "expectedTitle": "red99",
-                "expectedBody": "Message",
+                "expectedBody": "new_message",
             ],
             [
                 "pushShowNickname": false,
@@ -848,27 +849,27 @@ class UserNotificationManagerTests: XCTestCase {
                 "pushDecrypt": false,
                 "expectedFromName": "Hans Muster",
                 "expectedTitle": "Hans Muster",
-                "expectedBody": "Group message",
+                "expectedBody": "new_group_message",
             ],
             [
                 "pushShowNickname": true,
                 "pushDecrypt": false,
                 "expectedFromName": "red99",
                 "expectedTitle": "red99",
-                "expectedBody": "Group message",
+                "expectedBody": "new_group_message",
             ],
             [
                 "pushShowNickname": false,
                 "pushDecrypt": true,
                 "expectedFromName": "Hans Muster",
-                "expectedTitle": "Group message",
+                "expectedTitle": "new_group_message",
                 "expectedBody": "Hans Muster: This is a group message",
             ],
             [
                 "pushShowNickname": true,
                 "pushDecrypt": true,
                 "expectedFromName": "red99",
-                "expectedTitle": "Group message",
+                "expectedTitle": "new_group_message",
                 "expectedBody": "red99: This is a group message",
             ],
         ]
@@ -906,7 +907,7 @@ class UserNotificationManagerTests: XCTestCase {
             var contact: ContactEntity!
             var creatorContact: ContactEntity!
             var groupEntity: GroupEntity!
-            var conversation: Conversation!
+            var conversation: ConversationEntity!
             databasePreparer.save {
                 contact = databasePreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -930,7 +931,8 @@ class UserNotificationManagerTests: XCTestCase {
                     unreadMessageCount: 0,
                     visibility: .default,
                     complete: { conversation in
-                        conversation.groupID = groupID
+                        // swiftformat:disable:next acronyms
+                        conversation.groupId = groupID
                         conversation.contact = creatorContact
                         conversation.groupMyIdentity = myIdentityStoreMock.identity
                     }
@@ -999,7 +1001,7 @@ class UserNotificationManagerTests: XCTestCase {
             XCTAssertEqual(result?.isGroupMessage, expectedIsGroupMessage)
             XCTAssertEqual(result?.groupID, expectedGroupID)
             
-            var pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification)
+            let pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification)
             XCTAssertNotNil(pushSetting)
         }
     }
@@ -1023,7 +1025,7 @@ class UserNotificationManagerTests: XCTestCase {
         var contact: ContactEntity!
         var creatorContact: ContactEntity!
         var groupEntity: GroupEntity!
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         databasePreparer.save {
             contact = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -1049,7 +1051,8 @@ class UserNotificationManagerTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    conversation.groupID = groupID
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = groupID
                     conversation.contact = creatorContact
                     conversation.groupMyIdentity = myIdentityStoreMock.identity
                 }
@@ -1106,14 +1109,14 @@ class UserNotificationManagerTests: XCTestCase {
                 "pushDecrypt": false,
                 "expectedFromName": "Hans Muster",
                 "expectedTitle": "Hans Muster",
-                "expectedBody": "Message",
+                "expectedBody": "new_message",
             ],
             [
                 "pushShowNickname": true,
                 "pushDecrypt": false,
                 "expectedFromName": "red99",
                 "expectedTitle": "red99",
-                "expectedBody": "Message",
+                "expectedBody": "new_message",
             ],
             [
                 "pushShowNickname": false,
@@ -1143,7 +1146,7 @@ class UserNotificationManagerTests: XCTestCase {
 
             // Create base message in single cnversation for mocking
             var contact: ContactEntity!
-            var message: TextMessage!
+            var message: TextMessageEntity!
             databasePreparer.save {
                 contact = databasePreparer.createContact(
                     publicKey: Data([1]),
@@ -1249,7 +1252,7 @@ class UserNotificationManagerTests: XCTestCase {
                 "pushDecrypt": false,
                 "expectedFromName": "Hans Muster",
                 "expectedTitle": "Hans Muster",
-                "expectedBody": "Group message",
+                "expectedBody": "new_group_message",
                 "expectedGroupId": groupID.base64EncodedString(),
             ],
             [
@@ -1257,7 +1260,7 @@ class UserNotificationManagerTests: XCTestCase {
                 "pushDecrypt": false,
                 "expectedFromName": "red99",
                 "expectedTitle": "red99",
-                "expectedBody": "Group message",
+                "expectedBody": "new_group_message",
                 "expectedGroupId": groupID.base64EncodedString(),
             ],
             [
@@ -1289,7 +1292,7 @@ class UserNotificationManagerTests: XCTestCase {
 
             // Create base message in group conversation for mocking
             var contact: ContactEntity!
-            var message: TextMessage!
+            var message: TextMessageEntity!
             databasePreparer.save {
                 let contactGroupCreator = databasePreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
@@ -1313,7 +1316,8 @@ class UserNotificationManagerTests: XCTestCase {
                         unreadMessageCount: 0,
                         visibility: .default
                     ) { conversation in
-                        conversation.groupID = group.groupID
+                        // swiftformat:disable:next acronyms
+                        conversation.groupId = group.groupId
                         conversation.contact = contactGroupCreator
                         conversation.groupName = "This is a group test"
 

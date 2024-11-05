@@ -25,18 +25,18 @@ public protocol MessageDraftStoreProtocol: AnyObject {
     
     /// Deletes the draft message associated with the given conversation.
     /// - Parameter conversation: The conversation for which the draft will be deleted.
-    func deleteDraft(for conversation: Conversation)
+    func deleteDraft(for conversation: ConversationEntity)
     
     /// Loads the draft message associated with the given conversation.
     /// - Parameter conversation: The conversation for which the draft will be loaded.
     /// - Returns: An optional `Draft` object if a draft exists, otherwise `nil`.
-    func loadDraft(for conversation: Conversation) -> Draft?
+    func loadDraft(for conversation: ConversationEntity) -> Draft?
     
     /// Saves the draft message for a given conversation.
     /// - Parameters:
     ///   - draft: The `Draft` object to be saved.
     ///   - conversation: The conversation for which the draft will be saved.
-    func saveDraft(_ draft: Draft, for conversation: Conversation)
+    func saveDraft(_ draft: Draft, for conversation: ConversationEntity)
     
     /// Cleans up old draft messages that are no longer needed.
     /// This method checks if old drafts have already been deleted to avoid redundant cleanup.
@@ -53,7 +53,7 @@ public protocol MessageDraftStoreProtocol: AnyObject {
     /// - Returns: An optional `NSAttributedString` representing the styled draft preview, or `nil` if no draft is
     /// available.
     func previewForDraft(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         textStyle: UIFont.TextStyle,
         tint: UIColor
     ) -> NSAttributedString?
@@ -61,7 +61,7 @@ public protocol MessageDraftStoreProtocol: AnyObject {
 
 extension MessageDraftStoreProtocol {
     public func previewForDraft(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         textStyle: UIFont.TextStyle,
         tint: UIColor
     ) -> NSAttributedString? {

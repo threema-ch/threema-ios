@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct CallSoundSettingsView: View {
     @EnvironmentObject var settingsVM: SettingsStore
@@ -38,7 +39,7 @@ struct CallSoundSettingsView: View {
         List {
             Picker("", selection: $settingsVM.voIPSound) {
                 ForEach(soundList, id: \.self) { soundName in
-                    Text("sound_\(soundName)".localized)
+                    Text(BundleUtil.localizedString(forKey: "sound_\(soundName)"))
                 }
             }
         }
@@ -50,7 +51,7 @@ struct CallSoundSettingsView: View {
         }
         .pickerStyle(.inline)
         .tint(UIColor.primary.color)
-        .navigationTitle("settings_threema_calls_call_sound".localized)
+        .navigationTitle(#localize("settings_threema_calls_call_sound"))
     }
 }
 

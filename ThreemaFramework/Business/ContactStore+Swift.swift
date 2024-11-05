@@ -54,6 +54,9 @@ extension ContactStore {
                     publicKey: publicKey,
                     firstname: batchAddContact.firstName,
                     lastname: batchAddContact.lastName,
+                    csi: batchAddContact.csi,
+                    jobTitle: batchAddContact.jobTitle,
+                    department: batchAddContact.department,
                     acquaintanceLevel: .direct,
                     entityManager: entityManager,
                     contactSyncer: mediatorSyncableContacts

@@ -61,7 +61,7 @@ final class UnreadMessagesStateManager {
 
     private let businessInjector: BusinessInjectorProtocol
     private let messageFetcher: MessageFetcher
-    private let conversation: Conversation
+    private let conversation: ConversationEntity
     private let notificationManager: NotificationManagerProtocol
     private weak var delegate: UnreadMessagesStateManagerDelegate?
     
@@ -126,7 +126,7 @@ final class UnreadMessagesStateManager {
     // MARK: - Lifecycle
 
     init(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         businessInjector: BusinessInjectorProtocol,
         notificationManager: NotificationManagerProtocol = NotificationManager(),
         unreadMessagesStateManagerDelegate: UnreadMessagesStateManagerDelegate

@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Combine
 import MBProgressHUD
+import ThreemaMacros
 import UIKit
 
 /// Get updates for `ChatSearchController` interactions
@@ -101,7 +102,7 @@ final class ChatSearchController: NSObject {
     
     // MARK: - Private properties
     
-    private let conversation: Conversation
+    private let conversation: ConversationEntity
     private weak var delegate: ChatSearchControllerDelegate?
     private let context: NSManagedObjectContext
     private let entityFetcher: EntityFetcher
@@ -112,7 +113,7 @@ final class ChatSearchController: NSObject {
     @Published var searchText: String?
     
     private var starredToken: UISearchToken {
-        let token = UISearchToken(icon: UIImage(systemName: "star.fill"), text: "search_token_starred_title".localized)
+        let token = UISearchToken(icon: UIImage(systemName: "star.fill"), text: #localize("search_token_starred_title"))
         return token
     }
     
@@ -197,7 +198,7 @@ final class ChatSearchController: NSObject {
             }
             
             localizedMatchesText = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "chat_search_matches"),
+                #localize("chat_search_matches"),
                 currentResultOffset + 1,
                 filteredMessageObjectIDs.count
             )
@@ -207,7 +208,7 @@ final class ChatSearchController: NSObject {
             // No matches. Disable everything.
             nextResultBarButtonItem.isEnabled = false
             previousResultBarButtonItem.isEnabled = false
-            localizedMatchesText = BundleUtil.localizedString(forKey: "chat_search_no_matches")
+            localizedMatchesText = #localize("chat_search_no_matches")
             hasMatches = false
         }
         
@@ -230,11 +231,11 @@ final class ChatSearchController: NSObject {
     // MARK: - Lifecycle
     
     /// Create a new chat search controller
-    /// - Parameter conversation: Conversation to search messages in
+    /// - Parameter conversation: ConversationEntity to search messages in
     /// - Parameter delegate: Delegate that gets updated during the use of the search controller
     /// - Parameter entityManager: Entity manager used for search and to fetch results messages
     init(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         delegate: ChatSearchControllerDelegate,
         entityManager: EntityManager = EntityManager()
     ) {
@@ -296,7 +297,7 @@ final class ChatSearchController: NSObject {
                 DispatchQueue.main.async {
                     let hud = MBProgressHUD.showAdded(to: self.chatSearchResultsViewController.view, animated: true)
                     hud.mode = .indeterminate
-                    hud.label.text = BundleUtil.localizedString(forKey: "chat_search_searching")
+                    hud.label.text = #localize("chat_search_searching")
                     hud.removeFromSuperViewOnHide = true
                 }
                 var hasTokens = false

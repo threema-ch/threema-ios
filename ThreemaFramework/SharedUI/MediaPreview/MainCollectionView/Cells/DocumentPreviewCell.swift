@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import QuickLook
+import ThreemaMacros
 
 class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelegate {
     
@@ -122,7 +123,7 @@ class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelegate {
         smallPreviewContentView.isHidden = true
         
         activityIndicator.startAnimating()
-        loadingText.text = BundleUtil.localizedString(forKey: "loading_document")
+        loadingText.text = #localize("loading_document")
     }
     
     func showPreview() {

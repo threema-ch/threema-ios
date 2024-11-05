@@ -98,7 +98,7 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
             if (contact) {
                 displayName = contact.mentionName;
             } else if ([identity isEqualToString:@"@@@@@@@@"]) {
-                displayName = [BundleUtil localizedStringForKey:@"mentions_all"];
+                displayName = [BundleUtil localizedStringForKey:@"all"];
             }
             text = [text stringByReplacingCharactersInRange:result.range withString:[NSString stringWithFormat:@"@%@", displayName]];
         } else {
@@ -184,7 +184,7 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
                 [attributeAt setObject:@YES forKey:@"ZSWTappableLabelTappableRegionAttributeName"];
                 [attributeAt setObject:contact forKey:@"NSTextCheckingResult"];
             } else if ([identity isEqualToString:@"@@@@@@@@"]) {
-                displayName = [BundleUtil localizedStringForKey:@"mentions_all"];
+                displayName = [BundleUtil localizedStringForKey:@"all"];
                 [paddingAttributeLeft setObject:backgroundMentionMe forKey:@"TTTBackgroundFillColor"];
                 [paddingAttributeLeft setObject:backgroundMentionMe forKey:NSForegroundColorAttributeName];
                 

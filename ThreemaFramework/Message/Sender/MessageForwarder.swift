@@ -36,30 +36,30 @@ public final class MessageForwarder {
     /// Forwards a given base message to a conversation and adds additional text as caption or additional text message.
     /// - Parameters:
     ///   - message: Base message to be forwarded.
-    ///   - conversation: Conversation which message should be forwarded to.
+    ///   - conversation: ConversationEntity which message should be forwarded to.
     ///   - additionalText: Additional text to be send as caption for file messages, or as normal text message for other
     ///                     types.
     public func forward(
         _ message: BaseMessage,
-        to conversation: Conversation,
+        to conversation: ConversationEntity,
         sendAsFile: Bool,
         additionalText: String?
     ) {
         
         switch message {
-        case let textMessage as TextMessage:
+        case let textMessage as TextMessageEntity:
             businessInjector.messageSender.sendTextMessage(
                 containing: textMessage.text,
                 in: conversation
             )
             sendAdditionalText(additionalText, to: conversation)
             
-        case let locationMessage as LocationMessage:
+        case let locationMessage as LocationMessageEntity:
             let coordinates = CLLocationCoordinate2DMake(
                 locationMessage.latitude.doubleValue,
                 locationMessage.longitude.doubleValue
             )
-            let accuracy = locationMessage.accuracy.doubleValue
+            let accuracy = locationMessage.accuracy?.doubleValue ?? 0.0
             
             businessInjector.messageSender.sendLocationMessage(
                 coordinates: coordinates,
@@ -98,11 +98,10 @@ public final class MessageForwarder {
             }
             
         case let audioMessage as AudioMessageEntity:
-            guard let audio = audioMessage.audio,
-                  let data = audio.data,
+            guard let audioDataEntity = audioMessage.audio,
                   let item = URLSenderItem(
-                      data: data,
-                      fileName: audio.getFilename(),
+                      data: audioDataEntity.data,
+                      fileName: audioDataEntity.getFilename(),
                       type: UTType.audio.identifier,
                       renderType: sendAsFile ? 0 : 1,
                       sendAsFile: sendAsFile
@@ -123,9 +122,8 @@ public final class MessageForwarder {
             
         case let imageMessage as ImageMessageEntity:
             guard let image = imageMessage.image,
-                  let data = image.data,
                   let item = URLSenderItem(
-                      data: data,
+                      data: image.data,
                       fileName: image.getFilename(),
                       type: imageMessage.blobUTTypeIdentifier,
                       renderType: sendAsFile ? 0 : 1,
@@ -150,9 +148,8 @@ public final class MessageForwarder {
             
         case let videoMessage as VideoMessageEntity:
             guard let video = videoMessage.video,
-                  let data = video.data,
                   let item = URLSenderItem(
-                      data: data,
+                      data: video.data,
                       fileName: video.getFilename(),
                       type: videoMessage.blobUTTypeIdentifier,
                       renderType: sendAsFile ? 0 : 1,
@@ -180,7 +177,7 @@ public final class MessageForwarder {
         }
     }
     
-    private func sendAdditionalText(_ text: String?, to conversation: Conversation) {
+    private func sendAdditionalText(_ text: String?, to conversation: ConversationEntity) {
         guard let text else {
             return
         }

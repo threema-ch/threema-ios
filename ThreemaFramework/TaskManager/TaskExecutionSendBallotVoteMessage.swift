@@ -45,7 +45,7 @@ final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProt
                 }
 
                 self.frameworkInjector.entityManager.performBlockAndWait {
-                    var conversation: Conversation
+                    var conversation: ConversationEntity
                     do {
                         conversation = try self.getConversation(for: task)
                     }
@@ -143,7 +143,7 @@ final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProt
                         }
                     }
                     else {
-                        var conversation: Conversation
+                        var conversation: ConversationEntity
                         do {
                             conversation = try self.getConversation(for: task)
                         }

@@ -20,21 +20,22 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 @objcMembers public final class MessageDraftStore: NSObject, MessageDraftStoreProtocol {
     public static let shared = MessageDraftStore()
     
-    public func deleteDraft(for conversation: Conversation) {
+    public func deleteDraft(for conversation: ConversationEntity) {
         @MessageDraftCoordinator(conversation: conversation) var draft
         draft = nil
     }
     
-    public func loadDraft(for conversation: Conversation) -> Draft? {
+    public func loadDraft(for conversation: ConversationEntity) -> Draft? {
         @MessageDraftCoordinator(conversation: conversation) var draft
         return draft
     }
  
-    public func saveDraft(_ draft: Draft, for conversation: Conversation) {
+    public func saveDraft(_ draft: Draft, for conversation: ConversationEntity) {
         @MessageDraftCoordinator(conversation: conversation) var oldDraft
         oldDraft = draft
     }
@@ -52,7 +53,7 @@ import Foundation
                     [String: String]()
                 }))
             for contact in entityManager.entityFetcher.allContacts() as? [ContactEntity] ?? [] {
-                for conv in contact.conversations as? Set<Conversation> ?? Set<Conversation>() {
+                for conv in contact.conversations as? Set<ConversationEntity> ?? Set<ConversationEntity>() {
                     @MessageDraftCoordinator(conversation: conv) var mdc
                     guard let mdc, let storeKey = $mdc.storeKey else {
                         return
@@ -92,15 +93,15 @@ public enum Draft {
             draft
             
         case .audio:
-            "file_message_voice".localized
+            #localize("file_message_voice")
             
         case let .json(subtype):
             switch subtype {
             case let .quote(draft, _):
-                "\("draft_type_quote".localized): \(draft)"
+                "\(#localize("draft_type_quote")): \(draft)"
                 
             case let .edit(draft, _):
-                "\("draft_type_edit".localized): \(draft)"
+                "\(#localize("draft_type_edit")): \(draft)"
             }
         }
     }
@@ -217,7 +218,7 @@ extension Draft: Equatable {
 ///
 /// Everything here should work with any types of `Draft`
 @propertyWrapper struct MessageDraftCoordinator {
-    let conversation: Conversation
+    let conversation: ConversationEntity
     
     var projectedValue: MessageDraftCoordinator { self }
     
@@ -283,7 +284,7 @@ extension Draft: Equatable {
     }
     
     fileprivate var storeKey: String? {
-        if conversation.isGroup(), let hexStr = conversation.groupID?.hexString {
+        if conversation.isGroup, let hexStr = conversation.groupID?.hexString {
             let creator = conversation.contact?.identity ?? "*"
             return "\(creator)-\(hexStr)"
         }

@@ -94,6 +94,7 @@ typedef enum : NSUInteger {
             _companyDirectoryCellView = [[CompanyDirectoryCellView alloc] init];
         }
     }
+    self.navigationController.title = [BundleUtil localizedStringForKey:@"contacts"];
     return self;
 }
 
@@ -172,6 +173,7 @@ typedef enum : NSUInteger {
     [self.tableView registerClass:ContactCell.class forCellReuseIdentifier:@"ContactCell"];
     [self.tableView registerClass:GroupCell.class forCellReuseIdentifier:@"GroupCell"];
     [self.tableView registerClass:DistributionListCell.class forCellReuseIdentifier:@"DistributionListCell"];
+    self.title = [BundleUtil localizedStringForKey:@"contacts"];
 }
 
 - (void)refresh {
@@ -1018,7 +1020,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)deleteGroup:(Group *)group {
-    Conversation *conversation = group.conversation;
+    ConversationEntity *conversation = group.conversation;
     DeleteConversationAction *deleteAction = [DeleteConversationAction deleteActionForConversation:conversation];
     deleteAction.presentingViewController = self;
     
@@ -1059,7 +1061,7 @@ typedef enum : NSUInteger {
     }];
 }
 
-- (void) doNotheing {
+- (void) doNothing {
     return;
 }
 

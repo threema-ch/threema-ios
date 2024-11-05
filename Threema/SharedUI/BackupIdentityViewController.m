@@ -34,6 +34,8 @@
 @interface BackupIdentityViewController ()
 
 @property (weak, nonatomic) IBOutlet CopyLabel *identityBackupLabel;
+@property (weak, nonatomic) IBOutlet UILabel *includeInDeviceBackupLabel;
+@property (weak, nonatomic) IBOutlet UILabel *yourExportLabel;
 @end
 
 @implementation BackupIdentityViewController {
@@ -57,6 +59,10 @@
         self.phoneBackupSwitch.on = NO;
         self.phoneBackupSwitch.enabled = NO;
     }
+
+    self.includeInDeviceBackupLabel.text = [BundleUtil localizedStringForKey:@"id_export_include_in_device_backup_label"];
+    self.yourExportLabel.text = [BundleUtil localizedStringForKey:@"id_export_your_export_label"];
+    self.title = [BundleUtil localizedStringForKey:@"id_export_title"];
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appResignActive:) name:UIApplicationWillResignActiveNotification object:nil];
 }

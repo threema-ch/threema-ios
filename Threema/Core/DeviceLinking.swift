@@ -99,16 +99,11 @@ class DeviceLinking: NSObject {
     /// Block communications to the services: Threema Calls, MDM, Web, Safe,
     /// Contact-Sync and Chat Server. Disconnect Threema Web and Chat Server connection.
     func blockCommunicationAndDisconnect() async {
-        guard !businessInjector.userSettings.blockCommunication else {
-            DDLogInfo("Communication is already blocked")
-            return
-        }
-
-        businessInjector.userSettings.blockCommunication = true
+        // Block communication setting was removed
 
         if let webClientSessions = businessInjector.entityManager.entityFetcher.allActiveWebClientSessions() {
             for session in webClientSessions {
-                if let session = session as? WebClientSession {
+                if let session = session as? WebClientSessionEntity {
                     WCSessionManager.shared.stopSession(session)
                 }
             }
@@ -120,12 +115,7 @@ class DeviceLinking: NSObject {
     /// Unblock communications to the services: Threema Calls, MDM, Web, Safe,
     /// Contact-Sync and Chat Server.
     func unblockCommunication() {
-        guard businessInjector.userSettings.blockCommunication else {
-            DDLogInfo("Communication is not blocked")
-            return
-        }
-
-        businessInjector.userSettings.blockCommunication = false
+        // no-op: Block communication setting was removed
     }
 
     func currentLinkedDevicesCount() async throws -> Int {

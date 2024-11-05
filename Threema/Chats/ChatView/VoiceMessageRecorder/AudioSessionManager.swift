@@ -94,7 +94,8 @@ final class AudioSessionManager: AudioSessionManagerProtocol {
     /// - Returns: A `Result` indicating whether the audio session was successfully set up or an `AudioSessionError` if
     /// an error occurred.
     @discardableResult func setupAudioSession(isEarpiece: Bool) -> Result<Void, AudioSessionError> {
-        guard VoIPCallStateManager.shared.currentCallState() == .idle else {
+        guard VoIPCallStateManager.shared.currentCallState() == .idle,
+              !NavigationBarPromptHandler.isGroupCallActive else {
             return .failure(.callStateNotIdle)
         }
         
@@ -122,7 +123,8 @@ final class AudioSessionManager: AudioSessionManagerProtocol {
             return
         }
         
-        guard VoIPCallStateManager.shared.currentCallState() == .idle else {
+        guard VoIPCallStateManager.shared.currentCallState() == .idle,
+              !NavigationBarPromptHandler.isGroupCallActive else {
             return
         }
     

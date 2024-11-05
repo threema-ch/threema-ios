@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 import UIKit
 
 public class MarkupParser {
@@ -410,7 +411,7 @@ extension MarkupParser {
                 case .all:
                     parsedWithMentionNames.replaceCharacters(
                         in: range,
-                        with: "@\(BundleUtil.localizedString(forKey: "all"))"
+                        with: "@\(#localize("all"))"
                     )
                 case let .contact(contact):
                     parsedWithMentionNames.replaceCharacters(in: range, with: "@\(contact.displayName)")

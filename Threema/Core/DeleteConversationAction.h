@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Conversation.h"
 
 @class DeleteConversationAction;
 
@@ -28,7 +27,7 @@
 @property UIViewController *presentingViewController;
 @property CGRect presentingRect;
 
-+ (instancetype)deleteActionForConversation:(Conversation *)conversation;
++ (instancetype)deleteActionForConversation:(ConversationEntity *)conversation;
 
 - (void)executeOnCompletion:(void (^)(BOOL succeeded))onCompletion;
 

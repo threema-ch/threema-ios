@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 import UIKit
 
 protocol MWPhotoBrowserWrapperDelegate: AnyObject {
@@ -31,7 +32,7 @@ protocol MWPhotoBrowserWrapperDelegate: AnyObject {
 class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, MWFileDelegate,
     ModalNavigationControllerDelegate {
 
-    let conversation: Conversation
+    let conversation: ConversationEntity
     weak var parentViewController: UIViewController?
     let entityManager: EntityManager
     // This needs to be a class property to work
@@ -40,7 +41,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     private weak var delegate: MWPhotoBrowserWrapperDelegate?
     
     init(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         in parentViewController: UIViewController?,
         entityManager: EntityManager,
         delegate: MWPhotoBrowserWrapperDelegate
@@ -143,13 +144,13 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         
         switch media {
         case _ as MediaBrowserPhoto:
-            deleteButtonTitle = BundleUtil.localizedString(forKey: "delete_photo")
+            deleteButtonTitle = #localize("delete_photo")
             
         case _ as MediaBrowserVideo:
-            deleteButtonTitle = BundleUtil.localizedString(forKey: "delete_video")
+            deleteButtonTitle = #localize("delete_video")
 
         case _ as MediaBrowserFile:
-            deleteButtonTitle = BundleUtil.localizedString(forKey: "delete_file")
+            deleteButtonTitle = #localize("delete_file")
 
         default:
             DDLogError("Could not create caption view for photo browser")
@@ -160,7 +161,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
             owner: photoBrowser,
             title: deleteButtonTitle,
             message: nil,
-            titleDestructive: BundleUtil.localizedString(forKey: "delete")
+            titleDestructive: #localize("delete")
         ) { _ in
             let indexSet: Set<UInt> = [index]
             self.deleteMedia(for: indexSet) {
@@ -272,7 +273,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
             return photo
             
         case let videoMessageEntity as VideoMessageEntity:
-            let video = MediaBrowserVideo(thumbnail: videoMessageEntity.thumbnail?.uiImage)
+            let video = MediaBrowserVideo(thumbnail: videoMessageEntity.thumbnail?.uiImage())
             video?.delegate = self
             video?.sourceReference = videoMessageEntity
             video?.caption = DateFormatter.shortStyleDateTime(message.remoteSentDate)
@@ -357,7 +358,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         
         delegate?.willDeleteMessages(with: mediaEntitiesToDelete.map(\.objectID))
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             for mediaEntity in mediaEntitiesToDelete {
                 mediaEntity.conversation = nil
                 self.entityManager.entityDestroyer.delete(baseMessage: mediaEntity)

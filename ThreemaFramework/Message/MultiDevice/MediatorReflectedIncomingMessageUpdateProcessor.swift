@@ -77,10 +77,10 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
         senderGroupIdentity: GroupIdentity?,
         readDate: Date
     ) throws {
-        var readMessageConversations = Set<Conversation>()
+        var readMessageConversations = Set<ConversationEntity>()
 
         try frameworkInjector.entityManager.performAndWait {
-            let conversation: Conversation
+            let conversation: ConversationEntity
             if let senderIdentity,
                let contactConversation = self.frameworkInjector.entityManager.conversation(
                    for: senderIdentity.string,
@@ -89,7 +89,7 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
                 conversation = contactConversation
             }
             else if let senderGroupIdentity,
-                    let groupConversation = self.frameworkInjector.entityManager.entityFetcher.conversation(
+                    let groupConversation = self.frameworkInjector.entityManager.entityFetcher.conversationEntity(
                         for: senderGroupIdentity.id,
                         creator: senderGroupIdentity.creator.string
                     ) {

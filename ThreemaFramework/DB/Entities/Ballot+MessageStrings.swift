@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 import UIKit
 
 extension Ballot {
@@ -30,20 +31,20 @@ extension Ballot {
         }
         var choiceNames = [String]()
         for choice in choices {
-            if let myChoice = choice.getOwnResult()?.boolValue(), myChoice {
+            if let myChoice = choice.getOwnResult()?.boolValue, myChoice {
                 choiceNames.append(choice.name)
             }
         }
         
         // Add quotation marks
-        let startQuote = BundleUtil.localizedString(forKey: "quotation_mark_start")
-        let endQuote = BundleUtil.localizedString(forKey: "quotation_mark_end")
+        let startQuote = #localize("quotation_mark_start")
+        let endQuote = #localize("quotation_mark_end")
         let quotedChoices = choiceNames.map { "\(startQuote)\($0)\(endQuote)" }
         
         // Format list into a localized, readable String
         let joinedChoices = ListFormatter.localizedString(byJoining: quotedChoices)
         return String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "ballot_message_local_votes"),
+            #localize("ballot_message_local_votes"),
             joinedChoices
         )
     }
@@ -52,18 +53,18 @@ extension Ballot {
     private var localizedMostVotedChoices: String {
         guard let choices = mostVotedChoices() as? [String],
               !choices.isEmpty else {
-            return BundleUtil.localizedString(forKey: "ballot_message_no_votes")
+            return #localize("ballot_message_no_votes")
         }
         
         // Add quotation marks
-        let startQuote = BundleUtil.localizedString(forKey: "quotation_mark_start")
-        let endQuote = BundleUtil.localizedString(forKey: "quotation_mark_end")
+        let startQuote = #localize("quotation_mark_start")
+        let endQuote = #localize("quotation_mark_end")
         let quotedChoices = choices.map { "\(startQuote)\($0)\(endQuote)" }
         
         // Format list into a localized, readable String
         let joinedChoices = ListFormatter.localizedString(byJoining: quotedChoices)
         return String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "ballot_message_most_votes"),
+            #localize("ballot_message_most_votes"),
             joinedChoices
         )
     }
@@ -78,7 +79,7 @@ extension Ballot {
         let participantsCount = conversationParticipantsCount()
         
         return String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "ballot_message_did_vote"),
+            #localize("ballot_message_did_vote"),
             String(votersCount),
             String(participantsCount)
         )
@@ -86,7 +87,7 @@ extension Ballot {
     
     /// Secondary text used in the closing message of ballots
     public var localizedClosingMessageText: String {
-        var string = BundleUtil.localizedString(forKey: "ballot_message_closed")
+        var string = #localize("ballot_message_closed")
         
         let newline = "\n"
         

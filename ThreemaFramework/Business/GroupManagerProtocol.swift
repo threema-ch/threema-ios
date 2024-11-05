@@ -41,7 +41,7 @@ public protocol GroupManagerProtocol: GroupManagerProtocolObjc {
         systemMessageDate: Date?,
         sourceCaller: SourceCaller
     ) async throws -> Group?
-    func getConversation(for groupIdentity: GroupIdentity) -> Conversation?
+    func getConversation(for groupIdentity: GroupIdentity) -> ConversationEntity?
     func getAllActiveGroups() async -> [Group]
     func setName(groupID: Data, creator: String, name: String?, systemMessageDate: Date, send: Bool) async throws
     func setName(group: Group, name: String?, systemMessageDate: Date, send: Bool) async throws
@@ -129,7 +129,7 @@ extension GroupManagerProtocol {
         send: Bool
     ) async throws
     func getGroup(_ groupID: Data, creator: String) -> Group?
-    func getGroup(conversation: Conversation) -> Group?
+    func getGroup(conversation: ConversationEntity) -> Group?
     func leave(groupID: Data, creator: String, toMembers: [String]?, systemMessageDate: Date)
     func leaveDB(groupID: Data, creator: String, member: String, systemMessageDate: Date)
     func dissolve(groupID: Data, to identities: Set<String>?)

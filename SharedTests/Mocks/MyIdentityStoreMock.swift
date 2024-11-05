@@ -20,8 +20,13 @@
 
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 
 class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
+    var department: String!
+    
+    var jobTitle: String!
+
     var csi: String!
 
     var category: String!
@@ -39,7 +44,7 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
             return pushFromName
         }
 
-        return "\(identity) (\(BundleUtil.localizedString(forKey: "me")))"
+        return "\(identity) (\(#localize("me")))"
     }
 
     var pushFromName: String!

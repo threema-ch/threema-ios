@@ -21,20 +21,21 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaEssentials
+import ThreemaMacros
 import ThreemaProtocols
 
 /// Business representation of a Threema Contact
 public class Contact: NSObject {
     
     // These strings are used as static properties for performance reasons
-    private static let inactiveString = "inactive".localized
-    private static let invalidString = "invalid".localized
-    private static let unknownString = "(unknown)".localized
-    private static let workAdjustedVerificationLevelString0 = "level0_title".localized
-    private static let workAdjustedVerificationLevelString1 = "level1_title".localized
-    private static let workAdjustedVerificationLevelString2 = "level2_title".localized
-    private static let workAdjustedVerificationLevelString3 = "level3_title".localized
-    private static let workAdjustedVerificationLevelString4 = "level4_title".localized
+    private static let inactiveString = #localize("inactive")
+    private static let invalidString = #localize("invalid")
+    private static let unknownString = #localize("(unknown)")
+    private static let workAdjustedVerificationLevelString0 = #localize("level0_title")
+    private static let workAdjustedVerificationLevelString1 = #localize("level1_title")
+    private static let workAdjustedVerificationLevelString2 = #localize("level2_title")
+    private static let workAdjustedVerificationLevelString3 = #localize("level3_title")
+    private static let workAdjustedVerificationLevelString4 = #localize("level4_title")
 
     // MARK: - Observation
     
@@ -60,6 +61,9 @@ public class Contact: NSObject {
     @objc public private(set) dynamic var state = 0
     @objc public private(set) dynamic var firstName: String?
     @objc public private(set) dynamic var lastName: String?
+    @objc public private(set) dynamic var csi: String?
+    @objc public private(set) dynamic var jobTitle: String?
+    @objc public private(set) dynamic var department: String?
     @objc public private(set) dynamic var publicNickname: String?
     @objc public private(set) dynamic var verificationLevel = 0
     @objc public private(set) dynamic var featureMask: Int
@@ -114,6 +118,10 @@ public class Contact: NSObject {
     
     public var hasGatewayID: Bool {
         identity.isGatewayID
+    }
+    
+    public var isEchoEcho: Bool {
+        identity.string == "ECHOECHO"
     }
     
     public var forwardSecurityMode: ForwardSecurityMode {
@@ -225,6 +233,9 @@ public class Contact: NSObject {
         self.publicNickname = contactEntity.publicNickname
         self.firstName = contactEntity.firstName
         self.lastName = contactEntity.lastName
+        self.csi = contactEntity.csi
+        self.jobTitle = contactEntity.jobTitle
+        self.department = contactEntity.department
         self.verificationLevel = contactEntity.verificationLevel.intValue
         self.state = contactEntity.state?.intValue ?? kStateInactive
         self.isHidden = contactEntity.isContactHidden
@@ -236,7 +247,6 @@ public class Contact: NSObject {
         self.contactImageData = contactEntity.imageData
         self.readReceipt = contactEntity.readReceipt
         self.typingIndicator = contactEntity.typingIndicator
-        
         super.init()
 
         // Update tracking
@@ -301,6 +311,15 @@ public class Contact: NSObject {
                 }
                 if lastName != contactEntity.lastName {
                     lastName = contactEntity.lastName
+                }
+                if csi != contactEntity.csi {
+                    csi = contactEntity.csi
+                }
+                if jobTitle != contactEntity.jobTitle {
+                    jobTitle = contactEntity.jobTitle
+                }
+                if department != contactEntity.department {
+                    department = contactEntity.department
                 }
                 if verificationLevel != contactEntity.verificationLevel.intValue {
                     verificationLevel = contactEntity.verificationLevel.intValue
@@ -479,6 +498,9 @@ public class Contact: NSObject {
             publicKey == object.publicKey &&
             firstName == object.firstName &&
             lastName == object.lastName &&
+            csi == object.csi &&
+            jobTitle == object.jobTitle &&
+            department == object.department &&
             publicNickname == object.publicNickname &&
             verificationLevel == object.verificationLevel &&
             profilePicture.pngData() == object.profilePicture.pngData() &&

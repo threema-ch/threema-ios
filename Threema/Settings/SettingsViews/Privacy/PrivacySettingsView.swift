@@ -20,6 +20,7 @@
 
 import Combine
 import SwiftUI
+import ThreemaMacros
 
 struct PrivacySettingsView: View {
     
@@ -49,24 +50,24 @@ struct PrivacySettingsView: View {
             // MARK: Contacts
 
             Section(
-                header: Text("settings_privacy_contacts_header".localized),
+                header: Text(#localize("settings_privacy_contacts_header")),
                 footer: Text(contactsFooterText)
             ) {
                 Toggle(isOn: $settingsVM.syncContacts) {
-                    Text("settings_privacy_sync_contacts".localized)
+                    Text(#localize("settings_privacy_sync_contacts"))
                 }
                 .disabled(mdmSetup?.existsMdmKey(MDM_KEY_CONTACT_SYNC) ?? false)
                     
                 NavigationLink {
                     SyncExclusionListView()
                         .environmentObject(settingsVM)
-                        .navigationBarTitle("settings_privacy_exclusion_list".localized)
+                        .navigationBarTitle(#localize("settings_privacy_exclusion_list"))
                 } label: {
-                    Text("settings_privacy_exclusion_list".localized)
+                    Text(#localize("settings_privacy_exclusion_list"))
                 }
                     
                 Toggle(isOn: $settingsVM.blockUnknown) {
-                    Text("settings_privacy_block_unknown".localized)
+                    Text(#localize("settings_privacy_block_unknown"))
                 }
                 .disabled(mdmSetup?.existsMdmKey(MDM_KEY_BLOCK_UNKNOWN) ?? false)
             }
@@ -78,20 +79,20 @@ struct PrivacySettingsView: View {
             
             Section {
                 Toggle(isOn: $settingsVM.allowOutgoingDonations) {
-                    Text("settings_privacy_os_donate".localized)
+                    Text(#localize("settings_privacy_os_donate"))
                 }
                 if settingsVM.allowOutgoingDonations {
-                    Button("settings_privacy_os_reset".localized, role: .destructive) {
+                    Button(#localize("settings_privacy_os_reset"), role: .destructive) {
                         settingsVM.removeINInteractions(showNotification: true)
                     }
                 }
             } header: {
-                Text("settings_privacy_os_header".localized)
+                Text(#localize("settings_privacy_os_header"))
             } footer: {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("settings_privacy_os_footer".localized)
+                    Text(#localize("settings_privacy_os_footer"))
                     Link(
-                        "learn_more".localized,
+                        #localize("learn_more"),
                         destination: URL(string: interactionFAQURLString)!
                     )
                     .font(.footnote)
@@ -101,8 +102,8 @@ struct PrivacySettingsView: View {
             // MARK: Chats
 
             Section(
-                header: Text("settings_privacy_chat_header".localized),
-                footer: Text("settings_privacy_hide_private_chats_footer".localized)
+                header: Text(#localize("settings_privacy_chat_header")),
+                footer: Text(#localize("settings_privacy_hide_private_chats_footer"))
             ) {
                     
                 NavigationLink {
@@ -113,7 +114,7 @@ struct PrivacySettingsView: View {
                     .environmentObject(settingsVM)
                 } label: {
                     SettingsListItemView(
-                        cellTitle: "settings_privacy_read_receipts".localized,
+                        cellTitle: #localize("settings_privacy_read_receipts"),
                         accessoryText: readReceipts.localizedDescription
                     )
                 }
@@ -126,13 +127,13 @@ struct PrivacySettingsView: View {
                     .environmentObject(settingsVM)
                 } label: {
                     SettingsListItemView(
-                        cellTitle: "settings_privacy_typing_indicator".localized,
+                        cellTitle: #localize("settings_privacy_typing_indicator"),
                         accessoryText: typingIndicators.localizedDescription
                     )
                 }
                                     
                 Toggle(isOn: $intermediaryHidePrivate) {
-                    Text("settings_privacy_hide_private_chats".localized)
+                    Text(#localize("settings_privacy_hide_private_chats"))
                 }
                 .onChange(of: intermediaryHidePrivate) { newValue in
                     hidePrivateChatsChanged(newValue)
@@ -143,11 +144,11 @@ struct PrivacySettingsView: View {
             // MARK: POI
 
             Section(
-                header: Text("settings_privacy_poi_header".localized),
-                footer: Text("settings_privacy_poi_footer".localized)
+                header: Text(#localize("settings_privacy_poi_header")),
+                footer: Text(#localize("settings_privacy_poi_footer"))
             ) {
                 Toggle(isOn: $settingsVM.choosePOI) {
-                    Text("settings_privacy_choose_poi".localized)
+                    Text(#localize("settings_privacy_choose_poi"))
                 }
             }
         }
@@ -165,17 +166,17 @@ struct PrivacySettingsView: View {
         }
         .alert(isPresented: $settingsVM.syncFailed, content: {
             Alert(
-                title: Text("settings_md_sync_alert_title".localized),
-                primaryButton: .default(Text("try_again".localized)) {
+                title: Text(#localize("settings_md_sync_alert_title")),
+                primaryButton: .default(Text(#localize("try_again"))) {
                     settingsVM.syncAndSave()
                 },
-                secondaryButton: .default(Text("cancel".localized)) {
+                secondaryButton: .default(Text(#localize("cancel"))) {
                     settingsVM.discardUnsyncedChanges()
                 }
             )
         })
         
-        .navigationBarTitle("settings_list_privacy_title".localized, displayMode: .inline)
+        .navigationBarTitle(#localize("settings_list_privacy_title"), displayMode: .inline)
         .tint(UIColor.primary.color)
     }
     
@@ -187,7 +188,7 @@ struct PrivacySettingsView: View {
             .localizedString(forKey: "settings_privacy_block_unknown_foooter_off")
        
         if let mdmSetup, mdmSetup.existsMdmKey(MDM_KEY_BLOCK_UNKNOWN) || mdmSetup.existsMdmKey(MDM_KEY_CONTACT_SYNC) {
-            footerText = footerText + "\n\n" + "disabled_by_device_policy".localized
+            footerText = footerText + "\n\n" + #localize("disabled_by_device_policy")
         }
         
         contactsFooterText = footerText
@@ -241,9 +242,9 @@ private enum SettingValueOption: CaseIterable {
     var localizedDescription: String {
         switch self {
         case .doSend:
-            "send".localized
+            #localize("send")
         case .dontSend:
-            "dont_send".localized
+            #localize("dont_send")
         }
     }
     
@@ -264,9 +265,9 @@ private enum SettingType {
     var navigationTitle: String {
         switch self {
         case .readReceipt:
-            "settings_privacy_read_receipts".localized
+            #localize("settings_privacy_read_receipts")
         case .typingIndicator:
-            "settings_privacy_typing_indicator".localized
+            #localize("settings_privacy_typing_indicator")
         }
     }
 }
@@ -295,17 +296,17 @@ private struct PickerAndButtonView: View {
                 didSelect(newValue)
             }
             
-            Section(footer: Text("settings_privacy_TIRR_reset_footer".localized)) {
+            Section(footer: Text(#localize("settings_privacy_TIRR_reset_footer"))) {
                 Button {
                     showResetAlert = true
                 } label: {
-                    Text("settings_privacy_TIRR_reset_all".localized)
+                    Text(#localize("settings_privacy_TIRR_reset_all"))
                         .foregroundColor(.red)
                 }
             }
         }
         .alert(
-            "settings_privacy_TIRR_reset_alert_title".localized,
+            #localize("settings_privacy_TIRR_reset_alert_title"),
             isPresented: $showResetAlert,
             actions: {
                 Button(role: .destructive) {
@@ -316,12 +317,12 @@ private struct PickerAndButtonView: View {
                         resetTypingIndicator()
                     }
                 } label: {
-                    Text("settings_privacy_TIRR_reset_alert_action".localized)
+                    Text(#localize("settings_privacy_TIRR_reset_alert_action"))
                 }
 
             },
             message: {
-                Text("settings_privacy_TIRR_reset_alert_message".localized)
+                Text(#localize("settings_privacy_TIRR_reset_alert_message"))
             }
         )
         .navigationTitle(optionType.navigationTitle)

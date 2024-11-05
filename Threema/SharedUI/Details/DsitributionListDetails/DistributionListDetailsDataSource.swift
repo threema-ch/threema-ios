@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import MBProgressHUD
+import ThreemaMacros
 import UIKit
 
 /// Data source for `DistributionListDetailsViewController`
@@ -33,7 +34,7 @@ final class DistributionListDetailsDataSource: UITableViewDiffableDataSource<
     private let displayMode: DistributionListDetailsDisplayMode
 
     private let distributionList: DistributionList
-    private let conversation: Conversation
+    private let conversation: ConversationEntity
     
     private weak var distributionListDetailsViewController: DistributionListDetailsViewController?
     private weak var tableView: UITableView?
@@ -236,7 +237,7 @@ extension DistributionListDetailsDataSource {
         
         let messageQuickAction = QuickAction(
             imageName: "threema.lock.bubble.right.fill",
-            title: BundleUtil.localizedString(forKey: "message"),
+            title: #localize("message"),
             accessibilityIdentifier: "DistributionListDetailsDataSourceMessageQuickActionButton"
         ) { [weak self] _ in
             guard let strongSelf = self else {
@@ -267,7 +268,7 @@ extension DistributionListDetailsDataSource {
         var rows = [DistributionListDetails.Row]()
         
         // Add recipients
-        rows.append(contentsOf: conversation.members.map { recipient in
+        rows.append(contentsOf: conversation.unwrappedMembers.map { recipient in
             // Use creator row for creator
             let contact = Contact(contactEntity: recipient)
             return .contact(contact, isSelfMember: true)
@@ -281,7 +282,7 @@ extension DistributionListDetailsDataSource {
         
         let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         if messageFetcher.count() > 0 {
-            let localizedActionTitle = BundleUtil.localizedString(forKey: "messages_delete_all_button")
+            let localizedActionTitle = #localize("messages_delete_all_button")
             
             let deleteAllContentAction = Details.Action(
                 title: localizedActionTitle,
@@ -294,9 +295,9 @@ extension DistributionListDetailsDataSource {
                     return
                 }
                 
-                let localizedTitle = BundleUtil.localizedString(forKey: "messages_delete_all_confirm_title")
-                let localizedMessage = BundleUtil.localizedString(forKey: "messages_delete_all_confirm_message")
-                let localizedDelete = BundleUtil.localizedString(forKey: "delete")
+                let localizedTitle = #localize("messages_delete_all_confirm_title")
+                let localizedMessage = #localize("messages_delete_all_confirm_message")
+                let localizedDelete = #localize("delete")
                 
                 UIAlertTemplate.showDestructiveAlert(
                     owner: strongDistributionListDetailsViewController,
@@ -308,7 +309,7 @@ extension DistributionListDetailsDataSource {
                             RunLoop.main.schedule {
                                 let hud = MBProgressHUD(view: tableView)
                                 hud.minShowTime = 1.0
-                                hud.label.text = BundleUtil.localizedString(forKey: "delete_in_progress")
+                                hud.label.text = #localize("delete_in_progress")
                                 tableView.addSubview(hud)
                                 hud.show(animated: true)
                             }
@@ -339,7 +340,7 @@ extension DistributionListDetailsDataSource {
     private var destructiveDistributionListActions: [DistributionListDetails.Row] {
         var rows = [DistributionListDetails.Row]()
         
-        let localizedTitle = "distribution_list_delete".localized
+        let localizedTitle = #localize("distribution_list_delete")
         let deleteAction = Details.Action(
             title: localizedTitle,
             destructive: true
@@ -373,7 +374,7 @@ extension DistributionListDetailsDataSource {
         var row = [DistributionListDetails.Row]()
         
         let wallpaperAction = Details.Action(
-            title: BundleUtil.localizedString(forKey: "settings_chat_wallpaper_title")
+            title: #localize("settings_chat_wallpaper_title")
         ) { [weak self] _ in
             guard let strongSelf = self else {
                 return
@@ -398,11 +399,11 @@ extension DistributionListDetailsDataSource {
     }
 }
 
-// MARK: - Public recipinets header configuration
+// MARK: - Public recipients header configuration
 
 extension DistributionListDetailsDataSource {
     var numberOfRecipients: Int {
-        conversation.members.count
+        conversation.unwrappedMembers.count
     }
 }
 

@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "Old_BlobMessageSender.h"
-#import "Conversation.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "ServerConnector.h"
 #import "UserSettings.h"
@@ -55,7 +54,7 @@ static dispatch_queue_t backgroundQueue;
 
 #pragma mark - abstract methods
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(Conversation *)conversation {
+- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation {
     [NSException raise:NSInternalInconsistencyException
                 format:@"Method %@ is abstract, subclass it", NSStringFromSelector(_cmd)];
 }
@@ -196,7 +195,7 @@ static dispatch_queue_t backgroundQueue;
     
     EntityManager *entityManager = [[EntityManager alloc] init];
     [entityManager performAsyncBlockAndSafe:^{
-        Conversation *conversation = _message.conversation;
+        ConversationEntity *conversation = _message.conversation;
         conversation.lastMessage = nil;
         
         [[entityManager entityDestroyer] deleteWithBaseMessage:_message];

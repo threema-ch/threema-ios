@@ -30,7 +30,6 @@
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "EntityFetcher.h"
 #import "NSString+Hex.h"
-#import "Conversation.h"
 
 typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
     ThreemaAudioMessagePlaySpeedHalf = 0,
@@ -135,7 +134,6 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize evaluatedPolicyDomainStateShareExtension;
 
 @synthesize hidePrivateChats;
-@synthesize blockCommunication;
 @synthesize voiceMessagesShowTimeRemaining;
 
 @synthesize groupCallsDebugMessages;
@@ -143,7 +141,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize keepMessagesDays;
 
 @synthesize resetTipKitOnNextLaunch;
-
+@synthesize jbDetectionDismissed;
 @synthesize contactList2;
 
 /// Deprecated Keys, please add keys if they are removed:
@@ -159,6 +157,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 /// - `VideoCallSpeakerInfoShown`
 /// - `EnableFSv1_2ForTesting`
 /// - `useProfilePictureGenerator`
+/// - `BlockCommunication`
 
 static UserSettings *instance;
 
@@ -262,11 +261,11 @@ static UserSettings *instance;
                                         @"", @"SentryAppDevice",
                                         [NSNumber numberWithInt:ThreemaAudioMessagePlaySpeedSingle], @"ThreemaAudioMessagePlaySpeed",
                                         [NSNumber numberWithBool:NO], @"HidePrivateChats",
-                                        [NSNumber numberWithBool:NO], @"BlockCommunication",
                                         [NSNumber numberWithBool:NO], @"VoiceMessagesShowTimeRemaining",
                                         [NSNumber numberWithBool:NO], @"GroupCallsDebugMessages",
                                         @-1, @"KeepMessagesDays",
                                         [NSNumber numberWithBool:NO], @"ResetTipKitOnNextLaunch",
+                                        [NSNumber numberWithBool:NO], @"JBDetectionDismissed",
                                         [NSNumber numberWithBool:NO], @"ContactList2",
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
@@ -386,10 +385,9 @@ static UserSettings *instance;
     threemaAudioMessagePlaySpeed = [[defaults objectForKey:@"ThreemaAudioMessagePlaySpeed"] intValue];
     
     hidePrivateChats = [defaults boolForKey:@"HidePrivateChats"];
-    blockCommunication = [defaults boolForKey:@"BlockCommunication"];
     voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
     resetTipKitOnNextLaunch = [defaults boolForKey:@"ResetTipKitOnNextLaunch"];
-    
+    jbDetectionDismissed = [defaults boolForKey:@"JBDetectionDismissed"];
     contactList2 = [defaults boolForKey:@"ContactList2"];
 }
 
@@ -894,12 +892,6 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-- (void)setBlockCommunication:(BOOL)newBlockCommunication {
-    blockCommunication = newBlockCommunication;
-    [defaults setBool:blockCommunication forKey:@"BlockCommunication"];
-    [defaults synchronize];
-}
-
 - (void)setVoiceMessagesShowTimeRemaining:(BOOL)newVoiceMessagesShowTimeRemaining {
     voiceMessagesShowTimeRemaining = newVoiceMessagesShowTimeRemaining;
     [defaults setBool:voiceMessagesShowTimeRemaining forKey:@"VoiceMessagesShowTimeRemaining"];
@@ -909,6 +901,12 @@ static UserSettings *instance;
 - (void)setResetTipKitOnNextLaunch:(BOOL)newResetTipKitOnNextLaunch {
     resetTipKitOnNextLaunch = newResetTipKitOnNextLaunch;
     [defaults setBool:resetTipKitOnNextLaunch forKey:@"ResetTipKitOnNextLaunch"];
+    [defaults synchronize];
+}
+
+- (void)setJbDetectionDismissed:(BOOL)newJBDetectionDismissed {
+    jbDetectionDismissed = newJBDetectionDismissed;
+    [defaults setBool:jbDetectionDismissed forKey:@"JBDetectionDismissed"];
     [defaults synchronize];
 }
 

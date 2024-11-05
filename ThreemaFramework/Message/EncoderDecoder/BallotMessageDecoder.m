@@ -50,12 +50,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return self;
 }
 
-- (void)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
 }
 
 
-- (void)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
 }
 
@@ -86,7 +86,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return [json objectForKey: JSON_KEY_STATE];
 }
 
-- (void)decodeBallotCreateMessage:(AbstractMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull Conversation *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)decodeBallotCreateMessage:(AbstractMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     
     NSData *ballotId;
     NSData *jsonData;

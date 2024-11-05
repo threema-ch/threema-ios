@@ -177,7 +177,7 @@ class PPOptionsViewController: UITableViewController {
                             cell.imageView?.image = config.ownSnapButtonIcon
                         }
                     } else {
-                        cell.textLabel?.text = NSLocalizedString("Snap Photo or Video", comment: "Snap Photo or Video")
+                        cell.textLabel?.text = NSLocalizedString("snap_photo_or_video", comment: "Snap Photo or Video")
                     }
                 }
             } else {
@@ -193,7 +193,7 @@ class PPOptionsViewController: UITableViewController {
                             cell.imageView?.image = config.ownSnapButtonIcon
                         }
                     } else {
-                        cell.textLabel?.text = NSLocalizedString("Snap Photo or Video", comment: "Snap Photo or Video")
+                        cell.textLabel?.text = NSLocalizedString("snap_photo_or_video", comment: "Snap Photo or Video")
                     }
                 }
                 else if indexPath.row == specifiedRow + 1 && selctionCount > 0 && !config.showOptionsWhenAssetIsSelected && config.showAdditionalOptionWhenAssetIsSelected && config.additionalOptionText != nil {

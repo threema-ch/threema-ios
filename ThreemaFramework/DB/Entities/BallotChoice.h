@@ -23,7 +23,7 @@
 
 #import "TMAManagedObject.h"
 
-@class Ballot, BallotResult;
+@class Ballot, BallotResultEntity;
 
 @interface BallotChoice : TMAManagedObject
 
@@ -42,16 +42,16 @@
 
 @interface BallotChoice (CoreDataGeneratedAccessors)
 
-- (void)addResultObject:(BallotResult *)value;
-- (void)removeResultObject:(BallotResult *)value;
+- (void)addResultObject:(BallotResultEntity *)value;
+- (void)removeResultObject:(BallotResultEntity *)value;
 - (void)addResult:(NSSet *)values;
 - (void)removeResult:(NSSet *)values;
 
 #pragma mark - Own methods
 
-- (nullable BallotResult *)getOwnResult;
+- (nullable BallotResultEntity *)getOwnResult;
 
-- (nullable BallotResult *)getResultForId:(nonnull NSString *)contactId NS_SWIFT_NAME(getResult(for:));
+- (nullable BallotResultEntity *)getResultForId:(nonnull NSString *)contactId NS_SWIFT_NAME(getResult(for:));
 
 - (void)removeResultForContact:(nonnull NSString *)contactId;
 

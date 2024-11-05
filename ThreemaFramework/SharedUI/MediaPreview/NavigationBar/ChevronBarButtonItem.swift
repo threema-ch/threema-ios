@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 // MARK: - ChevronBarButtonItem.Configuration
@@ -95,7 +96,7 @@ class ChevronBarButtonItem: UIButton {
     }
         
     private func updateAccessibilityLabel() {
-        accessibilityLabel = BundleUtil.localizedString(forKey: "back")
+        accessibilityLabel = #localize("back")
     }
     
     // MARK: - Destruction

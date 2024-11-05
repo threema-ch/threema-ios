@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import CoreLocation
 import Foundation
 import MapKit
+import ThreemaMacros
 import UIKit
 
 class SendLocationViewController: ThemedViewController {
@@ -32,7 +33,7 @@ class SendLocationViewController: ThemedViewController {
     // improving in future)
     var currentLocationPOI = PointOfInterest(
         type: .currentLocationPOI,
-        name: BundleUtil.localizedString(forKey: "poi_current_location"),
+        name: #localize("poi_current_location"),
         location: CLLocation(latitude: 0.0, longitude: 0.0),
         distance: .notAvailable,
         category: .current,
@@ -41,14 +42,14 @@ class SendLocationViewController: ThemedViewController {
     
     var markedLocationPOI = PointOfInterest(
         type: .markedLocationPOI,
-        name: BundleUtil.localizedString(forKey: "poi_marked_location"),
+        name: #localize("poi_marked_location"),
         location: CLLocation(latitude: 0.1, longitude: 0.1),
         distance: .notSet,
         category: .marked,
         detailCategory: "marked"
     )
     
-    private let conversation: Conversation
+    private let conversation: ConversationEntity
     
     // DiffableDataSource
     private lazy var mapDataSource = SendLocationMapDataSource(
@@ -63,7 +64,7 @@ class SendLocationViewController: ThemedViewController {
     
     // Buttons
     private lazy var sendButton = UIBarButtonItem(
-        title: BundleUtil.localizedString(forKey: "send"),
+        title: #localize("send"),
         style: .done,
         target: self,
         action: #selector(sendButtonAction)
@@ -126,7 +127,7 @@ class SendLocationViewController: ThemedViewController {
     private lazy var searchController: UISearchController = {
         let searchController = UISearchController(searchResultsController: nil)
         searchController.obscuresBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = BundleUtil.localizedString(forKey: "poi_search_POI")
+        searchController.searchBar.placeholder = #localize("poi_search_POI")
         
         return searchController
     }()
@@ -156,7 +157,7 @@ class SendLocationViewController: ThemedViewController {
     
     // MARK: - Lifecycle
     
-    @objc init(conversation: Conversation) {
+    @objc init(conversation: ConversationEntity) {
         self.conversation = conversation
         
         super.init(nibName: nil, bundle: nil)
@@ -169,7 +170,7 @@ class SendLocationViewController: ThemedViewController {
     
     override func viewDidLoad() {
         // NavBar
-        navigationItem.title = BundleUtil.localizedString(forKey: "send_location")
+        navigationItem.title = #localize("send_location")
         navigationItem.largeTitleDisplayMode = .never
         
         navigationItem.leftBarButtonItem = cancelButton
@@ -643,7 +644,7 @@ extension SendLocationViewController {
     
     private func markLocation(location: CLLocation) {
         // Update MarkedPOI
-        updateMarkedPOI(name: BundleUtil.localizedString(forKey: "poi_marked_location"), location: location)
+        updateMarkedPOI(name: #localize("poi_marked_location"), location: location)
         
         mapDataSource.requestPOIsAround(location: location, radius: 10000) {
             self.selectPOI(poi: self.markedLocationPOI)
@@ -727,8 +728,8 @@ extension SendLocationViewController {
         
         UIAlertTemplate.showAlert(
             owner: self,
-            title: BundleUtil.localizedString(forKey: "poi_dropped_pin_info_alert_title"),
-            message: BundleUtil.localizedString(forKey: "poi_dropped_pin_info_alert_message")
+            title: #localize("poi_dropped_pin_info_alert_title"),
+            message: #localize("poi_dropped_pin_info_alert_message")
         )
     }
 }

@@ -48,8 +48,12 @@ extension ContactEntity {
             case .removed:
                 contactImage = nil
             case .updated:
+                guard let contactDefinedProfilePicture else {
+                    break
+                }
+                
                 let dbImageData = entityManager.entityCreator
-                    .imageData()
+                    .imageDataEntity()
                 contactImage = dbImageData
                 contactImage?.data = contactDefinedProfilePicture
             case .none:

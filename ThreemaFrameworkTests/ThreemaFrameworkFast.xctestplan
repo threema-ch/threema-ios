@@ -9,11 +9,14 @@
     }
   ],
   "defaultOptions" : {
-
+    "commandLineArgumentEntries" : [
+      {
+        "argument" : "-isRunningForTests"
+      }
+    ]
   },
   "testTargets" : [
     {
-      "parallelizable" : true,
       "skippedTests" : [
         "EntityFetcherTests\/testAllContactIdentitiesFetchingPerformance()",
         "EntityFetcherTests\/testAllContactsFetchingPerformance()",

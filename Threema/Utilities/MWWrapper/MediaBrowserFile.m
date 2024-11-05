@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "MediaBrowserFile.h"
-#import "ImageData.h"
 #import "FileMessagePreview.h"
 #import "UIImage+ColoredImage.h"
 #import "ThreemaUtilityObjC.h"
@@ -154,8 +153,8 @@
     if (_fileMessageEntity == nil || _fileMessageEntity.data == nil) {
         return nil;
     }
-    NSURL *url = [_fileMessageEntity tmpURL:tmpFileName];
-    [_fileMessageEntity exportDataToURL:url];
+    NSURL *url = [_fileMessageEntity tempFileURLWithFallBackFileName:tmpFileName];
+    [_fileMessageEntity exportDataTo:url];
     return url;
 }
 

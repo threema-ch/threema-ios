@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaMacros
 import UIKit
 
 @objc protocol RestoreOptionBackupViewControllerDelegate {
@@ -52,16 +53,16 @@ class RestoreOptionBackupViewController: IDCreationPageViewController {
         
         hideKeyboardWhenTappedAround()
 
-        titleLabel.text = hasDataOnDevice ? BundleUtil.localizedString(forKey: "restore_option_id_title") : BundleUtil
+        titleLabel.text = hasDataOnDevice ? #localize("restore_option_id_title") : BundleUtil
             .localizedString(forKey: "restore_option_title")
-        descriptionLabel.text = BundleUtil.localizedString(forKey: "restore_option_description")
+        descriptionLabel.text = #localize("restore_option_description")
         safeButton.setTitle("Threema Safe", for: .normal)
         safeButton.accessibilityIdentifier = "RestoreOptionBackupViewControllerThreemaSafeButton"
         safeLabel.text = hasDataOnDevice ? BundleUtil
             .localizedString(forKey: "restore_option_safe_keep_data") : BundleUtil
             .localizedString(forKey: "restore_option_safe")
-        idButton.setTitle(BundleUtil.localizedString(forKey: "id_backup"), for: .normal)
-        idLabel.text = hasDataOnDevice ? BundleUtil.localizedString(forKey: "restore_option_id_keep_data") : BundleUtil
+        idButton.setTitle(#localize("id_backup"), for: .normal)
+        idLabel.text = hasDataOnDevice ? #localize("restore_option_id_keep_data") : BundleUtil
             .localizedString(forKey: "restore_option_id")
         
         faqLinkLabel.tapDelegate = self
@@ -75,7 +76,7 @@ class RestoreOptionBackupViewController: IDCreationPageViewController {
         ]
         let faqLabelText = NSAttributedString(
             string: String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "backup_faq_link_text"),
+                #localize("backup_faq_link_text"),
                 ThreemaApp.currentName
             ),
             attributes: linkAttributes
@@ -83,7 +84,7 @@ class RestoreOptionBackupViewController: IDCreationPageViewController {
         
         faqLinkLabel.attributedText = faqLabelText
 
-        cancelButton.setTitle(BundleUtil.localizedString(forKey: "cancel"), for: .normal)
+        cancelButton.setTitle(#localize("cancel"), for: .normal)
 
         // add swipe right for cancel action
         let gestureRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(swipeAction))

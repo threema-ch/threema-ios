@@ -24,7 +24,7 @@ import XCTest
 class BlobDataDisplayTests: XCTestCase {
     
     private var databasePreparer: DatabasePreparer!
-    private var conversation: Conversation!
+    private var conversation: ConversationEntity!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
@@ -80,14 +80,14 @@ class BlobDataDisplayTests: XCTestCase {
         var fileMessageEntity: FileMessageEntity!
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 encryptionKey: MockData.generateBlobEncryptionKey(),
                 blobID: MockData.generateBlobID(),
                 blobThumbnailID: MockData.generateBlobID(),
-                data: fileData
+                data: fileDataEntity
             )
         }
 
@@ -98,12 +98,12 @@ class BlobDataDisplayTests: XCTestCase {
         var fileMessageEntity: FileMessageEntity!
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 encryptionKey: MockData.generateBlobEncryptionKey(),
-                data: fileData,
+                data: fileDataEntity,
                 isOwn: true
             )
         }
@@ -115,14 +115,14 @@ class BlobDataDisplayTests: XCTestCase {
         var fileMessageEntity: FileMessageEntity!
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 encryptionKey: MockData.generateBlobEncryptionKey(),
                 blobThumbnailID: MockData.generateBlobID(),
-                data: fileData,
-                thumbnail: databasePreparer.createImageData(data: Data(count: 1), height: 1, width: 1),
+                data: fileDataEntity,
+                thumbnail: databasePreparer.createImageDataEntity(data: Data(count: 1), height: 1, width: 1),
                 isOwn: true
             )
         }
@@ -135,13 +135,13 @@ class BlobDataDisplayTests: XCTestCase {
         let progress: Float = 0.84
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 encryptionKey: MockData.generateBlobEncryptionKey(),
                 progress: NSNumber(floatLiteral: Double(progress)),
-                data: fileData,
+                data: fileDataEntity,
                 isOwn: true
             )
         }
@@ -153,12 +153,12 @@ class BlobDataDisplayTests: XCTestCase {
         var fileMessageEntity: FileMessageEntity!
         let progress: Float = 0.1
         
-        func thumbnailTestImageData() -> ImageData {
+        func thumbnailTestImageData() -> ImageDataEntity {
             let testBundle = Bundle(for: BlobDataStateTests.self)
             let testImageURL = testBundle.url(forResource: "Bild-1-1-thumbnail", withExtension: "jpg")!
             let testImageData = try! Data(contentsOf: testImageURL)
             
-            return databasePreparer.createImageData(
+            return databasePreparer.createImageDataEntity(
                 data: testImageData,
                 height: 512,
                 width: 384
@@ -166,14 +166,14 @@ class BlobDataDisplayTests: XCTestCase {
         }
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 encryptionKey: MockData.generateBlobEncryptionKey(),
                 blobID: MockData.generateBlobID(),
                 progress: NSNumber(floatLiteral: Double(progress)),
-                data: fileData,
+                data: fileDataEntity,
                 thumbnail: thumbnailTestImageData(),
                 isOwn: true
             )
@@ -187,15 +187,15 @@ class BlobDataDisplayTests: XCTestCase {
         let progress: Float = 0.536
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 encryptionKey: MockData.generateBlobEncryptionKey(),
                 blobThumbnailID: MockData.generateBlobID(),
                 progress: NSNumber(floatLiteral: Double(progress)),
-                data: fileData,
-                thumbnail: databasePreparer.createImageData(data: Data(count: 1), height: 1, width: 1),
+                data: fileDataEntity,
+                thumbnail: databasePreparer.createImageDataEntity(data: Data(count: 1), height: 1, width: 1),
                 isOwn: true
             )
         }
@@ -207,15 +207,15 @@ class BlobDataDisplayTests: XCTestCase {
         var fileMessageEntity: FileMessageEntity!
         
         databasePreparer.save {
-            let fileData = databasePreparer.createFileData(data: Data(count: 10))
+            let fileDataEntity = databasePreparer.createFileDataEntity(data: Data(count: 10))
 
             fileMessageEntity = databasePreparer.createFileMessageEntity(
                 conversation: conversation,
                 encryptionKey: MockData.generateBlobEncryptionKey(),
                 blobID: MockData.generateBlobID(),
                 blobThumbnailID: MockData.generateBlobID(),
-                data: fileData,
-                thumbnail: databasePreparer.createImageData(data: Data(count: 1), height: 1, width: 1),
+                data: fileDataEntity,
+                thumbnail: databasePreparer.createImageDataEntity(data: Data(count: 1), height: 1, width: 1),
                 isOwn: true
             )
         }

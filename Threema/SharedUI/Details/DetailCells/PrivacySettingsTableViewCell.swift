@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 class PrivacySettingsTableViewCell: ThemedCodeStackTableViewCell {
@@ -42,38 +43,38 @@ class PrivacySettingsTableViewCell: ThemedCodeStackTableViewCell {
                 return
             }
             
-            if action.title == BundleUtil.localizedString(forKey: "send_readReceipts") {
+            if action.title == #localize("send_readReceipts") {
                 let defaultString = UserSettings.shared().sendReadReceipts ?
-                    BundleUtil.localizedString(forKey: "send") : BundleUtil.localizedString(forKey: "dont_send")
+                    #localize("send") : #localize("dont_send")
                 
                 switch contact.readReceipt {
                 case .send:
-                    stateLabel.text = BundleUtil.localizedString(forKey: "send")
+                    stateLabel.text = #localize("send")
                     
                 case .doNotSend:
-                    stateLabel.text = BundleUtil.localizedString(forKey: "dont_send")
+                    stateLabel.text = #localize("dont_send")
                     
                 default:
                     stateLabel.text = String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "default_send"),
+                        #localize("default_send"),
                         defaultString
                     )
                 }
             }
             else {
                 let defaultString = UserSettings.shared().sendTypingIndicator ?
-                    BundleUtil.localizedString(forKey: "send") : BundleUtil.localizedString(forKey: "dont_send")
+                    #localize("send") : #localize("dont_send")
                
                 switch contact.typingIndicator {
                 case .send:
-                    stateLabel.text = BundleUtil.localizedString(forKey: "send")
+                    stateLabel.text = #localize("send")
                     
                 case .doNotSend:
-                    stateLabel.text = BundleUtil.localizedString(forKey: "dont_send")
+                    stateLabel.text = #localize("dont_send")
                     
                 default:
                     stateLabel.text = String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "default_send"),
+                        #localize("default_send"),
                         defaultString
                     )
                 }

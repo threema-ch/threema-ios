@@ -7,6 +7,7 @@
 //
 
 import Photos
+import ThreemaMacros
 
 public extension CGSize {
 	
@@ -100,7 +101,7 @@ open class DKAsset: NSObject {
         let datetime = DateFormatter.accessibilityDateTime(date)
         
         if originalAsset.mediaType == .image {
-            text = String.localizedStringWithFormat(BundleUtil.localizedString(forKey: "imagedate_date"), datetime)
+            text = String.localizedStringWithFormat(#localize("imagedate_date"), datetime)
 
         } else if originalAsset.mediaType == .video {
             
@@ -111,7 +112,7 @@ open class DKAsset: NSObject {
             let durationString = formatter.string(from: TimeInterval(originalAsset.duration))!
             
             text = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "video_date_duration"),
+                #localize("video_date_duration"),
                 datetime,
                 durationString
             )

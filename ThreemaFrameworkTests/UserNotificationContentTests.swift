@@ -98,7 +98,7 @@ class UserNotificationContentTests: XCTestCase {
         let expectedIdendity = "ECHOECHO"
         let expectedMessageID = BytesUtility.generateRandomBytes(length: 32)!
         
-        var textMessage: TextMessage!
+        var textMessage: TextMessageEntity!
         databasePreparer.save {
             let contact = databasePreparer.createContact(
                 publicKey: expectedMessageID,
@@ -137,7 +137,7 @@ class UserNotificationContentTests: XCTestCase {
         let expectedIdendity = "ECHOECHO"
         let expectedMessageID = BytesUtility.generateRandomBytes(length: 32)!
         
-        var textMessage: TextMessage!
+        var textMessage: TextMessageEntity!
         databasePreparer.save {
             let contact = databasePreparer.createContact(
                 publicKey: expectedMessageID,
@@ -150,7 +150,8 @@ class UserNotificationContentTests: XCTestCase {
             )
             databasePreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    conversation.groupID = group.groupID
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = group.groupId
                     conversation.contact = contact
                 
                     textMessage = self.databasePreparer.createTextMessage(

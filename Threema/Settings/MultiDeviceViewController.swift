@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import SwiftUI
+import ThreemaMacros
 
 class MultiDeviceViewController: ThemedTableViewController {
     
@@ -40,7 +41,7 @@ class MultiDeviceViewController: ThemedTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = BundleUtil.localizedString(forKey: "multi_device_linked_devices_title")
+        title = #localize("multi_device_linked_devices_title")
         
         NotificationCenter.default.addObserver(
             self,
@@ -56,7 +57,7 @@ class MultiDeviceViewController: ThemedTableViewController {
         super.viewDidAppear(animated)
 
         refreshControlTableView.attributedTitle = NSAttributedString(
-            string: BundleUtil.localizedString(forKey: "multi_device_linked_devices_refresh")
+            string: #localize("multi_device_linked_devices_refresh")
         )
         refreshControlTableView.addTarget(self, action: #selector(refreshTableView), for: UIControl.Event.valueChanged)
         tableView?.addSubview(refreshControlTableView)
@@ -97,15 +98,15 @@ class MultiDeviceViewController: ThemedTableViewController {
                 }
                 .catch { error in
                     DDLogError(String.localizedStringWithFormat(
-                        BundleUtil.localizedString(forKey: "multi_device_linked_devices_loading_failed"),
+                        #localize("multi_device_linked_devices_loading_failed"),
                         error as CVarArg
                     ))
 
                     UIAlertTemplate.showAlert(
                         owner: self,
-                        title: BundleUtil.localizedString(forKey: "multi_device_linked_devices_failed_to_load_title"),
-                        message: BundleUtil.localizedString(
-                            forKey: "multi_device_linked_devices_failed_to_load_message"
+                        title: #localize("multi_device_linked_devices_failed_to_load_title"),
+                        message: #localize(
+                            "multi_device_linked_devices_failed_to_load_message"
                         )
                     )
                 }
@@ -123,7 +124,7 @@ class MultiDeviceViewController: ThemedTableViewController {
     func showAlertRemoveDeviceFailed() {
         UIAlertTemplate.showAlert(
             owner: self,
-            title: BundleUtil.localizedString(forKey: "multi_device_linked_devices_failed_remove_title"),
+            title: #localize("multi_device_linked_devices_failed_remove_title"),
             message: BundleUtil
                 .localizedString(forKey: "multi_device_linked_devices_failed_remove_message_2")
         )
@@ -179,13 +180,13 @@ extension MultiDeviceViewController {
     }
 
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        section == 0 ? BundleUtil.localizedString(forKey: "multi_device_linked_devices_this") : BundleUtil
+        section == 0 ? #localize("multi_device_linked_devices_this") : BundleUtil
             .localizedString(forKey: "multi_device_linked_devices_others")
     }
 
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         if section == 0 {
-            return BundleUtil.localizedString(forKey: "multi_device_linked_devices_desc")
+            return #localize("multi_device_linked_devices_desc")
         }
         return nil
     }

@@ -39,7 +39,7 @@ class ValueDetailsTableViewCell: ThemedCodeStackTableViewCell {
         
         label.font = UIFont.preferredFont(forTextStyle: .body)
         
-        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 0
@@ -52,8 +52,9 @@ class ValueDetailsTableViewCell: ThemedCodeStackTableViewCell {
         let label = CopyLabel()
         
         label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.numberOfLines = 2
         
-        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 0
@@ -69,6 +70,11 @@ class ValueDetailsTableViewCell: ThemedCodeStackTableViewCell {
         
         contentStack.addArrangedSubview(labelLabel)
         contentStack.addArrangedSubview(valueLabel)
+        
+        NSLayoutConstraint.activate([
+            labelLabel.widthAnchor.constraint(lessThanOrEqualTo: contentStack.widthAnchor, multiplier: 0.5),
+            labelLabel.widthAnchor.constraint(greaterThanOrEqualTo: contentStack.widthAnchor, multiplier: 0.4),
+        ])
     }
     
     override func prepareForReuse() {

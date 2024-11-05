@@ -44,9 +44,9 @@ class ChatProfileViewTests: XCTestCase {
     
     // MARK: - Chats
     
-    private func createConversation() -> (ContactEntity, Conversation) {
+    private func createConversation() -> (ContactEntity, ConversationEntity) {
         var contact: ContactEntity!
-        var conversation: Conversation!
+        var conversation: ConversationEntity!
         
         let databasePreparer = DatabasePreparer(context: managedObjectContext)
         databasePreparer.save {
@@ -115,8 +115,8 @@ class ChatProfileViewTests: XCTestCase {
     
     // MARK: - Group chats
     
-    private func createGroupConversation() -> Conversation {
-        var conversation: Conversation!
+    private func createGroupConversation() -> ConversationEntity {
+        var conversation: ConversationEntity!
         
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let groupName = "Foodies"
@@ -134,7 +134,8 @@ class ChatProfileViewTests: XCTestCase {
                 visibility: .default
             ) { conversation in
                 // Needed such that `conversation.isGroup()` returns true
-                conversation.groupID = groupID
+                // swiftformat:disable:next acronyms
+                conversation.groupId = groupID
                 
                 conversation.groupName = groupName
                 conversation.members = Set(members)
@@ -165,7 +166,7 @@ class ChatProfileViewTests: XCTestCase {
             // no-op
         }
         
-        conversation.members.removeFirst()
+        conversation.members?.removeFirst()
         
         // As the members list label is private we cannot assert anything.
         // This test just checks if there are any crashes due to the observers.
@@ -177,7 +178,7 @@ class ChatProfileViewTests: XCTestCase {
             // no-op
         }
         
-        let contact = try XCTUnwrap(conversation.members.first)
+        let contact = try XCTUnwrap(conversation.members?.first)
         contact.lastName = "1stMember"
         
         // As the members list label is private we cannot assert anything.
@@ -190,7 +191,7 @@ class ChatProfileViewTests: XCTestCase {
             // no-op
         }
         
-        let contact = try XCTUnwrap(conversation.members.removeFirst())
+        let contact = try XCTUnwrap(conversation.members?.removeFirst())
         contact.lastName = "1stRemovedMember"
         
         // As the members list label is private we cannot assert anything.

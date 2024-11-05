@@ -25,7 +25,7 @@ import ThreemaProtocols
 
 final class TaskExecutionMdmParameterSync: TaskExecutionTransaction {
 
-    override func reflectTransactionMessages() throws -> [Promise<Void>] {
+    override func executeTransaction() throws -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinitionMdmParameterSync else {
             throw TaskExecutionError.wrongTaskDefinitionType
         }
@@ -33,11 +33,13 @@ final class TaskExecutionMdmParameterSync: TaskExecutionTransaction {
         let envelope = frameworkInjector.mediatorMessageProtocol
             .getEnvelopeForMdmParametersUpdate(mdmParameters: task.mdmParameters)
 
-        return [Promise { try $0.fulfill(_ = reflectMessage(
+        try reflectMessage(
             envelope: envelope,
-            ltReflect: self.taskContext.logReflectMessageToMediator,
-            ltAck: self.taskContext.logReceiveMessageAckFromMediator
-        )) }]
+            ltReflect: taskContext.logReflectMessageToMediator,
+            ltAck: taskContext.logReceiveMessageAckFromMediator
+        )
+
+        return Promise()
     }
 
     override func writeLocal() -> Promise<Void> {

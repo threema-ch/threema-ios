@@ -24,7 +24,7 @@ import ThreemaFramework
 
 class GroupManagerMock: NSObject, GroupManagerProtocol {
 
-    var getConversationReturns: Conversation?
+    var getConversationReturns: ConversationEntity?
     var getGroupReturns = [Group]()
 
     private let myIdentityStore: MyIdentityStoreProtocol
@@ -145,7 +145,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         // no-op
     }
     
-    func getConversation(for groupIdentity: GroupIdentity) -> Conversation? {
+    func getConversation(for groupIdentity: GroupIdentity) -> ConversationEntity? {
         getConversationReturns
     }
 
@@ -158,7 +158,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
             .first(where: { $0.groupIdentity.id == groupID && $0.groupIdentity.creator.string == creator })
     }
     
-    func getGroup(conversation: Conversation) -> Group? {
+    func getGroup(conversation: ConversationEntity) -> Group? {
         guard let groupID = conversation.groupID else {
             return nil
         }

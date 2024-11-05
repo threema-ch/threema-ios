@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 
 @objc final class TaskDefinitionSendLocationMessage: TaskDefinitionSendBaseMessage {
     override var description: String {
@@ -31,19 +32,42 @@ import Foundation
         case poiAddress
     }
     
+    /// Create send location message task for 1:1 message
+    /// - Parameters:
+    ///   - poiAddress: String of the address of message to send
+    ///   - messageID: ID of message to send
+    ///   - receiverIdentity: Receiver identity string for 1:1 conversations
     @objc init(
         poiAddress: String?,
         messageID: Data,
-        receiverIdentity: String?,
-        group: Group?,
-        sendContactProfilePicture: Bool
+        receiverIdentity: String
     ) {
         self.poiAddress = poiAddress
         super.init(
             messageID: messageID,
             receiverIdentity: receiverIdentity,
+            sendContactProfilePicture: true
+        )
+    }
+    
+    /// Create send location message task for group message
+    /// - Parameters:
+    ///   - poiAddress: String of the address of message to send
+    ///   - messageID: ID of message to send
+    ///   - group: Group the message belongs to
+    ///   - groupReceivers: Group members that should receive the message
+    init(
+        poiAddress: String?,
+        messageID: Data,
+        group: Group,
+        receivers: [ThreemaIdentity]
+    ) {
+        self.poiAddress = poiAddress
+        super.init(
+            messageID: messageID,
             group: group,
-            sendContactProfilePicture: sendContactProfilePicture
+            receivers: receivers,
+            sendContactProfilePicture: true
         )
     }
 

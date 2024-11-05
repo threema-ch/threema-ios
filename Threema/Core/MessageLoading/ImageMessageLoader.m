@@ -19,8 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ImageMessageLoader.h"
-#import "ImageMessageEntity.h"
-#import "ImageData.h"
 #import "MyIdentityStore.h"
 #import "ProtocolDefines.h"
 #import "NaClCrypto.h"
@@ -80,17 +78,17 @@
     if (thumbnail) {
         NSData *thumbnailData = UIImageJPEGRepresentation(thumbnail, kJPEGCompressionQualityLow);
         if (thumbnailData) {
-            ImageData *dbThumbnail = [self.entityManager.entityCreator imageData];
+            ImageDataEntity *dbThumbnail = [self.entityManager.entityCreator imageDataEntity];
             dbThumbnail.data = thumbnailData;
-            dbThumbnail.width = [NSNumber numberWithInt:thumbnail.size.width];
-            dbThumbnail.height = [NSNumber numberWithInt:thumbnail.size.height];
+            dbThumbnail.width = thumbnail.size.width;
+            dbThumbnail.height = thumbnail.size.height;
 
             ((ImageMessageEntity *)message).thumbnail = dbThumbnail;
         }
     }
 
     /* Add to photo library */
-    if ([UserSettings sharedUserSettings].autoSaveMedia && _image && message.conversation.conversationCategory != ConversationCategoryPrivate) {
+    if ([UserSettings sharedUserSettings].autoSaveMedia && _image && message.conversation.category.intValue != ConversationCategoryPrivate) {
         [[AlbumManager shared] saveWithImage:_image];
     }
 }

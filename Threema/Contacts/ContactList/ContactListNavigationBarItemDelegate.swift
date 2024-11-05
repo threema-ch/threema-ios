@@ -20,7 +20,7 @@
 
 import Foundation
 
-protocol ContactListNavigationBarItemDelegate: AnyObject {
+protocol ContactListActionDelegate: AnyObject {
     func add(_ item: ContactListAddItem) -> Void
     func filterChanged(_ item: ContactListFilterItem) -> Void
     func didToggleWorkContacts(_ isTurnedOn: Bool) -> Void

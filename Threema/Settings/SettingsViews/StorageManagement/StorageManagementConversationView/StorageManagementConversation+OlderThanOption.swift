@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 extension StorageManagementConversationView {
     enum OlderThanOption: Identifiable, Equatable, Hashable {
@@ -91,24 +92,24 @@ extension StorageManagementConversationView {
         var localizedTitleDescription: String {
             switch self {
             case .oneYear:
-                "one_year_title".localized
+                #localize("one_year_title")
             case .sixMonths:
-                "six_months_title".localized
+                #localize("six_months_title")
             case .threeMonths:
-                "three_months_title".localized
+                #localize("three_months_title")
             case .oneMonth:
-                "one_month_title".localized
+                #localize("one_month_title")
             case .oneWeek:
-                "one_week_title".localized
+                #localize("one_week_title")
             case .everything:
-                "everything".localized
+                #localize("everything")
             case .forever:
-                "forever".localized
+                #localize("forever")
             case let .custom(days) where days <= 0: // MDM Setting
-                "forever".localized
+                #localize("forever")
             case let .custom(days): // MDM Setting
                 String.localizedStringWithFormat(
-                    "number_of_days".localized,
+                    #localize("number_of_days"),
                     days
                 )
             }
@@ -117,19 +118,19 @@ extension StorageManagementConversationView {
         var localizedDescription: String {
             switch self {
             case .oneYear:
-                "one_year".localized
+                #localize("one_year")
             case .sixMonths:
-                "six_months".localized
+                #localize("six_months")
             case .threeMonths:
-                "three_months".localized
+                #localize("three_months")
             case .oneMonth:
-                "one_month".localized
+                #localize("one_month")
             case .oneWeek:
-                "one_week".localized
+                #localize("one_week")
             case .everything:
-                "everything".localized
+                #localize("everything")
             case .forever:
-                "forever".localized
+                #localize("forever")
             case .custom:
                 ""
             }
@@ -138,10 +139,10 @@ extension StorageManagementConversationView {
         var deleteMessageConfirmationSentence: String {
             switch self {
             case .oneYear, .sixMonths, .threeMonths, .oneMonth, .oneWeek:
-                let defaultString = "delete_messages_confirm".localized
+                let defaultString = #localize("delete_messages_confirm")
                 return String.localizedStringWithFormat(defaultString, localizedDescription)
             case .everything:
-                return "delete_messages_confirm_all".localized
+                return #localize("delete_messages_confirm_all")
             default:
                 return ""
             }
@@ -150,10 +151,10 @@ extension StorageManagementConversationView {
         var deleteMediaConfirmationSentence: String {
             switch self {
             case .oneYear, .sixMonths, .threeMonths, .oneMonth, .oneWeek:
-                let defaultString = "delete_media_confirm".localized
+                let defaultString = #localize("delete_media_confirm")
                 return String.localizedStringWithFormat(defaultString, localizedDescription)
             case .everything:
-                return "delete_media_confirm_all".localized
+                return #localize("delete_media_confirm_all")
             default:
                 return ""
             }

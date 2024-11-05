@@ -56,9 +56,9 @@ final class TaskExecutionUpdateContactSyncTests: XCTestCase {
 
         dbPreparer.save {
             let c1 = dbPreparer.createContact(identity: "TESTER01")
-            c1.contactImage = dbPreparer.createImageData(data: contactImage, height: 1, width: 1)
+            c1.contactImage = dbPreparer.createImageDataEntity(data: contactImage, height: 1, width: 1)
             let c2 = dbPreparer.createContact(identity: "TESTER02")
-            c2.contactImage = dbPreparer.createImageData(data: contactImage, height: 1, width: 1)
+            c2.contactImage = dbPreparer.createImageDataEntity(data: contactImage, height: 1, width: 1)
         }
 
         let serverConnectorMock = ServerConnectorMock(

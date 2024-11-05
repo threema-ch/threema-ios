@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import MBProgressHUD
+import ThreemaMacros
 import UIKit
 
 class SafeSetupPasswordViewController: ThemedTableViewController {
@@ -70,12 +71,12 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
 
         hideKeyboardWhenTappedAround()
         
-        passwordField.placeholder = BundleUtil.localizedString(forKey: "Password")
-        passwordAgainField.placeholder = BundleUtil.localizedString(forKey: "password_again")
-        serverSwitchLabel.text = BundleUtil.localizedString(forKey: "safe_use_default_server")
+        passwordField.placeholder = #localize("Password")
+        passwordAgainField.placeholder = #localize("password_again")
+        serverSwitchLabel.text = #localize("safe_use_default_server")
         serverField.placeholder = "https://server.example.com"
-        serverUserNameField.placeholder = BundleUtil.localizedString(forKey: "username")
-        serverPasswordField.placeholder = BundleUtil.localizedString(forKey: "Password")
+        serverUserNameField.placeholder = #localize("username")
+        serverPasswordField.placeholder = #localize("Password")
         
         passwordField.isHidden = (mdmSetup.safePassword() != nil)
         passwordAgainField.isHidden = (mdmSetup.safePassword() != nil)
@@ -180,13 +181,13 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                 UIAlertTemplate.showConfirm(
                     owner: self,
                     popOverSource: passwordField,
-                    title: BundleUtil.localizedString(forKey: "password_bad"),
-                    message: BundleUtil.localizedString(forKey: "password_bad_explain"),
-                    titleOk: BundleUtil.localizedString(forKey: "continue_anyway"),
+                    title: #localize("password_bad"),
+                    message: #localize("password_bad_explain"),
+                    titleOk: #localize("continue_anyway"),
                     actionOk: { _ in
                         self.activate(safePassword: safePassword)
                     },
-                    titleCancel: BundleUtil.localizedString(forKey: "try_again"),
+                    titleCancel: #localize("try_again"),
                     actionCancel: { _ in
                         self.passwordField.becomeFirstResponder()
                         MBProgressHUD.hide(for: self.view, animated: true)
@@ -234,7 +235,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     DispatchQueue.main.async {
                         UIAlertTemplate.showAlert(
                             owner: self,
-                            title: BundleUtil.localizedString(forKey: "safe_error_preparing"),
+                            title: #localize("safe_error_preparing"),
                             message: safeError.errorDescription ?? safeError.localizedDescription
                         )
                     }
@@ -243,7 +244,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     DispatchQueue.main.async {
                         UIAlertTemplate.showAlert(
                             owner: self,
-                            title: BundleUtil.localizedString(forKey: "safe_error_preparing"),
+                            title: #localize("safe_error_preparing"),
                             message: error.localizedDescription
                         )
                     }
@@ -282,15 +283,15 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                         if let message = mdmSetup.safePasswordMessage() {
                             UIAlertTemplate.showAlert(
                                 owner: self,
-                                title: BundleUtil.localizedString(forKey: "Password"),
+                                title: #localize("Password"),
                                 message: message
                             )
                         }
                         else {
                             UIAlertTemplate.showAlert(
                                 owner: self,
-                                title: BundleUtil.localizedString(forKey: "Password"),
-                                message: BundleUtil.localizedString(forKey: "password_bad_guidelines")
+                                title: #localize("Password"),
+                                message: #localize("password_bad_guidelines")
                             )
                         }
                         return nil
@@ -301,9 +302,9 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                         .logString("Threema Safe: Can't check safe password because regex is invalid")
                     UIAlertTemplate.showAlert(
                         owner: self,
-                        title: BundleUtil.localizedString(forKey: "Password"),
+                        title: #localize("Password"),
                         message: String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "password_bad_regex"),
+                            #localize("password_bad_regex"),
                             ThreemaApp.currentName
                         )
                     )
@@ -314,8 +315,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                 if password.count < kMinimumPasswordLength {
                     UIAlertTemplate.showAlert(
                         owner: self,
-                        title: BundleUtil.localizedString(forKey: "password_too_short_title"),
-                        message: BundleUtil.localizedString(forKey: "password_too_short_message")
+                        title: #localize("password_too_short_title"),
+                        message: #localize("password_too_short_message")
                     )
                     return nil
                 }
@@ -326,8 +327,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                 
                 UIAlertTemplate.showAlert(
                     owner: self,
-                    title: BundleUtil.localizedString(forKey: "password_mismatch_title"),
-                    message: BundleUtil.localizedString(forKey: "password_mismatch_message")
+                    title: #localize("password_mismatch_title"),
+                    message: #localize("password_mismatch_message")
                 )
                 return nil
             }
@@ -388,7 +389,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                         DispatchQueue.main.async {
                             UIAlertTemplate.showAlert(
                                 owner: self,
-                                title: BundleUtil.localizedString(forKey: "safe_test_server"),
+                                title: #localize("safe_test_server"),
                                 message: errorMessage
                             )
                         }
@@ -410,8 +411,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             else {
                 UIAlertTemplate.showAlert(
                     owner: self,
-                    title: BundleUtil.localizedString(forKey: "safe_test_server"),
-                    message: BundleUtil.localizedString(forKey: "safe_test_server_invalid_url")
+                    title: #localize("safe_test_server"),
+                    message: #localize("safe_test_server_invalid_url")
                 )
                 completion(false)
                 return
@@ -458,16 +459,16 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             if mdmSetup.safePassword() != nil {
                 return nil
             }
-            return BundleUtil.localizedString(forKey: "safe_configure_choose_password_title")
+            return #localize("safe_configure_choose_password_title")
         case 1:
-            return !safeManager.isActivated && !mdmSetup.isSafeBackupServerPreset() && !isForcedBackup ? BundleUtil
-                .localizedString(forKey: "safe_server_name") : nil
+            return !safeManager.isActivated && !mdmSetup
+                .isSafeBackupServerPreset() && !isForcedBackup ? #localize("safe_server_name") : nil
         case 2:
             if safeManager.isActivated {
                 return nil
             }
             else {
-                return !serverSwitch.isOn ? BundleUtil.localizedString(forKey: "safe_server_authentication") : nil
+                return !serverSwitch.isOn ? #localize("safe_server_authentication") : nil
             }
         default:
             return nil
@@ -478,15 +479,15 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
         switch section {
         case 0:
             if mdmSetup.safePassword() != nil {
-                return "threema_safe_company_mdm_password_changed_title"
-                    .localized + ".\n" + "safe_change_password_disabled".localized + "."
+                return #localize("threema_safe_company_mdm_password_changed_title") + ".\n" +
+                    #localize("safe_change_password_disabled") + "."
             }
             else if isForcedBackup {
-                return BundleUtil.localizedString(forKey: "safe_configure_choose_password_mdm") + "\n\n" + BundleUtil
-                    .localizedString(forKey: "safe_configure_choose_password")
+                return #localize("safe_configure_choose_password_mdm") + "\n\n" +
+                    #localize("safe_configure_choose_password")
             }
             else {
-                return BundleUtil.localizedString(forKey: "safe_configure_choose_password")
+                return #localize("safe_configure_choose_password")
             }
         case 1:
             var explainText = "safe_configure_server_explain"

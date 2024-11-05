@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct NotificationReminderView: View {
     
@@ -39,7 +40,7 @@ struct NotificationReminderView: View {
             
             Text(
                 String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "push_reminder_message"),
+                    #localize("push_reminder_message"),
                     ThreemaApp.currentName,
                     ThreemaApp.currentName,
                     ThreemaApp.currentName
@@ -55,7 +56,7 @@ struct NotificationReminderView: View {
             Button {
                 setReminder()
             } label: {
-                Text(BundleUtil.localizedString(forKey: "push_reminder_set_now"))
+                Text(#localize("push_reminder_set_now"))
                     .font(.title3)
                     .bold()
             }
@@ -67,7 +68,7 @@ struct NotificationReminderView: View {
                 AppGroup.userDefaults().set(true, forKey: "PushReminderDoNotShowAgain")
                 dismiss()
             } label: {
-                Text(BundleUtil.localizedString(forKey: "push_reminder_not_now"))
+                Text(#localize("push_reminder_not_now"))
             }
             .buttonStyle(.borderless)
             .controlSize(.large)

@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 protocol ChatBarEditedMessageViewDelegate: AnyObject {
@@ -60,8 +61,8 @@ final class ChatBarEditedMessageView: UIView {
                 self?.delegate?.editedMessageDismissed()
             }
         )
-        button.accessibilityHint = BundleUtil.localizedString(
-            forKey: "accessibility_chatbar_close_edited_message_button_hint"
+        button.accessibilityHint = #localize(
+            "accessibility_chatbar_close_edited_message_button_hint"
         )
 
         return button
@@ -130,7 +131,7 @@ final class ChatBarEditedMessageView: UIView {
             return
         }
         editedMessageView.accessibilityLabel = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "accessibility_chatbar_edited_message_label"),
+            #localize("accessibility_chatbar_edited_message_label"),
             message.accessibilitySenderAndMessageTypeText
         )
     }

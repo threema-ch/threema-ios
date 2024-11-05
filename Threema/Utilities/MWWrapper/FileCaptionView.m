@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "FileCaptionView.h"
-#import "FileMessageEntity.h"
 #import "MediaBrowserFile.h"
 #import "RectUtil.h"
 #import "ThreemaUtilityObjC.h"

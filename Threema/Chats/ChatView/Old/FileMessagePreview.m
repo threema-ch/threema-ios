@@ -26,7 +26,6 @@
 #import "ActivityUtil.h"
 #import "RectUtil.h"
 #import "BundleUtil.h"
-#import "ImageData.h"
 #import "FileMessagePreviewUnsupportedTypeView.h"
 #import "UIImage+ColoredImage.h"
 #import "AppDelegate.h"
@@ -114,22 +113,45 @@
 }
 
 - (void)checkContactAccessFor:(UIViewController *)targetViewController {
-    if ([CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts] != CNAuthorizationStatusAuthorized) {
-        CNContactStore *cnAddressBook = [CNContactStore new];
-        [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
-            if (granted == YES) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self showContactOn:targetViewController];
-                });
-            } else {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    // Show access prompt
-                    [UIAlertTemplate showOpenSettingsAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] noAccessAlertType:NoAccessAlertTypeContacts];
-                });
-            }
-        }];
-    } else {
-        [self showContactOn:targetViewController];
+    if (@available(iOS 18.0, *)) {
+        CNAuthorizationStatus currentStatus = [CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts];
+        // TODO: (IOS-4889) In order to still compile the code in Xcode 15, we use 4 instead of `CNAuthorizationStatusLimited`
+        if (currentStatus != CNAuthorizationStatusAuthorized && currentStatus != 4) {
+            CNContactStore *cnAddressBook = [CNContactStore new];
+            [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
+                if (granted == YES) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self showContactOn:targetViewController];
+                    });
+                } else {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        // Show access prompt
+                        [UIAlertTemplate showOpenSettingsAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] noAccessAlertType:NoAccessAlertTypeContacts];
+                    });
+                }
+            }];
+        } else {
+            [self showContactOn:targetViewController];
+        }
+    }
+    else {
+        if ([CNContactStore authorizationStatusForEntityType:CNEntityTypeContacts] != CNAuthorizationStatusAuthorized) {
+            CNContactStore *cnAddressBook = [CNContactStore new];
+            [cnAddressBook requestAccessForEntityType:CNEntityTypeContacts completionHandler:^(BOOL granted, NSError * _Nullable error) {
+                if (granted == YES) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self showContactOn:targetViewController];
+                    });
+                } else {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        // Show access prompt
+                        [UIAlertTemplate showOpenSettingsAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] noAccessAlertType:NoAccessAlertTypeContacts];
+                    });
+                }
+            }];
+        } else {
+            [self showContactOn:targetViewController];
+        }
     }
 }
 
@@ -142,8 +164,8 @@
 
 - (void)showUsingDocumentInteractionControllerOn:(UIViewController *)targetViewController {
     NSString *filename = [[FileUtility shared] getTemporarySendableFileNameWithBase:@"file"];
-    _tmpFileUrl = [_fileMessageEntity tmpURL:filename];
-    [_fileMessageEntity exportDataToURL:_tmpFileUrl];
+    _tmpFileUrl = [_fileMessageEntity tempFileURLWithFallBackFileName:filename];
+    [_fileMessageEntity exportDataTo:_tmpFileUrl];
         
     _previewBaseController = targetViewController;
     
@@ -172,8 +194,8 @@
 
 - (void)showUsingQuickLookPreviewOn:(UIViewController *)targetViewController {
     NSString *filename = [[FileUtility shared] getTemporarySendableFileNameWithBase:@"file"];
-    _tmpFileUrl = [_fileMessageEntity tmpURL:filename];
-    [_fileMessageEntity exportDataToURL:_tmpFileUrl];
+    _tmpFileUrl = [_fileMessageEntity tempFileURLWithFallBackFileName:filename];
+    [_fileMessageEntity exportDataTo:_tmpFileUrl];
     
     ThreemaQLPreviewController *previewController = [[ThreemaQLPreviewController alloc] init];
     previewController.dataSource = self;

@@ -502,13 +502,13 @@ class GroupMessageProcessorTests: XCTestCase {
             
             let conversation = databasePreparer.save {
                 databasePreparer.createConversation(
+                    groupID: expectedGroupIdentity.id,
                     typing: false,
                     unreadMessageCount: 0,
                     visibility: .default
                 ) { conversation in
-                    conversation.groupID = expectedGroupIdentity.id
                     conversation.groupMyIdentity = myIdentityStoreMock.identity
-                    conversation.addMembers(members)
+                    conversation.members = members
                 }
             }
             

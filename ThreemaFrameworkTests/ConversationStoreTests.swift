@@ -248,7 +248,7 @@ final class ConversationStoreTests: XCTestCase {
         conversationStore.unmarkAllPrivateConversations()
 
         let conversations = try XCTUnwrap(
-            entityManager.entityFetcher.allConversations() as? [Conversation]
+            entityManager.entityFetcher.allConversations() as? [ConversationEntity]
         )
         XCTAssertTrue(conversations.filter { $0.conversationCategory == .private }.isEmpty)
         let tasks = try XCTUnwrap(taskManagerMock.addedTasks as? [TaskDefinitionUpdateContactSync])
@@ -279,11 +279,11 @@ final class ConversationStoreTests: XCTestCase {
     @discardableResult
     private func createConversation(
         unreadMessageCount: Int,
-        category: ConversationCategory,
-        visibility: ConversationVisibility,
+        category: ConversationEntity.Category,
+        visibility: ConversationEntity.Visibility,
         for identity: String = "ECHOECHO"
-    ) -> Conversation {
-        var conversation: Conversation!
+    ) -> ConversationEntity {
+        var conversation: ConversationEntity!
 
         let databasePreparer = DatabasePreparer(context: mainCnx)
         databasePreparer.save {

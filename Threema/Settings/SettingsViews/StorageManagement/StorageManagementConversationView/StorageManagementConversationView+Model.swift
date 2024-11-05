@@ -21,13 +21,14 @@
 import MBProgressHUD
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 // MARK: - StorageManagementConversationView.Model
 
 extension StorageManagementConversationView {
     class Model: ObservableObject {
         
-        private var conversation: Conversation?
+        private var conversation: ConversationEntity?
         private var businessInjector: BusinessInjectorProtocol
         var contact: Contact?
         var group: ThreemaFramework.Group?
@@ -38,7 +39,7 @@ extension StorageManagementConversationView {
         @Published var deleteInProgress = false {
             willSet {
                 let hud = ProgressHUD
-                    .make(label: "delete_in_progress".localized)
+                    .make(label: #localize("delete_in_progress"))
                 (newValue ? hud.show : hud.hide)?()
             }
         }
@@ -54,10 +55,10 @@ extension StorageManagementConversationView {
         /// Manage the Messages and Media
         ///
         /// - Parameters:
-        ///   - conversation: Specify a `Conversation` object to manage storage for. Otherwise, storage for all
+        ///   - conversation: Specify a `ConversationEntity` object to manage storage for. Otherwise, storage for all
         /// conversations will be managed.
         ///   - businessInjector: An object conforming to `BusinessInjectorProtocol` used for dependency injection.
-        init(conversation: Conversation?, businessInjector: BusinessInjectorProtocol) {
+        init(conversation: ConversationEntity?, businessInjector: BusinessInjectorProtocol) {
             self.businessInjector = businessInjector
             self.conversation = conversation
             
@@ -185,7 +186,7 @@ extension StorageManagementConversationView {
         /// - Returns: Count of messages and media of the conversations
         private func count(
             _ backgroundEntityManager: EntityManager,
-            _ conversations: Set<Conversation>
+            _ conversations: Set<ConversationEntity>
         ) {
             var messagesCount = 0
             var mediaCount = 0
@@ -210,9 +211,12 @@ extension StorageManagementConversationView {
         ///
         /// - Parameter backgroundEntityManager: The EntityManager instance to fetch conversations from.
         /// - Returns: A set of `Conversation` objects.
-        private func conversations(_ backgroundEntityManager: EntityManager) -> Set<Conversation> {
+        private func conversations(_ backgroundEntityManager: EntityManager) -> Set<ConversationEntity> {
             guard let conversation else {
-                return Set(backgroundEntityManager.entityFetcher.notArchivedConversations() as? [Conversation] ?? [])
+                return Set(
+                    backgroundEntityManager.entityFetcher
+                        .notArchivedConversations() as? [ConversationEntity] ?? []
+                )
             }
             
             return [conversation]

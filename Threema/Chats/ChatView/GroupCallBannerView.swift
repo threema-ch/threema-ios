@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
 import ThreemaFramework
+import ThreemaMacros
 
 protocol GroupCallBannerButtonViewDelegate: AnyObject {
     func joinCall() async
@@ -47,7 +48,7 @@ final class GroupCallBannerView: UIView {
         }
         
         var buttonConfig = UIButton.Configuration.bordered()
-        buttonConfig.title = BundleUtil.localizedString(forKey: "group_call_join_button_title")
+        buttonConfig.title = #localize("group_call_join_button_title")
         buttonConfig.image = UIImage(named: "phone.fill")
         buttonConfig.cornerStyle = .capsule
 
@@ -73,7 +74,7 @@ final class GroupCallBannerView: UIView {
         let label = UILabel()
         
         // Since it takes some time to update, so we don't show participants initially
-        label.text = BundleUtil.localizedString(forKey: "group_call_title")
+        label.text = #localize("group_call_title")
         label.font = UIFont.preferredFont(forTextStyle: .footnote).bold()
         label.sizeToFit()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -154,12 +155,12 @@ final class GroupCallBannerView: UIView {
                 let localizedParticipantsText: String =
                     if update.numberOfParticipants > 0 {
                         String.localizedStringWithFormat(
-                            BundleUtil.localizedString(forKey: "group_call_participants_title"),
+                            #localize("group_call_participants_title"),
                             String(update.numberOfParticipants)
                         )
                     }
                     else {
-                        BundleUtil.localizedString(forKey: "group_call_title")
+                        #localize("group_call_title")
                     }
 
                 participantsLabel.text = localizedParticipantsText

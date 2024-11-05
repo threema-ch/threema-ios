@@ -363,9 +363,8 @@ class TaskDefinitionTests: XCTestCase {
         let task = TaskDefinitionSendLocationMessage(
             poiAddress: expectedMessagePoiAddress,
             messageID: expectedMessageID,
-            receiverIdentity: nil,
             group: expectedGroup,
-            sendContactProfilePicture: true
+            receivers: expectedGroup.members.map(\.identity)
         )
         task.nonces = expectedNonces
 

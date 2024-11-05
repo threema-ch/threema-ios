@@ -27,7 +27,7 @@ class WebReceiversResponse: WebAbstractMessage {
     var groups = [Any]()
     var distributionList = [Any]()
     
-    init(requestID: String?, allContacts: [ContactEntity], allGroupConversations: [Conversation]) {
+    init(requestID: String?, allContacts: [ContactEntity], allGroupConversations: [ConversationEntity]) {
         for c in allContacts {
             let webcontact = WebContact(c)
             contacts.append(webcontact.objectDict())

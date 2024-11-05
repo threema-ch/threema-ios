@@ -38,38 +38,29 @@ final class TaskDefinitionReceiveReflectedMessage: TaskDefinition {
     }
     
     override var description: String {
-        "<\(Swift.type(of: self)) \(reflectedEnvelope?.loggingDescription ?? "unknown message")>"
+        "<\(Swift.type(of: self))>"
     }
     
-    override private init(type: TaskType) {
-        super.init(type: type)
-    }
-    
-    convenience init(
-        reflectID: Data,
-        reflectedEnvelope: D2d_Envelope,
-        reflectedAt: Date,
+    required init(
+        reflectedMessage: Data,
         receivedAfterInitialQueueSend: Bool,
         maxBytesToDecrypt: Int,
         timeoutDownloadThumbnail: Int
     ) {
-        self.init(type: .dropOnDisconnect)
-        self.retry = false
-        self.reflectID = reflectID
-        self.reflectedEnvelope = reflectedEnvelope
-        self.reflectedAt = reflectedAt
-        self.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend
+        self.reflectedMessage = reflectedMessage
         self.maxBytesToDecrypt = Int32(maxBytesToDecrypt)
         self.timeoutDownloadThumbnail = Int32(timeoutDownloadThumbnail)
+        self.receivedAfterInitialQueueSend = receivedAfterInitialQueueSend
+
+        super.init(type: .dropOnDisconnect)
+        self.retry = false
     }
 
-    var reflectID: Data!
-    var reflectedEnvelope: D2d_Envelope!
-    var reflectedAt: Date!
-    var receivedAfterInitialQueueSend: Bool!
-    var maxBytesToDecrypt: Int32!
-    var timeoutDownloadThumbnail: Int32!
-    
+    let reflectedMessage: Data
+    let receivedAfterInitialQueueSend: Bool
+    let maxBytesToDecrypt: Int32
+    let timeoutDownloadThumbnail: Int32
+
     required init(from decoder: Decoder) throws {
         fatalError("init(from:) has not been implemented")
     }

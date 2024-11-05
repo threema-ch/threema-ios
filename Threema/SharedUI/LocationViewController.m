@@ -19,8 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "LocationViewController.h"
-#import "LocationMessage.h"
-#import "Conversation.h"
 #import "ContactEntity.h"
 #import "MyIdentityStore.h"
 #import "UIImage+ColoredImage.h"
@@ -44,7 +42,7 @@
 
 @synthesize locationMessage;
 
-- (instancetype)initWithLocationMessage:(LocationMessage *)locationMessage {
+- (instancetype)initWithLocationMessage:(LocationMessageEntity *)locationMessage {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MainStoryboard" bundle:[NSBundle mainBundle]];
     self = [storyboard instantiateViewControllerWithIdentifier:@"LocationViewController"];
     self.locationMessage = locationMessage;
@@ -64,6 +62,11 @@
     MKCoordinateRegion region = MKCoordinateRegionMakeWithDistance(self.coordinate, 1000, 1000);
     [self.mapView setRegion:region animated:NO];
 
+    self.title = [BundleUtil localizedStringForKey:@"location_view_title"];
+    [self.mapTypeControl setTitle:[BundleUtil localizedStringForKey:@"location_view_map_standard"] forSegmentAtIndex:0];
+    [self.mapTypeControl setTitle:[BundleUtil localizedStringForKey:@"location_view_map_hybrid"] forSegmentAtIndex:1];
+    [self.mapTypeControl setTitle:[BundleUtil localizedStringForKey:@"location_view_map_satellite"] forSegmentAtIndex:2];
+    
     [self updateColors];
 }
 

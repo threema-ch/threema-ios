@@ -23,6 +23,7 @@ import Combine
 import Foundation
 import MBProgressHUD
 import ThreemaFramework
+import ThreemaMacros
 
 final class ProfileViewModel: ObservableObject {
     
@@ -80,7 +81,7 @@ final class ProfileViewModel: ObservableObject {
     }
     
     public var shareThreemaID: String {
-        "\(BundleUtil.localizedString(forKey: "profile_share_id_text")):\(THREEMA_ID_SHARE_LINK)\(publicKey.identity)"
+        "\(#localize("profile_share_id_text")):\(THREEMA_ID_SHARE_LINK)\(publicKey.identity)"
     }
    
     convenience init() {
@@ -157,10 +158,10 @@ final class ProfileViewModel: ObservableObject {
         
         NotificationPresenterWrapper.shared.present(
             type: .init(
-                notificationText: BundleUtil.localizedString(forKey: "incoming_profile_sync_title"),
+                notificationText: #localize("incoming_profile_sync_title"),
                 notificationStyle: .none
             ),
-            subtitle: BundleUtil.localizedString(forKey: "incoming_profile_sync_message")
+            subtitle: #localize("incoming_profile_sync_message")
         )
     }
     
@@ -171,7 +172,7 @@ final class ProfileViewModel: ObservableObject {
         }
         
         if businessInjector.myIdentityStore.linkEmailPending {
-            self.linkedEmail = BundleUtil.localizedString(forKey: "pending")
+            self.linkedEmail = #localize("(pending)")
             
             serverAPIConnector.checkLinkEmailStatus(
                 businessInjector.myIdentityStore as! MyIdentityStore,
@@ -191,7 +192,7 @@ final class ProfileViewModel: ObservableObject {
     
     private func loadLinkedMobile() {
         if businessInjector.myIdentityStore.linkMobileNoPending {
-            linkedMobile = BundleUtil.localizedString(forKey: "enter_code")
+            linkedMobile = #localize("enter_code")
         }
         else {
             if let linkedMobile = businessInjector.myIdentityStore.linkedMobileNo {
@@ -238,7 +239,7 @@ final class ProfileViewModel: ObservableObject {
     private func loadRevocationDetail() {
         let updateDetail: () -> Void = { [weak self] in
             guard let setDate = self?.businessInjector.myIdentityStore.revocationPasswordSetDate else {
-                self?.revocationDetail = BundleUtil.localizedString(forKey: "revocation_password_not_set")
+                self?.revocationDetail = #localize("revocation_password_not_set")
                 return
             }
             self?.revocationDetail = DateFormatter.getShortDate(setDate)
@@ -255,7 +256,7 @@ final class ProfileViewModel: ObservableObject {
                     updateDetail()
                 
                 } onError: { [weak self] _ in
-                    self?.revocationDetail = BundleUtil.localizedString(forKey: "revocation_check_failed")
+                    self?.revocationDetail = #localize("revocation_check_failed")
                 }
             
             return
@@ -276,13 +277,13 @@ extension ProfileViewModel {
         private var didDismissModal: () -> Void
         
         lazy var revocationKey: PasswordNavigationDelegate = .init(
-            title: BundleUtil.localizedString(forKey: "revocation_password"),
-            additionalText: BundleUtil.localizedString(forKey: "revocation_password_description"),
+            title: #localize("revocation_password"),
+            additionalText: #localize("revocation_password_description"),
             callback: revocationHandler
         )
         
         lazy var exportID: PasswordNavigationDelegate = .init(
-            additionalText: BundleUtil.localizedString(forKey: "password_description_backup"),
+            additionalText: #localize("password_description_backup"),
             callback: self
         )
         

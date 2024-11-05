@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23F79" minimumToolsVersion="Xcode 11.0" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="">
-    <entity name="AudioData" representedClassName="AudioData" syncable="YES">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23G93" minimumToolsVersion="Xcode 11.0" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="">
+    <entity name="AudioData" representedClassName="AudioDataEntity" syncable="YES">
         <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="AudioMessage" inverseName="audio" inverseEntity="AudioMessage"/>
     </entity>
@@ -57,7 +57,7 @@
         <attribute name="ballotState" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
         <relationship name="ballot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Ballot" inverseName="message" inverseEntity="Ballot"/>
     </entity>
-    <entity name="BallotResult" representedClassName="BallotResult" syncable="YES">
+    <entity name="BallotResult" representedClassName="BallotResultEntity" syncable="YES">
         <attribute name="createDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="modifyDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="participantId" attributeType="String"/>
@@ -136,7 +136,7 @@
         <attribute name="name" optional="YES" attributeType="String"/>
         <relationship name="conversation" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="distributionList" inverseEntity="Conversation"/>
     </entity>
-    <entity name="FileData" representedClassName="FileData" syncable="YES">
+    <entity name="FileData" representedClassName="FileDataEntity" syncable="YES">
         <attribute name="data" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="FileMessage" inverseName="data" inverseEntity="FileMessage"/>
     </entity>
@@ -175,7 +175,7 @@
         <attribute name="startMessageReceiveDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="group" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Group"/>
     </entity>
-    <entity name="ImageData" representedClassName="ImageData" syncable="YES">
+    <entity name="ImageData" representedClassName="ImageDataEntity" syncable="YES">
         <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <attribute name="height" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
         <attribute name="width" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
@@ -265,11 +265,11 @@
         <attribute name="text" optional="YES" attributeType="String"/>
         <relationship name="message" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="historyEntries" inverseEntity="Message"/>
     </entity>
-    <entity name="MessageMarkers" representedClassName="MessageMarkers" syncable="YES" codeGenerationType="class">
+    <entity name="MessageMarkers" representedClassName="MessageMarkersEntity" syncable="YES">
         <attribute name="star" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO"/>
         <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Message" inverseName="messageMarkers" inverseEntity="Message"/>
     </entity>
-    <entity name="Nonce" representedClassName="Nonce" syncable="YES">
+    <entity name="Nonce" representedClassName="NonceEntity" syncable="YES">
         <attribute name="nonce" attributeType="Binary"/>
         <fetchIndex name="byNonceIndex">
             <fetchIndexElement property="nonce" type="Binary" order="ascending"/>
@@ -279,11 +279,11 @@
         <attribute name="arg" optional="YES" attributeType="Binary"/>
         <attribute name="type" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
     </entity>
-    <entity name="TextMessage" representedClassName="TextMessage" parentEntity="Message" syncable="YES">
+    <entity name="TextMessage" representedClassName="TextMessageEntity" parentEntity="Message" syncable="YES">
         <attribute name="quotedMessageId" optional="YES" attributeType="Binary"/>
         <attribute name="text" attributeType="String"/>
     </entity>
-    <entity name="VideoData" representedClassName="VideoData" syncable="YES">
+    <entity name="VideoData" representedClassName="VideoDataEntity" syncable="YES">
         <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="VideoMessage" inverseName="video" inverseEntity="VideoMessage"/>
     </entity>

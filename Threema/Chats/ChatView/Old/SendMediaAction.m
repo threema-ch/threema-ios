@@ -34,7 +34,7 @@
 #import "UTIConverter.h"
 #import "MediaConverter.h"
 #import "ThemedNavigationController.h"
-#import "PreviewImageViewController.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -124,8 +124,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
         _picker.mediaTypes = myMediaTypes;
         
-        _picker.videoMaximumDuration = [MediaConverter videoMaxDurationAtCurrentQuality] * 60;
-        
+        _picker.videoMaximumDuration = [MediaConverter videoMaxDurationInMinutes] * 60;
+
         /* Always request high quality from UIImagePickerController, and transcode by ourselves later */
         _picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
         
@@ -431,7 +431,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                     item.caption = captions[i];
                 }
                 
-                Conversation *conversation = self.chatViewController.conversation;
+                ConversationEntity *conversation = self.chatViewController.conversation;
                 if (conversation != nil) {
                     MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
                     [messageSender sendBlobMessageFor:item inConversationWithID:conversation.objectID correlationID:correlationID webRequestID:nil completion:^(NSError *error) {
@@ -523,7 +523,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)checkVideoDone {
     bool done = true;
-    for (SDAVAssetExportSession *exportSession in self.videoEncoders) {
+    for (AVAssetExportSession *exportSession in self.videoEncoders) {
         done = exportSession.progress == 1.0;
     }
     if (self.videoEncoders.count == 0 && done) {
@@ -577,9 +577,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         VideoURLSenderItemCreator *creator = [[VideoURLSenderItemCreator alloc] init];
         creator.encodeProgressDelegate = self;
-        SDAVAssetExportSession *exportSession = [creator getExportSessionFor:videoAsset];
+        AVAssetExportSession *exportSession = [creator getExportSessionFor:videoAsset];
         if (!exportSession) {
-            DDLogError(@"Could not create SDAVAssetExportSession for media asset");
+            DDLogError(@"Could not create AVAssetExportSession for media asset");
         } else {
             [self.videoEncoders addObject: exportSession];
             senderItem = [creator senderItemFrom:videoAsset on:exportSession];
@@ -601,32 +601,24 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         /* image picked */
         UIImage *pickedImage = [info objectForKey:UIImagePickerControllerOriginalImage];
         
-        if (picker.sourceType == UIImagePickerControllerSourceTypeCamera && [UserSettings sharedUserSettings].autoSaveMedia && self.chatViewController.conversation.conversationCategory != ConversationCategoryPrivate) {
+        if (picker.sourceType == UIImagePickerControllerSourceTypeCamera && [UserSettings sharedUserSettings].autoSaveMedia && self.chatViewController.conversation.category.intValue != ConversationCategoryPrivate) {
             [[AlbumManager shared] saveWithImage:pickedImage];
         }
         
-        if (picker.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
-            /* need to ask for confirmation when picking images from library, as it's much too
-             easy to send the wrong picture with one tap */
-            PreviewImageViewController *previewVc = [self.chatViewController.storyboard instantiateViewControllerWithIdentifier:@"PreviewImage"];
-            previewVc.delegate = self.chatViewController;
-            previewVc.image = UIImageJPEGRepresentation(pickedImage, 1);
-            [picker pushViewController:previewVc animated:YES];
-        } else {
-            NSURL *imageUrl = [PhotosAccessHelper storeImageToTmprDirWithImageData:pickedImage];
-            
-            NSArray *array = [NSArray arrayWithObject:imageUrl];
-            [picker dismissViewControllerAnimated:true completion:^{
-                [self showPreviewForAssets:array];
-            }];
-        }
+        NSURL *imageUrl = [PhotosAccessHelper storeImageToTmprDirWithImageData:pickedImage];
+        
+        NSArray *array = [NSArray arrayWithObject:imageUrl];
+        [picker dismissViewControllerAnimated:true completion:^{
+            [self showPreviewForAssets:array];
+        }];
+    
     } else if ([[info objectForKey:UIImagePickerControllerMediaType] isEqualToString:(NSString*)kUTTypeMovie]) {
         /* video picked */
         _pickedVideoURL = [info objectForKey:UIImagePickerControllerMediaURL];
         
         _pickedVideoSent = NO;
         _pickedVideoSaved = NO;
-        if (picker.sourceType == UIImagePickerControllerSourceTypeCamera && [UserSettings sharedUserSettings].autoSaveMedia && self.chatViewController.conversation.conversationCategory != ConversationCategoryPrivate) {
+        if (picker.sourceType == UIImagePickerControllerSourceTypeCamera && [UserSettings sharedUserSettings].autoSaveMedia && self.chatViewController.conversation.category.intValue != ConversationCategoryPrivate) {
             [[AlbumManager shared] saveMovieToLibraryWithMovieURL:_pickedVideoURL completionHandler:^(BOOL success) {
                 _pickedVideoSaved = YES;
                 if (_pickedVideoSent && _pickedVideoSaved)
@@ -648,7 +640,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             /* video too long - must present editor */
             UIVideoEditorController *videoEditor = [[UIVideoEditorController alloc] init];
             videoEditor.videoQuality = UIImagePickerControllerQualityTypeHigh;
-            videoEditor.videoMaximumDuration = [MediaConverter videoMaxDurationAtCurrentQuality] * 60;
+            videoEditor.videoMaximumDuration = [MediaConverter videoMaxDurationInMinutes] * 60;
             videoEditor.videoPath = [_pickedVideoURL path];
             videoEditor.delegate = self;
             
@@ -692,7 +684,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         ImageURLSenderItemCreator *itemCreator = [[ImageURLSenderItemCreator alloc] init];
         URLSenderItem *senderItem = [itemCreator senderItemFromImage:image];
         
-        Conversation *conversation = self.chatViewController.conversation;
+        ConversationEntity *conversation = self.chatViewController.conversation;
         if (senderItem != nil && conversation != nil) {
             MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
             [messageSender sendBlobMessageFor:senderItem inConversationWithID:conversation.objectID correlationID:nil webRequestID:nil completion:nil];
@@ -731,7 +723,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         VideoURLSenderItemCreator *senderCreator = [[VideoURLSenderItemCreator alloc] init];
         senderCreator.encodeProgressDelegate = self;
         
-        SDAVAssetExportSession *exportSession = [senderCreator getExportSessionFor:asset];
+        AVAssetExportSession *exportSession = [senderCreator getExportSessionFor:asset];
         
         if (exportSession == nil) {
             DDLogError(@"VideoURL was nil.");
@@ -745,7 +737,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if (![caption isEqualToString:@""]) {
             senderItem.caption = caption;
         }
-        Conversation *conversation = self.chatViewController.conversation;
+        ConversationEntity *conversation = self.chatViewController.conversation;
         if (senderItem != nil && conversation != nil) {
             MessageSender *messageSender = [[BusinessInjector new] messageSenderObjC];
             [messageSender sendBlobMessageFor:senderItem inConversationWithID:conversation.objectID correlationID:nil webRequestID:nil completion:nil];
@@ -759,7 +751,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     });
 }
 
-- (void)videoExportSessionWithExportSession:(SDAVAssetExportSession * _Nonnull)exportSession {
+- (void)videoExportSessionWithExportSession:(AVAssetExportSession * _Nonnull)exportSession {
     float progress = exportSession.progress;
     dispatch_async(dispatch_get_main_queue(), ^{
         if (progress == 1.0f) {
@@ -834,7 +826,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     for (Old_FileMessageSender *fileMessageSender in self.fileMessageSenders) {
         [fileMessageSender uploadShouldCancel];
     }
-    for (SDAVAssetExportSession *exportSession in self.videoEncoders) {
+    for (AVAssetExportSession *exportSession in self.videoEncoders) {
         [exportSession cancelExport];
     }
     __unused bool val = [VideoURLSenderItemCreator cleanTemporaryDirectory];

@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 /// Typical circle with x mark icon, but the x mark is not transparent
@@ -81,7 +82,7 @@ final class OpaqueDeleteButton: ThemedCodeButton {
             deleteImageView.centerYAnchor.constraint(equalTo: centerYAnchor),
         ])
         
-        accessibilityLabel = BundleUtil.localizedString(forKey: "delete")
+        accessibilityLabel = #localize("delete")
         
         updateColors()
     }

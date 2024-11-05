@@ -49,7 +49,7 @@
 
 @property BOOL isNewBallot;
 @property Ballot *ballot;
-@property Conversation *conversation;
+@property ConversationEntity *conversation;
 @property (nonatomic, strong) NSIndexPath *indexPathForPicker;
 @property (nonatomic, strong) NSDate *lastSelectedDate;
 @property (nonatomic) BOOL lastPickerWithoutTime;
@@ -58,11 +58,11 @@
 
 @implementation BallotCreateViewController
 
-+ (instancetype) ballotCreateViewControllerForConversation:(Conversation *)conversation {
++ (instancetype) ballotCreateViewControllerForConversation:(ConversationEntity *)conversation {
     BallotCreateViewController *viewController = [self ballotCreateViewController];
     
     [viewController.entityManager performBlockAndWait:^{
-        Conversation *ownContextConversation = (Conversation *)[viewController.entityManager.entityFetcher existingObjectWithID:conversation.objectID];
+        ConversationEntity *ownContextConversation = (ConversationEntity *)[viewController.entityManager.entityFetcher existingObjectWithID:conversation.objectID];
         viewController.conversation = ownContextConversation;
         viewController.ballot = [viewController newBallot];
         viewController.ballot.conversation = ownContextConversation;

@@ -78,7 +78,8 @@ final class IntentCreatorTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    conversation.groupID = groupID
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = groupID
                     conversation.contact = contact1
                     conversation.groupName = "Testgruppe"
                 }
@@ -135,7 +136,8 @@ final class IntentCreatorTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    conversation.groupID = groupID
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = groupID
                     conversation.contact = contact1
                     conversation.groupName = "Testgruppe"
                 }
@@ -173,7 +175,7 @@ final class IntentCreatorTests: XCTestCase {
                 verificationLevel: 0
             )
             dp.createConversation(typing: false, unreadMessageCount: 2, visibility: .default) { conversation in
-                conversation.conversationCategory = .private
+                conversation.changeCategory(to: .private)
                 _ = contact1.conversations!.insert(conversation)
                 
                 dp.createTextMessage(
@@ -196,7 +198,8 @@ final class IntentCreatorTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    conversation.groupID = groupID
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = groupID
                     conversation.contact = contact1
                     conversation.groupName = "Testgruppe"
                 }
@@ -255,11 +258,12 @@ final class IntentCreatorTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    conversation.groupID = groupID
+                    // swiftformat:disable:next acronyms
+                    conversation.groupId = groupID
                     conversation.contact = contact1
                     conversation.groupName = "Testgruppe"
                     
-                    conversation.conversationCategory = .private
+                    conversation.changeCategory(to: .private)
                 }
             )
         }

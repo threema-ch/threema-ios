@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import MBProgressHUD
+import ThreemaMacros
 import UIKit
 
 open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDelegate {
@@ -165,10 +166,10 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         }
         
         if sendIsChoose {
-            rightBarButtonItem.setTitle(BundleUtil.localizedString(forKey: "next"), for: .normal)
+            rightBarButtonItem.setTitle(#localize("next"), for: .normal)
         }
         else {
-            rightBarButtonItem.setTitle(BundleUtil.localizedString(forKey: "send"), for: .normal)
+            rightBarButtonItem.setTitle(#localize("send"), for: .normal)
         }
         rightBarButtonItem.setTitleColor(.primary, for: .normal)
         rightBarButtonItem.titleLabel?.font = UIFont
@@ -242,7 +243,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     
     private func setupCaptionTextfield() {
         textField.attributedPlaceholder = NSAttributedString(
-            string: BundleUtil.localizedString(forKey: "add_caption_to_image"),
+            string: #localize("add_caption_to_image"),
             attributes: [NSAttributedString.Key.foregroundColor: Colors.textVeryLight]
         )
         textField.font = UIFont.preferredFont(forTextStyle: .body)
@@ -384,8 +385,8 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     }
     
     func addAccessibilityLabels() {
-        textField.accessibilityLabel = BundleUtil.localizedString(forKey: "add_caption_to_image")
-        trashButton.accessibilityLabel = BundleUtil.localizedString(forKey: "delete")
+        textField.accessibilityLabel = #localize("add_caption_to_image")
+        trashButton.accessibilityLabel = #localize("delete")
         previewButton.accessibilityLabel = BundleUtil
             .localizedString(forKey: "media_preview_preview_button_accessibility_label")
     }
@@ -430,27 +431,27 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     private func showError(errorList: [PhotosPickerError]) {
         let items = errorList.count
         
-        var title = BundleUtil.localizedString(forKey: "could_not_add_items_title")
+        var title = #localize("could_not_add_items_title")
         var message = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "multiple_media_items_could_not_be_processed"),
+            #localize("multiple_media_items_could_not_be_processed"),
             items
         )
         
         if let itemDelegate, itemDelegate.memoryConstrained,
            errorList.contains(where: { $0 == .fileTooLargeForShareExtension }) {
-            title = BundleUtil.localizedString(forKey: "could_not_add_all_items_memory_constrained_title")
-            message = BundleUtil.localizedString(forKey: "could_not_add_all_items_memory_constrained_message")
+            title = #localize("could_not_add_all_items_memory_constrained_title")
+            message = #localize("could_not_add_all_items_memory_constrained_message")
         }
         else if !errorList.isEmpty, errorList.filter({ $0 != .fileTooLargeForSending }).isEmpty {
-            title = BundleUtil.localizedString(forKey: "could_not_add_all_items_memory_constrained_title")
+            title = #localize("could_not_add_all_items_memory_constrained_title")
             message = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "error_message_file_too_big"),
+                #localize("error_message_file_too_big"),
                 FileUtility.shared.getFileSizeDescription(from: Int64(kMaxFileSize))
             )
         }
         else if items == 1 {
-            title = BundleUtil.localizedString(forKey: "could_not_add_all_items_title")
-            message = BundleUtil.localizedString(forKey: "one_media_item_could_not_be_processed")
+            title = #localize("could_not_add_all_items_title")
+            message = #localize("one_media_item_could_not_be_processed")
         }
         
         UIAlertTemplate.showAlert(owner: self, title: title, message: message, actionOk: { [weak self] _ in
@@ -486,9 +487,9 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         let size = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
         let allowed = ByteCountFormatter.string(fromByteCount: Int64(kMaxFileSize), countStyle: .file)
         
-        let title = BundleUtil.localizedString(forKey: "item_too_large_title")
+        let title = #localize("item_too_large_title")
         let message = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "maximum_file_size_exceeded"),
+            #localize("maximum_file_size_exceeded"),
             allowed,
             size
         )
@@ -498,7 +499,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     
     @objc func sendButtonPressed(_ sender: Any) {
         navigationItem.rightBarButtonItem?.isEnabled = false
-        let label = BundleUtil.localizedString(forKey: "processing_items_progress")
+        let label = #localize("processing_items_progress")
         let progressViewHandler = ProgressViewHandler(
             view: view,
             totalWorkItems: mediaData.count,

@@ -182,8 +182,9 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
 
         let contactsToCheck = managedObjectContext.performAndWait {
             var contactsToCheck = [Contact]()
-            if message.conversation.isGroup() {
-                contactsToCheck.append(contentsOf: message.conversation.members.map { Contact(contactEntity: $0) })
+            if message.conversation.isGroup {
+                contactsToCheck
+                    .append(contentsOf: message.conversation.unwrappedMembers.map { Contact(contactEntity: $0) })
             }
             else if let contactEntity = message.conversation.contact {
                 contactsToCheck.append(Contact(contactEntity: contactEntity))

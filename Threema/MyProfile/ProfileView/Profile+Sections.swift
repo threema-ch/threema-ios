@@ -20,6 +20,7 @@
 
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 extension ProfileView {
     
@@ -38,7 +39,7 @@ extension ProfileView {
                             .init(
                                 action: shareID,
                                 icon: "square.and.arrow.up.fill",
-                                title: "profile_share_id".localized,
+                                title: #localize("profile_share_id"),
                                 buttonAccessibilityIdentifier: "share_id_button",
                                 accessibilityIdentifier: "share_id"
                             )
@@ -47,7 +48,7 @@ extension ProfileView {
                         .init(
                             action: showQrCode,
                             icon: "qrcode",
-                            title: "profile_show_qr_code".localized,
+                            title: #localize("profile_show_qr_code"),
                             buttonAccessibilityIdentifier: "qr_code_button",
                             accessibilityIdentifier: "qr_code"
                         )
@@ -113,7 +114,7 @@ extension ProfileView {
                     .wrappedModalNavigationView
                 }, label: {
                     ListItem(
-                        title: "profile_linked_phone".localized,
+                        title: #localize("profile_linked_phone"),
                         subTitle: model.linkedMobile
                     )
                 }, onDismiss: model.load, fullscreen: true)
@@ -123,12 +124,12 @@ extension ProfileView {
                         .wrappedModalNavigationView
                 }, label: {
                     ListItem(
-                        title: "profile_linked_email".localized,
+                        title: #localize("profile_linked_email"),
                         subTitle: model.linkedEmail
                     )
                 }, onDismiss: model.load, fullscreen: true)
             } footer: {
-                Text(String(format: "myprofile_link_email_phone_footer".localized, ThreemaApp.appName))
+                Text(String(format: #localize("myprofile_link_email_phone_footer"), ThreemaApp.appName))
             }
             .disabled(model.readOnlyProfile)
         }
@@ -143,7 +144,7 @@ extension ProfileView {
             Section {
                 LockedNavigationLink(shouldNavigate: $model.shouldNavigateToSafeSetup, label: {
                     ListItem(
-                        title: "safe_setup_backup_title".localized,
+                        title: #localize("safe_setup_backup_title"),
                         subTitle: (model.isThreemaSafeActivated ? "On" : "Off").localized
                     )
                 }, destination: {
@@ -157,8 +158,8 @@ extension ProfileView {
         @ViewBuilder
         private var footer: some View {
             Text(
-                BundleUtil.localizedString(
-                    forKey: !(model.mdmSetup?.isSafeBackupDisable() ?? true)
+                #localize(
+                    !(model.mdmSetup?.isSafeBackupDisable() ?? true)
                         ? "safe_enable_explain_short"
                         : "disabled_by_device_policy"
                 )
@@ -168,7 +169,7 @@ extension ProfileView {
         static var safe: some View {
             uiViewController(viewController("safeSetupViewController"))
                 .navigationBarTitleDisplayMode(.inline)
-                .navigationTitle("safe_setup_backup_title".localized)
+                .navigationTitle(#localize("safe_setup_backup_title"))
         }
     }
     
@@ -183,7 +184,7 @@ extension ProfileView {
                     exportID
                 } label: {
                     ListItem(
-                        title: "profile_id_export".localized
+                        title: #localize("profile_id_export")
                     )
                 }
                 .disabled(model.disableBackups)
@@ -192,7 +193,7 @@ extension ProfileView {
                         revocationKey
                     } label: {
                         ListItem(
-                            title: "revocation_password".localized,
+                            title: #localize("revocation_password"),
                             subTitle: model.revocationDetail
                         )
                     }
@@ -226,7 +227,7 @@ extension ProfileView {
         @ViewBuilder
         private var footer: some View {
             if model.disableBackups || model.readOnlyProfile {
-                Text("disabled_by_device_policy".localized)
+                Text(#localize("disabled_by_device_policy"))
             }
         }
     }
@@ -242,7 +243,7 @@ extension ProfileView {
                     showPublicKey()
                 } label: {
                     ListItem(
-                        title: "public_key".localized
+                        title: #localize("public_key")
                     )
                 }
             }
@@ -265,7 +266,7 @@ extension ProfileView {
         
         private var label: some View {
             ListItem(
-                title: "my_profile_delete_cell_title".localized
+                title: #localize("my_profile_delete_cell_title")
             )
             .foregroundColor(Color.red)
         }
@@ -278,11 +279,11 @@ extension ProfileView {
                     } label: {
                         label
                     }.alert(
-                        "delete_identity_passcode_title".localized,
+                        #localize("delete_identity_passcode_title"),
                         isPresented: $isAlertPresented,
                         actions: { },
                         message: {
-                            Text("delete_identity_passcode_message".localized)
+                            Text(#localize("delete_identity_passcode_message"))
                         }
                     )
                 }

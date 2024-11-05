@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct DeviceJoinPFSInfoView: View {
     
@@ -32,15 +33,15 @@ struct DeviceJoinPFSInfoView: View {
         VStack {
             ScrollView {
                 DeviceJoinHeaderView(
-                    title: "settings_list_threema_desktop_title".localized,
+                    title: #localize("settings_list_threema_desktop_title"),
                     description: String.localizedStringWithFormat(
-                        "multi_device_join_perfect_forward_secrecy_info".localized,
+                        #localize("multi_device_join_perfect_forward_secrecy_info"),
                         ThreemaURLProvider.multiDeviceLimit.absoluteString
                     )
                 )
                 .padding([.horizontal, .top], 24)
                 .accessibilityAction(named: Text(String.localizedStringWithFormat(
-                    "accessibility_action_open_link".localized,
+                    #localize("accessibility_action_open_link"),
                     ThreemaURLProvider.multiDeviceLimit.absoluteString
                 ))) {
                     openURL(ThreemaURLProvider.multiDeviceLimit)
@@ -67,7 +68,7 @@ struct DeviceJoinPFSInfoView: View {
                 Button {
                     showScanQRCodeView = true
                 } label: {
-                    Text("multi_device_new_linked_devices_add_button".localized)
+                    Text(#localize("multi_device_new_linked_devices_add_button"))
                         .font(.title3) // This is a little bit too big
                         .bold()
                         .padding(8)
@@ -86,7 +87,7 @@ struct DeviceJoinPFSInfoView: View {
                 Button(role: .cancel) {
                     showWizard = false
                 } label: {
-                    Label("Cancel", systemImage: "xmark.circle.fill")
+                    Label(#localize("cancel"), systemImage: "xmark.circle.fill")
                         .symbolRenderingMode(.hierarchical)
                         .foregroundColor(.secondary)
                 }

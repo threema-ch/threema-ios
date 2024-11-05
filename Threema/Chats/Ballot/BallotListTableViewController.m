@@ -38,7 +38,7 @@
 
 @implementation BallotListTableViewController
 
-+ (instancetype) ballotListViewControllerForConversation:(Conversation *)conversation {
++ (instancetype) ballotListViewControllerForConversation:(ConversationEntity *)conversation {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Ballot" bundle:nil];
     
     BallotListTableViewController *viewController = (BallotListTableViewController *) [storyboard instantiateViewControllerWithIdentifier:@"BallotListTableViewController"];

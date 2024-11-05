@@ -19,13 +19,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Conversation.h"
 #import "AppDelegate.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 @protocol ChatViewControllerActionsProtocol <NSObject>
 
 @property UITableView *chatContent;
-@property Conversation *conversation;
+@property ConversationEntity *conversation;
 @property UINavigationController *navigationController;
 @property UIView *view;
 @property UIViewController *presentedViewController;

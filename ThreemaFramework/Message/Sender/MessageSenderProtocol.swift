@@ -51,10 +51,10 @@ public enum MessageSenderReceivers {
     @discardableResult
     func sendTextMessage(
         containing text: String,
-        in conversation: Conversation,
+        in conversation: ConversationEntity,
         sendProfilePicture: Bool,
         requestID: String?
-    ) async -> [TextMessage]
+    ) async -> [TextMessageEntity]
         
     func sendBlobMessage(
         for item: URLSenderItem,
@@ -68,8 +68,8 @@ public enum MessageSenderReceivers {
         accuracy: CLLocationAccuracy,
         poiName: String?,
         poiAddress: String?,
-        in conversation: Conversation
-    )
+        in conversation: ConversationEntity
+    ) async
 
     func sendBallotMessage(for ballot: Ballot)
 
@@ -120,17 +120,19 @@ public enum MessageSenderReceivers {
 
     func doSendReadReceipt(to contactEntity: ContactEntity?) -> Bool
 
-    func doSendReadReceipt(to conversation: Conversation) -> Bool
+    func doSendReadReceipt(to conversation: ConversationEntity) -> Bool
 
     func doSendTypingIndicator(to contact: ContactEntity?) -> Bool
 
-    func doSendTypingIndicator(to conversation: Conversation) -> Bool
+    func doSendTypingIndicator(to conversation: ConversationEntity) -> Bool
 }
 
 extension MessageSenderProtocol {
+    // MARK: - TextMessage
+
     public func sendTextMessage(
         containing text: String,
-        in conversation: Conversation,
+        in conversation: ConversationEntity,
         sendProfilePicture: Bool = true,
         requestID: String? = nil
     ) {
@@ -146,10 +148,10 @@ extension MessageSenderProtocol {
     
     public func sendTextMessage(
         containing text: String,
-        in conversation: Conversation,
+        in conversation: ConversationEntity,
         sendProfilePicture: Bool = true,
         requestID: String? = nil
-    ) async -> [TextMessage] {
+    ) async -> [TextMessageEntity] {
         await sendTextMessage(
             containing: text,
             in: conversation,
@@ -158,6 +160,8 @@ extension MessageSenderProtocol {
         )
     }
     
+    // MARK: - BlobMessage
+
     public func sendBlobMessage(
         for item: URLSenderItem,
         in conversationObjectID: NSManagedObjectID,
@@ -170,6 +174,26 @@ extension MessageSenderProtocol {
             correlationID: correlationID,
             webRequestID: webRequestID
         )
+    }
+    
+    // MARK: - LocationMessage
+
+    public func sendLocationMessage(
+        coordinates: CLLocationCoordinate2D,
+        accuracy: CLLocationAccuracy,
+        poiName: String?,
+        poiAddress: String?,
+        in conversation: ConversationEntity
+    ) {
+        Task {
+            await sendLocationMessage(
+                coordinates: coordinates,
+                accuracy: accuracy,
+                poiName: poiName,
+                poiAddress: poiAddress,
+                in: conversation
+            )
+        }
     }
 
     /// Send abstract message

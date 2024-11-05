@@ -24,12 +24,12 @@ import ThreemaEssentials
 import ThreemaProtocols
 
 public protocol ConversationStoreProtocol {
-    func pin(_ conversation: Conversation)
-    func unpin(_ conversation: Conversation)
-    func makePrivate(_ conversation: Conversation)
-    func makeNotPrivate(_ conversation: Conversation)
-    func archive(_ conversation: Conversation)
-    func unarchive(_ conversation: Conversation)
+    func pin(_ conversation: ConversationEntity)
+    func unpin(_ conversation: ConversationEntity)
+    func makePrivate(_ conversation: ConversationEntity)
+    func makeNotPrivate(_ conversation: ConversationEntity)
+    func archive(_ conversation: ConversationEntity)
+    func unarchive(_ conversation: ConversationEntity)
 }
 
 protocol ConversationStoreInternalProtocol {
@@ -59,9 +59,9 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
     }
 
     @objc public func unmarkAllPrivateConversations() {
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             for conversation in self.entityManager.entityFetcher.privateConversations() {
-                guard let conversation = conversation as? Conversation else {
+                guard let conversation = conversation as? ConversationEntity else {
                     continue
                 }
                 self.makeNotPrivate(conversation)
@@ -70,27 +70,27 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
         userSettings.hidePrivateChats = false
     }
 
-    public func pin(_ conversation: Conversation) {
+    public func pin(_ conversation: ConversationEntity) {
         guard conversation.conversationVisibility == .default else {
             return
         }
-        saveAndSync(ConversationVisibility.pinned, of: conversation)
+        saveAndSync(ConversationEntity.Visibility.pinned, of: conversation)
     }
 
-    public func unpin(_ conversation: Conversation) {
+    public func unpin(_ conversation: ConversationEntity) {
         guard conversation.conversationVisibility == .pinned else {
             return
         }
-        saveAndSync(ConversationVisibility.default, of: conversation)
+        saveAndSync(ConversationEntity.Visibility.default, of: conversation)
     }
 
-    public func makePrivate(_ conversation: Conversation) {
+    public func makePrivate(_ conversation: ConversationEntity) {
         guard conversation.conversationCategory != .private else {
             return
         }
-        saveAndSync(ConversationCategory.private, of: conversation)
+        saveAndSync(ConversationEntity.Category.private, of: conversation)
         
-        if conversation.isGroup() {
+        if conversation.isGroup {
             SettingsStore.removeINInteractions(for: conversation.objectID)
         }
         else if let contact = conversation.contact {
@@ -98,43 +98,45 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
         }
     }
 
-    public func makeNotPrivate(_ conversation: Conversation) {
+    public func makeNotPrivate(_ conversation: ConversationEntity) {
         guard conversation.conversationCategory != .default else {
             return
         }
-        saveAndSync(ConversationCategory.default, of: conversation)
+        saveAndSync(ConversationEntity.Category.default, of: conversation)
     }
 
-    public func archive(_ conversation: Conversation) {
+    public func archive(_ conversation: ConversationEntity) {
         guard conversation.conversationVisibility != .archived else {
             return
         }
-        saveAndSync(ConversationVisibility.archived, of: conversation)
+        saveAndSync(ConversationEntity.Visibility.archived, of: conversation)
     }
 
-    public func unarchive(_ conversation: Conversation) {
+    public func unarchive(_ conversation: ConversationEntity) {
         guard conversation.conversationVisibility == .archived else {
             return
         }
-        saveAndSync(ConversationVisibility.default, of: conversation)
+        saveAndSync(ConversationEntity.Visibility.default, of: conversation)
     }
 
     /// Update conversation (`Conversation.conversationCategory` and `Conversation.conversationVisibility`) of Contact.
     /// - Parameters:
     ///   - syncContact: Sync contact information
     func updateConversation(withContact syncContact: Sync_Contact) {
-        guard let conversation = entityManager.entityFetcher.conversation(forIdentity: syncContact.identity) else {
+        guard let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: syncContact.identity)
+        else {
             DDLogError("Conversation for contact (identity: \(syncContact.identity)) not found")
             return
         }
 
         if syncContact.hasConversationCategory,
-           let category = ConversationCategory(rawValue: syncContact.conversationCategory.rawValue) {
+           let category = ConversationEntity.Category(rawValue: syncContact.conversationCategory.rawValue) {
             save(category, of: conversation)
         }
 
         if syncContact.hasConversationVisibility,
-           let visibility = ConversationVisibility(rawValue: syncContact.conversationVisibility.rawValue) {
+           let visibility = ConversationEntity
+           .Visibility(rawValue: syncContact.conversationVisibility.rawValue) {
             save(visibility, of: conversation)
         }
     }
@@ -144,7 +146,7 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
     ///   - syncGroup: Sync group information
     func updateConversation(withGroup syncGroup: Sync_Group) {
         guard let groupIdentity = try? GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity),
-              let conversation = entityManager.entityFetcher.conversation(
+              let conversation = entityManager.entityFetcher.conversationEntity(
                   for: groupIdentity.id,
                   creator: groupIdentity.creator.string
               ) else {
@@ -155,19 +157,20 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
         }
 
         if syncGroup.hasConversationCategory,
-           let category = ConversationCategory(rawValue: syncGroup.conversationCategory.rawValue) {
+           let category = ConversationEntity.Category(rawValue: syncGroup.conversationCategory.rawValue) {
             save(category, of: conversation)
         }
 
         if syncGroup.hasConversationVisibility,
-           let visibility = ConversationVisibility(rawValue: syncGroup.conversationVisibility.rawValue) {
+           let visibility = ConversationEntity
+           .Visibility(rawValue: syncGroup.conversationVisibility.rawValue) {
             save(visibility, of: conversation)
         }
     }
 
     // MARK: Private functions
 
-    private func saveAndSync(_ attribute: some Any, of conversation: Conversation) {
+    private func saveAndSync(_ attribute: some Any, of conversation: ConversationEntity) {
         let identities = save(attribute, of: conversation)
         sync(attribute, contactIdentity: identities.contactIdentity, groupIdentity: identities.groupIdentity)
     }
@@ -175,26 +178,29 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
     @discardableResult
     private func save(
         _ attribute: some Any,
-        of conversation: Conversation
+        of conversation: ConversationEntity
     ) -> (contactIdentity: String?, groupIdentity: GroupIdentity?) {
-        assert(attribute is ConversationCategory || attribute is ConversationVisibility)
+        assert(
+            attribute is ConversationEntity.Category || attribute is ConversationEntity
+                .Visibility
+        )
 
         var contactIdentity: String?
         var groupIdentity: GroupIdentity?
 
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             if let conversation = self.entityManager.entityFetcher
-                .existingObject(with: conversation.objectID) as? Conversation {
+                .existingObject(with: conversation.objectID) as? ConversationEntity {
                 // Save attribute on conversation
-                if let conversationCategory = attribute as? ConversationCategory {
-                    conversation.conversationCategory = conversationCategory
+                if let conversationCategory = attribute as? ConversationEntity.Category {
+                    conversation.changeCategory(to: conversationCategory)
                 }
-                else if let conversationVisibility = attribute as? ConversationVisibility {
-                    conversation.conversationVisibility = conversationVisibility
+                else if let conversationVisibility = attribute as? ConversationEntity.Visibility {
+                    conversation.changeVisibility(to: conversationVisibility)
                 }
                 
                 // Get identity of conversation
-                if !conversation.isGroup() {
+                if !conversation.isGroup {
                     contactIdentity = conversation.contact?.identity
                 }
                 else {
@@ -214,7 +220,10 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
             return
         }
 
-        assert(attribute is ConversationCategory || attribute is ConversationVisibility)
+        assert(
+            attribute is ConversationEntity.Category || attribute is ConversationEntity
+                .Visibility
+        )
 
         // Sync conversation attribute
         if let contactIdentity {
@@ -224,10 +233,10 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
                 taskManager,
                 entityManager
             )
-            if let conversationCategory = attribute as? ConversationCategory {
+            if let conversationCategory = attribute as? ConversationEntity.Category {
                 syncer.updateConversationCategory(identity: contactIdentity, value: conversationCategory)
             }
-            else if let conversationVisibility = attribute as? ConversationVisibility {
+            else if let conversationVisibility = attribute as? ConversationEntity.Visibility {
                 syncer.updateConversationVisibility(identity: contactIdentity, value: conversationVisibility)
             }
             syncer.syncAsync()
@@ -240,10 +249,10 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
                     taskManager,
                     groupManager
                 )
-                if let conversationCategory = attribute as? ConversationCategory {
+                if let conversationCategory = attribute as? ConversationEntity.Category {
                     await syncer.update(identity: groupIdentity, conversationCategory: conversationCategory)
                 }
-                else if let conversationVisibility = attribute as? ConversationVisibility {
+                else if let conversationVisibility = attribute as? ConversationEntity.Visibility {
                     await syncer.update(identity: groupIdentity, conversationVisibility: conversationVisibility)
                 }
                 await syncer.sync(syncAction: .update)

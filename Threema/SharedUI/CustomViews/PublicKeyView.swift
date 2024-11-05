@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 final class PublicKeyView: UIView {
@@ -100,7 +101,7 @@ final class PublicKeyView: UIView {
         button.addTarget(self, action: #selector(close), for: .touchUpInside)
         button.addTarget(self, action: #selector(touchButtonDown), for: .touchDown)
         button.addTarget(self, action: #selector(touchCancel), for: .touchUpOutside)
-        button.setTitle(BundleUtil.localizedString(forKey: "ok"), for: .normal)
+        button.setTitle(#localize("ok"), for: .normal)
         button.titleLabel?.adjustsFontForContentSizeCategory = true
         button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
         
@@ -173,7 +174,7 @@ final class PublicKeyView: UIView {
         if let contact {
             // Configure identity label
             identityTextView.text = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "public_key_of"),
+                #localize("public_key_of"),
                 contact.identity
             )
             formatAndSetPublicKey(publicKey: contact.publicKey.hexEncodedString())
@@ -181,7 +182,7 @@ final class PublicKeyView: UIView {
         else if let identity,
                 let publicKey {
             identityTextView.text = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "public_key_of"),
+                #localize("public_key_of"),
                 identity
             )
             formatAndSetPublicKey(publicKey: publicKey.hexEncodedString())

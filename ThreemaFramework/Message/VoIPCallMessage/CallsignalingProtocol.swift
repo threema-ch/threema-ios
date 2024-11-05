@@ -20,6 +20,7 @@
 
 import Foundation
 import Reachability
+import ThreemaMacros
 import ThreemaProtocols
 
 public enum CallsignalingProtocol {
@@ -193,11 +194,11 @@ extension CallsignalingProtocol {
     public static func threemaVideoCallQualitySettingTitle(for setting: ThreemaVideoCallQualitySetting) -> String {
         switch setting {
         case ThreemaVideoCallQualitySettingAuto:
-            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_auto")
+            #localize("settings_threema_calls_video_quality_profile_auto")
         case ThreemaVideoCallQualitySettingMaximumQuality:
-            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_max")
+            #localize("settings_threema_calls_video_quality_profile_max")
         case ThreemaVideoCallQualitySettingLowDataConsumption:
-            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_low")
+            #localize("settings_threema_calls_video_quality_profile_low")
         default:
             "Unknown"
         }
@@ -206,11 +207,11 @@ extension CallsignalingProtocol {
     public static func threemaVideoCallQualitySettingSubtitle(for setting: ThreemaVideoCallQualitySetting) -> String {
         switch setting {
         case ThreemaVideoCallQualitySettingAuto:
-            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_auto_description")
+            #localize("settings_threema_calls_video_quality_profile_auto_description")
         case ThreemaVideoCallQualitySettingMaximumQuality:
-            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_max_description")
+            #localize("settings_threema_calls_video_quality_profile_max_description")
         case ThreemaVideoCallQualitySettingLowDataConsumption:
-            BundleUtil.localizedString(forKey: "settings_threema_calls_video_quality_profile_low_description")
+            #localize("settings_threema_calls_video_quality_profile_low_description")
         default:
             "Unknown"
         }

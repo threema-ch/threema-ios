@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import PromiseKit
 import SwiftUI
+import ThreemaMacros
 import UIKit
 
 final class StorageManagementViewController: ThemedCodeModernGroupedTableViewController {
@@ -148,7 +149,7 @@ extension StorageManagementViewController {
     private func configureNavigationBar() {
         navigationItem.largeTitleDisplayMode = .never
         
-        navigationBarTitle = "storage_management".localized
+        navigationBarTitle = #localize("storage_management")
     }
     
     private func configureTableView() {
@@ -170,16 +171,16 @@ extension StorageManagementViewController {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Row>()
         
         snapshot.appendSections([.storage])
-        snapshot.appendItems([.storage(label: "storage_total".localized, type: .total)])
+        snapshot.appendItems([.storage(label: #localize("storage_total"), type: .total)])
         snapshot
             .appendItems([.storage(
-                label: "storage_total_in_use".localized,
+                label: #localize("storage_total_in_use"),
                 type: .totalInUse
             )])
         snapshot
-            .appendItems([.storage(label: "storage_total_free".localized, type: .totalFree)])
+            .appendItems([.storage(label: #localize("storage_total_free"), type: .totalFree)])
         snapshot.appendItems([.storage(label: String(
-            format: "storage_threema".localized,
+            format: #localize("storage_threema"),
             ThreemaApp.currentName
         ), type: .threema)])
         
@@ -228,7 +229,7 @@ extension StorageManagementViewController: UITableViewDelegate {
         
         func push(_ content: StorageManagementConversationView) {
             let hostedVC = UIHostingController(rootView: content)
-            hostedVC.navigationItem.title = "storage_management".localized
+            hostedVC.navigationItem.title = #localize("storage_management")
             navigationController?.pushViewController(hostedVC, animated: true)
         }
         

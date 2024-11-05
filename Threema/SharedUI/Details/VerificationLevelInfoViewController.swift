@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 import UIKit
 
 /// Show all verification levels with description.
@@ -94,12 +95,12 @@ final class VerificationLevelInfoViewController: ThemedViewController {
     // MARK: - Configuration
      
     private func configureContent() {
-        title = BundleUtil.localizedString(forKey: "verification_level_title")
+        title = #localize("verification_level_title")
         
-        descriptionText.text = BundleUtil.localizedString(forKey: "verification_level_text")
+        descriptionText.text = #localize("verification_level_text")
         
-        workTitle.text = BundleUtil.localizedString(forKey: "verification_level_section_work")
-        otherTitle.text = BundleUtil.localizedString(forKey: "verification_level_section_other")
+        workTitle.text = #localize("verification_level_section_work")
+        otherTitle.text = #localize("verification_level_section_other")
     }
     
     private func configureLayout() {

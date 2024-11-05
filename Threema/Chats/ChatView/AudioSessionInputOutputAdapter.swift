@@ -59,7 +59,8 @@ enum AudioSessionInputOutputAdapter {
     }
     
     private static func setupAudioSession(forEarpiece: Bool, onError: ((NSError) -> Void)?) {
-        guard VoIPCallStateManager.shared.currentCallState() == .idle else {
+        guard VoIPCallStateManager.shared.currentCallState() == .idle,
+              !NavigationBarPromptHandler.isGroupCallActive else {
             return
         }
         
@@ -120,7 +121,8 @@ enum AudioSessionInputOutputAdapter {
     }
     
     static func resetAudioSession(to category: AVAudioSession.Category?) {
-        guard VoIPCallStateManager.shared.currentCallState() == .idle else {
+        guard VoIPCallStateManager.shared.currentCallState() == .idle,
+              !NavigationBarPromptHandler.isGroupCallActive else {
             return
         }
         

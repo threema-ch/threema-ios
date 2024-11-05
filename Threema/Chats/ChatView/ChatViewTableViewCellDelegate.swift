@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import ThreemaEssentials
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
@@ -118,7 +119,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         guard let conversation = chatViewController?.conversation else {
             return false
         }
-        return conversation.isGroup()
+        return conversation.isGroup
     }
     
     var chatViewIsDistributionListConversation: Bool {
@@ -284,7 +285,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
                 markers.star = NSNumber(booleanLiteral: !markers.star.boolValue)
             }
             else {
-                if let newMarker = self.entityManager.entityCreator.messageMarkers() {
+                if let newMarker = self.entityManager.entityCreator.messageMarkersEntity() {
                     newMarker.star = NSNumber(booleanLiteral: true)
                     message.messageMarkers = newMarker
                 }
@@ -300,8 +301,8 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             var text: String?
 
             let message = self.entityManager.entityFetcher.existingObject(with: messageObjectID) as? EditedMessage
-            if let textMessage = message as? TextMessage {
-                text = textMessage.text ?? ""
+            if let textMessage = message as? TextMessageEntity {
+                text = textMessage.text
             }
             else if let fileMessage = message as? FileMessage {
                 text = fileMessage.caption ?? ""
@@ -357,7 +358,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         let group = businessInjector.groupManager.getGroup(conversation: conversation)
         var contact: ContactEntity?
         
-        if conversation.isGroup() {
+        if conversation.isGroup {
             if baseMessage.isMyReaction(ack ? .acknowledged : .declined) {
                 return
             }
@@ -432,7 +433,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
                 .existingObject(with: messageID) as? BaseMessage
 
             var rejectedBy: Set<ContactEntity>? = nil
-            if message?.conversation.isGroup() ?? false, !(message?.rejectedBy?.isEmpty ?? true) {
+            if message?.conversation.isGroup ?? false, !(message?.rejectedBy?.isEmpty ?? true) {
                 rejectedBy = message?.rejectedBy
             }
             
@@ -452,12 +453,12 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             UIAlertTemplate.showConfirm(
                 owner: chatViewController,
                 popOverSource: sourceView,
-                title: "chat_view_resend_group_message_confirmation_title".localized,
+                title: #localize("chat_view_resend_group_message_confirmation_title"),
                 message: String.localizedStringWithFormat(
-                    "chat_view_resend_group_message_confirmation_message".localized,
+                    #localize("chat_view_resend_group_message_confirmation_message"),
                     rejectedMemberNames.formatted()
                 ),
-                titleOk: "chat_view_resend_group_message_confirmation_button".localized,
+                titleOk: #localize("chat_view_resend_group_message_confirmation_button"),
                 actionOk: { _ in
                     Task {
                         await backgroundBusinessInjector.messageSender.sendBaseMessage(
@@ -466,7 +467,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
                         )
                     }
                 },
-                titleCancel: "cancel".localized
+                titleCancel: #localize("cancel")
             )
         }
         else {

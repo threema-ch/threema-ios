@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import ThreemaEssentials
 import ThreemaFramework
+import ThreemaMacros
 
 @objc class WCSessionManager: NSObject {
     
@@ -181,19 +182,19 @@ extension WCSessionManager {
                         return
                     }
                     webClientSession.isConnecting = true
-                    var session: WCSession? = self.sessions[webClientSession.initiatorPermanentPublicKey!]
+                    var session: WCSession? = self.sessions[webClientSession.initiatorPermanentPublicKey]
                     
                     if LicenseStore.requiresLicenseKey() == true {
                         let mdmSetup = MDMSetup(setup: false)!
                         if let webHosts = mdmSetup.webHosts() {
                             if WCSessionManager.isWebHostAllowed(
-                                scannedHostName: webClientSession.saltyRTCHost!,
+                                scannedHostName: webClientSession.saltyRTCHost,
                                 whiteList: webHosts
                             ) == false {
                                 DDLogNotice("[Threema Web] Scanned qr code host is not white listed")
                                 if AppDelegate.shared().isAppInBackground() {
                                     ThreemaUtilityObjC.sendErrorLocalNotification(
-                                        BundleUtil.localizedString(forKey: "webClient_scan_error_mdm_host_title"),
+                                        #localize("webClient_scan_error_mdm_host_title"),
                                         body: BundleUtil
                                             .localizedString(forKey: "webClient_scan_error_mdm_host_message"),
                                         userInfo: nil
@@ -226,7 +227,7 @@ extension WCSessionManager {
 
                     if session == nil {
                         session = WCSession(webClientSession: webClientSession)
-                        self.sessions[webClientSession.initiatorPermanentPublicKey!] = session
+                        self.sessions[webClientSession.initiatorPermanentPublicKey] = session
                     }
                     if wca != nil {
                         session!.setWcaForConnection(wca: wca!)
@@ -242,9 +243,9 @@ extension WCSessionManager {
         })
     }
     
-    @objc public func connect(authToken: Data?, wca: String?, webClientSession: WebClientSession) {
+    @objc public func connect(authToken: Data?, wca: String?, webClientSession: WebClientSessionEntity) {
         DDLogNotice(
-            "[Threema Web] Connect to host \(webClientSession.saltyRTCHost ?? "?"); port: \(webClientSession.saltyRTCPort?.stringValue ?? "?") selfHosted: \(webClientSession.selfHosted?.stringValue ?? "?"); permanent: \(webClientSession.permanent?.stringValue ?? "?"); version: \(webClientSession.version?.stringValue ?? "?")"
+            "[Threema Web] Connect to host \(webClientSession.saltyRTCHost); port: \(webClientSession.saltyRTCPort.stringValue) selfHosted: \(webClientSession.selfHosted.stringValue); permanent: \(webClientSession.permanent.stringValue); version: \(webClientSession.version?.stringValue ?? "?")"
         )
         
         if webClientSession.isConnecting {
@@ -255,7 +256,7 @@ extension WCSessionManager {
         
         canConnectToWebClient(completionHandler: { isValid in
             if isValid == true {
-                var session: WCSession? = self.sessions[webClientSession.initiatorPermanentPublicKey!]
+                var session: WCSession? = self.sessions[webClientSession.initiatorPermanentPublicKey]
                 
                 if let session, let wca,
                    let connectionWca = session.connectionWca(),
@@ -268,21 +269,21 @@ extension WCSessionManager {
 
                 if session == nil {
                     session = WCSession(webClientSession: webClientSession)
-                    self.sessions[webClientSession.initiatorPermanentPublicKey!] = session
+                    self.sessions[webClientSession.initiatorPermanentPublicKey] = session
                 }
                 
                 if LicenseStore.requiresLicenseKey() == true {
                     let mdmSetup = MDMSetup(setup: false)!
                     if let webHosts = mdmSetup.webHosts() {
                         if WCSessionManager.isWebHostAllowed(
-                            scannedHostName: webClientSession.saltyRTCHost!,
+                            scannedHostName: webClientSession.saltyRTCHost,
                             whiteList: webHosts
                         ) == false {
                             DDLogError("[Threema Web] Scanned qr code host is not white listed")
                             if AppDelegate.shared().isAppInBackground() {
                                 ThreemaUtilityObjC.sendErrorLocalNotification(
-                                    BundleUtil.localizedString(forKey: "webClient_scan_error_mdm_host_title"),
-                                    body: BundleUtil.localizedString(forKey: "webClient_scan_error_mdm_host_message"),
+                                    #localize("webClient_scan_error_mdm_host_title"),
+                                    body: #localize("webClient_scan_error_mdm_host_message"),
                                     userInfo: nil
                                 )
                             }
@@ -290,8 +291,8 @@ extension WCSessionManager {
                                 let rootVC = UIApplication.shared.windows.first!.rootViewController
                                 UIAlertTemplate.showAlert(
                                     owner: rootVC!,
-                                    title: BundleUtil.localizedString(forKey: "webClient_scan_error_mdm_host_title"),
-                                    message: BundleUtil.localizedString(forKey: "webClient_scan_error_mdm_host_message")
+                                    title: #localize("webClient_scan_error_mdm_host_title"),
+                                    message: #localize("webClient_scan_error_mdm_host_message")
                                 )
                             }
                             webClientSession.isConnecting = false
@@ -375,17 +376,17 @@ extension WCSessionManager {
     }
     
     /// Stop specific session.
-    public func stopSession(_ webClientSession: WebClientSession) {
+    public func stopSession(_ webClientSession: WebClientSessionEntity) {
         DDLogNotice("[Threema Web] Stop session")
-        if let session: WCSession = sessions[webClientSession.initiatorPermanentPublicKey!] {
+        if let session: WCSession = sessions[webClientSession.initiatorPermanentPublicKey] {
             session.stop(close: true, forget: false, sendDisconnect: true, reason: .stop)
         }
     }
     
     /// Stop and delete specific session.
-    public func stopAndDeleteSession(_ webClientSession: WebClientSession) {
+    public func stopAndDeleteSession(_ webClientSession: WebClientSessionEntity) {
         DDLogNotice("[Threema Web] Stop and delete all active sessions")
-        let publicKey = webClientSession.initiatorPermanentPublicKey!
+        let publicKey = webClientSession.initiatorPermanentPublicKey
         if let session: WCSession = sessions[publicKey] {
             session.stop(close: true, forget: true, sendDisconnect: true, reason: .delete)
             sessions.removeValue(forKey: publicKey)
@@ -429,7 +430,7 @@ extension WCSessionManager {
         }
     }
     
-    @objc public func updateConversationPushSetting(conversation: Conversation) {
+    @objc public func updateConversationPushSetting(conversation: ConversationEntity) {
         for publicKey in running {
             if let session = sessions[publicKey] {
                 let conversationResponse = WebConversationUpdate(
@@ -446,10 +447,10 @@ extension WCSessionManager {
 extension WCSessionManager {
     // MARK: Private functions
     
-    private func addWCSessionToRunning(webClientSession: WebClientSession) {
+    private func addWCSessionToRunning(webClientSession: WebClientSessionEntity) {
         runningSessionsQueue.sync {
-            if !running.contains(webClientSession.initiatorPermanentPublicKey!) {
-                running.append(webClientSession.initiatorPermanentPublicKey!)
+            if !running.contains(webClientSession.initiatorPermanentPublicKey) {
+                running.append(webClientSession.initiatorPermanentPublicKey)
                 WebClientSessionStore.shared.updateWebClientSession(session: webClientSession, active: true)
             }
         }
@@ -544,7 +545,7 @@ extension WCSessionManager {
     private func responseUpdateMessage(
         with requestedConversationID: String,
         message: BaseMessage,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         objectMode: WebMessagesUpdate.ObjectMode,
         exclude requestID: String
     ) {
@@ -567,7 +568,7 @@ extension WCSessionManager {
     private func responseUpdateMessage(
         with requestedConversationID: String,
         message: BaseMessage,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         objectMode: WebMessagesUpdate.ObjectMode
     ) {
         for publicKey in running {
@@ -586,7 +587,7 @@ extension WCSessionManager {
     
     private func sendResponseUpdateMessage(
         message: BaseMessage,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         objectMode: WebMessagesUpdate.ObjectMode,
         session: WCSession
     ) {
@@ -600,7 +601,10 @@ extension WCSessionManager {
         session.sendMessageToWeb(blacklisted: false, msgpack: messageUpdate.messagePack())
     }
     
-    private func responseUpdateConversation(conversation: Conversation, objectMode: WebConversationUpdate.ObjectMode) {
+    private func responseUpdateConversation(
+        conversation: ConversationEntity,
+        objectMode: WebConversationUpdate.ObjectMode
+    ) {
         for publicKey in running {
             if let session = sessions[publicKey] {
                 let conversationResponse = WebConversationUpdate(
@@ -627,7 +631,7 @@ extension WCSessionManager {
     }
     
     private func responseUpdateDeletedConversation(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         contact: ContactEntity?,
         objectMode: WebConversationUpdate.ObjectMode
     ) {
@@ -691,9 +695,9 @@ extension WCSessionManager {
                     case is BaseMessage:
                         let baseMessage = managedObject as! BaseMessage
                         DDLogNotice("New message added on wrong context \(baseMessage.id.hexString)")
-                    case is Conversation:
-                        let conversation = managedObject as! Conversation
-                        if conversation.isGroup() {
+                    case is ConversationEntity:
+                        let conversation = managedObject as! ConversationEntity
+                        if conversation.isGroup {
                             DDLogNotice(
                                 "New conversation added on wrong context \(conversation.groupID?.hexString ?? "?")"
                             )
@@ -715,9 +719,9 @@ extension WCSessionManager {
                     case is BaseMessage:
                         let baseMessage = managedObject as! BaseMessage
                         DDLogNotice("Updated message on wrong context \(baseMessage.id.hexString)")
-                    case is Conversation:
-                        let conversation = managedObject as! Conversation
-                        if conversation.isGroup() {
+                    case is ConversationEntity:
+                        let conversation = managedObject as! ConversationEntity
+                        if conversation.isGroup {
                             DDLogNotice(
                                 "Updated conversation on wrong context \(conversation.groupID?.hexString ?? "?")"
                             )
@@ -755,8 +759,8 @@ extension WCSessionManager {
                     continue
                 }
                 updateBaseMessage(managedObject as! BaseMessage, dirtyObjects: dirtyObjects)
-            case is Conversation:
-                updateConversation(managedObject as! Conversation, dirtyObjects: dirtyObjects)
+            case is ConversationEntity:
+                updateConversation(managedObject as! ConversationEntity, dirtyObjects: dirtyObjects)
             default:
                 break
             }
@@ -777,8 +781,8 @@ extension WCSessionManager {
                 }
                 
                 insertBaseMessage(managedObject as! BaseMessage)
-            case is Conversation:
-                insertConversation(managedObject as! Conversation)
+            case is ConversationEntity:
+                insertConversation(managedObject as! ConversationEntity)
             default:
                 break
             }
@@ -792,8 +796,8 @@ extension WCSessionManager {
                 deleteContact(managedObject as! ContactEntity)
             case is BaseMessage:
                 deleteBaseMessage(managedObject as! BaseMessage)
-            case is Conversation:
-                deleteConversation(managedObject as! Conversation)
+            case is ConversationEntity:
+                deleteConversation(managedObject as! ConversationEntity)
             default:
                 break
             }
@@ -854,7 +858,7 @@ extension WCSessionManager {
             
             DDLogNotice("Updated message on main context \(currentMessage.id.hexString)")
                         
-            let identity = conversation.isGroup() ? conversation.groupID!.hexEncodedString() : self
+            let identity = conversation.isGroup ? conversation.groupID!.hexEncodedString() : self
                 .baseMessageIdentity(baseMessage)
             self.processBaseMessageUpdate(baseMessage: currentMessage, changedValues: changedValues, identity: identity)
             
@@ -907,7 +911,7 @@ extension WCSessionManager {
         return true
     }
         
-    private func updateConversation(_ conversation: Conversation, dirtyObjects: Bool = false) {
+    private func updateConversation(_ conversation: ConversationEntity, dirtyObjects: Bool = false) {
         let changedValues = conversation.changedValues()
         
         let changedValuesForCurrentEvent = conversation.changedValuesForCurrentEvent()
@@ -917,16 +921,16 @@ extension WCSessionManager {
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
             guard let currentConversation = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: conversation.objectID) as? Conversation else {
+                .getManagedObject(by: conversation.objectID) as? ConversationEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
             
             DDLogNotice(
-                "Updated conversation on main context \(currentConversation.isGroup() ? currentConversation.groupID?.hexString ?? "?" : currentConversation.contact?.identity ?? "?")"
+                "Updated conversation on main context \(currentConversation.isGroup ? currentConversation.groupID?.hexString ?? "?" : currentConversation.contact?.identity ?? "?")"
             )
                         
-            if currentConversation.isGroup() {
+            if currentConversation.isGroup {
                 
                 if changedValues.keys.contains("groupName") || changedValues.keys.contains("members") {
                     if let group = self.businessInjector.groupManager.getGroup(conversation: currentConversation) {
@@ -954,7 +958,7 @@ extension WCSessionManager {
                 let objectMode: WebConversationUpdate.ObjectMode = .modified
                 self.responseUpdateConversation(conversation: currentConversation, objectMode: objectMode)
             }
-            else if !conversation.isGroup(),
+            else if !conversation.isGroup,
                     let contact = conversation.contact,
                     changedValues.keys.contains("category") || changedValues.keys.contains("visibility") {
                 self.responseUpdateContact(contact: contact, objectMode: .modified)
@@ -975,15 +979,15 @@ extension WCSessionManager {
                 return
             }
             DDLogNotice("New contact added on main context \(currentContact.identity)")
-            if currentContact.identity != nil, currentContact.publicKey != nil {
-                let objectMode: WebReceiverUpdate.ObjectMode = .new
-                self.responseUpdateContact(contact: currentContact, objectMode: objectMode)
-            }
+            
+            let objectMode: WebReceiverUpdate.ObjectMode = .new
+            self.responseUpdateContact(contact: currentContact, objectMode: objectMode)
+            
             BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
         }
     }
     
-    private func insertConversation(_ conversation: Conversation) {
+    private func insertConversation(_ conversation: ConversationEntity) {
         
         let backgroundKey = kAppAckBackgroundTask + SwiftUtils.pseudoRandomString(length: 10)
         BackgroundTaskManager.shared.newBackgroundTask(
@@ -993,17 +997,17 @@ extension WCSessionManager {
             
             // Show only chats where lastUpdate is not `nil` to avoid showing chats that only contain system messages
             guard let currentConversation = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: conversation.objectID) as? Conversation,
+                .getManagedObject(by: conversation.objectID) as? ConversationEntity,
                 currentConversation.lastUpdate != nil else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
             
             DDLogNotice(
-                "New conversation added on main context \(currentConversation.isGroup() ? currentConversation.groupID?.hexString ?? "?" : currentConversation.contact?.identity ?? "?")"
+                "New conversation added on main context \(currentConversation.isGroup ? currentConversation.groupID?.hexString ?? "?" : currentConversation.contact?.identity ?? "?")"
             )
             
-            if currentConversation.isGroup(),
+            if currentConversation.isGroup,
                let group = self.businessInjector.groupManager.getGroup(conversation: currentConversation) {
                 self.responseUpdateGroup(group: group, objectMode: .new)
             }
@@ -1029,7 +1033,7 @@ extension WCSessionManager {
             DDLogNotice("New message added on main context \(currentMessage.id.hexString)")
             
             let id: String =
-                if conversation.isGroup(),
+                if conversation.isGroup,
                 let groupID = conversation.groupID {
                     groupID.hexEncodedString()
                 }
@@ -1048,7 +1052,7 @@ extension WCSessionManager {
                 }
             
             switch currentMessage {
-            case is TextMessage:
+            case is TextMessageEntity:
                 self.processTextMessageResponse(currentMessage, id)
             case is FileMessageEntity, is ImageMessageEntity, is VideoMessageEntity, is AudioMessageEntity:
                 self.processFileMessageResponse(currentMessage, id)
@@ -1068,10 +1072,10 @@ extension WCSessionManager {
         let changedValues = baseMessage.changedValues()
         let changedValuesForCurrentEvent = baseMessage.changedValuesForCurrentEvent()
         let identity: String?
-        var conversation: Conversation?
+        var conversation: ConversationEntity?
         
         if changedValues.keys.contains("conversation"), changedValuesForCurrentEvent["conversation"] != nil {
-            conversation = changedValuesForCurrentEvent["conversation"] as? Conversation
+            conversation = changedValuesForCurrentEvent["conversation"] as? ConversationEntity
         }
         if let conv = baseMessage.conversation {
             conversation = conv
@@ -1090,7 +1094,7 @@ extension WCSessionManager {
                 }
             }
             
-            if conv.isGroup() {
+            if conv.isGroup {
                 let objectMode: WebMessagesUpdate.ObjectMode = .removed
                 responseUpdateMessage(
                     with: conv.groupID!.hexEncodedString(),
@@ -1099,7 +1103,7 @@ extension WCSessionManager {
                     objectMode: objectMode
                 )
             }
-            if let identity, !conv.isGroup() {
+            if let identity, !conv.isGroup {
                 let objectMode: WebMessagesUpdate.ObjectMode = .removed
                 responseUpdateMessage(
                     with: identity,
@@ -1111,7 +1115,7 @@ extension WCSessionManager {
         }
     }
     
-    private func deleteConversation(_ conversation: Conversation) {
+    private func deleteConversation(_ conversation: ConversationEntity) {
         let changedValuesForCurrentEvent = conversation.changedValuesForCurrentEvent()
         let objectMode: WebConversationUpdate.ObjectMode = .removed
         let contact: ContactEntity? = changedValuesForCurrentEvent["contact"] as? ContactEntity

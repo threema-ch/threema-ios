@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 import UIKit
 
 /// Cell for showing the typing indicator. It is modeled after the `ChatViewTextMessageTableViewCell` and adapts it's
@@ -236,7 +237,7 @@ extension ChatViewTypingIndicatorTableViewCell {
     
     override public var accessibilityLabel: String? {
         get {
-            BundleUtil.localizedString(forKey: "accessibility_senderDescription_typing")
+            #localize("accessibility_senderDescription_typing")
         }
         set {
             // No-op

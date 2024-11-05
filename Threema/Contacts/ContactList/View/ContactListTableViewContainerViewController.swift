@@ -22,12 +22,12 @@ import Foundation
 
 class ContactListTableViewContainerViewController: ContainerViewController {
     
-    private let contacts = ContactListViewController()
-    private let groups = GroupListViewController()
-    private let distributionList = DistributionListViewController()
+    private lazy var contacts = ContactListViewController(itemsDelegate: self)
+    private lazy var groups = GroupListViewController(itemsDelegate: self)
+    private lazy var distributionList = DistributionListViewController(itemsDelegate: self)
     
     #if THREEMA_WORK || THREEMA_ONPREM
-        private let work = WorkContactListViewController()
+        private lazy var work = WorkContactListViewController(itemsDelegate: self)
     #endif
     
     private lazy var internalNavItem = ContactListNavigationItem(delegate: self)
@@ -37,8 +37,10 @@ class ContactListTableViewContainerViewController: ContainerViewController {
     override var navigationItem: ContactListNavigationItem { internalNavItem }
     
     override var viewControllers: [UIViewController] {
-        #if THREEMA_WORK || THREEMA_ONPREM
+        #if THREEMA_WORK
             [contacts, groups, distributionList, work]
+        #elseif THREEMA_ONPREM
+            [work, groups, distributionList]
         #else
             [contacts, groups, distributionList]
         #endif
@@ -70,9 +72,9 @@ class ContactListTableViewContainerViewController: ContainerViewController {
     }
 }
 
-// MARK: - ContactListNavigationBarItemDelegate
+// MARK: - ContactListActionDelegate
 
-extension ContactListTableViewContainerViewController: ContactListNavigationBarItemDelegate {
+extension ContactListTableViewContainerViewController: ContactListActionDelegate {
     func add(_ item: ContactListAddItem) {
         {
             switch item {
@@ -89,7 +91,7 @@ extension ContactListTableViewContainerViewController: ContactListNavigationBarI
     }
     
     func filterChanged(_ item: ContactListFilterItem) {
-        #if THREEMA_WORK || THREEMA_ONPREM
+        #if THREEMA_WORK
             navigationItem.shouldShowWorkButton = item == .contacts
             guard let workIndex = viewControllers.firstIndex(of: work), workContactsEnabled, item == .contacts else {
                 return switchToViewController(at: item.rawValue)

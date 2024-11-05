@@ -21,7 +21,7 @@
 #import <Foundation/Foundation.h>
 #import "Old_BlobUploadDelegate.h"
 
-@class Conversation, Contact;
+@class ConversationEntity, Contact;
 
 NS_ASSUME_NONNULL_BEGIN
 

@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaMacros
 
 /// Business representation of a Threema distribution list
 public class DistributionList: NSObject {
@@ -34,7 +35,7 @@ public class DistributionList: NSObject {
 
     public var recipientsSummary: String {
         guard !recipients.isEmpty else {
-            return "distribution_list_no_recipient_title".localized
+            return #localize("distribution_list_no_recipient_title")
         }
         
         return ListFormatter.localizedString(byJoining: recipients.map(\.shortDisplayName))
@@ -46,11 +47,11 @@ public class DistributionList: NSObject {
     
     public var recipientCountString: String {
         if numberOfRecipients == 1 {
-            "distribution_list_one_recipient_title".localized
+            #localize("distribution_list_one_recipient_title")
         }
         else {
             String.localizedStringWithFormat(
-                "distribution_list_multiple_recipients_title".localized,
+                #localize("distribution_list_multiple_recipients_title"),
                 numberOfRecipients
             )
         }
@@ -77,7 +78,7 @@ public class DistributionList: NSObject {
        
         self.distributionListID = Int(distributionListEntity.distributionListID)
         self.displayName = distributionListEntity.name
-        self.recipients = Set(distributionListEntity.conversation.members.map {
+        self.recipients = Set(distributionListEntity.conversation.unwrappedMembers.map {
             Contact(contactEntity: $0)
         })
         self.idColor = IDColor.forData(distributionListEntity.distributionListID.littleEndianData)
@@ -130,7 +131,7 @@ public class DistributionList: NSObject {
         subscriptionTokens.append(token)
     }
     
-    private func subscribeForConversationChanges(conversation: Conversation) {
+    private func subscribeForConversationChanges(conversation: ConversationEntity) {
         let token = EntityObserver.shared.subscribe(managedObject: conversation) { [weak self] managedObject, reason in
            
             // Checks
@@ -138,7 +139,7 @@ public class DistributionList: NSObject {
                 return
             }
 
-            guard let conversation = managedObject as? Conversation else {
+            guard let conversation = managedObject as? ConversationEntity else {
                 DDLogError("Wrong type, should be Conversation")
                 return
             }
@@ -161,7 +162,7 @@ public class DistributionList: NSObject {
                 }
                 
                 // Check if recipients composition changed
-                let newRecipients = Set(conversation.members.map { Contact(contactEntity: $0) })
+                let newRecipients = Set(conversation.unwrappedMembers.map { Contact(contactEntity: $0) })
                 
                 if !recipients.contactsEqual(to: newRecipients) {
                     recipients = newRecipients

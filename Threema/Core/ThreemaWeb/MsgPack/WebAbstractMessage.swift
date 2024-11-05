@@ -183,11 +183,11 @@ public class WebAbstractMessage: NSObject {
                 return
             case "thumbnail"?:
                 let requestThumbnail = WebThumbnailRequest(message: self)
-                var conversation: Conversation?
+                var conversation: ConversationEntity?
                 var entityManager = EntityManager()
                 
                 if requestThumbnail.type == "contact" {
-                    conversation = entityManager.entityFetcher.conversation(forIdentity: requestThumbnail.id)
+                    conversation = entityManager.entityFetcher.conversationEntity(forIdentity: requestThumbnail.id)
                 }
                 else {
                     conversation = entityManager.entityFetcher
@@ -289,11 +289,12 @@ public class WebAbstractMessage: NSObject {
                 return
             case "ack"?:
                 let requestAck = WebAckRequest(message: self)
-                var conversation: Conversation?
+                var conversation: ConversationEntity?
                 let businessInjector = BusinessInjector()
                 
                 if requestAck.type == "contact" {
-                    conversation = businessInjector.entityManager.entityFetcher.conversation(forIdentity: requestAck.id)
+                    conversation = businessInjector.entityManager.entityFetcher
+                        .conversationEntity(forIdentity: requestAck.id)
                 }
                 else {
                     conversation = businessInjector.entityManager.entityFetcher
@@ -333,9 +334,9 @@ public class WebAbstractMessage: NSObject {
                 let requestBlob = WebBlobRequest(message: self)
                 let entityManager = EntityManager()
                 
-                let conversation: Conversation? =
+                let conversation: ConversationEntity? =
                     if requestBlob.type == "contact" {
-                        entityManager.entityFetcher.conversation(forIdentity: requestBlob.id)
+                        entityManager.entityFetcher.conversationEntity(forIdentity: requestBlob.id)
                     }
                     else {
                         entityManager.entityFetcher.legacyConversation(for: requestBlob.id.hexadecimal)
@@ -678,11 +679,12 @@ public class WebAbstractMessage: NSObject {
     }
     
     private func updateReadStateForMessage(requestMessage: WebReadRequest) {
-        var conversation: Conversation?
+        var conversation: ConversationEntity?
         let businessInjector = BusinessInjector()
         
         if requestMessage.type == "contact" {
-            conversation = businessInjector.entityManager.entityFetcher.conversation(forIdentity: requestMessage.id)
+            conversation = businessInjector.entityManager.entityFetcher
+                .conversationEntity(forIdentity: requestMessage.id)
         }
         else {
             conversation = businessInjector.entityManager.entityFetcher
@@ -705,7 +707,7 @@ public class WebAbstractMessage: NSObject {
             if let conversation = message.conversation,
                message.id == requestMessage.messageID || foundMessageID {
                 readReceiptQueue.append(message)
-                if conversation.isGroup() {
+                if conversation.isGroup {
                     // Quickfix: Sender should never be `nil` for incoming group messages
                     let key = message.sender!.identity + message.id.hexEncodedString()
                     for stage in UserNotificationStage.allCases {
@@ -766,7 +768,7 @@ public class WebAbstractMessage: NSObject {
             let group = businessInjector.groupManager.getGroup(conversation: conversation)
             var contact: ContactEntity?
             
-            if conversation.isGroup() {
+            if conversation.isGroup {
                 if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
                    !groupDeliveryReceipts.isEmpty,
                    baseMessage.isMyReaction(requestMessage.acknowledged ? .acknowledged : .declined) {
@@ -813,11 +815,11 @@ public class WebAbstractMessage: NSObject {
     
     private func buildResponseReceivers(completion: @escaping (_ webResponseReceivers: WebReceiversResponse?) -> Void) {
         var contactResult: [ContactEntity]?
-        var allGroupConversations: [Conversation]?
+        var allGroupConversations: [ConversationEntity]?
         var responseReceivers: WebReceiversResponse?
         let entityManager = EntityManager()
         contactResult = entityManager.entityFetcher.allContacts() as? [ContactEntity]
-        allGroupConversations = (entityManager.entityFetcher.allGroupConversations() as? [Conversation])!
+        allGroupConversations = (entityManager.entityFetcher.allGroupConversations() as? [ConversationEntity])!
         
         responseReceivers = WebReceiversResponse(
             requestID: requestID,

@@ -635,14 +635,14 @@
         onError([ThreemaError threemaError:@"store has no valid identity"]);
         return;
     }
-        
+    
     NSMutableDictionary *request = [@{
-                              @"identity": identityStore.identity,
-                              @"licenseUsername": licenseUsername,
-                              @"licensePassword": licensePassword,
-                              @"publicNickname": (identityStore.pushFromName != nil  && identityStore.pushFromName.length > 0 ? identityStore.pushFromName : identityStore.identity),
-                              @"version": ThreemaUtility.clientVersionWithMDM
-                              } mutableCopy];
+        @"identity": identityStore.identity,
+        @"licenseUsername": licenseUsername,
+        @"licensePassword": licensePassword,
+        @"publicNickname": (identityStore.pushFromName != nil  && identityStore.pushFromName.length > 0 ? identityStore.pushFromName : identityStore.identity),
+        @"version": ThreemaUtility.clientVersionWithMDM
+    } mutableCopy];
     
     if (identityStore.firstName != nil)
         request[@"firstName"] = identityStore.firstName;
@@ -652,6 +652,20 @@
         request[@"csi"] = identityStore.csi;
     if (identityStore.category != nil)
         request[@"category"] = identityStore.category;
+    
+    // For backwards compatibility we have to send this values always
+    // Otherwise it will not remove the values if there are empty or nil
+    if (identityStore.jobTitle != nil) {
+        request[@"jobTitle"] = identityStore.jobTitle;
+    } else {
+        request[@"jobTitle"] = @"";
+    }
+    
+    if (identityStore.department != nil) {
+        request[@"department"] = identityStore.department;
+    } else {
+        request[@"department"] = @"";
+    }
     
     NSData *requestData = [NSJSONSerialization dataWithJSONObject:request options:NSJSONWritingPrettyPrinted error:nil];
     unsigned char digest[CC_SHA256_DIGEST_LENGTH];
@@ -666,7 +680,8 @@
         return;
     }
     
-    DDLogWarn(@"Send update work info with\nfirstName: %@\nlastName: %@\ncsi: %@\ncategory: %@", identityStore.firstName, identityStore.lastName, identityStore.csi, identityStore.category);
+    DDLogWarn(@"Send update work info with\nfirstName: %@\nlastName: %@\ncsi: %@\njobTitle: %@\ndepartment: %@\ncategory: %@", identityStore.firstName, identityStore.lastName, identityStore.csi, identityStore.jobTitle, identityStore.department, identityStore.category);
+
     
     [self sendSignedRequest:request toApiPath:@"identity/update_work_info" forStore:identityStore onCompletion:^(id jsonObject) {
         if ([jsonObject[@"success"] boolValue]) {

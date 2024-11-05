@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct RevokeView: View {
     private let identity = MyIdentityStore.shared().identity!
@@ -34,20 +35,20 @@ struct RevokeView: View {
         GeometryReader { proxy in
             ScrollView {
                 VStack {
-                    Text("my_profile_revoke_identity_view_title".localized)
+                    Text(#localize("my_profile_revoke_identity_view_title"))
                         .bold()
                         .font(.title2)
                     
                     GroupBox(
                         label: Label(
-                            "my_profile_revoke_info_delete".localized,
+                            #localize("my_profile_revoke_info_delete"),
                             systemImage: "trash.circle.fill"
                         ),
                         content: {
                             VStack(alignment: .leading) {
-                                BulletText(string: "my_profile_delete_bullet_id".localized)
-                                BulletText(string: "my_profile_delete_bullet_safe".localized)
-                                BulletText(string: "my_profile_delete_bullet_linked".localized)
+                                BulletText(string: #localize("my_profile_delete_bullet_id"))
+                                BulletText(string: #localize("my_profile_delete_bullet_safe"))
+                                BulletText(string: #localize("my_profile_delete_bullet_linked"))
                             }
                             .padding(.leading, 24.0)
                             .padding(.top, 1)
@@ -56,12 +57,12 @@ struct RevokeView: View {
                                 Text(
                                     String
                                         .localizedStringWithFormat(
-                                            "my_profile_revoke_identity_view_enter_id".localized,
+                                            #localize("my_profile_revoke_identity_view_enter_id"),
                                             identity
                                         )
                                 )
                                 
-                                TextField("my_profile_revoke_identity_view_placeholder".localized, text: $enteredText)
+                                TextField(#localize("my_profile_revoke_identity_view_placeholder"), text: $enteredText)
                                     .textFieldStyle(.roundedBorder)
                                     .foregroundColor(.white)
                                     .textCase(.uppercase)
@@ -77,7 +78,7 @@ struct RevokeView: View {
                     
                     GroupBox(label: EmptyView(), content: {
                         Label {
-                            Text("my_profile_delete_info_revoke".localized)
+                            Text(#localize("my_profile_delete_info_revoke"))
                                 .foregroundColor(textIsSameAsID ? Colors.red.color : Colors.white.color)
                         } icon: {
                             Image(systemName: "exclamationmark.triangle.fill")
@@ -95,7 +96,7 @@ struct RevokeView: View {
                         Button(role: .destructive, action: {
                             revokePressed()
                         }, label: {
-                            Text("my_profile_revoke_identity_view_button_revoke".localized)
+                            Text(#localize("my_profile_revoke_identity_view_button_revoke"))
                                 .frame(maxWidth: .infinity)
                         })
                         .disabled(isDeleting)
@@ -105,7 +106,7 @@ struct RevokeView: View {
                         Button {
                             tabSelection = 0
                         } label: {
-                            Text("back".localized)
+                            Text(#localize("back"))
                                 .frame(maxWidth: .infinity)
                         }
                         .disabled(isDeleting)

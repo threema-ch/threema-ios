@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct DeviceJoinSuccessView: View {
     
@@ -39,9 +40,9 @@ struct DeviceJoinSuccessView: View {
                             .accessibilityHidden(true)
                         
                         DeviceJoinHeaderView(
-                            title: "multi_device_join_linked_successfully_title".localized,
+                            title: #localize("multi_device_join_linked_successfully_title"),
                             description: String.localizedStringWithFormat(
-                                "multi_device_join_linked_successfully_info".localized,
+                                #localize("multi_device_join_linked_successfully_info"),
                                 ThreemaApp.appName
                             )
                         )
@@ -60,7 +61,7 @@ struct DeviceJoinSuccessView: View {
             Button {
                 showWizard = false
             } label: {
-                Text("continue".localized)
+                Text(#localize("continue"))
                     .font(.title3) // This is a little bit too big
                     .bold()
                     .padding(8)

@@ -23,6 +23,7 @@ import DSWaveformImageViews
 import Foundation
 import SwiftUI
 import ThreemaFramework
+import ThreemaMacros
 
 protocol VoiceMessageRecorderViewDelegate: AnyObject {
     func willDismissRecorder()
@@ -189,7 +190,7 @@ extension VoiceMessageRecorderView {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
             }
         )
-        .accessibilityLabel("stop".localized)
+        .accessibilityLabel(#localize("stop"))
         .accessibilityFocused($isStopFocused)
     }
     
@@ -222,7 +223,7 @@ extension VoiceMessageRecorderView {
             }
         )
         .scaleEffect(0.6)
-        .accessibilityLabel("record_continue".localized)
+        .accessibilityLabel(#localize("record_continue"))
     }
     
     private var sendButton: some View {
@@ -246,7 +247,7 @@ extension VoiceMessageRecorderView {
                 .foregroundColor(model.recordingState == .recordingStopping ? .secondary : UIColor.primary.color)
         }
         .disabled(model.recordingState == .recordingStopping)
-        .accessibilityLabel("send".localized)
+        .accessibilityLabel(#localize("send"))
     }
     
     private var discardButton: some View {
@@ -269,7 +270,7 @@ extension VoiceMessageRecorderView {
                 )
                 .foregroundColor(.gray)
         }
-        .accessibilityLabel("quit".localized)
+        .accessibilityLabel(#localize("quit"))
     }
     
     private func buildButton(

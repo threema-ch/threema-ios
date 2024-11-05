@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
+import ThreemaMacros
 
 class MentionableIdentity: Hashable {
     enum ContactKind: Hashable {
@@ -34,7 +35,7 @@ class MentionableIdentity: Hashable {
     lazy var corpus: String = {
         switch contactKind {
         case .all:
-            return BundleUtil.localizedString(forKey: "all").lowercased()
+            return #localize("all").lowercased()
         case let ContactKind.contact(identity):
             guard let contact = entityFetcher.contact(for: identity) else {
                 DDLogError("Created MentionableIdentity for a contact that doesn't exist")
@@ -47,7 +48,7 @@ class MentionableIdentity: Hashable {
     lazy var displayName: String = {
         switch contactKind {
         case .all:
-            return BundleUtil.localizedString(forKey: "all")
+            return #localize("all")
         case let ContactKind.contact(identity):
             guard let contact = entityFetcher.contact(for: identity) else {
                 DDLogError("Created MentionableIdentity for a contact that doesn't exist")

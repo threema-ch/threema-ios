@@ -19,13 +19,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 class ThreemaWebSettingCell: UITableViewCell {
     @IBOutlet var titleLabel: UILabel?
     @IBOutlet var webClientSwitch: UISwitch?
 
     func setupCell() {
-        titleLabel?.text = BundleUtil.localizedString(forKey: "webClientSession_title")
+        titleLabel?.text = #localize("webClientSession_title")
         
         let mdmSetup = MDMSetup(setup: false)!
         if mdmSetup.existsMdmKey(MDM_KEY_DISABLE_WEB) {

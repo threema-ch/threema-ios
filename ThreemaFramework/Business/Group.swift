@@ -23,16 +23,17 @@ import Foundation
 import GroupCalls
 import Intents
 import ThreemaEssentials
+import ThreemaMacros
 import ThreemaProtocols
 
 /// Business representation of a Threema group
 public class Group: NSObject {
     
     // These strings are used as static properties for performance reasons
-    private static let meString = "me".localized
-    private static let unknownString = "(unknown)".localized
-    private static let oneMemberTitleString = "group_one_member_title".localized
-    private static let multipleMemberTitleString = "group_multiple_members_title".localized
+    private static let meString = #localize("me")
+    private static let unknownString = #localize("(unknown)")
+    private static let oneMemberTitleString = #localize("group_one_member_title")
+    private static let multipleMemberTitleString = #localize("group_multiple_members_title")
     private static let maxGroupMembers = BundleUtil.object(forInfoDictionaryKey: "ThreemaMaxGroupMembers") as? Int ?? 0
 
     // MARK: - Internal types
@@ -88,7 +89,7 @@ public class Group: NSObject {
     // Tokens for entity subscriptions, will be removed when is deallocated
     private var subscriptionTokens = [EntityObserver.SubscriptionToken]()
 
-    @objc public private(set) dynamic var state: GroupState
+    @objc public private(set) dynamic var state: GroupEntity.GroupState
     @objc public private(set) dynamic var members: Set<Contact>
     @objc public private(set) dynamic var name: String?
     @objc public private(set) dynamic var old_ProfilePicture: Data?
@@ -97,7 +98,7 @@ public class Group: NSObject {
     // MARK: - Public properties
 
     @available(*, deprecated, message: "Do not use anymore, load CoreData conversation separated")
-    @objc public let conversation: Conversation
+    @objc public let conversation: ConversationEntity
 
     public let groupIdentity: GroupIdentity
     
@@ -211,9 +212,9 @@ public class Group: NSObject {
         allMemberIdentities.count == 1 && isSelfMember
     }
 
-    public private(set) var conversationCategory: ConversationCategory
+    public private(set) var conversationCategory: ConversationEntity.Category
     
-    public private(set) var conversationVisibility: ConversationVisibility
+    public private(set) var conversationVisibility: ConversationEntity.Visibility
     
     /// A string with all members as comma separated list
     ///
@@ -310,7 +311,7 @@ public class Group: NSObject {
         myIdentityStore: MyIdentityStoreProtocol,
         userSettings: UserSettingsProtocol,
         groupEntity: GroupEntity,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         lastSyncRequest: Date?
     ) {
         if let conversationContact = conversation.contact {
@@ -327,11 +328,13 @@ public class Group: NSObject {
         if let contactEntity = conversation.contact {
             self.conversationContact = Contact(contactEntity: contactEntity)
         }
+        // swiftformat:disable: acronyms
         self.groupIdentity = GroupIdentity(
-            id: groupEntity.groupID,
+            id: groupEntity.groupId,
             creator: ThreemaIdentity(groupEntity.groupCreator ?? myIdentityStore.identity)
         )
-        self.state = GroupState(rawValue: groupEntity.state.intValue)!
+        // swiftformat:enable: acronyms
+        self.state = GroupEntity.GroupState(rawValue: groupEntity.state.intValue)!
         self.name = conversation.groupName
         
         self.old_ProfilePicture = conversation.groupImage?.data
@@ -343,7 +346,7 @@ public class Group: NSObject {
         self.conversationVisibility = conversation.conversationVisibility
         self.lastPeriodicSync = groupEntity.lastPeriodicSync
 
-        self.members = Set(conversation.members.map { Contact(contactEntity: $0) })
+        self.members = Set(conversation.unwrappedMembers.map { Contact(contactEntity: $0) })
 
         super.init()
         
@@ -402,15 +405,17 @@ public class Group: NSObject {
                     }
                     
                 case .updated:
+                    // swiftformat:disable: acronyms
                     guard groupIdentity == GroupIdentity(
-                        id: groupEntity.groupID,
+                        id: groupEntity.groupId,
                         creator: ThreemaIdentity(groupEntity.groupCreator ?? myIdentityStore.identity)
                     ) else {
                         DDLogError("Group identity mismatch")
                         return
                     }
+                    // swiftformat:enable: acronyms
 
-                    if let newState = GroupState(rawValue: groupEntity.state.intValue) {
+                    if let newState = GroupEntity.GroupState(rawValue: groupEntity.state.intValue) {
                         if state != newState {
                             state = newState
                         }
@@ -426,12 +431,12 @@ public class Group: NSObject {
         )
     }
     
-    private func subscribeForConversationEntityChanges(conversationEntity: Conversation) {
+    private func subscribeForConversationEntityChanges(conversationEntity: ConversationEntity) {
         subscriptionTokens.append(
             EntityObserver.shared.subscribe(
                 managedObject: conversation
             ) { [weak self] managedObject, reason in
-                guard let self, let conversation = managedObject as? Conversation else {
+                guard let self, let conversation = managedObject as? ConversationEntity else {
                     DDLogError("Wrong type, should be Conversation")
                     return
                 }
@@ -442,7 +447,7 @@ public class Group: NSObject {
                         willBeDeleted = true
                     }
                 case .updated:
-                    guard conversation.isGroup(), groupID == conversation.groupID else {
+                    guard conversation.isGroup, groupID == conversation.groupID else {
                         DDLogError("Group ID mismatch")
                         return
                     }
@@ -482,7 +487,7 @@ public class Group: NSObject {
                     }
 
                     // Check has members composition changed
-                    let newMembers = Set(conversation.members.map { Contact(contactEntity: $0) })
+                    let newMembers = Set(conversation.unwrappedMembers.map { Contact(contactEntity: $0) })
 
                     if !members.contactsEqual(to: newMembers) {
                         members = newMembers

@@ -55,7 +55,7 @@ public class MessageFetcher: NSObject {
     private let audioEntityName = "AudioMessage"
     private let systemEntityName = "SystemMessage"
     
-    private let conversation: Conversation
+    private let conversation: ConversationEntity
     private let entityManager: EntityManager
     
     // MARK: Predicates
@@ -143,7 +143,7 @@ public class MessageFetcher: NSObject {
     private lazy var lastMessageExcludesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
         let excludePredicateExcludes = NSPredicate(
             format: "type IN %@",
-            SystemMessage.excludeSystemMessageTypes
+            SystemMessageEntity.excludeSystemMessageTypes
         )
         let fetchRequestExcludes = NSFetchRequest<NSFetchRequestResult>(entityName: systemEntityName)
         fetchRequestExcludes.predicate =
@@ -213,9 +213,9 @@ public class MessageFetcher: NSObject {
     
     /// Initialize for a fixed conversation
     /// - Parameters:
-    ///   - conversation: Conversation's messages you want to access
+    ///   - conversation: ConversationEntity's messages you want to access
     ///   - entityManager: Manager used for fetch requests
-    @objc public init(for conversation: Conversation, with entityManager: EntityManager) {
+    @objc public init(for conversation: ConversationEntity, with entityManager: EntityManager) {
         self.conversation = conversation
         self.entityManager = entityManager
                 

@@ -20,6 +20,7 @@
 
 import Foundation
 import ThreemaEssentials
+import ThreemaMacros
 
 public struct PushSetting: Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
@@ -50,19 +51,19 @@ public struct PushSetting: Codable, Sendable {
         public var localizedString: String {
             switch self {
             case .time1Hour:
-                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_1Hour")
+                #localize("doNotDisturb_onPeriod_1Hour")
             case .time2Hours:
-                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_2Hours")
+                #localize("doNotDisturb_onPeriod_2Hours")
             case .time3Hours:
-                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_3Hours")
+                #localize("doNotDisturb_onPeriod_3Hours")
             case .time4Hours:
-                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_4Hours")
+                #localize("doNotDisturb_onPeriod_4Hours")
             case .time8Hours:
-                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_8Hours")
+                #localize("doNotDisturb_onPeriod_8Hours")
             case .time1Day:
-                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_1Day")
+                #localize("doNotDisturb_onPeriod_1Day")
             case .time1Week:
-                BundleUtil.localizedString(forKey: "doNotDisturb_onPeriod_1Week")
+                #localize("doNotDisturb_onPeriod_1Week")
             }
         }
     }
@@ -181,14 +182,14 @@ public struct PushSetting: Codable, Sendable {
 
     /// Localized description of current state to show in UI
     public var localizedDescription: String {
-        let formatString = BundleUtil.localizedString(forKey: "doNotDisturb_on_until_date_and_time")
+        let formatString = #localize("doNotDisturb_on_until_date_and_time")
 
         return localizedDescription(offPeriodFormatString: formatString)
     }
 
     /// Longer localized description of current state to show in UI
     public var localizedLongDescription: String {
-        let formatString = BundleUtil.localizedString(forKey: "doNotDisturb_on_until_date_and_time_long")
+        let formatString = #localize("doNotDisturb_on_until_date_and_time_long")
 
         return localizedDescription(offPeriodFormatString: formatString)
     }
@@ -208,9 +209,9 @@ public struct PushSetting: Codable, Sendable {
                 return ""
             }
         case .off:
-            return BundleUtil.localizedString(forKey: "doNotDisturb_on")
+            return #localize("doNotDisturb_on")
         case .on:
-            return BundleUtil.localizedString(forKey: "doNotDisturb_off")
+            return #localize("doNotDisturb_off")
         }
     }
 

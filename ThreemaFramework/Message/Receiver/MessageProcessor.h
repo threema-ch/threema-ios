@@ -23,7 +23,7 @@
 #import "MessageProcessorDelegate.h"
     
 @class BoxedMessage;
-@class Conversation;
+@class ConversationEntity;
 @class ContactEntity;
 
 @interface MessageProcessor : NSObject

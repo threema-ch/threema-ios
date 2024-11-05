@@ -39,7 +39,7 @@ public final class DistributionListManager: NSObject, DistributionListManagerPro
     // MARK: - Public functions
 
     public func createDistributionList(
-        conversation: Conversation,
+        conversation: ConversationEntity,
         name: String,
         imageData: Data?,
         recipients: Set<Contact>
@@ -72,16 +72,16 @@ public final class DistributionListManager: NSObject, DistributionListManagerPro
             conversation.members = contactEntities
             
             if let imageData, let image = UIImage(data: imageData) {
-                let dbImage = self.entityManager.entityCreator.imageData()
+                let dbImage = self.entityManager.entityCreator.imageDataEntity()
                 dbImage?.data = imageData
-                dbImage?.width = NSNumber(floatLiteral: Double(image.size.width))
-                dbImage?.height = NSNumber(floatLiteral: Double(image.size.height))
+                dbImage?.width = Int16(image.size.width)
+                dbImage?.height = Int16(image.size.height)
                 conversation.groupImage = dbImage
             }
         }
     }
 
-    public func distributionList(for conversation: Conversation) -> DistributionList? {
+    public func distributionList(for conversation: ConversationEntity) -> DistributionList? {
         entityManager.performAndWait {
             guard let distributionListEntity = self.entityManager.entityFetcher
                 .distributionListEntity(for: conversation) else {
@@ -108,10 +108,10 @@ public final class DistributionListManager: NSObject, DistributionListManagerPro
                 return
             }
             
-            let dbImage = self.entityManager.entityCreator.imageData()
+            let dbImage = self.entityManager.entityCreator.imageDataEntity()
             dbImage?.data = profilePicture
-            dbImage?.width = NSNumber(floatLiteral: Double(image.size.width))
-            dbImage?.height = NSNumber(floatLiteral: Double(image.size.height))
+            dbImage?.width = Int16(image.size.width)
+            dbImage?.height = Int16(image.size.height)
             conversation.groupImage = dbImage
         }
     }

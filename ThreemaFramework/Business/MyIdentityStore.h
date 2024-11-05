@@ -37,6 +37,8 @@
 @property (strong, nonatomic, readwrite) NSString *firstName;
 @property (strong, nonatomic, readwrite) NSString *lastName;
 @property (strong, nonatomic, readwrite) NSString *csi;
+@property (strong, nonatomic, readwrite) NSString *jobTitle;
+@property (strong, nonatomic, readwrite) NSString *department;
 @property (strong, nonatomic, readwrite) NSString *category;
 
 @property (strong, nonatomic, readonly) UIImage *resolvedProfilePicture;

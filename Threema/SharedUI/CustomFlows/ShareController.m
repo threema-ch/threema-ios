@@ -26,7 +26,7 @@
 #import "Old_FileMessageSender.h"
 #import "UTIConverter.h"
 #import "UserSettings.h"
-#import "Conversation.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 @import CocoaLumberjack;
 
@@ -76,7 +76,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowConversation object:nil userInfo:_info];
 }
 
-- (void)shareWithConversation:(Conversation *)conversation renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {
+- (void)shareWithConversation:(ConversationEntity *)conversation renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {
     
     if (conversation == nil) {
         return;
@@ -116,7 +116,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)contactPicker:(ContactGroupPickerViewController*)contactPicker didPickConversations:(NSSet *)conversations renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {   
     [contactPicker dismissViewControllerAnimated:YES completion:^{
         // Only one expected
-        Conversation *conversation = conversations.anyObject;
+        ConversationEntity *conversation = conversations.anyObject;
         [self shareWithConversation:conversation renderType:renderType sendAsFile:sendAsFile];
     }];
 }

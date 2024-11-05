@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import CodeScanner
 import SwiftUI
+import ThreemaMacros
 
 struct DeviceJoinScanQRCodeView: View {
     
@@ -69,9 +70,9 @@ struct DeviceJoinScanQRCodeView: View {
                     VStack {
                         
                         DeviceJoinHeaderView(
-                            title: "multi_device_join_scan_qr_code_title".localized,
+                            title: #localize("multi_device_join_scan_qr_code_title"),
                             description: String.localizedStringWithFormat(
-                                "multi_device_join_scan_qr_code_info".localized,
+                                #localize("multi_device_join_scan_qr_code_info"),
                                 ThreemaApp.appName
                             )
                         )
@@ -89,13 +90,13 @@ struct DeviceJoinScanQRCodeView: View {
                                 .background(Color.green) // Only needed for preview & simulator
                                 .accessibilityElement()
                                 .accessibilityLabel(
-                                    BundleUtil.localizedString(
-                                        forKey: "multi_device_join_scan_qr_code_scanner_view_accessibility_label"
+                                    #localize(
+                                        "multi_device_join_scan_qr_code_scanner_view_accessibility_label"
                                     )
                                 )
                                 .accessibilityHint(String.localizedStringWithFormat(
-                                    BundleUtil.localizedString(
-                                        forKey: "multi_device_join_scan_qr_code_scanner_view_accessibility_hint"
+                                    #localize(
+                                        "multi_device_join_scan_qr_code_scanner_view_accessibility_hint"
                                     ),
                                     ThreemaApp.appName
                                 ))
@@ -113,12 +114,14 @@ struct DeviceJoinScanQRCodeView: View {
                         // Allow entering of URL if build with Xcode
                         #if targetEnvironment(simulator)
                             HStack {
-                                TextField("Join URL", text: $debugDeviceJoinURLString)
-                            
+                                TextField(text: $debugDeviceJoinURLString) {
+                                    Text(verbatim: "Join URL")
+                                }
+                                
                                 Button {
                                     process(inputString: debugDeviceJoinURLString)
                                 } label: {
-                                    Text("Connect")
+                                    Text(verbatim: "Connect")
                                 }
                             }
                             .padding(.bottom)
@@ -130,7 +133,7 @@ struct DeviceJoinScanQRCodeView: View {
             }
             
             // This is an overlay during establishing the rendezvous connection
-            DeviceJoinProgressView(text: "multi_device_join_connecting".localized)
+            DeviceJoinProgressView(text: #localize("multi_device_join_connecting"))
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.thinMaterial)
@@ -147,7 +150,7 @@ struct DeviceJoinScanQRCodeView: View {
                     deviceJoinManager.deviceJoin.cancel()
                     showWizard = false
                 } label: {
-                    Label("Cancel", systemImage: "xmark.circle.fill")
+                    Label(#localize("cancel"), systemImage: "xmark.circle.fill")
                         .symbolRenderingMode(.hierarchical)
                         .foregroundColor(.secondary)
                 }
@@ -168,10 +171,10 @@ struct DeviceJoinScanQRCodeView: View {
         }
         // No camera access
         .alert(
-            "alert_no_access_title_camera".localized,
+            #localize("alert_no_access_title_camera"),
             isPresented: $showNoCameraAccessAlert
         ) {
-            Button("alert_no_access_open_settings".localized) {
+            Button(#localize("alert_no_access_open_settings")) {
                 guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
                     DDLogWarn("Unable to get settings URL")
                     return
@@ -180,18 +183,18 @@ struct DeviceJoinScanQRCodeView: View {
                 openURL(settingsURL)
             }
             
-            Button("Cancel", role: .cancel) { // No specific localization is needed
+            Button(#localize("cancel"), role: .cancel) {
                 showWizard = false
             }
         } message: {
-            Text("alert_no_access_message_camera".localized)
+            Text(#localize("alert_no_access_message_camera"))
         }
         // Retry error
         .alert(
             retryErrorTitle,
             isPresented: $showRetryError
         ) {
-            Button("OK") {
+            Button("ok") {
                 Task {
                     successfulScanned = false
                     try deviceJoinManager.advance(to: .scanQRCode)
@@ -205,12 +208,12 @@ struct DeviceJoinScanQRCodeView: View {
             fatalErrorTitle,
             isPresented: $showFatalError
         ) {
-            Button("OK") {
+            Button("ok") {
                 deviceJoinManager.deviceJoin.cancel()
                 showWizard = false
             }
         } message: {
-            Text("multi_device_join_fatal_error_message".localized)
+            Text(#localize("multi_device_join_fatal_error_message"))
         }
     }
     
@@ -226,7 +229,7 @@ struct DeviceJoinScanQRCodeView: View {
             requestCameraAccess()
             
         case .failure:
-            fatalErrorTitle = "multi_device_join_fatal_scanning_qr_code_error_title".localized
+            fatalErrorTitle = #localize("multi_device_join_fatal_scanning_qr_code_error_title")
             showFatalError = true
             
             DDLogError("Failed to scan QR Code")
@@ -252,7 +255,7 @@ struct DeviceJoinScanQRCodeView: View {
             break
         @unknown default:
             DDLogError("Unknown default camera authorization status")
-            fatalErrorTitle = "multi_device_join_fatal_camera_access_error_title".localized
+            fatalErrorTitle = #localize("multi_device_join_fatal_camera_access_error_title")
             showFatalError = true
         }
     }
@@ -262,9 +265,9 @@ struct DeviceJoinScanQRCodeView: View {
         guard let urlSafeBase64 = verify(inputString: inputString) else {
             DDLogError("Invalid QR Code")
             
-            retryErrorTitle = "multi_device_join_unknown_qr_code_title".localized
+            retryErrorTitle = #localize("multi_device_join_unknown_qr_code_title")
             retryErrorMessage = String.localizedStringWithFormat(
-                "multi_device_join_unknown_qr_code_message".localized,
+                #localize("multi_device_join_unknown_qr_code_message"),
                 DeviceJoinManager.downloadURL
             )
             showRetryError = true
@@ -283,7 +286,7 @@ struct DeviceJoinScanQRCodeView: View {
         catch {
             DDLogError("Success scan error: \(error)")
             
-            fatalErrorTitle = "multi_device_join_unrecoverable_error_title".localized
+            fatalErrorTitle = #localize("multi_device_join_unrecoverable_error_title")
             showFatalError = true
         }
     }
@@ -323,9 +326,9 @@ struct DeviceJoinScanQRCodeView: View {
                 
                 switch error {
                 case let rendezvousError as RendezvousProtocol.Error where rendezvousError == .invalidVersion:
-                    retryErrorTitle = "multi_device_join_incompatible_version_title".localized
+                    retryErrorTitle = #localize("multi_device_join_incompatible_version_title")
                     retryErrorMessage = String.localizedStringWithFormat(
-                        "multi_device_join_incompatible_version_message".localized,
+                        #localize("multi_device_join_incompatible_version_message"),
                         ThreemaApp.appName
                     )
                     
@@ -341,7 +344,7 @@ struct DeviceJoinScanQRCodeView: View {
                     }
                     
                 default:
-                    retryErrorTitle = "multi_device_join_new_device_not_found_title".localized
+                    retryErrorTitle = #localize("multi_device_join_new_device_not_found_title")
                     retryErrorMessage = BundleUtil
                         .localizedString(forKey: "multi_device_join_new_device_not_found_message")
                     Task { @MainActor in

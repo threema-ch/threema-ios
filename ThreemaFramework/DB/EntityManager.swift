@@ -110,7 +110,7 @@ public class EntityManager: NSObject {
         // perform always runs on the correct queue for `current`
         dbContext.current.perform {
             block?()
-            self.internalSave()
+            try? self.internalSave()
         }
     }
     
@@ -118,7 +118,7 @@ public class EntityManager: NSObject {
     @objc public func performSyncBlockAndSafe(_ block: (() -> Void)?) {
         dbContext.current.performAndWait {
             block?()
-            internalSave()
+            try? internalSave()
         }
     }
     
@@ -139,7 +139,7 @@ public class EntityManager: NSObject {
     public func performAndWaitSave<T>(_ block: @escaping () throws -> T) rethrows -> T {
         try dbContext.current.performAndWait {
             let returnValue = try block()
-            self.internalSave()
+            try self.internalSave()
             return returnValue
         }
     }
@@ -147,7 +147,7 @@ public class EntityManager: NSObject {
     public func performSave<T>(_ block: @escaping () throws -> T) async rethrows -> T {
         try await dbContext.current.perform(schedule: .immediate) {
             let returnValue = try block()
-            self.internalSave()
+            try self.internalSave()
             return returnValue
         }
     }
@@ -180,7 +180,7 @@ public class EntityManager: NSObject {
     /// Check and repair database integrity at the moment just the relationship of `Conversation.lastMessage`.
     public func repairDatabaseIntegrity() {
         performAndWaitSave {
-            guard let conversations = self.entityFetcher.allConversations() as? [Conversation] else {
+            guard let conversations = self.entityFetcher.allConversations() as? [ConversationEntity] else {
                 return
             }
 
@@ -247,20 +247,20 @@ public class EntityManager: NSObject {
     public func markMessageAsReceived(_ abstractMessage: AbstractMessage, receivedAt: Date = .now) {
 
         performAndWaitSave {
-            var conversation: Conversation?
+            var conversation: ConversationEntity?
 
             if abstractMessage.flagGroupMessage() {
                 guard let groupMessage = abstractMessage as? AbstractGroupMessage else {
                     DDLogError("Could not update message because it is not group message")
                     return
                 }
-                conversation = self.entityFetcher.conversation(
+                conversation = self.entityFetcher.conversationEntity(
                     for: groupMessage.groupID,
                     creator: groupMessage.groupCreator
                 )
             }
             else {
-                conversation = self.entityFetcher.conversation(forIdentity: abstractMessage.fromIdentity)
+                conversation = self.entityFetcher.conversationEntity(forIdentity: abstractMessage.fromIdentity)
             }
 
             guard let conversation else {
@@ -292,7 +292,7 @@ public class EntityManager: NSObject {
     /// - isLocal: True means message was NOT sent to the chat server
     public func markMessageAsSent(
         _ messageID: Data,
-        in conversation: Conversation,
+        in conversation: ConversationEntity,
         sentAt: Date = .now,
         isLocal: Bool = false
     ) {
@@ -318,7 +318,7 @@ public class EntityManager: NSObject {
     /// - forwardSecurityMode: new mode
     public func setForwardSecurityMode(
         _ messageID: Data,
-        in conversation: Conversation,
+        in conversation: ConversationEntity,
         forwardSecurityMode: ForwardSecurityMode
     ) {
         performAndWaitSave {
@@ -342,7 +342,7 @@ public class EntityManager: NSObject {
     func removeContacts(
         with contactIDs: Set<String>,
         fromRejectedListOfMessageWith messageID: Data,
-        in conversation: Conversation
+        in conversation: ConversationEntity
     ) {
         performAndWaitSave {
             guard let dbMsg = self.entityFetcher.ownMessage(with: messageID, conversation: conversation) else {
@@ -383,7 +383,7 @@ public class EntityManager: NSObject {
             return
         }
         
-        performBlockAndWait {
+        performAndWait {
             let stalenessInterval: TimeInterval = self.dbContext.current.stalenessInterval
             self.dbContext.current.stalenessInterval = 0.0
             self.dbContext.current.refresh(object, mergeChanges: mergeChanges)
@@ -395,7 +395,7 @@ public class EntityManager: NSObject {
 // MARK: Private functions
 
 extension EntityManager {
-    private func internalSave() {
+    private func internalSave() throws {
         guard dbContext.current.hasChanges else {
             return
         }
@@ -443,20 +443,27 @@ extension EntityManager {
         }
         catch {
             DDLogError("Error saving current context: \(error)")
+            if ProcessInfoHelper.isRunningForTests {
+                throw error
+            }
             ErrorHandler.abortWithError(error)
         }
         
         if success {
             if dbContext.current.parent != nil {
                 // Save parent context (changes were pushed by save in child context)
-                dbContext.main.performAndWait {
-                    do {
+                
+                do {
+                    try dbContext.main.performAndWait {
                         try self.dbContext.main.save()
                     }
-                    catch {
-                        DDLogError("Error saving main context: \(error)")
-                        ErrorHandler.abortWithError(error)
+                }
+                catch {
+                    DDLogError("Error saving main context: \(error)")
+                    if ProcessInfoHelper.isRunningForTests {
+                        throw error
                     }
+                    ErrorHandler.abortWithError(error)
                 }
             }
         }
@@ -474,7 +481,7 @@ extension EntityManager {
     @objc public func conversation(
         forContact contactEntity: ContactEntity,
         createIfNotExisting: Bool
-    ) -> Conversation? {
+    ) -> ConversationEntity? {
         conversation(forContact: contactEntity, createIfNotExisting: createIfNotExisting, setLastUpdate: true)
     }
     
@@ -483,16 +490,16 @@ extension EntityManager {
         createIfNotExisting: Bool,
         setLastUpdate: Bool = true,
         keepContactHidden: Bool = false
-    ) -> Conversation? {
-        let conversation = entityFetcher.conversation(forIdentity: contactEntity.identity)
+    ) -> ConversationEntity? {
+        let conversation = entityFetcher.conversationEntity(forIdentity: contactEntity.identity)
 
         if createIfNotExisting, conversation == nil,
-           let conversation = entityCreator.conversation(setLastUpdate) {
+           let conversation = entityCreator.conversationEntity(setLastUpdate) {
             conversation.contact = contactEntity
 
             if contactEntity.showOtherThreemaTypeIcon {
                 // Add work info as first message
-                let systemMessage = entityCreator.systemMessage(for: conversation)
+                let systemMessage = entityCreator.systemMessageEntity(for: conversation)
                 systemMessage?.type = NSNumber(value: kSystemMessageContactOtherAppInfo)
                 systemMessage?.remoteSentDate = Date()
             }
@@ -518,7 +525,7 @@ extension EntityManager {
         return conversation
     }
 
-    @objc public func conversation(for identity: String, createIfNotExisting: Bool) -> Conversation? {
+    @objc public func conversation(for identity: String, createIfNotExisting: Bool) -> ConversationEntity? {
         conversation(for: identity, createIfNotExisting: createIfNotExisting, setLastUpdate: true)
     }
     
@@ -527,7 +534,7 @@ extension EntityManager {
         createIfNotExisting: Bool,
         setLastUpdate: Bool = true,
         keepContactHidden: Bool = false
-    ) -> Conversation? {
+    ) -> ConversationEntity? {
         guard let contact = entityFetcher.contact(for: identity) else {
             return nil
         }
@@ -539,7 +546,7 @@ extension EntityManager {
         )
     }
 
-    func conversation(forMessage message: AbstractMessage) -> Conversation? {
+    func conversation(forMessage message: AbstractMessage) -> ConversationEntity? {
         if let groupMessage = message as? AbstractGroupMessage {
             groupConversation(forMessage: groupMessage, fetcher: entityFetcher)
         }
@@ -559,14 +566,14 @@ extension EntityManager {
     ///         - Sender of the message
     ///         - Receiver is nil because its me
     func existingConversationSenderReceiver(for abstractMessage: AbstractMessage)
-        -> (conversation: Conversation?, sender: ContactEntity?, receiver: ContactEntity?) {
+        -> (conversation: ConversationEntity?, sender: ContactEntity?, receiver: ContactEntity?) {
 
         // Get DB objects Conversation and ContactEntity from particular entity fetcher
         func conversationSenderReceiver(fetcher: EntityFetcher)
-            -> (conversation: Conversation?, sender: ContactEntity?, receiver: ContactEntity?) {
+            -> (conversation: ConversationEntity?, sender: ContactEntity?, receiver: ContactEntity?) {
             var sender: ContactEntity?
             var receiver: ContactEntity?
-            var conversation: Conversation?
+            var conversation: ConversationEntity?
 
             if let groupMessage = abstractMessage as? AbstractGroupMessage {
                 conversation = groupConversation(forMessage: groupMessage, fetcher: fetcher)
@@ -608,7 +615,7 @@ extension EntityManager {
             return (conversation, sender, receiver)
         }
 
-        var result: (conversation: Conversation?, sender: ContactEntity?, receiver: ContactEntity?)!
+        var result: (conversation: ConversationEntity?, sender: ContactEntity?, receiver: ContactEntity?)!
         dbContext.current.performAndWait {
             result = conversationSenderReceiver(fetcher: entityFetcher)
         }
@@ -635,7 +642,7 @@ extension EntityManager {
 
             // Apply contact entity and conversation to current DB context
             if let conversationObjectID = resultObjectIDs.conversationObjectID {
-                result.conversation = dbContext.current.object(with: conversationObjectID) as? Conversation
+                result.conversation = dbContext.current.object(with: conversationObjectID) as? ConversationEntity
             }
             if let senderObjectID = resultObjectIDs.senderObjectID {
                 result.sender = dbContext.current.object(with: senderObjectID) as? ContactEntity
@@ -681,7 +688,7 @@ extension EntityManager {
         for abstractMessage: AbstractMessage,
         sender: UnsafeMutablePointer<ContactEntity?>,
         receiver: UnsafeMutablePointer<ContactEntity?>
-    ) -> Conversation? {
+    ) -> ConversationEntity? {
         let result = existingConversationSenderReceiver(for: abstractMessage)
         sender.pointee = result.sender
         receiver.pointee = result.receiver
@@ -701,7 +708,7 @@ extension EntityManager {
     @objc func getOrCreateMessage(
         for abstractMessage: AbstractMessage,
         sender: ContactEntity?,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         thumbnail: UIImage?,
         onCompletion: @escaping (BaseMessage) -> Void,
         onError: @escaping (Error) -> Void
@@ -733,13 +740,13 @@ extension EntityManager {
     func getOrCreateMessage(
         for abstractMessage: AbstractMessage,
         sender: ContactEntity?,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         thumbnail: UIImage?
     ) throws -> BaseMessage {
         assert(abstractMessage.fromIdentity != nil, "Sender identity is needed to calculating sending direction")
 
         // Get DB objects BaseMessage from particular entity fetcher
-        func getMessage(for conversation: Conversation, fetcher: EntityFetcher) -> BaseMessage? {
+        func getMessage(for conversation: ConversationEntity, fetcher: EntityFetcher) -> BaseMessage? {
             fetcher.message(with: abstractMessage.messageID, conversation: conversation)
         }
 
@@ -802,13 +809,13 @@ extension EntityManager {
                     }
                 }
                 else if abstractMessage is BoxLocationMessage || abstractMessage is GroupLocationMessage {
-                    guard message is LocationMessage else {
+                    guard message is LocationMessageEntity else {
                         throw TaskExecutionError
                             .messageTypeMismatch(message: "message ID: \(abstractMessage.messageID.hexString)")
                     }
                 }
                 else if abstractMessage is BoxTextMessage || abstractMessage is GroupTextMessage {
-                    guard message is TextMessage else {
+                    guard message is TextMessageEntity else {
                         throw TaskExecutionError
                             .messageTypeMismatch(message: "message ID: \(abstractMessage.messageID.hexString)")
                     }
@@ -836,10 +843,10 @@ extension EntityManager {
                         message = self.entityCreator.imageMessageEntity(fromBox: amsg)
                     }
                     else if let amsg = abstractMessage as? BoxLocationMessage {
-                        message = self.entityCreator.locationMessage(fromBox: amsg)
+                        message = self.entityCreator.locationMessageEntity(fromBox: amsg)
                     }
                     else if let amsg = abstractMessage as? BoxTextMessage {
-                        message = self.entityCreator.textMessage(fromBox: amsg)
+                        message = self.entityCreator.textMessageEntity(fromBox: amsg)
                     }
                     else if let amsg = abstractMessage as? BoxVideoMessage {
                         message = self.entityCreator.videoMessageEntity(fromBox: amsg)
@@ -861,11 +868,11 @@ extension EntityManager {
                         message?.sender = sender
                     }
                     else if let amsg = abstractMessage as? GroupLocationMessage {
-                        message = self.entityCreator.locationMessage(fromGroupBox: amsg)
+                        message = self.entityCreator.locationMessageEntity(fromGroupBox: amsg)
                         message?.sender = sender
                     }
                     else if let amsg = abstractMessage as? GroupTextMessage {
-                        message = self.entityCreator.textMessage(fromGroupBox: amsg)
+                        message = self.entityCreator.textMessageEntity(fromGroupBox: amsg)
                         message?.sender = sender
                     }
                     else if let amsg = abstractMessage as? GroupVideoMessage {
@@ -875,11 +882,11 @@ extension EntityManager {
 
                     if message is VideoMessageEntity {
                         if let thumbnail,
-                           let imageData = self.entityCreator.imageData() {
-
-                            imageData.data = thumbnail.jpegData(compressionQuality: kJPEGCompressionQualityLow)
-                            imageData.width = NSNumber(floatLiteral: thumbnail.size.width)
-                            imageData.height = NSNumber(floatLiteral: thumbnail.size.height)
+                           let imageData = self.entityCreator.imageDataEntity(),
+                           let data = thumbnail.jpegData(compressionQuality: kJPEGCompressionQualityLow) {
+                            imageData.data = data
+                            imageData.width = Int16(thumbnail.size.width)
+                            imageData.height = Int16(thumbnail.size.height)
 
                             (message as? VideoMessageEntity)?.thumbnail = imageData
                         }
@@ -910,7 +917,7 @@ extension EntityManager {
     @available(*, deprecated, message: "Just for Objective-C calls")
     @objc func deleteMessage(
         for abstractMessage: AbstractMessage,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         onError: @escaping (Error) -> Void
     ) -> BaseMessage? {
         do {
@@ -924,7 +931,7 @@ extension EntityManager {
 
     func deleteMessage(
         for abstractMessage: AbstractMessage,
-        conversation: Conversation
+        conversation: ConversationEntity
     ) throws -> BaseMessage {
         var e2eDeleteMessage: CspE2e_DeleteMessage?
 
@@ -974,7 +981,7 @@ extension EntityManager {
     @available(*, deprecated, message: "Just for Objective-C calls")
     @objc func editMessage(
         for abstractMessage: AbstractMessage,
-        conversation: Conversation,
+        conversation: ConversationEntity,
         onError: @escaping (Error) -> Void
     ) -> BaseMessage? {
         do {
@@ -988,7 +995,7 @@ extension EntityManager {
 
     func editMessage(
         for abstractMessage: AbstractMessage,
-        conversation: Conversation
+        conversation: ConversationEntity
     ) throws -> BaseMessage {
         var e2eEditMessage: CspE2e_EditMessage?
 
@@ -1025,7 +1032,7 @@ extension EntityManager {
             
             let history = self.entityCreator.messageHistoryEntry(for: message)
           
-            if let textMessage = message as? TextMessage {
+            if let textMessage = message as? TextMessageEntity {
                 history?.text = textMessage.text
                 textMessage.text = e2eEditMessage.text
                 textMessage.lastEditedAt = abstractMessage.date
@@ -1045,20 +1052,26 @@ extension EntityManager {
         }
     }
 
-    private func groupConversation(forMessage message: AbstractGroupMessage, fetcher: EntityFetcher) -> Conversation? {
-        fetcher.conversation(for: message.groupID, creator: message.groupCreator)
+    private func groupConversation(
+        forMessage message: AbstractGroupMessage,
+        fetcher: EntityFetcher
+    ) -> ConversationEntity? {
+        fetcher.conversationEntity(for: message.groupID, creator: message.groupCreator)
     }
 
-    private func oneToOneConversation(forMessage message: AbstractMessage, fetcher: EntityFetcher) -> Conversation? {
+    private func oneToOneConversation(
+        forMessage message: AbstractMessage,
+        fetcher: EntityFetcher
+    ) -> ConversationEntity? {
         assert(!(message is AbstractGroupMessage))
         
-        var conversation: Conversation?
+        var conversation: ConversationEntity?
 
         if message.toIdentity != myIdentityStore.identity {
-            conversation = fetcher.conversation(forIdentity: message.toIdentity)
+            conversation = fetcher.conversationEntity(forIdentity: message.toIdentity)
         }
         else if message.fromIdentity != myIdentityStore.identity {
-            conversation = fetcher.conversation(forIdentity: message.fromIdentity)
+            conversation = fetcher.conversationEntity(forIdentity: message.fromIdentity)
         }
 
         // Check if the contact still needs to be hidden

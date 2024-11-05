@@ -31,36 +31,36 @@ import ThreemaFramework
         self.entityManager = EntityManager()
     }
     
-    @objc func webClientSessionForHash(_ hash: String) -> WebClientSession? {
-        entityManager!.entityFetcher.webClientSession(forInitiatorPermanentPublicKeyHash: hash)
+    @objc func webClientSessionForHash(_ hash: String) -> WebClientSessionEntity? {
+        entityManager!.entityFetcher.webClientSessionEntity(forInitiatorPermanentPublicKeyHash: hash)
     }
         
-    @objc func activeWebClientSession() -> WebClientSession? {
-        entityManager!.entityFetcher.activeWebClientSession()
+    @objc func activeWebClientSession() -> WebClientSessionEntity? {
+        entityManager!.entityFetcher.activeWebClientSessionEntity()
     }
     
-    @objc func allWebClientSessions() -> [WebClientSession]? {
-        entityManager!.entityFetcher.allWebClientSessions() as? [WebClientSession]
+    @objc func allWebClientSessions() -> [WebClientSessionEntity]? {
+        entityManager!.entityFetcher.allWebClientSessions() as? [WebClientSessionEntity]
     }
     
-    func addWebClientSession(dictionary: [String: Any]) -> WebClientSession {
-        var session: WebClientSession?
+    func addWebClientSession(dictionary: [String: Any]) -> WebClientSessionEntity {
+        var session: WebClientSessionEntity?
         
         if let hash = dictionary["initiatorPermanentPublicKeyHash"] as? String {
-            session = entityManager!.entityFetcher.webClientSession(forInitiatorPermanentPublicKeyHash: hash)
+            session = entityManager!.entityFetcher.webClientSessionEntity(forInitiatorPermanentPublicKeyHash: hash)
         }
         
         if session != nil {
             return session!
         }
         
-        entityManager!.performSyncBlockAndSafe {
-            session = self.entityManager!.entityCreator.webClientSession()
+        entityManager!.performAndWaitSave {
+            session = self.entityManager!.entityCreator.webClientSessionEntity()
             session!.permanent = NSNumber(value: dictionary["permanent"] as! Bool) as NSNumber
-            session!.saltyRTCHost = dictionary["saltyRTCHost"] as? String
-            session!.initiatorPermanentPublicKey = dictionary["initiatorPermanentPublicKey"] as? Data
-            session!.serverPermanentPublicKey = dictionary["serverPermanentPublicKey"] as? Data
-            session!.saltyRTCPort = dictionary["saltyRTCPort"] as? NSNumber
+            session!.saltyRTCHost = dictionary["saltyRTCHost"] as! String
+            session!.initiatorPermanentPublicKey = dictionary["initiatorPermanentPublicKey"] as! Data
+            session!.serverPermanentPublicKey = dictionary["serverPermanentPublicKey"] as! Data
+            session!.saltyRTCPort = (dictionary["saltyRTCPort"] as? NSNumber)!
             session!.version = dictionary["webClientVersion"] as? NSNumber
             session!.selfHosted = NSNumber(value: dictionary["selfHosted"] as! Bool) as NSNumber
             
@@ -91,65 +91,65 @@ import ThreemaFramework
         return session!
     }
     
-    @objc func updateWebClientSession(session: WebClientSession, active: Bool) {
-        entityManager!.performSyncBlockAndSafe {
+    @objc func updateWebClientSession(session: WebClientSessionEntity, active: Bool) {
+        entityManager!.performAndWaitSave {
             session.active = NSNumber(value: active) as NSNumber
         }
     }
     
-    func updateWebClientSession(session: WebClientSession, privateKey: Data?) {
-        entityManager!.performSyncBlockAndSafe {
+    func updateWebClientSession(session: WebClientSessionEntity, privateKey: Data?) {
+        entityManager!.performAndWaitSave {
             session.privateKey = privateKey
         }
     }
     
-    func updateWebClientSession(session: WebClientSession, hash: String) {
-        entityManager!.performSyncBlockAndSafe {
+    func updateWebClientSession(session: WebClientSessionEntity, hash: String) {
+        entityManager!.performAndWaitSave {
             session.initiatorPermanentPublicKeyHash = hash
         }
     }
     
-    func updateWebClientSession(session: WebClientSession, lastConnection: Date) {
-        entityManager!.performSyncBlockAndSafe {
+    func updateWebClientSession(session: WebClientSessionEntity, lastConnection: Date) {
+        entityManager!.performAndWaitSave {
             session.lastConnection = lastConnection
         }
     }
     
-    func updateWebClientSession(session: WebClientSession, browserName: String!, browserVersion: NSNumber!) {
-        entityManager!.performSyncBlockAndSafe {
+    func updateWebClientSession(session: WebClientSessionEntity, browserName: String!, browserVersion: NSNumber!) {
+        entityManager!.performAndWaitSave {
             session.browserName = browserName
             session.browserVersion = browserVersion
         }
     }
     
-    func updateWebClientSession(session: WebClientSession, sessionName: String?) {
-        entityManager!.performSyncBlockAndSafe {
+    func updateWebClientSession(session: WebClientSessionEntity, sessionName: String?) {
+        entityManager!.performAndWaitSave {
             session.name = sessionName
         }
     }
     
     func deleteAllWebClientSessions() {
-        entityManager!.performSyncBlockAndSafe {
-            let sessions = self.entityManager!.entityFetcher.allWebClientSessions() as? [WebClientSession]
+        entityManager!.performAndWaitSave {
+            let sessions = self.entityManager!.entityFetcher.allWebClientSessions() as? [WebClientSessionEntity]
             if sessions != nil {
                 for session in sessions! {
-                    self.entityManager?.entityDestroyer.delete(webClientSession: session)
+                    self.entityManager?.entityDestroyer.delete(webClientSessionEntity: session)
                 }
             }
         }
     }
     
-    func deleteWebClientSession(_ session: WebClientSession) {
-        entityManager!.performSyncBlockAndSafe {
-            self.entityManager?.entityDestroyer.delete(webClientSession: session)
+    func deleteWebClientSession(_ session: WebClientSessionEntity) {
+        entityManager!.performAndWaitSave {
+            self.entityManager?.entityDestroyer.delete(webClientSessionEntity: session)
         }
     }
     
     @objc func setAllWebClientSessionsInactive() {
-        entityManager!.performSyncBlockAndSafe {
-            let sessions = self.entityManager!.entityFetcher.allActiveWebClientSessions() as? [WebClientSession]
+        entityManager!.performAndWaitSave {
+            let sessions = self.entityManager!.entityFetcher.allActiveWebClientSessions() as? [WebClientSessionEntity]
             if sessions != nil {
-                for session: WebClientSession in sessions! {
+                for session: WebClientSessionEntity in sessions! {
                     session.active = NSNumber(value: false) as NSNumber
                 }
             }
@@ -157,11 +157,12 @@ import ThreemaFramework
     }
         
     func removeAllNotPermanentSessions() {
-        entityManager!.performSyncBlockAndSafe {
-            let sessions = self.entityManager!.entityFetcher.allNotPermanentWebClientSessions() as? [WebClientSession]
+        entityManager!.performAndWaitSave {
+            let sessions = self.entityManager!.entityFetcher
+                .allNotPermanentWebClientSessions() as? [WebClientSessionEntity]
             if sessions != nil {
                 for session in sessions! {
-                    self.entityManager?.entityDestroyer.delete(webClientSession: session)
+                    self.entityManager?.entityDestroyer.delete(webClientSessionEntity: session)
                 }
             }
         }

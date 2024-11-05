@@ -19,11 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "MessageActivityItem.h"
-#import "TextMessage.h"
-#import "ImageMessageEntity.h"
-#import "VideoMessageEntity.h"
-#import "AudioMessageEntity.h"
-#import "FileMessageEntity.h"
 #import "UTIConverter.h"
 
 #ifdef DEBUG
@@ -65,7 +60,7 @@
         return [self videoUrl];
     } else if ([_message isKindOfClass:[FileMessageEntity class]]) {
         NSString *filename = [[FileUtility shared] getTemporaryFileName];
-        return [((FileMessageEntity *)_message) tmpURL:filename];
+        return [((FileMessageEntity *)_message) tempFileURLWithFallBackFileName:filename];
     }
 
     return nil;
@@ -124,7 +119,7 @@
         [videoMessageEntity.video.data writeToURL:_url atomically:NO];
     } else if ([_message isKindOfClass:[FileMessageEntity class]]) {
         FileMessageEntity *fileMessageEntity = (FileMessageEntity *)self.message;
-        [fileMessageEntity exportDataToURL:_url];
+        [fileMessageEntity exportDataTo:_url];
     }
     return _url;
 }
@@ -136,8 +131,8 @@
 #pragma mark - UIActivityItemSource
 
 - (id)activityViewController:(UIActivityViewController *)activityViewController itemForActivityType:(NSString *)activityType {
-    if ([_message isKindOfClass:[TextMessage class]]) {
-        return ((TextMessage *)_message).text;
+    if ([_message isKindOfClass:[TextMessageEntity class]]) {
+        return ((TextMessageEntity *)_message).text;
     }
     NSURL *exportURL = [self exportData];
     
@@ -157,8 +152,8 @@
 }
 
 - (id)activityViewControllerPlaceholderItem:(UIActivityViewController *)activityViewController {
-    if ([_message isKindOfClass:[TextMessage class]]) {
-        return ((TextMessage *)_message).text;
+    if ([_message isKindOfClass:[TextMessageEntity class]]) {
+        return ((TextMessageEntity *)_message).text;
     }
     // don't try to return thumbnail image, it won't work
 
@@ -168,7 +163,7 @@
 }
 
 - (NSString *)activityViewController:(UIActivityViewController *)activityViewController dataTypeIdentifierForActivityType:(NSString *)activityType {
-    if ([_message isKindOfClass:[TextMessage class]]) {
+    if ([_message isKindOfClass:[TextMessageEntity class]]) {
         return UTTYPE_PLAIN_TEXT;
     } else if ([_message respondsToSelector:@selector(blobUTTypeIdentifier)]) {
         return ((id<BlobData>)self.message).blobUTTypeIdentifier;

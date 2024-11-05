@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 // If you have a new cell you need to add it in 4 places: (also see Step 1 - 4 comments below)
@@ -115,7 +116,7 @@ struct ChatViewCellProvider {
 
         switch message {
             
-        case let textMessage as TextMessage:
+        case let textMessage as TextMessageEntity:
             let cell: ChatViewTextMessageTableViewCell = ChatViewCellProvider.dequeueIncomingOutgoingCell(
                 for: indexPath,
                 and: message,
@@ -194,7 +195,7 @@ struct ChatViewCellProvider {
                 return cell
             }
             
-        case let locationMessage as LocationMessage:
+        case let locationMessage as LocationMessageEntity:
             let cell: ChatViewLocationMessageTableViewCell = ChatViewCellProvider.dequeueIncomingOutgoingCell(
                 for: indexPath,
                 and: message,
@@ -214,7 +215,7 @@ struct ChatViewCellProvider {
             cell.chatViewTableViewCellDelegate = chatViewTableViewCellDelegate
             return cell
             
-        case let systemMessage as SystemMessage:
+        case let systemMessage as SystemMessageEntity:
             switch systemMessage.systemMessageType {
             case .callMessage:
                 let cell: ChatViewCallSystemMessageTableViewCell = ChatViewCellProvider.dequeueIncomingOutgoingCell(
@@ -274,7 +275,7 @@ struct ChatViewCellProvider {
         
         // Updating text
         let text = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "unread_messages_line_with_count"),
+            #localize("unread_messages_line_with_count"),
             unreadMessagesCount
         )
         cell.text = text
@@ -321,7 +322,7 @@ enum ChatViewCellSizeProvider {
         if message.deletedAt == nil {
             switch message {
 
-            case let textMessage as TextMessage:
+            case let textMessage as TextMessageEntity:
                 ChatViewTextMessageTableViewCell.sizingCell.textMessageAndNeighbors = (
                     message: textMessage,
                     neighbors: neighbors
@@ -373,7 +374,7 @@ enum ChatViewCellSizeProvider {
                     measurableCell = ChatViewFileMessageTableViewCell.sizingCell
                 }
 
-            case let locationMessage as LocationMessage:
+            case let locationMessage as LocationMessageEntity:
                 ChatViewLocationMessageTableViewCell.sizingCell.locationMessageAndNeighbors = (
                     message: locationMessage,
                     neighbors: neighbors
@@ -384,7 +385,7 @@ enum ChatViewCellSizeProvider {
                 ChatViewBallotMessageTableViewCell.sizingCell.ballotMessageAndNeighbors = (ballotMessage, neighbors)
                 measurableCell = ChatViewBallotMessageTableViewCell.sizingCell
 
-            case let systemMessage as SystemMessage:
+            case let systemMessage as SystemMessageEntity:
                 // Differentiate between CallMessages and other SystemMessages
                 switch systemMessage.systemMessageType {
                 case .callMessage:

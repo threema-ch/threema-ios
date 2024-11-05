@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct MultiDeviceWizardPreparationView: View {
     @ObservedObject var wizardVM: MultiDeviceWizardViewModel
@@ -50,7 +51,7 @@ struct MultiDeviceWizardPreparationView: View {
                         .animation(animation, value: animate)
                         .accessibilityHidden(true)
                     
-                    Text(BundleUtil.localizedString(forKey: "md_wizard_preparation_status"))
+                    Text(#localize("md_wizard_preparation_status"))
                         .font(.title2)
                         .bold()
                         .padding()
@@ -62,13 +63,13 @@ struct MultiDeviceWizardPreparationView: View {
                 dismiss = true
                 wizardVM.cancelLinking()
             } label: {
-                Text(BundleUtil.localizedString(forKey: "md_wizard_cancel"))
+                Text(#localize("md_wizard_cancel"))
             }
             .buttonStyle(.bordered)
             .tint(Color(.primary))
         }
         .padding(.horizontal)
-        .navigationBarTitle(BundleUtil.localizedString(forKey: "md_wizard_header"))
+        .navigationBarTitle(#localize("md_wizard_header"))
         .navigationBarBackButtonHidden()
         .onAppear {
             wizardVM.advanceState(.preparation)

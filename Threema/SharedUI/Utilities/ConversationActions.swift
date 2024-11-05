@@ -56,16 +56,16 @@ class ConversationActions: NSObject {
     
     /// Reads all unread messages of a conversation if read receipts are enabled, also updates the unread messages count
     /// - Parameters:
-    ///   - conversation: Conversation to read messages
+    ///   - conversation: ConversationEntity to read messages for
     ///   - isAppInBackground: If app is in background, default gets current status from AppDelegate
     func read(
-        _ conversation: Conversation,
+        _ conversation: ConversationEntity,
         isAppInBackground: Bool
     ) async {
         await businessInjector.runInBackground { backgroundBusinessInjector in
             await backgroundBusinessInjector.entityManager.perform {
                 if let conv = backgroundBusinessInjector.entityManager.entityFetcher
-                    .getManagedObject(by: conversation.objectID) as? Conversation {
+                    .getManagedObject(by: conversation.objectID) as? ConversationEntity {
                     _ = backgroundBusinessInjector.unreadMessages.read(
                         for: conv,
                         isAppInBackground: isAppInBackground
@@ -98,7 +98,7 @@ class ConversationActions: NSObject {
         return businessInjector.runInBackgroundAndWait { backgroundBusinessInjector in
             backgroundBusinessInjector.entityManager.performAndWait {
                 let conversation = backgroundBusinessInjector.entityManager.entityFetcher
-                    .getManagedObject(by: conversationObjectID) as! Conversation
+                    .getManagedObject(by: conversationObjectID) as! ConversationEntity
 
                 var messages = [BaseMessage]()
                 for messageObjectID in messageObjectIDs {
@@ -127,7 +127,7 @@ class ConversationActions: NSObject {
         }
     }
 
-    func unread(_ conversation: Conversation) {
+    func unread(_ conversation: ConversationEntity) {
 
         let unreadMessagesCount = businessInjector.unreadMessages.count(for: conversation)
         guard unreadMessagesCount == 0 else {
@@ -143,12 +143,12 @@ class ConversationActions: NSObject {
     
     // MARK: - Archiving
     
-    func archive(_ conversation: Conversation) {
+    func archive(_ conversation: ConversationEntity) {
         businessInjector.conversationStore.archive(conversation)
         notificationManagerResolve(businessInjector).updateUnreadMessagesCount()
     }
     
-    func unarchive(_ conversation: Conversation) {
+    func unarchive(_ conversation: ConversationEntity) {
         var doUpdateUnreadMessagesCount = false
 
         businessInjector.entityManager.performAndWait {

@@ -34,9 +34,9 @@ extension GroupCallManager {
         return await withCheckedContinuation { continuation in
             let businessInjector = BusinessInjector()
             
-            businessInjector.entityManager.performBlockAndWait {
+            businessInjector.entityManager.performAndWait {
                 guard let conversation = businessInjector.entityManager.entityFetcher
-                    .getManagedObject(by: groupConversationManagedObjectID) as? Conversation else {
+                    .getManagedObject(by: groupConversationManagedObjectID) as? ConversationEntity else {
                     continuation.resume(returning: nil)
                     return
                 }

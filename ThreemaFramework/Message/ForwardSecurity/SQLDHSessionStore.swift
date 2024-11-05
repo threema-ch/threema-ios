@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import SQLite
+import ThreemaMacros
 import ThreemaProtocols
 
 public protocol SQLDHSessionStoreErrorHandler: AnyObject {
@@ -698,7 +699,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         newVersion: Int32,
         versionInfo: SQLDHSessionStoreVersionInfo
     ) -> SQLDHSessionStoreMigrationError {
-        let baseString = BundleUtil.localizedString(forKey: "sqldhsessionstore_cannot_downgrade_to")
+        let baseString = #localize("sqldhsessionstore_cannot_downgrade_to")
         let localizedDescription = String.localizedStringWithFormat(
             baseString,
             "SQLDHSessionStore.swift",
@@ -713,7 +714,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
     }
     
     private static func generalError(from error: Error) -> SQLDHSessionStoreMigrationError {
-        let baseString = BundleUtil.localizedString(forKey: "sqldhsessionstore_unknownError")
+        let baseString = #localize("sqldhsessionstore_unknownError")
         let localizedDescription = String.localizedStringWithFormat(
             baseString,
             error.localizedDescription

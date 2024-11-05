@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct NotificationTypeSelectionView: View {
     @Environment(\.dismiss) var dismiss
@@ -41,13 +42,13 @@ struct NotificationTypeSelectionView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                Text(BundleUtil.localizedString(forKey: "settings_notification_type_preview_title"))
+                Text(#localize("settings_notification_type_preview_title"))
                     .font(.largeTitle)
                     .bold()
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                 
-                Text(BundleUtil.localizedString(forKey: "settings_notification_type_preview_description"))
+                Text(#localize("settings_notification_type_preview_description"))
                     .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.center)
                     .padding(.bottom, 4)
@@ -71,7 +72,7 @@ struct NotificationTypeSelectionView: View {
                 }
                 
                 Toggle(isOn: $showPreview) {
-                    Text(BundleUtil.localizedString(forKey: "settings_notifications_push_preview"))
+                    Text(#localize("settings_notifications_push_preview"))
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .tint(UIColor.primary.color)
@@ -83,7 +84,7 @@ struct NotificationTypeSelectionView: View {
                 .disabled(disablePreviewToggle)
                 
                 if disablePreviewToggle {
-                    Text(BundleUtil.localizedString(forKey: "disabled_by_device_policy"))
+                    Text(#localize("disabled_by_device_policy"))
                         .font(.footnote)
                         .padding(.horizontal)
                         .padding(.vertical, 4)
@@ -96,7 +97,7 @@ struct NotificationTypeSelectionView: View {
                         AppGroup.userDefaults().set(true, forKey: Constants.showedNotificationTypeSelectionView)
                         dismiss()
                     } label: {
-                        Text(BundleUtil.localizedString(forKey: "continue"))
+                        Text(#localize("continue"))
                             .font(.title3)
                             .bold()
                             .foregroundColor(.white)

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 /// Display a text message
@@ -28,7 +29,7 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
     /// Text message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
-    var textMessageAndNeighbors: (message: TextMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
+    var textMessageAndNeighbors: (message: TextMessageEntity, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
             let block = {
                 self.updateCell(for: self.textMessageAndNeighbors?.message)
@@ -224,7 +225,7 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
         }
     }
     
-    private func updateCell(for textMessage: TextMessage?) {
+    private func updateCell(for textMessage: TextMessageEntity?) {
        
         // Quote stack view displaying / hiding
         if textMessage?.quoteMessage != nil {
@@ -251,7 +252,7 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
         guard textMessageAndNeighbors?.message.quoteMessage != nil else {
             return
         }
-        accessibilityHint = BundleUtil.localizedString(forKey: "quote_interaction_hint")
+        accessibilityHint = #localize("quote_interaction_hint")
     }
     
     private func observe(oldQuoteMessage: QuoteMessage?, quoteMessage: QuoteMessage?) {
@@ -290,7 +291,8 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
     // MARK: - Action Functions
     
     @objc func quoteViewTapped() {
-        guard let quotedMessageID = textMessageAndNeighbors?.message.quotedMessageID else {
+        // swiftformat:disable:next acronyms
+        guard let quotedMessageID = textMessageAndNeighbors?.message.quotedMessageId else {
             return
         }
         chatViewTableViewCellDelegate?.quoteTapped(on: quotedMessageID)

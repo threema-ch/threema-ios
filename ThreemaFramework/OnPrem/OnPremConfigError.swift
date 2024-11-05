@@ -21,6 +21,7 @@
 // swiftformat:disable acronyms
 
 import Foundation
+import ThreemaMacros
 
 enum OnPremConfigError: Int, Error {
     case badInputOppfData
@@ -51,13 +52,13 @@ extension OnPremConfigError: LocalizedError {
              .missingAvatarConfig, .missingWorkConfig, .invalidConfigUrl, .configurationMissing, .signatureKeyMismatch,
              .badSignature, .missingDomainsConfig, .noDomainSpkis, .unsupportedDomainMatchMode,
              .unsupportedDomainSpkisAlgorithm:
-            String.localizedStringWithFormat("enter_license_onprem_error_config".localized, rawValue)
+            String.localizedStringWithFormat(#localize("enter_license_onprem_error_config"), rawValue)
        
         case .unsupportedVersion:
-            String.localizedStringWithFormat("enter_license_onprem_error_version".localized, rawValue)
+            String.localizedStringWithFormat(#localize("enter_license_onprem_error_version"), rawValue)
 
         case .unauthorized, .licenseExpired:
-            String.localizedStringWithFormat("enter_license_onprem_error_credentials".localized, rawValue)
+            String.localizedStringWithFormat(#localize("enter_license_onprem_error_credentials"), rawValue)
         }
     }
 }

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaMacros
 import TipKit
 import UIKit
 
@@ -85,11 +86,11 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     ///   - displayStyle: Appearance of the details
     ///   - delegate: Details delegate that is called on certain actions
     init(
-        for conversation: Conversation,
+        for conversation: ConversationEntity,
         displayStyle: DetailsDisplayStyle = .default,
         delegate: DetailsDelegate?
     ) {
-        precondition(!conversation.isGroup(), "This is not intended for groups")
+        precondition(!conversation.isGroup, "This is not intended for groups")
         
         guard let contactEntity = conversation.contact else {
             fatalError("No linked contact for this conversations. This only supports single contacts conversations.")
@@ -581,12 +582,12 @@ extension SingleDetailsViewController: UITableViewDelegate {
         switch section {
         case .groups:
             title = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "groups_header"),
+                #localize("groups_header"),
                 dataSource.numberOfGroups
             )
             
             if dataSource.hasMoreGroupsToShow {
-                let localizedShowAllTitle = BundleUtil.localizedString(forKey: "show_all_button")
+                let localizedShowAllTitle = #localize("show_all_button")
                 
                 action = Details.Action(title: localizedShowAllTitle) { [weak self] _ in
                     guard let strongSelf = self else {
@@ -598,10 +599,10 @@ extension SingleDetailsViewController: UITableViewDelegate {
             }
             
         case .notifications:
-            title = BundleUtil.localizedString(forKey: "pushSetting_header")
+            title = #localize("pushSetting_header")
             
         case .privacySettings:
-            title = BundleUtil.localizedString(forKey: "privacySetting_header")
+            title = #localize("privacySetting_header")
             
         default:
             title = nil
@@ -670,7 +671,7 @@ extension SingleDetailsViewController: UITableViewDelegate {
             action.run(cell)
             
         case let .booleanAction(action):
-            if action.title == "notification_sound_title".localized {
+            if action.title == #localize("notification_sound_title") {
                 dataSource.showDebugInfoTapCounter += 1
             }
             

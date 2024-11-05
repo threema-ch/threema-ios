@@ -20,7 +20,7 @@
 
 #import <XCTest/XCTest.h>
 #import <ThreemaFramework/AppGroup.h>
-#import "ThreemaFrameworkTests-Swift.h"
+#import "ThreemaFrameworkTests-swift.h"
 
 @interface FulltextSearchTests : XCTestCase
 
@@ -47,7 +47,7 @@ NSInteger count = 10000;
     EntityManager *em = [[EntityManager alloc] initWithDatabaseContext:dbCnx];
     
     ContactEntity *contact = [[em entityFetcher] contactForId:@"ECHOECHO"];
-    Conversation *conversation = [[em entityFetcher] conversationForContact:contact];
+    ConversationEntity *conversation = [[em entityFetcher] conversationForContact:contact];
     
     NSArray *result = [em.entityFetcher textMessagesContaining:@"gibts nicht" inConversation:conversation fetchLimit:0];
     expect([result count]).to.equal(0);
@@ -69,15 +69,15 @@ NSInteger count = 10000;
     EntityManager *em = [[EntityManager alloc] initWithDatabaseContext:dbCnx];
     
     ContactEntity *contact = [[em entityFetcher] contactForId:@"ECHOECHO"];
-    Conversation *conversation = [[em entityFetcher] conversationForContact:contact];
+    ConversationEntity *conversation = [[em entityFetcher] conversationEntityForContact:contact];
     
     CFTimeInterval startTime = CACurrentMediaTime();
-    [em.entityFetcher textMessagesContaining:@"gibts nicht" inConversation:conversation filterPredicate:nil fetchLimit:0];
+    [em.entityFetcher textMessagesContaining:@"gibts nicht" inConversationEntity:conversation filterPredicate:nil fetchLimit:0];
     CFTimeInterval duration = CACurrentMediaTime() - startTime;
     XCTAssert(duration < 0.1);
 
     startTime = CACurrentMediaTime();
-    [em.entityFetcher textMessagesContaining:@"yz" inConversation:conversation filterPredicate:nil fetchLimit:0];
+    [em.entityFetcher textMessagesContaining:@"yz" inConversationEntity:conversation filterPredicate:nil fetchLimit:0];
     duration = CACurrentMediaTime() - startTime;
     XCTAssert(duration < 0.1);
 }

@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import MBProgressHUD
 import PhotosUI
+import ThreemaMacros
 
 let tmpDirectory = "tmpImages/"
 
@@ -88,12 +89,12 @@ let tmpDirectory = "tmpImages/"
     
     func didSelectAsset(picker: DKImagePickerController, asset: DKAsset) {
         if asset.isVideo, asset.originalAsset!
-            .duration > (MediaConverter.videoMaxDurationAtCurrentQuality() + 1) * 60 {
+            .duration > (MediaConverter.videoMaxDurationInMinutes() + 1) * 60 {
             picker.deselectAsset(asset)
-            let errorTitle = BundleUtil.localizedString(forKey: "video_too_long_title")
+            let errorTitle = #localize("video_too_long_title")
             let errorMessage = String.localizedStringWithFormat(
-                BundleUtil.localizedString(forKey: "video_too_long_message"),
-                MediaConverter.videoMaxDurationAtCurrentQuality()
+                #localize("video_too_long_message"),
+                MediaConverter.videoMaxDurationInMinutes()
             )
             
             UIAlertTemplate.showAlert(owner: picker, title: errorTitle, message: errorMessage)
@@ -170,7 +171,7 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
             hud = MBProgressHUD(view: view)
             hud?.graceTime = 0.25
             hud?.mode = .indeterminate
-            hud?.label.text = BundleUtil.localizedString(forKey: "loading_files_takes_time_title")
+            hud?.label.text = #localize("loading_files_takes_time_title")
             DispatchQueue.main.async {
                 view.addSubview(hud!)
                 hud?.show(animated: true)

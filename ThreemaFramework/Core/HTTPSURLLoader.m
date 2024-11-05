@@ -24,6 +24,7 @@
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "ServerConnector.h"
 #import "UserSettings.h"
+#import "BlobOrigin.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -98,7 +99,7 @@
 	{
 		[connection cancel];  // stop connecting; no more delegate messages
 		NSDictionary *errorInfo = [NSDictionary dictionaryWithObject:[NSString stringWithFormat:
-                                                                      NSLocalizedString(@"Server returned status code %lu",@""),
+                                                                      @"Server returned status code %lu",
                                                                       statusCode]
                                                               forKey:NSLocalizedDescriptionKey];
 		NSError *statusError = [NSError errorWithDomain:NSURLErrorDomain

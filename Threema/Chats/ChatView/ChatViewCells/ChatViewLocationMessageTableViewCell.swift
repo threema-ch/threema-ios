@@ -29,7 +29,7 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
     /// Location message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
-    var locationMessageAndNeighbors: (message: LocationMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
+    var locationMessageAndNeighbors: (message: LocationMessageEntity, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
             let block = {
                 self.updateCell(for: self.locationMessageAndNeighbors?.message)
@@ -156,7 +156,7 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
         iconMessageContentView.isUserInteractionEnabled = !editing
     }
     
-    private func updateCell(for locationMessage: LocationMessage?) {
+    private func updateCell(for locationMessage: LocationMessageEntity?) {
         // By accepting an optional the data is automatically reset when the text message is set to `nil`
         
         // Clear cache for cell, if address was newly added

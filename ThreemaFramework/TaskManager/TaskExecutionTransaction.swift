@@ -87,14 +87,9 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
             guard try self.checkPreconditions() else {
                 throw TaskExecutionTransactionError.preconditionFailed
             }
-            
-            try task.checkDropping()
 
-            let reflectResult = try self.reflectTransactionMessages()
-            
             try task.checkDropping()
-            
-            return when(fulfilled: reflectResult).asVoid()
+            return try self.executeTransaction()
         }
         .then { _ -> Promise<Void> in
             try task.checkDropping()
@@ -124,7 +119,7 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
         false
     }
 
-    @discardableResult func reflectTransactionMessages() throws -> [Promise<Void>] {
+    @discardableResult func executeTransaction() throws -> Promise<Void> {
         preconditionFailure("This function must be overridden")
     }
 

@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import Sentry
 import ThreemaFramework
+import ThreemaMacros
 
 @objc class SentryClient: NSObject {
     
@@ -113,17 +114,17 @@ import ThreemaFramework
         DispatchQueue.main.async {
             let confirm = UIAlertController(
                 title: String.localizedStringWithFormat(
-                    "sentry_crash_send_title".localized,
+                    #localize("sentry_crash_send_title"),
                     ThreemaApp.currentName
                 ),
-                message: "sentry_crash_send_description".localized,
+                message: #localize("sentry_crash_send_description"),
                 preferredStyle: .alert
             )
             confirm.addTextField { textField in
-                textField.placeholder = "sentry_crash_comment_placeholder".localized
+                textField.placeholder = #localize("sentry_crash_comment_placeholder")
             }
             confirm.addAction(UIAlertAction(
-                title: "sentry_crash_send_yes".localized,
+                title: #localize("sentry_crash_send_yes"),
                 style: .default,
                 handler: { _ in
                     if let textField = confirm.textFields?.first,
@@ -136,7 +137,7 @@ import ThreemaFramework
                 }
             ))
             confirm.addAction(UIAlertAction(
-                title: "sentry_crash_send_no".localized,
+                title: #localize("sentry_crash_send_no"),
                 style: .cancel,
                 handler: { _ in
                     dispatch.leave()

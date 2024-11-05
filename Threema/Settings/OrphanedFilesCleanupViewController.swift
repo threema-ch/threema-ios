@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import MBProgressHUD
 import SwiftUI
+import ThreemaMacros
 
 class OrphanedFilesCleanupViewController: ThemedTableViewController {
     
@@ -38,14 +39,14 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
 
     override func viewDidLoad() {
         orphanedFilesDescription.text = String.localizedStringWithFormat(
-            BundleUtil.localizedString(forKey: "settings_orphaned_files_description"),
+            #localize("settings_orphaned_files_description"),
             ThreemaApp.currentName,
             ThreemaApp.currentName
         )
-        orphanedFilesMoveToBin.text = BundleUtil.localizedString(forKey: "settings_orphaned_files_button")
-        orphanedFilesRestore.text = BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_restore_button")
-        orphanedFilesDelete.text = BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_delete_button")
-        logAllFiles.text = BundleUtil.localizedString(forKey: "settings_orphaned_files_log_all_files_button")
+        orphanedFilesMoveToBin.text = #localize("settings_orphaned_files_button")
+        orphanedFilesRestore.text = #localize("settings_orphaned_files_bin_restore_button")
+        orphanedFilesDelete.text = #localize("settings_orphaned_files_bin_delete_button")
+        logAllFiles.text = #localize("settings_orphaned_files_log_all_files_button")
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -88,13 +89,13 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch section {
         case 0:
-            BundleUtil.localizedString(forKey: "settings_advanced_orphaned_files_cleanup")
+            #localize("settings_advanced_orphaned_files_cleanup")
         case 1:
-            BundleUtil.localizedString(forKey: "settings_orphaned_files_title")
+            #localize("settings_orphaned_files_title")
         case 2:
-            BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_title")
+            #localize("settings_orphaned_files_bin_title")
         case 3:
-            BundleUtil.localizedString(forKey: "settings_orphaned_files_log_title")
+            #localize("settings_orphaned_files_log_title")
         default:
             nil
         }
@@ -109,21 +110,21 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
                !orphanedFiles.isEmpty {
                 
                 String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "settings_orphaned_files_footer"),
+                    #localize("settings_orphaned_files_footer"),
                     "\(orphanedFiles.count)",
                     "\((totalFilesCount ?? 0) + orphanedFiles.count)",
                     ThreemaApp.currentName
                 )
             }
             else {
-                BundleUtil.localizedString(forKey: "settings_orphaned_files_footer_no_files")
+                #localize("settings_orphaned_files_footer_no_files")
             }
         case 2:
             if let orphanedFilesInBin,
                !orphanedFilesInBin.isEmpty {
                 
                 String.localizedStringWithFormat(
-                    BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_footer"),
+                    #localize("settings_orphaned_files_bin_footer"),
                     "\(orphanedFilesInBin.count)",
                     ByteCountFormatter.string(
                         fromByteCount: orphanedFilesBinSize ?? 0,
@@ -133,7 +134,7 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
                 )
             }
             else {
-                BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_footer_no_files")
+                #localize("settings_orphaned_files_bin_footer_no_files")
             }
         default:
             nil
@@ -193,15 +194,15 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
             UIAlertTemplate.showConfirm(
                 owner: self,
                 popOverSource: orphanedFilesDelete,
-                title: BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_delete_conformation"),
+                title: #localize("settings_orphaned_files_bin_delete_conformation"),
                 message: nil,
-                titleOk: BundleUtil.localizedString(forKey: "settings_orphaned_files_bin_delete_button"),
+                titleOk: #localize("settings_orphaned_files_bin_delete_button"),
                 actionOk: { _ in
                 
                     executeAction {
                         self.emptyBin()
                     }
-                }, titleCancel: BundleUtil.localizedString(forKey: "cancel")
+                }, titleCancel: #localize("cancel")
             )
         }
         else if indexPath.section == 3, indexPath.row == 0, logAllFiles.isEnabled {

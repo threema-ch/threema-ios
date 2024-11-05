@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaMacros
 
 struct VideoCallQualitySelectionView: View {
     @EnvironmentObject var settingsVM: SettingsStore
@@ -47,12 +48,12 @@ struct VideoCallQualitySelectionView: View {
                 }
                 
             } footer: {
-                Text("settings_threema_calls_video_quality_profile_footer".localized)
+                Text(#localize("settings_threema_calls_video_quality_profile_footer"))
             }
         }
         .pickerStyle(.inline)
         .tint(UIColor.primary.color)
-        .navigationTitle("settings_threema_calls_video_quality_profile".localized)
+        .navigationTitle(#localize("settings_threema_calls_video_quality_profile"))
     }
 }
 

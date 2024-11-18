@@ -9,10 +9,58 @@
             "value" : "Zrušit"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abbräche"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annulla"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンセル"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить"
+          }
+        },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zrušiť"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İptal etmek"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
           }
         }
       }
@@ -25,10 +73,58 @@
             "value" : "Není nainstalována žádná vhodná aplikace"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kei passendi App installiert"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nessuna app adatta installata"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "適切なアプリがインストールされていません"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подходящее приложение не установлено"
+          }
+        },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nie je nainštalovaná vhodná aplikácia"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uygun bir Uygulama yüklü değil"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не встановлено відповідний додаток"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安装合适的应用程序"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未安裝合適的應用程式"
           }
         }
       }
@@ -41,10 +137,58 @@
             "value" : "ok"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Easy"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ok"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ok"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "хорошо"
+          }
+        },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "ok"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamam"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добре"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "确定"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "確認"
           }
         }
       }
@@ -57,10 +201,58 @@
             "value" : "Otevřít v…"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ufmache in …"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri in..."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開く..."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть в..."
+          }
+        },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Otvoriť v ..."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Şurada aç:"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Відкрити у..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在…打开..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在…開啟..."
           }
         }
       }
@@ -73,10 +265,58 @@
             "value" : "Vyberte soubor"
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datei uswähle"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleziona un file"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイルを選択"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите файл"
+          }
+        },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vyberte súbor"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bir dosya seçin"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обрати файл"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择文件"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "選擇檔案"
           }
         }
       }
@@ -89,10 +329,58 @@
             "value" : "Zdá se, že vaše %@ nemá nainstalované žádné další aplikace, které by dokázaly otevřít tento dokument."
           }
         },
+        "gsw-CH" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uf Ihrem %@ schiint kei App installiert z’sii, wo das Dokumänt cha ufmache."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sembra che %@ non abbia altre app installate in grado di aprire questo documento."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お使いの%@には、このドキュメントを開くことができるその他のアプリがインストールされていないようです。"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Похоже, на вашем %@ не установлено никаких других приложений, которые могли бы открыть этот документ."
+          }
+        },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zdá sa, že váš %@ nemá nainštalované žiadne iné aplikácie, ktoré by mohli otvoriť tento dokument."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ cihazınızda bu belgeyi açabilecek başka bir Uygulama yüklü görünmüyor."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На вашому %@ не встановлено інших застосунків, які можуть відкрити цей документ."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您的%@似乎没有安装任何其他可以打开此文档的应用程序。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您的%@似乎沒有安裝任何其他可以開啟此檔案的應用程式。"
           }
         }
       }

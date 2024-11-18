@@ -1,0 +1,12 @@
+/* (No Comment) */
+"advanced_settings_group_footer" = "Не включайте эту настройку без явных указаний службы поддержки Threema.  Возможно, вы не будете получать входящие сообщения, пока эта настройка включена.";
+
+/* (No Comment) */
+"advanced_settings_group_title" = "Настройки поддержки";
+
+/* (No Comment) */
+"safe_mode_switch" = "Расширенный режим поддержки";
+
+/* (No Comment) */
+"sentry_switch" = "Отключить стража";
+

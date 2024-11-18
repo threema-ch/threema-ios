@@ -21,6 +21,18 @@
             "value" : "Code postal TouchID"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TouchID codice PIN"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ピンコードタッチID"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -43,6 +55,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "TouchID com código PIN"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пинкод TouchID"
           }
         },
         "sk" : {

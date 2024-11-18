@@ -7,3 +7,6 @@
 /* (No Comment) */
 "safe_mode_switch" = "Розширений режим підтримки";
 
+/* (No Comment) */
+"sentry_switch" = "Вимкнути Sentry";
+

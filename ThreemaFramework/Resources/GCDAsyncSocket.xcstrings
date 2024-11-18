@@ -28,6 +28,18 @@
             "value" : "Socket fermé par l’homologue distant"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Socket chiuso dal peer remoto"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ソケットはリモートピアにより閉じられました"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -50,6 +62,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Soquete fechado pelo peer remoto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сокет закрыт удаленным одноранговым узлом"
           }
         },
         "sk" : {
@@ -111,6 +129,18 @@
             "value" : "La tentative de connexion à l’hôte a échoué"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentativo di connessione all'host fallito"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ホストへの接続試行がタイムアウトしました"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -133,6 +163,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A tentativa de conexão com o host atingiu o tempo limite"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время ожидания попытки подключения к хосту истекло"
           }
         },
         "sk" : {
@@ -194,6 +230,18 @@
             "value" : "L’opération de lecture a atteint la longueur maximale fixée"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'operazione di lettura ha raggiunto la lunghezza massima impostata"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "読み取り操作が設定された最大長に達しました"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -216,6 +264,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A operação de leitura atingiu o comprimento máximo definido"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Операция чтения достигла установленной максимальной длины"
           }
         },
         "sk" : {
@@ -277,6 +331,18 @@
             "value" : "L’opération de lecture a été interrompue"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operazione di lettura interrotta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "読み取り操作がタイムアウトしました"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -299,6 +365,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O tempo limite da operação de leitura atingiu o tempo limite"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время ожидания операции чтения истекло"
           }
         },
         "sk" : {
@@ -360,6 +432,18 @@
             "value" : "L’opération d’écriture a été interrompue"
           }
         },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Operazione di scrittura interrotta"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "書き込み操作がタイムアウトしました"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -382,6 +466,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O tempo limite da operação de gravação atingiu o tempo limite"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время ожидания операции записи истекло"
           }
         },
         "sk" : {

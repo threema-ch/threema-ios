@@ -19,8 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "AbstractGroupMessage.h"
-#import "UserSettings.h"
+#import <ThreemaFramework/AbstractGroupMessage.h>
+#import <ThreemaFramework/UserSettings.h>
 
 /// Handling of group messages
 ///

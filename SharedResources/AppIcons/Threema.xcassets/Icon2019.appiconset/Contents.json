@@ -1,7 +1,31 @@
 {
   "images" : [
     {
-      "filename" : "icon_2019_consumer_full.png",
+      "filename" : "consumer_2019_any.png",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "consumer_2019_dark.png",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "tinted"
+        }
+      ],
+      "filename" : "consumer_2019_tinted.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"

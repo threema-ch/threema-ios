@@ -1,7 +1,31 @@
 {
   "images" : [
     {
-      "filename" : "icon-work-sandbox-1024-square.png",
+      "filename" : "blue_any.png",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "blue_dark.png",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "tinted"
+        }
+      ],
+      "filename" : "blue_tinted.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"

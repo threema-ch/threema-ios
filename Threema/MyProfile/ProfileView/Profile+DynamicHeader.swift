@@ -106,9 +106,6 @@ extension ProfileView {
             -> some View {
             ZStack {
                 content(placeHolder)
-                    .onTapGesture(count: 3, perform: {
-                        debugHidden.toggle()
-                    })
                 profileHeaderView
                     
                 #if DEBUG

@@ -1116,15 +1116,17 @@ import ThreemaMacros
                let days = Double(exactly: seconds / 86400)?.rounded(FloatingPointRoundingRule.up) {
                     
                 safeConfigManager.setLastAlertBackupFailed(Date())
-                    
-                UIAlertTemplate.showAlert(
-                    owner: topViewController,
-                    title: #localize("safe_setup_backup_title"),
-                    message: String.localizedStringWithFormat(
-                        #localize("safe_failed_notification"),
-                        abs(days)
+                
+                DispatchQueue.main.async {
+                    UIAlertTemplate.showAlert(
+                        owner: topViewController,
+                        title: #localize("safe_setup_backup_title"),
+                        message: String.localizedStringWithFormat(
+                            #localize("safe_failed_notification"),
+                            abs(days)
+                        )
                     )
-                )
+                }
             }
         }
     }

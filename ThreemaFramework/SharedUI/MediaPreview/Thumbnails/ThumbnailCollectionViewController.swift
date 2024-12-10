@@ -181,6 +181,7 @@ class ThumbnailCollectionViewController: NSObject, UICollectionViewDelegateFlowL
         if indexPath.section == 1 {
             parent!.addButtonPressed()
             collectionView.deselectItem(at: indexPath, animated: false)
+            NotificationCenter.default.post(name: NSNotification.Name(rawValue: kMediaPreviewPauseVideo), object: nil)
         }
         else if indexPath.section == 0 {
             parent!.largeCollectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)

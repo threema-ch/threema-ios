@@ -30,16 +30,16 @@ struct QuickActionRow: View {
     
     var body: some View {
         VStack {
-            HStack(spacing: 8.0, content: {
+            HStack(spacing: 8.0) {
                 ForEach(actions, id: \.id) { action in
                     QuickActionButton(model: action)
                 }
-            }).frame(height: 66)
+            }.frame(height: 66)
         }.frame(maxWidth: .infinity)
     }
     
     struct Action: Identifiable {
-        var id: UUID { UUID() }
+        let id = UUID()
         let action: () -> Void
         let icon: String
         let title: String
@@ -48,65 +48,67 @@ struct QuickActionRow: View {
     }
     
     struct QuickActionButton: View {
-        @State private var isPressed = false
         let model: Action
         
         var body: some View {
-            Button(action: model.action, label: {
-                ZStack {
-                    Color(uiColor: Colors.backgroundQuickActionButton)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                    
-                    // Padding values here are finetuned to the current usage, could changed in future
-                    VStack(spacing: 0.0) {
-                        Image(systemName: model.icon)
-                            .font(.system(size: 24))
-                            .padding(.top, 6)
-                            .frame(maxHeight: .infinity)
-                        Text(model.title)
-                            .padding(.bottom, 8)
-                            .font(.footnote)
-                    }
-                    .accessibilityIdentifier(model.accessibilityIdentifier)
-                    .foregroundStyle(.tint)
+            Button(action: model.action) {
+                // Padding values here are fine-tuned to the current usage, could changed in future
+                VStack(spacing: 0.0) {
+                    Image(systemName: model.icon)
+                        .font(.system(size: 24))
+                        .padding(.top, 6)
+                        .frame(maxHeight: .infinity)
+                    Text(model.title)
+                        .padding(.bottom, 8)
+                        .font(.footnote)
                 }
+                // Needed to make full button tappable
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            })
+                .accessibilityIdentifier(model.accessibilityIdentifier)
+            }
             .accessibilityIdentifier(model.buttonAccessibilityIdentifier)
-            .opacity(isPressed ? 0.3 : 1)
-            .buttonStyle(PlainButtonStyle())
-            .onLongPressGesture(minimumDuration: .infinity, pressing: { isPressing in
-                isPressed = isPressing
-            }, perform: { })
+            .buttonStyle(QuickActionButtonStyle())
         }
     }
 }
 
-struct QuickActionRow_Previews: PreviewProvider {
-    static var previews: some View {
-        func actions() -> [QuickActionRow.Action] {
-            [
-                .init(
-                    action: {
-                        print("share QRCode")
-                    },
-                    icon: "qrcode",
-                    title: "qrcode",
-                    buttonAccessibilityIdentifier: "qrcode-button",
-                    accessibilityIdentifier: "qrcode"
-                ),
-                .init(
-                    action: {
-                        print("share id")
-                    },
-                    icon: "square.and.arrow.up.fill",
-                    title: "Share ID",
-                    buttonAccessibilityIdentifier: "shareID-button",
-                    accessibilityIdentifier: "shareID"
-                ),
-            ]
-        }
-        
-        return QuickActionRow(actions: actions).background(Color.blue)
+private struct QuickActionButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        // Based on configuration of the UIKit version of `QuickActionButton`
+        configuration.label
+            .background(Color(uiColor: Colors.backgroundQuickActionButton))
+            .foregroundStyle(.tint)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .opacity(configuration.isPressed ? 0.3 : 1)
+        // No shadow as it gets cut off in the current usage in Profile
     }
+}
+
+#Preview {
+    func actions() -> [QuickActionRow.Action] {
+        [
+            .init(
+                action: {
+                    print("share QRCode")
+                },
+                icon: "qrcode",
+                title: "qrcode",
+                buttonAccessibilityIdentifier: "qrcode-button",
+                accessibilityIdentifier: "qrcode"
+            ),
+            .init(
+                action: {
+                    print("share id")
+                },
+                icon: "square.and.arrow.up.fill",
+                title: "Share ID",
+                buttonAccessibilityIdentifier: "shareID-button",
+                accessibilityIdentifier: "shareID"
+            ),
+        ]
+    }
+    
+    return QuickActionRow(actions: actions)
+        .padding()
+        .background(Color.blue)
 }

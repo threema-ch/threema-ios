@@ -242,8 +242,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertTrue(resultGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
         XCTAssertNil(resultGrp.lastSyncRequest)
 
-        XCTAssertEqual(1, contactStoreMock.markContactAsDeletedCalls.count)
-        XCTAssertTrue(contactStoreMock.markContactAsDeletedCalls.contains("MEMBER04"))
+        XCTAssertEqual(0, contactStoreMock.markContactAsDeletedCalls.count)
 
         XCTAssertNil(resultNewMembers)
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupCreateMessage }.count)
@@ -329,8 +328,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertTrue(resultGrp.allMemberIdentities.contains(myIdentityStoreMock.identity))
         XCTAssertNil(resultGrp.lastSyncRequest)
 
-        XCTAssertEqual(1, contactStoreMock.markContactAsDeletedCalls.count)
-        XCTAssertTrue(contactStoreMock.markContactAsDeletedCalls.contains("MEMBER04"))
+        XCTAssertEqual(0, contactStoreMock.markContactAsDeletedCalls.count)
         
         XCTAssertNil(resultNewMembers)
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupCreateMessage }.count)

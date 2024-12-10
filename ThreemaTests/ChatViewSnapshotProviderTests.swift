@@ -522,7 +522,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                         // update issues
                         XCTAssertEqual(
                             diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
-                            2
+                            3
                         )
                     }
                     else {
@@ -561,7 +561,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                         // update issues
                         XCTAssertEqual(
                             diffableDataSourceSnapshot.reconfiguredItemIdentifiers.count,
-                            2
+                            3
                         )
                     }
                     else {

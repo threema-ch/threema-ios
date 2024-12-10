@@ -940,12 +940,34 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Parameter entityManagerObject should be type of EntityManager");
     EntityManager *em = (EntityManager *)entityManagerObject;
+    BusinessInjector *businessInjector = [[BusinessInjector alloc] initWithEntityManager:em];
+    GroupManager *groupManager = [businessInjector groupManagerObjC];
 
     [em performBlock:^{
         // check in local DB first
         ContactEntity *contact = [em.entityFetcher contactForId:identity];
         if (contact.publicKey) {
-            onCompletion(contact.publicKey);
+            if (userSettings.blockUnknown && ![TrustedContactsObjc ignoreBlockUnknownWithIdentity:identity] && ignoreBlockUnknown == false) {
+                if (contact.isContactHidden == false) {
+                    onCompletion(contact.publicKey);
+                    return;
+                }
+                else if (contact.groupConversations.count > 0) {
+                    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"identity == %@", contact.identity];
+                    for (ConversationEntity *groupConversation in contact.groupConversations) {
+                        Group *group = [groupManager getGroupWithConversation:groupConversation];
+                        if (group.isSelfMember && [group.members filteredSetUsingPredicate:predicate].count > 0) {
+                            onCompletion(contact.publicKey);
+                            return;
+                        }
+                    }
+                }
+                
+                DDLogVerbose(@"Block unknown contacts is on - discarding message");
+                onError([ThreemaError threemaError:@"Message received from unknown contact and block contacts is on" withCode:ThreemaProtocolErrorBlockUnknownContact]);
+            } else {
+                onCompletion(contact.publicKey);
+            }
         } else {
             
             if ([LicenseStore requiresLicenseKey]) {

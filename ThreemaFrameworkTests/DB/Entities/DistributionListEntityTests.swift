@@ -55,7 +55,6 @@ final class DistributionListEntityTests: XCTestCase {
         let distributionListEntity = try entityManager.performAndWaitSave {
             let distributionListEntity = try XCTUnwrap(entityManager.entityCreator.distributionListEntity())
             
-            // swiftformat:disable:next acronyms
             distributionListEntity.distributionListID = id
             distributionListEntity.name = name
 

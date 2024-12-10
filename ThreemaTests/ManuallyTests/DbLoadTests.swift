@@ -529,12 +529,13 @@ class DBLoadTests: XCTestCase {
         
         let imageCount = 100_000
         
+        let testBundle = Bundle(for: DBLoadTests.self)
+        let testImageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
+        let testImageData = try? Data(contentsOf: testImageURL!)
+        
         for i in 0..<imageCount {
             let log = "Image: \(i) / \(imageCount)"
             print(log)
-            let testBundle = Bundle(for: DBLoadTests.self)
-            let testImageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
-            let testImageData = try? Data(contentsOf: testImageURL!)
             
             loadImage(with: testImageData!, conversation!, entityManager, log)
         }
@@ -561,6 +562,147 @@ class DBLoadTests: XCTestCase {
             message.fileName = "Bild.jpeg"
             message.fileSize = NSNumber(integerLiteral: dbFile.data!.count)
             message.mimeType = "image/jpeg"
+            message.type = NSNumber(integerLiteral: 1)
+            message.date = Date(timeIntervalSinceReferenceDate: TimeInterval(-1 * Int.random(in: 0...223_456_789)))
+            message.deliveryDate = message.date
+            message.sender = conversation.contact
+            message.sent = NSNumber(booleanLiteral: true)
+            message.delivered = NSNumber(booleanLiteral: true)
+            message.read = NSNumber(booleanLiteral: true)
+            message.remoteSentDate = Date()
+            message.encryptionKey = NaClCrypto.shared().randomBytes(kBlobKeyLen)
+            
+            do {
+                if let jsonWithoutCaption = FileMessageEncoder.jsonString(for: message),
+                   let dataWithoutCaption = jsonWithoutCaption.data(using: .utf8),
+                   var dict = try JSONSerialization.jsonObject(with: dataWithoutCaption) as? [String: AnyObject] {
+                    dict["d"] = caption as AnyObject
+                    let dataWithCaption = try JSONSerialization.data(withJSONObject: dict)
+                    message.json = String(data: dataWithCaption, encoding: .utf8)
+                }
+            }
+            catch {
+                // do nothing
+            }
+        }
+    }
+    
+    func testLoadVideoFileMessages() {
+        var conversation: ConversationEntity?
+        
+        _ = createContacts(for: ["ECHOECHO"])
+        let entityManager = EntityManager(withChildContextForBackgroundProcess: false)
+        entityManager.performAndWaitSave {
+            if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
+                conversation = (entityManager.conversation(forContact: contact, createIfNotExisting: true))!
+            }
+        }
+        
+        let videoCount = 100_000
+        
+        let testBundle = Bundle(for: DBLoadTests.self)
+        let testVideoURL = try? XCTUnwrap(testBundle.url(forResource: "Video-1", withExtension: "mp4"))
+        let testVideoData = try? XCTUnwrap(Data(contentsOf: testVideoURL!))
+        
+        let testThumbnailURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
+        let testThumbnailData = try? Data(contentsOf: testThumbnailURL!)
+        
+        for i in 0..<videoCount {
+            let log = "Video: \(i) / \(videoCount)"
+            print(log)
+            
+            loadVideo(with: testVideoData!, testThumbnailData!, conversation!, entityManager, log)
+        }
+    }
+    
+    func loadVideo(
+        with videoData: Data,
+        _ thumbnailData: Data,
+        _ conversation: ConversationEntity,
+        _ entityManager: EntityManager,
+        _ caption: String
+    ) {
+        
+        entityManager.performAndWaitSave {
+            let dbFile: FileDataEntity = (entityManager.entityCreator.fileDataEntity())!
+            dbFile.data = videoData
+            
+            let thumbnailFile: ImageDataEntity = entityManager.entityCreator.imageDataEntity()!
+            thumbnailFile.data = MediaConverter.getThumbnailFor(UIImage(data: thumbnailData)!)!
+                .jpegData(compressionQuality: 1.0)!
+            
+            let message: FileMessageEntity = (entityManager.entityCreator.fileMessageEntity(for: conversation))!
+            message.data = dbFile
+            message.thumbnail = thumbnailFile
+            message.fileName = "Video.mp4"
+            message.fileSize = NSNumber(integerLiteral: dbFile.data!.count)
+            message.mimeType = "video/mp4"
+            message.type = NSNumber(integerLiteral: 1)
+            message.date = Date(timeIntervalSinceReferenceDate: TimeInterval(-1 * Int.random(in: 0...223_456_789)))
+            message.deliveryDate = message.date
+            message.sender = conversation.contact
+            message.sent = NSNumber(booleanLiteral: true)
+            message.delivered = NSNumber(booleanLiteral: true)
+            message.read = NSNumber(booleanLiteral: true)
+            message.remoteSentDate = Date()
+            message.encryptionKey = NaClCrypto.shared().randomBytes(kBlobKeyLen)
+            
+            do {
+                if let jsonWithoutCaption = FileMessageEncoder.jsonString(for: message),
+                   let dataWithoutCaption = jsonWithoutCaption.data(using: .utf8),
+                   var dict = try JSONSerialization.jsonObject(with: dataWithoutCaption) as? [String: AnyObject] {
+                    dict["d"] = caption as AnyObject
+                    let dataWithCaption = try JSONSerialization.data(withJSONObject: dict)
+                    message.json = String(data: dataWithCaption, encoding: .utf8)
+                }
+            }
+            catch {
+                // do nothing
+            }
+        }
+    }
+    
+    func testLoadAudioFileMessages() {
+        var conversation: ConversationEntity?
+        
+        _ = createContacts(for: ["ECHOECHO"])
+        let entityManager = EntityManager(withChildContextForBackgroundProcess: false)
+        entityManager.performAndWaitSave {
+            if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
+                conversation = (entityManager.conversation(forContact: contact, createIfNotExisting: true))!
+            }
+        }
+        
+        let audioCount = 100_000
+        
+        let testBundle = Bundle(for: DBLoadTests.self)
+        let testAudioURL = try? XCTUnwrap(testBundle.url(forResource: "SmallVoice", withExtension: "mp3"))
+        let testAudioData = try? XCTUnwrap(Data(contentsOf: testAudioURL!))
+
+        for i in 0..<audioCount {
+            let log = "Audio: \(i) / \(audioCount)"
+            print(log)
+            
+            loadAudio(with: testAudioData!, conversation!, entityManager, log)
+        }
+    }
+    
+    func loadAudio(
+        with audioData: Data,
+        _ conversation: ConversationEntity,
+        _ entityManager: EntityManager,
+        _ caption: String
+    ) {
+        
+        entityManager.performAndWaitSave {
+            let dbFile: FileDataEntity = (entityManager.entityCreator.fileDataEntity())!
+            dbFile.data = audioData
+                        
+            let message: FileMessageEntity = (entityManager.entityCreator.fileMessageEntity(for: conversation))!
+            message.data = dbFile
+            message.fileName = "Audio.mp3"
+            message.fileSize = NSNumber(integerLiteral: dbFile.data!.count)
+            message.mimeType = "audio/mp4"
             message.type = NSNumber(integerLiteral: 1)
             message.date = Date(timeIntervalSinceReferenceDate: TimeInterval(-1 * Int.random(in: 0...223_456_789)))
             message.deliveryDate = message.date

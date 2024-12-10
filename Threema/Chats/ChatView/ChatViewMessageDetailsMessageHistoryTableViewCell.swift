@@ -109,7 +109,6 @@ final class ChatViewMessageDetailsMessageHistoryTableViewCell: ThemedCodeTableVi
             )
             
             messageLabel.attributedText = markedUpString
-            messageLabel.font = UIFont.preferredFont(forTextStyle: .body)
         }
         else {
             messageLabel.text = #localize("detailView_edit_history_no_caption")

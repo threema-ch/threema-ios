@@ -39,9 +39,9 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
     func testTerminateAllSessionsWithMultipleToTerminate() throws {
         let sessionStore = InMemoryDHSessionStore()
         let messageSenderMock = MessageSenderMock()
-        let entityManger = EntityManager(databaseContext: databaseMainContext)
+        let entityManager = EntityManager(databaseContext: databaseMainContext)
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: entityManger,
+            entityManager: entityManager,
             messageSender: messageSenderMock
         )
         let fsSessionTerminator = try ForwardSecuritySessionTerminator(
@@ -108,9 +108,9 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
     func testTerminateAllSessions() throws {
         let sessionStore = InMemoryDHSessionStore()
         let messageSenderMock = MessageSenderMock()
-        let entityManger = EntityManager(databaseContext: databaseMainContext)
+        let entityManager = EntityManager(databaseContext: databaseMainContext)
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: entityManger,
+            entityManager: entityManager,
             messageSender: messageSenderMock
         )
         let fsSessionTerminator = try ForwardSecuritySessionTerminator(
@@ -154,9 +154,9 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
     func testTerminateWithNoSessionToTerminate() throws {
         let sessionStore = InMemoryDHSessionStore()
         let messageSenderMock = MessageSenderMock()
-        let entityManger = EntityManager(databaseContext: databaseMainContext)
+        let entityManager = EntityManager(databaseContext: databaseMainContext)
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: entityManger,
+            entityManager: entityManager,
             messageSender: messageSenderMock
         )
         let fsSessionTerminator = try ForwardSecuritySessionTerminator(
@@ -208,9 +208,9 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
     
     func testDeleteAllSessionsWithMultipleToDelete() throws {
         let sessionStore = InMemoryDHSessionStore()
-        let entityManger = EntityManager(databaseContext: databaseMainContext)
+        let entityManager = EntityManager(databaseContext: databaseMainContext)
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: entityManger
+            entityManager: entityManager
         )
         let fsSessionTerminator = try ForwardSecuritySessionTerminator(
             businessInjector: businessInjectorMock,

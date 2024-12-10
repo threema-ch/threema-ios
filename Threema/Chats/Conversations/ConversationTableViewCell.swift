@@ -562,6 +562,10 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         updateDateDraftLabel()
     }
     
+    public func updateCellTitle() {
+        updateTitleLabel()
+    }
+    
     // MARK: - Updates
     
     override func updateColors() {

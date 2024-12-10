@@ -20,8 +20,6 @@
 
 #import "ActivityUtil.h"
 #import "MessageActivityItem.h"
-#import "TTOpenInAppActivity.h"
-#import "ForwardURLActivity.h"
 
 @implementation ActivityUtil
 

@@ -44,7 +44,7 @@ public struct AppSetupSteps: Sendable {
         let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
         self.init(
             backgroundBusinessInjector: backgroundBusinessInjector,
-            taskManger: TaskManager(
+            taskManager: TaskManager(
                 backgroundEntityManager: backgroundBusinessInjector.entityManager,
                 serverConnector: backgroundBusinessInjector.serverConnector
             ),
@@ -55,12 +55,12 @@ public struct AppSetupSteps: Sendable {
     
     init(
         backgroundBusinessInjector: FrameworkInjectorProtocol,
-        taskManger: TaskManagerProtocol,
+        taskManager: TaskManagerProtocol,
         featureMask: FeatureMaskProtocol.Type,
         contactPhotoSender: ContactPhotoSenderProtocol.Type
     ) {
         self.backgroundBusinessInjector = backgroundBusinessInjector
-        self.taskManager = taskManger
+        self.taskManager = taskManager
         self.featureMask = featureMask
         self.contactPhotoSender = contactPhotoSender
     }

@@ -512,13 +512,13 @@ class MediatorReflectedOutgoingMessageProcessor {
         else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: omsg.loggingDescription)
         }
-        processVoIPCallMessage(
+        
+        return processVoIPCallMessage(
             abstractMessage: amsg,
             voipMessage: msg,
             identity: receiverIdentity,
             isOutgoing: true
         )
-        return Promise()
     }
 
     private func processVoIPCallMessage(
@@ -526,14 +526,19 @@ class MediatorReflectedOutgoingMessageProcessor {
         voipMessage: VoIPCallMessageProtocol,
         identity: String,
         isOutgoing: Bool
-    ) {
-        if !isOutgoing {
-            messageProcessorDelegate.incomingMessageStarted(amsg)
-        }
-
-        messageProcessorDelegate.processVoIPCall(voipMessage as! NSObject, identity: identity) { delegate in
+    ) -> Promise<Void> {
+        Promise { seal in
             if !isOutgoing {
-                delegate.incomingMessageFinished(amsg)
+                messageProcessorDelegate.incomingMessageStarted(amsg)
+            }
+
+            messageProcessorDelegate.processVoIPCall(voipMessage as! NSObject, identity: identity) { delegate in
+                if !isOutgoing {
+                    delegate.incomingMessageFinished(amsg)
+                }
+                seal.fulfill_()
+            } onError: { error in
+                seal.reject(error)
             }
         }
     }

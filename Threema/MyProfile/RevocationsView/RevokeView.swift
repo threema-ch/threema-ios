@@ -31,6 +31,9 @@ struct RevokeView: View {
     @State private var textIsSameAsID = false
     @State private var enteredText = ""
     
+    // Workaround: TextField has the wrong color
+    @State private var textFieldColor: Color = .black
+    
     var body: some View {
         GeometryReader { proxy in
             ScrollView {
@@ -63,11 +66,13 @@ struct RevokeView: View {
                                 )
                                 
                                 TextField(#localize("my_profile_revoke_identity_view_placeholder"), text: $enteredText)
+                                    .foregroundStyle(textFieldColor)
                                     .textFieldStyle(.roundedBorder)
-                                    .foregroundColor(.white)
                                     .textCase(.uppercase)
                                     .textInputAutocapitalization(.characters)
                                     .onChange(of: enteredText) { newValue in
+                                        // Workaround: TextField has the wrong color
+                                        textFieldColor = .white
                                         textIsSameAsID = newValue == identity
                                     }
                             }

@@ -32,29 +32,27 @@ extension ProfileView {
         
         var body: some View {
             Section {
-                ZStack {
-                    Color(uiColor: Colors.backgroundGroupedViewController)
-                    QuickActionRow {
-                        if ThreemaApp.current != .onPrem {
-                            .init(
-                                action: shareID,
-                                icon: "square.and.arrow.up.fill",
-                                title: #localize("profile_share_id"),
-                                buttonAccessibilityIdentifier: "share_id_button",
-                                accessibilityIdentifier: "share_id"
-                            )
-                        }
-                        
+                QuickActionRow {
+                    if ThreemaApp.current != .onPrem {
                         .init(
-                            action: showQrCode,
-                            icon: "qrcode",
-                            title: #localize("profile_show_qr_code"),
-                            buttonAccessibilityIdentifier: "qr_code_button",
-                            accessibilityIdentifier: "qr_code"
+                            action: shareID,
+                            icon: "square.and.arrow.up.fill",
+                            title: #localize("profile_share_id"),
+                            buttonAccessibilityIdentifier: "share_id_button",
+                            accessibilityIdentifier: "share_id"
                         )
                     }
+                    
+                    .init(
+                        action: showQrCode,
+                        icon: "qrcode",
+                        title: #localize("profile_show_qr_code"),
+                        buttonAccessibilityIdentifier: "qr_code_button",
+                        accessibilityIdentifier: "qr_code"
+                    )
                 }
                 .listRowInsets(EdgeInsets())
+                .background(Color(uiColor: Colors.backgroundGroupedViewController))
                 .accessibilityHidden(isAccessibilityHidden)
             }
         }
@@ -117,7 +115,7 @@ extension ProfileView {
                         title: #localize("profile_linked_phone"),
                         subTitle: model.linkedMobile
                     )
-                }, onDismiss: model.load, fullscreen: true)
+                }, onDismiss: model.load, fullscreen: false)
                 
                 ModalNavigationLink(destination: {
                     viewController("linkEmailViewController")
@@ -127,7 +125,7 @@ extension ProfileView {
                         title: #localize("profile_linked_email"),
                         subTitle: model.linkedEmail
                     )
-                }, onDismiss: model.load, fullscreen: true)
+                }, onDismiss: model.load, fullscreen: false)
             } footer: {
                 Text(String(format: #localize("myprofile_link_email_phone_footer"), ThreemaApp.appName))
             }

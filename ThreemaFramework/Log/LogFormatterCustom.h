@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "LogLevelCustom.h"
+#import <ThreemaFramework/LogLevelCustom.h>
 #import <stdatomic.h>
 
 @import CocoaLumberjack;

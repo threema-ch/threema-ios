@@ -41,7 +41,8 @@ struct ButtonNavigationLink<Content: View>: View {
 }
 
 struct ModalNavigationLink<Content: View, Label: View>: View {
-    @State private var isPresented = false
+    @State private var isPresentedFullScreen = false
+    @State private var isPresentedSheet = false
 
     var destination: () -> Content
     var label: () -> Label
@@ -50,20 +51,20 @@ struct ModalNavigationLink<Content: View, Label: View>: View {
 
     var body: some View {
         ButtonNavigationLink {
-            isPresented.toggle()
-        } label: {
-            label()
-        }.background {
             if fullscreen {
-                VStack { }.fullScreenCover(isPresented: $isPresented, onDismiss: onDismiss) {
-                    destination()
-                }
+                isPresentedFullScreen.toggle()
             }
             else {
-                VStack { }.sheet(isPresented: $isPresented, onDismiss: onDismiss) {
-                    destination()
-                }
+                isPresentedSheet.toggle()
             }
+        } label: {
+            label()
+        }
+        .fullScreenCover(isPresented: $isPresentedFullScreen, onDismiss: onDismiss) {
+            destination()
+        }
+        .sheet(isPresented: $isPresentedSheet, onDismiss: onDismiss) {
+            destination()
         }
     }
 }

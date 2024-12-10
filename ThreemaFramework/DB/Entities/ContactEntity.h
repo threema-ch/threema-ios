@@ -21,7 +21,7 @@
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
 
-#import "TMAManagedObject.h"
+#import <ThreemaFramework/TMAManagedObject.h>
 
 @class BaseMessage, ConversationEntity, ImageDataEntity;
 

@@ -408,12 +408,16 @@ typedef enum : NSUInteger {
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    [_currentDataSource selectedCellAtIndexPath:indexPath selected:YES];
-    
-    if (_submitOnSelect) {
-        [self.delegate contactPicker:self didPickConversations:_currentDataSource.selectedConversations renderType:_renderType sendAsFile:_sendAsFileSwitch.on];
+    if ([_currentDataSource canSelectCellAtIndexPath:indexPath]) {
+        [_currentDataSource selectedCellAtIndexPath:indexPath selected:YES];
+
+        if (_submitOnSelect) {
+            [self.delegate contactPicker:self didPickConversations:_currentDataSource.selectedConversations renderType:_renderType sendAsFile:_sendAsFileSwitch.on];
+        } else {
+            [self updateButtons];
+        }
     } else {
-        [self updateButtons];
+        [tableView deselectRowAtIndexPath:indexPath animated:false];
     }
 }
 

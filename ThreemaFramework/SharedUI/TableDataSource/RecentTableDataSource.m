@@ -33,6 +33,7 @@
 @interface RecentTableDataSource ()
 
 @property NSFetchedResultsController *fetchedResultsController;
+@property MessagePermission *messagePermission;
 
 @property NSMutableSet *selectedConversations;
 
@@ -50,23 +51,40 @@
 {
     self = [super init];
     if (self) {
-        self->groupManager = [[BusinessInjector new] groupManagerObjC];
-        [self initFetchedResultsController];
+        BusinessInjector *businessInjector = [[BusinessInjector alloc] init];
+        self->groupManager = businessInjector.groupManagerObjC;
+        [self initFetchedResultsController:businessInjector];
         _selectedConversations = [NSMutableSet set];
     }
     return self;
 }
 
-- (void)initFetchedResultsController
+- (void)initFetchedResultsController:(BusinessInjector *)businessInjector
 {
-    EntityManager *entityManager = [[EntityManager alloc] init];
-    _fetchedResultsController = [entityManager.entityFetcher fetchedResultsControllerForConversations];
+    _messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:businessInjector.myIdentityStore userSettings:businessInjector.userSettings groupManager:businessInjector.groupManagerObjC entityManager:businessInjector.entityManager];
+    _fetchedResultsController = [businessInjector.entityManager.entityFetcher fetchedResultsControllerForConversations];
     
     NSError *error = nil;
     if (![_fetchedResultsController performFetch:&error]) {
         DDLogError(@"Unresolved error %@, %@", error, [error userInfo]);
         [ErrorHandler abortWithError: error];
     }
+}
+
+- (BOOL)canSelectCellAtIndexPath:(NSIndexPath *)indexPath {
+    ConversationEntity *conversation = [_fetchedResultsController objectAtIndexPath:indexPath];
+    
+    if (!conversation.isGroup && conversation.contact != nil) {
+        NSString *reason = nil;
+        if ([_messagePermission canSendTo:conversation.contact.identity reason:&reason]) {
+            return true;
+        }
+        
+        [[NotificationPresenterWrapper shared] presentErrorWithErrorText:reason];
+        return false;
+    }
+    
+    return true;
 }
 
 - (void)selectedCellAtIndexPath:(NSIndexPath *)indexPath selected:(BOOL)selected {

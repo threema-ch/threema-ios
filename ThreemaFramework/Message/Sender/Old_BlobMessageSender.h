@@ -19,12 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "BaseMessage.h"
-#import "BlobOrigin.h"
-#import "ExternalStorageInfo.h"
-#import "UploadProgressDelegate.h"
-#import "Old_BlobUploadDelegate.h"
-#import "URLSenderItem.h"
+#import <ThreemaFramework/BaseMessage.h>
+#import <ThreemaFramework/BlobOrigin.h>
+#import <ThreemaFramework/ExternalStorageInfo.h>
+#import <ThreemaFramework/UploadProgressDelegate.h>
+#import <ThreemaFramework/Old_BlobUploadDelegate.h>
+#import <ThreemaFramework/URLSenderItem.h>
 
 @protocol BlobData;
 @interface Old_BlobMessageSender : NSObject <Old_BlobUploadDelegate>

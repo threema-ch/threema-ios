@@ -19,7 +19,6 @@
 ///***** END THREEMA MODIFICATION *********/
 #import "UIImage+MWPhotoBrowser.h"
 ///***** BEGIN THREEMA MODIFICATION: Add AppGroup and utils *********/
-#import "TTOpenInAppActivity.h"
 #import "ForwardURLActivity.h"
 #import "ForwardMultipleURLActivity.h"
 #import "AppGroup.h"
@@ -1878,10 +1877,9 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
             return;
         }
         
-        TTOpenInAppActivity *openInAppActivity = [[TTOpenInAppActivity alloc] initWithView:self.view andBarButtonItem:_actionButton];
         ForwardMultipleURLActivity *forwardUrlActivity = [[ForwardMultipleURLActivity alloc] init];
         
-        self.activityViewController = [ActivityUtil activityViewControllerWithActivityItems:allSelectedPhotos applicationActivities:@[forwardUrlActivity, openInAppActivity]];
+        self.activityViewController = [ActivityUtil activityViewControllerWithActivityItems:allSelectedPhotos applicationActivities:@[forwardUrlActivity]];
         
         // Show
         typeof(self) __weak weakSelf = self;
@@ -1976,7 +1974,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)shareMedia:(MWPhoto *)item {
     
-    /***** BEGIN THREEMA MODIFICATION: use TTOpenInAppActivity, ForwardURLActivity, MDM share restriction *********/
+    /***** BEGIN THREEMA MODIFICATION: use ForwardURLActivity, MDM share restriction *********/
     
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:false];
     if ([mdmSetup disableShareMedia] == true) {
@@ -1995,13 +1993,10 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         }
         NSArray *items = [NSArray arrayWithObject: photoUrl];
         
-        TTOpenInAppActivity *openInAppActivity = [[TTOpenInAppActivity alloc] initWithView:self.view andBarButtonItem:_actionButton];
         ForwardURLActivity *forwardUrlActivity = [[ForwardURLActivity alloc] init];
         
-        self.activityViewController = [ActivityUtil activityViewControllerWithActivityItems:items applicationActivities:@[forwardUrlActivity, openInAppActivity]];
-        
-        openInAppActivity.superViewController = self.activityViewController;
-                
+        self.activityViewController = [ActivityUtil activityViewControllerWithActivityItems:items applicationActivities:@[forwardUrlActivity]];
+                        
         // Show
         typeof(self) __weak weakSelf = self;
         // iOS 8 - Set the Anchor Point for the popover
@@ -2025,7 +2020,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         [self presentViewController:self.activityViewController animated:YES completion:nil];
     }
     
-    ///***** END THREEMA MODIFICATION: use TTOpenInAppActivity, ForwardURLActivity, MDM share restriction *********/
+    ///***** END THREEMA MODIFICATION: use ForwardURLActivity, MDM share restriction *********/
 }
 
 - (void)showAlert:(NSString *)title message:(NSString *)message {

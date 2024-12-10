@@ -42,6 +42,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 @property EntityManager *entityManager;
 @property id<NSFetchedResultsControllerDelegate> fetchedResultsControllerDelegate;
+@property MessagePermission *messagePermission;
 
 @property BOOL ignoreUpdates;
 
@@ -73,7 +74,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (self) {
         _contactList = [ThreemaUtility isWorkFlavor] ? ContactListContactsAndWork : ContactListContacts;
 
-        _entityManager = [[EntityManager alloc] init];
+        BusinessInjector *businessInjector = [[BusinessInjector alloc] init];
+        _messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:businessInjector.myIdentityStore userSettings:businessInjector.userSettings groupManager:businessInjector.groupManagerObjC entityManager:businessInjector.entityManager];
+        _entityManager = businessInjector.entityManager;
+
         if (members != nil) {
             _selectedContacts = members;
         } else {
@@ -237,6 +241,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [conversations addObject:conversation];
     }
     return conversations;
+}
+
+- (BOOL)canSelectCellAtIndexPath:(NSIndexPath *)indexPath {
+    ContactEntity *contact = [self contactAtIndexPath:indexPath];
+    if (contact != nil) {
+        NSString *reason = nil;
+        if ([_messagePermission canSendTo:contact.identity reason:&reason]) {
+            return true;
+        }
+        
+        [[NotificationPresenterWrapper shared] presentErrorWithErrorText:reason];
+    }
+    return false;
 }
 
 - (void)selectedCellAtIndexPath:(NSIndexPath *)indexPath selected:(BOOL)selected {

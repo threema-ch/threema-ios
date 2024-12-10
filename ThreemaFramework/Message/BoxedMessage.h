@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "LoggingDescriptionProtocol.h"
+#import <ThreemaFramework/LoggingDescriptionProtocol.h>
 
 @interface BoxedMessage : NSObject <LoggingDescriptionProtocol>
 

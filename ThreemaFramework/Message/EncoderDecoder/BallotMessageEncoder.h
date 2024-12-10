@@ -19,11 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "BoxBallotCreateMessage.h"
-#import "BoxBallotVoteMessage.h"
-#import "GroupBallotCreateMessage.h"
-#import "GroupBallotVoteMessage.h"
-#import "Ballot.h"
+#import <ThreemaFramework/BoxBallotCreateMessage.h>
+#import <ThreemaFramework/BoxBallotVoteMessage.h>
+#import <ThreemaFramework/GroupBallotCreateMessage.h>
+#import <ThreemaFramework/GroupBallotVoteMessage.h>
+#import <ThreemaFramework/Ballot.h>
 
 @class BallotResultEntity;
 

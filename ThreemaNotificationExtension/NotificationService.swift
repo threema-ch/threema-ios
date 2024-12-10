@@ -398,7 +398,7 @@ class NotificationService: UNNotificationServiceExtension {
                     TaskManager.isEmpty()
             ) {
             DDLogNotice(
-                "[Push] Stopping process incoming messages (force: \(force), willExpire: \(willExpire)), because receive message queue finished or chat/reflection queue is dry!"
+                "[Push] Stopping process incoming messages (force: \(force), reportedCall: \(reportedCall) willExpire: \(willExpire)), because receive message queue finished or chat/reflection queue is dry!"
             )
             DDLog.flushLog()
 
@@ -413,27 +413,24 @@ class NotificationService: UNNotificationServiceExtension {
                 return
             }
             
-            // Gives a little time to remove notification from notification center
-            var delay: Double = 2
             if reportedCall {
-                DDLogNotice("Push] Delay timeout for incoming call")
-                delay = 5
+                DDLogNotice("[Push] Set didJustReportCall")
                 NotificationService.didJustReportCall = reportedCall
             }
 
             DispatchQueue.main.async {
                 NotificationService.stopProcessingTimer?.invalidate()
                 NotificationService.stopProcessingTimer = Timer.scheduledTimer(
-                    withTimeInterval: delay,
+                    withTimeInterval: 2, // Gives a little time to remove notification from notification center
                     repeats: false,
                     block: { _ in
-                        if reportedCall {
+                        if NotificationService.didJustReportCall {
                             DDLogNotice("[Push] didJustReportCall timer will start")
                             Timer.scheduledTimer(
-                                withTimeInterval: delay,
+                                withTimeInterval: 5,
                                 repeats: false,
                                 block: { _ in
-                                    DDLogNotice("[Push] didJustReportCall timer did fire")
+                                    DDLogNotice("[Push] Reset didJustReportCall")
                                     NotificationService.didJustReportCall = false
                                 }
                             )
@@ -482,24 +479,36 @@ class NotificationService: UNNotificationServiceExtension {
         for payload: [AnyHashable: Any],
         message: VoIPCallOfferMessage,
         from identity: String?,
-        onCompletion: ((MessageProcessorDelegate) -> Void)? = nil
+        onCompletion: @escaping ((MessageProcessorDelegate) -> Void),
+        onError: @escaping (any Error) -> Void
     ) {
         
         // Check if blocked
         guard let identity,
               !backgroundBusinessInjector.userSettings.blacklist.contains(identity) else {
-            onCompletion?(self)
+            onCompletion(self)
             return
         }
+
+        // Call forced exit here with reported call, this set didJustReportCall and prevent adding new tasks within
+        // Notification Extension
+        exitIfAllTasksProcessed(force: true, reportedCall: true)
+
+        // Remove all incoming tasks. All further messages must be processed by the App
+        TaskManager.interrupt()
+
+        // Cancel the actual task processing of Offer message, because this message must be processed from the App
+        // again!
+        onError(ThreemaProtocolError.doNotProcessOfferMessageInNotificationExtension)
+
         DDLogNotice("[Push] will Report Incoming VoIP Push Payload to OS.")
         CXProvider.reportNewIncomingVoIPPushPayload(payload) { error in
             if let error {
                 DDLogError("[Push] Incoming VoIP Push Payload, system disallow the call: \(error)")
             }
             else {
-                DDLogNotice("[Push] Incoming VoIP Push Payload reported, leaving now")
+                DDLogNotice("[Push] Incoming VoIP Push Payload reported")
             }
-            self.exitIfAllTasksProcessed(force: true, reportedCall: true)
         }
     }
 
@@ -768,7 +777,8 @@ extension NotificationService: MessageProcessorDelegate {
     func processVoIPCall(
         _ message: NSObject,
         identity: String?,
-        onCompletion: ((MessageProcessorDelegate) -> Void)? = nil
+        onCompletion: @escaping ((any MessageProcessorDelegate) -> Void),
+        onError: @escaping (any Error) -> Void
     ) {
         switch message {
         case is VoIPCallOfferMessage:
@@ -776,19 +786,19 @@ extension NotificationService: MessageProcessorDelegate {
             
             guard let identity else {
                 DDLogError("No contact for processing VoIP call offer.")
-                onCompletion?(self)
+                onCompletion(self) // Discard message
                 return
             }
             guard backgroundBusinessInjector.userSettings.enableThreemaCall else {
                 offerMessage.contactIdentity = identity
                 rejectCall(offer: offerMessage)
-                onCompletion?(self)
+                onCompletion(self) // Discard message
                 return
             }
             guard backgroundBusinessInjector.pushSettingManager.canMasterDndSendPush() else {
                 offerMessage.contactIdentity = identity
                 rejectCall(offer: offerMessage, rejectReason: .offHours)
-                onCompletion?(self)
+                onCompletion(self) // Discard message
                 return
             }
             
@@ -798,7 +808,8 @@ extension NotificationService: MessageProcessorDelegate {
                 for: ["NotificationExtensionOffer": identity, "NotificationExtensionCallerName": displayName],
                 message: message as! VoIPCallOfferMessage,
                 from: identity,
-                onCompletion: onCompletion
+                onCompletion: onCompletion,
+                onError: onError
             )
             
         case let message as VoIPCallHangupMessage:
@@ -815,12 +826,12 @@ extension NotificationService: MessageProcessorDelegate {
                         self.updateNotificationContent(for: message)
                     }
                     
-                    onCompletion?(self)
+                    onCompletion(self)
                 }
 
         default:
-            onCompletion?(self)
             DDLogError("Message couldn't be processed as VoIP call.")
+            onCompletion(self) // Discard message
         }
     }
     

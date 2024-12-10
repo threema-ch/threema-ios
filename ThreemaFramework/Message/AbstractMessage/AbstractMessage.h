@@ -19,12 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "BoxedMessage.h"
-#import "ContactEntity.h"
-#import "MyIdentityStore.h"
-#import "LoggingDescriptionProtocol.h"
-#import "ProtocolDefines.h"
-#import "ObjcCspE2eFs_Version.h"
+#import <ThreemaFramework/BoxedMessage.h>
+#import <ThreemaFramework/ContactEntity.h>
+#import <ThreemaFramework/MyIdentityStore.h>
+#import <ThreemaFramework/LoggingDescriptionProtocol.h>
+#import <ThreemaFramework/ProtocolDefines.h>
+#import <ThreemaFramework/ObjcCspE2eFs_Version.h>
 
 @protocol MyIdentityStoreProtocol;
 

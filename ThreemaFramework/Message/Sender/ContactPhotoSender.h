@@ -19,8 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Old_BlobUploadDelegate.h"
-#import "AbstractMessage.h"
+#import <ThreemaFramework/Old_BlobUploadDelegate.h>
+#import <ThreemaFramework/AbstractMessage.h>
 
 @class ConversationEntity, ContactEntity;
 

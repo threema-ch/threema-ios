@@ -20,7 +20,7 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
-#import "BaseMessage.h"
+#import <ThreemaFramework/BaseMessage.h>
 
 @class Ballot;
 

@@ -776,7 +776,7 @@
     return [self countEntityNamed:@"Message" withPredicate:@"sender == %@", contact];
 }
 
-- (NSInteger)countMessagesForContactInConversationEntity:(nonnull ContactEntity *)contact forConversation:(ConversationEntity *)conversation {
+- (NSInteger)countMessagesForContactEntity:(nonnull ContactEntity *)contact inConversationEntity:(ConversationEntity *)conversation {
     return [self countEntityNamed:@"Message" withPredicate:@"sender == %@ AND conversation == %@", contact, conversation];
 }
 

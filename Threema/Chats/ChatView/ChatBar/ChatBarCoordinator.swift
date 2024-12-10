@@ -663,7 +663,8 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         // Sending
         // Edit Message
         if let messageToEdit {
-            guard !messageToEdit.wasSentMoreThanSixHoursAgo else {
+            let group = businessInjector.groupManager.getGroup(conversation: messageToEdit.conversation)
+            guard !messageToEdit.wasSentMoreThanSixHoursAgo || (group?.isNoteGroup ?? false) else {
                 showEditMessageSentTooLongAgoAlert()
                 return
             }
@@ -674,7 +675,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             ).unsupported
             
             // We filter out certain contacts in groups that will no receive the message anyway
-            if let group = businessInjector.groupManager.getGroup(conversation: messageToEdit.conversation) {
+            if let group {
                 var filteredUnsupportedContact = [Contact]()
                 
                 for unsupportedContact in unsupportedContacts {

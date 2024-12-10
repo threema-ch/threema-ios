@@ -299,7 +299,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
         var nickname = ""
         if let publicNickname = contact.publicNickname,
            publicNickname != contact.identity.string {
-            nickname = publicNickname
+            nickname = "~\(publicNickname)"
         }
         
         if LicenseStore.requiresLicenseKey() {

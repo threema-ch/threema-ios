@@ -33,7 +33,7 @@ struct ThreemaMacrosPlugin: CompilerPlugin {
 
 /// Implementation of the `localize` macro, which takes a key
 /// of type `String` and tries to look up a localized string for the current language set. If no matching string is
-/// found it tries falls back to english. If that does no succeed to, then it returns the key itself.
+/// found it tries falls back to English. If that does no succeed to, then it returns the key itself.
 ///
 ///     #localize("key")
 ///

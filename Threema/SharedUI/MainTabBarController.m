@@ -32,6 +32,8 @@
 #import "AppGroup.h"
 #import "JKLLockScreenViewController.h"
 
+#import <PhotosUI/PhotosUI.h>
+
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 #else
@@ -441,15 +443,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _groupDetailViewController = nil;
     _distributionListDetailViewController = nil;
     if (SYSTEM_IS_IPAD) {
-        [self hideModal];
-        Contact *businessContact = [[Contact alloc] initWithContactEntity:contact];
-        _singleDetailViewController = [[SingleDetailsViewController alloc] initFor:businessContact displayStyle:DetailsDisplayStyleDefault];
-        
-        if (self.selectedIndex == kContactsTabBarIndex) {
-            [self switchContact];
-        } else {
-            [self setSelectedIndex:kContactsTabBarIndex];
-        }
+        [self hideModalWithCompletion:^{
+            Contact *businessContact = [[Contact alloc] initWithContactEntity:contact];
+            _singleDetailViewController = [[SingleDetailsViewController alloc] initFor:businessContact displayStyle:DetailsDisplayStyleDefault];
+            
+            if (self.selectedIndex == kContactsTabBarIndex) {
+                [self switchContact];
+            } else {
+                [self setSelectedIndex:kContactsTabBarIndex];
+            }
+        }];
     } else {
         // Only show contact details non-modally if we're already in the Contacts tab
         if (self.selectedIndex == kContactsTabBarIndex) {
@@ -531,56 +534,57 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)selectedConversation:(NSNotification*)notification {
-    [self hideModal];
-    ConversationEntity *conv = [self getConversationForNotificationInfo:notification.userInfo];
-
-    if (conv == nil) {
-        DDLogError(@"Unable to show chat because conversation is nil");
-        return;
-    }
-    
-    if (SYSTEM_IS_IPAD) {
-        if (self.selectedIndex != kChatTabBarIndex) {
-            [self setSelectedIndex:kChatTabBarIndex];
-        }
-        [self switchConversation: conv notification:notification];
-    } else {
-        // New ChatView iPhone
-        if (_conversationsViewController == nil) {
-            _conversationsNavigationController = self.viewControllers[kChatTabBarIndex];
-        }
-        ShowConversationInformation *info = [ShowConversationInformation createInfoFor:notification];
-
-        ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation:conv showConversationInformation:info];
+    [self hideModalWithCompletion:^{
+        ConversationEntity *conv = [self getConversationForNotificationInfo:notification.userInfo];
         
-        if ([_conversationsNavigationController.topViewController isKindOfClass:[ArchivedConversationsViewController class]]) {
-            _archivedConversationsViewController = (ArchivedConversationsViewController *) _conversationsNavigationController.topViewController;
-            [_archivedConversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
-            [self setSelectedViewController:_conversationsNavigationController];
-            
-        } else if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]) {
-            _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
-            [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
-            [self setSelectedViewController:_conversationsNavigationController];
+        if (conv == nil) {
+            DDLogError(@"Unable to show chat because conversation is nil");
+            return;
         }
-        else {
-            // Check if open chat is same we want to open, TODO: (IOS-4617) improve opening logic
-            if ([_conversationsNavigationController.topViewController isKindOfClass:[ChatViewController class]]) {
-                ChatViewController * topChatViewController = (ChatViewController *) _conversationsNavigationController.topViewController;
-                if (topChatViewController.conversation == chatViewController.conversation && !info.forceReopenChat) {
-                    return;
-                }
+        
+        if (SYSTEM_IS_IPAD) {
+            if (self.selectedIndex != kChatTabBarIndex) {
+                [self setSelectedIndex:kChatTabBarIndex];
             }
+            [self switchConversation: conv notification:notification];
+        } else {
+            // New ChatView iPhone
+            if (_conversationsViewController == nil) {
+                _conversationsNavigationController = self.viewControllers[kChatTabBarIndex];
+            }
+            ShowConversationInformation *info = [ShowConversationInformation createInfoFor:notification];
             
-            [_conversationsNavigationController popToRootViewControllerAnimated:NO];
-            // There is a race condition during pop, so we need to check again.
-            if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]) {
+            ChatViewController *chatViewController = [[ChatViewController alloc]initWithConversation:conv showConversationInformation:info];
+            
+            if ([_conversationsNavigationController.topViewController isKindOfClass:[ArchivedConversationsViewController class]]) {
+                _archivedConversationsViewController = (ArchivedConversationsViewController *) _conversationsNavigationController.topViewController;
+                [_archivedConversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
+                [self setSelectedViewController:_conversationsNavigationController];
+                
+            } else if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]) {
                 _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
                 [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
                 [self setSelectedViewController:_conversationsNavigationController];
             }
+            else {
+                // Check if open chat is same we want to open, TODO: (IOS-4617) improve opening logic
+                if ([_conversationsNavigationController.topViewController isKindOfClass:[ChatViewController class]]) {
+                    ChatViewController * topChatViewController = (ChatViewController *) _conversationsNavigationController.topViewController;
+                    if (topChatViewController.conversation == chatViewController.conversation && !info.forceReopenChat) {
+                        return;
+                    }
+                }
+                
+                [_conversationsNavigationController popToRootViewControllerAnimated:NO];
+                // There is a race condition during pop, so we need to check again.
+                if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]) {
+                    _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
+                    [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
+                    [self setSelectedViewController:_conversationsNavigationController];
+                }
+            }
         }
-    }
+    }];
 }
 
 - (void)deletedConversation:(NSNotification*)notification {
@@ -652,13 +656,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
-- (void)hideModal {
+- (void)hideModalWithCompletion:(void(^)(void))onCompletion {
     if (self.presentedViewController == nil) {
+        onCompletion();
         return;
     }
     
     if (_currentIndex == kSettingsTabBarIndex || _currentIndex == kMyIdentityTabBarIndex) {
-        [self.presentedViewController dismissViewControllerAnimated:YES completion:nil];
+        [self.presentedViewController dismissViewControllerAnimated:YES completion:onCompletion];
         return;
     }
     
@@ -666,12 +671,27 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if ([controller isKindOfClass:[UINavigationController class]]) {
         UINavigationController *navigationController = (UINavigationController*)controller;
         if ([navigationController.topViewController isKindOfClass:[MWPhotoBrowser class]]) {
-            [navigationController dismissViewControllerAnimated:YES completion:nil];
+            [navigationController.topViewController dismissViewControllerAnimated:YES completion:^{
+                [navigationController dismissViewControllerAnimated:YES completion:onCompletion];
+            }];
         }
         else if ([navigationController.topViewController isKindOfClass:[SingleDetailsViewController class]]
                  || [navigationController.topViewController isKindOfClass:[GroupDetailsViewController class]]) {
-            [navigationController dismissViewControllerAnimated:YES completion:nil];
+                [navigationController.topViewController dismissViewControllerAnimated:YES completion:onCompletion];
         }
+        else if ([navigationController.topViewController isKindOfClass:[DKAssetGroupDetailVC class]]
+                 || [navigationController.topViewController isKindOfClass:[MediaPreviewViewController class]]) {
+            [navigationController.topViewController dismissViewControllerAnimated:YES completion:^{
+                [navigationController dismissViewControllerAnimated:YES completion:onCompletion];
+            }];
+        }
+    }
+    else if ([controller isKindOfClass:[PHPickerViewController class]]) {
+        PHPickerViewController *pickerViewController = (PHPickerViewController *)controller;
+        [pickerViewController dismissViewControllerAnimated:YES completion:onCompletion];
+    }
+    else {
+        onCompletion();
     }
 }
 

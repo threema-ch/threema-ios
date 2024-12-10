@@ -68,7 +68,7 @@ If you build the Threema OnPrem target, credentials from the [Threema OnPrem](ht
 
 ## <a name="building"></a>Building
 
-To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (15.4+) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
+To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (16.1+) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
 
 ### 1. Install Dependencies
 

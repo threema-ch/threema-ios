@@ -135,6 +135,10 @@ class ConversationsViewController: ThemedTableViewController {
         }
     }
     
+    deinit {
+        UserSettings.shared().removeObserver(self, forKeyPath: "blacklist")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -909,6 +913,7 @@ extension ConversationsViewController {
             name: NSNotification.Name(rawValue: kNotificationChangedHidePrivateChat),
             object: nil
         )
+        UserSettings.shared().addObserver(self, forKeyPath: "blacklist", context: nil)
     }
     
     @objc private func unreadMessageCountChanged(_ notification: Notification) {
@@ -1001,6 +1006,23 @@ extension ConversationsViewController {
         if fetchedResultsController.fetchRequest.predicate != newPredicate {
             fetchedResultsController.fetchRequest.predicate = newPredicate
             refreshData()
+        }
+    }
+    
+    override public func observeValue(
+        forKeyPath keyPath: String?,
+        of object: Any?,
+        change: [NSKeyValueChangeKey: Any]?,
+        context: UnsafeMutableRawPointer?
+    ) {
+        if keyPath == "blacklist" {
+            DispatchQueue.main.async {
+                for cell in self.tableView.visibleCells {
+                    if let conversationCell = cell as? ConversationTableViewCell {
+                        conversationCell.updateCellTitle()
+                    }
+                }
+            }
         }
     }
 }

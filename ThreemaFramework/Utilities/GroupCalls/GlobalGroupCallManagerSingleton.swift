@@ -76,7 +76,10 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             httpHelper: GroupCallSFUTokenFetcher(),
             groupCallCrypto: GroupCallCrypto(),
             groupCallDateFormatter: GroupCallDateFormatterAdapter(),
-            userSettings: GroupCallUserSettings(ipv6Enabled: UserSettings.shared().enableIPv6),
+            userSettings: GroupCallUserSettings(
+                ipv6Enabled: UserSettings.shared().enableIPv6,
+                disableProximityMonitoring: UserSettings.shared().disableProximityMonitoring
+            ),
             groupCallSystemMessageAdapter: GroupCallSystemMessageAdapter<BusinessInjector>(
                 businessInjector: BusinessInjector(forBackgroundProcess: true)
             ),

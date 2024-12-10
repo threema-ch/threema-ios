@@ -618,6 +618,8 @@ class MediatorReflectedIncomingMessageProcessor {
                 }
 
                 seal.fulfill_()
+            } onError: { error in
+                seal.reject(error)
             }
         }
     }

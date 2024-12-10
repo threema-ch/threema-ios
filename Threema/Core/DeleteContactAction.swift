@@ -321,15 +321,7 @@ extension DeleteContactAction {
             completion?(true)
             return
         }
-        
-        // Remove from blocklist, if present
-        if let blocklist = UserSettings.shared()?.blacklist,
-           blocklist.contains(contactIdentity) {
-            let mutableBlocklist = NSMutableOrderedSet(orderedSet: blocklist)
-            mutableBlocklist.remove(contactIdentity)
-            UserSettings.shared()?.blacklist = mutableBlocklist
-        }
-        
+                
         // Remove form profile picture receiver list
         UserSettings.shared()?.profilePictureContactList.removeAll { anyID in
             guard let id = anyID as? String else {

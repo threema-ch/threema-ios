@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 /// A macro that tries to look up a localized string for a given key for the current language set. If no string is found
-/// it falls back to english, then just returns the key itself.
+/// it falls back to English, then just returns the key itself.
 ///
 ///     #localize("key")
 ///

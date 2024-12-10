@@ -122,9 +122,9 @@ final class EntityFetcherTests: XCTestCase {
             databasePreparer.createContact(identity: "AAAAAAAA")
         }
         
-        let entityManger = EntityManager(databaseContext: databaseMainContext)
-        _ = await entityManger.performSave {
-            entityManger.conversation(forContact: contact, createIfNotExisting: true, setLastUpdate: false)
+        let entityManager = EntityManager(databaseContext: databaseMainContext)
+        _ = await entityManager.performSave {
+            entityManager.conversation(forContact: contact, createIfNotExisting: true, setLastUpdate: false)
         }
                 
         // Run
@@ -146,9 +146,9 @@ final class EntityFetcherTests: XCTestCase {
             databasePreparer.createContact(identity: contactIdentity.string)
         }
         
-        let entityManger = EntityManager(databaseContext: databaseMainContext)
-        _ = await entityManger.performSave {
-            entityManger.conversation(forContact: contact, createIfNotExisting: true, setLastUpdate: true)
+        let entityManager = EntityManager(databaseContext: databaseMainContext)
+        _ = await entityManager.performSave {
+            entityManager.conversation(forContact: contact, createIfNotExisting: true, setLastUpdate: true)
         }
                 
         // Run
@@ -174,9 +174,9 @@ final class EntityFetcherTests: XCTestCase {
             )
         }
         
-        let entityManger = EntityManager(databaseContext: databaseMainContext)
-        _ = await entityManger.performSave {
-            entityManger.conversation(forContact: contact, createIfNotExisting: true, setLastUpdate: true)
+        let entityManager = EntityManager(databaseContext: databaseMainContext)
+        _ = await entityManager.performSave {
+            entityManager.conversation(forContact: contact, createIfNotExisting: true, setLastUpdate: true)
         }
                 
         // Run
@@ -202,9 +202,9 @@ final class EntityFetcherTests: XCTestCase {
             )
         }
         
-        let entityManger = EntityManager(databaseContext: databaseMainContext)
-        _ = await entityManger.performSave {
-            entityManger.conversation(forContact: contact, createIfNotExisting: true, setLastUpdate: true)
+        let entityManager = EntityManager(databaseContext: databaseMainContext)
+        _ = await entityManager.performSave {
+            entityManager.conversation(forContact: contact, createIfNotExisting: true, setLastUpdate: true)
         }
                 
         // Run
@@ -363,7 +363,7 @@ final class EntityFetcherTests: XCTestCase {
     func testSolicitedContactMultipleGroupsAndContacts() async throws {
         // Setup
         let databasePreparer = DatabasePreparer(context: mainContext)
-        let entityManger = EntityManager(databaseContext: databaseMainContext)
+        let entityManager = EntityManager(databaseContext: databaseMainContext)
 
         // Create some identities to use
         
@@ -387,22 +387,22 @@ final class EntityFetcherTests: XCTestCase {
         
         // Conversation 1: Normal
         let contact1 = identities[0]
-        _ = await entityManger.performSave {
-            entityManger.conversation(for: contact1.string, createIfNotExisting: true, setLastUpdate: true)
+        _ = await entityManager.performSave {
+            entityManager.conversation(for: contact1.string, createIfNotExisting: true, setLastUpdate: true)
         }
         expectedIdentities.insert(contact1)
 
         // Conversation 2: Normal
         let contact2 = identities[numberOfIdentities - 1]
-        _ = await entityManger.performSave {
-            entityManger.conversation(for: contact2.string, createIfNotExisting: true, setLastUpdate: true)
+        _ = await entityManager.performSave {
+            entityManager.conversation(for: contact2.string, createIfNotExisting: true, setLastUpdate: true)
         }
         expectedIdentities.insert(contact2)
         
         // Conversation 3: No last update
         let contact3 = identities[numberOfIdentities - 10]
-        _ = await entityManger.performSave {
-            entityManger.conversation(for: contact3.string, createIfNotExisting: true, setLastUpdate: false)
+        _ = await entityManager.performSave {
+            entityManager.conversation(for: contact3.string, createIfNotExisting: true, setLastUpdate: false)
         }
         // This one should not appear in the resulting set (if they are not part of another group or 1:1 conversation)
         
@@ -443,13 +443,13 @@ final class EntityFetcherTests: XCTestCase {
         members: [ThreemaIdentity],
         myIdentityStore: MyIdentityStoreProtocol = MyIdentityStoreMock()
     ) async throws -> (GroupManagerProtocol, GroupIdentity) {
-        let entityManger = EntityManager(databaseContext: databaseMainContext, myIdentityStore: myIdentityStore)
+        let entityManager = EntityManager(databaseContext: databaseMainContext, myIdentityStore: myIdentityStore)
         let groupManager = GroupManager(
             myIdentityStore,
             ContactStoreMock(callOnCompletion: true),
             TaskManagerMock(),
             UserSettingsMock(),
-            entityManger,
+            entityManager,
             GroupPhotoSenderMock()
         )
                 

@@ -137,6 +137,14 @@ import ThreemaMacros
         present(type: .sendingError)
     }
     
+    @objc public func presentError(errorText: String) {
+        let type = NotificationPresenterType(
+            notificationText: errorText,
+            notificationStyle: .error
+        )
+        present(type: type)
+    }
+    
     // MARK: - Styles
     
     private func initializeStyles() {

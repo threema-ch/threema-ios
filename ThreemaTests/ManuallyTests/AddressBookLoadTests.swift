@@ -22,6 +22,7 @@ import XCTest
 
 import Contacts
 import PromiseKit
+import RSKImageCropper
 @testable import Threema
 
 class AddressBoolLoadTests: XCTestCase {

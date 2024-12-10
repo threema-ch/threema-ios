@@ -62,14 +62,16 @@ final class TaskExecutionReceiveReflectedMessage: TaskExecution, TaskExecutionPr
                 return Promise()
             }
             .catch(on: .global()) { processingError in
-                // Discard incoming reflected message on error, if not ThreemaProtocolError.notLoggedIn or
-                // MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage
+                // Discard incoming reflected message on error, if not ThreemaProtocolError.notLoggedIn,
+                // MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage or
+                // ThreemaProtocolError.doNotProcessOfferMessageInNotificationExtension
                 switch processingError {
                 case let nsError as NSError
                     where nsError.code == ThreemaProtocolError.notLoggedIn.rawValue:
 
                     seal.reject(processingError)
-                case MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage:
+                case MediatorReflectedProcessorError.doNotAckIncomingVoIPMessage,
+                     ThreemaProtocolError.doNotProcessOfferMessageInNotificationExtension:
                     seal.reject(processingError)
                 default:
                     DDLogWarn(

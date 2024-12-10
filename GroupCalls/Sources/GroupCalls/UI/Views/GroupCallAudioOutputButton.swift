@@ -27,7 +27,7 @@ class GroupCallAudioOutputButton: UIButton {
     
     private typealias buttonConfig = GroupCallUIConfiguration.ToolbarButton
     private var dependencies: Dependencies
-        
+    
     private lazy var routePickerView: AVRoutePickerView = {
         let routePickerView = AVRoutePickerView(frame: CGRect(
             x: 0.0,
@@ -57,16 +57,23 @@ class GroupCallAudioOutputButton: UIButton {
     
     init(frame: CGRect, dependencies: Dependencies) {
         self.dependencies = dependencies
-
+        
         super.init(frame: frame)
         
         configureButton()
+        proximitySensor(enable: true)
         registerObserver()
     }
     
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        Task { @MainActor in
+            UIDevice.current.isProximityMonitoringEnabled = false
+        }
     }
     
     // MARK: - Configuration
@@ -86,7 +93,7 @@ class GroupCallAudioOutputButton: UIButton {
             .localizedString(for: "group_call_accessibility_audio_output")
         
         addSubview(routePickerView)
-
+        
         NSLayoutConstraint.activate([
             widthAnchor.constraint(equalToConstant: buttonConfig.smallerButtonWidth),
             heightAnchor.constraint(equalTo: widthAnchor),
@@ -136,28 +143,41 @@ class GroupCallAudioOutputButton: UIButton {
                     systemName: "speaker.wave.3",
                     withConfiguration: buttonConfig.smallerButtonImageConfig
                 )
+                proximitySensor(enable: false)
                 
             case .headphones, .bluetoothLE, .bluetoothHFP, .bluetoothA2DP:
                 newConfig.image = UIImage(
                     systemName: "earbuds",
                     withConfiguration: buttonConfig.smallerButtonImageConfig
                 )
+                proximitySensor(enable: false)
                 
             case .builtInReceiver:
                 newConfig.image = UIImage(
                     systemName: "ear.and.waveform",
                     withConfiguration: buttonConfig.smallerButtonImageConfig
                 )
+                proximitySensor(enable: true)
                 
             default:
                 newConfig.image = UIImage(
                     systemName: "speaker.wave.3",
                     withConfiguration: buttonConfig.smallerButtonImageConfig
                 )
+                proximitySensor(enable: false)
             }
         }
         
         return newConfig
+    }
+
+    private func proximitySensor(enable: Bool) {
+        guard !dependencies.userSettings.disableProximityMonitoring else {
+            return
+        }
+        Task { @MainActor in
+            UIDevice.current.isProximityMonitoringEnabled = enable
+        }
     }
 }
 

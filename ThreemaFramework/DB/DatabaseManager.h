@@ -20,7 +20,7 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
-#import "DatabaseContext.h"
+#import <ThreemaFramework/DatabaseContext.h>
 
 typedef enum : NSUInteger {
     RequiresMigrationNone = 0,

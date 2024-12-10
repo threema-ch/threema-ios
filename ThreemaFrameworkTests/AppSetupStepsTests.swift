@@ -100,7 +100,7 @@ final class AppSetupStepsTests: XCTestCase {
         ContactPhotoSenderMock.numberOfSendProfileRequestCalls = 0
         let appSetupSteps = AppSetupSteps(
             backgroundBusinessInjector: businessInjectorMock,
-            taskManger: taskManagerMock,
+            taskManager: taskManagerMock,
             featureMask: FeatureMaskMock.self,
             contactPhotoSender: ContactPhotoSenderMock.self
         )
@@ -177,7 +177,7 @@ final class AppSetupStepsTests: XCTestCase {
         ContactPhotoSenderMock.numberOfSendProfileRequestCalls = 0
         let appSetupSteps = AppSetupSteps(
             backgroundBusinessInjector: businessInjectorMock,
-            taskManger: taskManagerMock,
+            taskManager: taskManagerMock,
             featureMask: FeatureMaskMock.self,
             contactPhotoSender: ContactPhotoSenderMock.self
         )

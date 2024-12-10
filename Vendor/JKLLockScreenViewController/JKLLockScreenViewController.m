@@ -212,7 +212,7 @@ static const NSUInteger newMaxLength = 6;
     if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error]) {
         // evaluate
         [context evaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics
-                localizedReason:NSLocalizedStringFromTable(@"Pincode TouchID", @"JKLockScreen", nil)
+                localizedReason:@"Pincode TouchID"
                           reply:^(BOOL success, NSError * authenticationError) {
                               if (success) {
                                   [self lsv_unlockDelayDismissViewController:LSVDismissWaitingDuration];

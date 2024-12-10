@@ -19,12 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "EntityFetcher.h"
-#import "BallotMessage.h"
-#import "BoxBallotCreateMessage.h"
-#import "BoxBallotVoteMessage.h"
-#import "GroupBallotCreateMessage.h"
-#import "GroupBallotVoteMessage.h"
+#import <ThreemaFramework/EntityFetcher.h>
+#import <ThreemaFramework/BallotMessage.h>
+#import <ThreemaFramework/BoxBallotCreateMessage.h>
+#import <ThreemaFramework/BoxBallotVoteMessage.h>
+#import <ThreemaFramework/GroupBallotCreateMessage.h>
+#import <ThreemaFramework/GroupBallotVoteMessage.h>
 
 @interface BallotMessageDecoder : NSObject
 

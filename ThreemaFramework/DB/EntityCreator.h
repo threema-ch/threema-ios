@@ -20,26 +20,26 @@
 
 #import <Foundation/Foundation.h>
 
-#import "BoxTextMessage.h"
-#import "GroupTextMessage.h"
+#import <ThreemaFramework/BoxTextMessage.h>
+#import <ThreemaFramework/GroupTextMessage.h>
 
-#import "BoxImageMessage.h"
-#import "GroupImageMessage.h"
+#import <ThreemaFramework/BoxImageMessage.h>
+#import <ThreemaFramework/GroupImageMessage.h>
 
-#import "BoxVideoMessage.h"
-#import "GroupVideoMessage.h"
+#import <ThreemaFramework/BoxVideoMessage.h>
+#import <ThreemaFramework/GroupVideoMessage.h>
 
-#import "BoxAudioMessage.h"
-#import "GroupAudioMessage.h"
+#import <ThreemaFramework/BoxAudioMessage.h>
+#import <ThreemaFramework/GroupAudioMessage.h>
 
-#import "BoxLocationMessage.h"
-#import "GroupLocationMessage.h"
+#import <ThreemaFramework/BoxLocationMessage.h>
+#import <ThreemaFramework/GroupLocationMessage.h>
 
-#import "BallotMessage.h"
-#import "BoxBallotCreateMessage.h"
-#import "GroupBallotCreateMessage.h"
+#import <ThreemaFramework/BallotMessage.h>
+#import <ThreemaFramework/BoxBallotCreateMessage.h>
+#import <ThreemaFramework/GroupBallotCreateMessage.h>
 
-#import "BallotChoice.h"
+#import <ThreemaFramework/BallotChoice.h>
 
 
 @class AudioDataEntity;

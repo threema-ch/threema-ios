@@ -195,15 +195,13 @@ import UserNotifications
     @objc func incomingCallAnswer(
         answer: VoIPCallAnswerMessage,
         identity theIdentity: String,
-        completion: (() -> Void)?
+        completion: @escaping () -> Void
     ) {
         BackgroundTaskManager.shared.newBackgroundTask(
             key: kAppVoIPBackgroundTask,
             timeout: Int(kAppPushBackgroundTaskTime)
         ) {
-            if completion != nil {
-                answer.completion = completion
-            }
+            answer.completion = completion
             answer.contactIdentity = theIdentity
             self.addMessageToQueue(message: answer)
         }

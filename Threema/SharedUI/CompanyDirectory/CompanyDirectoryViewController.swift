@@ -146,6 +146,7 @@ import ThreemaMacros
         
         // call api to get the results
         searchString = query
+        nextPage = 0
         
         ServerAPIConnector().search(
             inDirectory: query,

@@ -26,7 +26,7 @@ final class MockDependencies {
     var mockHTTHelper = MockHTTPHelper()
     var mockGroupCallCrypto = MockGroupCallCrypto()
     var mockGroupCallDateFormatter = MockGroupCallDateFormatter()
-    var mockUserSettings = MockGroupCallUserSettings(ipv6Enabled: true)
+    var mockUserSettings = MockGroupCallUserSettings(ipv6Enabled: true, disableProximityMonitoring: false)
     var mockGroupCallSystemMessageAdapter = MockGroupCallSystemMessageAdapter()
     var mockNotificationPresenterWrapper = MockNotificationPresenterWrapper()
     var mockGroupCallParticipantInfoFetcher = MockGroupCallParticipantInfoFetcher()

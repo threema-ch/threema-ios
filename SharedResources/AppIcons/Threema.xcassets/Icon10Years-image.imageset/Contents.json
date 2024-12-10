@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "consumer_10_years.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

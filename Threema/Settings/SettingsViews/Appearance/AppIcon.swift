@@ -87,22 +87,41 @@ public enum AppIcon: CaseIterable {
     }
     
     public var preview: UIImage {
-        let image: UIImage? =
-            switch self {
-            case .default:
-                UIImage(named: "AppIcon")
-            case .icon2019:
-                UIImage(named: "Icon2019")
-            case .icon20131:
-                UIImage(named: "Icon2013_1")
-            case .icon20132:
-                UIImage(named: "Icon2013_2")
-            case .anniversary10:
-                UIImage(named: "Icon10Years")
-            }
+        // Starting with the iOS 18 SDK (Xcode 16) app icon assets cannot be accessed from the app. Thus we have to add
+        // them twice, once as an image asset. Our convention is to suffix these images with `-image`.
+        // Source: https://forums.developer.apple.com/forums/thread/757162?answerId=799284022#799284022
+        
+        // We want to take advantage of the build time guarantees of image resources. At the same time we don't see a
+        // reason to set active Swift compilation conditions for each app target. Our workaround is to also add the
+        // `-image` assets to Green, but they are never actually used/shown.
+        #if THREEMA_CUSTOMER
+            let image: UIImage? =
+                switch self {
+                case .default:
+                    UIImage(resource: .appIcon)
+                case .icon2019:
+                    UIImage(resource: .icon2019)
+                case .icon20131:
+                    UIImage(resource: .icon20131)
+                case .icon20132:
+                    UIImage(resource: .icon20132)
+                case .anniversary10:
+                    UIImage(resource: .icon10Years)
+                }
+        #else
+            let image: UIImage? =
+                switch self {
+                case .default:
+                    UIImage(resource: .appIcon)
+                case .icon2019, .icon20131, .icon20132, .anniversary10:
+                    UIImage(systemName: "questionmark.square.dashed")
+                }
+        #endif
+        
         guard let image else {
             return UIImage(systemName: "questionmark.square.dashed")!
         }
+        
         return image
     }
 }

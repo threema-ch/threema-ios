@@ -951,6 +951,7 @@ extension ChatViewBaseTableViewCell: ChatViewTableViewCellHorizontalSwipeHandler
     
     var canQuote: Bool {
         (messageAndNeighbors.message is QuoteMessage) &&
+            messageAndNeighbors.message?.deletedAt == nil &&
             (chatViewTableViewCellDelegate?.cellInteractionEnabled ?? false) &&
             !(chatViewTableViewCellDelegate?.chatViewIsDistributionListConversation ?? false)
     }

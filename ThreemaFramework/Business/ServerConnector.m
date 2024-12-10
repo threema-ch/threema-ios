@@ -24,7 +24,7 @@
 
 #import "ServerConnector.h"
 #import "NaClCrypto.h"
-#import <ThreemaFramework/ChatTcpSocket.h>
+#import "ChatTcpSocket.h"
 #import <ThreemaFramework/NSData+ConvertUInt64.h>
 #import "NSString+Hex.h"
 #import "BoxedMessage.h"
@@ -1676,9 +1676,9 @@ struct pktExtension {
     });
 }
 
-- (void)processVoIPCall:(NSObject *)message identity:(NSString *)identity onCompletion:(void (^)(id<MessageProcessorDelegate> _Nonnull))onCompletion {
+- (void)processVoIPCall:(NSObject *)message identity:(NSString *)identity onCompletion:(void (^_Nonnull)(id<MessageProcessorDelegate> _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     dispatch_async(queueMessageProcessorDelegate, ^{
-        [clientMessageProcessorDelegate processVoIPCall:message identity:identity onCompletion:onCompletion];
+        [clientMessageProcessorDelegate processVoIPCall:message identity:identity onCompletion:onCompletion onError:onError];
     });
 }
 

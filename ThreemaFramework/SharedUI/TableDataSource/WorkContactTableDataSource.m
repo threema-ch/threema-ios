@@ -42,6 +42,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 @property EntityManager *entityManager;
 @property id<NSFetchedResultsControllerDelegate> fetchedResultsControllerDelegate;
+@property MessagePermission *messagePermission;
 
 @property BOOL ignoreUpdates;
 
@@ -69,7 +70,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (instancetype)initWithFetchedResultsControllerDelegate:(id<NSFetchedResultsControllerDelegate>)delegate members:(NSMutableSet *)members {
     self = [super init];
     if (self) {
-        _entityManager = [[EntityManager alloc] init];
+        BusinessInjector *businessInjector = [[BusinessInjector alloc] init];
+        _messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:businessInjector.myIdentityStore userSettings:businessInjector.userSettings groupManager:businessInjector.groupManagerObjC entityManager:businessInjector.entityManager];
+        _entityManager = businessInjector.entityManager;
+
         if (members != nil) {
             _selectedWorkContacts = members;
         } else {

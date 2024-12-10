@@ -19,8 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Old_BlobMessageSender.h"
-#import "URLSenderItem.h"
+#import <ThreemaFramework/Old_BlobMessageSender.h>
+#import <ThreemaFramework/URLSenderItem.h>
 
 @class FileMessageEntity;
 

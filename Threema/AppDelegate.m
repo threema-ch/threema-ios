@@ -551,16 +551,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 #pragma mark - UI handling
 
-- (void)fixTabBarNotBeingHidden {
-    // reselect chat bar in order to trigger hiding of tab bar again
-    UITabBarController *mainTabBarController = [AppDelegate getMainTabBarController];
-
-    if (!SYSTEM_IS_IPAD && mainTabBarController.selectedIndex == kChatTabBarIndex) {
-        mainTabBarController.selectedIndex = kContactsTabBarIndex;
-        mainTabBarController.selectedIndex = kChatTabBarIndex;
-    }
-}
-
 - (void)completedIDSetup {
     AppLaunchTasks *appLaunchTasks = [AppLaunchTasks new];
     [appLaunchTasks runLaunchEventDidFinishLaunching];
@@ -624,7 +614,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 [lockView removeFromSuperview];
             }
             self.window.rootViewController = lastViewController;
-            [self fixTabBarNotBeingHidden];
 
             lastViewController = nil;
             lockView = nil;

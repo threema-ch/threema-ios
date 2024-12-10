@@ -19,10 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Ballot.h"
-#import "AbstractMessage.h"
-#import "AbstractGroupMessage.h"
-#import "MyIdentityStore.h"
+#import <ThreemaFramework/Ballot.h>
+#import <ThreemaFramework/AbstractMessage.h>
+#import <ThreemaFramework/AbstractGroupMessage.h>
+#import <ThreemaFramework/MyIdentityStore.h>
 
 @class ConversationEntity, DistributionListEntity, GroupCallEntity, NonceEntity, GroupEntity, LastGroupSyncRequestEntity, WebClientSessionEntity;
 
@@ -226,7 +226,7 @@ typedef enum : NSUInteger {
 
 - (NSInteger)countMessagesForContact:(nonnull ContactEntity *)contact;
 
-- (NSInteger)countMessagesForContactInConversation:(nonnull ContactEntity *)contact forConversationEntity:(ConversationEntity *)conversation;
+- (NSInteger)countMessagesForContactEntity:(nonnull ContactEntity *)contact inConversationEntity:(ConversationEntity *)conversation;
 
 - (NSFetchedResultsController *)fetchedResultsControllerForContactTypes:(ContactTypes)types list:(ContactList)contactList members:(NSMutableSet *)members;
 

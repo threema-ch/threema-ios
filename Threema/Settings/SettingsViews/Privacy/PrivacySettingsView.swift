@@ -61,7 +61,6 @@ struct PrivacySettingsView: View {
                 NavigationLink {
                     SyncExclusionListView()
                         .environmentObject(settingsVM)
-                        .navigationBarTitle(#localize("settings_privacy_exclusion_list"))
                 } label: {
                     Text(#localize("settings_privacy_exclusion_list"))
                 }
@@ -70,6 +69,13 @@ struct PrivacySettingsView: View {
                     Text(#localize("settings_privacy_block_unknown"))
                 }
                 .disabled(mdmSetup?.existsMdmKey(MDM_KEY_BLOCK_UNKNOWN) ?? false)
+                
+                NavigationLink {
+                    BlockListView()
+                        .environmentObject(settingsVM)
+                } label: {
+                    Text(#localize("settings_privacy_blocklist"))
+                }
             }
             .onChange(of: settingsVM.blockUnknown) { _ in
                 updateContactsFooter()
@@ -352,15 +358,5 @@ private struct PickerAndButtonView: View {
                 contact.typingIndicator = .default
             }
         }
-    }
-}
-
-private struct SyncExclusionListView: UIViewControllerRepresentable {
-    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
-    
-    func makeUIViewController(context: Context) -> some UIViewController {
-        let storyboard = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
-        let vc = storyboard.instantiateViewController(identifier: "IDSyncExclusion")
-        return vc
     }
 }

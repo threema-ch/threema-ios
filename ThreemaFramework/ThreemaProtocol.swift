@@ -60,6 +60,7 @@ public enum ThreemaProtocol {
 
     case badMessage = 667
     case blockUnknownContact = 666
+    case doNotProcessOfferMessageInNotificationExtension = 680
     case generalError = 100
     case messageAlreadyProcessed = 671
     case messageBlobDecryptionFailed = 673
@@ -81,6 +82,8 @@ public enum ThreemaProtocol {
             return "\(rawError) 'Invalid message format or decryption failure'"
         case .blockUnknownContact:
             return "\(rawError) 'Unknown contact is blocked'"
+        case .doNotProcessOfferMessageInNotificationExtension:
+            return "\(rawError) 'Threema Call message Offer must not be processed in the Notification Extension'"
         case .generalError:
             return "\(rawError) 'General error'"
         case .messageAlreadyProcessed:

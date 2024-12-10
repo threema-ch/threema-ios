@@ -252,6 +252,10 @@ public struct NotificationPresenterType {
         notificationText: #localize("cannot_connect_title"),
         notificationStyle: .error
     )
+    public static let idWrongLength = NotificationPresenterType(
+        notificationText: #localize("notification_threema_id_wrong_length"),
+        notificationStyle: .error
+    )
 }
 
 // MARK: - AccessibilityAnnouncementType

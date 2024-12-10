@@ -430,21 +430,24 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     func processVoIPCall(
         _ message: NSObject,
         identity: String?,
-        onCompletion: ((MessageProcessorDelegate) -> Void)? = nil
+        onCompletion: @escaping ((any MessageProcessorDelegate) -> Void),
+        onError: @escaping (any Error) -> Void
     ) {
         switch message {
         case is VoIPCallOfferMessage:
             guard let identity else {
                 DDLogError("No contact for processing VoIP call offer.")
+                onCompletion(self) // Discard message
                 break
             }
             
             VoIPCallStateManager.shared.incomingCallOffer(offer: message as! VoIPCallOfferMessage, identity: identity) {
-                onCompletion?(self)
+                onCompletion(self)
             }
         case is VoIPCallAnswerMessage:
             guard let identity else {
                 DDLogError("No contact for processing VoIP call answer.")
+                onCompletion(self) // Discard message
                 break
             }
             
@@ -452,11 +455,12 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 answer: message as! VoIPCallAnswerMessage,
                 identity: identity
             ) {
-                onCompletion?(self)
+                onCompletion(self)
             }
         case is VoIPCallIceCandidatesMessage:
             guard let identity else {
                 DDLogError("No contact for processing VoIP call ice candidates.")
+                onCompletion(self) // Discard message
                 break
             }
             
@@ -464,16 +468,17 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 candidates: message as! VoIPCallIceCandidatesMessage,
                 identity: identity
             ) {
-                onCompletion?(self)
+                onCompletion(self)
             }
         case is VoIPCallHangupMessage:
             VoIPCallStateManager.shared.incomingCallHangup(hangup: message as! VoIPCallHangupMessage)
-            onCompletion?(self)
+            onCompletion(self)
         case is VoIPCallRingingMessage:
             VoIPCallStateManager.shared.incomingCallRinging(ringing: message as! VoIPCallRingingMessage)
-            onCompletion?(self)
+            onCompletion(self)
         default:
             DDLogError("Message couldn't process as VoIP call.")
+            onCompletion(self) // Discard message
         }
     }
 }

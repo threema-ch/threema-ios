@@ -22,7 +22,7 @@
 
 @import CocoaLumberjack;
 
-@interface FileLoggerCustom : DDAbstractLogger <DDLogger> {
+@interface FileLoggerCustom : DDAbstractLogger {
 }
 
 @property (readonly, nonatomic) NSURL *logFile;

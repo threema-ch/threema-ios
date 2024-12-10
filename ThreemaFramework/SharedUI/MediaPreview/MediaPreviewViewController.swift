@@ -698,6 +698,20 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         }
         mediaData[indexPath.item].caption = textField.text
         updateTextAlignment()
+        
+        // If any caption is added or exists: disable swipe to dismiss. Reenable it if all captions are removed.
+        if let caption = textField.text, !caption.isEmpty {
+            isModalInPresentation = true
+        }
+        else if hasOnlyEmptyCaptions() {
+            isModalInPresentation = false
+        }
+    }
+    
+    private func hasOnlyEmptyCaptions() -> Bool {
+        mediaData.allSatisfy { item in
+            item.caption?.isEmpty ?? true
+        }
     }
     
     func updateTextForIndex(indexPath: IndexPath, animated: Bool) {

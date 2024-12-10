@@ -171,11 +171,10 @@ struct ContactsCleanupView: View {
                         for conversation in sortedConversations {
                             let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
                             let messageCount = messageFetcher.count()
-                            let contactConversationMessageCount: Int = entityManager.entityFetcher
-                                .countMessagesForContact(
-                                    inConversation: contact,
-                                    for: conversation
-                                )
+                            let contactConversationMessageCount: Int = entityManager.entityFetcher.countMessages(
+                                for: contact,
+                                in: conversation
+                            )
                             
                             let groupInfo =
                                 if let group = entityManager.entityFetcher.groupEntity(for: conversation) {

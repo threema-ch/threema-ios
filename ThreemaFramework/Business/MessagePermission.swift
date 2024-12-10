@@ -50,15 +50,29 @@ public class MessagePermission: NSObject {
     /// - Returns: Is not isAllowed than reason is set to inform user
     public func canSend(to identity: String) -> (isAllowed: Bool, reason: String?) {
         var result: (isAllowed: Bool, reason: String?) = (false, nil)
-
+        
         entityManager.performAndWait {
-            guard let conversation = self.entityManager.entityFetcher.conversationEntity(forIdentity: identity) else {
-                result = (false, "Conversation for contact (\(identity)) not found.")
-                return
+            if let conversation = self.entityManager.entityFetcher.conversationEntity(forIdentity: identity) {
+                result = self.canSend(to: conversation)
             }
-            result = self.canSend(to: conversation)
+            else if let contact = self.entityManager.entityFetcher.contact(for: identity),
+                    self.userSettings.blacklist.contains(contact.identity) {
+                // Check for blacklisted contact
+                DDLogError("Cannot send a message to this contact \(identity) because it is blocked")
+                result = (false, #localize("contact_blocked_cannot_send"))
+            }
+            else if let contact = self.entityManager.entityFetcher.contact(for: identity),
+                    let state = contact.state,
+                    state.intValue == kStateInvalid {
+                // Check for invalid contact
+                DDLogError("Cannot send a message to this contact (\(contact.identity) because it is invalid")
+                result = (false, #localize("contact_invalid_cannot_send"))
+            }
+            else {
+                result = (false, "Conversation for contact (\(identity)) could not be found.")
+            }
         }
-
+        
         return result
     }
 

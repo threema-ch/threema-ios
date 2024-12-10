@@ -91,7 +91,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: blobManagerMock,
+            blobManager: blobManagerMock,
             blobMessageSender: blobMessageSender
         )
         
@@ -154,7 +154,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -217,7 +217,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: blobManagerMock,
+            blobManager: blobManagerMock,
             blobMessageSender: blobMessageSender
         )
         
@@ -261,7 +261,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: blobManagerMock,
+            blobManager: blobManagerMock,
             blobMessageSender: blobMessageSender
         )
         
@@ -342,7 +342,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: groupManager,
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -435,7 +435,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: groupManager,
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -532,7 +532,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: groupManager,
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -598,7 +598,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -662,7 +662,7 @@ class MessageSenderTests: XCTestCase {
                 groupManager: GroupManagerMock(),
                 taskManager: taskManagerMock,
                 entityManager: entityManager,
-                blobManger: BlobManagerMock(),
+                blobManager: BlobManagerMock(),
                 blobMessageSender: blobMessageSender
             )
 
@@ -752,7 +752,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -797,7 +797,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -828,7 +828,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -870,7 +870,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -931,7 +931,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: groupManagerMock,
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -990,7 +990,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: groupManagerMock,
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -1034,7 +1034,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -1073,7 +1073,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -1115,7 +1115,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 
@@ -1145,7 +1145,7 @@ class MessageSenderTests: XCTestCase {
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
             entityManager: entityManager,
-            blobManger: BlobManagerMock(),
+            blobManager: BlobManagerMock(),
             blobMessageSender: blobMessageSender
         )
 

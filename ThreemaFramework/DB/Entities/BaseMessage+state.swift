@@ -90,13 +90,28 @@ extension BaseMessage {
             return false
         }
         
+        let isNoteGroup = {
+            guard conversation.isGroup else {
+                return false
+            }
+            
+            let businessInjector = BusinessInjector(forBackgroundProcess: true)
+            
+            guard let group = businessInjector.groupManager.getGroup(conversation: conversation),
+                  group.isNoteGroup else {
+                return false
+            }
+            
+            return true
+        }()
+        
         return isOwnMessage &&
-            !wasSentMoreThanSixHoursAgo &&
+            (!wasSentMoreThanSixHoursAgo || isNoteGroup) &&
             messageState != .sending &&
             messageState != .failed &&
-            FeatureMask.check(message: self, for: .editMessageSupport).isSupported
+            (FeatureMask.check(message: self, for: .editMessageSupport).isSupported || isNoteGroup)
     }
-    
+        
     public var typeSupportsRemoteDeletion: Bool {
         self is AudioMessageEntity ||
             self is FileMessageEntity ||

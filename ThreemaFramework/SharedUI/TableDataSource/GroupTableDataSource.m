@@ -39,6 +39,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 @property EntityManager *entityManager;
 @property id<NSFetchedResultsControllerDelegate> fetchedResultsControllerDelegate;
+@property MessagePermission *messagePermission;
 
 @property BOOL ignoreUpdates;
 
@@ -65,10 +66,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 {
     self = [super init];
     if (self) {
-        _entityManager = [[EntityManager alloc] init];
+        BusinessInjector *businessInjector = [[BusinessInjector alloc] init];
+        _messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:businessInjector.myIdentityStore userSettings:businessInjector.userSettings groupManager:businessInjector.groupManagerObjC entityManager:businessInjector.entityManager];
+        _entityManager = businessInjector.entityManager;
         _selectedGroups = [NSMutableSet set];
 
-        self->groupManager = [[[BusinessInjector alloc] initWithEntityManager:_entityManager] groupManagerObjC];
+        self->groupManager = businessInjector.groupManagerObjC;
 
         if (delegate) {
             _fetchedResultsControllerDelegate = delegate;
@@ -169,6 +172,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (NSArray *)sectionIndexTitlesForTableView:(UITableView *)tableView {
     return nil;
+}
+
+- (BOOL)canSelectCellAtIndexPath:(NSIndexPath *)indexPath {
+    return true;
 }
 
 - (void)selectedCellAtIndexPath:(NSIndexPath *)indexPath selected:(BOOL)selected {

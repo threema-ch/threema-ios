@@ -19,8 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "BoxFileMessage.h"
-#import "GroupFileMessage.h"
+#import <ThreemaFramework/BoxFileMessage.h>
+#import <ThreemaFramework/GroupFileMessage.h>
 
 @class FileMessageEntity;
 

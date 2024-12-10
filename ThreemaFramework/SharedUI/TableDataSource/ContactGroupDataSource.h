@@ -25,7 +25,9 @@
 
 - (NSSet *)selectedConversations;
 
-- (void)selectedCellAtIndexPath:(NSIndexPath *) indexPath selected:(BOOL)selected;
+- (BOOL)canSelectCellAtIndexPath:(NSIndexPath *)indexPath;
+
+- (void)selectedCellAtIndexPath:(NSIndexPath *)indexPath selected:(BOOL)selected;
 
 - (void)filterByWords:(NSArray *)words;
 

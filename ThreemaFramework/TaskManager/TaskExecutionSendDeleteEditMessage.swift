@@ -64,6 +64,7 @@ final class TaskExecutionSendDeleteEditMessage: TaskExecution, TaskExecutionProt
 
                     if task.isGroupMessage {
                         guard !(task.isNoteGroup ?? false) else {
+                            seal.fulfill(sendMessages)
                             return
                         }
 

@@ -18,8 +18,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#import "AbstractGroupMessage.h"
-#import "QuotedMessageProtocol.h"
+#import <ThreemaFramework/AbstractGroupMessage.h>
+#import <ThreemaFramework/QuotedMessageProtocol.h>
 
 @interface GroupTextMessage : AbstractGroupMessage <NSSecureCoding, QuotedMessageProtocol>
 

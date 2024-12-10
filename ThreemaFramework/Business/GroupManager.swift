@@ -323,13 +323,6 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                                 date: systemMessageDate
                             )
                         }
-
-                        if sourceCaller != .sync, !memberContact.isContactHidden {
-                            self.contactStore.markContactAsDeleted(
-                                identity: memberIdentity,
-                                entityManagerObject: self.entityManager
-                            )
-                        }
                     }
                 }
 

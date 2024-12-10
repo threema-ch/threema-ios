@@ -45,7 +45,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         groupManager: GroupManagerProtocol,
         taskManager: TaskManagerProtocol,
         entityManager: EntityManager,
-        blobManger: BlobManagerProtocol,
+        blobManager: BlobManagerProtocol,
         blobMessageSender: BlobMessageSender
     ) {
         self.serverConnector = serverConnector
@@ -54,7 +54,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         self.groupManager = groupManager
         self.taskManager = taskManager
         self.entityManager = entityManager
-        self.blobManager = blobManger
+        self.blobManager = blobManager
         self.blobMessageSender = blobMessageSender
         
         super.init()
@@ -75,7 +75,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             groupManager: groupManager,
             taskManager: taskManager,
             entityManager: entityManager,
-            blobManger: BlobManager.shared,
+            blobManager: BlobManager.shared,
             blobMessageSender: BlobMessageSender()
         )
     }

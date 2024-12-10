@@ -942,7 +942,7 @@ Process incoming message.
     
     [messageProcessorDelegate processVoIPCall:message identity:msg.fromIdentity onCompletion:^(id<MessageProcessorDelegate>  _Nonnull delegate) {
         onCompletion(delegate);
-    }];
+    } onError:onError];
 }
 
 - (void)processIncomingVoIPCallAnswerMessage:(BoxVoIPCallAnswerMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
@@ -954,7 +954,7 @@ Process incoming message.
 
     [messageProcessorDelegate processVoIPCall:message identity:msg.fromIdentity onCompletion:^(id<MessageProcessorDelegate>  _Nonnull delegate) {
         onCompletion(delegate);
-    }];
+    } onError:onError];
 }
 
 - (void)processIncomingVoIPCallIceCandidatesMessage:(BoxVoIPCallIceCandidatesMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
@@ -966,7 +966,7 @@ Process incoming message.
 
     [messageProcessorDelegate processVoIPCall:message identity:msg.fromIdentity onCompletion:^(id<MessageProcessorDelegate>  _Nonnull delegate) {
         onCompletion(delegate);
-    }];
+    } onError:onError];
 }
 
 - (void)processIncomingVoIPCallHangupMessage:(BoxVoIPCallHangupMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
@@ -979,7 +979,7 @@ Process incoming message.
     
     [messageProcessorDelegate processVoIPCall:message identity:nil onCompletion:^(id<MessageProcessorDelegate>  _Nullable delegate) {
         onCompletion(delegate);
-    }];
+    } onError:onError];
 }
 
 - (void)processIncomingVoipCallRingingMessage:(BoxVoIPCallRingingMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
@@ -992,7 +992,7 @@ Process incoming message.
     
     [messageProcessorDelegate processVoIPCall:message identity:nil onCompletion:^(id<MessageProcessorDelegate>  _Nonnull delegate) {
         onCompletion(delegate);
-    }];
+    } onError:onError];
 }
 
 

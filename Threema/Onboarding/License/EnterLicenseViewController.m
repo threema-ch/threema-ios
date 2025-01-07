@@ -35,14 +35,17 @@
 
 @end
 
-@implementation EnterLicenseViewController
+@implementation EnterLicenseViewController {
+    BOOL isUsernameSetByMDM;
+    BOOL isPasswordSetByMDM;
+}
 
 + (EnterLicenseViewController*)instantiate {
     NSString *storyboardName = @"License";
     if ([LicenseStore isOnPrem]) {
         storyboardName = @"LicenseOnPrem";
     }
-    
+
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle:nil];
     EnterLicenseViewController *viewController = [storyboard instantiateInitialViewController];
     // Set default value
@@ -52,6 +55,10 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    isUsernameSetByMDM = [mdmSetup existsMdmKey:MDM_KEY_LICENSE_USERNAME];
+    isPasswordSetByMDM = [mdmSetup existsMdmKey:MDM_KEY_LICENSE_PASSWORD];
 
     _confirmButton.layer.cornerRadius = 3;
     _licenseUsernameTextField.layer.cornerRadius = 3;
@@ -81,18 +88,30 @@
     NSString *placeholder = [BundleUtil localizedStringForKey:@"enter_license_username_placeholder"];
     _licenseUsernameTextField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder attributes:@{NSForegroundColorAttributeName: THREEMA_COLOR_PLACEHOLDER}];
     _licenseUsernameTextField.delegate = self;
-    
-    placeholder = [BundleUtil localizedStringForKey:@"enter_license_password_placeholder"];
-    _licensePasswordTextField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder attributes:@{NSForegroundColorAttributeName: THREEMA_COLOR_PLACEHOLDER}];
-    _licensePasswordTextField.delegate = self;
-    
+
     placeholder = [BundleUtil localizedStringForKey:@"enter_license_server_placeholder"];
     _serverTextField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder attributes:@{NSForegroundColorAttributeName: THREEMA_COLOR_PLACEHOLDER}];
     _serverTextField.delegate = self;
 
     _licenseStore = [LicenseStore sharedLicenseStore];
     _licenseUsernameTextField.text = _licenseStore.licenseUsername;
-    _licensePasswordTextField.text = _licenseStore.licensePassword;
+    if (isUsernameSetByMDM == YES) {
+        _licenseUsernameTextField.enabled = NO;
+    }
+
+    // Do not apply password if is set by MDM
+    if (isPasswordSetByMDM == NO) {
+        placeholder = [BundleUtil localizedStringForKey:@"enter_license_password_placeholder"];
+        _licensePasswordTextField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder attributes:@{NSForegroundColorAttributeName: THREEMA_COLOR_PLACEHOLDER}];
+        _licensePasswordTextField.delegate = self;
+        _licensePasswordTextField.enabled = YES;
+        _licensePasswordTextField.text = _licenseStore.licensePassword;
+    }
+    else {
+        placeholder = [BundleUtil localizedStringForKey:@"set_by_administrator"];
+        _licensePasswordTextField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder attributes:@{NSForegroundColorAttributeName: THREEMA_COLOR_PLACEHOLDER}];
+        _licensePasswordTextField.enabled = NO;
+    }
     _serverTextField.text = _licenseStore.onPremConfigUrl;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateLicenseText) name:kNotificationLicenseMissing object:nil];
@@ -126,7 +145,10 @@
 - (void)updateLicenseText {
     dispatch_async(dispatch_get_main_queue(), ^{
         _licenseUsernameTextField.text = _licenseStore.licenseUsername;
-        _licensePasswordTextField.text = _licenseStore.licensePassword;
+        // Do not apply password if is set by MDM
+        if (isPasswordSetByMDM == NO) {
+            _licensePasswordTextField.text = _licenseStore.licensePassword;
+        }
         if ([LicenseStore isOnPrem]) {
             _serverTextField.text = _licenseStore.onPremConfigUrl;
         }
@@ -186,7 +208,7 @@
 }
 
 - (void)updateConfirmButtonUsername:(NSString*)username password:(NSString*)password server:(NSString*)server {
-    if (username.length > 0 && password.length > 0 && (server == nil || server.length > 0)) {
+    if (username.length > 0 && (password.length > 0 || isPasswordSetByMDM) && (server == nil || server.length > 0)) {
         _confirmButton.enabled = YES;
         _confirmButton.alpha = 1.0;
     } else {
@@ -248,7 +270,10 @@
     [self hideKeyboard];
     
     [_licenseStore setLicenseUsername:_licenseUsernameTextField.text];
-    [_licenseStore setLicensePassword:_licensePasswordTextField.text];
+    if (isPasswordSetByMDM == NO) {
+        [_licenseStore setLicensePassword:_licensePasswordTextField.text];
+    }
+
     if ([LicenseStore isOnPrem]) {
         [_licenseStore setOnPremConfigUrl:_serverTextField.text];
     }
@@ -270,9 +295,7 @@
                 }
             } else {
                 [self showErrorMessage:_licenseStore.errorMessage];
-                // disable button, user has to change key first
-                _confirmButton.enabled = NO;
-                _confirmButton.alpha = 0.7;
+                [self updateConfirmButton];
             }
         });
     }];

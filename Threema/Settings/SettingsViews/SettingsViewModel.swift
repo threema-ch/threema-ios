@@ -53,17 +53,6 @@ class SettingsViewModel: ObservableObject {
         }
     }
     
-    var displayOrphanedFilesCleanup: Bool {
-        switch ThreemaEnvironment.env() {
-        case .appStore:
-            false
-        case .testFlight:
-            false
-        case .xcode:
-            true
-        }
-    }
-    
     func giveFeedback() {
         if let contact = BusinessInjector().entityManager.entityFetcher
             .contact(for: Constants.betaFeedbackIdentity) {

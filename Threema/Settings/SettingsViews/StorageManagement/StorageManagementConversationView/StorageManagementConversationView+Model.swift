@@ -95,18 +95,33 @@ extension StorageManagementConversationView {
         /// - Parameter option: The `OlderThanOption` that specifies the age of messages to be deleted.
         func messageDelete(_ option: OlderThanOption) {
             deleteInProgress = true
+
             Task {
                 await businessInjector.runInBackground { [weak self] backgroundBusinessInjector in
                     guard let self else {
                         return
                     }
-                    guard let count = await backgroundBusinessInjector
-                        .entityManager
-                        .entityDestroyer
-                        .deleteMessages(
-                            olderThan: option.date,
-                            for: conversation?.objectID
-                        ) else {
+
+                    let count: Int? = await backgroundBusinessInjector.entityManager.perform {
+                        let conversationEntity: ConversationEntity? =
+                            if let conversationObjectID = self.conversation?.objectID {
+                                backgroundBusinessInjector.entityManager.entityFetcher
+                                    .existingObject(with: conversationObjectID) as? ConversationEntity
+                            }
+                            else {
+                                nil
+                            }
+
+                        return backgroundBusinessInjector
+                            .entityManager
+                            .entityDestroyer
+                            .deleteMessages(
+                                olderThan: option.date,
+                                for: conversationEntity
+                            )
+                    }
+
+                    guard let count else {
                         DDLogNotice("[EntityDestroyer] no messages got deleted")
                         await MainActor.run {
                             self.deleteInProgress = false
@@ -131,18 +146,33 @@ extension StorageManagementConversationView {
         /// - Parameter option: The `OlderThanOption` that specifies the age of files and media to be deleted.
         func mediaDelete(_ option: OlderThanOption) {
             deleteInProgress = true
+
             Task {
                 await businessInjector.runInBackground { [weak self] backgroundBusinessInjector in
                     guard let self else {
                         return
                     }
-                    guard let count = await backgroundBusinessInjector
-                        .entityManager
-                        .entityDestroyer
-                        .deleteMedias(
-                            olderThan: option.date,
-                            for: conversation?.objectID
-                        ) else {
+
+                    let count: Int? = await backgroundBusinessInjector.entityManager.perform {
+                        let conversationEntity: ConversationEntity? =
+                            if let conversationObjectID = self.conversation?.objectID {
+                                backgroundBusinessInjector.entityManager.entityFetcher
+                                    .existingObject(with: conversationObjectID) as? ConversationEntity
+                            }
+                            else {
+                                nil
+                            }
+
+                        return backgroundBusinessInjector
+                            .entityManager
+                            .entityDestroyer
+                            .deleteMedias(
+                                olderThan: option.date,
+                                for: conversationEntity
+                            )
+                    }
+
+                    guard let count else {
                         DDLogNotice("[EntityDestroyer] media files deleted")
                         await MainActor.run {
                             self.deleteInProgress = false

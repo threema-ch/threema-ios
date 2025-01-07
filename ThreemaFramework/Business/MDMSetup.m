@@ -206,7 +206,7 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (NSNumber*)safeEnable {
-    NSNumber *safeEnable = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_ENABLE];
+    NSNumber *safeEnable = [self getMdmConfigurationBoolForKey:MDM_KEY_SAFE_ENABLE];
     return [safeEnable isKindOfClass:[NSNumber class]] ? safeEnable : nil;
 }
 

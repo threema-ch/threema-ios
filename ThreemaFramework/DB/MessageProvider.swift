@@ -274,9 +274,10 @@ public final class MessageProvider: NSObject {
         }
         
         backgroundEntityManager.performBlock { [weak self] in
-            guard let conversation = self?.backgroundEntityManager.entityFetcher
-                .existingObject(with: self?.conversationObjectID) as? ConversationEntity,
-                let lastUpdate = conversation.lastUpdate else {
+            guard let conversationObjectID = self?.conversationObjectID,
+                  let conversation = self?.backgroundEntityManager.entityFetcher
+                  .existingObject(with: conversationObjectID) as? ConversationEntity,
+                  let lastUpdate = conversation.lastUpdate else {
                 return
             }
             if lastUpdate > lastWillResignActiveNotification {

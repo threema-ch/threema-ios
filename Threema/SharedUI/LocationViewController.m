@@ -135,7 +135,11 @@
     }]];
     [actionSheet addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"cancel"] style:UIAlertActionStyleCancel handler:nil]];
     
+    if(SYSTEM_IS_IPAD) {
+        actionSheet.popoverPresentationController.barButtonItem = _shareButton;
+    }
     [self presentViewController:actionSheet animated:YES completion:nil];
+    
 }
 
 - (IBAction)mapTypeChanged:(id)sender {

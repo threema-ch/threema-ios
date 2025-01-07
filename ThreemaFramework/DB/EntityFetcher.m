@@ -57,7 +57,7 @@
     return [_managedObjectContext objectWithID: objectID];
 }
 
-- (__kindof NSManagedObject *)existingObjectWithID:(NSManagedObjectID *)objectID {
+- (__kindof NSManagedObject *)existingObjectWithID:(nonnull NSManagedObjectID *)objectID {
     NSError *error;
     
     NSManagedObject *managedObject = [_managedObjectContext existingObjectWithID:objectID error:&error];

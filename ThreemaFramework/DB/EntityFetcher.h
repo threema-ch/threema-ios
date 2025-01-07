@@ -50,7 +50,7 @@ typedef enum : NSUInteger {
 
 - (__kindof NSManagedObject *)getManagedObjectById:(NSManagedObjectID *)objectID;
 
-- (__kindof NSManagedObject *)existingObjectWithID:(NSManagedObjectID *)objectID;
+- (__kindof NSManagedObject *)existingObjectWithID:(nonnull NSManagedObjectID *)objectID;
 
 - (__kindof NSManagedObject *)existingObjectWithIDString:(NSString *)objectIDString;
 

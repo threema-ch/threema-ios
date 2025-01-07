@@ -69,7 +69,7 @@ public class MessagePermission: NSObject {
                 result = (false, #localize("contact_invalid_cannot_send"))
             }
             else {
-                result = (false, "Conversation for contact (\(identity)) could not be found.")
+                result = (true, nil)
             }
         }
         

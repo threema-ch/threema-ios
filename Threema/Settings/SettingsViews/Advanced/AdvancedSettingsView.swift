@@ -25,7 +25,6 @@ import ThreemaMacros
 
 struct AdvancedSettingsView: View {
     @EnvironmentObject var settingsVM: SettingsStore
-    @EnvironmentObject var model: SettingsViewModel
     
     @State private var showConfirmationSheet = false
     
@@ -179,14 +178,12 @@ struct AdvancedSettingsView: View {
                     Text(#localize("settings_advanced_webrtc_diagnostics_title"))
                 }
                 
-                if model.displayOrphanedFilesCleanup {
-                    NavigationLink {
-                        OrphanedFilesCleanupViewControllerRepresentable()
-                            .ignoresSafeArea(.all)
-                            .navigationBarTitle("settings_advanced_orphaned_files_cleanup", displayMode: .inline)
-                    } label: {
-                        Text(#localize("settings_advanced_orphaned_files_cleanup"))
-                    }
+                NavigationLink {
+                    OrphanedFilesCleanupViewControllerRepresentable()
+                        .ignoresSafeArea(.all)
+                        .navigationBarTitle("settings_advanced_orphaned_files_cleanup", displayMode: .inline)
+                } label: {
+                    Text(#localize("settings_advanced_orphaned_files_cleanup"))
                 }
 
                 NavigationLink {

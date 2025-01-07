@@ -44,25 +44,12 @@ import Foundation
     ///
     /// - Parameters:
     ///   - olderThan: All message older than that date will be deleted
-    ///   - conversation: Conversation
-    /// - Returns:
-    ///   Count of deleted media files
-    public func deleteMedias(olderThan: Date?, for conversationID: NSManagedObjectID?) async -> Int? {
-        await existingObjectPerform(for: conversationID) {
-            self.deleteMedias(olderThan: olderThan, for: $0)
-        }
-    }
-    
-    /// Delete media files of audio, file, image and video messages.
-    ///
-    /// - Parameters:
-    ///   - olderThan: All message older than that date will be deleted
     ///   - conversation: ConversationEntity
     /// - Returns:
     ///   Count of deleted media files
     public func deleteMedias(olderThan: Date?, for conversation: ConversationEntity? = nil) -> Int? {
         var deletedObjects = 0
-        var mediaMessageTypes = [
+        let mediaMessageTypes = [
             AudioMessageEntity.self,
             FileMessageEntity.self,
             ImageMessageEntity.self,
@@ -384,6 +371,7 @@ import Foundation
         }
         
         let deletedMessages = deleteMessages(with: fetchMessages)
+
         if deletedMessages > 0 {
             NotificationCenter.default.post(
                 name: NSNotification.Name(kNotificationBatchDeletedOldMessages),
@@ -394,20 +382,6 @@ import Foundation
         return nil
     }
 
-    /// Delete all kind of messages.
-    ///
-    /// - Parameters:
-    ///    - olderThan: All message older than that date will be deleted
-    ///    - conversation: Conversation
-    ///
-    /// - Returns:
-    ///    Count of deleted messages
-    public func deleteMessages(olderThan: Date?, for conversationID: NSManagedObjectID?) async -> Int? {
-        await existingObjectPerform(for: conversationID) {
-            self.deleteMessages(olderThan: olderThan, for: $0)
-        }
-    }
-    
     /// Delete all kind of messages.
     ///
     /// - Parameters:
@@ -576,6 +550,7 @@ import Foundation
         }
                 
         let deleteFilenames = getExternalFilenames(ofMessages: [object], includeThumbnail: true)
+
         deleteExternalFiles(list: deleteFilenames)
 
         if let message = object as? BaseMessage {
@@ -738,24 +713,6 @@ import Foundation
     
     // MARK: - Private helper methods
     
-    /// Asynchronously performs a block with an existing managed object of type `TMAManagedObject` if available.
-    ///
-    /// - Parameters:
-    ///   - id: The `NSManagedObjectID` of the object to fetch.
-    ///   - block: The block to execute with the fetched object. The block receives an optional `TMAManagedObject`.
-    /// - Returns: The result of the block of type `R`.
-    private func existingObjectPerform<T: TMAManagedObject, Result>(
-        for id: NSManagedObjectID?,
-        with block: @escaping (T?) -> (Result)
-    ) async -> Result {
-        await objCnx.perform {
-            guard let id, let object = try? self.objCnx.existingObject(with: id) as? T else {
-                return block(nil)
-            }
-            return block(object)
-        }
-    }
-    
     /// Used to Delete the Messages according to the Retention Policy.
     /// Currently all but Open Polls are affected.
     ///
@@ -783,15 +740,24 @@ import Foundation
             guard !filtered.isEmpty else {
                 return
             }
-            
+
+            let deleteFilenames = getExternalFilenames(ofMessages: filtered, includeThumbnail: true)
+
             nullifyConversationLastMessage(for: filtered)
-            
+
+            // With a batch delete will sometimes the external file of a file message not deleted immediately. If the
+            // external file is remaining, than the only way to delete this is in Settings - Advanced - Delete Orphaned
+            // Files
             let batch = NSBatchDeleteRequest(objectIDs: filtered.map(\.objectID))
             batch.resultType = .resultTypeObjectIDs
             try Task.checkCancellation()
             
             if let deleteResult = try objCnx.execute(batch) as? NSBatchDeleteResult,
                let deletedIDs = deleteResult.result as? [NSManagedObjectID], !deletedIDs.isEmpty {
+                refreshDatabaseMainAndDirectContexts(for: deletedIDs)
+
+                deleteExternalFiles(list: deleteFilenames)
+
                 DDLogNotice("[Message Retention]: Deleted \(deletedIDs.count) messages")
             }
             
@@ -841,6 +807,28 @@ import Foundation
         return (fetchMessages, relationship, blobIDField)
     }
     
+    private func getExternalFilenames(ofObjectIDs: [NSManagedObjectID], includeThumbnail: Bool) -> [String] {
+        var externalFilenames = [String]()
+
+        do {
+            for entityName in ["AudioMessage", "FileMessage", "ImageMessage", "VideoMessage"] {
+                let fetch = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+                fetch.predicate = NSPredicate(format: "self IN %@", ofObjectIDs)
+
+                let messages = try objCnx.fetch(fetch)
+
+                externalFilenames.append(
+                    contentsOf: getExternalFilenames(ofMessages: messages, includeThumbnail: includeThumbnail)
+                )
+            }
+        }
+        catch {
+            DDLogError("Fetching messages to evaluate external files failed: \(error)")
+        }
+
+        return externalFilenames
+    }
+
     /// List names of external files.
     ///
     /// - Parameters:
@@ -940,17 +928,26 @@ import Foundation
     ///    Count of deleted messages
     private func deleteMessages(with fetchRequest: NSFetchRequest<NSFetchRequestResult>) -> Int {
         do {
-            let messages = try objCnx.fetch(fetchRequest)
-            let deleteFilenames = getExternalFilenames(ofMessages: messages, includeThumbnail: true)
-
-            if let messages = messages as? [BaseMessage] {
-                nullifyConversationLastMessage(for: messages)
+            fetchRequest.resultType = NSFetchRequestResultType.managedObjectIDResultType
+            guard let objectIDs = try objCnx.fetch(fetchRequest) as? [NSManagedObjectID], !objectIDs.isEmpty else {
+                return 0
             }
-            
+
+            let deleteFilenames = getExternalFilenames(ofObjectIDs: objectIDs, includeThumbnail: true)
+
+            nullifyConversationLastMessage(forObjectIDs: objectIDs)
+
+            // With a batch delete will sometimes the external file of a file message not deleted immediately. If the
+            // external file is remaining, than the only way to delete this is in Settings - Advanced - Delete Orphaned
+            // Files
             let batch = NSBatchDeleteRequest(fetchRequest: fetchRequest)
             batch.resultType = NSBatchDeleteRequestResultType.resultTypeObjectIDs
             let deleteResult = try objCnx.execute(batch) as? NSBatchDeleteResult
             if let deletedIDs = deleteResult?.result as? [NSManagedObjectID], !deletedIDs.isEmpty {
+                refreshDatabaseMainAndDirectContexts(for: deletedIDs)
+
+                deleteExternalFiles(list: deleteFilenames)
+
                 return deletedIDs.count
             }
             
@@ -968,10 +965,18 @@ import Foundation
             return
         }
 
+        nullifyConversationLastMessage(forObjectIDs: messages.map(\.objectID))
+    }
+
+    private func nullifyConversationLastMessage(forObjectIDs: [NSManagedObjectID]) {
+        guard !forObjectIDs.isEmpty else {
+            return
+        }
+
         do {
             try objCnx.performAndWait {
                 let fetchConversations = NSFetchRequest<NSFetchRequestResult>(entityName: "Conversation")
-                fetchConversations.predicate = NSPredicate(format: "lastMessage IN %@", messages)
+                fetchConversations.predicate = NSPredicate(format: "lastMessage IN %@", forObjectIDs)
 
                 if let conversations = try fetchConversations.execute() as? [ConversationEntity],
                    !conversations.isEmpty {
@@ -986,5 +991,26 @@ import Foundation
         catch {
             DDLogError("Failed to nullify `Conversation.lastMessage`: \(error)")
         }
+    }
+
+    /// Merge deleted objects in private (background) context to main and direct database contexts.
+    /// - Parameter deletedIDs: Array with object ID of deleted objects
+    private func refreshDatabaseMainAndDirectContexts(for deletedIDs: [NSManagedObjectID]) {
+        guard !deletedIDs.isEmpty,
+              (objCnx as NSManagedObjectContext).concurrencyType != .mainQueueConcurrencyType,
+              let databaseContext = DatabaseManager.db().getDatabaseContext() else {
+            return
+        }
+
+        var contexts = [databaseContext.main]
+        if let directContexts = databaseContext.directContexts {
+            contexts.append(contentsOf: directContexts)
+        }
+
+        // Merge the deletions into the app's managed object context.
+        NSManagedObjectContext.mergeChanges(
+            fromRemoteContextSave: [NSDeletedObjectsKey: deletedIDs],
+            into: contexts
+        )
     }
 }

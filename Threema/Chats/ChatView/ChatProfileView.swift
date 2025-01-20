@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2024 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -140,6 +140,7 @@ final class ChatProfileView: UIStackView {
         let label = UILabel()
         
         label.font = ChatViewConfiguration.Profile.nameFont
+        label.textColor = .label
         label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         
         if debug {
@@ -188,6 +189,7 @@ final class ChatProfileView: UIStackView {
         let label = UILabel()
         
         label.font = ChatViewConfiguration.Profile.membersListFont
+        label.textColor = .secondaryLabel
         
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
@@ -241,7 +243,6 @@ final class ChatProfileView: UIStackView {
         configureView()
         configureButton()
         configureContentObservers()
-        updateColors()
     }
     
     @available(*, unavailable, message: "Use init(for:)")
@@ -456,12 +457,7 @@ final class ChatProfileView: UIStackView {
     }
     
     // MARK: - Update functions
-    
-    func updateColors() {
-        Colors.setTextColor(Colors.text, label: nameLabel)
-        Colors.setTextColor(Colors.textLight, label: membersListLabel)
-    }
-    
+        
     private func updateGroupMembersListLabel() {
         let businessInjector = BusinessInjector()
         businessInjector.entityManager.performAndWait {

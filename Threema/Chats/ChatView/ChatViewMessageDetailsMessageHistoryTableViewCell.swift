@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2024 Threema GmbH
+// Copyright (c) 2024-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -84,12 +84,6 @@ final class ChatViewMessageDetailsMessageHistoryTableViewCell: ThemedCodeTableVi
         ])
     }
     
-    override func updateColors() {
-        super.updateColors()
-        messageLabel.textColor = historyItem?.text != "" ? Colors.text : Colors.textLight
-        dateLabel.textColor = Colors.textLight
-    }
-    
     private func updateView(with historyItem: EditHistoryItem) {
         // Text
         if historyItem.text != "" {
@@ -131,7 +125,8 @@ final class ChatViewMessageDetailsMessageHistoryTableViewCell: ThemedCodeTableVi
             dateLabel.text = dateLabelText
         }
         
-        updateColors()
+        messageLabel.textColor = historyItem.text != "" ? .label : .secondaryLabel
+        dateLabel.textColor = .secondaryLabel
     }
 }
 

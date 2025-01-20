@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -43,16 +43,19 @@ extension ChatViewMessageActions {
     }
     
     /// Creates an array of `UIAccessibilityCustomActions`
+    /// - Parameter reactionsManager: `ReactionsManager` that provides the actions for reactions
     /// - Returns: Array of `UIAccessibilityCustomAction`
-    func buildAccessibilityCustomActions() -> [UIAccessibilityCustomAction]? {
-        guard isUserInteractionEnabled else {
+    func buildAccessibilityCustomActions(reactionsManager: ReactionsManager?) -> [UIAccessibilityCustomAction]? {
+        guard isUserInteractionEnabled, let actionsSections = messageActionsSections() else {
             return nil
         }
         
-        guard let actionsSections = messageActionsSections() else {
-            return nil
+        var baseActions = actionsSections.flatMap(\.accessibilityActions)
+        
+        if let reactionsManager {
+            baseActions.append(contentsOf: reactionsManager.accessibilityActions())
         }
         
-        return actionsSections.flatMap(\.accessibilityActions)
+        return baseActions
     }
 }

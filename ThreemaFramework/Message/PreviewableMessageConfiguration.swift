@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2023 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -59,7 +59,7 @@ public struct PreviewableMessageConfiguration {
             scale: .small
         ),
         font: UIFont.preferredFont(forTextStyle: .caption1),
-        tintColor: { Colors.textLight },
+        tintColor: { UIColor.secondaryLabel },
         trimmingCount: 200
     )
     
@@ -69,7 +69,7 @@ public struct PreviewableMessageConfiguration {
             scale: .small
         ),
         font: UIFont.preferredFont(forTextStyle: .subheadline),
-        tintColor: { Colors.textLight },
+        tintColor: { UIColor.secondaryLabel },
         trimmingCount: 200,
         includeSender: true
     )
@@ -80,7 +80,7 @@ public struct PreviewableMessageConfiguration {
             scale: .small
         ),
         font: UIFont.preferredFont(forTextStyle: .subheadline),
-        tintColor: { Colors.textLight },
+        tintColor: { UIColor.secondaryLabel },
         trimmingCount: 200,
         includeSender: true
     )
@@ -91,7 +91,7 @@ public struct PreviewableMessageConfiguration {
             scale: .small
         ),
         font: UIFont.preferredFont(forTextStyle: .caption1),
-        tintColor: { Colors.textLight },
+        tintColor: { UIColor.secondaryLabel },
         trimmingCount: 100
     )
 }

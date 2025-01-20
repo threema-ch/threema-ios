@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -38,23 +38,28 @@ import UIKit
 ///                                         +-----^-----+
 ///                                               |
 ///                                               |
-///                +------------------------------+-------------------------------+
-///                |                              |                               |
-///                |                              |                               |
-///                |                              |                               |
-///  +-------------+-----------+          +-------+------+               +--------+-------+
-///  | chatBubbleBackgroundView|          |chatBubbleView|               |profilePictureView |
-///  +-------------------------+          +------^-------+               +----------------+
-///                                              |
-///                                              |
-///                                              |
-///                                              +-------------------------------+
-///                                              |                               |
-///                                              |                               |
-///                                              |                               |
-///                                        +-----+----+                      +---+----+
-///                                        | nameLabel|                      |rootView|
-///                                        +----------+                      +--------+
+///                             +-----------------+-----------------+
+///                             |                                   |
+///                             |                                   |
+///                     +--------------+                   +--------+---------+
+///                     |chatBubbleView|                   |profilePictureView|
+///                     +-------^------+                   +------------------+
+///                             |
+///                             |
+///                +------------+--------------------+
+///                |                                 |
+///                |                                 |
+///   +------------+-----------+          +----------+----------+
+///   |chatBubbleBackgroundView|          |chatBubbleContentView|
+///   +------------------------+          +----------^----------+
+///                                                  |
+///                                                  |
+///                                       +----------+----------+
+///                                       |                     |
+///                                       |                     |
+///                                  +----+----+            +---+----+
+///                                  |nameLabel|            |rootView|
+///                                  +---------+            +--------+
 ///
 class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
@@ -63,6 +68,51 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     /// Override this if you want to set a non-default distance constraint for the name label to the cell content
     var nameLabelBottomInset: Double {
         ChatViewConfiguration.GroupCells.nameLabelDefaultTopBottomInset
+    }
+    
+    /// Is the message sent by me?
+    var messageIsOwnMessage: Bool {
+        messageAndNeighbors.message?.isOwnMessage ?? false
+    }
+    
+    /// Is the message in a group chat?
+    var messageIsGroupMessage: Bool {
+        messageAndNeighbors.message?.isGroupMessage ?? false
+    }
+    
+    // Can we apply reactions to the message?
+    var messageSupportsReaction: Bool {
+        messageAndNeighbors.message?.supportsReaction ?? false
+    }
+    
+    // Should the context menu emoji picker should be shown for this message?
+    var showEmojiPickerContextMenu: Bool {
+        
+        // TODO: (IOS-5051) The first check must be removed when we fixed the ctx menu situation
+        return false
+        
+        // Can we even send emoji reactions?
+        guard UserSettings.shared().sendEmojiReactions else {
+            return false
+        }
+        
+        // Can reactions even be applied to the message?
+        guard messageSupportsReaction else {
+            return false
+        }
+        
+        // We do not allow sending emoji reactions to our own messages in chats where the recipient does not support
+        // them
+        let isGroup = messageAndNeighbors.message?.isGroupMessage ?? false
+        let remoteSupportNotSupported = reactionsManager?.recipientReactionSupport == ReactionsManager
+            .RecipientReactionSupport.none
+        
+        if !isGroup, remoteSupportNotSupported, messageIsOwnMessage {
+            return false
+        }
+        else {
+            return true
+        }
     }
     
     /// Suggestion if the cell should show date and state
@@ -81,10 +131,10 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     /// Override this if you want a non-default color background or no bubble at all.
     var bubbleBackgroundColor: UIColor {
         if let message = messageAndNeighbors.message, message.isOwnMessage {
-            Colors.chatBubbleSent
+            .chatBubbleSent
         }
         else {
-            Colors.chatBubbleReceived
+            .chatBubbleReceived
         }
     }
     
@@ -93,11 +143,18 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     /// Override this if you want a non-default selected background color or no bubble at all.
     var selectedBubbleBackgroundColor: UIColor {
         if let message = messageAndNeighbors.message, message.isOwnMessage {
-            Colors.chatBubbleSentSelected
+            .chatBubbleSentSelected
         }
         else {
-            Colors.chatBubbleReceivedSelected
+            .chatBubbleReceivedSelected
         }
+    }
+    
+    /// Selected size of the stack view the reactions are shown in
+    ///
+    /// Override this if you want a non-default stack size.
+    var reactionsStackViewSize: ChatViewBaseTableViewCellReactionsStackView.StackViewSize {
+        .full
     }
     
     /// Delegate used to handle cell delegates
@@ -109,18 +166,29 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         }
     }
     
+    /// Handles all reactions related functionality for the message the cell is displaying
+    lazy var reactionsManager: ReactionsManager? = {
+        guard let messageObjectID else {
+            return nil
+        }
+        return ReactionsManager(messageObjectID: messageObjectID, reactionsManagerDelegate: self)
+    }()
+    
     // MARK: Views and constraints
     
-    /// Contains the message view (added in root view) & the `nameLabel`. It is added to `contentView`.
-    private(set) lazy var chatBubbleView = {
-        let chatBubbleView = ChatBubbleView { [weak self] _ in
+    /// Contains the `chatBubbleContentView` and `chatBubbleBackgroundView`. It is added to `contentView`.
+    private(set) lazy var chatBubbleView = UIView()
+    
+    /// Contains the message view (added via root view) & the `nameLabel`. It is added to `chatBubbleContentView`.
+    private(set) lazy var chatBubbleContentView = {
+        let chatBubbleContentView = ChatBubbleContentView { [weak self] _ in
             // On changing the bounds or the frame of chatBubbleView, we need to layout ourselves as well
             // to propagate the changes to the chatBubbleBackgroundView
             // The new value for the bubble of chatBubbleBackgroundView will be set in `layoutSubviews`
             self?.setNeedsLayout()
         }
        
-        return chatBubbleView
+        return chatBubbleContentView
     }()
     
     var chatBubbleBorderPath: UIBezierPath {
@@ -131,7 +199,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     ///
     /// Set the `constant` to another value if you don't want the default spacing used in the chat view. This might be
     /// overridden again after updating the message or its neighbors.
-    private(set) lazy var bubbleTopSpacingConstraint = chatBubbleView.topAnchor.constraint(
+    private(set) lazy var contentTopSpacingConstraint = chatBubbleView.topAnchor.constraint(
         equalTo: contentView.topAnchor,
         constant: ChatViewConfiguration.ChatBubble.defaultTopBottomInset
     )
@@ -140,7 +208,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     ///
     /// Set the `constant` to another value if you don't want the default spacing used in the chat view. This might be
     /// overridden again after updating the message or its neighbors.
-    private(set) lazy var bubbleBottomSpacingConstraint = chatBubbleView.bottomAnchor.constraint(
+    private(set) lazy var contentBottomSpacingConstraint = chatBubbleView.bottomAnchor.constraint(
         equalTo: contentView.bottomAnchor,
         constant: -ChatViewConfiguration.ChatBubble.defaultTopBottomInset
     )
@@ -152,6 +220,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     fileprivate var messageAndNeighbors: (message: BaseMessage?, neighbors: ChatViewDataSource.MessageNeighbors?) {
         didSet {
             guard let message = messageAndNeighbors.message else {
+                reactionsManager = nil
                 return
             }
             
@@ -164,6 +233,16 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             else {
                 // We are most likely a new cell and don't animate our content configuration or update
                 chatBubbleBackgroundView.animate = false
+                
+                if let newMessage = messageAndNeighbors.message {
+                    reactionsManager = ReactionsManager(
+                        messageObjectID: newMessage.objectID,
+                        reactionsManagerDelegate: self
+                    )
+                }
+                else {
+                    reactionsManager = nil
+                }
             }
             
             if message.isOwnMessage {
@@ -173,9 +252,17 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             else {
                 setLayoutForOtherMessage()
             }
+            
+            if reactionsManager != nil, let reactions = message.reactions, !reactions.isEmpty {
+                showReactions()
+            }
+            else {
+                hideReactions()
+            }
 
             updateRetryAndCancelButton()
-            updateColors()
+            
+            chatBubbleBackgroundView.backgroundColor = bubbleBackgroundColor.resolvedColor(with: traitCollection)
             
             if debugColors, let neighbors = messageAndNeighbors.neighbors {
                 if neighbors.previousMessage == nil,
@@ -241,6 +328,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         
         return profilePictureView
     }()
+    
+    private(set) var reactionsView: ChatViewBaseTableViewCellReactionsStackView?
     
     // MARK: Constraints
     
@@ -321,13 +410,16 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         // TODO: (IOS-2014) Maybe use backgroundView from cell?
         
         // Add views
-        contentView.addSubview(chatBubbleBackgroundView)
-        chatBubbleBackgroundView.translatesAutoresizingMaskIntoConstraints = false
-        
         contentView.addSubview(chatBubbleView)
         chatBubbleView.translatesAutoresizingMaskIntoConstraints = false
+
+        chatBubbleView.addSubview(chatBubbleBackgroundView)
+        chatBubbleBackgroundView.translatesAutoresizingMaskIntoConstraints = false
         
-        chatBubbleView.addSubview(nameLabel)
+        chatBubbleView.addSubview(chatBubbleContentView)
+        chatBubbleContentView.translatesAutoresizingMaskIntoConstraints = false
+        
+        chatBubbleContentView.addSubview(nameLabel)
         nameLabel.translatesAutoresizingMaskIntoConstraints = false
         // By default the name is hidden
         nameLabel.isHidden = true
@@ -344,20 +436,26 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         
         // TODO: (IOS-2943 & IOS-2489) Set correct layout guides for content view and test on iPad
         NSLayoutConstraint.activate([
-            // Leading or trailing constraint for `chatBubbleView` is set by setLayoutFor... below
-            bubbleTopSpacingConstraint,
-            bubbleBottomSpacingConstraint,
+            // Leading or trailing constraint for `chatBubbleContentView` is set by setLayoutFor... below
+            contentTopSpacingConstraint,
+            contentBottomSpacingConstraint,
             
-            chatBubbleView.widthAnchor.constraint(
+            chatBubbleContentView.widthAnchor.constraint(
                 lessThanOrEqualTo: contentView.readableContentGuide.widthAnchor,
                 multiplier: bubbleWidthRatio
             ),
             
-            // Add background of `chatBubbleView` to `contentView`
-            chatBubbleBackgroundView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            chatBubbleBackgroundView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            chatBubbleBackgroundView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            chatBubbleBackgroundView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            // Add `chatBubbleContentView` to `chatBubbleView`
+            chatBubbleContentView.topAnchor.constraint(equalTo: chatBubbleView.topAnchor),
+            chatBubbleContentView.leadingAnchor.constraint(equalTo: chatBubbleView.leadingAnchor),
+            chatBubbleContentView.bottomAnchor.constraint(equalTo: chatBubbleView.bottomAnchor),
+            chatBubbleContentView.trailingAnchor.constraint(equalTo: chatBubbleView.trailingAnchor),
+           
+            // Add `chatBubbleBackgroundView` to `chatBubbleView`
+            chatBubbleBackgroundView.topAnchor.constraint(equalTo: chatBubbleView.topAnchor),
+            chatBubbleBackgroundView.leadingAnchor.constraint(equalTo: chatBubbleView.leadingAnchor),
+            chatBubbleBackgroundView.bottomAnchor.constraint(equalTo: chatBubbleView.bottomAnchor),
+            chatBubbleBackgroundView.trailingAnchor.constraint(equalTo: chatBubbleView.trailingAnchor),
         ])
         
         NSLayoutConstraint.activate(profilePictureViewConstraints)
@@ -370,7 +468,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         
         // This will animate depending on whether the message that was set in `messageAndNeighbors`
         // has changed.
-        chatBubbleBackgroundView.bubbleFrame = chatBubbleView.frame
+        chatBubbleBackgroundView.bubbleFrame = chatBubbleContentView.frame
     }
     
     // MARK: - For child classes
@@ -382,28 +480,28 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     ///
     /// - Parameter rootView: Root view which will contain all content in it and it's subviews
     func addContent(rootView: UIView) {
-        // This needs to be a subview of the `chatBubbleView` view instead of the `cell`
+        // This needs to be a subview of the `chatBubbleContentView` view instead of the `cell`
         // otherwise the bubble is drawn over this view and its subviews.
-        chatBubbleView.addSubview(rootView)
+        chatBubbleContentView.addSubview(rootView)
         rootView.translatesAutoresizingMaskIntoConstraints = false
         
-        // Use `chatBubbleView` to get same margins as background bubble
+        // Use `chatBubbleContentView` to get same margins as background bubble
         NSLayoutConstraint.activate([
             // Top constraints depends on name constraint
-            rootView.layoutMarginsGuide.leadingAnchor.constraint(equalTo: chatBubbleView.leadingAnchor),
-            rootView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: chatBubbleView.bottomAnchor),
-            rootView.layoutMarginsGuide.trailingAnchor.constraint(equalTo: chatBubbleView.trailingAnchor),
+            rootView.layoutMarginsGuide.leadingAnchor.constraint(equalTo: chatBubbleContentView.leadingAnchor),
+            rootView.layoutMarginsGuide.bottomAnchor.constraint(equalTo: chatBubbleContentView.bottomAnchor),
+            rootView.layoutMarginsGuide.trailingAnchor.constraint(equalTo: chatBubbleContentView.trailingAnchor),
         ])
         
         // Configure name constraints
         
         nameConstraints = [
             nameLabel.topAnchor.constraint(
-                equalTo: chatBubbleView.topAnchor,
+                equalTo: chatBubbleContentView.topAnchor,
                 constant: ChatViewConfiguration.Content.defaultTopBottomInset
             ),
             nameLabel.leadingAnchor.constraint(
-                equalTo: chatBubbleView.leadingAnchor,
+                equalTo: chatBubbleContentView.leadingAnchor,
                 constant: ChatViewConfiguration.Content.defaultLeadingTrailingInset
             ),
             nameLabel.bottomAnchor.constraint(
@@ -411,13 +509,13 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
                 constant: -nameLabelBottomInset
             ),
             nameLabel.trailingAnchor.constraint(
-                equalTo: chatBubbleView.trailingAnchor,
+                equalTo: chatBubbleContentView.trailingAnchor,
                 constant: -ChatViewConfiguration.Content.defaultLeadingTrailingInset
             ),
         ]
         
         noNameConstraints = [
-            rootView.layoutMarginsGuide.topAnchor.constraint(equalTo: chatBubbleView.topAnchor),
+            rootView.layoutMarginsGuide.topAnchor.constraint(equalTo: chatBubbleContentView.topAnchor),
         ]
         
         NSLayoutConstraint.activate(noNameConstraints)
@@ -446,9 +544,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     override func updateColors() {
         super.updateColors()
         
-        chatBubbleBackgroundView.backgroundColor = bubbleBackgroundColor
         updateNameLabelColor()
-        swipeHandler?.updateColors()
+        reactionsView?.updateColors()
     }
     
     private func updateNameLabelColor() {
@@ -498,11 +595,15 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             delay: .zero,
             options: .curveEaseInOut
         ) { [weak self] in
+            guard let self else {
+                return
+            }
             if highlight {
-                self?.chatBubbleBackgroundView.backgroundColor = self?.selectedBubbleBackgroundColor
+                chatBubbleBackgroundView.backgroundColor = selectedBubbleBackgroundColor
+                    .resolvedColor(with: traitCollection)
             }
             else {
-                self?.chatBubbleBackgroundView.backgroundColor = self?.bubbleBackgroundColor
+                chatBubbleBackgroundView.backgroundColor = bubbleBackgroundColor.resolvedColor(with: traitCollection)
             }
         }
     }
@@ -619,23 +720,23 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         // Top insets: Add everything needed expect in certain cases
         if shouldUseDefaultTopInset {
             if isGroup {
-                bubbleTopSpacingConstraint.constant = ChatViewConfiguration.ChatBubble.defaultGroupTopBottomInset
+                contentTopSpacingConstraint.constant = ChatViewConfiguration.ChatBubble.defaultGroupTopBottomInset
             }
             else {
-                bubbleTopSpacingConstraint.constant = ChatViewConfiguration.ChatBubble.defaultTopBottomInset
+                contentTopSpacingConstraint.constant = ChatViewConfiguration.ChatBubble.defaultTopBottomInset
             }
         }
         else if shouldGroupWithPreviousMessage {
-            bubbleTopSpacingConstraint.constant = ChatViewConfiguration.ChatBubble.groupedTopBottomInset
+            contentTopSpacingConstraint.constant = ChatViewConfiguration.ChatBubble.groupedTopBottomInset
         }
         else {
             if isGroup {
-                bubbleTopSpacingConstraint.constant = (2 * ChatViewConfiguration.ChatBubble.defaultGroupTopBottomInset)
+                contentTopSpacingConstraint.constant = (2 * ChatViewConfiguration.ChatBubble.defaultGroupTopBottomInset)
                     // Remove the minimal bottom inset
                     - ChatViewConfiguration.ChatBubble.groupedTopBottomInset
             }
             else {
-                bubbleTopSpacingConstraint.constant = (2 * ChatViewConfiguration.ChatBubble.defaultTopBottomInset)
+                contentTopSpacingConstraint.constant = (2 * ChatViewConfiguration.ChatBubble.defaultTopBottomInset)
                     // Remove the minimal bottom inset
                     - ChatViewConfiguration.ChatBubble.groupedTopBottomInset
             }
@@ -645,14 +746,14 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         // inset should be used
         if shouldUseDefaultBottomInset {
             if isGroup {
-                bubbleBottomSpacingConstraint.constant = -ChatViewConfiguration.ChatBubble.defaultGroupTopBottomInset
+                contentBottomSpacingConstraint.constant = -ChatViewConfiguration.ChatBubble.defaultGroupTopBottomInset
             }
             else {
-                bubbleBottomSpacingConstraint.constant = -ChatViewConfiguration.ChatBubble.defaultTopBottomInset
+                contentBottomSpacingConstraint.constant = -ChatViewConfiguration.ChatBubble.defaultTopBottomInset
             }
         }
         else {
-            bubbleBottomSpacingConstraint.constant = -ChatViewConfiguration.ChatBubble.groupedTopBottomInset
+            contentBottomSpacingConstraint.constant = -ChatViewConfiguration.ChatBubble.groupedTopBottomInset
         }
         
         // Date and state
@@ -741,6 +842,76 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             return
         }
         profilePictureView.info = .contact(Contact(contactEntity: sender))
+    }
+    
+    // MARK: - Reactions
+    
+    private func showReactions() {
+
+        guard let reactionsManager else {
+            assertionFailure()
+            hideReactions()
+            return
+        }
+        
+        // Do we already show the correct view? If so, return.
+        guard reactionsManager.messageObjectID != reactionsView?.reactionsManager.messageObjectID else {
+            return
+        }
+        
+        if reactionsView != nil {
+            hideReactions()
+        }
+        
+        UIView.performWithoutAnimation {
+            let reactionsView = ChatViewBaseTableViewCellReactionsStackView(
+                reactionsManager: reactionsManager,
+                size: reactionsStackViewSize
+            )
+            self.reactionsView = reactionsView
+        
+            reactionsView.translatesAutoresizingMaskIntoConstraints = false
+        
+            contentView.addSubview(reactionsView)
+            
+            NSLayoutConstraint.deactivate([
+                contentBottomSpacingConstraint,
+            ])
+            
+            contentBottomSpacingConstraint = reactionsView.bottomAnchor.constraint(
+                equalTo: contentView.bottomAnchor,
+                constant: -ChatViewConfiguration.ChatBubble.defaultTopBottomInset
+            )
+            
+            NSLayoutConstraint.activate([
+                reactionsView.topAnchor.constraint(
+                    equalTo: chatBubbleView.bottomAnchor,
+                    constant: -ChatViewConfiguration.ChatBubble.reactionBottomInset
+                ),
+                reactionsView.trailingAnchor.constraint(equalTo: chatBubbleView.trailingAnchor, constant: -2),
+                reactionsView.leadingAnchor.constraint(greaterThanOrEqualTo: chatBubbleView.leadingAnchor, constant: 2),
+                contentBottomSpacingConstraint,
+            ])
+            
+            layoutIfNeeded()
+        }
+    }
+    
+    private func hideReactions() {
+        NSLayoutConstraint.deactivate([
+            contentBottomSpacingConstraint,
+        ])
+        
+        reactionsView?.removeFromSuperview()
+        reactionsView = nil
+        contentBottomSpacingConstraint = chatBubbleView.bottomAnchor.constraint(
+            equalTo: contentView.bottomAnchor,
+            constant: -ChatViewConfiguration.ChatBubble.defaultTopBottomInset
+        )
+        
+        NSLayoutConstraint.activate([
+            contentBottomSpacingConstraint,
+        ])
     }
     
     // MARK: - Actions
@@ -842,12 +1013,6 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         
         // Is the state not .failed?
         guard message.messageDisplayState != .failed else {
-            return false
-        }
-        
-        // Has reactions?
-        if (message.messageDisplayState == .userAcknowledged || message.messageDisplayState == .userDeclined) ||
-            (message.isGroupMessage && message.messageGroupReactionState != .none) {
             return false
         }
         
@@ -971,6 +1136,22 @@ extension ChatViewBaseTableViewCell: ChatViewTableViewCellHorizontalSwipeHandler
     }
 }
 
+// MARK: - ReactionsManagerProtocol
+
+extension ChatViewBaseTableViewCell: ReactionsManagerProtocol {
+    func dismissContextMenu(showEmojiPicker: Bool, for reactionsManager: ReactionsManager) {
+        chatViewTableViewCellDelegate?.dismissContextMenu(showEmojiPicker: showEmojiPicker, for: reactionsManager)
+    }
+    
+    func showReactionAlert(for result: ReactionsManager.ReactionSendingResult) {
+        chatViewTableViewCellDelegate?.showReactionAlert(for: result)
+    }
+    
+    func showExistingReactions(reactionsManager: ReactionsManager) {
+        chatViewTableViewCellDelegate?.showExistingReactions(reactionsManager: reactionsManager)
+    }
+}
+
 // MARK: - Accessibility
 
 extension ChatViewBaseTableViewCell {
@@ -995,11 +1176,13 @@ extension ChatViewBaseTableViewCell {
                     "\(#localize("in_reply_to")) \(quoteMessage.accessibilitySenderAndMessageTypeText) \(quoteMessage.previewText)."
             }
 
-            let editedMessage = message.lastEditedAt != nil ? BundleUtil
-                .localizedString(forKey: "edited_message_state") : ""
+            let editedMessage = message.lastEditedAt != nil ? #localize("edited_message_state") : ""
 
+            let reactionsSummary = reactionsManager?.existingReactionsSummary() ?? ""
+            
             let labelText =
-                "\(message.accessibilitySenderAndMessageTypeText) \(status) \(message.customAccessibilityLabel) \(quote) \(editedMessage) \(message.accessibilityDateAndState)"
+                "\(message.accessibilitySenderAndMessageTypeText) \(status) \(message.customAccessibilityLabel) \(quote) \(editedMessage). \(reactionsSummary). \(message.accessibilityDateAndState)."
+            
             return labelText
         }
         
@@ -1058,6 +1241,16 @@ extension ChatViewBaseTableViewCell {
         chatViewTableViewCellDelegate?.didTap(message: message, in: self)
         chatViewTableViewCellDelegate?.didAccessibilityTapOnCell()
         return true
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
+            return
+        }
+        
+        highlightCompleteCell(isSelected)
     }
 }
 

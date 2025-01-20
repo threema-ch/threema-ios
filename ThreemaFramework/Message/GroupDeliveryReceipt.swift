@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2023 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -34,8 +34,8 @@ import Foundation
         case unknown = 0
         case received = 1
         case read = 2
-        case acknowledged = 3
-        case declined = 4
+        case acknowledged = 3 // Unused, do not remove to not mess up values in core data
+        case declined = 4 // Same as above
         case consumed = 5
     }
     
@@ -54,26 +54,6 @@ import Foundation
             return .unknown
         }
         return type
-    }
-    
-    public func icon() -> UIImage {
-        let deliveryReceiptType = DeliveryReceiptType(rawValue: deliveryReceiptTypeValue)
-        switch deliveryReceiptType {
-        case .acknowledged:
-            return UIImage(
-                systemName: identity == MyIdentityStore.shared()
-                    .identity ? "hand.thumbsup.fill" : "hand.thumbsup"
-            )!
-                .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
-        case .declined:
-            return UIImage(
-                systemName: identity == MyIdentityStore.shared()
-                    .identity ? "hand.thumbsdown.fill" : "hand.thumbsdown"
-            )!
-                .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
-        default:
-            return UIImage()
-        }
     }
     
     // MARK: NSSecureCoding

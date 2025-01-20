@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2024 Threema GmbH
+// Copyright (c) 2014-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -135,23 +135,19 @@
 
 - (void)refresh {
     [super refresh];
-    
-    [self updateColors];
 }
 
-- (void)updateColors {
-    self.view.backgroundColor = Colors.backgroundGroupedViewController;
-    _buttonView.backgroundColor = Colors.backgroundGroupedViewController;
+- (void)setupColors {
+    self.view.backgroundColor = UIColor.systemGroupedBackgroundColor;
+    _buttonView.backgroundColor = UIColor.systemGroupedBackgroundColor;
     
-    _hairlineTop.backgroundColor = Colors.textLight;
+    _hairlineTop.backgroundColor = UIColor.separatorColor;
     _hairlineTop.frame = [RectUtil setHeightOf:_hairlineTop.frame height:0.5];
 
-    _headerView.backgroundColor = Colors.backgroundHeaderView;
+    _headerView.backgroundColor = UIColor.systemBackgroundColor;
     
     self.titleTextView.backgroundColor = [UIColor clearColor];
-    self.titleTextView.placeholderTextColor = Colors.textVeryLight;
-    
-    [Colors updateKeyboardAppearanceFor:_titleTextView];
+    self.titleTextView.placeholderTextColor = UIColor.placeholderTextColor;
 }
 
 - (void)setOnlyEditing {
@@ -166,7 +162,7 @@
     
     [super viewWillAppear:animated];
     
-    [self updateColors];
+    [self setupColors];
 }
 
 - (void)updateUIStrings {
@@ -428,11 +424,6 @@
 }
 
 #pragma mark - table view data source / delegate
-
-- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-    
-    [Colors updateWithCell:cell setBackgroundColor:true];
-}
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     if (_indexPathForPicker && indexPath.section == _indexPathForPicker.section && indexPath.row == _indexPathForPicker.row) {

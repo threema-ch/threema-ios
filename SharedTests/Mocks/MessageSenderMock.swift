@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -91,28 +91,20 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         sendDeliveryReceiptCalls.append(abstractMessage)
         return Promise()
     }
-
+    
+    func sendReaction(
+        to objectID: NSManagedObjectID,
+        reaction: ThreemaFramework.EmojiVariant
+    ) async throws -> ThreemaFramework.ReactionsManager
+        .ReactionSendingResult {
+        .success
+    }
+    
     func sendReadReceipt(for messages: [BaseMessage], toIdentity: ThreemaEssentials.ThreemaIdentity) async {
         // no-op
     }
 
     func sendReadReceipt(for messages: [BaseMessage], toGroupIdentity: ThreemaEssentials.GroupIdentity) async {
-        // no-op
-    }
-
-    func sendUserAck(for message: BaseMessage, toIdentity: ThreemaEssentials.ThreemaIdentity) async {
-        // no-op
-    }
-
-    func sendUserAck(for message: BaseMessage, toGroup: ThreemaFramework.Group) async {
-        // no-op
-    }
-
-    func sendUserDecline(for message: BaseMessage, toIdentity: ThreemaEssentials.ThreemaIdentity) async {
-        // no-op
-    }
-
-    func sendUserDecline(for message: BaseMessage, toGroup: ThreemaFramework.Group) async {
         // no-op
     }
 

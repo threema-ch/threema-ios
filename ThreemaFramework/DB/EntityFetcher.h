@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2023 Threema GmbH
+// Copyright (c) 2014-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -24,7 +24,7 @@
 #import <ThreemaFramework/AbstractGroupMessage.h>
 #import <ThreemaFramework/MyIdentityStore.h>
 
-@class ConversationEntity, DistributionListEntity, GroupCallEntity, NonceEntity, GroupEntity, LastGroupSyncRequestEntity, WebClientSessionEntity;
+@class ConversationEntity, DistributionListEntity, GroupCallEntity, NonceEntity, GroupEntity, LastGroupSyncRequestEntity, WebClientSessionEntity,MessageReactionEntity;
 
 typedef enum : NSUInteger {
     ContactsAll,
@@ -185,6 +185,12 @@ typedef enum : NSUInteger {
 
 - (nullable DistributionListEntity *) distributionListEntityForDistributionListID:(nonnull NSNumber *)distributionListID;
 
+- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessage *)message creator:(nullable ContactEntity *)creator;
+
+- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessage *)message;
+
+- (nullable MessageReactionEntity *) messageReactionEntityForMessageID:(nonnull NSData *)messageID creator:(nullable ContactEntity *)creator reaction:(nullable NSString *)reaction;
+
 - (LastGroupSyncRequestEntity *)lastGroupSyncRequestFor:(NSData *)groupId groupCreator:(NSString *)groupCreator sinceDate:(NSDate *)sinceDate;
 
 - (NSFetchRequest *)fetchRequestForEntity:(NSString *)entityName;
@@ -205,6 +211,8 @@ typedef enum : NSUInteger {
 - (NSInteger)countBallotsForConversationEntity:(ConversationEntity *)conversation;
 
 - (NSInteger)countOpenBallotsForConversationEntity:(ConversationEntity *)conversation;
+
+- (NSArray *)textMessagesForConversationEntity:(ConversationEntity *)conversation;
 
 - (NSArray *)imageMessagesForConversationEntity:(ConversationEntity *)conversation;
 

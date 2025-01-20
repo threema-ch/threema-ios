@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -65,7 +65,8 @@ class AppMigrationTests: XCTestCase {
         setupDataForMigrationVersion5_9_2()
         setupDataForMigrationVersion6_2()
         setupDataForMigrationVersion6_2_1()
-
+        try setupDataForMigrationVersion6_6()
+        
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
         DatabaseManager.db().doMigrateDB()
@@ -129,11 +130,16 @@ class AppMigrationTests: XCTestCase {
             ddLoggerMock
                 .exists(message: "[AppMigration] Files migration to version 6.3 successfully finished")
         )
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 6.6 started"))
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(message: "[AppMigration] App migration to version 6.6 successfully finished")
+        )
 
         let entityManager = EntityManager(databaseContext: dbMainCnx)
         let conversations: [ConversationEntity] = entityManager.entityFetcher
             .allConversations() as! [ConversationEntity]
-        XCTAssertEqual(conversations.count, 5)
+        XCTAssertEqual(conversations.count, 7)
 
         // Checks for 4.8 migration
         for conversation in ["SENDER01", "SENDER02"]
@@ -229,6 +235,55 @@ class AppMigrationTests: XCTestCase {
             isDirectory: false
         )
         XCTAssertTrue(FileUtility.shared.isExists(fileURL: taskQueuePath))
+        
+        // Checks for 6.6 migration
+        // Ack/Dec
+        let reactionConversation = entityManager.entityFetcher.conversationEntity(forIdentity: "REACTION")
+        let reactionConversationMessages = try XCTUnwrap(
+            entityManager.entityFetcher
+                .textMessages(for: reactionConversation) as? [TextMessageEntity]
+        )
+        
+        XCTAssertEqual(reactionConversationMessages.count, 2)
+        for message in reactionConversationMessages {
+            XCTAssertNil(message.userackDate)
+            
+            if message.isOwnMessage {
+                let reaction = try XCTUnwrap(message.reactions?.first)
+                XCTAssertNotNil(reaction.creator)
+                XCTAssertEqual(reaction.reaction, "👎")
+            }
+            else {
+                let reaction = try XCTUnwrap(message.reactions?.first)
+                XCTAssertNil(reaction.creator)
+                XCTAssertEqual(reaction.reaction, "👍")
+            }
+        }
+        
+        // Group reactions
+        let reactionContact = entityManager.entityFetcher.contact(for: "REACTION")
+        let reactionGroup = entityManager.entityFetcher.groupConversations(for: reactionContact)
+            .first as? ConversationEntity
+        let reactionGroupMessage = try XCTUnwrap(
+            (
+                entityManager.entityFetcher
+                    .textMessages(for: reactionGroup) as? [TextMessageEntity]
+            )?.first
+        )
+        
+        XCTAssertEqual(reactionGroupMessage.groupDeliveryReceipts.count, 0)
+        
+        let reactions = try XCTUnwrap(reactionGroupMessage.reactions)
+        for reaction in reactions {
+            if reaction.creator == nil {
+                XCTAssertNil(reaction.creator)
+                XCTAssertEqual(reaction.reaction, "👎")
+            }
+            else {
+                XCTAssertNotNil(reaction.creator)
+                XCTAssertEqual(reaction.reaction, "👍")
+            }
+        }
     }
 
     private func setupDataForMigrationVersion4_8() {
@@ -517,6 +572,68 @@ class AppMigrationTests: XCTestCase {
         )
         if !FileUtility.shared.isExists(fileURL: taskQueuePath) {
             _ = FileUtility.shared.write(fileURL: taskQueuePath, text: "Test")
+        }
+    }
+    
+    private func setupDataForMigrationVersion6_6() throws {
+        let contact = dbPreparer.save {
+            dbPreparer.createContact(
+                publicKey: MockData.generatePublicKey(),
+                identity: "REACTION",
+                verificationLevel: 0
+            )
+        }
+
+        try dbPreparer.save {
+            // Ack/Dec
+            let conversation = dbPreparer
+                .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
+                    conversation.contact = contact
+                }
+            dbPreparer.createTextMessage(
+                conversation: conversation,
+                isOwn: false,
+                userackDate: Date.now,
+                userack: true,
+                sender: contact,
+                remoteSentDate: Date.now
+            )
+            dbPreparer.createTextMessage(
+                conversation: conversation,
+                isOwn: true,
+                userackDate: Date.now,
+                userack: false,
+                sender: nil,
+                remoteSentDate: nil
+            )
+            
+            // Group reactions
+            let groupID = MockData.generateGroupID()
+            let (_, _, groupConversation) = try dbPreparer.createGroup(
+                groupID: groupID,
+                groupCreatorIdentity: "REACTION",
+                members: ["REACTION"]
+            )
+
+            let groupTextMessage = dbPreparer.createTextMessage(
+                conversation: groupConversation,
+                isOwn: false,
+                sender: contact,
+                remoteSentDate: Date.now
+            )
+
+            groupTextMessage.groupDeliveryReceipts = [
+                GroupDeliveryReceipt(
+                    identity: "REACTION",
+                    deliveryReceiptType: .acknowledged,
+                    date: .now
+                ),
+                GroupDeliveryReceipt(
+                    identity: myIdentityStoreMock.identity,
+                    deliveryReceiptType: .declined,
+                    date: .now
+                ),
+            ]
         }
     }
 }

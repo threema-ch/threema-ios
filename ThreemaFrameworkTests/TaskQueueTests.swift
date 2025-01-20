@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -1601,7 +1601,20 @@ class TaskQueueTests: XCTestCase {
         }
         try! tq.enqueue(task: taskNewDeviceSync, completionHandler: nil)
         
-        let expectedItemCount = 20
+        // Add TaskDefinitionSendReactionMessage
+        var expectedReaction = CspE2e_Reaction()
+        expectedReaction.messageID = try MockData.generateMessageID().littleEndian()
+        expectedReaction.action = .apply(Data("✌🏻".utf8))
+        let expectedReactionReceiver = "ECHOECHO"
+        
+        let taskReactionMessage = TaskDefinitionSendReactionMessage(
+            reaction: expectedReaction,
+            receiverIdentity: expectedReactionReceiver
+        )
+
+        try! tq.enqueue(task: taskReactionMessage, completionHandler: nil)
+        
+        let expectedItemCount = 21
         guard tq.list.count == expectedItemCount else {
             XCTFail("TaskList has wrong number of items. Expected \(expectedItemCount) but was \(tq.list.count)")
             return
@@ -1681,7 +1694,7 @@ class TaskQueueTests: XCTestCase {
         tq.decode(data)
 
         // Check persistent tasks
-        let expectedItemCountAfterDecode = 15
+        let expectedItemCountAfterDecode = 16
         guard tq.list.count == expectedItemCountAfterDecode else {
             XCTFail(
                 "TaskList has wrong number of items. Expected \(expectedItemCountAfterDecode) but was \(tq.list.count)"
@@ -1902,6 +1915,16 @@ class TaskQueueTests: XCTestCase {
         if let task = tq.list[14].taskDefinition as? TaskDefinitionRunForwardSecurityRefreshSteps {
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(task.contactIdentities, expectedToMembers.map { ThreemaIdentity($0) })
+            XCTAssertTrue(task.retry)
+        }
+        else {
+            XCTFail()
+        }
+        
+        if let task = tq.list[15].taskDefinition as? TaskDefinitionSendReactionMessage {
+            XCTAssertEqual(.interrupted, task.state)
+            XCTAssertEqual(task.reaction.messageID, expectedReaction.messageID)
+            XCTAssertEqual(task.reaction.action, expectedReaction.action)
             XCTAssertTrue(task.retry)
         }
         else {

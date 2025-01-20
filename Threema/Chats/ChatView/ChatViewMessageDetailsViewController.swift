@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -34,11 +34,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         
         // TODO: IOS-2788
         case error
-        
-        case reaction
-        case groupAcknowledgements(_ count: Int)
-        case groupDeclines(_ count: Int)
-        
+                
         case editHistory
         
         case fileMetadata
@@ -58,8 +54,6 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         
         case deletedMessage
         case editedMessage
-
-        case groupReaction(_ groupDeliveryReceipt: GroupDeliveryReceipt)
         
         // Warning: `EditHistoryItem` should not be stored directly inside the snapshot, but rather outside. As this is
         // only an issue when the details are shown during an edit update we leave it as is. (See `Hashable`
@@ -109,13 +103,13 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                 // Deactivate because we don't assign a delegate for the context menu and things like quote would be
                 // hard to implement
                 cell.isUserInteractionEnabled = false
-                cell.backgroundColor = Colors.backgroundTableViewCell
+                cell.backgroundColor = .secondarySystemGroupedBackground
                 
                 // A bit hacky: Adjust spacing
                 if let chatViewBaseTableViewCell = cell as? ChatViewBaseTableViewCell {
-                    chatViewBaseTableViewCell.bubbleTopSpacingConstraint.constant = ChatViewConfiguration
+                    chatViewBaseTableViewCell.contentTopSpacingConstraint.constant = ChatViewConfiguration
                         .ChatBubble.defaultGroupTopBottomInset
-                    chatViewBaseTableViewCell.bubbleBottomSpacingConstraint.constant = -ChatViewConfiguration
+                    chatViewBaseTableViewCell.contentBottomSpacingConstraint.constant = -ChatViewConfiguration
                         .ChatBubble.defaultGroupTopBottomInset
                 }
                 
@@ -136,7 +130,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                     at: indexPath,
                     text: #localize("message_display_status_deleted_message"),
                     secondaryText: DateFormatter.shortStyleDateTime(message.deletedAt),
-                    image: UIImage(systemName: "trash")?.withTintColor(Colors.text, renderingMode: .alwaysOriginal)
+                    image: UIImage(systemName: "trash")?.withTintColor(.label, renderingMode: .alwaysOriginal)
                 )
 
             case .editedMessage:
@@ -146,7 +140,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                     text: #localize("message_display_status_edited_message"),
                     secondaryText: DateFormatter.shortStyleDateTime(message.lastEditedAt),
                     image: UIImage(resource: .threemaPencilBubbleLeft)
-                        .withTintColor(Colors.text, renderingMode: .alwaysOriginal)
+                        .withTintColor(.label, renderingMode: .alwaysOriginal)
                 )
 
             case .consumed:
@@ -166,11 +160,6 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
                     secondaryText: secondaryText,
                     image: image
                 )
-                                
-            case let .groupReaction(groupDeliveryReceipt):
-                let cell: ChatViewMessageDetailsGroupReactionTableViewCell = tableView.dequeueCell(for: indexPath)
-                cell.groupDeliveryReceipt = groupDeliveryReceipt
-                return cell
                 
             case .fileSize:
                 var secondaryText: String?
@@ -229,16 +218,6 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
             }
             
             return switch section {
-            case let .groupAcknowledgements(count):
-                String.localizedStringWithFormat(
-                    #localize("detailView_group_acknowledged"),
-                    count
-                )
-            case let .groupDeclines(count):
-                String.localizedStringWithFormat(
-                    #localize("detailView_group_declined"),
-                    count
-                )
             case .editHistory:
                 if let entries = message?.historyEntries, !entries.isEmpty {
                     #localize("detailView_edit_history_header")
@@ -300,7 +279,6 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
             UITableViewCell.self,
             forCellReuseIdentifier: ChatViewMessageDetailsViewController.contentConfigurationCellIdentifier
         )
-        tableView.registerCell(ChatViewMessageDetailsGroupReactionTableViewCell.self)
         tableView.registerCell(ChatViewMessageDetailsMessageHistoryTableViewCell.self)
         tableView.registerCell(DebugInfoTableViewCell.self)
                 
@@ -330,13 +308,6 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         
         observeMessage(\.lastEditedAt) { [weak self] in
             self?.updateSnapshot(reconfigure: [])
-        }
-        
-        observeMessage(\.userackDate) { [weak self] in
-            self?.updateSnapshot(reconfigure: [
-                .messageDisplayState(.userAcknowledged),
-                .messageDisplayState(.userDeclined),
-            ])
         }
         
         observeMessage(\.groupDeliveryReceipts) { [weak self] in
@@ -482,26 +453,6 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
 //            snapshot.appendSections([.errors])
 //            snapshot.appendItems([.messageDisplayState(.failed)])
 //        }
-        
-        // We do not show reactions for deleted messages
-        if message.deletedAt == nil {
-            if messageDisplayState == .userAcknowledged || messageDisplayState == .userDeclined {
-                snapshot.appendSections([.reaction])
-                snapshot.appendItems([.messageDisplayState(messageDisplayState)])
-            }
-            
-            let groupAcknowledgements = message.groupReactions(for: .acknowledged)
-            if !groupAcknowledgements.isEmpty {
-                snapshot.appendSections([.groupAcknowledgements(groupAcknowledgements.count)])
-                snapshot.appendItems(groupAcknowledgements.map { .groupReaction($0) })
-            }
-            
-            let groupDeclines = message.groupReactions(for: .declined)
-            if !groupDeclines.isEmpty {
-                snapshot.appendSections([.groupDeclines(groupDeclines.count)])
-                snapshot.appendItems(groupDeclines.map { .groupReaction($0) })
-            }
-        }
         
         /// Note: Ideally we would use an approach where we can reconfigure the cells for the history, by storing the
         /// information not inside the snapshot. (See `Hashable` implementation of `EditHistoryItem` for details.)

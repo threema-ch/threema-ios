@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -123,6 +123,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
         let label = UILabel()
         
         label.font = .preferredFont(forTextStyle: .footnote)
+        label.textColor = .secondaryLabel
         
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
@@ -134,6 +135,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
         
         label.textAlignment = .right
         label.font = .preferredFont(forTextStyle: .footnote)
+        label.textColor = .secondaryLabel
         
         label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         
@@ -242,13 +244,6 @@ public final class ContactCell: ThemedCodeTableViewCell {
             identityLabel.widthAnchor.constraint(lessThanOrEqualTo: secondLineStack.widthAnchor, multiplier: 0.6),
             identityLabel.widthAnchor.constraint(greaterThanOrEqualTo: secondLineStack.widthAnchor, multiplier: 0.2),
         ])
-    }
-    
-    override public func updateColors() {
-        super.updateColors()
-
-        Colors.setTextColor(Colors.textLight, label: metadataLabel)
-        Colors.setTextColor(Colors.textLight, label: identityLabel)
     }
     
     // MARK: - Reuse configuration

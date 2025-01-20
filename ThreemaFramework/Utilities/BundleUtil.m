@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2015-2023 Threema GmbH
+// Copyright (c) 2015-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -57,17 +57,6 @@
 
 + (NSString *)threemaAppIdentifier {
     return [[BundleUtil mainBundle] objectForInfoDictionaryKey:@"ThreemaAppIdentifier"];
-}
-
-
-+ (NSString *)threemaVersionSuffix {
-    return [[BundleUtil mainBundle] objectForInfoDictionaryKey:@"ThreemaVersionSuffix"];
-}
-
-+ (BOOL)threemaWorkVersion {
-    NSAssert([[BundleUtil mainBundle] objectForInfoDictionaryKey:@"ThreemaWorkVersion"] != nil, @"Bundle ThreemaWorkVersion not set");
-    NSNumber *threemaWorkVersion = [[BundleUtil mainBundle] objectForInfoDictionaryKey:@"ThreemaWorkVersion"];
-    return [threemaWorkVersion isEqual:@(NO)] ? NO : YES;
 }
 
 + (id)objectForInfoDictionaryKey:(NSString *)key {

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2023 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -30,7 +30,11 @@
     
     _contact = contact;
     
-    [self updateColor];
+    if (_contact.isActive || _contact == nil) {
+        self.textColor = UIColor.labelColor;
+    } else {
+        self.textColor = UIColor.secondaryLabelColor;
+    }
     
     if (contact == nil) {
         self.text = [BundleUtil localizedStringForKey:@"me"];
@@ -113,14 +117,6 @@
 
 - (BOOL)isBlacklisted {
     return [[UserSettings sharedUserSettings].blacklist containsObject:_contact.identity];
-}
-
-- (void)updateColor {
-    if (_contact.isActive || _contact == nil) {
-        self.textColor = Colors.text;
-    } else {
-        self.textColor = Colors.textLight;
-    }
 }
 
 - (NSString *)accessibilityLabel {

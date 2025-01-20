@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2024 Threema GmbH
+// Copyright (c) 2014-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -272,7 +272,7 @@
     CGRect textRect = [self textRectForSize:size];
     _notVotedView = [[UITextView alloc] initWithFrame:textRect];
     _notVotedView.text = [self createNotVotedString];
-    _notVotedView.textColor = [Colors textLight];
+    _notVotedView.textColor = [UIColor secondaryLabelColor];
     _notVotedView.backgroundColor = self.backgroundColor;
     _notVotedView.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote];
     _notVotedView.showsVerticalScrollIndicator = NO;
@@ -313,9 +313,9 @@
         [_matrixView setColor:HIGHEST_VOTE_COLOR forRowAt:idx];
         
         if (Colors.theme == ThemeLight) {
-            [_choicesView setTextColor:Colors.textInverted forRowAt:idx];
-            [_totalsView setTextColor:Colors.textInverted forRowAt:idx];
-            [_matrixView setTextColor:Colors.textInverted forRowAt:idx];
+            [_choicesView setTextColor:UIColor.whiteColor forRowAt:idx];
+            [_totalsView setTextColor:UIColor.whiteColor forRowAt:idx];
+            [_matrixView setTextColor:UIColor.whiteColor forRowAt:idx];
         }
     }
 }

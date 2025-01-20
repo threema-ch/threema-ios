@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2024 Threema GmbH
+// Copyright (c) 2019-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -292,7 +292,7 @@ extension VoIPCallPeerConnectionClient {
                     AVAudioSession.Category.playAndRecord,
                     with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
                 )
-                try rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat)
+                try rtcAudioSession.setMode(UserSettings.shared().disableProximityMonitoring ? .videoChat : .voiceChat)
                 try rtcAudioSession.overrideOutputAudioPort(speakerActive ? .speaker : .none)
                 try rtcAudioSession.setActive(true)
             }
@@ -318,7 +318,9 @@ extension VoIPCallPeerConnectionClient {
                     AVAudioSession.Category.playAndRecord,
                     with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
                 )
-                try rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat)
+                if !UserSettings.shared().disableProximityMonitoring {
+                    try rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat)
+                }
                 try rtcAudioSession.overrideOutputAudioPort(.none)
                 try rtcAudioSession.setActive(true)
             }
@@ -624,7 +626,7 @@ extension VoIPCallPeerConnectionClient {
                 AVAudioSession.Category.playAndRecord,
                 with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
             )
-            try rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat)
+            try rtcAudioSession.setMode(UserSettings.shared().disableProximityMonitoring ? .videoChat : .voiceChat)
         }
         catch {
             debugPrint("Error changeing AVAudioSession category: \(error)")

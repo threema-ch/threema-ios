@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -306,10 +306,16 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                !BusinessInjector().settingsStore.enableThreemaGroupCalls {
                 return false
             }
-            
-            guard abstractMessage.flagShouldPush(), !abstractMessage.flagImmediateDeliveryRequired(),
-                  !abstractMessage.flagIsVoIP() else {
-                return false
+
+            // Delete or edit message it self can't show notification, but can delete/edit existing notification
+            if !(
+                abstractMessage is DeleteMessage || abstractMessage is DeleteGroupMessage
+                    || abstractMessage is EditMessage || abstractMessage is EditGroupMessage
+            ) {
+                guard abstractMessage.canShowUserNotification(), !abstractMessage.flagImmediateDeliveryRequired(),
+                      !abstractMessage.flagIsVoIP() else {
+                    return false
+                }
             }
         }
         
@@ -329,7 +335,8 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 return false
             }
         }
-        
+
+        // TODO: (IOS-5090) Is this check necessary?
         // BaseMessage checks
         if let flags = pendingUserNotification.baseMessage?.flags {
             guard flags.intValue & Int(MESSAGE_FLAG_SEND_PUSH) != 0,

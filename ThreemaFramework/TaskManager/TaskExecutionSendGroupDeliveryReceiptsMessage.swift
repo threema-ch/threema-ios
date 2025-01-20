@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2023 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -46,6 +46,12 @@ final class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskEx
             }
 
             if task.receiptType == .ack || task.receiptType == .decline {
+                
+                // We do no longer reflect group delivery receipts once the user is in phase 2
+                guard !self.frameworkInjector.userSettings.sendEmojiReactions else {
+                    return Promise { seal in seal.fulfill(true) }
+                }
+                
                 let msg = self.getGroupDeliveryReceiptMessage(
                     groupID,
                     groupCreatorIdentity,

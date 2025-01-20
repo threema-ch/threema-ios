@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="20037" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="PlI-zG-6ML">
-    <device id="retina4_7" orientation="portrait" appearance="light"/>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="PlI-zG-6ML">
+    <device id="iPad13_0rounded" orientation="portrait" layout="fullscreen" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="20020"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -11,9 +11,9 @@
         <!--Root Navigation Controller-->
         <scene sceneID="tjp-DD-UHP">
             <objects>
-                <navigationController id="PlI-zG-6ML" customClass="RootNavigationController" customModule="ThreemaForWorkRedShareExtension" customModuleProvider="target" sceneMemberID="viewController">
+                <navigationController id="PlI-zG-6ML" customClass="RootNavigationController" customModule="Threema_Blue_ShareExtension" customModuleProvider="target" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="3eU-Xc-Xxm">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
+                        <rect key="frame" x="0.0" y="24" width="1032" height="50"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                 </navigationController>
@@ -24,34 +24,34 @@
         <!--Progress View Controller-->
         <scene sceneID="SfS-oM-cJX">
             <objects>
-                <viewController storyboardIdentifier="ProgressViewController" id="1g1-T0-HaN" customClass="ProgressViewController" customModule="ThreemaForWorkRedShareExtension" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ProgressViewController" id="1g1-T0-HaN" customClass="ProgressViewController" customModule="Threema_Blue_ShareExtension" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="Ep5-ud-z4P">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
                         <subviews>
                             <visualEffectView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DNP-Jn-Ees">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                                <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
                                 <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="kwd-dj-wdN">
-                                    <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="1032" height="1376"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="wCW-AV-vd5">
-                                            <rect key="frame" x="37.5" y="258.5" width="300" height="150"/>
+                                            <rect key="frame" x="366" y="615" width="300" height="150"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="PO9-0a-8GW">
                                                     <rect key="frame" x="34" y="27" width="215" height="21"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <color key="textColor" systemColor="darkTextColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" fixedFrame="YES" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="lf0-yi-Qfg">
                                                     <rect key="frame" x="34" y="70" width="233" height="2"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
                                                 </progressView>
                                                 <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9Ws-Li-364">
                                                     <rect key="frame" x="79" y="95" width="124" height="30"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <state key="normal" title="Cancel"/>
                                                     <connections>
@@ -66,19 +66,17 @@
                                             </constraints>
                                         </view>
                                     </subviews>
-                                    <constraints>
-                                        <constraint firstAttribute="centerX" secondItem="wCW-AV-vd5" secondAttribute="centerX" id="DJO-TD-dDQ"/>
-                                        <constraint firstAttribute="centerY" secondItem="wCW-AV-vd5" secondAttribute="centerY" id="rEZ-58-IKz"/>
-                                    </constraints>
                                 </view>
                                 <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
-                                <blurEffect style="light"/>
+                                <blurEffect style="dark"/>
                             </visualEffectView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="VfH-jk-DOe"/>
                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="wCW-AV-vd5" firstAttribute="centerY" secondItem="VfH-jk-DOe" secondAttribute="centerY" id="5hC-vJ-LoC"/>
                             <constraint firstItem="VfH-jk-DOe" firstAttribute="centerX" secondItem="DNP-Jn-Ees" secondAttribute="centerX" id="8wx-cX-St1"/>
+                            <constraint firstItem="wCW-AV-vd5" firstAttribute="centerX" secondItem="VfH-jk-DOe" secondAttribute="centerX" id="Fjc-eM-lnx"/>
                             <constraint firstItem="DNP-Jn-Ees" firstAttribute="width" secondItem="Ep5-ud-z4P" secondAttribute="width" id="Fmc-dt-YwR"/>
                             <constraint firstAttribute="centerY" secondItem="DNP-Jn-Ees" secondAttribute="centerY" id="N4d-cK-xy5"/>
                             <constraint firstItem="DNP-Jn-Ees" firstAttribute="height" secondItem="Ep5-ud-z4P" secondAttribute="height" id="ohl-go-s1t"/>

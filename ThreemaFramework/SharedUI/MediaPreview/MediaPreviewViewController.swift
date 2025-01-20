@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2023 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -101,10 +101,12 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             navigationController?.navigationBar.setNeedsLayout()
         }
         
-        themeChanged()
-        updateTitleLabel()
+        view.backgroundColor = .systemBackground
+        middleStackView.backgroundColor = .secondarySystemBackground
+        stackView.backgroundColor = .secondarySystemBackground
         
-        overrideUserInterfaceStyle = UserSettings.shared().darkTheme ? .dark : .light
+        setupNavigationbar()
+        updateTitleLabel()
     }
     
     override open func viewDidAppear(_ animated: Bool) {
@@ -131,16 +133,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         setupTitleView(landscape: MediaPreviewViewController.isLandscape())
         
         setupKeyboardActions()
-        
-        // Get notified on theme changes
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(themeChanged),
-            name: NSNotification.Name(rawValue: kNotificationColorThemeChanged),
-            object: nil
-        )
-        themeChanged()
-        
+                
         if showKeyboard {
             textField.becomeFirstResponder()
         }
@@ -191,24 +184,6 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         )
     }
     
-    @objc func themeChanged() {
-        greyBgView.backgroundColor = Colors.backgroundPreviewCollectionViewCell
-        largeCollectionView.backgroundColor = Colors.backgroundTableView
-        view.backgroundColor = Colors.backgroundThumbnailCollectionView
-        smallCollectionView.backgroundColor = Colors.backgroundThumbnailCollectionView
-        middleStackView.backgroundColor = Colors.backgroundPreviewCollectionViewCell
-    
-        textField.backgroundColor = .clear
-        
-        backgroundView1.backgroundColor = Colors.secondary
-        backgroundView2.backgroundColor = Colors.secondary
-        
-        stackView.backgroundColor = Colors.backgroundPreviewCollectionViewCell
-                        
-        setupNavigationbar()
-        reloadData()
-    }
-    
     private func setupCollectionViews() {
         let layout = MediaPreviewFlowLayout()
         layout.scrollDirection = .horizontal
@@ -219,6 +194,8 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         largeCollectionView.isPagingEnabled = true
         largeCollectionView.allowsMultipleSelection = false
         largeCollectionViewContainerView.delegate = self
+        
+        largeCollectionView.backgroundColor = .secondarySystemBackground
         
         setupSmallCollectionView()
     }
@@ -235,6 +212,8 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         
         smallCollectionView.showsHorizontalScrollIndicator = true
         
+        smallCollectionView.backgroundColor = .systemBackground
+        
         smallCollectionView.register(
             ConversationDescriptionCell.self,
             forCellWithReuseIdentifier: "ConversationDescriptionCell"
@@ -244,18 +223,17 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     private func setupCaptionTextfield() {
         textField.attributedPlaceholder = NSAttributedString(
             string: #localize("add_caption_to_image"),
-            attributes: [NSAttributedString.Key.foregroundColor: Colors.textVeryLight]
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor.placeholderText]
         )
         textField.font = UIFont.preferredFont(forTextStyle: .body)
+        textField.textColor = .label
+        textField.backgroundColor = .clear
         textField.delegate = self
         
         // Setup grey background view to separate items and caption view from thumbnails
         greyBgViewBottomConstraint.constant = smallCollectionView.frame.height
-        greyBgView.backgroundColor = Colors.backgroundView
-        
-        largeCollectionView.backgroundColor = Colors.backgroundTableView
-        
-        textField.backgroundColor = Colors.backgroundTextView
+        greyBgView.backgroundColor = .secondarySystemBackground
+                
         textField.borderStyle = .none
         textField.minimumFontSize = 17.0
     }
@@ -263,8 +241,8 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     private func setupToolbar() {
         backgroundView1.layer.cornerRadius = backgroundView1.frame.width / 2
         backgroundView2.layer.cornerRadius = backgroundView1.frame.width / 2
-        backgroundView1.backgroundColor = Colors.chatBubbleSent
-        backgroundView2.backgroundColor = Colors.chatBubbleSent
+        backgroundView1.backgroundColor = .secondary
+        backgroundView2.backgroundColor = .secondary
         
         if !debugColors {
             view1.backgroundColor = .clear

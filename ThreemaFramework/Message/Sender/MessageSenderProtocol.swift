@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -101,20 +101,16 @@ public enum MessageSenderReceivers {
     func sendEditMessage(with objectID: NSManagedObjectID, rawText: String, receiversExcluded: [Contact]?) throws
 
     // MARK: - Status update
-
+    
+    @discardableResult
+    func sendReaction(to objectID: NSManagedObjectID, reaction: EmojiVariant) async throws -> ReactionsManager
+        .ReactionSendingResult
+    
     func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> Promise<Void>
 
     func sendReadReceipt(for messages: [BaseMessage], toIdentity: ThreemaIdentity) async
 
     func sendReadReceipt(for messages: [BaseMessage], toGroupIdentity: GroupIdentity) async
-
-    func sendUserAck(for message: BaseMessage, toIdentity: ThreemaIdentity) async
-
-    func sendUserAck(for message: BaseMessage, toGroup: Group) async
-
-    func sendUserDecline(for message: BaseMessage, toIdentity: ThreemaIdentity) async
-
-    func sendUserDecline(for message: BaseMessage, toGroup: Group) async
 
     func sendTypingIndicator(typing: Bool, toIdentity: ThreemaIdentity)
 

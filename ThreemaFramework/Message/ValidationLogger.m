@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2013-2023 Threema GmbH
+// Copyright (c) 2013-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -214,6 +214,24 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             break;
         case MSGTYPE_GROUP_CALL_START:
             typeText = @"GROUP_CALL_START:";
+            break;
+        case MSGTYPE_EDIT:
+            typeText = @"MSGTYPE_EDIT:";
+            break;
+        case MSGTYPE_GROUP_EDIT:
+            typeText = @"MSGTYPE_GROUP_EDIT:";
+            break;
+        case MSGTYPE_DELETE:
+            typeText = @"MSGTYPE_DELETE:";
+            break;
+        case MSGTYPE_GROUP_DELETE:
+            typeText = @"MSGTYPE_GROUP_DELETE:";
+            break;
+        case MSGTYPE_REACTION:
+            typeText = @"MSGTYPE_REACTION:";
+            break;
+        case MSGTYPE_GROUP_REACTION:
+            typeText = @"MSGTYPE_GROUP_REACTION:";
             break;
         default:
             break;

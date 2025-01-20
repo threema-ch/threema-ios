@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2016-2023 Threema GmbH
+// Copyright (c) 2016-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -175,10 +175,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return [UIScreen mainScreen].bounds.size.height;
 }
 
-+ (NSArray*)videoQualities {
-    return @[@"low", @"high", @"original"];
-}
-
 + (double)videoMaxDurationInMinutes {
     double minutes = [VideoConversionHelper videoMaxDurationInMinutes];
     return minutes;
@@ -191,18 +187,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
     VideoConversionHelper *videoConversionHelper = [VideoConversionHelper new];
     return [videoConversionHelper videoHasAllowedSizeAt:url];
-}
-
-+ (AVAssetExportSession*)convertVideoAsset:(AVAsset*)asset onCompletion:(void(^)(NSURL *url))onCompletion onError:(void(^)(NSError *error))onError {
-    /* convert video to MPEG4 for compatibility with Android */
-    
-    NSURL *outputURL = [MediaConverter getAssetOutputURL];
-    
-    AVAssetExportSession *exportSession = [MediaConverter getAVAssetExportSessionFrom:asset outputURL:outputURL];
-    
-    [MediaConverter convertVideoWithExportSession:exportSession onCompletion:onCompletion onError:onError];
-    
-    return exportSession;
 }
 
 + (void)convertVideoWithExportSession:(AVAssetExportSession *)exportSession onCompletion:(void(^)(NSURL *url))onCompletion onError:(void(^)(NSError *error))onError {

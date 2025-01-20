@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2024 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -54,6 +54,7 @@
     
     self.title = [BundleUtil localizedStringForKey:@"profile_code_link_number"];
     self.phoneNumberTitleLabel.text = [BundleUtil localizedStringForKey:@"profile_code_phone_number"];
+    self.phoneNumberTitleLabel.textColor = UIColor.labelColor;
     self.tableView.rowHeight = 85.0;
     self.tableView.estimatedRowHeight = 85.0;
 }

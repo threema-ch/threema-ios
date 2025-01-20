@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2024 Threema GmbH
+// Copyright (c) 2014-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -41,17 +41,12 @@
 
     self.bounceOffset = HEADER_BOUNCE_OFFSET;
     
-    [self updateColors];
-}
-
-- (void)updateColors {
-    _mainView.backgroundColor = Colors.backgroundHeaderView;
-    
-    _accessoryView.backgroundColor = Colors.backgroundGroupedViewController;
-    _titleLabel.textColor = Colors.text;
-    _createdByNameLabel.textColor = Colors.textLight;
-    _dateLabel.textColor = Colors.textLight;
-    _hairLineView.backgroundColor = Colors.hairLine;
+    _mainView.backgroundColor = UIColor.secondarySystemGroupedBackgroundColor;
+    _accessoryView.backgroundColor = UIColor.systemGroupedBackgroundColor;
+    _titleLabel.textColor = UIColor.labelColor;
+    _createdByNameLabel.textColor = UIColor.secondaryLabelColor;
+    _dateLabel.textColor = UIColor.secondaryLabelColor;
+    _hairLineView.backgroundColor = UIColor.placeholderTextColor;
 }
 
 -(void)setBallot:(Ballot *)ballot {

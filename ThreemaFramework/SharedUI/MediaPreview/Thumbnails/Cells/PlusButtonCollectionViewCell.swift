@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2023 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -24,13 +24,13 @@ import ThreemaMacros
 class PlusButtonCollectionViewCell: UICollectionViewCell {
     @IBOutlet var imageView: UIImageView!
     func setup() {
-        contentView.backgroundColor = Colors.secondary
+        contentView.backgroundColor = .secondary
         imageView.image = UIImage(systemName: "plus")?.applying(symbolWeight: .semibold, symbolScale: .large)
             .withTint(.primary)
         
         layer.borderWidth = 2
         layer.cornerRadius = 5
-        layer.borderColor = Colors.backgroundView.cgColor
+        layer.borderColor = UIColor.systemGroupedBackground.cgColor
     }
     
     override func prepareForReuse() {
@@ -50,5 +50,16 @@ class PlusButtonCollectionViewCell: UICollectionViewCell {
         get {
             #localize("media_preview_accessibility_plus_button")
         }
+    }
+    
+    // CGColors have no automatic theme change built in, so we track it ourselves
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
+            return
+        }
+        
+        layer.borderColor = UIColor.systemGroupedBackground.cgColor
     }
 }

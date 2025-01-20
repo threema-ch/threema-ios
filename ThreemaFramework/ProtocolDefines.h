@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2023 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -118,6 +118,8 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define MSGTYPE_VOIP_CALL_RINGING 0x64
 #define MSGTYPE_DELIVERY_RECEIPT 0x80
 #define MSGTYPE_GROUP_DELIVERY_RECEIPT 0x81
+#define MSGTYPE_REACTION 0x82
+#define MSGTYPE_GROUP_REACTION 0x83
 #define MSGTYPE_TYPING_INDICATOR 0x90
 #define MSGTYPE_EDIT 0x91
 #define MSGTYPE_DELETE 0x92
@@ -173,6 +175,7 @@ static Float32 const kWebClientMediaQuality = 0.6;
 #define FEATURE_MASK_FORWARD_SECURITY   0x40
 #define FEATURE_MASK_EDIT_MESSAGE       0x100
 #define FEATURE_MASK_DELETE_MESSAGE     0x200
+#define FEATURE_MASK_REACTION           0x400
 
 #define PUSHFILTER_TYPE_NONE            0
 #define PUSHFILTER_TYPE_ALLOW_LISTED	1

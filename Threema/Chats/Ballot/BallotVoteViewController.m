@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2024 Threema GmbH
+// Copyright (c) 2014-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -87,7 +87,6 @@
     if (animated) {
         [_headerView bounceDetailView];
     }
-    [self updateColors];
 }
 
 - (void)viewDidLoad {
@@ -115,7 +114,7 @@
         
         UIImage *tmpImage = [UIImage systemImageNamed:@"chevron.right"];
         _detailsImage.image = [tmpImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-        _detailsImage.tintColor = Colors.text;
+        _detailsImage.tintColor = UIColor.labelColor;
     } else {
         _detailsImage.hidden = YES;
     }
@@ -130,27 +129,25 @@
     
     _voteButton.title = [BundleUtil localizedStringForKey:@"ballot_vote"];
     [_ballotCloseButton setTitle:[BundleUtil localizedStringForKey:@"ballot_close"] forState:UIControlStateNormal];
+    
+    [self setupColors];
 }
 
 - (void)refresh {
     [super refresh];
-    
-    [self updateColors];
 }
 
-- (void)updateColors {
-    self.view.backgroundColor = Colors.backgroundGroupedViewController;
+- (void)setupColors {
+    self.view.backgroundColor = UIColor.systemGroupedBackgroundColor;
     
-    _adminView.backgroundColor = Colors.backgroundView;
+    _adminView.backgroundColor = UIColor.systemGroupedBackgroundColor;
     
-    _summaryView.backgroundColor = Colors.backgroundInverted;
-    _countVotesLabel.textColor = Colors.text;
+    _summaryView.backgroundColor = UIColor.systemFillColor;
+    _countVotesLabel.textColor = UIColor.labelColor;
+        
+    _headerPlaceholderView.backgroundColor = UIColor.systemBackgroundColor;
     
-    [_headerView updateColors];
-    
-    _headerPlaceholderView.backgroundColor = Colors.backgroundHeaderView;
-    
-    _detailsImage.tintColor = Colors.text;
+    _detailsImage.tintColor = UIColor.labelColor;
 }
 
 - (void)updateContent {
@@ -342,11 +339,6 @@
 
 #pragma mark - table view data source
 
-- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-    
-    [Colors updateWithCell:cell setBackgroundColor:true];
-}
-
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
     return 0.001;
 }
@@ -372,7 +364,6 @@
     if (cell == nil) {
         cell = [[BallotVoteTableCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier: BALLOT_VOTE_TABLE_CELL_ID];
     }
-    
     [cell.choiceLabel setText: title];
     [cell.choiceLabel sizeToFit];
     cell.frame = [RectUtil setHeightOf:cell.frame height:cell.choiceLabel.bounds.size.height];

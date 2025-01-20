@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -79,12 +79,6 @@ class BaseMessageDisplayTests: XCTestCase {
         
         baseMessage.userack = true
         XCTAssertEqual(.failed, baseMessage.messageDisplayState)
-        
-        baseMessage.userackDate = Date()
-        XCTAssertEqual(.userAcknowledged, baseMessage.messageDisplayState)
-
-        baseMessage.userack = false
-        XCTAssertEqual(.userDeclined, baseMessage.messageDisplayState)
     }
     
     func testOtherDisplayState() {
@@ -122,12 +116,6 @@ class BaseMessageDisplayTests: XCTestCase {
         
         baseMessage.userack = true
         XCTAssertEqual(.none, baseMessage.messageDisplayState)
-        
-        baseMessage.userackDate = .now
-        XCTAssertEqual(.userAcknowledged, baseMessage.messageDisplayState)
-
-        baseMessage.userack = false
-        XCTAssertEqual(.userDeclined, baseMessage.messageDisplayState)
     }
     
     func testOwnGroupMessageDisplayState() {
@@ -175,12 +163,6 @@ class BaseMessageDisplayTests: XCTestCase {
         
         baseMessage.userack = true
         XCTAssertEqual(.failed, baseMessage.messageDisplayState)
-        
-        baseMessage.userackDate = .now
-        XCTAssertEqual(.userAcknowledged, baseMessage.messageDisplayState)
-
-        baseMessage.userack = false
-        XCTAssertEqual(.userDeclined, baseMessage.messageDisplayState)
     }
     
     func testOtherGroupMessageDisplayState() {
@@ -229,12 +211,6 @@ class BaseMessageDisplayTests: XCTestCase {
         
         baseMessage.userack = true
         XCTAssertEqual(.none, baseMessage.messageDisplayState)
-        
-        baseMessage.userackDate = .now
-        XCTAssertEqual(.userAcknowledged, baseMessage.messageDisplayState)
-
-        baseMessage.userack = false
-        XCTAssertEqual(.userDeclined, baseMessage.messageDisplayState)
     }
     
     // MARK: - displayDate
@@ -246,8 +222,6 @@ class BaseMessageDisplayTests: XCTestCase {
         let expectedSentDate = Date(timeIntervalSinceNow: -900)
         let expectedDeliveryDate = Date(timeIntervalSinceNow: -800)
         let expectedReadDate = Date(timeIntervalSinceNow: -700)
-        let expectedAcknowledgeDate = Date(timeIntervalSinceNow: -600)
-        let expectedDeclineDate = Date(timeIntervalSinceNow: -600)
 
         databasePreparer.save {
             baseMessage = databasePreparer.createTextMessage(
@@ -281,16 +255,6 @@ class BaseMessageDisplayTests: XCTestCase {
 
         baseMessage.sendFailed = true
         XCTAssertEqual(expectedReadDate, baseMessage.displayDate)
-
-        baseMessage.userack = true
-        XCTAssertEqual(expectedReadDate, baseMessage.displayDate)
-
-        baseMessage.userackDate = expectedAcknowledgeDate
-        XCTAssertEqual(expectedAcknowledgeDate, baseMessage.displayDate)
-
-        baseMessage.userack = false
-        baseMessage.userackDate = expectedDeclineDate
-        XCTAssertEqual(expectedDeclineDate, baseMessage.displayDate)
     }
     
     func testOwnGatewayMessageDisplayDate() {
@@ -300,8 +264,6 @@ class BaseMessageDisplayTests: XCTestCase {
         let expectedSentDate = Date(timeIntervalSinceNow: -900)
         let expectedDeliveryDate = Date(timeIntervalSinceNow: -800)
         let expectedReadDate = Date(timeIntervalSinceNow: -700)
-        let expectedAcknowledgeDate = Date(timeIntervalSinceNow: -600)
-        let expectedDeclineDate = Date(timeIntervalSinceNow: -600)
 
         databasePreparer.save {
             let gatewayContact = databasePreparer.createContact(
@@ -342,16 +304,6 @@ class BaseMessageDisplayTests: XCTestCase {
 
         baseMessage.sendFailed = true
         XCTAssertEqual(expectedReadDate, baseMessage.displayDate)
-
-        baseMessage.userack = true
-        XCTAssertEqual(expectedReadDate, baseMessage.displayDate)
-
-        baseMessage.userackDate = expectedAcknowledgeDate
-        XCTAssertEqual(expectedAcknowledgeDate, baseMessage.displayDate)
-
-        baseMessage.userack = false
-        baseMessage.userackDate = expectedDeclineDate
-        XCTAssertEqual(expectedDeclineDate, baseMessage.displayDate)
     }
     
     func testOwnGroupMessageDisplayDate() {
@@ -361,8 +313,6 @@ class BaseMessageDisplayTests: XCTestCase {
         let expectedSentDate = Date(timeIntervalSinceNow: -900)
         let expectedDeliveryDate = Date(timeIntervalSinceNow: -800)
         let expectedReadDate = Date(timeIntervalSinceNow: -700)
-        let expectedAcknowledgeDate = Date(timeIntervalSinceNow: -600)
-        let expectedDeclineDate = Date(timeIntervalSinceNow: -600)
 
         databasePreparer.save {
             let groupConversation = databasePreparer.createConversation(
@@ -406,16 +356,6 @@ class BaseMessageDisplayTests: XCTestCase {
 
         baseMessage.sendFailed = true
         XCTAssertEqual(expectedDate, baseMessage.displayDate)
-
-        baseMessage.userack = true
-        XCTAssertEqual(expectedDate, baseMessage.displayDate)
-
-        baseMessage.userackDate = expectedAcknowledgeDate
-        XCTAssertEqual(expectedAcknowledgeDate, baseMessage.displayDate)
-
-        baseMessage.userack = false
-        baseMessage.userackDate = expectedDeclineDate
-        XCTAssertEqual(expectedDeclineDate, baseMessage.displayDate)
     }
     
     func testOtherSingleMessageDisplayDate() {
@@ -425,8 +365,6 @@ class BaseMessageDisplayTests: XCTestCase {
         let expectedDate = Date(timeIntervalSinceNow: -1000)
         let expectedDeliveryDate = Date(timeIntervalSinceNow: -800)
         let expectedReadDate = Date(timeIntervalSinceNow: -700)
-        let expectedAcknowledgeDate = Date(timeIntervalSinceNow: -600)
-        let expectedDeclineDate = Date(timeIntervalSinceNow: -600)
 
         databasePreparer.save {
             baseMessage = databasePreparer.createTextMessage(
@@ -459,16 +397,6 @@ class BaseMessageDisplayTests: XCTestCase {
 
         baseMessage.sendFailed = true
         XCTAssertEqual(expectedSentDate, baseMessage.displayDate)
-
-        baseMessage.userack = true
-        XCTAssertEqual(expectedSentDate, baseMessage.displayDate)
-
-        baseMessage.userackDate = expectedAcknowledgeDate
-        XCTAssertEqual(expectedAcknowledgeDate, baseMessage.displayDate)
-
-        baseMessage.userack = false
-        baseMessage.userackDate = expectedDeclineDate
-        XCTAssertEqual(expectedDeclineDate, baseMessage.displayDate)
     }
     
     func testOtherGroupMessageDisplayDate() {
@@ -478,8 +406,6 @@ class BaseMessageDisplayTests: XCTestCase {
         let expectedDate = Date(timeIntervalSinceNow: -1000)
         let expectedDeliveryDate = Date(timeIntervalSinceNow: -800)
         let expectedReadDate = Date(timeIntervalSinceNow: -700)
-        let expectedAcknowledgeDate = Date(timeIntervalSinceNow: -600)
-        let expectedDeclineDate = Date(timeIntervalSinceNow: -600)
 
         databasePreparer.save {
             let groupConversation = databasePreparer.createConversation(
@@ -522,16 +448,6 @@ class BaseMessageDisplayTests: XCTestCase {
 
         baseMessage.sendFailed = true
         XCTAssertEqual(expectedSentDate, baseMessage.displayDate)
-
-        baseMessage.userack = true
-        XCTAssertEqual(expectedSentDate, baseMessage.displayDate)
-
-        baseMessage.userackDate = expectedAcknowledgeDate
-        XCTAssertEqual(expectedAcknowledgeDate, baseMessage.displayDate)
-
-        baseMessage.userack = false
-        baseMessage.userackDate = expectedDeclineDate
-        XCTAssertEqual(expectedDeclineDate, baseMessage.displayDate)
     }
     
     // MARK: - Date for state
@@ -543,7 +459,6 @@ class BaseMessageDisplayTests: XCTestCase {
         let expectedSentDate = Date(timeIntervalSinceNow: -900)
         let expectedDeliveryDate = Date(timeIntervalSinceNow: -800)
         let expectedReadDate = Date(timeIntervalSinceNow: -700)
-        let expectedAcknowledgeAndDeclineDate = Date(timeIntervalSinceNow: -600)
 
         databasePreparer.save {
             baseMessage = databasePreparer.createTextMessage(
@@ -562,12 +477,9 @@ class BaseMessageDisplayTests: XCTestCase {
             
             baseMessage.deliveryDate = expectedDeliveryDate
             baseMessage.readDate = expectedReadDate
-            baseMessage.userackDate = expectedAcknowledgeAndDeclineDate
         }
     
         XCTAssertNil(baseMessage.date(for: .none))
-        XCTAssertEqual(expectedAcknowledgeAndDeclineDate, baseMessage.date(for: .userAcknowledged))
-        XCTAssertEqual(expectedAcknowledgeAndDeclineDate, baseMessage.date(for: .userDeclined))
         XCTAssertNil(baseMessage.date(for: .sending))
         
         XCTAssertNil(baseMessage.date(for: .sent))

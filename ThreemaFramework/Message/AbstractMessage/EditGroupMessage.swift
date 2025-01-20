@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2024 Threema GmbH
+// Copyright (c) 2024-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -24,6 +24,10 @@ import ThreemaProtocols
 
 @objc public final class EditGroupMessage: AbstractGroupMessage {
     public var decoded: CspE2e_EditMessage?
+    
+    override public var loggingDescription: String {
+        "\(super.loggingDescription); edit ID: \(decoded?.messageID.littleEndianData.hexString ?? "unknown")"
+    }
 
     override public func type() -> UInt8 {
         UInt8(MSGTYPE_GROUP_EDIT)

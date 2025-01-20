@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -115,6 +115,21 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
         }
     }
     
+    override var reactionsStackViewSize: ChatViewBaseTableViewCellReactionsStackView.StackViewSize {
+        guard let textMessage = textMessageAndNeighbors?.message else {
+            return .full
+        }
+        
+        switch textMessage.text.count {
+        case 0...10:
+            return .tiny
+        case 11...20:
+            return .small
+        default:
+            return .full
+        }
+    }
+    
     /// Used to observe changes of the quoted message, e.g. edits
     private var observers = [NSKeyValueObservation]()
     
@@ -205,8 +220,6 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
         super.updateColors()
         
         messageQuoteStackView.updateColors()
-        messageTextView.updateColors()
-        messageDateAndStateView.updateColors()
     }
     
     override func setEditing(_ editing: Bool, animated: Bool) {
@@ -242,7 +255,7 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
         }
         
         messageQuoteStackView.quoteMessage = textMessage?.quoteMessage
-        messageTextView.text = textMessage?.text ?? ""
+        messageTextView.text = textMessage?.text
         messageDateAndStateView.message = textMessage
 
         updateAccessibility()
@@ -327,11 +340,6 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageActions {
 
         typealias Provider = ChatViewMessageActionsProvider
         
-        // Ack
-        let ackHandler = { (message: BaseMessage, ack: Bool) in
-            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
-        }
-        
         // MessageMarkers
         let markStarHandler = { (message: BaseMessage) in
             self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
@@ -376,13 +384,26 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageActions {
         let didDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
+        
+        // Reaction
+        let ackHandler = { (_: BaseMessage, ack: Bool) in
+            if ack {
+                self.reactionsManager?.send(EmojiVariant(base: .thumbsUpSign, skintone: nil))
+            }
+            else {
+                self.reactionsManager?.send(EmojiVariant(base: .thumbsDownSign, skintone: nil))
+            }
+        }
+        
+        let showEmojiPickerHandler: Provider.DefaultHandler = {
+            self.reactionsManager?.showEmojiPickerSheet()
+        }
 
         // Build menu
         return Provider.defaultActions(
             message: message,
             activityViewAnchor: contentView,
-            popOverSource: chatBubbleView,
-            ackHandler: ackHandler,
+            popOverSource: chatBubbleContentView,
             markStarHandler: markStarHandler,
             quoteHandler: quoteHandler,
             editHandler: editHandler,
@@ -392,7 +413,9 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageActions {
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete
+            didDelete: didDelete,
+            ackHandler: ackHandler,
+            showEmojiPickerHandler: showEmojiPickerHandler
         )
     }
     
@@ -404,7 +427,8 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageActions {
                 self.showContact(identity: identity)
             }) ?? [UIAccessibilityCustomAction]()
             
-            actions += buildAccessibilityCustomActions() ?? [UIAccessibilityCustomAction]()
+            actions += buildAccessibilityCustomActions(reactionsManager: reactionsManager) ??
+                [UIAccessibilityCustomAction]()
             return actions
         }
         set {

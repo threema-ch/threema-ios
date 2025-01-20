@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -38,6 +38,7 @@ class ValueDetailsTableViewCell: ThemedCodeStackTableViewCell {
         let label = UILabel()
         
         label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.textColor = .label
         
         label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         
@@ -52,6 +53,7 @@ class ValueDetailsTableViewCell: ThemedCodeStackTableViewCell {
         let label = CopyLabel()
         
         label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.textColor = .secondaryLabel
         label.numberOfLines = 2
         
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -83,13 +85,7 @@ class ValueDetailsTableViewCell: ThemedCodeStackTableViewCell {
         label = nil
         value = nil
     }
-    
-    override func updateColors() {
-        super.updateColors()
         
-        valueLabel.textColor = Colors.textLight
-    }
-    
     // MARK: - Accessibility
     
     override public var accessibilityLabel: String? {

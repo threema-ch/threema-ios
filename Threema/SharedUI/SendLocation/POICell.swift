@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -35,7 +35,6 @@ class POICell: ThemedCodeTableViewCell, Reusable {
             addressLabel.text = poi.address
             distanceLabel.text = localizedDistanceString(for: poi.distance)
             poiImage.image = poi.image
-            updateColors()
         }
     }
     
@@ -73,6 +72,7 @@ class POICell: ThemedCodeTableViewCell, Reusable {
         nameLabel.font = UIFont.preferredFont(forTextStyle: .body)
         nameLabel.lineBreakMode = .byWordWrapping
         nameLabel.numberOfLines = 0
+        nameLabel.textColor = .label
         
         return nameLabel
     }()
@@ -82,6 +82,7 @@ class POICell: ThemedCodeTableViewCell, Reusable {
         distanceLabel.adjustsFontForContentSizeCategory = true
         distanceLabel.font = UIFont.preferredFont(forTextStyle: .body)
         distanceLabel.translatesAutoresizingMaskIntoConstraints = false
+        distanceLabel.textColor = .secondaryLabel
         return distanceLabel
     }()
     
@@ -91,6 +92,7 @@ class POICell: ThemedCodeTableViewCell, Reusable {
         addressLabel.font = UIFont.preferredFont(forTextStyle: .body)
         addressLabel.lineBreakMode = .byWordWrapping
         addressLabel.numberOfLines = 0
+        addressLabel.textColor = .secondaryLabel
         
         return addressLabel
     }()
@@ -146,26 +148,16 @@ class POICell: ThemedCodeTableViewCell, Reusable {
             bottom: 0,
             right: 0
         )
-        updateColors()
     }
     
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: selected)
-        updateColors()
         if selected {
             nameAddressStackView.addArrangedSubview(addressLabel)
         }
         else {
             addressLabel.removeFromSuperview()
         }
-    }
-        
-    /// Assigns colors to the view's content
-    override func updateColors() {
-        super.updateColors()
-        Colors.setTextColor(Colors.text, label: nameLabel)
-        Colors.setTextColor(Colors.textLight, label: distanceLabel)
-        Colors.setTextColor(Colors.textLight, label: addressLabel)
     }
     
     // MARK: - Functions

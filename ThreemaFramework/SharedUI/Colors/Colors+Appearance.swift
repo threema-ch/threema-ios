@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -25,6 +25,7 @@ import Foundation
 // MARK: - Appearance
 extension Colors {
     class func setupAppearance() {
+                
         // MARK: Window
         update(window: UIWindow.appearance())
         
@@ -44,28 +45,21 @@ extension Colors {
         UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = .primary
         UIView.appearance(whenContainedInInstancesOf: [UIDocumentMenuViewController.self]).tintColor = .primary
         UIView.appearance(whenContainedInInstancesOf: [UIWindow.self, UIView.self]).tintColor = .primary
-                
-        // MARK: UITableView
-        update(tableView: UITableView.appearance())
-               
-        // MARK: UITableViewCell
-        update(cell: UITableViewCell.appearance())
-        
+                        
         // MARK: UIButton
         UIButton.appearance(whenContainedInInstancesOf: [UIDocumentMenuViewController.self]).tintColor = .primary
                 
         // MARK: UILabel
         // Do not change it for cells, because cells have their own appearance
-        UILabel.appearance(whenContainedInInstancesOf: [UITextField.self]).textColor = Colors.textPlaceholder
+        UILabel.appearance(whenContainedInInstancesOf: [UITextField.self]).textColor = UIColor.placeholderText
             
         // MARK: UITextView
-        UITextView.appearance().textColor = Colors.text
+        UITextView.appearance().textColor = .label
         UITextView.appearance().tintColor = .primary
         UITextView.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).textColor = Colors.white
-//        UITextView.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).keyboardAppearance = .dark
         
         // MARK: TextField
-        UITextField.appearance().textColor = Colors.text
+        UITextField.appearance().textColor = .label
         UITextField.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).textColor = Colors.white
         UITextField.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).keyboardAppearance = .dark
                 
@@ -81,7 +75,7 @@ extension Colors {
         UIProgressView.appearance().tintColor = .primary
                
         // MARK: UIActivityIndicatorView
-        UIActivityIndicatorView.appearance().color = Colors.text
+        UIActivityIndicatorView.appearance().color = .label
     }
 }
 
@@ -96,14 +90,14 @@ extension Colors {
                 textField.keyboardAppearance = .dark
             }
             
-            textField.textColor = Colors.text
+            textField.textColor = .label
             textField.tintColor = .primary
             
             if let placeholder = textField.attributedPlaceholder {
                 let p = NSMutableAttributedString(attributedString: placeholder)
                 p.addAttribute(
                     .foregroundColor,
-                    value: Colors.textPlaceholder,
+                    value: UIColor.placeholderText,
                     range: NSRange(location: 0, length: placeholder.length)
                 )
                 textField.attributedPlaceholder = p
@@ -117,7 +111,7 @@ extension Colors {
             case .dark:
                 textView.keyboardAppearance = .dark
             }
-            textView.textColor = Colors.text
+            textView.textColor = .label
             textView.tintColor = .primary
         }
     }
@@ -126,32 +120,7 @@ extension Colors {
         tableView.sectionIndexColor = .primary
         tableView.separatorInsetReference = .fromAutomaticInsets
     }
-    
-    @objc public class func update(cell: UITableViewCell, setBackgroundColor: Bool = true) {
-        var textColor = Colors.text
-        var detailTextColor = Colors.textLight
-        
-        if cell.accessibilityTraits == .notEnabled || !cell.isUserInteractionEnabled {
-            textColor = Colors.textLight
-            detailTextColor = Colors.textVeryLight
-        }
-        else if cell.accessibilityTraits == .button, cell.accessoryType != .disclosureIndicator,
-                cell.accessoryType != .detailButton,
-                !(cell.accessoryView?.isKind(of: UISwitch.self) ?? false) {
-            textColor = .primary
-            detailTextColor = Colors.textLight
-        }
-        
-        // handle custom table cells
-        setTextColor(textColor, in: cell.contentView)
-        
-        cell.textLabel?.textColor = textColor
-        if let detailTextLabel = cell.detailTextLabel {
-            detailTextLabel.textColor = detailTextColor
-        }
-        cell.tintColor = .primary
-    }
-    
+       
     /// Check if a call or web session is active and return the correct appearance
     /// - Returns: Transparent or default UINavigationBarAppearance
     public class func transparentNavigationBarAppearance() -> UINavigationBarAppearance {
@@ -175,20 +144,20 @@ extension Colors {
     
     @objc public class func colorForNavigationBackground() -> UIColor? {
         if NavigationBarPromptHandler.isCallActiveInBackground || NavigationBarPromptHandler.isGroupCallActive {
-            return Colors.navigationBarCall
+            return .navigationBarCall
         }
         else if NavigationBarPromptHandler.isWebActive {
-            return Colors.navigationBarWeb
+            return .navigationBarWeb
         }
         return nil
     }
     
     @objc public class func colorForBarTint() -> UIColor? {
         if NavigationBarPromptHandler.isCallActiveInBackground || NavigationBarPromptHandler.isGroupCallActive {
-            return Colors.navigationBarCall
+            return .navigationBarCall
         }
         else if NavigationBarPromptHandler.isWebActive {
-            return Colors.navigationBarWeb
+            return .navigationBarWeb
         }
         return Colors.backgroundNavigationController
     }
@@ -197,12 +166,6 @@ extension Colors {
         navigationBar.tintColor = .primary
         navigationBar.barTintColor = colorForBarTint()
 
-        switch theme {
-        case .light, .undefined:
-            navigationBar.overrideUserInterfaceStyle = .light
-        case .dark:
-            navigationBar.overrideUserInterfaceStyle = .dark
-        }
         navigationBar.standardAppearance = defaultNavigationBarAppearance()
         navigationBar.scrollEdgeAppearance = transparentNavigationBarAppearance()
     }
@@ -258,56 +221,10 @@ extension Colors {
         UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self])
             .setTitleTextAttributes([.foregroundColor: UIColor.primary], for: .normal)
         
-        searchBar.searchTextField.textColor = Colors.text
+        searchBar.searchTextField.textColor = .label
     }
     
     @objc public class func update(switchAppearance: UISwitch) {
         switchAppearance.onTintColor = .primary
-    }
-        
-    @objc public class func setTextColor(_ color: UIColor, in parentView: UIView) {
-        for view in parentView.subviews {
-            
-            if view is ContactNameLabel || view is UIButton {
-                continue
-            }
-            
-            if let themedCodeTableViewCell = view as? ThemedCodeTableViewCell {
-                themedCodeTableViewCell.updateColors()
-            }
-            else if let label = view as? UILabel {
-                setTextColor(color, label: label)
-            }
-            if let textView = view as? UITextView {
-                setTextColor(color, textView: textView)
-            }
-            else if let textField = view as? UITextField {
-                setTextColor(color, textField: textField)
-            }
-            else {
-                setTextColor(color, in: view)
-            }
-        }
-    }
-    
-    @objc public class func setTextColor(_ color: UIColor, label: UILabel) {
-        label.textColor = color
-        label.highlightedTextColor = color
-    }
-    
-    @objc public class func setTextColor(_ color: UIColor, textView: UITextView) {
-        textView.textColor = color
-    }
-    
-    @objc public class func setTextColor(_ color: UIColor, textField: UITextField) {
-        textField.textColor = color
-        textField.colorizeClearButton()
-        
-        if let placeholderText = textField.placeholder {
-            textField.attributedPlaceholder = NSAttributedString(
-                string: placeholderText,
-                attributes: [.foregroundColor: Colors.textPlaceholder]
-            )
-        }
     }
 }

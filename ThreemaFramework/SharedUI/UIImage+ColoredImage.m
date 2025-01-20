@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2023 Threema GmbH
+// Copyright (c) 2014-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -23,32 +23,6 @@
 @implementation UIImage (ColoredImage)
 
 static CGFloat scale = -1.0;
-static NSCache *imageCache = nil;
-
-+ (UIImage *) imageNamed:(NSString *)name inColor: (UIColor *) color
-{
-    NSString *cacheKey = [NSString stringWithFormat:@"%@/%@", name, color];
-    
-    // Check cache first
-    UIImage *image;
-    if (imageCache != nil) {
-        image = [imageCache objectForKey:cacheKey];
-        if (image != nil) {
-            return image;
-        }
-    }
-    
-    image = [[UIImage imageNamed:name] imageWithTint: color];
-    
-    // Put in cache
-    if (imageCache == nil) {
-        imageCache = [[NSCache alloc] init];
-        imageCache.name = @"ColoredImage cache";
-    }
-    [imageCache setObject:image forKey:cacheKey];
-    
-    return image;
-}
 
 - (UIImage *) imageWithTint:(UIColor *)tintColor {
     return [self imageWithTintColor:tintColor];
@@ -80,20 +54,6 @@ static NSCache *imageCache = nil;
     UIGraphicsEndImageContext();
     
     return coloredImage;
-}
-
-- (UIImage *) invertedImage {
-    CIImage *img = [CIImage imageWithCGImage:self.CGImage];
-
-    CIFilter *filter = [CIFilter filterWithName:@"CIColorInvert"];
-    [filter setDefaults];
-    [filter setValue:img forKey:@"inputImage"];
-
-    CIContext *context = [[CIContext alloc] init];
-    CGImageRef ref = [context createCGImage:filter.outputImage fromRect:filter.outputImage.extent];
-
-    return [UIImage imageWithCGImage:ref];
-
 }
 
 @end

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -66,7 +66,7 @@ class MarkupParsingTextStorage: NSTextStorage {
         guard location <= backingStore.length else {
             range?.pointee = NSRange(location: location, length: 0)
             return [
-                NSAttributedString.Key.foregroundColor: Colors.text,
+                NSAttributedString.Key.foregroundColor: UIColor.label,
                 NSAttributedString.Key.font: UIFont
                     .preferredFont(forTextStyle: ChatViewConfiguration.ChatTextView.textStyle),
             ]
@@ -189,7 +189,7 @@ class MarkupParsingTextStorage: NSTextStorage {
         let attributedString = NSAttributedString(
             string: notParsedText.string,
             attributes: [
-                NSAttributedString.Key.foregroundColor: Colors.text,
+                NSAttributedString.Key.foregroundColor: UIColor.label,
                 NSAttributedString.Key.font: UIFont
                     .preferredFont(forTextStyle: ChatViewConfiguration.ChatTextView.textStyle),
             ]

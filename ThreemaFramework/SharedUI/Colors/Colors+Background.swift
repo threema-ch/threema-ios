@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -42,21 +42,8 @@ extension Colors {
         }
     }
     
-    @objc public class var backgroundHeaderView: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.white.color
-        case .dark:
-            Asset.SharedColors.black.color
-        }
-    }
-    
     @objc public class var backgroundView: UIColor {
         .systemGroupedBackground
-    }
-    
-    @objc public class var backgroundAlertView: UIColor {
-        .secondarySystemBackground
     }
     
     @objc public class var backgroundInverted: UIColor {
@@ -94,32 +81,6 @@ extension Colors {
         }
     }
     
-    @objc public class var backgroundQuickActionButton: UIColor {
-        backgroundTableViewCell
-    }
-    
-    @objc public class var backgroundQuickActionButtonSelected: UIColor {
-        .secondarySystemGroupedBackground
-    }
-    
-    @objc public class var backgroundTextView: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.gray200.color
-        case .dark:
-            Asset.SharedColors.black.color
-        }
-    }
-    
-    @objc public class var backgroundQrCode: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.white.color
-        case .dark:
-            Asset.SharedColors.gray900.color
-        }
-    }
-    
     @objc public class var backgroundSafeImageCircle: UIColor {
         Asset.SharedColors.gray250.color
     }
@@ -137,24 +98,6 @@ extension Colors {
         }
     }
     
-    @objc public class var backgroundUnreadMessageLine: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.black.color.withAlphaComponent(0.45)
-        case .dark:
-            Asset.SharedColors.gray700.color.withAlphaComponent(0.45)
-        }
-    }
-    
-    @objc public class var backgroundSegmentedControl: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.white.color
-        case .dark:
-            Asset.SharedColors.gray650.color
-        }
-    }
-
     public class var backgroundWizardBox: UIColor {
         switch theme {
         case .light, .undefined:

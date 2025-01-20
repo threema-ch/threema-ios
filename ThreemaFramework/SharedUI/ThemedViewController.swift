@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2023 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -65,7 +65,6 @@ open class ThemedViewController: UIViewController {
     /// Called whenever the colors of the views should be set to the current theme colors
     open func updateColors() {
         view.backgroundColor = Colors.backgroundViewController
-        Colors.setTextColor(Colors.text, in: view)
     }
     
     // MARK: - Notifications

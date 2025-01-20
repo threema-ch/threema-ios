@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2023 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -880,6 +880,15 @@ class TaskExecution: NSObject {
                 ) : frameworkInjector.entityManager.entityFetcher
                 .conversationEntity(forIdentity: task.receiverIdentity)
         }
+        if let task = task as? TaskDefinitionSendReactionMessage,
+           let groupCreatorIdentity = task.groupCreatorIdentity ?? frameworkInjector.myIdentityStore.identity {
+            conversation = task.isGroupMessage ? frameworkInjector.entityManager.entityFetcher
+                .conversationEntity(
+                    for: task.groupID!,
+                    creator: groupCreatorIdentity
+                ) : frameworkInjector.entityManager.entityFetcher
+                .conversationEntity(forIdentity: task.receiverIdentity)
+        }
         else if let task = task as? TaskDefinitionSendDeleteEditMessage,
                 let groupCreatorIdentity = task.groupCreatorIdentity ?? frameworkInjector.myIdentityStore.identity {
             conversation = task.isGroupMessage ? frameworkInjector.entityManager.entityFetcher
@@ -1153,6 +1162,32 @@ class TaskExecution: NSObject {
             )
             groupMsg.fromIdentity = fromIdentity
             groupMsg.toIdentity = toIdentity
+            return groupMsg
+        }
+        else if let task = task as? TaskDefinitionSendReactionMessage {
+            guard let groupID = task.groupID,
+                  let groupCreatorIdentity = task.groupCreatorIdentity,
+                  frameworkInjector.groupManager
+                  .getConversation(for: GroupIdentity(
+                      id: groupID,
+                      creator: ThreemaIdentity(groupCreatorIdentity)
+                  )) !=
+                  nil else {
+                let msg = ReactionMessage()
+                msg.fromIdentity = fromIdentity
+                msg.toIdentity = toIdentity
+                msg.decoded = task.reaction
+                
+                return msg
+            }
+
+            let groupMsg = GroupReactionMessage()
+            groupMsg.fromIdentity = fromIdentity
+            groupMsg.toIdentity = toIdentity
+            groupMsg.decoded = task.reaction
+            groupMsg.groupID = task.groupID
+            groupMsg.groupCreator = task.groupCreatorIdentity
+            
             return groupMsg
         }
         else if let task = task as? TaskDefinitionSendDeleteEditMessage {

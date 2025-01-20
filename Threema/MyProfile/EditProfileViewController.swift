@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -78,7 +78,7 @@ import ThreemaMacros
         nickNameTextField?.delegate = self
         nickNameTextField?.text = profile.nickname
         
-        updateColors()
+        setupColors()
         
         profilePictureSettingCell?.isUserInteractionEnabled = !mdmSetup.disableSendProfilePicture()
         
@@ -178,16 +178,15 @@ import ThreemaMacros
         LicenseStore.shared().performUpdateWorkInfo()
         nickNameTextField?.resignFirstResponder()
     }
-    
-    override func updateColors() {
-        super.updateColors()
-        Colors.updateKeyboardAppearance(for: nickNameTextField)
         
-        nickNameTextField?.textColor = Colors.text
-        nickNameTitleLabel.textColor = Colors.textLight
+    private func setupColors() {
+        nickNameTextField?.textColor = .label
+        nickNameTitleLabel.textColor = .secondaryLabel
         nickNameTitleLabel?.shadowColor = nil
         
-        contactsSettingValue.textColor = Colors.textLight
+        releaseProfileTo.textColor = .label
+        
+        contactsSettingValue.textColor = .secondaryLabel
     }
     
     private func updateView() {
@@ -233,17 +232,6 @@ import ThreemaMacros
 }
 
 extension EditProfileViewController {
-    override func tableView(
-        _ tableView: UITableView,
-        willDisplay cell: UITableViewCell,
-        forRowAt indexPath: IndexPath
-    ) {
-        super.tableView(tableView, willDisplay: cell, forRowAt: indexPath)
-        
-        Colors.setTextColor(Colors.text, textField: nickNameTextField)
-        updateColors()
-    }
-    
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         var footer = #localize("edit_profile_footer")
         

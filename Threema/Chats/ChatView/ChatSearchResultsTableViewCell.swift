@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -28,7 +28,7 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
     /// Message to show in this cell
     var message: BaseMessage? {
         didSet {
-            updateCel(for: message)
+            updateCell(for: message)
         }
     }
     
@@ -44,6 +44,7 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         let label = UILabel()
 
         label.font = UIFont.preferredFont(forTextStyle: ChatViewConfiguration.SearchResults.nameTextStyle)
+        label.textColor = .label
         
         label.adjustsFontForContentSizeCategory = true
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -59,6 +60,7 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         let label = UILabel()
         
         label.font = UIFont.preferredFont(forTextStyle: ChatViewConfiguration.SearchResults.metadataTextStyle)
+        label.textColor = .secondaryLabel
         
         label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         
@@ -75,6 +77,7 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         imageView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(
             textStyle: ChatViewConfiguration.SearchResults.metadataTextStyle
         )
+        imageView.tintColor = .secondaryLabel
                 
         return imageView
     }()
@@ -136,7 +139,8 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         label.numberOfLines = 2
         
         label.font = UIFont.preferredFont(forTextStyle: ChatViewConfiguration.SearchResults.messagePreviewTextTextStyle)
-        
+        label.tintColor = .secondaryLabel
+
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 3
         }
@@ -204,18 +208,8 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
     }
     
     // MARK: - Updates
-    
-    override func updateColors() {
-        super.updateColors()
         
-        nameLabel.textColor = Colors.text
-        dateLabel.textColor = Colors.textLight
-        disclosureIndicatorImageView.tintColor = Colors.textLight
-        markerStarImageView.tintColor = .systemYellow
-        messagePreviewTextLabel.tintColor = Colors.textLight
-    }
-    
-    private func updateCel(for message: BaseMessage?) {
+    private func updateCell(for message: BaseMessage?) {
         guard let message else {
             nameLabel.text = nil
             dateLabel.text = nil

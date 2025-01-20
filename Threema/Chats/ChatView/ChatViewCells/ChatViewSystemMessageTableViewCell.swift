@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -37,6 +37,13 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
     
     /// Delegate used to handle cell delegates
     weak var chatViewTableViewCellDelegate: ChatViewTableViewCellDelegateProtocol?
+    
+    var backgroundBorderPath: UIBezierPath {
+        UIBezierPath(
+            roundedRect: systemMessageBackgroundView.frame,
+            cornerRadius: systemMessageBackgroundView.layer.cornerRadius
+        )
+    }
     
     // MARK: - Private properties
     
@@ -122,16 +129,16 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
                 equalTo: systemMessageLabel.trailingAnchor
             ),
         ])
+        
+        setupColors()
     }
     
     // MARK: - Updates
     
-    override func updateColors() {
-        super.updateColors()
-        
-        systemMessageLabel.textColor = Colors.textLight
-        systemMessageLabel.highlightedTextColor = Colors.textLight
-        systemMessageBackgroundView.backgroundColor = Colors.systemMessageBackground
+    private func setupColors() {
+        systemMessageLabel.textColor = .secondaryLabel
+        systemMessageLabel.highlightedTextColor = .secondaryLabel
+        systemMessageBackgroundView.backgroundColor = .systemMessageBackground
     }
     
     private func updateCell(for systemMessage: SystemMessageEntity?) {
@@ -162,8 +169,6 @@ final class ChatViewSystemMessageTableViewCell: ThemedCodeTableViewCell, Measura
         else {
             bottomSpacingConstraint.constant = -ChatViewConfiguration.SystemMessage.defaultTopBottomInset
         }
-        
-        updateColors()
     }
     
     // MARK: - Overrides
@@ -358,7 +363,7 @@ extension ChatViewSystemMessageTableViewCell: ChatViewMessageActions {
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
         get {
-            buildAccessibilityCustomActions()
+            buildAccessibilityCustomActions(reactionsManager: nil)
         }
         set {
             // No-op

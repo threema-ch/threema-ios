@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -114,6 +114,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
         let label = MessageMetadataTextLabel()
         label.textAlignment = .right
         label.font = ChatViewConfiguration.MessageMetadata.monospacedDigitFont()
+        label.textColor = .secondaryLabel
         
         return label
     }()
@@ -385,13 +386,8 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
     override func updateColors() {
         super.updateColors()
         
-        Colors.setTextColor(Colors.textLight, label: fileSizeLabel)
-        waveformView.updateColor()
         micIconOrPlaybackSpeedButton.updateColors()
         stateButton.updateColors()
-        inlineDateAndStateView.updateColors()
-        captionDateAndStateView.updateColors()
-        captionTextLabel.updateColors()
     }
     
     func updateMessageMetadataFileSizeLabel(voiceMessage: VoiceMessage?) {
@@ -731,11 +727,6 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
         }
 
         typealias Provider = ChatViewMessageActionsProvider
-    
-        // Ack
-        let ackHandler = { (message: BaseMessage, ack: Bool) in
-            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
-        }
             
         // MessageMarkers
         let markStarHandler = { (message: BaseMessage) in
@@ -812,11 +803,25 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
         
+        // Reaction
+        let ackHandler = { (_: BaseMessage, ack: Bool) in
+            if ack {
+                self.reactionsManager?.send(EmojiVariant(base: .thumbsUpSign, skintone: nil))
+            }
+            else {
+                self.reactionsManager?.send(EmojiVariant(base: .thumbsDownSign, skintone: nil))
+            }
+        }
+        
+        let showEmojiPickerHandler: Provider.DefaultHandler = {
+            self.reactionsManager?.showEmojiPickerSheet()
+        }
+        
+        // Build menu
         return Provider.defaultActions(
             message: message,
             activityViewAnchor: containerView,
-            popOverSource: chatBubbleView,
-            ackHandler: ackHandler,
+            popOverSource: chatBubbleContentView,
             markStarHandler: markStarHandler,
             retryAndCancelHandler: retryAndCancelHandler,
             downloadHandler: downloadHandler,
@@ -827,7 +832,9 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete
+            didDelete: didDelete,
+            ackHandler: ackHandler,
+            showEmojiPickerHandler: showEmojiPickerHandler
         )
     }
     
@@ -883,7 +890,8 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
         get {
-            let builtActions = buildAccessibilityCustomActions() ?? [UIAccessibilityCustomAction]()
+            let builtActions = buildAccessibilityCustomActions(reactionsManager: reactionsManager) ??
+                [UIAccessibilityCustomAction]()
             let customActionArray = [
                 UIAccessibilityCustomAction(
                     name: BundleUtil

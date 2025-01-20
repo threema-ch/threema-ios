@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
@@ -1400,6 +1401,114 @@ class UserNotificationManagerTests: XCTestCase {
             var pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification)
             XCTAssertEqual(pushSetting?.groupIdentity, GroupIdentity(id: groupID, creator: groupCreator))
             XCTAssertEqual(pushSetting?.type, .on)
+        }
+    }
+
+    func testUserNotificationContentPushWithEditMessage() throws {
+        // Create abstract message for mocking
+        let expectedSenderID = "ECHOECHO"
+        let expectedMessageID = MockData.generateMessageID()
+        let expectedCmd = "newmsg"
+        let expectedGroupID = MockData.generateGroupID()
+
+        let expectedGroup = databasePreparer.save {
+            let member = databasePreparer.createContact(identity: expectedSenderID)
+            let groupEntity = databasePreparer.createGroupEntity(
+                groupID: expectedGroupID,
+                groupCreator: nil
+            )
+            let conversationEntity = databasePreparer.createConversation(groupID: expectedGroupID)
+            conversationEntity.members = [member]
+
+            return Group(
+                myIdentityStore: MyIdentityStoreMock(),
+                userSettings: UserSettingsMock(),
+                groupEntity: groupEntity,
+                conversation: conversationEntity,
+                lastSyncRequest: nil
+            )
+        }
+
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let groupManagerMock = GroupManagerMock(myIdentityStoreMock)
+        groupManagerMock.getGroupReturns.append(expectedGroup)
+
+        let deleteMessage = DeleteMessage()
+        deleteMessage.decoded = try CspE2e_DeleteMessage.with { message in
+            message.messageID = try MockData.generateMessageID().littleEndian()
+        }
+        deleteMessage.fromIdentity = expectedSenderID
+        deleteMessage.messageID = expectedMessageID
+
+        let deleteGroupMessage = DeleteGroupMessage()
+        deleteGroupMessage.decoded = try CspE2e_DeleteMessage.with { message in
+            message.messageID = try MockData.generateMessageID().littleEndian()
+        }
+        deleteGroupMessage.groupID = expectedGroupID
+        deleteGroupMessage.groupCreator = myIdentityStoreMock.identity
+        deleteGroupMessage.fromIdentity = expectedSenderID
+        deleteGroupMessage.messageID = expectedMessageID
+
+        let editMessage = EditMessage()
+        editMessage.decoded = try CspE2e_EditMessage.with { message in
+            message.messageID = try MockData.generateMessageID().littleEndian()
+            message.text = "This is a message"
+        }
+        editMessage.fromIdentity = expectedSenderID
+        editMessage.messageID = expectedMessageID
+
+        let editGroupMessage = EditGroupMessage()
+        editGroupMessage.decoded = try CspE2e_EditMessage.with { message in
+            message.messageID = try MockData.generateMessageID().littleEndian()
+            message.text = "This is a message"
+        }
+        editGroupMessage.groupID = expectedGroupID
+        editGroupMessage.groupCreator = myIdentityStoreMock.identity
+        editGroupMessage.fromIdentity = expectedSenderID
+        editGroupMessage.messageID = expectedMessageID
+
+        let testCases: [(abstractMessage: AbstractMessage, cmd: String)] = [
+            (deleteMessage, "newmsg"),
+            (deleteGroupMessage, "newgroupmsg"),
+            (editMessage, "newmsg"),
+            (editGroupMessage, "newgroupmsg"),
+        ]
+
+        for testCase in testCases {
+            let pendingUserNotification =
+                PendingUserNotification(key: "\(expectedSenderID)\(expectedMessageID.hexString)")
+            pendingUserNotification
+                .threemaPushNotification =
+                try ThreemaPushNotification(from: [
+                    "from": expectedSenderID,
+                    "messageId": expectedMessageID.hexString,
+                    "voip": false,
+                    "cmd": testCase.cmd,
+                ])
+            pendingUserNotification.abstractMessage = testCase.abstractMessage
+
+            let entityManager = EntityManager(databaseContext: databaseCnx)
+            let pushSettingManager = PushSettingManager(
+                UserSettingsMock(),
+                groupManagerMock,
+                entityManager,
+                TaskManagerMock(),
+                false
+            )
+
+            let userNotificationManager = UserNotificationManager(
+                SettingsStoreMock(),
+                UserSettingsMock(),
+                myIdentityStoreMock,
+                pushSettingManager,
+                ContactStoreMock(),
+                groupManagerMock,
+                entityManager,
+                false
+            )
+            let result = userNotificationManager.userNotificationContent(pendingUserNotification)
+
+            XCTAssertEqual(result?.messageID, expectedMessageID.hexString)
         }
     }
 

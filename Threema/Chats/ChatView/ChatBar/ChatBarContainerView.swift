@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -53,7 +53,12 @@ final class ChatBarContainerView: UIView {
         return stackView
     }()
     
-    private lazy var topHairlineView = UIView()
+    private lazy var topHairlineView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .separator
+        return view
+    }()
+
     private var mentionsTableViewHeightConstraint: NSLayoutConstraint?
     
     // MARK: Lifecycle
@@ -62,7 +67,9 @@ final class ChatBarContainerView: UIView {
         super.init(frame: .zero)
         
         configureLayout()
-        updateColors()
+        
+        // This should give an effect similar to the one in the tab bar
+        backgroundColor = .tertiarySystemBackground
     }
     
     @available(*, unavailable)
@@ -254,19 +261,7 @@ final class ChatBarContainerView: UIView {
     func enableInteraction() {
         catchTapOnDisabledView?.removeFromSuperview()
     }
-    
-    func updateColors() {
-        topHairlineView.backgroundColor = Colors.hairLine
         
-        if UIAccessibility.isReduceTransparencyEnabled {
-            backgroundColor = Colors.backgroundChatBar
-        }
-        else {
-            // This should give an effect similar to the one in the tab bar
-            backgroundColor = .clear
-        }
-    }
-    
     // MARK: Updates for Coordinator
     
     func updateMentionsTableViewHeight(overwriteHeight: CGFloat? = nil, onCompletion: ((Bool) -> Void)? = nil) {

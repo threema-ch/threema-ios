@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -120,6 +120,7 @@ class MultiDeviceCell: ThemedCodeStackTableViewCell {
         let label = UILabel()
         
         label.font = UIFont.preferredFont(forTextStyle: .footnote)
+        label.textColor = .secondaryLabel
         
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
@@ -134,6 +135,7 @@ class MultiDeviceCell: ThemedCodeStackTableViewCell {
         let label = UILabel()
         
         label.font = UIFont.preferredFont(forTextStyle: .footnote)
+        label.textColor = .secondaryLabel
         
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
                
@@ -186,15 +188,6 @@ class MultiDeviceCell: ThemedCodeStackTableViewCell {
         contentStack.spacing = 16
         contentStack.addArrangedSubview(platformIcon)
         contentStack.addArrangedSubview(platformStack)
-    }
-    
-    // MARK: - Updates
-    
-    override func updateColors() {
-        super.updateColors()
-        
-        Colors.setTextColor(Colors.textLight, label: platformDetailsLabel)
-        Colors.setTextColor(Colors.textLight, label: lastLoginAtLabel)
     }
 }
 

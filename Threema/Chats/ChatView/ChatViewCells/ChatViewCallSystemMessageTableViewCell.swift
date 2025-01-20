@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -52,6 +52,7 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
         let label = UILabel(frame: .zero)
         label.numberOfLines = 0
         label.font = ChatViewConfiguration.MessageMetadata.font
+        label.textColor = .secondaryLabel
         label.adjustsFontForContentSizeCategory = true
         return label
     }()
@@ -106,9 +107,6 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
         if case let .callMessage(type: call) = callMessageAndNeighbors?.message.systemMessageType {
             iconView.image = call.symbol
         }
-        messageTextView.updateColors()
-        Colors.setTextColor(Colors.textLight, label: metaDataLabel)
-        stateAndDateView.updateColors()
     }
     
     override func setEditing(_ editing: Bool, animated: Bool) {
@@ -161,7 +159,7 @@ final class ChatViewCallSystemMessageTableViewCell: ChatViewBaseTableViewCell, M
             systemName: "timer",
             withConfiguration: ChatViewConfiguration.MessageMetadata.symbolConfiguration
         )?
-            .withTintColor(Colors.textLight)
+            .withTintColor(.secondaryLabel)
         
         // Combine String
         let duration = NSMutableAttributedString(string: callTime)
@@ -232,7 +230,7 @@ extension ChatViewCallSystemMessageTableViewCell: ChatViewMessageActions {
 
         let basicActions = Provider.defaultBasicActions(
             message: message,
-            popOverSource: chatBubbleView,
+            popOverSource: chatBubbleContentView,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
@@ -244,7 +242,7 @@ extension ChatViewCallSystemMessageTableViewCell: ChatViewMessageActions {
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
         get {
-            buildAccessibilityCustomActions()
+            buildAccessibilityCustomActions(reactionsManager: reactionsManager)
         }
         set {
             // No-op

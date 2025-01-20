@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2024 Threema GmbH
+// Copyright (c) 2024-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -108,6 +108,30 @@ extension EntityFetcher {
         
         // We only return the NSManagedObjectIDs
         return sorted.map(\.objectID)
+    }
+    
+    public func messagesWithUserAckDate() -> [BaseMessage]? {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
+        let sortDescriptor = NSSortDescriptor(key: "date", ascending: true)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        fetchRequest.predicate = NSPredicate(format: "userackDate != nil")
+        
+        let result = managedObjectContext.performAndWait {
+            try? fetchRequest.execute() as? [BaseMessage]
+        }
+        return result
+    }
+    
+    public func messagesWithUserGroupReactions() -> [BaseMessage]? {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
+        let sortDescriptor = NSSortDescriptor(key: "date", ascending: true)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        fetchRequest.predicate = NSPredicate(format: "groupDeliveryReceipts != nil")
+        
+        let result = managedObjectContext.performAndWait {
+            try? fetchRequest.execute() as? [BaseMessage]
+        }
+        return result
     }
     
     // MARK: - Global Search

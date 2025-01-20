@@ -168,7 +168,7 @@ We accept GitHub pull requests. Please refer to <https://threema.ch/open-source/
 Threema for iOS is licensed under the GNU Affero General Public License v3.
 
 
-    Copyright (c) 2012-2024 Threema GmbH
+    Copyright (c) 2012-2025 Threema GmbH
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License, version 3,
     as published by the Free Software Foundation.

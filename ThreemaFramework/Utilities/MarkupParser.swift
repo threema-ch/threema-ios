@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -48,7 +48,7 @@ public class MarkupParser {
     private static let PREFORMAT_MAX_COUNT = 5000
     
     private static let markupAttributes = [
-        NSAttributedString.Key.foregroundColor: Colors.textVeryLight,
+        NSAttributedString.Key.foregroundColor: UIColor.secondaryLabel,
         NSAttributedString.Key.tokenType: TokenType.markup,
     ] as [NSAttributedString.Key: Any]
     

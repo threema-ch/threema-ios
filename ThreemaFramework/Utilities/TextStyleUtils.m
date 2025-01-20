@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2023 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -47,7 +47,7 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
     }
     
     NSDataDetector *detector = [NSDataDetector dataDetectorWithTypes:textCheckingTypes error:NULL];
-    NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:string attributes:@{NSFontAttributeName: font, NSForegroundColorAttributeName: textColor ? textColor : Colors.text}];
+    NSMutableAttributedString *attributedString = [[NSMutableAttributedString alloc] initWithString:string attributes:@{NSFontAttributeName: font, NSForegroundColorAttributeName: textColor ? textColor : UIColor.labelColor}];
     [detector enumerateMatchesInString:string options:0 range:NSMakeRange(0, string.length) usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
         NSMutableDictionary *attributes = [NSMutableDictionary dictionary];
         attributes[@"ZSWTappableLabelTappableRegionAttributeName"] = @YES;
@@ -176,7 +176,7 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
                 displayName = contact.mentionName;
                 [attributes setObject:@YES forKey:@"ZSWTappableLabelTappableRegionAttributeName"];
                 [attributes setObject:contact forKey:@"NSTextCheckingResult"];
-                [attributes setObject:Colors.text forKey:NSForegroundColorAttributeName];
+                [attributes setObject:UIColor.labelColor forKey:NSForegroundColorAttributeName];
                 [paddingAttributeLeft setObject:@YES forKey:@"ZSWTappableLabelTappableRegionAttributeName"];
                 [paddingAttributeLeft setObject:contact forKey:@"NSTextCheckingResult"];
                 [paddingAttributeRight setObject:@YES forKey:@"ZSWTappableLabelTappableRegionAttributeName"];

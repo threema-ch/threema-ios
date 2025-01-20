@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -28,13 +28,11 @@ final class MessageSecondaryTextLabel: RTLAligningLabel {
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureLabel()
-        updateColors()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         configureLabel()
-        updateColors()
     }
     
     convenience init() {
@@ -45,14 +43,9 @@ final class MessageSecondaryTextLabel: RTLAligningLabel {
         numberOfLines = 0
         
         font = ChatViewConfiguration.SecondaryText.font
+        textColor = .secondaryLabel
         adjustsFontForContentSizeCategory = true
         
         lineBreakMode = .byWordWrapping
-    }
-    
-    // MARK: - Update
-    
-    func updateColors() {
-        Colors.setTextColor(Colors.textLight, label: self)
     }
 }

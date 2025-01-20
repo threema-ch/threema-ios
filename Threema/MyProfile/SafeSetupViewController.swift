@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2024 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -58,6 +58,8 @@ class SafeSetupViewController: ThemedViewController {
         title = "Threema Safe"
         safeImageCircle.layer.cornerRadius = safeImageCircle.frame.height / 2
         safeSwitch.isEnabled = !mdmSetup.isSafeBackupForce()
+        
+        view.backgroundColor = .secondarySystemGroupedBackground
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -149,8 +151,6 @@ class SafeSetupViewController: ThemedViewController {
     }
     
     private func setupColor() {
-        view.backgroundColor = Colors.backgroundTableViewCell
-        
         safeSeparatorView.backgroundColor = Colors.separator
         safeImageCircle.backgroundColor = Colors.backgroundSafeImageCircle
         safeImageView.bringSubviewToFront(view)

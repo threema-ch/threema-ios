@@ -235,6 +235,7 @@
         cell.textLabel.textColor = [UIColor colorWithRed:0 green:122.0f/255.0f blue:1.0f alpha:1.0f];
         
         if (indexPath.row == 0) {
+            cell.textLabel.textColor = [UIColor primary];
             if (_passcodeLockOn) {
                 cell.textLabel.text = KKPasscodeLockLocalizedString(@"Turn Passcode Off", @"");
             } else {
@@ -248,13 +249,17 @@
             cell.accessibilityTraits = UIAccessibilityTraitButton;
             if (!_passcodeLockOn) {
                 cell.accessibilityTraits = UIAccessibilityTraitNotEnabled;
-                cell.textLabel.textColor = [UIColor grayColor];
+                cell.textLabel.textColor = [UIColor secondaryLabelColor];
+            }
+            else {
+                cell.textLabel.textColor = [UIColor primary];
             }
         }
 	} else if (indexPath.section == 1) {
         
         cell.textLabel.text = KKPasscodeLockLocalizedString(@"Require Passcode", @"");
         cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.textLabel.textColor = [UIColor labelColor];
         cell.accessibilityIdentifier = @"Identifier2";
         cell.detailTextLabel.text = [KKPasscodeSettingsViewController textForGracePeriod:_gracePeriod shortForm:YES];
         
@@ -270,11 +275,11 @@
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         cell.textLabel.text = touchIdType;
         if (_passcodeLockOn && touchIdSupported) {
-            cell.textLabel.textColor = [UIColor blackColor];
+            cell.textLabel.textColor = [UIColor labelColor];
             _touchIdSwitch.enabled = YES;
             cell.accessibilityTraits = UIAccessibilityTraitNone;
         } else {
-            cell.textLabel.textColor = [UIColor grayColor];
+            cell.textLabel.textColor = [UIColor secondaryLabelColor];
             _touchIdSwitch.enabled = NO;
             cell.accessibilityTraits = UIAccessibilityTraitNotEnabled;
         }
@@ -283,11 +288,11 @@
         cell.accessoryView = _eraseDataSwitch;
         cell.selectionStyle = UITableViewCellSelectionStyleNone;
         if (_passcodeLockOn) {
-            cell.textLabel.textColor = [UIColor blackColor];
+            cell.textLabel.textColor = [UIColor labelColor];
             _eraseDataSwitch.enabled = YES;
             cell.accessibilityTraits = UIAccessibilityTraitNone;
         } else {
-            cell.textLabel.textColor = [UIColor grayColor];
+            cell.textLabel.textColor = [UIColor secondaryLabelColor];
             _eraseDataSwitch.enabled = NO;
             cell.accessibilityTraits = UIAccessibilityTraitNotEnabled;
         }

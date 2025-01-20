@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2024 Threema GmbH
+// Copyright (c) 2019-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -58,6 +58,8 @@ import ThreemaMacros
             .localizedString(forKey: "companydirectory_noentries_description")
         
         title = MyIdentityStore.shared()?.companyName
+        
+        noEntriesFoundDescriptionLabel.textColor = .secondaryLabel
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -112,8 +114,6 @@ import ThreemaMacros
         
         Colors.update(searchBar: searchBar)
         Colors.update(tableView: tableView)
-        
-        noEntriesFoundDescriptionLabel.textColor = Colors.textLight
     }
     
     func updateNoEntriesFound() {
@@ -322,7 +322,7 @@ import ThreemaMacros
         stackView.spacing = 2.0
         
         let textlabel = UILabel(frame: CGRect(x: 0.0, y: 0.0, width: textWidth, height: 20.0))
-        textlabel.textColor = Colors.text
+        textlabel.textColor = .label
         textlabel.font = UIFont.preferredFont(forTextStyle: UIFont.TextStyle.callout)
         textlabel.text = text
         stackView.addArrangedSubview(textlabel)
@@ -419,7 +419,7 @@ extension CompanyDirectoryViewController: UITableViewDataSource {
                 systemName: "chevron.down.circle",
                 withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
             )?
-                .withTintColor(Colors.textLight, renderingMode: .alwaysOriginal)
+                .withTintColor(.secondaryLabel, renderingMode: .alwaysOriginal)
             cell.imageView?.image = image?.resizedImage(newSize: CGSize(width: 25.0, height: 25.0))
             cell.accessoryView = nil
             return cell
@@ -435,14 +435,7 @@ extension CompanyDirectoryViewController: UITableViewDataSource {
             return cell
         }
     }
-    
-    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        Colors.update(cell: cell)
-        if cell.isKind(of: Old_CompanyDirectoryContactCell.self) {
-            (cell as! Old_CompanyDirectoryContactCell).updateColors()
-        }
-    }
-    
+        
     func sectionIndexTitles(for tableView: UITableView) -> [String]? {
         UILocalizedIndexedCollation.current().sectionIndexTitles
     }

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -26,6 +26,7 @@ import ThreemaMacros
 struct NotificationSettingsView: View {
     
     @EnvironmentObject var settingsVM: SettingsStore
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     @State var dndBegin = Date.now
     @State var dndEnd = Date.now
@@ -163,29 +164,56 @@ struct NotificationSettingsView: View {
                             )
                         }
                         
-                        DatePicker(
-                            #localize("settings_notifications_masterDnd_startTime"),
-                            selection: $dndBegin,
-                            displayedComponents: .hourAndMinute
-                        )
-                        .datePickerStyle(.compact)
-                        .onChange(of: dndBegin) { _ in
-                            didSetStartTime()
+                        if UIDevice.current.userInterfaceIdiom == .pad {
+                            DatePicker(
+                                #localize("settings_notifications_masterDnd_startTime"),
+                                selection: $dndBegin,
+                                displayedComponents: .hourAndMinute
+                            )
+                            .datePickerStyle(.wheel)
+                            .onChange(of: dndBegin) { _ in
+                                didSetStartTime()
+                            }
+                            
+                            DatePicker(
+                                #localize("settings_notifications_masterDnd_endTime"),
+                                selection: $dndEnd,
+                                displayedComponents: .hourAndMinute
+                            )
+                            .datePickerStyle(.wheel)
+                            .onChange(of: dndEnd) { _ in
+                                didSetEndTime()
+                            }
+                            .onAppear {
+                                dndBegin = dateFromTimeString(timeString: settingsVM.masterDndStartTime ?? "00:00")
+                                dndEnd = dateFromTimeString(timeString: settingsVM.masterDndEndTime ?? "00:00")
+                            }
                         }
                         
-                        DatePicker(
-                            #localize("settings_notifications_masterDnd_endTime"),
-                            selection: $dndEnd,
-                            displayedComponents: .hourAndMinute
-                        )
-                        .datePickerStyle(.compact)
-                        .onChange(of: dndEnd) { _ in
-                            didSetEndTime()
-                        }
-                        
-                        .onAppear {
-                            dndBegin = dateFromTimeString(timeString: settingsVM.masterDndStartTime ?? "00:00")
-                            dndEnd = dateFromTimeString(timeString: settingsVM.masterDndEndTime ?? "00:00")
+                        else {
+                            DatePicker(
+                                #localize("settings_notifications_masterDnd_startTime"),
+                                selection: $dndBegin,
+                                displayedComponents: .hourAndMinute
+                            )
+                            .datePickerStyle(.compact)
+                            .onChange(of: dndBegin) { _ in
+                                didSetStartTime()
+                            }
+                            
+                            DatePicker(
+                                #localize("settings_notifications_masterDnd_endTime"),
+                                selection: $dndEnd,
+                                displayedComponents: .hourAndMinute
+                            )
+                            .datePickerStyle(.compact)
+                            .onChange(of: dndEnd) { _ in
+                                didSetEndTime()
+                            }
+                            .onAppear {
+                                dndBegin = dateFromTimeString(timeString: settingsVM.masterDndStartTime ?? "00:00")
+                                dndEnd = dateFromTimeString(timeString: settingsVM.masterDndEndTime ?? "00:00")
+                            }
                         }
                     }
                 }

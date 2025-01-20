@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -38,6 +38,8 @@ class LinkEmailViewController: ThemedTableViewController {
         emailTextField.placeholder = #localize("link_email_textfield_placeholder")
         emailTextFieldTitle.text = #localize("link_email_textfield_title")
         emailTextField.keyboardAppearance = UIKeyboardAppearance.default
+        
+        emailTextFieldTitle.textColor = .label
         
         ServerInfoProviderFactory.makeServerInfoProvider()
             .directoryServer(ipv6: UserSettings.shared().enableIPv6) { directoryServerInfo, _ in

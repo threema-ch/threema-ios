@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -54,8 +54,10 @@ enum ChatViewMessageActionsProvider {
                     menu.preferredElementSize = .small
                 }
                 return menu
+                
             case .inline:
                 return UIMenu(options: .displayInline, children: actions.map(\.contextMenuAction))
+                
             case let .submenu(title):
                 return UIMenu(title: title, children: actions.map(\.contextMenuAction))
             }
@@ -111,7 +113,6 @@ enum ChatViewMessageActionsProvider {
     ///   - message: Target message for actions
     ///   - activityViewAnchor: Anchor view for activity
     ///   - popOverSource: Anchor point for delete confirmation
-    ///   - ackHandler: Called when a reaction is tapped
     ///   - markStarHandler: Called when add/remove star is tapped
     ///   - retryAndCancelHandler: Called when retry or cancel is tapped
     ///   - downloadHandler: Called when download is tapped
@@ -125,12 +126,12 @@ enum ChatViewMessageActionsProvider {
     ///   - selectHandler: Called when select is tapped
     ///   - willDelete: Called when full (not remote) delete is selected and before the delete happens
     ///   - didDelete: Called when full (not remote) delete is selected and after the delete happened
+    ///   - ackHandler: Called when a reaction is tapped
     /// - Returns: A set of default actions sections
     public static func defaultActions(
         message: BaseMessage,
         activityViewAnchor: UIView,
         popOverSource: UIView,
-        ackHandler: @escaping (BaseMessage, Bool) -> Void?,
         markStarHandler: @escaping (BaseMessage) -> Void?,
         retryAndCancelHandler: DefaultHandler? = nil,
         downloadHandler: DefaultHandler? = nil,
@@ -143,7 +144,9 @@ enum ChatViewMessageActionsProvider {
         detailsHandler: @escaping DefaultHandler,
         selectHandler: @escaping DefaultHandler,
         willDelete: @escaping DefaultHandler,
-        didDelete: @escaping DefaultHandler
+        didDelete: @escaping DefaultHandler,
+        ackHandler: @escaping (BaseMessage, Bool) -> Void?,
+        showEmojiPickerHandler: @escaping DefaultHandler
     ) -> [MessageActionsSection] {
         
         // MARK: Primary actions
@@ -151,13 +154,17 @@ enum ChatViewMessageActionsProvider {
         let primaryActionsSection = defaultPrimaryActionsSection(
             message: message,
             ackHandler: ackHandler,
-            markStarHandler: markStarHandler
+            markStarHandler: markStarHandler,
+            showEmojiPickerHandler: showEmojiPickerHandler
         )
         
         // MARK: General actions
         
         var generalActions = [MessageAction]()
         
+        if UserSettings.shared().sendEmojiReactions {
+            generalActions.append(addStarMarkerAction(message: message, handler: markStarHandler))
+        }
         // File/media actions
         
         assert(
@@ -260,17 +267,31 @@ enum ChatViewMessageActionsProvider {
     public static func defaultPrimaryActionsSection(
         message: BaseMessage,
         ackHandler: ((BaseMessage, Bool) -> Void?)?,
-        markStarHandler: @escaping (BaseMessage) -> Void?
+        markStarHandler: @escaping (BaseMessage) -> Void?,
+        showEmojiPickerHandler: DefaultHandler?
     ) -> MessageActionsSection {
         var primaryActions = [MessageAction]()
         
-        if let ackHandler, message.supportsReaction {
-            let thumbsUp = thumbsUpAction(message: message, handler: ackHandler)
-            let thumbsDown = thumbsDownAction(message: message, handler: ackHandler)
-            primaryActions.append(contentsOf: [thumbsUp, thumbsDown])
+        if UserSettings.shared().sendEmojiReactions, message.supportsReaction {
+            if let ackHandler {
+                let thumbsUp = thumbsUpAction(message: message, handler: ackHandler)
+                let thumbsDown = thumbsDownAction(message: message, handler: ackHandler)
+                primaryActions.append(contentsOf: [thumbsUp, thumbsDown])
+            }
+            
+            if let showEmojiPickerHandler {
+                primaryActions.append(showEmojiPickerAction(handler: showEmojiPickerHandler))
+            }
         }
-        
-        primaryActions.append(addStarMarkerAction(message: message, handler: markStarHandler))
+        else {
+            if let ackHandler, message.supportsLegacyReaction {
+                let thumbsUp = thumbsUpAction(message: message, handler: ackHandler)
+                let thumbsDown = thumbsDownAction(message: message, handler: ackHandler)
+                primaryActions.append(contentsOf: [thumbsUp, thumbsDown])
+            }
+            
+            primaryActions.append(addStarMarkerAction(message: message, handler: markStarHandler))
+        }
         
         return MessageActionsSection(sectionType: .horizontalInline, actions: primaryActions)
     }
@@ -315,17 +336,9 @@ enum ChatViewMessageActionsProvider {
         message: BaseMessage,
         handler: @escaping (BaseMessage, Bool) -> Void?
     ) -> MessageAction {
-        let image: UIImage? =
-            if message.isGroupMessage {
-                message.groupReactionsThumbsUpImage
-            }
-            else {
-                message.userThumbsUpImage
-            }
                 
-        return MessageAction(
-            title: #localize("acknowledge"),
-            image: image
+        MessageAction(
+            title: "👍"
         ) {
             handler(message, true)
             let generator = UINotificationFeedbackGenerator()
@@ -337,17 +350,9 @@ enum ChatViewMessageActionsProvider {
         message: BaseMessage,
         handler: @escaping (BaseMessage, Bool) -> Void?
     ) -> MessageAction {
-        let image: UIImage? =
-            if message.isGroupMessage {
-                message.groupReactionsThumbsDownImage
-            }
-            else {
-                message.userThumbsDownImage
-            }
                 
-        return MessageAction(
-            title: #localize("decline"),
-            image: image
+        MessageAction(
+            title: "👎"
         ) {
             handler(message, false)
             let generator = UINotificationFeedbackGenerator()
@@ -355,15 +360,26 @@ enum ChatViewMessageActionsProvider {
         }
     }
     
+    private static func showEmojiPickerAction(
+        handler: @escaping DefaultHandler
+    ) -> MessageAction {
+                
+        MessageAction(
+            title: #localize("emoji_reaction_open_picker"),
+            image: UIImage(resource: .threemaCustomFaceSmilingBadgePlus),
+            handler: handler
+        )
+    }
+    
     private static func addStarMarkerAction(
         message: BaseMessage,
         handler: @escaping (BaseMessage) -> Void?
     ) -> MessageAction {
         let isStarred = message.messageMarkers?.star.boolValue ?? false
-        let title = isStarred ? "marker_action_remove_star" : "marker_action_star"
+        let title = isStarred ? #localize("marker_action_remove_star") : #localize("marker_action_star")
         
         return MessageAction(
-            title: title.localized,
+            title: title,
             image: message.messageMarkerStarImage
         ) {
             handler(message)

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -47,35 +47,13 @@ extension Colors {
             Asset.SharedColors.black.color
         }
     }
-    
-    @objc public class var backgroundTableHeaderView: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.gray200.color
-        case .dark:
-            Asset.SharedColors.black.color
-        }
-    }
-    
-    @objc public class var backgroundTableViewCell: UIColor {
-        .secondarySystemGroupedBackground
-    }
-    
+        
     @objc public class var backgroundTableViewCellSelected: UIColor {
         switch theme {
         case .light, .undefined:
             Asset.SharedColors.backgroundCellSelectedLight.color
         case .dark:
             Asset.SharedColors.backgroundCellSelectedDark.color
-        }
-    }
-    
-    @objc public class var backgroundTableViewCellShareExtensionSelected: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.gray400.color
-        case .dark:
-            Asset.SharedColors.gray350.color
         }
     }
 }

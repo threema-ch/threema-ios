@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2023 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -94,6 +94,7 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, readwrite) NSInteger keepMessagesDays;
 
 @property (nonatomic, readwrite) BOOL contactList2;
+@property (nonatomic, readwrite) BOOL sendEmojiReactions;
 
 @property (nonatomic, readwrite) BOOL safeIntroShown;
 @end

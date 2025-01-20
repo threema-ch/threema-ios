@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2021 Threema GmbH
+// Copyright (c) 2019-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -24,7 +24,7 @@ import XCTest
 
 class DatabasePreparer {
     private let objCnx: NSManagedObjectContext
-    
+
     required init(context: NSManagedObjectContext) {
         self.objCnx = context
     }
@@ -293,6 +293,7 @@ class DatabasePreparer {
         read: Bool = true,
         readDate: Date? = nil,
         sent: Bool = true,
+        userackDate: Date? = nil,
         userack: Bool = false,
         sender: ContactEntity?,
         remoteSentDate: Date? // can be set to nil for outgoing messages
@@ -307,6 +308,7 @@ class DatabasePreparer {
         textMessage.read = NSNumber(booleanLiteral: read)
         textMessage.readDate = readDate
         textMessage.sent = NSNumber(booleanLiteral: sent)
+        textMessage.userackDate = userackDate
         textMessage.userack = NSNumber(booleanLiteral: userack)
         textMessage.sender = sender
         textMessage.remoteSentDate = remoteSentDate
@@ -399,14 +401,21 @@ class DatabasePreparer {
         members: [String]
     ) throws -> (ContactEntity, GroupEntity, ConversationEntity) {
         save {
-            let contactEntity = createContact(identity: groupCreatorIdentity)
+            let contactEntity = loadEntity(
+                objectType: ContactEntity.self,
+                predicate: "identity == %@",
+                args: groupCreatorIdentity
+            )
+                ?? createContact(identity: groupCreatorIdentity)
             let groupEntity = createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             let conversation = createConversation()
             // swiftformat:disable:next acronyms
             conversation.groupId = groupEntity.groupId
             conversation.contact = contactEntity
             for identity in members {
-                conversation.members?.insert(createContact(identity: identity))
+                let member = loadEntity(objectType: ContactEntity.self, predicate: "identity == %@", args: identity)
+                    ?? createContact(identity: identity)
+                conversation.members?.insert(member)
             }
 
             return (contactEntity, groupEntity, conversation)
@@ -414,8 +423,26 @@ class DatabasePreparer {
     }
     
     private func createEntity<T: NSManagedObject>(objectType: T.Type) -> T {
+        NSEntityDescription.insertNewObject(
+            forEntityName: entityDescription(objectType: objectType).name!,
+            into: objCnx
+        ) as! T
+    }
+
+    private func loadEntity<T: NSManagedObject>(objectType: T.Type, predicate: String, args: String...) -> T? {
+        let entityDescriptor = entityDescription(objectType: objectType)
+
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityDescriptor.name!)
+        fetchRequest.entity = entityDescriptor
+        fetchRequest.predicate = NSPredicate(format: predicate, argumentArray: args)
+        fetchRequest.fetchLimit = 1
+
+        return (try? fetchRequest.execute() as? [T])?.first
+    }
+
+    private func entityDescription(objectType: (some NSManagedObject).Type) -> NSEntityDescription {
         var entityName: String
-        
+
         if objectType is ContactEntity.Type {
             entityName = "Contact"
         }
@@ -470,7 +497,7 @@ class DatabasePreparer {
         else {
             fatalError("Object type not defined")
         }
-        
-        return NSEntityDescription.insertNewObject(forEntityName: entityName, into: objCnx) as! T
+
+        return NSEntityDescription.entity(forEntityName: entityName, in: objCnx)!
     }
 }

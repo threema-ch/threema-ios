@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -46,6 +46,8 @@ final class MessageVoiceMessageStateButton: ThemedCodeButton {
         self.isPlaying = false
         
         super.init(frame: frame, action: action)
+        
+        self.tintColor = .secondaryLabel
     }
     
     // MARK: - Updates
@@ -91,9 +93,5 @@ final class MessageVoiceMessageStateButton: ThemedCodeButton {
             right: -config.circleFillSymbolInset
         ))
         setImage(image, for: .normal)
-    }
-    
-    override func updateColors() {
-        tintColor = Colors.textLight
     }
 }

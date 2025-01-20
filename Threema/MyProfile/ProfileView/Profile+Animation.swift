@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -34,6 +34,8 @@ enum ImageState {
 struct TrackedFrame: Equatable {
     let id: String
     let frame: CGRect
+    let data: Any?
+    var proxy: GeometryProxy? = nil
 
     static func == (lhs: TrackedFrame, rhs: TrackedFrame) -> Bool {
         lhs.id == rhs.id && lhs.frame == rhs.frame

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2024 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -209,6 +209,30 @@ class TaskDefinitionTests: XCTestCase {
         XCTAssertEqual(result.editMessage, expectedEditMessage)
     }
 
+    func testTaskDefinitionSendReactionMessageEncodeDecode() throws {
+        let expectedReceiverIdentity = ThreemaIdentity("ECHOECHO")
+        let expectedReactionMessage = try CspE2e_Reaction.with { message in
+            message.messageID = try MockData.generateMessageID().littleEndian()
+            message.action = .apply(Data("😁".utf8))
+        }
+
+        let task = TaskDefinitionSendReactionMessage(
+            reaction: expectedReactionMessage,
+            receiverIdentity: expectedReceiverIdentity.string
+        )
+
+        let encoder = JSONEncoder()
+        let data = try XCTUnwrap(encoder.encode(task))
+
+        let decoder = JSONDecoder()
+        let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendReactionMessage.self, from: data))
+
+        XCTAssertEqual(result.receiverIdentity, expectedReceiverIdentity.string)
+        XCTAssertNil(result.groupID)
+        XCTAssertEqual(result.reaction.action, expectedReactionMessage.action)
+        XCTAssertEqual(result.reaction.messageID, expectedReactionMessage.messageID)
+    }
+    
     func testTaskDefinitionSendDeliveryReceiptsMessageEncodeDecode() throws {
         let expectedFromIdentity = "CONTACT1"
         let expectedToIdentity = "CONTACT2"

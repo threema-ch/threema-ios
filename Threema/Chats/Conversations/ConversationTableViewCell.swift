@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -166,8 +166,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     private lazy var nameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: .body).bold()
-        label.textColor = Colors.text
-        label.highlightedTextColor = Colors.text
+        label.textColor = .label
         label.numberOfLines = 1
         
         if UIApplication.shared.preferredContentSizeCategory.isAccessibilityCategory {
@@ -184,8 +183,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     private lazy var dateDraftLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: Configuration.dateDraftTextStyle)
-        label.textColor = Colors.textLight
-        label.highlightedTextColor = Colors.textLight
+        label.textColor = .secondaryLabel
         label.numberOfLines = 1
         label.textAlignment = .right
         
@@ -207,8 +205,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     private lazy var previewLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: Configuration.previewTextStyle)
-        label.textColor = Colors.textLight
-        label.highlightedTextColor = Colors.textLight
+        label.textColor = .secondaryLabel
         label.numberOfLines = 2
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
@@ -254,7 +251,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             systemName: "ellipsis.bubble.fill",
             withConfiguration: Configuration.typingIconConfiguration
         )?
-            .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+            .withTintColor(.secondaryLabel, renderingMode: .alwaysOriginal)
         let imageView = UIImageView(
             image: image
         )
@@ -280,7 +277,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 systemName: "bell.fill",
                 withConfiguration: Configuration.iconsConfiguration
             )?
-                .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+                .withTintColor(.secondaryLabel, renderingMode: .alwaysOriginal)
         )
         
         imageView.contentMode = .scaleAspectFit
@@ -299,7 +296,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             systemName: "pin.circle.fill",
             withConfiguration: Configuration.iconsConfiguration
         )?
-            .withTintColor(Colors.backgroundPinChat, renderingMode: .alwaysOriginal)
+            .withTintColor(.pin, renderingMode: .alwaysOriginal)
         let imageView = UIImageView(
             image: image
         )
@@ -572,28 +569,12 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         super.updateColors()
         
         backgroundColor = .clear
-        
-        if let conversation,
-           !conversation.isGroup,
-           let contact = conversation.contact,
-           let state = contact.state,
-           state.intValue == kStateInactive || state.intValue == kStateInvalid {
-            nameLabel.textColor = Colors.textLight
-            nameLabel.highlightedTextColor = Colors.textLight
-        }
-        else {
-            nameLabel.textColor = Colors.text
-            nameLabel.highlightedTextColor = Colors.text
-        }
-        
+                
         if let conversation {
             let draft = MessageDraftStore.shared.loadDraft(for: conversation)
             updateColorsForDateDraftLabel(isDraft: draft?.string != nil)
         }
         
-        previewLabel.textColor = Colors.textLight
-        previewLabel.highlightedTextColor = Colors.textLight
-
         badgeCountView.updateColors()
         
         typingIndicatorImageView.image = UIImage(
@@ -601,7 +582,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             withConfiguration: Configuration.typingIconConfiguration
             
         )?
-            .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+            .withTintColor(.secondaryLabel, renderingMode: .alwaysOriginal)
         
         let iconConfig = traitCollection.preferredContentSizeCategory.isAccessibilityCategory ?
             Configuration.iconsAccessibilityConfiguration
@@ -610,7 +591,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             systemName: "pin.circle.fill",
             withConfiguration: iconConfig
         )?
-            .withTintColor(Colors.backgroundPinChat, renderingMode: .alwaysOriginal)
+            .withTintColor(.pin, renderingMode: .alwaysOriginal)
         pinImageView.image = pinImage
         
         updateDisplayStateImage()
@@ -645,12 +626,10 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     private func updateColorsForDateDraftLabel(isDraft: Bool) {
         if isDraft {
-            dateDraftLabel.textColor = Colors.red
-            dateDraftLabel.highlightedTextColor = Colors.red
+            dateDraftLabel.textColor = .systemRed
         }
         else {
-            dateDraftLabel.textColor = Colors.textLight
-            dateDraftLabel.highlightedTextColor = Colors.textLight
+            dateDraftLabel.textColor = .secondaryLabel
         }
     }
     
@@ -772,10 +751,12 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             else {
                 nameLabel.attributedText = NSMutableAttributedString(string: displayName)
             }
-            nameLabel.textColor = Colors.text
-            nameLabel.highlightedTextColor = Colors.text
+            nameLabel.textColor = .label
             return
         }
+        
+        var attributedNameString = NSMutableAttributedString(string: displayName)
+        nameLabel.textColor = .label
         
         // Check style for the title
         if let contact = conversation.contact,
@@ -784,20 +765,23 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             // Contact is invalid
             let attributeString = NSMutableAttributedString(string: displayName)
             attributeString.addAttribute(.strikethroughStyle, value: 2, range: NSMakeRange(0, attributeString.length))
-            nameLabel.attributedText = attributeString
-            nameLabel.textColor = Colors.textLight
-            nameLabel.highlightedTextColor = Colors.textLight
+            attributedNameString = attributeString
+            nameLabel.textColor = .secondaryLabel
         }
         else if let contact = conversation.contact,
-                UserSettings.shared().blacklist.contains(contact.identity) {
+                let state = contact.state,
+                state.intValue == kStateInactive {
+            // Contact is inactive
+            nameLabel.textColor = .secondaryLabel
+        }
+        
+        if let contact = conversation.contact,
+           UserSettings.shared().blacklist.contains(contact.identity) {
             // Contact is blacklisted
-            nameLabel.attributedText = NSMutableAttributedString(string: "🚫 " + displayName)
+            attributedNameString = NSMutableAttributedString(string: "🚫 " + attributedNameString.string)
         }
-        else {
-            nameLabel.attributedText = NSMutableAttributedString(string: displayName)
-            nameLabel.textColor = Colors.text
-            nameLabel.highlightedTextColor = Colors.text
-        }
+
+        nameLabel.attributedText = attributedNameString
     }
     
     private func updateDisplayStateImage() {
@@ -812,7 +796,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 systemName: "lock.fill",
                 withConfiguration: Configuration.lockImageConfiguration
             )?
-                .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+                .withTintColor(.secondaryLabel, renderingMode: .alwaysOriginal)
             displayStateImageView.isHidden = false
             return
         }
@@ -826,14 +810,14 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                     systemName: "note.text",
                     withConfiguration: Configuration.noteGroupConfiguration
                 )?
-                    .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+                    .withTintColor(.secondaryLabel, renderingMode: .alwaysOriginal)
             }
             else {
                 displayStateImageView.image = UIImage(
                     systemName: "person.3.fill",
                     withConfiguration: Configuration.displayStateConfiguration
                 )?
-                    .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+                    .withTintColor(.secondaryLabel, renderingMode: .alwaysOriginal)
             }
             displayStateImageView.isHidden = false
             return
@@ -844,7 +828,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 systemName: "megaphone.fill",
                 withConfiguration: Configuration.displayStateConfiguration
             )?
-                .withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+                .withTintColor(.secondaryLabel, renderingMode: .alwaysOriginal)
             displayStateImageView.isHidden = false
             return
         }
@@ -853,7 +837,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             if let lastMessage = conversation.lastMessage,
                lastMessage.deletedAt == nil,
                let symbol = lastMessage.messageDisplayState.overviewSymbol(
-                   with: Colors.grayCircleBackground,
+                   with: .secondaryLabel,
                    ownMessage: lastMessage.isOwnMessage,
                    configuration: Configuration.displayStateConfiguration
                ) {
@@ -875,7 +859,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         if let draft = MessageDraftStore.shared.previewForDraft(
             for: conversation,
             textStyle: Configuration.dateDraftTextStyle,
-            tint: Colors.textLight
+            tint: .secondaryLabel
         ) {
             updateColorsForDateDraftLabel(isDraft: true)
             dateDraftLabel.text = #localize("draft").uppercased()
@@ -949,7 +933,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             Configuration.iconsAccessibilityConfiguration
             : Configuration.iconsConfiguration
         if let icon = pushSetting.imageForEditedPushSetting(with: iconConfig) {
-            dndImageView.image = icon.withTintColor(Colors.grayCircleBackground, renderingMode: .alwaysOriginal)
+            dndImageView.image = icon.withTintColor(.secondaryLabel, renderingMode: .alwaysOriginal)
             dndImageView.isHidden = false
         }
         else {
@@ -1217,10 +1201,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         }
 
         if let lastMessage = conversation?.lastMessage {
-            observeLastMessage(lastMessage, keyPath: \.userack, callOnCreation: false) { [weak self] in
-                self?.updateDisplayStateImage()
-                self?.updateDateDraftLabel()
-            }
 
             observeLastMessage(lastMessage, keyPath: \.read, callOnCreation: false) { [weak self] in
                 self?.updateDisplayStateImage()

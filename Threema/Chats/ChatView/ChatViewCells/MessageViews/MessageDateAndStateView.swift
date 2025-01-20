@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -36,7 +36,6 @@ final class MessageDateAndStateView: UIView {
             }
             
             showStatus = message.messageDisplayState != .none && message.deletedAt == nil
-            showGroupReactions = message.isGroupMessage && message.messageGroupReactionState != .none
             showMarkers = message.hasMarkers
             
             let block = {
@@ -63,7 +62,12 @@ final class MessageDateAndStateView: UIView {
     /// Allows overriding the default text and symbol color to something custom
     var overrideColor: UIColor? {
         didSet {
-            updateColors()
+            if let overrideColor {
+                dateLabel.textColor = overrideColor
+            }
+            else {
+                dateLabel.textColor = .secondaryLabel
+            }
         }
     }
     
@@ -90,7 +94,7 @@ final class MessageDateAndStateView: UIView {
     
     // MARK: Views & constraints
     
-    // Date: Trailing to this view there can be the Status, GroupReactions, Markers or no view.
+    // Date: Trailing to this view there can be the Status, Markers or no view.
     private lazy var dateLabel = MessageMetadataTextLabel()
     
     private lazy var dateLabelConstraints: [NSLayoutConstraint] =
@@ -100,19 +104,13 @@ final class MessageDateAndStateView: UIView {
         equalTo: statusImageView.centerXAnchor,
         constant: -trailingSymbolConstant
     )]
-    
-    private lazy var dateLabelGroupReactionsViewConstraints: [NSLayoutConstraint] =
-        [dateLabel.trailingAnchor.constraint(
-            equalTo: groupReactionsView.leadingAnchor,
-            constant: -ChatViewConfiguration.MessageMetadata.minimalInBetweenSpace
-        )]
 
     private lazy var dateLabelMarkerViewConstraints: [NSLayoutConstraint] = [dateLabel.trailingAnchor.constraint(
         equalTo: markersView.centerXAnchor,
         constant: -trailingSymbolConstant
     )]
     
-    // Status: Trailing to this view there can be GroupReactions, Markers or no view.
+    // Status: Trailing to this view there can be Markers or no view.
     private var showStatus = false
     private lazy var statusImageView: UIImageView = {
         let imageView = UIImageView()
@@ -128,35 +126,10 @@ final class MessageDateAndStateView: UIView {
         ),
     ]
     
-    private lazy var statusImageViewGroupReactionsViewConstraints: [NSLayoutConstraint] = [
-        statusImageView.firstBaselineAnchor.constraint(equalTo: dateLabel.firstBaselineAnchor),
-        statusImageView.centerXAnchor.constraint(
-            equalTo: groupReactionsView.leadingAnchor,
-            constant: -trailingSymbolConstant
-        ),
-    ]
-    
     private lazy var statusImageViewMarkerViewConstraints: [NSLayoutConstraint] = [
         statusImageView.firstBaselineAnchor.constraint(equalTo: dateLabel.firstBaselineAnchor),
         statusImageView.centerXAnchor.constraint(
             equalTo: markersView.leadingAnchor,
-            constant: -trailingSymbolConstant
-        ),
-    ]
-    
-    // GroupReactions: Trailing to this view there can be Markers or no view.
-    private var showGroupReactions = false
-    private lazy var groupReactionsView = MessageGroupReactionView()
-    
-    private lazy var groupReactionsViewConstraints: [NSLayoutConstraint] = [
-        groupReactionsView.trailingAnchor.constraint(
-            equalTo: trailingAnchor
-        ),
-    ]
-    
-    private lazy var groupReactionsViewMarkerViewConstraints: [NSLayoutConstraint] = [
-        groupReactionsView.trailingAnchor.constraint(
-            equalTo: markersView.centerXAnchor,
             constant: -trailingSymbolConstant
         ),
     ]
@@ -177,13 +150,11 @@ final class MessageDateAndStateView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureLayout()
-        updateColors()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         configureLayout()
-        updateColors()
     }
     
     convenience init() {
@@ -193,12 +164,10 @@ final class MessageDateAndStateView: UIView {
     private func configureLayout() {
         addSubview(dateLabel)
         addSubview(statusImageView)
-        addSubview(groupReactionsView)
         addSubview(markersView)
         
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         statusImageView.translatesAutoresizingMaskIntoConstraints = false
-        groupReactionsView.translatesAutoresizingMaskIntoConstraints = false
         markersView.translatesAutoresizingMaskIntoConstraints = false
                 
         NSLayoutConstraint.activate([
@@ -210,27 +179,9 @@ final class MessageDateAndStateView: UIView {
     
     // MARK: - Updates
     
-    func updateColors() {
-        guard let message else {
-            return
-        }
-        
-        if let overrideColor {
-            Colors.setTextColor(overrideColor, label: dateLabel)
-        }
-        else {
-            Colors.setTextColor(Colors.textLight, label: dateLabel)
-        }
-        
-        updateStatusImageView(for: message)
-        groupReactionsView.updateColors()
-        markersView.updateColors()
-    }
-    
     private func updateSubviews(for message: BaseMessage) {
         updateDateLabel(for: message)
         updateStatusImageView(for: message)
-        updateGroupReactionsView(for: message)
         updateMarkersView(for: message)
     }
     
@@ -256,25 +207,16 @@ final class MessageDateAndStateView: UIView {
         if showStatus {
             NSLayoutConstraint.activate(dateLabelStatusViewConstraints)
             NSLayoutConstraint.deactivate(dateLabelConstraints)
-            NSLayoutConstraint.deactivate(dateLabelGroupReactionsViewConstraints)
-            NSLayoutConstraint.deactivate(dateLabelMarkerViewConstraints)
-        }
-        else if showGroupReactions {
-            NSLayoutConstraint.activate(dateLabelGroupReactionsViewConstraints)
-            NSLayoutConstraint.deactivate(dateLabelConstraints)
-            NSLayoutConstraint.deactivate(dateLabelStatusViewConstraints)
             NSLayoutConstraint.deactivate(dateLabelMarkerViewConstraints)
         }
         else if showMarkers {
             NSLayoutConstraint.activate(dateLabelMarkerViewConstraints)
             NSLayoutConstraint.deactivate(dateLabelConstraints)
             NSLayoutConstraint.deactivate(dateLabelStatusViewConstraints)
-            NSLayoutConstraint.deactivate(dateLabelGroupReactionsViewConstraints)
         }
         else {
             NSLayoutConstraint.activate(dateLabelConstraints)
             NSLayoutConstraint.deactivate(dateLabelStatusViewConstraints)
-            NSLayoutConstraint.deactivate(dateLabelGroupReactionsViewConstraints)
             NSLayoutConstraint.deactivate(dateLabelMarkerViewConstraints)
         }
     }
@@ -288,66 +230,27 @@ final class MessageDateAndStateView: UIView {
         }
         
         let state = message.messageDisplayState
-        guard let symbol = state.symbol(with: Colors.textLight) else {
+        guard let symbol = state.symbol(with: .secondaryLabel) else {
             statusImageView.isHidden = true
             statusImageView.image = nil
             return
         }
         
-        let coloredSymbol: UIImage =
-            if state != .userAcknowledged, state != .userDeclined, let overrideColor {
-                symbol.withTintColor(overrideColor, renderingMode: .alwaysOriginal)
-            }
-            else {
-                symbol
-            }
-        
-        statusImageView.image = coloredSymbol
+        statusImageView.image = symbol
         
         UIView.performWithoutAnimation {
-            if showGroupReactions {
-                NSLayoutConstraint.activate(statusImageViewGroupReactionsViewConstraints)
-                NSLayoutConstraint.deactivate(statusImageViewMarkerViewConstraints)
-                NSLayoutConstraint.deactivate(statusImageViewConstraints)
-            }
-            else if showMarkers {
+            if showMarkers {
                 NSLayoutConstraint.activate(statusImageViewMarkerViewConstraints)
-                NSLayoutConstraint.deactivate(statusImageViewGroupReactionsViewConstraints)
                 NSLayoutConstraint.deactivate(statusImageViewConstraints)
             }
             else {
                 NSLayoutConstraint.activate(statusImageViewConstraints)
-                NSLayoutConstraint.deactivate(statusImageViewGroupReactionsViewConstraints)
                 NSLayoutConstraint.deactivate(statusImageViewMarkerViewConstraints)
             }
         
             // Avoids a slide in from the left
             layoutIfNeeded()
             statusImageView.isHidden = false
-        }
-    }
-    
-    private func updateGroupReactionsView(for message: BaseMessage) {
-        groupReactionsView.message = message
-        
-        guard showGroupReactions else {
-            groupReactionsView.isHidden = true
-            return
-        }
-        
-        UIView.performWithoutAnimation {
-            if showMarkers {
-                NSLayoutConstraint.activate(groupReactionsViewMarkerViewConstraints)
-                NSLayoutConstraint.deactivate(groupReactionsViewConstraints)
-            }
-            else {
-                NSLayoutConstraint.activate(groupReactionsViewConstraints)
-                NSLayoutConstraint.deactivate(groupReactionsViewMarkerViewConstraints)
-            }
-            
-            // Avoids a slide in from the left
-            layoutIfNeeded()
-            groupReactionsView.isHidden = false
         }
     }
     

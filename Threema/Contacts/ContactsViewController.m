@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2024 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -146,6 +146,9 @@ typedef enum : NSUInteger {
     [self setRefreshControlTitle:NO];
     
     [self updateColors];
+    _noContactsTitleLabel.textColor = UIColor.labelColor;
+    _noContactsMessageLabel.textColor = UIColor.secondaryLabelColor;
+    _countContactsFooterLabel.textColor = UIColor.tertiaryLabelColor;
     
     self.isMultipleEditing = NO;
     
@@ -189,10 +192,7 @@ typedef enum : NSUInteger {
 - (void)updateColors {
     [super updateColors];
     [self.navigationController.view setBackgroundColor:Colors.backgroundNavigationController];
-    
-    _noContactsTitleLabel.textColor = Colors.text;
-    _noContactsMessageLabel.textColor = Colors.textLight;
-    
+        
     [Colors updateWithTableView:self.tableView];
     [Colors updateWithSearchBar:self.searchController.searchBar];
     
@@ -209,10 +209,6 @@ typedef enum : NSUInteger {
     }
     _rfControl.backgroundColor = [UIColor clearColor];
     [self setRefreshControlTitle:NO];
-    
-    [_companyDirectoryCellView updateColors];
-    
-    _countContactsFooterLabel.textColor = Colors.textVeryLight;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -770,7 +766,7 @@ typedef enum : NSUInteger {
     } else {
         refreshText = [BundleUtil localizedStringForKey:@"pull_to_sync"];
     }
-    NSMutableAttributedString *attributedRefreshText = [[NSMutableAttributedString alloc] initWithString:refreshText attributes:@{ NSFontAttributeName: font, NSForegroundColorAttributeName: Colors.textLight, NSBackgroundColorAttributeName: [UIColor clearColor]}];
+    NSMutableAttributedString *attributedRefreshText = [[NSMutableAttributedString alloc] initWithString:refreshText attributes:@{ NSFontAttributeName: font, NSForegroundColorAttributeName: UIColor.secondaryLabelColor, NSBackgroundColorAttributeName: [UIColor clearColor]}];
     _rfControl.attributedTitle = attributedRefreshText;
 }
 

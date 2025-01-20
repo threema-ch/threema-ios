@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2024 Threema GmbH
+// Copyright (c) 2019-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -1895,7 +1895,7 @@ extension VoIPCallService {
             do {
                 try audioSession.setCategory(
                     .playAndRecord,
-                    mode: .voiceChat,
+                    mode: UserSettings.shared().disableProximityMonitoring ? .videoChat : .voiceChat,
                     options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
                 )
                 try audioSession.overrideOutputAudioPort(speakerActive ? .speaker : .none)
@@ -2158,7 +2158,7 @@ extension VoIPCallService {
             }
             
             let notification = UNMutableNotificationContent()
-            notification.categoryIdentifier = "CALL"
+            notification.categoryIdentifier = NotificationActionProvider.Category.callCategory.rawValue
             
             if self.businessInjector.userSettings.pushSound != "none", !pushSetting.muted {
                 notification.sound = UNNotificationSound(
@@ -2612,7 +2612,7 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         do {
             try audioSession.setCategory(
                 .playAndRecord,
-                mode: speakerActive ? .videoChat : .voiceChat,
+                mode: speakerActive || UserSettings.shared().disableProximityMonitoring ? .videoChat : .voiceChat,
                 options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
             )
             try audioSession.overrideOutputAudioPort(speakerActive ? .speaker : .none)

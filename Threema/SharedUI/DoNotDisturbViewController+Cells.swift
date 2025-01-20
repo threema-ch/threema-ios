@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -35,12 +35,7 @@ extension DoNotDisturbViewController {
             
             accessibilityTraits.insert(.button)
             textLabel?.textAlignment = .center
-        }
-        
-        override func updateColors() {
-            super.updateColors()
-            
-            Colors.setTextColor(Colors.red, in: self)
+            textLabel?.textColor = .systemRed
         }
     }
     
@@ -48,13 +43,9 @@ extension DoNotDisturbViewController {
         override func configureCell() {
             super.configureCell()
             
+            textLabel?.textColor = .label
+            
             accessibilityTraits.insert(.button)
-        }
-        
-        override func updateColors() {
-            super.updateColors()
-            // Even tough they are buttons don't use the accent color. Just for stylistic reasons.
-            Colors.setTextColor(Colors.text, in: self)
         }
     }
     

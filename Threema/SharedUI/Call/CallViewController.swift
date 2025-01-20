@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2024 Threema GmbH
+// Copyright (c) 2019-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -164,24 +164,6 @@ class CallViewController: UIViewController {
             let currentRoute = AVAudioSession.sharedInstance().currentRoute
             
             for output in currentRoute.outputs {
-                if isBeingDismissed {
-                    UIDevice.current.isProximityMonitoringEnabled = false
-                }
-                else {
-                    if output.portType == AVAudioSession.Port.builtInReceiver {
-                        if UserSettings.shared()?.disableProximityMonitoring == false,
-                           !UIDevice.current.isProximityMonitoringEnabled,
-                           VoIPCallStateManager.shared.currentCallState() != .idle {
-                            UIDevice.current.isProximityMonitoringEnabled = true
-                        }
-                    }
-                    else {
-                        if UIDevice.current.isProximityMonitoringEnabled {
-                            UIDevice.current.isProximityMonitoringEnabled = false
-                        }
-                    }
-                }
-                
                 if output.portType == AVAudioSession.Port.builtInSpeaker {
                     let speakerImage = UIImage(systemName: "speaker.wave.2.circle.fill")?
                         .applying(
@@ -331,10 +313,7 @@ class CallViewController: UIViewController {
                 
         NavigationBarPromptHandler.isCallActiveInBackground = false
         muteButton.isSelected = VoIPCallStateManager.shared.isCallMuted()
-        if !isTesting {
-            UIDevice.current
-                .isProximityMonitoringEnabled = !(UserSettings.shared()?.disableProximityMonitoring ?? false)
-        }
+
         UIApplication.shared.isIdleTimerDisabled = true
         setupView()
         updateAccessibilityLabels()
@@ -354,8 +333,6 @@ class CallViewController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-                
-        UIDevice.current.isProximityMonitoringEnabled = false
         
         if !NavigationBarPromptHandler.isWebActive {
             UIApplication.shared.isIdleTimerDisabled = false
@@ -1557,7 +1534,6 @@ extension CallViewController {
         else {
             NavigationBarPromptHandler.isCallActiveInBackground = true
             NavigationBarPromptHandler.name = contact?.displayName
-            UIDevice.current.isProximityMonitoringEnabled = false
             
             NotificationCenter.default.post(
                 name: NSNotification.Name(rawValue: kNotificationNavigationItemPromptShouldChange),

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2024 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -172,12 +172,6 @@ typedef enum : NSUInteger {
 
 #pragma mark - Table view
 
-- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (!([cell isKindOfClass:GroupCell.class] || [cell isKindOfClass:ContactCell.class] || [cell isKindOfClass:CompanyDirectoryCell.class])) {
-        [Colors updateWithCell:cell setBackgroundColor:true];
-    }
-}
-
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
     return UITableViewAutomaticDimension;
 }
@@ -250,6 +244,7 @@ typedef enum : NSUInteger {
         if (indexPath.section == 0) {
             cell = [self.tableView dequeueReusableCellWithIdentifier:@"CreateGroupCell"];
             cell.textLabel.text = [BundleUtil localizedStringForKey:@"create_new_group"];
+            cell.textLabel.textColor = UIColor.primary;
         } else {
             NSIndexPath *convertedIndex = [NSIndexPath indexPathForRow:indexPath.row inSection:indexPath.section - 1];
             cell = [self tableView:tableView groupCellForIndexPath:convertedIndex];
@@ -262,7 +257,6 @@ typedef enum : NSUInteger {
                 if (cell == nil) {
                     cell = [[CompanyDirectoryCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"CompanyDirectoryCell"];
                 }
-                [((CompanyDirectoryCell *)cell) updateColors];
             } else {
                 NSIndexPath *convertedIndex = [NSIndexPath indexPathForRow:indexPath.row inSection:indexPath.section - 1];
                 cell = [self tableView:tableView workContactCellForIndexPath:convertedIndex];

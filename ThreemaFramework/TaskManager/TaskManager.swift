@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2023 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -74,9 +74,9 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
         }
     }
     
+    /// Caution: Tasks with retry the completion handler might be called multiple times!
     func addWithWait(taskDefinition: TaskDefinitionProtocol) -> (WaitTask, CancelableTask?) {
-        assert(!taskDefinition.retry, "For retry tasks the completion handler might be called multiple times")
-        
+
         // This is a bit crazy, but the best we could come up with
         let completionTask: Task<Void, Error> = Task {
             try await withCheckedThrowingContinuation { continuation in

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -189,6 +189,10 @@ import ThreemaMacros
             if migratedTo < .v6_3 {
                 // Only a files migration is run
                 migratedTo = .v6_3
+            }
+            if migratedTo < .v6_6 {
+                try migrateTo6_6()
+                migratedTo = .v6_6
             }
 
             // Add here a check if migration is necessary for a particular version...
@@ -715,5 +719,101 @@ import ThreemaMacros
 
         os_signpost(.end, log: osPOILog, name: "6.2 migration")
         DDLogNotice("[AppMigration] App migration to version 6.2 successfully finished")
+    }
+    
+    /// Migrate to version 6.6:
+    /// - Migrate legacy reactions to new reactions
+    private func migrateTo6_6() throws {
+        DDLogNotice("[AppMigration] App migration to version 6.6 started")
+        os_signpost(.begin, log: osPOILog, name: "6.6 migration")
+
+        func addReaction(to message: BaseMessage, from contact: ContactEntity?, thumbUp: Bool, at date: Date) {
+            guard let reaction = businessInjector.entityManager.entityCreator.messageReactionEntity()
+            else {
+                DDLogError("Create reaction entity failed")
+                return
+            }
+
+            reaction.message = message
+            reaction.creator = contact
+            reaction.date = date
+            reaction.reaction = thumbUp ? "👍" : "👎"
+        }
+
+        // Migrate existing ack/dec to new reactions
+        // 1:1 conversation messages
+        businessInjector.entityManager.performAndWaitSave {
+            guard let messages = self.businessInjector.entityManager.entityFetcher.messagesWithUserAckDate() else {
+                return
+            }
+
+            DDLogNotice(
+                "[AppMigration] App migration to version 6.6: found \(messages.count) from 1:1 chats with ack/dec."
+            )
+
+            for message in messages {
+                guard let userackDate = message.userackDate else {
+                    continue
+                }
+
+                if message.isOwnMessage {
+                    guard let contact = message.conversation.contact else {
+                        continue
+                    }
+
+                    addReaction(to: message, from: contact, thumbUp: message.userack.boolValue, at: userackDate)
+                }
+                else {
+                    addReaction(to: message, from: nil, thumbUp: message.userack.boolValue, at: userackDate)
+                }
+
+                // Purge old ack/dec data
+                message.userackDate = nil
+                message.userack = 0
+            }
+        }
+        
+        // Group messages
+        businessInjector.entityManager.performAndWaitSave {
+            guard let messages = self.businessInjector.entityManager.entityFetcher.messagesWithUserGroupReactions()
+            else {
+                return
+            }
+            
+            DDLogNotice(
+                "[AppMigration] App migration to version 6.6: found \(messages.count) from group chats with ack/dec."
+            )
+            
+            for message in messages {
+                
+                guard let receipts = message.groupDeliveryReceipts as? [GroupDeliveryReceipt], !receipts.isEmpty else {
+                    continue
+                }
+                
+                for receipt in receipts {
+                    let type = receipt.deliveryReceiptType()
+                    guard type == .acknowledged || type == .declined else {
+                        continue
+                    }
+                    
+                    var contact: ContactEntity? = nil
+                    if receipt.identity != self.businessInjector.myIdentityStore.identity {
+                        guard let fetchedContact = self.businessInjector.entityManager.entityFetcher
+                            .contact(for: receipt.identity) else {
+                            continue
+                        }
+                        contact = fetchedContact
+                    }
+
+                    addReaction(to: message, from: contact, thumbUp: type == .acknowledged, at: receipt.date)
+
+                    // Purge old ack/dec data
+                    message.remove(groupDeliveryReceipt: receipt)
+                }
+            }
+        }
+
+        os_signpost(.end, log: osPOILog, name: "6.6 migration")
+        DDLogNotice("[AppMigration] App migration to version 6.6 successfully finished")
     }
 }

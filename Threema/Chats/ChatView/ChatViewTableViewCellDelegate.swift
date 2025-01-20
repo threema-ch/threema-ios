@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -48,12 +48,15 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     func showDetails(for messageID: NSManagedObjectID)
     func willDeleteMessage(with objectID: NSManagedObjectID)
     func didDeleteMessages()
-    func sendAck(for message: BaseMessage, ack: Bool)
     func toggleMessageMarkerStar(message: BaseMessage)
     func retryOrCancelSendingMessage(withID messageID: NSManagedObjectID, from sourceView: UIView)
     func editMessage(for messageObjectID: NSManagedObjectID)
 
     func didSelectText(in textView: MessageTextView?)
+    
+    func dismissContextMenu(showEmojiPicker: Bool, for reactionsManager: ReactionsManager)
+    func showReactionAlert(for result: ReactionsManager.ReactionSendingResult)
+    func showExistingReactions(reactionsManager: ReactionsManager)
     
     var currentSearchText: String? { get }
     
@@ -265,19 +268,6 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     }
     
     // MARK: - Message actions
-
-    func sendAck(for message: BaseMessage, ack: Bool) {
-        
-        guard !UIAccessibility.isVoiceOverRunning else {
-            ChatViewTableViewCellDelegate.sendAck(message: message, ack: ack)
-            return
-        }
-        
-        let block = {
-            ChatViewTableViewCellDelegate.sendAck(message: message, ack: ack)
-        }
-        chatViewController?.contextMenuActionsQueue.append(block)
-    }
     
     func toggleMessageMarkerStar(message: BaseMessage) {
         entityManager.performAndWaitSave {
@@ -317,6 +307,18 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         }
     }
     
+    func dismissContextMenu(showEmojiPicker: Bool, for reactionsManager: ReactionsManager) {
+        chatViewController?.dismissContextMenu(showEmojiPicker: showEmojiPicker, for: reactionsManager)
+    }
+    
+    func showReactionAlert(for result: ReactionsManager.ReactionSendingResult) {
+        chatViewController?.showReactionAlert(for: result)
+    }
+    
+    func showExistingReactions(reactionsManager: ReactionsManager) {
+        chatViewController?.showExistingReactions(reactionsManager: reactionsManager)
+    }
+    
     // MARK: - CellHeightCache
     
     func clearCellHeightCache(for objectID: NSManagedObjectID) {
@@ -340,59 +342,6 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     
     var cellInteractionEnabled: Bool {
         chatViewController?.cellInteractionEnabled ?? false
-    }
-    
-    // MARK: - Helpers
-    
-    ///  Processes sending thumbsUp or thumbsDown
-    private static func sendAck(message: BaseMessage, ack: Bool) {
-        let businessInjector = BusinessInjector()
-        
-        guard let baseMessage = businessInjector.entityManager.entityFetcher
-            .existingObject(with: message.objectID) as? BaseMessage,
-            baseMessage.deletedAt == nil,
-            let conversation = baseMessage.conversation else {
-            return
-        }
-        
-        let group = businessInjector.groupManager.getGroup(conversation: conversation)
-        var contact: ContactEntity?
-        
-        if conversation.isGroup {
-            if baseMessage.isMyReaction(ack ? .acknowledged : .declined) {
-                return
-            }
-        }
-        else {
-            guard let c = conversation.contact else {
-                return
-            }
-            contact = c
-            // Only send changed acks
-            if baseMessage.userackDate != nil, let currentAck = baseMessage.userack, currentAck.boolValue == ack {
-                return
-            }
-        }
-        let identity = contact?.threemaIdentity
-
-        Task { @MainActor in
-            if ack {
-                if let group {
-                    await businessInjector.messageSender.sendUserAck(for: baseMessage, toGroup: group)
-                }
-                else if let identity {
-                    await businessInjector.messageSender.sendUserAck(for: baseMessage, toIdentity: identity)
-                }
-            }
-            else {
-                if let group {
-                    await businessInjector.messageSender.sendUserDecline(for: baseMessage, toGroup: group)
-                }
-                else if let identity {
-                    await businessInjector.messageSender.sendUserDecline(for: baseMessage, toIdentity: identity)
-                }
-            }
-        }
     }
     
     // MARK: - Retry & cancel

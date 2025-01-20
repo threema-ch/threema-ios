@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2024 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -110,6 +110,10 @@ struct WebClientInfoCapabilities {
     var quotesV2Support = true
     var groupReactions = true
     
+    // Theoretically, this would be true from phase 1, but the web update will only be released around the launch of
+    // phase 2
+    var emojiReactions = UserSettings.shared().sendEmojiReactions
+    
     var mdm = WebClientInfoMdmRestrictions()
     
     func objectDict() -> [String: Any] {
@@ -121,6 +125,7 @@ struct WebClientInfoCapabilities {
             "imageFormat": imageFormat.objectDict(),
             "quotesV2": quotesV2Support,
             "groupReactions": groupReactions,
+            "emojiReactions": emojiReactions,
         ]
         
         if LicenseStore.shared().getRequiresLicenseKey() {

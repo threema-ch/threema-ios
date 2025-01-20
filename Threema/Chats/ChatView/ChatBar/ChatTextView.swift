@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -54,7 +54,7 @@ final class ChatTextView: CustomResponderTextView {
         }
         get {
             [
-                NSAttributedString.Key.foregroundColor: Colors.text,
+                NSAttributedString.Key.foregroundColor: UIColor.label,
                 NSAttributedString.Key.font: UIFont
                     .preferredFont(forTextStyle: ChatViewConfiguration.ChatTextView.textStyle),
             ]
@@ -152,6 +152,7 @@ final class ChatTextView: CustomResponderTextView {
         label.isHidden = false
         label.isUserInteractionEnabled = false
         label.font = UIFont.preferredFont(forTextStyle: Config.textStyle)
+        label.textColor = .placeholderText
         label.adjustsFontForContentSizeCategory = true
         label.isAccessibilityElement = false
         return label
@@ -209,6 +210,7 @@ final class ChatTextView: CustomResponderTextView {
         UIMenuController.shared.menuItems = [menuItem]
 
         font = UIFont.preferredFont(forTextStyle: Config.textStyle)
+        backgroundColor = .secondarySystemGroupedBackground
         adjustsFontForContentSizeCategory = true
         
         textContainer.lineFragmentPadding = 0
@@ -233,6 +235,7 @@ final class ChatTextView: CustomResponderTextView {
         layer.borderWidth = Config.borderWidth
         layer.cornerRadius = Config.cornerRadius
         layer.masksToBounds = true
+        layer.borderColor = UIColor.separator.cgColor
         
         // Set to default insets
         // They might be updated in `configureInsetsIfNeeded()`
@@ -248,7 +251,6 @@ final class ChatTextView: CustomResponderTextView {
         addObservers()
         
         updatePlaceholder()
-        updateColors()
         resizeTextView()
     }
     
@@ -320,17 +322,7 @@ final class ChatTextView: CustomResponderTextView {
     }
     
     // MARK: - Update
-    
-    func updateColors() {
-        backgroundColor = Colors.chatBarInput
-        layer.borderColor = Colors.hairLine.cgColor
         
-        placeholderLabel.textColor = Colors.textPlaceholder
-        
-        // This reformats the text using the new colors
-        customTextStorage?.reformatText()
-    }
-    
     private func updatePlaceholder() {
         if text.isEmpty {
             placeholderLabel.isHidden = false
@@ -420,6 +412,12 @@ final class ChatTextView: CustomResponderTextView {
         super.traitCollectionDidChange(previousTraitCollection)
         
         if previousTraitCollection?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+            customTextStorage?.reformatText()
+        }
+        else if traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+            // CGColors have no automatic theme change built in, so we track it ourselves
+            layer.borderColor = UIColor.separator.cgColor
+            // This reformats the text using the new colors
             customTextStorage?.reformatText()
         }
     }

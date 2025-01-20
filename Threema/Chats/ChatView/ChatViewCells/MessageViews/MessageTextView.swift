@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -125,14 +125,12 @@ final class MessageTextView: RTLAligningTextView {
         self.messageTextViewDelegate = messageTextViewDelegate
         super.init(frame: frame, textContainer: textContainer)
         configureTextView()
-        updateColors()
     }
     
     required init?(coder: NSCoder, messageTextViewDelegate: MessageTextViewDelegate) {
         self.messageTextViewDelegate = messageTextViewDelegate
         super.init(coder: coder)
         configureTextView()
-        updateColors()
     }
     
     convenience init(messageTextViewDelegate: MessageTextViewDelegate?) {
@@ -146,6 +144,7 @@ final class MessageTextView: RTLAligningTextView {
     
     private func configureTextView() {
         font = UIFont.preferredFont(forTextStyle: ChatViewConfiguration.Text.textStyle)
+        textColor = .label
         adjustsFontForContentSizeCategory = true
         isScrollEnabled = false
         isEditable = false
@@ -161,18 +160,8 @@ final class MessageTextView: RTLAligningTextView {
         accessibilityElementsHidden = true
     }
         
-    // MARK: - Update
-    
-    func updateColors() {
-        Colors.setTextColor(Colors.text, in: self)
-        if messageTextViewDelegate?.currentSearchText != nil {
-            // Works around `Colors` resetting our colors when we actually want to highlight text
-            text = text
-        }
-    }
-    
     // MARK: - Private Helper Functions
-    
+        
     private func setAttributedText(to text: NSAttributedString, maybeHighlighting searchText: String? = nil) {
         if let searchText {
             attributedText = highlight(
@@ -218,7 +207,7 @@ final class MessageTextView: RTLAligningTextView {
             return NSAttributedString(
                 string: text,
                 attributes: [
-                    NSAttributedString.Key.foregroundColor: Colors.text,
+                    NSAttributedString.Key.foregroundColor: UIColor.label,
                     NSAttributedString.Key.font: UIFont
                         .preferredFont(forTextStyle: ChatViewConfiguration.Text.emojiTextStyle),
                 ]
@@ -228,7 +217,7 @@ final class MessageTextView: RTLAligningTextView {
             let attributedString = NSAttributedString(
                 string: text,
                 attributes: [
-                    NSAttributedString.Key.foregroundColor: Colors.text,
+                    NSAttributedString.Key.foregroundColor: UIColor.label,
                     NSAttributedString.Key.font: UIFont
                         .preferredFont(forTextStyle: ChatViewConfiguration.Text.textStyle),
                 ]

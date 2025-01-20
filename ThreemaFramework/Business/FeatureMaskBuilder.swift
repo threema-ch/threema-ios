@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -64,6 +64,10 @@ import ThreemaProtocols
         set(feature: Int(ThreemaProtocols.Common_CspFeatureMaskFlag.deleteMessageSupport.rawValue), enabled: enabled)
     }
     
+    @objc func emojiReactions(enabled: Bool) -> FeatureMaskBuilder {
+        set(feature: Int(ThreemaProtocols.Common_CspFeatureMaskFlag.reactionSupport.rawValue), enabled: enabled)
+    }
+    
     private func set(feature: Int, enabled: Bool) -> FeatureMaskBuilder {
         if enabled {
             mask = mask | feature
@@ -103,5 +107,6 @@ import ThreemaProtocols
             .groupCalls(enabled: BusinessInjector().settingsStore.enableThreemaGroupCalls)
             .editMessage(enabled: true)
             .deleteMessage(enabled: true)
+            .emojiReactions(enabled: true)
     }
 }

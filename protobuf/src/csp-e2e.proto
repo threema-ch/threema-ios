@@ -11,6 +11,8 @@ package csp_e2e;
 option java_package = "ch.threema.protobuf.csp.e2e";
 option java_multiple_files = true;
 
+import "common.proto";
+
 // Metadata sent within a CSP payload `message-with-metadata-box` struct.
 message MessageMetadata {
   // Padding that is ignored by the receiver.
@@ -51,13 +53,14 @@ message MessageMetadata {
 // - Exempt from blocking: No
 // - Implicit _direct_ contact creation: No
 // - Protect against replay: Yes
+// - Unarchive: No
+// - Bump _last update_: No
 // - Reflect:
 //   - Incoming: Yes
 //   - Outgoing: Yes
 //   - _Sent_ update: No
-// - Delivery receipts:
-//   - Automatic: No
-//   - Manual: No
+// - Delivery receipts: No
+// - Reactions: No
 // - Edit applies to: N/A (obviously)
 // - Deletable by: N/A
 // - When rejected: N/A (ignored)
@@ -71,13 +74,14 @@ message MessageMetadata {
 // - Exempt from blocking: No
 // - Implicit _direct_ contact creation: No
 // - Protect against replay: Yes
+// - Unarchive: No
+// - Bump _last update_: No
 // - Reflect:
 //   - Incoming: Yes
 //   - Outgoing: Yes
 //   - _Sent_ update: No
-// - Delivery receipts:
-//   - Automatic: N/A
-//   - Manual: No
+// - Delivery receipts: N/A
+// - Reactions: No
 // - Edit applies to: N/A (obviously)
 // - Deletable by: N/A
 // - When rejected: N/A (ignored)
@@ -116,17 +120,14 @@ message MessageMetadata {
 // 1. If the sender or the receiver do not have `EDIT_MESSAGE_SUPPORT`, discard
 //    the edited message and abort these steps.
 // 2. Run the _Common Edit Message Submit Preflight Steps_.
-// 3. Let `edit-message-id` be a random message ID.
-// 4. Let `edited-at` be the current timestamp.
-// 5. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
-//    the following properties:
-//    - `id` set to `edit-message-id`,
+// 3. Let `edited-at` be the current timestamp.
+// 4. Run the _1:1 Messages Submit Steps_ with `messages` set from the following
+//    properties:
 //    - `created-at` set to `edited-at`,
-//    - `receivers` set to the receiver,
-//    - to construct an `EditMessage` message
-// 6. Edit `message` as defined by the associated _Edit applies to_ property and
-//    add an indicator to `message`, informing the user that the message has
-//    been edited by the user at `edited-at`.
+//    - to construct an `EditMessage` message.
+// 5. Edit the referred message as defined by the associated _Edit applies to_
+//    property and add an indicator to the referred message, informing the user
+//    that the referred message has been edited by the user at `edited-at`.
 //
 // The following steps must be invoked when the user wants to submit an edited
 // group message.
@@ -136,18 +137,15 @@ message MessageMetadata {
 // 2. If the sender or all of the group members do not have
 //    `EDIT_MESSAGE_SUPPORT`, discard the edited message and abort these steps.
 // 3. Run the _Common Edit Message Submit Preflight Steps_.
-// 4. Let `edit-message-id` be a random message ID.
-// 5. Let `edited-at` be the current timestamp.
-// 6. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
-//    the following properties:
-//    - `id` set to `edit-message-id`,
+// 4. Let `edited-at` be the current timestamp.
+// 5. Run the _Group Messages Submit Steps_ with `messages` set from the
+//    following properties:
 //    - `created-at` set to `edited-at`,
-//    - `receivers` set to all group members that have `EDIT_MESSAGE_SUPPORT`,
 //    - to construct an `EditMessage` message (wrapped by
-//      [`group-member-container`](ref:e2e.group-member-container))
-// 7. Edit `message` as defined by the associated _Edit applies to_ property and
-//    add an indicator to `message`, informing the user that the message has
-//    been edited by the user at `edited-at`.
+//      [`group-member-container`](ref:e2e.group-member-container)).
+// 6. Edit the referred message as defined by the associated _Edit applies to_
+//    property and add an indicator to the referred message, informing the user
+//    that the referred message has been edited by the user at `edited-at`.
 //
 // The following steps are defined as the _Common Edit Message Submit Preflight
 // Steps_:
@@ -181,14 +179,15 @@ message MessageMetadata {
 // The following steps are defined as the _Common Edit Message Receive Steps_:
 //
 // 1. Lookup the message with `message_id` originally sent by the sender within
-//    the associated conversation and let `message` be the result.
-// 2. If `message` is not defined or the sender is not the original sender of
-//    `message`, discard the message and abort these steps.²
-// 3. If `message` is not editable (see the associated _Edit applies to_
-//    property), discard the message and abort these steps.
-// 4. Edit `message` as defined by the associated _Edit applies to_ property and
-//    add an indicator to `message`, informing the user that the message has
-//    been edited by the sender at the `message`'s `created-at`.
+//    the associated conversation and let `referred-message` be the result.
+// 2. If `referred-message` is not defined or the sender is not the original
+//    sender of `referred-message`, discard the message and abort these steps.²
+// 3. If `referred-message` is not editable (see the associated _Edit applies
+//    to_ property), discard the message and abort these steps.
+// 4. Edit `referred-message` as defined by the associated _Edit applies to_
+//    property and add an indicator to `referred-message`, informing the user
+//    that the message has been edited by the sender at the message's (the
+//    `EditMessage`'s) `created-at`.
 //
 // ¹: For simplicity, the time constraint is applied on the sender side only.
 // The receiver will always accept a request to edit a message. This is deemed
@@ -225,13 +224,14 @@ message EditMessage {
 // - Exempt from blocking: No
 // - Implicit _direct_ contact creation: No
 // - Protect against replay: Yes
+// - Unarchive: No
+// - Bump _last update_: No
 // - Reflect:
 //   - Incoming: Yes
 //   - Outgoing: Yes
 //   - _Sent_ update: No
-// - Delivery receipts:
-//   - Automatic: No
-//   - Manual: No
+// - Delivery receipts: No
+// - Reactions: No
 // - Edit applies to: N/A
 // - Deletable by: N/A (obviously)
 // - When rejected: N/A (ignored)
@@ -245,13 +245,14 @@ message EditMessage {
 // - Exempt from blocking: No
 // - Implicit _direct_ contact creation: No
 // - Protect against replay: Yes
+// - Unarchive: No
+// - Bump _last update_: No
 // - Reflect:
 //   - Incoming: Yes
 //   - Outgoing: Yes
 //   - _Sent_ update: No
-// - Delivery receipts:
-//   - Automatic: N/A
-//   - Manual: No
+// - Delivery receipts: N/A
+// - Reactions: No
 // - Edit applies to: N/A
 // - Deletable by: N/A (obviously)
 // - When rejected: N/A (ignored)
@@ -263,16 +264,13 @@ message EditMessage {
 // 1. If the sender or the receiver do not have `DELETE_MESSAGE_SUPPORT`,
 //    disallow removal and abort these steps.
 // 2. Run the _Common Delete Message Preflight Steps_.
-// 3. Let `delete-message-id` be a random message ID.
-// 4. Let `deleted-at` be the current timestamp.
-// 5. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
-//    the following properties:
-//    - `id` set to `delete-message-id`,
+// 3. Let `deleted-at` be the current timestamp.
+// 4. Run the _1:1 Messages Submit Steps_ with `messages` set from the following
+//    properties:
 //    - `created-at` set to `deleted-at`,
-//    - `receivers` set to the receiver,
-//    - to construct a `DeleteMessage` message
-// 6. Replace `message` with a message informing the user that the message of
-//    the user has been removed at `deleted-at`.²
+//    - to construct a `DeleteMessage` message.
+// 5. Replace the referred message with a message informing the user that the
+//    referred message of the user has been removed at `deleted-at`.²
 //
 // The following steps must be invoked when the user wants to delete a group
 // message.
@@ -283,17 +281,14 @@ message EditMessage {
 // 3. Run the _Common Delete Message Preflight Steps_.
 // 4. If any of the group members do not have `DELETE_MESSAGE_SUPPORT`, notify
 //    the user that the affected contacts will continue to see the message.
-// 5. Let `delete-message-id` be a random message ID.
-// 6. Let `deleted-at` be the current timestamp.
-// 7. Schedule a persistent task to run the _Bundled Messages Send Steps_ with
-//    the following properties:
-//    - `id` set to `delete-message-id`,
+// 5. Let `deleted-at` be the current timestamp.
+// 6. Run the _Group Messages Submit Steps_ with `messages` set from the
+//    following properties:
 //    - `created-at` set to `deleted-at`,
-//    - `receivers` set to all group members that have `DELETE_MESSAGE_SUPPORT`,
-//    - to construct an `DeleteMessage` message (wrapped by
-//      [`group-member-container`](ref:e2e.group-member-container))
-// 8. Replace `message` with a message informing the user that the message of
-//    the user has been removed at `deleted-at`.²
+//    - to construct a `DeleteMessage` message (wrapped by
+//      [`group-member-container`](ref:e2e.group-member-container)).
+// 7. Replace the referred message with a message informing the user that the
+//    referred message of the user has been removed at `deleted-at`.²
 //
 // The following steps are defined as the _Common Delete Message Preflight
 // Steps_:
@@ -327,12 +322,13 @@ message EditMessage {
 //
 // 1. Lookup the message with `message_id` originally sent by the sender within
 //    the associated conversation and let `message` be the result.
-// 2. If `message` is not defined or the sender is not the original sender of
-//    `message`, discard the message and abort these steps.
-// 3. If `message` is not deletable (see the associated _Deletable by_
+// 2. If `referred-message` is not defined or the sender is not the original
+//    sender of `message`, discard the message and abort these steps.
+// 3. If `referred-message` is not deletable (see the associated _Deletable by_
 //    property), discard the message and abort these steps.
-// 4. Replace `message` with a message informing the user that the message of
-//    the sender has been removed at the `message`'s `created-at`.²
+// 4. Replace `referred-message` with a message informing the user that the
+//    message of the sender has been removed at the message's (the
+//    `DeleteMessage`'s) `created-at`.²
 //
 // ¹: For simplicity, the time constraint is applied on the sender side only.
 // The receiver will always accept a request to delete a message. This is deemed
@@ -357,13 +353,14 @@ message DeleteMessage {
 // - Exempt from blocking: Yes
 // - Implicit _direct_ contact creation: No
 // - Protect against replay: Yes
+// - Unarchive: TODO(SE-508)
+// - Bump _last update_: TODO(SE-508)
 // - Reflect:
 //   - Incoming: Yes
 //   - Outgoing: Yes
 //   - _Sent_ update: No
-// - Delivery receipts:
-//   - Automatic: N/A
-//   - Manual: No
+// - Delivery receipts: N/A
+// - Reactions: No
 // - When rejected: N/A¹
 // - Edit applies to: N/A
 // - Deletable by: N/A
@@ -372,6 +369,10 @@ message DeleteMessage {
 // ¹: For the group creator it will be handled as if `group-sync-request` was
 // received, re-sending a `GroupCallStart` if still ongoing, implicitly
 // triggered by FS `Reject` receive steps.
+//
+// When the user wants to create a new group call or join an existing group
+// call, run the steps outlined in the _Create or Join_ section of the Group
+// Call Protocol.
 //
 // When reflected from another device as an incoming or outgoing message:
 //
@@ -419,4 +420,321 @@ message GroupCallStart {
 
   // The base URL of the SFU, used to join or peek the call.
   string sfu_base_url = 3;
+}
+
+// React to a message.
+//
+// **Properties (1:1)**:
+// - Kind: 1:1
+// - Flags:
+//   - `0x01`: Send push notification.
+// - User profile distribution: Yes
+// - Exempt from blocking: No
+// - Implicit _direct_ contact creation: No
+// - Protect against replay: Yes
+// - Reflect:
+//   - Incoming: Yes
+//   - Outgoing: Yes
+//   - _Sent_ update: No
+// - Delivery receipts: No
+// - Reactions: No, that would be silly!
+// - When rejected: N/A (ignored)
+// - Edit applies to: N/A (can withdraw and apply with another `Reaction`)
+// - Deletable by: N/A (can withdraw with another `Reaction`)
+// - Send to Threema Gateway ID group creator: N/A
+//
+// **Properties (Group)**:
+// - Kind: 1:1
+// - Flags:
+//   - `0x01`: Send push notification.
+// - User profile distribution: Yes
+// - Exempt from blocking: No
+// - Implicit _direct_ contact creation: No
+// - Protect against replay: Yes
+// - Reflect:
+//   - Incoming: Yes
+//   - Outgoing: Yes
+//   - _Sent_ update: No
+// - Delivery receipts: N/A
+// - Reactions: No, that would be silly!
+// - When rejected: N/A (ignored)
+// - Edit applies to: N/A (can withdraw and apply with another `Reaction`)
+// - Deletable by: N/A (can withdraw with another `Reaction`)
+// - Send to Threema Gateway ID group creator: If capture is enabled
+//
+// When the user submits a reaction in a 1:1 conversation:
+//
+// 1. Let `reaction` be the reaction to be applied to or withdrawn from a
+//    referred message which must contain a single fully-qualified [emoji
+//    codepoint sequence that is part of the currently supported Unicode
+//    standard][emoji-test.txt].
+// 2. Run the _Legacy Reaction Mapping Steps_ with `reaction` and let
+//    `legacy-reaction` be the result.
+// 3. If `legacy-reaction` is not defined and the sender or the receiver does
+//    not have `REACTION_SUPPORT`, log a warning and abort these steps.¹
+// 4. Let `reacted-at` be the current timestamp.
+// 5. If both sender and receiver have `REACTION_SUPPORT`, run the _1:1 Messages
+//    Submit Steps_ with `messages` set from the following properties:
+//    - `created-at` set to `reacted-at`,
+//    - to construct a `Reaction` message from `reaction`.
+// 6. If the sender or the receiver does not have `REACTION_SUPPORT`, run the
+//    _1:1 Messages Submit Steps_ with `messages` set from the following
+//    properties:
+//    - `created-at` set to `reacted-at`,
+//    - to construct the `legacy-reaction`.
+// 7. Apply `reaction` (i.e. apply or withdraw) to the referred message with the
+//    `reacted-at` timestamp.
+//
+// When the user submits a reaction in a group conversation:
+//
+// 1. Let `reaction` be the reaction to be applied to or withdrawn from a
+//    referred message which must contain a single fully-qualified [emoji
+//    codepoint sequence that is part of the currently supported Unicode
+//    standard][emoji-test.txt].
+// 2. Run the _Legacy Reaction Mapping Steps_ with `reaction` and let
+//    `legacy-reaction` be the result.
+// 3. If `legacy-reaction` is not defined:
+//    1. If the sender does not have `REACTION_SUPPORT`, log a warning and abort
+//       these steps.²
+//    2. If all of the group members do not have `REACTION_SUPPORT`, log a
+//       warning and and abort these steps.²
+//    3. If any of the group members do not have `REACTION_SUPPORT`, notify the
+//       user that the affected contacts will not receive the reaction.
+// 4. Let `reacted-at` be the current timestamp.
+// 5. Run the _Group Messages Submit Steps_ with `messages` set from the
+//    following properties:
+//    - `created-at` set to `reacted-at`,
+//    - to construct a _canonical_ `Reaction` message from `reaction`,
+//    - to construct a _specific_ message in the following way:
+//      1. Let `receiver` be the specific receiver.
+//      2. If the `receiver` does not have `REACTION_SUPPORT` and
+//         `legacy-reaction` is defined, return the `legacy-reaction` (wrapped
+//         by [`group-member-container`](ref:e2e.group-member-container)).
+//      3. Construct and return the _canonical_ `Reaction` message from
+//         `reaction` (wrapped by
+//         [`group-member-container`](ref:e2e.group-member-container)).³
+// 6. Apply `reaction` (i.e. apply or withdraw) to the referred message with the
+//    `reacted-at` timestamp.
+//
+// The following steps are defined as the _Legacy Reaction Mapping Steps_:
+//
+// 1. If `action` is of variant `apply`:
+//    1. If `action.apply` equals one of the following codepoint sequences,
+//       return a `e2e.delivery-receipt` of type _acknowledge_ (0x03):
+//       - `1F44D` (👍)
+//       - `1F44D 1F3FB` (👍🏻)
+//       - `1F44D 1F3FC` (👍🏼)
+//       - `1F44D 1F3FD` (👍🏽)
+//       - `1F44D 1F3FE` (👍🏾)
+//       - `1F44D 1F3FF` (👍🏿)
+//    2. If `action.apply` equals one of the following codepoint sequences,
+//       return a `e2e.delivery-receipt` of type _decline_ (0x04):
+//       - `1F44E` (👎)
+//       - `1F44E 1F3FB` (👎🏻)
+//       - `1F44E 1F3FC` (👎🏼)
+//       - `1F44E 1F3FD` (👎🏽)
+//       - `1F44E 1F3FE` (👎🏾)
+//       - `1F44E 1F3FF` (👎🏿)
+// 2. Return no message.
+//
+// When reflected from another device as an incoming or outgoing 1:1 message:
+//
+// 1. Run the _Common Reaction Receive Steps_.
+//
+// When receiving this message:
+//
+// 1. Run the _Common Reaction Receive Steps_.
+//
+// When receiving this message (wrapped by
+// [`group-member-container`](ref:e2e.group-member-container)):
+//
+// 1. Run the [_Common Group Receive Steps_](ref:e2e#receiving). If the reaction
+//    message has been discarded, abort these steps.
+// 1. Run the _Common Reaction Receive Steps_.
+//
+// The following steps are defined as the _Common Reaction Receive Steps_:
+//
+// 1. Lookup the referred message with `message_id` within the associated
+//    conversation and let `referred-message` be the result.
+// 2. If `referred-message` is not defined, discard the message and abort these
+//    steps.
+// 3. If `referred-message` is not reactable (see the associated _Reactions_
+//    property), discard the message and abort these steps.
+// 4. If `action` is of variant `apply`:
+//    1. If `apply` contains more than 64 bytes, discard the message and abort
+//       these steps.
+//    2. Decode `apply` to a UTF-8 string. If the string is empty, discard the
+//       message and abort these steps.
+//    3. Apply (or re-apply) the resulting emoji from the sender to
+//       `referred-message` with the message's (the `Reaction`'s) `created-at`
+//       timestamp used for the time of reaction.⁴⁵
+// 5. If `action` is of variant `withdraw`:
+//    1. If `withdraw` contains more than 64 bytes, discard the message and
+//       abort these steps.
+//    2. Decode `withdraw` to a UTF-8 string. If the string is empty, discard
+//       the message and abort these steps.
+//    3. Remove the resulting emoji reaction from the sender for `message`.⁴⁵
+//
+// ¹: The UI should not allow to create non-legacy reactions in 1:1
+// conversations with a sender or receiver that does not have
+// `REACTION_SUPPORT`.
+//
+// ²: The UI should not allow to create non-legacy reactions in group
+// conversations with a sender that does not have `REACTION_SUPPORT` or when all
+// other group members don't have `REACTION_SUPPORT`.
+//
+// ³: In case the reaction could not be mapped to a legacy reaction, this
+// results in a `Reaction` message being sent to group members that currently do
+// not support reactions. This is intentional.
+//
+// ⁴: Note that the _apply_ mechanism is additive, meaning multiple reactions
+// from the same sender are allowed on a single message. This is why the
+// _withdraw_ mechanism is needed which removes a specific reaction. On the
+// other hand, a deprecated `e2e.delivery-receipt` will replace all existing
+// reactions of the sender at once (including these new-style reactions).
+//
+// ⁵: The UI should display a placeholder (�) for unknown emojis, meaining those
+// which are not a single fully-qualified [emoji codepoint sequence that is part
+// of the currently supported Unicode standard][emoji-test.txt]. But the
+// individual code sequences still have individual display buckets.
+//
+// [emoji-test.txt]: https://www.unicode.org/Public/emoji/latest/emoji-test.txt
+message Reaction {
+  // Unique ID of the referred message.
+  fixed64 message_id = 1;
+
+  // A single emoji reaction to be applied or withdrawn.
+  oneof action {
+    // Apply a new emoji reaction.
+    bytes apply = 2;
+
+    // Withdraw a specific emoji reaction.
+    bytes withdraw = 3;
+  }
+}
+
+// Request joining a group.
+//
+// This message is sent to the administrator of a group. The required
+// information is provided by a `GroupInvite` URL payload.
+//
+// **Properties**:
+// - Kind: 1:1
+// - Flags:
+//   - `0x01`: Send push notification.
+// - User profile distribution: Yes
+// - Exempt from blocking: Yes
+// - Implicit _direct_ contact creation: Yes
+// - Protect against replay: Yes
+// - Reflect:
+//   - Incoming: Yes
+//   - Outgoing: Yes
+//   - _Sent_ update: No
+// - Delivery receipts: No
+// - Reactions: No
+// - When rejected: N/A (ignored)
+// - Edit applies to: N/A
+// - Deletable by: User only
+// - Send to Threema Gateway ID group creator: N/A
+//
+// When receiving this message:
+//
+// 1. Look up the corresponding group invitation by the token.
+// 2. If the group invitation could not be found, discard the message and abort
+//    these steps.
+// 3. If the sender is already part of the group, send an accept response and
+//    then respond as if the sender had sent a `group-sync-request` (i.e. send a
+//    `group-setup`, `group-name`, etc.). Finally, abort these steps.
+// 4. If the group name does not match the name in the originally sent group
+//    invitation, discard the message and abort these steps.
+// 5. If the group invitation has expired, send the respective response and
+//    abort these steps.
+// 6. If the group invitation requires the admin to accept the request, show
+//    this information in the user interface and pause these steps until the
+//    user manually confirmed of rejected the request. Note that the date of the
+//    decision is allowed to extend beyond the expiration date of the group
+//    invitation. Continue with the following sub-steps once the user made a
+//    decision on the request:
+//     1. If the user manually rejected the request, send the respective
+//        response and abort these steps.
+// 7. If the group is full, send the respective response and abort these steps.
+// 8. Send an accept response.
+// 9. Add the sender of the group invitation request to the group and follow the
+//    group protocol from there.
+message GroupJoinRequest {
+  // The group invite token, 16 bytes
+  bytes token = 1;
+
+  // The group name from the group invite URL
+  string group_name = 2;
+
+  // A message for the group administrator, e.g. for identification purposes
+  //
+  // The message helps the administrator to decide whether or not to accept a
+  // join request.
+  //
+  // Should be requested by the user interface for invitations that require
+  // manual confirmation by the administrator. Should not be requested in case
+  // the invitation will be automatically accepted.
+  string message = 3;
+}
+
+// Response sent by the admin of a group towards a sender of a valid group join
+// request.
+//
+// **Properties**:
+// - Kind: 1:1
+// - Flags: None
+// - User profile distribution: Yes
+// - Exempt from blocking: Yes
+// - Implicit _direct_ contact creation: Yes
+// - Protect against replay: Yes
+// - Reflect:
+//   - Incoming: Yes
+//   - Outgoing: Yes
+//   - _Sent_ update: No
+// - Delivery receipts: No
+// - Reactions: No
+// - When rejected: N/A (ignored)
+// - Edit applies to: N/A
+// - Deletable by: N/A
+// - Send to Threema Gateway ID group creator: N/A
+//
+// When receiving this message:
+//
+// 1. Look up the corresponding group join request by the token and the
+//    sender's Threema ID as the administrator's Threema ID.
+// 2. If the group join request could not be found, discard the message and
+//    abort these steps.
+// 3. Mark the group join request as accepted or (automatically) rejected by
+//    the given response type.
+// 4. If the group join request has been accepted, remember the group id in
+//    order to be able to map an incoming `group-setup` to the group.
+message GroupJoinResponse {
+  // The group invite token, 16 bytes
+  bytes token = 1;
+
+  // Response of the admin
+  message Response {
+    // Accept a group invite request
+    message Accept {
+      // Group ID (little-endian) as chosen by the group creator
+      //
+      // Note: Combined with the Threema ID of the administrator, this forms the
+      // `GroupIdentity`.
+      fixed64 group_id = 1;
+    }
+
+    oneof response {
+      // Accept a group invite request
+      Accept accept = 1;
+      // Token of a group invitation expired
+      common.Unit expired = 2;
+      // Group invitation cannot be accepted due to the group being full
+      common.Unit group_full = 3;
+      // The administrator explicitly rejects the invitation request
+      common.Unit reject = 4;
+    }
+  }
+  Response response = 2;
 }

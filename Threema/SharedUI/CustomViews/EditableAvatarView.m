@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2015-2024 Threema GmbH
+// Copyright (c) 2015-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -102,7 +102,7 @@
     [_pickImageLabel addGestureRecognizer:tapLabelRecognizer];
     _pickImageLabel.userInteractionEnabled = YES;
     _pickImageLabel.layer.borderWidth = 1;
-    _pickImageLabel.layer.borderColor = Colors.text.CGColor;
+    _pickImageLabel.layer.borderColor = UIColor.labelColor.CGColor;
     _pickImageLabel.layer.cornerRadius = rect.size.width/2;
     _pickImageLabel.layer.masksToBounds = true;
     _profilePictureView.accessibilityIgnoresInvertColors = true;
@@ -129,7 +129,7 @@
 - (void)updatePlaceholderView {
     _profilePictureView.userInteractionEnabled = _canDeleteImage || _canChooseImage;
     _pickImageLabel.userInteractionEnabled = _canDeleteImage || _canChooseImage;
-    _pickImageLabel.textColor = _canDeleteImage || _canChooseImage ? Colors.text : Colors.textPlaceholder;
+    _pickImageLabel.textColor = _canDeleteImage || _canChooseImage ? UIColor.labelColor : UIColor.placeholderTextColor;
 }
 
 - (void)tappedImage {

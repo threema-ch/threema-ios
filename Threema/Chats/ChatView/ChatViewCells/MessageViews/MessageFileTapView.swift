@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -89,6 +89,8 @@ final class MessageFileTapView: UIView {
         label.numberOfLines = 0
         
         label.font = ChatViewConfiguration.File.fileNameFont
+        label.textColor = .secondaryLabel
+
         label.adjustsFontForContentSizeCategory = true
         
         // No truncation should happen, but if it would we should try to show at least the extension
@@ -322,9 +324,6 @@ final class MessageFileTapView: UIView {
     }
     
     func updateColors() {
-        Colors.setTextColor(Colors.textLight, label: fileNameLabel)
-        fileSizeLabel.updateColors()
-        dateAndStateView.updateColors()
         fileIcon.updateColors()
         
         // Works around `Colors` resetting our colors when we actually want to highlight text

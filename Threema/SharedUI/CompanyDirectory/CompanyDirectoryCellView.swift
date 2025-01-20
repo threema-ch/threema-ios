@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -110,15 +110,11 @@ class CompanyDirectoryCellView: UIStackView {
         
         layoutIfNeeded()
         
-        updateColors()
-    }
-    
-    @objc public func updateColors() {
-        companyNameLabel.textColor = Colors.text
-        companyDirectoryDescriptionLabel.textColor = Colors.textLight
+        companyNameLabel.textColor = .label
+        companyDirectoryDescriptionLabel.textColor = .secondaryLabel
         tintColor = .primary
     }
-    
+        
     @objc public func refresh() {
         configureView()
     }

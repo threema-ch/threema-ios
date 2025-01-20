@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -217,61 +217,67 @@ class MessageStore: MessageStoreProtocol {
                             with: messageID,
                             conversation: conversation
                         ) {
-
-                        if deliveryReceiptMessage.receiptType == .received {
-                            DDLogNotice("Message ID \(msg.id.hexString) has been received by recipient")
-                            self.frameworkInjector.entityManager.performAndWaitSave {
+                        try self.frameworkInjector.entityManager.performAndWaitSave {
+                            if deliveryReceiptMessage.receiptType == .received {
+                                DDLogNotice("Message ID \(msg.id.hexString) has been received by recipient")
                                 msg.delivered = true
                                 msg.deliveryDate = createdAt
                             }
-                        }
-                        else if deliveryReceiptMessage.receiptType == .read {
-                            DDLogNotice("Message ID \(msg.id.hexString) has been read by recipient")
-                            self.frameworkInjector.entityManager.performAndWaitSave {
+                            else if deliveryReceiptMessage.receiptType == .read {
+                                DDLogNotice("Message ID \(msg.id.hexString) has been read by recipient")
                                 msg.read = true
                                 msg.readDate = createdAt
-                                
+                            
                                 DDLogVerbose("Message marked as read: \(msg.id.hexString)")
 
                                 messageReadConversations.insert(msg.conversation)
-                            }
 
-                            // If it is a read receipt of a reflected incoming message, then remove all notifications of
-                            // this message
-                            if isOutgoing {
-                                if let contentKey = PendingUserNotificationKey.key(
-                                    identity: deliveryReceiptMessage.toIdentity,
-                                    messageID: messageID
-                                ) {
-                                    self.frameworkInjector.userNotificationCenterManager.remove(
-                                        contentKey: contentKey,
-                                        exceptStage: nil,
-                                        justPending: false
-                                    )
+                                // If it is a read receipt of a reflected incoming message, then remove all
+                                // notifications of
+                                // this message
+                                if isOutgoing {
+                                    if let contentKey = PendingUserNotificationKey.key(
+                                        identity: deliveryReceiptMessage.toIdentity,
+                                        messageID: messageID
+                                    ) {
+                                        self.frameworkInjector.userNotificationCenterManager.remove(
+                                            contentKey: contentKey,
+                                            exceptStage: nil,
+                                            justPending: false
+                                        )
+                                    }
                                 }
                             }
-                        }
-                        else if deliveryReceiptMessage.receiptType == .ack, msg.deletedAt == nil {
-                            DDLogNotice("Message ID \(msg.id.hexString) has been user acknowledged by recipient")
-                            self.frameworkInjector.entityManager.performAndWaitSave {
-                                msg.userack = true
-                                msg.userackDate = createdAt
+                            else if deliveryReceiptMessage.receiptType == .ack || deliveryReceiptMessage
+                                .receiptType == .decline {
+                                let reactionsProcessor = ReactionsMessageProcessor(
+                                    entityManager: self.frameworkInjector
+                                        .entityManager
+                                )
+                            
+                                try reactionsProcessor.handleLegacyReaction(
+                                    ack: deliveryReceiptMessage.receiptType == .ack,
+                                    date: createdAt,
+                                    messageID: msg.objectID,
+                                    sender: deliveryReceiptMessage.fromIdentity
+                                )
+                            }
+                            else {
+                                DDLogWarn(
+                                    "Unknown delivery receipt type \(deliveryReceiptMessage.receiptType) with message ID \(messageID.hexString)"
+                                )
                             }
                         }
-                        else if deliveryReceiptMessage.receiptType == .decline, msg.deletedAt == nil {
-                            DDLogNotice("Message ID \(msg.id.hexString) has been user declined by recipient")
-                            self.frameworkInjector.entityManager.performAndWaitSave {
-                                msg.userack = false
-                                msg.userackDate = createdAt
-                            }
-                        }
-                        else {
-                            DDLogWarn(
-                                "Unknown delivery receipt type \(deliveryReceiptMessage.receiptType) with message ID \(messageID.hexString)"
-                            )
-                        }
+
                         self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
                         self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+
+                        if deliveryReceiptMessage.receiptType == .ack || deliveryReceiptMessage.receiptType == .decline,
+                           let reactions = msg.reactions {
+                            for reaction in reactions {
+                                self.messageProcessorDelegate.changedManagedObjectID(reaction.objectID)
+                            }
+                        }
                     }
                     else {
                         throw MediatorReflectedProcessorError.messageNotProcessed(
@@ -848,16 +854,38 @@ class MessageStore: MessageStoreProtocol {
                         conversation: conversation
                     ),
                         msg.conversation.groupID == groupDeliveryReceiptMessage.groupID {
-                        self.frameworkInjector.entityManager.performAndWaitSave {
-                            let receipt = GroupDeliveryReceipt(
-                                identity: groupDeliveryReceiptMessage.fromIdentity,
-                                deliveryReceiptType: receiptType,
-                                date: createdAt
-                            )
-                            msg.add(groupDeliveryReceipt: receipt)
+                        try self.frameworkInjector.entityManager.performAndWaitSave {
+                            if receiptType == .acknowledged || receiptType == .declined {
+                                let reactionsProcessor = ReactionsMessageProcessor(
+                                    entityManager: self.frameworkInjector
+                                        .entityManager
+                                )
+                                try reactionsProcessor.handleLegacyReaction(
+                                    ack: receiptType == .acknowledged,
+                                    date: createdAt,
+                                    messageID: msg.objectID,
+                                    sender: groupDeliveryReceiptMessage.fromIdentity
+                                )
+                            }
+                            else {
+                                let receipt = GroupDeliveryReceipt(
+                                    identity: groupDeliveryReceiptMessage.fromIdentity,
+                                    deliveryReceiptType: receiptType,
+                                    date: createdAt
+                                )
+                                msg.add(groupDeliveryReceipt: receipt)
+                            }
                         }
+
                         self.messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
                         self.messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+
+                        if receiptType == .acknowledged || receiptType == .declined,
+                           let reactions = msg.reactions {
+                            for reaction in reactions {
+                                self.messageProcessorDelegate.changedManagedObjectID(reaction.objectID)
+                            }
+                        }
                     }
                     else {
                         throw MediatorReflectedProcessorError
@@ -1184,6 +1212,73 @@ class MessageStore: MessageStoreProtocol {
                 self.messageProcessorDelegate.changedManagedObjectID(conversationObjectID)
                 
                 seal.fulfill_()
+            }
+        }
+    }
+    
+    func save(
+        reactionMessage: ReactionMessage,
+        conversationIdentity: String,
+        createdAt: Date,
+        isOutgoing: Bool
+    ) throws {
+        if !isOutgoing {
+            messageProcessorDelegate.incomingMessageStarted(reactionMessage)
+        }
+                
+        let reactionManager = ReactionsMessageProcessor(entityManager: frameworkInjector.entityManager)
+        let (conversation, _) = try conversationSender(forMessage: reactionMessage, isOutgoing: isOutgoing)
+        let msg = reactionManager.handleMessage(abstractMessage: reactionMessage, conversation: conversation)
+
+        if !isOutgoing {
+            assert(reactionMessage.fromIdentity == conversationIdentity)
+            if let msg {
+                messageProcessorDelegate.incomingMessageChanged(reactionMessage, baseMessage: msg)
+            }
+            messageProcessorDelegate.incomingMessageFinished(reactionMessage)
+        }
+        else {
+            messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+            if let msg {
+                messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                if let reactions = msg.reactions {
+                    for reaction in reactions {
+                        messageProcessorDelegate.changedManagedObjectID(reaction.objectID)
+                    }
+                }
+            }
+        }
+    }
+    
+    func save(
+        groupReactionMessage: GroupReactionMessage,
+        senderIdentity: String,
+        createdAt: Date,
+        isOutgoing: Bool
+    ) throws {
+        if !isOutgoing {
+            messageProcessorDelegate.incomingMessageStarted(groupReactionMessage)
+        }
+        let reactionManager = ReactionsMessageProcessor(entityManager: frameworkInjector.entityManager)
+        let (conversation, _) = try conversationSender(forMessage: groupReactionMessage, isOutgoing: isOutgoing)
+        let msg = reactionManager.handleGroupMessage(abstractMessage: groupReactionMessage, conversation: conversation)
+
+        if !isOutgoing {
+            assert(groupReactionMessage.fromIdentity == senderIdentity)
+            if let msg {
+                messageProcessorDelegate.incomingMessageChanged(groupReactionMessage, baseMessage: msg)
+            }
+            messageProcessorDelegate.incomingMessageFinished(groupReactionMessage)
+        }
+        else {
+            messageProcessorDelegate.changedManagedObjectID(conversation.objectID)
+            if let msg {
+                messageProcessorDelegate.changedManagedObjectID(msg.objectID)
+                if let reactions = msg.reactions {
+                    for reaction in reactions {
+                        messageProcessorDelegate.changedManagedObjectID(reaction.objectID)
+                    }
+                }
             }
         }
     }

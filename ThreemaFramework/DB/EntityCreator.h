@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2023 Threema GmbH
+// Copyright (c) 2014-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -41,7 +41,6 @@
 
 #import <ThreemaFramework/BallotChoice.h>
 
-
 @class AudioDataEntity;
 @class AudioMessageEntity;
 @class CallEntity;
@@ -62,6 +61,7 @@
 @class SystemMessageEntity;
 @class TextMessageEntity;
 @class WebClientSessionEntity;
+@class MessageReactionEntity;
 
 @interface EntityCreator : NSObject
 
@@ -141,5 +141,7 @@
 - (GroupCallEntity *)groupCallEntity;
 
 - (DistributionListEntity*)distributionListEntity;
+
+- (MessageReactionEntity*)messageReactionEntity;
 
 @end

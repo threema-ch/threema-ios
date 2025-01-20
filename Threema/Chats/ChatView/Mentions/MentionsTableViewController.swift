@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -61,9 +61,7 @@ class MentionsTableViewController: ThemedViewController {
         }
         
         cell.nameLabel.text = identity.displayName
-        
-        cell.backgroundColor = Colors.backgroundChatBar
-        
+                
         return cell
     }
     
@@ -76,7 +74,7 @@ class MentionsTableViewController: ThemedViewController {
         
         super.init(nibName: nil, bundle: nil)
         
-        view.backgroundColor = Colors.backgroundChatBar
+        view.backgroundColor = .systemGroupedBackground
     }
     
     @available(*, unavailable)

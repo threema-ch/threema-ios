@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -47,61 +47,13 @@ class ProgressViewController: UIViewController {
         
         itemsToSend = NSMutableDictionary()
         cancelButton!.setTitle(#localize("cancel"), for: .normal)
-        
-        overrideUserInterfaceStyle = UserSettings.shared().darkTheme ? .dark : .light
-    }
-    
-    func updateColors() {
-        view.backgroundColor = Colors.backgroundGroupedViewController
+                
+        view.backgroundColor = .systemGroupedBackground
         
         view.tintColor = .primary
-        contentView!.backgroundColor = view.backgroundColor
-        if Colors.theme == .dark {
-            darkenVisualEffectsView()
-        }
+        contentView!.backgroundColor = .secondarySystemGroupedBackground
         contentView?.layer.cornerRadius = 15.0
-        label.textColor = Colors.text
-    }
-    
-    private func darkenVisualEffectsView() {
-        let rect = CGRect(origin: view.bounds.origin, size: view.bounds.size)
-        
-        let blurEffect = UIBlurEffect(style: .dark)
-        blurView = UIVisualEffectView(effect: blurEffect)
-        
-        blurView!.frame = rect
-        blurView!.autoresizingMask = .flexibleWidth
-        blurView!.autoresizingMask = .flexibleHeight
-        
-        visualEffectsView?.removeFromSuperview()
-        
-        visualEffectsView = nil
-        
-        blurView!.contentView.addSubview(contentView!)
-        view.addSubview(blurView!)
-        
-        let horizontalConstraint = NSLayoutConstraint(
-            item: contentView!,
-            attribute: .centerX,
-            relatedBy: .equal,
-            toItem: blurView,
-            attribute: .centerX,
-            multiplier: 1,
-            constant: 0
-        )
-        
-        let verticalConstraint = NSLayoutConstraint(
-            item: contentView!,
-            attribute: .centerY,
-            relatedBy: .equal,
-            toItem: blurView,
-            attribute: .centerY,
-            multiplier: 1,
-            constant: 0
-        )
-        
-        blurView?.addConstraint(horizontalConstraint)
-        blurView?.addConstraint(verticalConstraint)
+        label.textColor = .label
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -111,8 +63,6 @@ class ProgressViewController: UIViewController {
         
         updateProgressLabel()
         progressView?.progress = 0.0
-        
-        updateColors()
     }
     
     func setProgress(progress: NSNumber, item: Any?) {

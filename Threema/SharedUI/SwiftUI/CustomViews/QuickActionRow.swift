@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -76,7 +76,7 @@ private struct QuickActionButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         // Based on configuration of the UIKit version of `QuickActionButton`
         configuration.label
-            .background(Color(uiColor: Colors.backgroundQuickActionButton))
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
             .foregroundStyle(.tint)
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .opacity(configuration.isPressed ? 0.3 : 1)

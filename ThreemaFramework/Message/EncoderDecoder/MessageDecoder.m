@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2023 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -845,6 +845,44 @@
             }
 
             msg = editGroupMessage;
+            break;
+        }
+        case MSGTYPE_REACTION: {
+            ReactionMessage *reactionMessage = [[ReactionMessage alloc] init];
+            NSError *protobufError = nil;
+            
+            [reactionMessage fromRawProtoBufMessageWithRawProtobufMessage:[NSData dataWithBytes:body.bytes length:[body length]] error:&protobufError];
+            
+            if(protobufError != nil) {
+                DDLogWarn(@"Cannot decode Reaction Message: %@", protobufError);
+                break;
+            }
+            
+            msg = reactionMessage;
+            break;
+        }
+        case MSGTYPE_GROUP_REACTION: {
+            if ([body length] < (kIdentityLen + kGroupIdLen)) {
+                DDLogWarn(@"Wrong length %lu for group file message", (unsigned long)[body length]);
+                break;
+            }
+            
+            NSError *protobufError = nil;
+            
+            int i = 0;
+            GroupReactionMessage *groupReactionMessage = [[GroupReactionMessage alloc] init];
+            groupReactionMessage.groupCreator = [[NSString alloc] initWithData:[NSData dataWithBytes:body.bytes length:kIdentityLen] encoding:NSASCIIStringEncoding];
+            i+= kIdentityLen;
+            groupReactionMessage.groupId = [NSData dataWithBytes:(body.bytes + i) length:kGroupIdLen];
+            i+= kGroupIdLen;
+            [groupReactionMessage fromRawProtoBufMessageWithRawProtobufMessage:[NSData dataWithBytes:(body.bytes + i) length:[body length] - i] error:&protobufError];
+            
+            if(protobufError != nil) {
+                DDLogWarn(@"Cannot decode Group Reaction Message: %@", protobufError);
+                break;
+            }
+            
+            msg = groupReactionMessage;
             break;
         }
         default: {

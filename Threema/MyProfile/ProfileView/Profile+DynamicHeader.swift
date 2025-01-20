@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -231,7 +231,7 @@ extension ProfileView {
                                 .scaledToFit()
                                 .accessibilityLabel(#localize("my_profilepicture"))
                                 .transformAnchorPreference(key: TrackedFrame.Key.self, value: .bounds) {
-                                    $0.append(TrackedFrame(id: "imageFrame", frame: proxy[$1]))
+                                    $0.append(TrackedFrame(id: "imageFrame", frame: proxy[$1], data: nil))
                                 }
                                 .modifier(ScaleRadius(isCircle: state == .normal, rectSize: proxy.size))
                                 .frame(
@@ -271,7 +271,7 @@ extension ProfileView {
                 }
                 .listRowBackground(Color(uiColor: Colors.backgroundGroupedViewController))
                 .transformAnchorPreference(key: TrackedFrame.Key.self, value: .bounds) {
-                    $0.append(TrackedFrame(id: "topCell", frame: proxy[$1]))
+                    $0.append(TrackedFrame(id: "topCell", frame: proxy[$1], data: nil))
                 }
             )
         }

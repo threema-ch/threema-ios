@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2017-2024 Threema GmbH
+// Copyright (c) 2017-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -99,8 +99,21 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        updateColors()
         setupLocalizables()
+        
+        descriptionLabel.font = UIFont.preferredFont(forTextStyle: .body)
+        finishLabel.font = UIFont.preferredFont(forTextStyle: .body)
+        diagnosticTextView.font = UIFont.preferredFont(forTextStyle: .callout)
+
+        view.backgroundColor = .systemGroupedBackground
+        
+        diagnosticTextView.textColor = .secondaryLabel
+    
+        startButton.setTitleColor(.primary, for: .normal)
+        copyButton.setTitleColor(.primary, for: .normal)
+        
+        diagnosticTextView.layer.borderWidth = 1.0
+        diagnosticTextView.layer.borderColor = UIColor.systemGray4.cgColor
         
         activityIndicator.stopAnimating()
         activityIndicator.isHidden = true
@@ -130,30 +143,7 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
     }
     
     // MARK: Private functions
-    
-    private func updateColors() {
-        descriptionLabel.font = UIFont.systemFont(ofSize: 17.0)
-        finishLabel.font = UIFont.systemFont(ofSize: 17.0)
-               
-        view.backgroundColor = Colors.backgroundGroupedViewController
         
-        activityIndicator.style = Colors.activityIndicatorViewStyle
-        switch Colors.theme {
-        case .dark:
-            diagnosticTextView.textColor = UIColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 1.0)
-        case .light, .undefined:
-            diagnosticTextView.textColor = Colors.textLight
-        }
-        
-        diagnosticTextView.font = UIFont.systemFont(ofSize: 15.0)
-        
-        startButton.setTitleColor(.primary, for: .normal)
-        copyButton.setTitleColor(.primary, for: .normal)
-        
-        diagnosticTextView.layer.borderWidth = 1.0
-        diagnosticTextView.layer.borderColor = Colors.textVeryLight.cgColor
-    }
-    
     private func setupLocalizables() {
         title = #localize("webrtc_diagnostics.title")
         descriptionLabel.text = #localize("webrtc_diagnostics.description")
@@ -162,7 +152,7 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
         startButton.setTitle(#localize("webrtc_diagnostics.start"), for: .normal)
         copyButton.setTitle(#localize("webrtc_diagnostics.copyToClipboard"), for: .normal)
     }
-    
+        
     private func startDiagnostic() {
         isDiagnosticRunning = true
         diagnosticTextView.text = ""

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2024 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -101,7 +101,7 @@ struct WebContact {
         }
         
         self.publicKey = contact.publicKey
-        self.hidden = false // for contacts where are added by group chats
+        self.hidden = contact.isContactHidden
         
         self.isBlocked = UserSettings.shared().blacklist.contains(contact.identity)
         

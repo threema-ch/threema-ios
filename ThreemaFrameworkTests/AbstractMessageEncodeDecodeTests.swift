@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2024 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -1386,6 +1387,102 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertTrue(expectedReceiptMessageIDs[0].elementsEqual(result?.receiptMessageIDs[0] as! Data))
         XCTAssertTrue(expectedReceiptMessageIDs[1].elementsEqual(result?.receiptMessageIDs[1] as! Data))
 
+        XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
+        XCTAssertEqual(expectedToIdentity, result?.toIdentity)
+        XCTAssertEqual(expectedMessageID, result?.messageID)
+        XCTAssertEqual(expectedPushFromName, result?.pushFromName)
+        XCTAssertEqual(expectedDate, result?.date)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result?.delivered)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result?.userAck)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result?.sendUserAck)
+        XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
+        XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
+        XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
+    }
+    
+    func testReactionMessage() throws {
+        let expectedReaction = Data("😁".utf8)
+        
+        var cspReaction = CspE2e_Reaction()
+        cspReaction.action = .apply(expectedReaction)
+        cspReaction.messageID = try expectedMessageID.littleEndian()
+        
+        let msg: ReactionMessage = abstractMessage(
+            expectedFromIdentity,
+            expectedToIdentity,
+            expectedMessageID,
+            expectedPushFromName,
+            expectedDate,
+            expectedDeliveryDate,
+            expectedDelivered,
+            expectedUserAck,
+            expectedSendUserAck,
+            expectedNonce,
+            expectedFlags,
+            expectedReceivedAfterInitialQueueSend
+        )
+        
+        msg.decoded = cspReaction
+        
+        let result: ReactionMessage? = try encodeDecode(message: msg)
+        
+        XCTAssertNotNil(result)
+        XCTAssertEqual(expectedReaction, result?.decoded?.apply)
+        XCTAssertEqual(expectedMessageID, result?.decoded?.messageID.littleEndianData)
+
+        XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
+        XCTAssertEqual(expectedToIdentity, result?.toIdentity)
+        XCTAssertEqual(expectedMessageID, result?.messageID)
+        XCTAssertEqual(expectedPushFromName, result?.pushFromName)
+        XCTAssertEqual(expectedDate, result?.date)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result?.delivered)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result?.userAck)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result?.sendUserAck)
+        XCTAssertTrue(try expectedNonce.elementsEqual(XCTUnwrap(result?.nonce)))
+        XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
+        XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
+    }
+    
+    func testGroupReactionMessage() throws {
+        let expectedGroupID: Data = MockData.generateGroupID()
+        let expectedGroupCreator = "CREATOR1"
+        let expectedReaction = Data("😁".utf8)
+
+        var cspReaction = CspE2e_Reaction()
+        cspReaction.action = .apply(expectedReaction)
+        cspReaction.messageID = try expectedMessageID.littleEndian()
+        
+        let msg: GroupReactionMessage = abstractMessage(
+            expectedFromIdentity,
+            expectedToIdentity,
+            expectedMessageID,
+            expectedPushFromName,
+            expectedDate,
+            expectedDeliveryDate,
+            expectedDelivered,
+            expectedUserAck,
+            expectedSendUserAck,
+            expectedNonce,
+            expectedFlags,
+            expectedReceivedAfterInitialQueueSend
+        )
+        
+        msg.groupID = expectedGroupID
+        msg.groupCreator = expectedGroupCreator
+
+        msg.decoded = cspReaction
+        
+        let result: GroupReactionMessage? = try encodeDecode(message: msg)
+        
+        XCTAssertNotNil(result)
+        
+        XCTAssertEqual(expectedReaction, result?.decoded?.apply)
+        XCTAssertEqual(expectedMessageID, result?.decoded?.messageID.littleEndianData)
+        
+        XCTAssertTrue(expectedGroupID.elementsEqual((result?.groupID)!))
+        XCTAssertEqual(expectedGroupCreator, result?.groupCreator)
         XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
         XCTAssertEqual(expectedToIdentity, result?.toIdentity)
         XCTAssertEqual(expectedMessageID, result?.messageID)

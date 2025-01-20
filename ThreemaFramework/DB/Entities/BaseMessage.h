@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2023 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -47,6 +47,7 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 @class ConversationEntity;
 @class ContactEntity;
 @class MessageMarkersEntity;
+@class MessageReactionEntity;
 @class MessageHistoryEntryEntity;
 
 @interface BaseMessage : TMAManagedObject
@@ -86,7 +87,7 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 /// - Update -> CSP: Date set by receiver (`Date.now`), MDP: Reflected date set by receiver after reflecting (leader) or when processing incoming reflected message (none leader)
 @property (nullable, nonatomic, retain) NSDate *deliveryDate;
 @property (nullable, nonatomic, retain) NSDate *readDate;
-@property (nullable, nonatomic, retain) NSDate *userackDate;
+@property (nullable, nonatomic, retain) NSDate *userackDate DEPRECATED_MSG_ATTRIBUTE("Use new reactions instead.");
 @property (nullable, nonatomic, retain) NSDate *deletedAt;
 @property (nullable, nonatomic, retain) NSDate *lastEditedAt;
 
@@ -94,7 +95,7 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 @property (nonatomic, retain) NSNumber *sent;
 @property (nonatomic, retain) NSNumber *delivered;
 @property (nonatomic, retain) NSNumber *read;
-@property (nonatomic, retain) NSNumber *userack;
+@property (nonatomic, retain) NSNumber *userack DEPRECATED_MSG_ATTRIBUTE("Use new reactions instead.");
 
 /// Set if sending failed (this includes rejected by FS)
 @property (nullable, nonatomic, retain) NSNumber *sendFailed;
@@ -107,6 +108,7 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 @property (nonatomic, retain) ConversationEntity *conversation;
 @property (nullable, nonatomic, retain) ContactEntity *sender;
 @property (nullable, nonatomic, retain) NSSet<MessageHistoryEntryEntity *> *historyEntries;
+@property (nullable, nonatomic, retain) NSSet<MessageReactionEntity *> *reactions;
 
 @property (nullable, nonatomic, retain) MessageMarkersEntity *messageMarkers;
 @property (nullable, nonatomic, retain) NSSet<BaseMessage *> *distributedMessages;

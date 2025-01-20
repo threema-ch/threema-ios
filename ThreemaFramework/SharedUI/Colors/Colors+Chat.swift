@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -40,25 +40,7 @@ extension Colors {
             Asset.SharedColors.gray450.color
         }
     }
-    
-    public class var chatBubbleReceived: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.gray250.color
-        case .dark:
-            Asset.SharedColors.gray800.color
-        }
-    }
-    
-    public class var chatBubbleReceivedSelected: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.gray350.color
-        case .dark:
-            Asset.SharedColors.gray550.color
-        }
-    }
-    
+            
     public class var backgroundChatBar: UIColor {
         switch theme {
         case .light, .undefined:
@@ -76,44 +58,9 @@ extension Colors {
             Asset.SharedColors.gray1000.color
         }
     }
-        
-    public class var thumbUp: UIColor {
-        Colors.green
-    }
-    
-    public class var thumbDown: UIColor {
-        Asset.SharedColors.orange.color
-    }
     
     public class var messageFailed: UIColor {
         .systemRed
-    }
-    
-    @objc public class var backgroundAudioPlayer: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.gray100.color
-        case .dark:
-            Asset.SharedColors.gray800.color
-        }
-    }
-    
-    @objc public class var backgroundAudioPlayerButton: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.gray200.color
-        case .dark:
-            Asset.SharedColors.gray900.color
-        }
-    }
-    
-    @objc public class var backgroundSpeedButton: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.gray300.color
-        case .dark:
-            Asset.SharedColors.gray900.color
-        }
     }
     
     @objc public class var fillMicrophoneButton: UIColor {
@@ -146,11 +93,7 @@ extension Colors {
             Asset.SharedColors.gray800.color
         }
     }
-    
-    public class var backgroundPinChat: UIColor {
-        Asset.SharedColors.pin.color
-    }
-    
+        
     public class var backgroundThumbnailCollectionView: UIColor {
         switch theme {
         case .light, .undefined:
@@ -168,15 +111,6 @@ extension Colors {
             Asset.SharedColors.black.color
         }
     }
-    
-    public class var systemMessageBackground: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.gray150.color
-        case .dark:
-            Asset.SharedColors.gray900.color
-        }
-    }
 
     public class var thumbnailProgressViewColor: UIColor {
         switch theme {
@@ -185,5 +119,45 @@ extension Colors {
         case .dark:
             Asset.SharedColors.gray850.color
         }
+    }
+    
+    public class var chatReactionBubble: UIColor {
+        switch theme {
+        case .light, .undefined:
+            Asset.SharedColors.gray300.color
+        case .dark:
+            Asset.SharedColors.gray800.color
+        }
+    }
+    
+    public class var chatReactionBubbleSelected: UIColor {
+        switch theme {
+        case .light, .undefined:
+            Asset.SharedColors.gray400.color
+        case .dark:
+            Asset.SharedColors.gray550.color
+        }
+    }
+
+    public class var chatReactionBubbleHighlighted: UIColor {
+        switch theme {
+        case .light, .undefined:
+            Asset.SharedColors.gray350.color
+        case .dark:
+            Asset.SharedColors.gray500.color
+        }
+    }
+    
+    public class var chatReactionBubbleTextColor: UIColor {
+        switch theme {
+        case .light, .undefined:
+            Asset.SharedColors.gray750.color
+        case .dark:
+            Asset.SharedColors.gray400.color
+        }
+    }
+    
+    public class var chatReactionBubbleBorder: UIColor {
+        UIColor.systemBackground
     }
 }

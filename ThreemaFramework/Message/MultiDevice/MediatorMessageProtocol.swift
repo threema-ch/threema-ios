@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2023 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -136,7 +136,9 @@ enum MediatorMessageProtocolError: Error {
             mt == .groupDeleteMessage ||
             mt == .editMessage ||
             mt == .groupEditMessage ||
-            mt == .groupCallStart
+            mt == .groupCallStart ||
+            mt == .reaction ||
+            mt == .groupReaction
     }
     
     // MARK: Chat server protocol extension for WebSocket
@@ -826,6 +828,10 @@ enum MediatorMessageProtocolError: Error {
             return MSGTYPE_GROUP_EDIT
         case .groupDeleteMessage:
             return MSGTYPE_GROUP_DELETE
+        case .reaction:
+            return MSGTYPE_REACTION
+        case .groupReaction:
+            return MSGTYPE_GROUP_REACTION
         // Not supported types
         case .forwardSecurityEnvelope:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
@@ -834,6 +840,10 @@ enum MediatorMessageProtocolError: Error {
         case .UNRECOGNIZED:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
         case .webSessionResume:
+            throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
+        case .groupJoinRequest:
+            throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
+        case .groupJoinResponse:
             throw MediatorMessageProtocolError.noAbstractMessageType(for: type)
         }
     }
@@ -918,6 +928,10 @@ enum MediatorMessageProtocolError: Error {
             .groupEditMessage
         case MSGTYPE_GROUP_DELETE:
             .groupDeleteMessage
+        case MSGTYPE_REACTION:
+            .reaction
+        case MSGTYPE_GROUP_REACTION:
+            .groupReaction
         default:
             .invalidType
         }
@@ -1049,7 +1063,7 @@ extension D2d_UserProfileSync: D2d_LoggingDescriptionProtocol {
 
 extension CspE2e_DeleteMessage: D2d_LoggingDescriptionProtocol {
     var loggingDescription: String {
-        "(type: \(CspE2e_DeleteMessage.self); edit ID:\(messageID.littleEndianData.hexString))"
+        "(type: \(CspE2e_DeleteMessage.self); delete ID: \(messageID.littleEndianData.hexString))"
     }
 }
 
@@ -1057,6 +1071,6 @@ extension CspE2e_DeleteMessage: D2d_LoggingDescriptionProtocol {
 
 extension CspE2e_EditMessage: D2d_LoggingDescriptionProtocol {
     var loggingDescription: String {
-        "(type: \(CspE2e_EditMessage.self); edit ID:\(messageID.littleEndianData.hexString))"
+        "(type: \(CspE2e_EditMessage.self); edit ID: \(messageID.littleEndianData.hexString))"
     }
 }

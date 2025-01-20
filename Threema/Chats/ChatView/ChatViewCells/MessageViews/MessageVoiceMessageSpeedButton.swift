@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -59,6 +59,8 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
         label.isUserInteractionEnabled = true
         
         label.font = config.SpeedLabel.font
+        label.textColor = .labelInverted
+
         label.setContentCompressionResistancePriority(.required, for: .horizontal)
         
         return label
@@ -81,6 +83,8 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
             container.trailingAnchor.constraint(equalTo: speedLabel.trailingAnchor, constant: config.leftRightInset),
         ])
         
+        container.backgroundColor = .secondaryLabel
+
         container.alpha = 0.0
             
         return container
@@ -111,6 +115,8 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
         DispatchQueue.main.async {
             self.toggleOrUpdateView(animated: false)
         }
+        
+        tintColor = .secondaryLabel
     }
     
     // MARK: - Update Functions
@@ -188,11 +194,13 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
         accessibilityLabel = "\(currentSpeed)"
     }
     
-    override func updateColors() {
-        speedLabel.textColor = Colors.textInverted
-        tintColor = Colors.textLight
-        speedLabelContainer.backgroundColor = Colors.textLight
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
         
-        updateMicrophoneIcon()
+        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
+            return
+        }
+        
+        toggleOrUpdateView()
     }
 }

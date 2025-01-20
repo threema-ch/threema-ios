@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2024 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -35,6 +35,7 @@ class WebClientSessionCell: UITableViewCell {
         loadingIndicator.stopAnimating()
         loadingIndicator.style = Colors.activityIndicatorViewStyle
         
+        browserLabel.textColor = .label
         if webClientSession.name != nil {
             browserLabel.text = webClientSession.name
         }
@@ -42,6 +43,7 @@ class WebClientSessionCell: UITableViewCell {
             browserLabel.text = #localize("webClientSession_unnamed")
         }
         
+        infoLabel.textColor = .secondaryLabel
         let info: String
         let localizedSavedString = webClientSession.permanent.boolValue ? BundleUtil
             .localizedString(forKey: "webClientSession_saved") : BundleUtil

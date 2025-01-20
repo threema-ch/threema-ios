@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2023 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -25,7 +25,6 @@
 #import "ServerConnector.h"
 #import "NaClCrypto.h"
 #import "ChatTcpSocket.h"
-#import <ThreemaFramework/NSData+ConvertUInt64.h>
 #import "NSString+Hex.h"
 #import "BoxedMessage.h"
 #import "MyIdentityStore.h"
@@ -37,7 +36,6 @@
 #import "AppGroup.h"
 #import "LicenseStore.h"
 #import "PushPayloadDecryptor.h"
-#import "DataQueue.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelAll;

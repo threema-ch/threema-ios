@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -43,7 +43,7 @@ struct StorageManagementConversationView: View {
                     HStack(alignment: .center) {
                         Text(#localize("disabled_by_device_policy"))
                             .font(.footnote)
-                            .foregroundColor(Color(uiColor: Colors.textLight))
+                            .foregroundColor(Color(uiColor: .secondaryLabel))
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -52,6 +52,7 @@ struct StorageManagementConversationView: View {
         }
         .navigationTitle(#localize("storage_management"))
         .task(model.load)
+        .background(UIColor.systemGroupedBackground.color)
     }
     
     @ViewBuilder

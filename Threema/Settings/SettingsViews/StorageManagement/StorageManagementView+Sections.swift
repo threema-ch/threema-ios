@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -148,7 +148,7 @@ extension StorageManagementView {
                 }
                 .font(.callout)
                 .lineLimit(sizeCategory.isAccessibilityCategory ? nil : 1)
-                .foregroundColor(Color(uiColor: Colors.textLight))
+                .foregroundColor(Color(uiColor: .secondaryLabel))
                 .task {
                     metaData = await model.calcMetaData(for: conversation)
                 }
@@ -205,7 +205,7 @@ extension StorageManagementView {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text(toValueString(storageUsage[keyPath: value]))
                     .lineLimit(sizeCategory.isAccessibilityCategory ? nil : 1)
-                    .foregroundColor(Color(uiColor: Colors.textLight))
+                    .foregroundColor(Color(uiColor: .secondaryLabel))
                     .frame(maxWidth: .infinity, alignment: sizeCategory.isAccessibilityCategory ? .leading : .trailing)
                     .copyLabel(value: toValueString(storageUsage[keyPath: value]))
                     .accessibilityValue(toValueString(storageUsage[keyPath: value]))

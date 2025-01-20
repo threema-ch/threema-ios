@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2023 Threema GmbH
+// Copyright (c) 2019-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -302,6 +302,12 @@ import Foundation
                 delete(entity: history)
             }
         }
+        
+        if let reactions = message.reactions {
+            for reaction in reactions {
+                delete(entity: reaction)
+            }
+        }
     }
 
     private func deleteThumbnail(for message: BaseMessage) {
@@ -460,7 +466,11 @@ import Foundation
     @objc func delete(ballot: Ballot) {
         delete(entity: ballot)
     }
-
+    
+    @objc func delete(reaction: MessageReactionEntity) {
+        delete(entity: reaction)
+    }
+    
     @objc func delete(ballotChoice: BallotChoice) {
         delete(entity: ballotChoice)
     }

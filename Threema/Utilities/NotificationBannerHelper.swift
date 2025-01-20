@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2024 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -97,9 +97,9 @@ import ThreemaMacros
                 title: title,
                 subtitle: "",
                 titleFont: UIFont.boldSystemFont(ofSize: titleFontDescriptor.pointSize),
-                titleColor: Colors.text,
+                titleColor: .label,
                 subtitleFont: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
-                subtitleColor: Colors.text,
+                subtitleColor: .label,
                 leftView: profileImageView,
                 rightView: thumbnailImageView,
                 style: .info,
@@ -136,7 +136,7 @@ import ThreemaMacros
                 let attributed = TextStyleUtils.makeAttributedString(
                     from: message.previewText,
                     with: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
-                    textColor: Colors.text,
+                    textColor: .label,
                     isOwn: true,
                     application: UIApplication.shared
                 )
@@ -147,7 +147,7 @@ import ThreemaMacros
                 let attributedContact = TextStyleUtils.makeAttributedString(
                     from: contactString,
                     with: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
-                    textColor: Colors.text,
+                    textColor: .label,
                     isOwn: true,
                     application: UIApplication.shared
                 )
@@ -158,7 +158,7 @@ import ThreemaMacros
                 let attributed = TextStyleUtils.makeAttributedString(
                     from: message.previewText,
                     with: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
-                    textColor: Colors.text,
+                    textColor: .label,
                     isOwn: true,
                     application: UIApplication.shared
                 )
@@ -175,7 +175,7 @@ import ThreemaMacros
                 banner.subtitleLabel!.attributedText = TextStyleUtils.makeMentionsAttributedString(
                     for: formattedAttributeString,
                     textFont: banner.subtitleLabel!.font,
-                    at: Colors.textLight.withAlphaComponent(0.6),
+                    at: .secondaryLabel.withAlphaComponent(0.6),
                     messageInfo: 2,
                     application: UIApplication.shared
                 )
@@ -220,7 +220,7 @@ import ThreemaMacros
             systemName: "mic.fill",
             withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
         )?
-            .withTintColor(Colors.text, renderingMode: .alwaysOriginal)
+            .withTintColor(.label, renderingMode: .alwaysOriginal)
         return getThumbnail(for: image, contentMode: .center)
     }
 
@@ -259,9 +259,9 @@ import ThreemaMacros
             title: title,
             subtitle: body,
             titleFont: UIFont.boldSystemFont(ofSize: titleFontDescriptor.pointSize),
-            titleColor: Colors.text,
+            titleColor: .label,
             subtitleFont: UIFont.preferredFont(forTextStyle: .title1),
-            subtitleColor: Colors.text,
+            subtitleColor: .label,
             leftView: profilePictureView,
             rightView: nil,
             style: .info,
@@ -278,7 +278,7 @@ import ThreemaMacros
         let attributed = TextStyleUtils.makeAttributedString(
             from: body,
             with: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
-            textColor: Colors.text,
+            textColor: .label,
             isOwn: true,
             application: UIApplication.shared
         )

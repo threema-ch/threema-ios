@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2024 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -946,28 +946,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                  [[UIApplication sharedApplication] registerForRemoteNotifications];
              });
              
-             // required to get the app to do anything at all about push notifications
-             UNTextInputNotificationAction *textAction = [UNTextInputNotificationAction actionWithIdentifier:@"REPLY_MESSAGE" title:[BundleUtil localizedStringForKey:@"decryption_push_reply"] options:UNNotificationActionOptionAuthenticationRequired textInputButtonTitle:[BundleUtil localizedStringForKey:@"send"] textInputPlaceholder:[BundleUtil localizedStringForKey:@"decryption_push_placeholder"]];
-             
-             UNNotificationAction *thumbUpAction = [UNNotificationAction actionWithIdentifier:@"THUMB_UP" title:[BundleUtil localizedStringForKey:@"decryption_push_agree"] options:UNNotificationActionOptionAuthenticationRequired];
-             UNNotificationAction *thumbDownAction = [UNNotificationAction actionWithIdentifier:@"THUMB_DOWN" title:[BundleUtil localizedStringForKey:@"decryption_push_disagree"] options:UNNotificationActionOptionAuthenticationRequired];
-             
-             UNTextInputNotificationAction *callReplyAction = [UNTextInputNotificationAction actionWithIdentifier:@"REPLY_MESSAGE" title:[BundleUtil localizedStringForKey:@"decryption_push_reply"] options:UNNotificationActionOptionAuthenticationRequired textInputButtonTitle:[BundleUtil localizedStringForKey:@"send"] textInputPlaceholder:[BundleUtil localizedStringForKey:@"decryption_push_placeholder"]];
-             UNNotificationAction *callBackAction = [UNNotificationAction actionWithIdentifier:@"CALL" title:[BundleUtil localizedStringForKey:@"call_back"] options:UNNotificationActionOptionForeground];
-             
-             UNNotificationAction *acceptCallAction = [UNNotificationAction actionWithIdentifier:@"ACCEPTCALL" title:[BundleUtil localizedStringForKey:@"call_accept"] options:UNNotificationActionOptionForeground];
-             UNNotificationAction *rejectCallAction = [UNNotificationAction actionWithIdentifier:@"REJECTCALL" title:[BundleUtil localizedStringForKey:@"call_reject"] options:UNNotificationActionOptionDestructive];
-             
-             // Create the category with the custom actions.
-             UNNotificationCategory *singleCategory = [UNNotificationCategory categoryWithIdentifier:@"SINGLE" actions:@[textAction, thumbUpAction, thumbDownAction] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone];
-             UNNotificationCategory *groupCategory = [UNNotificationCategory categoryWithIdentifier:@"GROUP" actions:@[textAction, thumbUpAction, thumbDownAction] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone];
-             UNNotificationCategory *callCategory = [UNNotificationCategory categoryWithIdentifier:@"CALL" actions:@[callReplyAction, callBackAction] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone];
-             UNNotificationCategory *incomCallCategory = [UNNotificationCategory categoryWithIdentifier:@"INCOMCALL" actions:@[acceptCallAction, rejectCallAction] intentIdentifiers:@[] options:UNNotificationCategoryOptionNone];
-             
-             // Register the notification categories.
-             [center setNotificationCategories:[NSSet setWithObjects:groupCategory, singleCategory, callCategory, incomCallCategory, nil]];
+             NotificationActionProvider* provider = [NotificationActionProvider new];
+             NSSet* categories = [provider defaultCategories];
+             [center setNotificationCategories:categories];
          }
      }];
+    
 }
 
 #pragma mark - Misc

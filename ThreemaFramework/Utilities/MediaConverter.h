@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2016-2023 Threema GmbH
+// Copyright (c) 2016-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -54,10 +54,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (BOOL)isVideoDurationValidAtUrl:(nullable NSURL *)url NS_SWIFT_NAME(isVideoDurationValid(at:));
 
-+ (NSArray<NSString *> *)videoQualities;
 + (double)videoMaxDurationInMinutes;
 
-+ (nullable AVAssetExportSession *)convertVideoAsset:(nullable AVAsset *)asset onCompletion:(void(^)(NSURL * _Nullable url))onCompletion onError:(void(^)(NSError * _Nullable error))onError;
 + (void)convertVideoWithExportSession:(nullable AVAssetExportSession *)exportSession onCompletion:(void(^)(NSURL * _Nullable url))onCompletion onError:(void(^)(NSError * _Nullable error))onError;
 
 + (nullable AVAssetExportSession *)getAVAssetExportSessionFrom:(nullable AVAsset *)asset outputURL:(nullable NSURL *)outputURL;

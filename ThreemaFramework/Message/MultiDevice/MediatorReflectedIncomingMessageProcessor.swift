@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -135,6 +135,10 @@ class MediatorReflectedIncomingMessageProcessor {
             try process(incomingMessage: imsg, groupCallStartMessage: amsg as! GroupCallStartMessage)
         case is TypingIndicatorMessage:
             try process(incomingMessage: imsg, typingIndicatorMessage: amsg as! TypingIndicatorMessage)
+        case is ReactionMessage:
+            try process(incomingMessage: imsg, reactionMessage: amsg as! ReactionMessage)
+        case is GroupReactionMessage:
+            try process(incomingMessage: imsg, groupReactionMessage: amsg as! GroupReactionMessage)
         default:
             Promise { $0.reject(MediatorReflectedProcessorError.messageWontProcessed(
                 message: "Reflected incoming message type \(imsg.loggingDescription) will be not processed"
@@ -645,6 +649,34 @@ class MediatorReflectedIncomingMessageProcessor {
             reflectedAt: reflectedAt,
             isOutgoing: false
         )
+    }
+    
+    // MARK: Process Incoming Reaction Messages
+
+    private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
+        reactionMessage amsg: ReactionMessage
+    ) throws -> Promise<Void> {
+        try messageStore.save(
+            reactionMessage: amsg,
+            conversationIdentity: getSenderIdentity(for: imsg),
+            createdAt: getCreatedAt(for: imsg),
+            isOutgoing: false
+        )
+        return Promise()
+    }
+    
+    private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
+        groupReactionMessage amsg: GroupReactionMessage
+    ) throws -> Promise<Void> {
+        try messageStore.save(
+            groupReactionMessage: amsg,
+            senderIdentity: getSenderIdentity(for: imsg),
+            createdAt: getCreatedAt(for: imsg),
+            isOutgoing: false
+        )
+        return Promise()
     }
 
     // MARK: Misc

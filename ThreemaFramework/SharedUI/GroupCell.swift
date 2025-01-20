@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -106,6 +106,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
     
         label.textAlignment = .right
         label.font = .preferredFont(forTextStyle: .footnote)
+        label.textColor = .secondaryLabel
         
         label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         
@@ -116,6 +117,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
         let label = UILabel()
         
         label.font = .preferredFont(forTextStyle: .footnote)
+        label.textColor = .secondaryLabel
 
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 2
@@ -180,13 +182,6 @@ public final class GroupCell: ThemedCodeTableViewCell {
             containerStack.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
             containerStack.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
         ])
-    }
-    
-    override public func updateColors() {
-        super.updateColors()
-        
-        Colors.setTextColor(Colors.textLight, label: topMetadataLabel)
-        Colors.setTextColor(Colors.textLight, label: membersListLabel)
     }
     
     // MARK: - Updates

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2024 Threema GmbH
+// Copyright (c) 2024-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -42,6 +42,7 @@ final class MessageMarkersView: UIView {
         imageView.contentMode = .center
         imageView.image = UIImage(systemName: "star.fill")?.withTintColor(.systemYellow)
         imageView.preferredSymbolConfiguration = ChatViewConfiguration.MessageMetadata.symbolConfiguration
+        imageView.tintColor = .systemYellow
         
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
@@ -59,7 +60,6 @@ final class MessageMarkersView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureLayout()
-        updateColors()
     }
         
     convenience init() {
@@ -73,15 +73,9 @@ final class MessageMarkersView: UIView {
     
     private func configureLayout() {
         addSubview(markerStarImageView)
-        
-        updateColors()
     }
     
     // MARK: - Updates
-    
-    func updateColors() {
-        markerStarImageView.tintColor = .systemYellow
-    }
     
     private func updateMarkers(for message: BaseMessage) {
         guard message.hasMarkers else {

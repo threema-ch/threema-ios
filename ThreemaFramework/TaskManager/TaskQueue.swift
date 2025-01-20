@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -305,20 +305,24 @@ final class TaskQueue {
         let archiver = NSKeyedArchiver(requiringSecureCoding: true)
 
         do {
-            // Encode type of each item
-            let types: [String] = queue.list.map(\.taskDefinition.className)
-            try archiver.encodeEncodable(types, forKey: "types")
-
             // Encode each task definition if they should be persisted and are not dropped
             // (for now no persistent dropped tasks should exist)
+            var types = [String]()
             var i = 0
             for task in queue.list {
                 if task.taskDefinition.type == .persistent, !task.taskDefinition.isDropped {
-                    try? archiver.encodeEncodable(task.taskDefinition, forKey: "\(task.taskDefinition.className)_\(i)")
-                }
+                    let type = task.taskDefinition.className
 
-                i += 1
+                    try? archiver.encodeEncodable(task.taskDefinition, forKey: "\(type)_\(i)")
+
+                    types.append(type)
+
+                    i += 1
+                }
             }
+
+            // Encode type of each item
+            try archiver.encodeEncodable(types, forKey: "types")
         }
         catch {
             DDLogError("Encoding of tasks failed")
@@ -415,6 +419,11 @@ final class TaskQueue {
                         case String(describing: type(of: TaskDefinitionSendDeleteEditMessage.self)):
                             taskDefinition = try unarchiver.decodeTopLevelDecodable(
                                 TaskDefinitionSendDeleteEditMessage.self,
+                                forKey: "\(className)_\(i)"
+                            )
+                        case String(describing: type(of: TaskDefinitionSendReactionMessage.self)):
+                            taskDefinition = try unarchiver.decodeTopLevelDecodable(
+                                TaskDefinitionSendReactionMessage.self,
                                 forKey: "\(className)_\(i)"
                             )
                         default:

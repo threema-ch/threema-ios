@@ -291,7 +291,7 @@ message Contact {
     // The contact was explicitly added by the user or a 1:1 conversation with
     // the contact has been initiated.
     DIRECT = 0;
-    // This level covers two cases:
+    // This level covers the following cases:
     //
     // - The contact is part of a group the user is also part of. The contact
     //   was not explicitly added and no 1:1 conversation has been initiated.
@@ -299,9 +299,10 @@ message Contact {
     //   either of them has since been removed from all common groups.
     // - The contact has been explicitly removed by the user.
     //
-    // Note that this level is referred in the protocol as either acquaintance
-    // level _group_ or  _deleted_. Although they are semantically different,
-    // they cannot and need not be distinguished on the wire.
+    // The protocol refers to contacts with this level as either acquaintance
+    // level _group_ or _deleted_. They are interchangeable and there's no
+    // semantic difference between them beyond the context in which they are
+    // referred to.
     GROUP_OR_DELETED = 1;
   }
   optional AcquaintanceLevel acquaintance_level = 9;

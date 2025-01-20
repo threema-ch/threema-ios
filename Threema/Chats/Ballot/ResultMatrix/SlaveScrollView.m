@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2024 Threema GmbH
+// Copyright (c) 2014-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -111,15 +111,15 @@
     NSArray *subviews = [self.contentView subviews];
     if (index < [subviews count]) {
         UIView *view = [subviews objectAtIndex:index];
-        if ([view isKindOfClass:[BallotMatrixLabelView class]] && Colors.theme == ThemeLight) {
+        if ([view isKindOfClass:[BallotMatrixLabelView class]]) {
             BallotMatrixLabelView *b = (BallotMatrixLabelView *)view;
-            [b setTextColor:Colors.textInverted];
+            [b setTextColor:UIColor.whiteColor];
         } else {
             NSArray *subsub = [view subviews];
             [subsub enumerateObjectsUsingBlock:^(id v, NSUInteger idx, BOOL * _Nonnull stop) {
                 if ([v isKindOfClass:[BallotResultMatrixCell class]]) {
                     BallotResultMatrixCell *cell = (BallotResultMatrixCell *)v;
-                    [cell setColorForChoice:Colors.textInverted];
+                    [cell setColorForChoice:color];
                 }
             }];
         }

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2023 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -404,7 +404,7 @@ Process incoming message.
     } else if ([amsg isKindOfClass:[DeliveryReceiptMessage class]]) {
         [self processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)amsg onCompletion:^{
             onCompletion(nil);
-        }];
+        } onError:onError];
     } else if ([amsg isKindOfClass:[TypingIndicatorMessage class]]) {
         [self processIncomingTypingIndicator:(TypingIndicatorMessage*)amsg];
         onCompletion(nil);
@@ -478,8 +478,20 @@ Process incoming message.
                 onCompletion(nil);
             }];
         }
-    }
-    else {
+    } else if ([amsg isKindOfClass:[ReactionMessage class]]) {
+        ReactionMessage *newMsg = (ReactionMessage *) amsg;
+        ReactionsMessageProcessor *manager = [[ReactionsMessageProcessor alloc]initWithEntityManager:entityManager];
+        BaseMessage *message = [manager handleMessageWithAbstractMessage: newMsg conversation:conversation];
+
+        if (message) {
+            [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
+                onCompletion(nil);
+            }];
+        }
+        else {
+            onCompletion(nil);
+        }
+    } else {
         // Do not Ack message, try process this message later because of protocol changes
         onError([ThreemaError threemaError:@"Invalid message class"]);
     }
@@ -576,7 +588,7 @@ Process incoming message.
                 onError(error);
             }];
         } else if ([amsg isKindOfClass:[GroupDeliveryReceiptMessage class]]) {
-            [self processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)amsg onCompletion:onCompletion];
+            [self processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupCallStartMessage class]]) {
             GroupCallStartMessage *newMsg = (GroupCallStartMessage *) amsg;
             [[GlobalGroupCallManagerSingleton shared] handleMessageWithRawMessage:newMsg.decodedObj from:newMsg.fromIdentity in:conversation.objectID receiveDate:newMsg.date completionHandler:^{
@@ -596,6 +608,15 @@ Process incoming message.
             BaseMessage *message = [entityManager editMessageFor:amsg conversation:conversation onError:onError];
             if (message) {
                 [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
+            }
+        } else if ([amsg isKindOfClass:[GroupReactionMessage class]]) {
+            GroupReactionMessage *newMsg = (GroupReactionMessage *) amsg;
+            ReactionsMessageProcessor *manager = [[ReactionsMessageProcessor alloc]initWithEntityManager:entityManager];
+            BaseMessage *message = [manager handleGroupMessageWithAbstractMessage:newMsg conversation:conversation];
+            if (message) {
+                [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
+            } else {
+                onCompletion();
             }
         } else {
             onError([ThreemaError threemaError:@"Invalid message class"]);
@@ -741,7 +762,7 @@ Process incoming message.
     }];
 }
 
-- (void)processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion {
+- (void)processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     [entityManager performAsyncBlockAndSafe:^{
         ConversationEntity *conversation = [[entityManager entityFetcher] conversationEntityForIdentity:[msg fromIdentity]];
 
@@ -769,26 +790,32 @@ Process incoming message.
                     dbmsg.delivered = [NSNumber numberWithBool:YES];
                 dbmsg.readDate = msg.date;
                 dbmsg.read = [NSNumber numberWithBool:YES];
-            } else if (msg.receiptType == ReceiptTypeAck && dbmsg.deletedAt == nil) {
-                DDLogNotice(@"Message ID %@ has been user acknowledged by recipient", [NSString stringWithHexData:receiptMessageId]);
-                dbmsg.userackDate = msg.date;
-                dbmsg.userack = [NSNumber numberWithBool:YES];
-            } else if (msg.receiptType == ReceiptTypeDecline && dbmsg.deletedAt == nil) {
-                DDLogNotice(@"Message ID %@ has been user declined by recipient", [NSString stringWithHexData:receiptMessageId]);
-                dbmsg.userackDate = msg.date;
-                dbmsg.userack = [NSNumber numberWithBool:NO];
+            } else if (msg.receiptType == ReceiptTypeAck || msg.receiptType == ReceiptTypeDecline) {
+                ReactionsMessageProcessor * reactionProcessor = [[ReactionsMessageProcessor alloc]initWithEntityManager:entityManager];
+                NSError *error = nil;
+                [reactionProcessor handleLegacyReactionWithAck:msg.receiptType == ReceiptTypeAck date:msg.date messageID:dbmsg.objectID sender:msg.fromIdentity error: &error];
+                if(error) {
+                    onError(error);
+                    return;
+                }
             } else {
                 DDLogWarn(@"Unknown delivery receipt type %d with message ID %@", msg.receiptType, [NSString stringWithHexData:receiptMessageId]);
             }
 
             [messageProcessorDelegate changedManagedObjectID:dbmsg.objectID];
+
+            if ((msg.receiptType == ReceiptTypeAck || msg.receiptType == ReceiptTypeDecline) && dbmsg.reactions != nil) {
+                for (MessageReactionEntity *reaction in dbmsg.reactions) {
+                    [messageProcessorDelegate changedManagedObjectID:reaction.objectID];
+                }
+            }
         }
         
         onCompletion();
     }];
 }
 
-- (void)processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion {
+- (void)processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     [entityManager performAsyncBlockAndSafe:^{
         ConversationEntity *conversation = [entityManager.entityFetcher conversationEntityForGroupId:msg.groupId creator:msg.groupCreator];
 
@@ -806,21 +833,27 @@ Process incoming message.
                 continue;
             }
             
-            if (msg.receiptType == ReceiptTypeAck) {
-                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:msg.fromIdentity deliveryReceiptType:DeliveryReceiptTypeAcknowledged date:msg.date];
-                [dbmsg addWithGroupDeliveryReceipt:groupDeliveryReceipt];
-                DDLogWarn(@"Message ID %@ has been user acknowledged by %@", [NSString stringWithHexData:receiptMessageId], msg.fromIdentity);
-            }
-            else if (msg.receiptType == ReceiptTypeDecline) {
-                GroupDeliveryReceipt *groupDeliveryReceipt = [[GroupDeliveryReceipt alloc] initWithIdentity:msg.fromIdentity deliveryReceiptType:DeliveryReceiptTypeDeclined date:msg.date];
-                [dbmsg addWithGroupDeliveryReceipt:groupDeliveryReceipt];
-                DDLogWarn(@"Message ID %@ has been user declined by %@", [NSString stringWithHexData:receiptMessageId], msg.fromIdentity);
+            if (msg.receiptType == ReceiptTypeAck || msg.receiptType == ReceiptTypeDecline) {
+                ReactionsMessageProcessor * reactionProcessor = [[ReactionsMessageProcessor alloc] initWithEntityManager:entityManager];
+                NSError *error = nil;
+                [reactionProcessor handleLegacyReactionWithAck:msg.receiptType == ReceiptTypeAck date:msg.date messageID:dbmsg.objectID sender:msg.fromIdentity error: &error];
+                
+                if(error) {
+                    onError(error);
+                    return;
+                }
             }
             else {
                 DDLogWarn(@"Unknown group delivery receipt type %d with message ID %@", msg.receiptType, [NSString stringWithHexData:receiptMessageId]);
             }
             
             [messageProcessorDelegate changedManagedObjectID:dbmsg.objectID];
+
+            if ((msg.receiptType == ReceiptTypeAck || msg.receiptType == ReceiptTypeDecline) && dbmsg.reactions != nil) {
+                for (MessageReactionEntity *reaction in dbmsg.reactions) {
+                    [messageProcessorDelegate changedManagedObjectID:reaction.objectID];
+                }
+            }
         }
         
         onCompletion();

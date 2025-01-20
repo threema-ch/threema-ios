@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2024 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -121,21 +121,19 @@ class NotificationResponse: NSObject {
     }
 
     private func handleResponse() {
-        if categoryIdentifier == "SINGLE" || categoryIdentifier == "GROUP" {
+        if categoryIdentifier == NotificationActionProvider
+            .Category.singleCategory.rawValue || categoryIdentifier == NotificationActionProvider.Category.groupCategory
+            .rawValue {
             AppGroup.setActive(false, for: AppGroupTypeNotificationExtension)
             AppGroup.setActive(false, for: AppGroupTypeShareExtension)
 
-            if actionIdentifier == "THUMB_UP" {
-                businessInjector.serverConnector.connect(initiator: .notificationHandler)
-                handleThumbUp()
-            }
-            else if actionIdentifier == "THUMB_DOWN" {
-                businessInjector.serverConnector.connect(initiator: .notificationHandler)
-                handleThumbDown()
-            }
-            else if actionIdentifier == "REPLY_MESSAGE" {
+            if actionIdentifier == NotificationActionProvider.Action.replyAction.rawValue {
                 businessInjector.serverConnector.connect(initiator: .notificationHandler)
                 handleReplyMessage()
+            }
+            else if NotificationActionProvider.Action.isEmojiAction(identifier: actionIdentifier) {
+                businessInjector.serverConnector.connect(initiator: .notificationHandler)
+                handleEmojiReply(identifier: actionIdentifier)
             }
             else {
                 businessInjector.serverConnector.connect(initiator: .app)
@@ -146,11 +144,12 @@ class NotificationResponse: NSObject {
                 finishResponse()
             }
         }
-        else if categoryIdentifier == "CALL" {
-            if actionIdentifier == "REPLY_MESSAGE" {
-                handleReplyMessage()
+        else if categoryIdentifier == NotificationActionProvider.Category.callCategory.rawValue {
+            if actionIdentifier == NotificationActionProvider.Action.replyAction.rawValue {
+                businessInjector.serverConnector.connect(initiator: .notificationHandler)
+                handleReplyMessageToMissedCaller()
             }
-            else if actionIdentifier == "CALL" {
+            else if actionIdentifier == NotificationActionProvider.Action.callBackAction.rawValue {
                 handleCallMessage()
             }
             else {
@@ -158,17 +157,6 @@ class NotificationResponse: NSObject {
                     payload: userInfo,
                     receivedWhileRunning: AppDelegate.shared().active
                 )
-                finishResponse()
-            }
-        }
-        else if categoryIdentifier == "INCOMCALL" {
-            if actionIdentifier == "ACCEPTCALL" {
-                handleAcceptCall()
-            }
-            else if actionIdentifier == "REJECTCALL" {
-                handleRejectCall()
-            }
-            else {
                 finishResponse()
             }
         }
@@ -189,220 +177,140 @@ class NotificationResponse: NSObject {
         }
     }
 
-    private func handleThumbUp() {
-        ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            guard let messageID = self.messageID, let conversation = self.conversation,
-                  let baseMessage = self.businessInjector.entityManager.entityFetcher.message(
-                      with: messageID.decodeHex(),
-                      conversation: conversation
-                  ),
-                  let conversation = baseMessage.conversation else {
-                self.sendThumbUpError()
-                self.finishResponse()
-                return
-            }
-           
-            let isGroup = conversation.isGroup
-            
-            if isGroup {
-                if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
-                   !groupDeliveryReceipts.isEmpty,
-                   baseMessage.isMyReaction(.acknowledged) {
-                    self.finishResponse()
-                    return
-                }
-
-                if let group = self.businessInjector.groupManager.getGroup(conversation: conversation) {
-                    Task {
-                        self.updateMessageAsRead(for: baseMessage)
-                        await self.businessInjector.messageSender.sendReadReceipt(
-                            for: [baseMessage],
-                            toGroupIdentity: group.groupIdentity
-                        )
-                        await self.businessInjector.messageSender.sendUserAck(for: baseMessage, toGroup: group)
-                        self.finishResponse()
-                    }
-                }
-            }
-            else {
-                guard let identity = conversation.contact?.threemaIdentity else {
-                    self.sendThumbUpError()
-                    self.finishResponse()
-                    return
-                }
-                // Only send changed acks
-                if baseMessage.userackDate != nil, let currentAck = baseMessage.userack, currentAck.boolValue {
-                    self.finishResponse()
-                    return
-                }
-                Task {
-                    self.updateMessageAsRead(for: baseMessage)
-                    await self.businessInjector.messageSender.sendReadReceipt(for: [baseMessage], toIdentity: identity)
-                    await self.businessInjector.messageSender.sendUserAck(for: baseMessage, toIdentity: identity)
-                    self.finishResponse()
-                }
-            }
-            
-        }) {
-            self.sendThumbUpError()
-            self.finishResponse()
-        }
-    }
-    
-    private func sendThumbUpError() {
-        ThreemaUtilityObjC.sendErrorLocalNotification(
-            #localize("send_notification_message_error_title"),
-            body: #localize("send_notification_message_error_agree"),
-            userInfo: userInfo
-        )
-    }
-
-    private func handleThumbDown() {
-        ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            guard let messageID = self.messageID, let conversation = self.conversation,
-                  let baseMessage = self.businessInjector.entityManager.entityFetcher.message(
-                      with: messageID.decodeHex(),
-                      conversation: conversation
-                  ),
-                  let conversation = baseMessage.conversation else {
-                self.sendThumbDownError()
-                self.finishResponse()
-                return
-            }
-           
-            if conversation.isGroup {
-                if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
-                   !groupDeliveryReceipts.isEmpty,
-                   baseMessage.isMyReaction(.declined) {
-                    self.finishResponse()
-                    return
-                }
-                
-                if let group = self.businessInjector.groupManager.getGroup(conversation: conversation) {
-                    Task {
-                        self.updateMessageAsRead(for: baseMessage)
-                        await self.businessInjector.messageSender.sendReadReceipt(
-                            for: [baseMessage],
-                            toGroupIdentity: group.groupIdentity
-                        )
-                        await self.businessInjector.messageSender.sendUserDecline(for: baseMessage, toGroup: group)
-                        
-                        self.finishResponse()
-                    }
-                }
-            }
-            else {
-                guard let contact = conversation.contact else {
-                    self.sendThumbDownError()
-                    self.finishResponse()
-                    return
-                }
-                // Only send changed acks
-                if baseMessage.userackDate != nil, let currentAck = baseMessage.userack, !currentAck.boolValue {
-                    self.finishResponse()
-                    return
-                }
-
-                Task {
-                    self.updateMessageAsRead(for: baseMessage)
-                    await self.businessInjector.messageSender.sendReadReceipt(
-                        for: [baseMessage],
-                        toIdentity: contact.threemaIdentity
-                    )
-                    await self.businessInjector.messageSender.sendUserDecline(
-                        for: baseMessage,
-                        toIdentity: contact.threemaIdentity
-                    )
-                    self.finishResponse()
-                }
-            }
-        }) {
-            self.sendThumbDownError()
-            self.finishResponse()
-        }
-    }
-    
-    private func sendThumbDownError() {
-        ThreemaUtilityObjC.sendErrorLocalNotification(
-            #localize("send_notification_message_error_title"),
-            body: #localize("send_notification_message_error_disagree"),
-            userInfo: userInfo
-        )
-    }
-
     private func handleReplyMessage() {
-        
         guard let userText else {
+            finishResponse()
             return
         }
         
-        ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            let businessInjector = BusinessInjector()
-            
-            if let messageID = self.messageID, let conversation = self.conversation,
-               let baseMessage = businessInjector.entityManager.entityFetcher.message(
-                   with: messageID.decodeHex(),
-                   conversation: conversation
-               ),
-               let conversation = baseMessage.conversation {
+        ServerConnectorHelper.waitUntilConnected(timeout: 20) {
+            Task { @MainActor in
+                if let messageID = self.messageID, let conversation = self.conversation,
+                   let baseMessage = self.businessInjector.entityManager.entityFetcher.message(
+                       with: messageID.decodeHex(),
+                       conversation: conversation
+                   ),
+                   let conversation = baseMessage.conversation {
 
-                if !baseMessage.isGroupMessage,
-                   let contact = conversation.contact {
-                    Task { @MainActor in
-                        self.updateMessageAsRead(for: baseMessage)
+                    if !baseMessage.isGroupMessage,
+                       let contact = conversation.contact {
+
+                        await self.updateMessageAsRead(for: baseMessage)
                         await self.businessInjector.messageSender.sendReadReceipt(
                             for: [baseMessage],
                             toIdentity: contact.threemaIdentity
                         )
-                        self.sendUserText(
-                            text: userText,
-                            conversation: conversation,
-                            isConnectionEstablished: true
-                        )
                     }
+
+                    await self.businessInjector.messageSender.sendTextMessage(
+                        containing: userText,
+                        in: conversation,
+                        sendProfilePicture: false
+                    )
                 }
                 else {
-                    self.updateMessageAsRead(for: baseMessage)
-                    self.sendUserText(text: userText, conversation: conversation, isConnectionEstablished: true)
+                    self.sendReplyError()
                 }
-            }
-            else {
-                self.sendReplyError()
+
                 self.finishResponse()
             }
-        }) {
-            if let messageID = self.messageID, let conversation = self.conversation,
-               let baseMessage = self.businessInjector.entityManager.entityFetcher.message(
-                   with: messageID.decodeHex(),
-                   conversation: conversation
-               ),
-               let conversation = baseMessage.conversation {
-                
-                self.updateMessageAsRead(for: baseMessage)
-                self.sendUserText(text: userText, conversation: conversation, isConnectionEstablished: false)
-            }
-            else {
-                self.sendReplyError()
-                self.finishResponse()
-            }
-        }
-    }
-    
-    private func sendUserText(text: String, conversation: ConversationEntity, isConnectionEstablished: Bool) {
-        Task {
-            await businessInjector.messageSender.sendTextMessage(
-                containing: text,
-                in: conversation,
-                sendProfilePicture: false
-            )
-            
-            if !isConnectionEstablished {
-                self.sendReplyError()
-            }
+        } onTimeout: {
+            self.sendReplyError()
             self.finishResponse()
         }
     }
 
+    private func handleReplyMessageToMissedCaller() {
+        guard let userText else {
+            finishResponse()
+            return
+        }
+
+        ServerConnectorHelper.waitUntilConnected(timeout: 20) {
+            Task { @MainActor in
+                if let conversation = self.conversation {
+                    await self.businessInjector.messageSender.sendTextMessage(
+                        containing: userText,
+                        in: conversation,
+                        sendProfilePicture: false
+                    )
+                }
+                else {
+                    self.sendReplyError()
+                }
+
+                self.finishResponse()
+            }
+        } onTimeout: {
+            self.sendReplyError()
+            self.finishResponse()
+        }
+    }
+
+    private func handleEmojiReply(identifier: String) {
+        guard let emoji = NotificationActionProvider.Action.emoji(for: identifier) else {
+            sendReactionError()
+            finishResponse()
+            return
+        }
+        
+        ServerConnectorHelper.waitUntilConnected(timeout: 20) {
+            guard let messageID = self.messageID, let conversation = self.conversation else {
+                self.sendReactionError()
+                self.finishResponse()
+                return
+            }
+
+            Task { @MainActor in
+                let entityManager = self.businessInjector.entityManager
+                let (messageObjectID, isGroupMessage, baseMessage):
+                    (NSManagedObjectID?, Bool, BaseMessage?) = await entityManager.perform {
+                        let baseMessage = entityManager.entityFetcher.message(
+                            with: messageID.decodeHex(),
+                            conversation: conversation
+                        )
+                        return (baseMessage?.objectID, baseMessage?.isGroupMessage ?? false, baseMessage)
+                    }
+
+                guard let messageObjectID, let baseMessage else {
+                    self.sendReactionError()
+                    self.finishResponse()
+                    return
+                }
+
+                if !isGroupMessage,
+                   let contact = conversation.contact {
+
+                    await self.updateMessageAsRead(for: baseMessage)
+                    await self.businessInjector.messageSender.sendReadReceipt(
+                        for: [baseMessage],
+                        toIdentity: contact.threemaIdentity
+                    )
+                }
+
+                do {
+                    let result = try await self.businessInjector.messageSender.sendReaction(
+                        to: messageObjectID,
+                        reaction: emoji
+                    )
+                    
+                    if result != .success {
+                        self.sendReactionError()
+                    }
+                }
+                catch {
+                    DDLogError("[NotificationResponse] Could not send reaction: \(error)")
+                    self.sendReactionError()
+                }
+
+                self.finishResponse()
+            }
+        } onTimeout: {
+            self.sendReactionError()
+            self.finishResponse()
+        }
+    }
+    
     private func sendReplyError() {
         ThreemaUtilityObjC.sendErrorLocalNotification(
             #localize("send_notification_message_error_title"),
@@ -410,10 +318,23 @@ class NotificationResponse: NSObject {
             userInfo: userInfo
         )
     }
+    
+    private func sendReactionError() {
+        ThreemaUtilityObjC.sendErrorLocalNotification(
+            #localize("send_notification_reaction_error_title"),
+            body: #localize("send_notification_reaction_error_body"),
+            userInfo: userInfo
+        )
+    }
 
     private func handleCallMessage() {
-        ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            if let contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.identity!) {
+        guard let identity else {
+            finishResponse()
+            return
+        }
+
+        ServerConnectorHelper.waitUntilConnected(timeout: 20) {
+            if let contact = self.businessInjector.entityManager.entityFetcher.contact(for: identity) {
                 var callID: VoIPCallID?
                 if let threemaDict = self.threemaDict {
                     if let tmpCallID = threemaDict["callId"] {
@@ -433,65 +354,8 @@ class NotificationResponse: NSObject {
             }
             else {
                 self.finishResponse()
-                return
             }
-        }) {
-            self.finishResponse()
-        }
-    }
-
-    private func handleAcceptCall() {
-        ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            if let contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.identity!) {
-                var callID: VoIPCallID?
-                if let threemaDict = self.threemaDict {
-                    if let tmpCallID = threemaDict["callId"] {
-                        callID = VoIPCallID(callID: tmpCallID as? UInt32)
-                    }
-                }
-                let action = VoIPCallUserAction(
-                    action: .accept,
-                    contactIdentity: contact.identity,
-                    callID: callID,
-                    completion: {
-                        self.finishResponse()
-                    }
-                )
-                VoIPCallStateManager.shared.processUserAction(action)
-            }
-            else {
-                self.finishResponse()
-                return
-            }
-        }) {
-            self.finishResponse()
-        }
-    }
-
-    private func handleRejectCall() {
-        ServerConnectorHelper.waitUntilConnected(timeout: 20, onConnect: {
-            if let contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.identity!) {
-                var callID: VoIPCallID?
-                if let threemaDict = self.threemaDict {
-                    if let tmpCallID = threemaDict["callId"] {
-                        callID = VoIPCallID(callID: tmpCallID as? UInt32)
-                    }
-                }
-                let action = VoIPCallUserAction(
-                    action: .reject,
-                    contactIdentity: contact.identity,
-                    callID: callID,
-                    completion: {
-                        self.finishResponse()
-                    }
-                )
-                VoIPCallStateManager.shared.processUserAction(action)
-            }
-            else {
-                self.finishResponse()
-                return
-            }
-        }) {
+        } onTimeout: {
             self.finishResponse()
         }
     }
@@ -515,8 +379,8 @@ class NotificationResponse: NSObject {
 
     /// Update message read.
     /// - Parameter message: Message to set read true
-    private func updateMessageAsRead(for message: BaseMessage) {
-        businessInjector.entityManager.performAndWaitSave {
+    private func updateMessageAsRead(for message: BaseMessage) async {
+        await businessInjector.entityManager.performSave {
             message.read = NSNumber(booleanLiteral: true)
             message.readDate = Date()
             DDLogVerbose("Message marked as read: \(message.id.hexString)")

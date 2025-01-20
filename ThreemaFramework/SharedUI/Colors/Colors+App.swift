@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -43,62 +43,7 @@ extension Colors {
             color(for: Asset.TargetColors.OnPrem.secondary)
         }
     }
-    
-    @objc public class var chatBubbleSent: UIColor {
-        switch ThreemaApp.current {
-        case .threema, .green:
-            color(for: Asset.TargetColors.Threema.chatBubbleSent)
-        case .work, .blue:
-            color(for: Asset.TargetColors.ThreemaWork.chatBubbleSent)
-        case .onPrem:
-            color(for: Asset.TargetColors.OnPrem.chatBubbleSent)
-        }
-    }
-    
-    @objc public class var chatBubbleSentSelected: UIColor {
-        switch ThreemaApp.current {
-        case .threema, .green:
-            color(for: Asset.TargetColors.Threema.chatBubbleSentSelected)
-        case .work, .blue:
-            color(for: Asset.TargetColors.ThreemaWork.chatBubbleSentSelected)
-        case .onPrem:
-            color(for: Asset.TargetColors.OnPrem.chatBubbleSentSelected)
-        }
-    }
-    
-    @objc public class var chatCallButtonBubble: UIColor {
-        switch ThreemaApp.current {
-        case .threema, .green:
-            color(for: Asset.TargetColors.Threema.primary)
-        case .work, .blue:
-            color(for: Asset.TargetColors.ThreemaWork.primary)
-        case .onPrem:
-            color(for: Asset.TargetColors.OnPrem.primary)
-        }
-    }
-    
-    @objc public class var navigationBarCall: UIColor {
-        switch ThreemaApp.current {
-        case .threema, .green:
-            color(for: Asset.TargetColors.Threema.navigationBarCall)
-        case .work, .blue:
-            color(for: Asset.TargetColors.ThreemaWork.navigationBarCall)
-        case .onPrem:
-            color(for: Asset.TargetColors.OnPrem.navigationBarCall)
-        }
-    }
-    
-    @objc public class var navigationBarWeb: UIColor {
-        switch ThreemaApp.current {
-        case .threema, .green:
-            color(for: Asset.TargetColors.Threema.navigationBarWeb)
-        case .work, .blue:
-            color(for: Asset.TargetColors.ThreemaWork.navigationBarWeb)
-        case .onPrem:
-            color(for: Asset.TargetColors.OnPrem.navigationBarWeb)
-        }
-    }
-    
+        
     @objc public class var threemaLogo: UIImage! {
         switch ThreemaApp.current {
         case .threema:
@@ -142,21 +87,6 @@ extension Colors {
         }
     }
     
-    @objc public class var backgroundContactInfoSystemMessage: UIColor {
-        switch ThreemaApp.current {
-        case .threema:
-            Colors.blue
-        case .work:
-            Colors.green
-        case .green:
-            Colors.blue
-        case .blue:
-            Colors.green
-        case .onPrem:
-            Colors.green
-        }
-    }
-    
     @objc public class var backgroundCircleButton: UIColor {
         switch theme {
         case .light, .undefined:
@@ -172,11 +102,7 @@ extension Colors {
             .quaternarySystemFill
         }
     }
-    
-    public class var grayCircleBackground: UIColor {
-        Colors.textLight
-    }
-    
+        
     public class var grayCircleSymbol: UIColor {
         switch theme {
         case .light, .undefined:

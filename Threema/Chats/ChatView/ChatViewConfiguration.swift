@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -130,6 +130,8 @@ enum ChatViewConfiguration {
         static let defaultGroupTopBottomInset = 8.0
         /// Default top and bottom space between chat bubbles when they are grouped (2 means 4 in total)
         static let groupedTopBottomInset = 2.0
+        /// Bottom inset of the reactions stack view to the chat bubble
+        static let reactionBottomInset = 5.0
         
         /// Default leading and trailing space of chat bubbles
         static let defaultLeadingTrailingInset: CGFloat = 8
@@ -532,8 +534,6 @@ enum ChatViewConfiguration {
         static let defaultSymbolCenterInset: CGFloat = 6
         /// Minimal space between a leading and trailing metadata view
         static let minimalInBetweenSpace: CGFloat = 4
-        /// space between label and group reaction symbol
-        static let defaultLabelGroupReactionSymbolSpace: CGFloat = 1
         
         /// Text style for labels and symbols
         static let textStyle = UIFont.TextStyle.caption1
@@ -747,5 +747,56 @@ enum ChatViewConfiguration {
         /// You can find a more detailed description of the workaround in
         /// `willApplySnapshot(currentDoesIncludeNewestMessage:)` of `ChatViewController`
         static let newCellsContentHeightLeeway = 1.0
+    }
+    
+    enum EmojiReactions {
+        
+        enum Animation {
+            static let defaultHideShowDuration = 0.3
+            static let defaultDelay = 0.75
+            static let defaultSpeed = 2.0
+        }
+        
+        enum Picker {
+            // Grid
+            static let columns = 7
+            static let columnSpacing: CGFloat = 8
+            static let rowSpacing: CGFloat = 0
+            
+            static let onPressScale: CGFloat = 0.95
+            // Search
+            static let initialItemScale: CGFloat = 0.8
+            
+            // SkinTonePicker
+            static let minimumLongPressDuration: TimeInterval = 0.5
+            static let cornerRadius: CGFloat = 14
+            
+            // SectionToolbar
+            static let toolbarHeight: CGFloat = 60
+            static let horizontalPadding: CGFloat = 16
+            static let itemHeightMargin: CGFloat = 4
+            static let yOffsetOnDismissal: CGFloat = 100
+            
+            // EmojiView
+            static let minEmojiViewWidth: CGFloat = 50
+            static let maxEmojiViewWidth: CGFloat = 60
+        }
+        
+        enum ContextMenuView {
+            static let maxFrameWidthMultiplier = 0.7
+            static let viewPadding = 6.0
+            static let buttonPadding = 4.0
+            static let buttonSpacing = 2.0
+
+            static let disabledButtonOpacity = 0.3
+        }
+        
+        enum CellStackView {
+            static let itemSpacing = 4.0
+            static let itemBorderWidth = 1.0
+            static let itemMinWidth = 20.0
+            static let itemTopBottomInset = 6.0
+            static let itemLeadingTrailingInset = 8.0
+        }
     }
 }

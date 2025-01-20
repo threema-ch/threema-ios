@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -33,7 +33,8 @@ struct DeveloperSettingsView: View {
     
     // Feature Flags
     @State var contactList2 = UserSettings.shared().contactList2
-
+    @State var sendEmojiReactions = UserSettings.shared().sendEmojiReactions
+    
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
     
@@ -53,6 +54,9 @@ struct DeveloperSettingsView: View {
             }
             header: {
                 Text(verbatim: "Local Info")
+            }
+            footer: {
+                Text(verbatim: "Does not refresh automatically.")
             }
             
             Section {
@@ -149,6 +153,16 @@ struct DeveloperSettingsView: View {
                     UserSettings.shared().contactList2 = newValue
                     exit(1)
                 }
+                
+                Toggle(isOn: $sendEmojiReactions) {
+                    Text(verbatim: "Emoji-Reactions Phase 2")
+                }
+                .onChange(of: sendEmojiReactions) { newValue in
+                    UserSettings.shared().sendEmojiReactions = newValue
+                }
+                #if !DEBUG
+                .disabled(true)
+                #endif
             }
             header: {
                 Text(verbatim: "Feature Flags")
@@ -165,6 +179,7 @@ struct DeveloperSettingsView: View {
             header: {
                 Text(verbatim: "Group Calls")
             }
+            
             Section {
                 Button {
                     let businessInjector = BusinessInjector()

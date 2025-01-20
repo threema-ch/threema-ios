@@ -63,7 +63,7 @@ static const CGFloat labelPadding = 10;
 
     _label.numberOfLines = 0;
     ///***** BEGIN THREEMA MODIFICATION*********
-    _label.textColor = [Colors text];
+    _label.textColor = [UIColor labelColor];
     ///***** END THREEMA MODIFICATION*********
     _label.font = [UIFont systemFontOfSize:17];
     if ([_photo respondsToSelector:@selector(caption)]) {

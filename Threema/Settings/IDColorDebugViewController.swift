@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -42,7 +42,7 @@ class IDColorDebugViewController: UIViewController {
         stack.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24)
         stack.isLayoutMarginsRelativeArrangement = true
                     
-        stack.backgroundColor = Colors.chatBubbleReceived
+        stack.backgroundColor = .chatBubbleReceived
         
         return stack
     }()
@@ -63,8 +63,8 @@ class IDColorDebugViewController: UIViewController {
         stack.spacing = 16
         stack.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24)
         stack.isLayoutMarginsRelativeArrangement = true
-                    
-        stack.backgroundColor = Colors.chatBubbleSent
+               
+        stack.backgroundColor = .chatBubbleSent
         
         return stack
     }()

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2024 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -45,9 +45,14 @@ class SafeIntroViewController: ThemedViewController {
         cancelButton.setTitle(#localize("safe_intro_cancel"), for: .normal)
         okButton.setTitle(#localize("safe_intro_enable"), for: .normal)
         
+        cancelButton.accentColor = .primary
+        cancelButton.textColor = .label
+        okButton.accentColor = .primary
+        okButton.textColor = .white
+
+        introCircle.backgroundColor = .tertiarySystemGroupedBackground
+
         isModalInPresentation = true
-        
-        updateColors()
     }
     
     // TODO: (IOS-3251) Remove
@@ -64,17 +69,6 @@ class SafeIntroViewController: ThemedViewController {
             .topViewController as? SafeSetupPasswordViewController {
             safeSetupPasswordViewController.isOpenedFromIntro = true
         }
-    }
-    
-    override func updateColors() {
-        super.updateColors()
-        
-        cancelButton.accentColor = .primary
-        cancelButton.textColor = Colors.text
-        okButton.accentColor = .primary
-        okButton.textColor = Colors.textInverted
-
-        introCircle.backgroundColor = UIColor(red: 235.0 / 255.0, green: 235.0 / 255.0, blue: 235.0 / 255.0, alpha: 1.0)
     }
 }
 

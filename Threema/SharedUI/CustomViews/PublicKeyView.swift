@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -32,6 +32,8 @@ final class PublicKeyView: UIView {
     
     private lazy var backgroundView: UIView = {
         let view = UIView()
+        view.backgroundColor = .black
+        view.alpha = 0.6
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -42,6 +44,7 @@ final class PublicKeyView: UIView {
         view.layer.cornerRadius = 15.0
         view.layer.cornerCurve = .continuous
         view.clipsToBounds = true
+        view.backgroundColor = .secondarySystemBackground
         return view
     }()
     
@@ -69,6 +72,8 @@ final class PublicKeyView: UIView {
         let textView = UITextView(frame: .zero)
         textView.isScrollEnabled = false
         textView.font = UIFont.preferredFont(forTextStyle: .headline)
+        textView.textColor = .label
+        textView.backgroundColor = .clear
         textView.textAlignment = .center
         textView.isEditable = false
         textView.isSelectable = false
@@ -84,7 +89,7 @@ final class PublicKeyView: UIView {
         let label = CopyLabel()
         let preferredFont = UIFont.preferredFont(forTextStyle: .title3)
         label.font = UIFont.monospacedSystemFont(ofSize: preferredFont.pointSize, weight: .regular)
-        
+        label.textColor = .label
         label.numberOfLines = 0
         label.textAlignment = .center
         label.adjustsFontForContentSizeCategory = true
@@ -93,7 +98,11 @@ final class PublicKeyView: UIView {
     }()
     
     // Hairline View
-    private lazy var hairline = UIView()
+    private lazy var hairline: UIView = {
+        let view = UIView()
+        view.backgroundColor = .separator
+        return view
+    }()
     
     // Close button
     private lazy var okButton: UIButton = {
@@ -104,6 +113,10 @@ final class PublicKeyView: UIView {
         button.setTitle(#localize("ok"), for: .normal)
         button.titleLabel?.adjustsFontForContentSizeCategory = true
         button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
+        
+        button.backgroundColor = .secondarySystemBackground
+        button.tintColor = .primary
+        button.setTitleColor(.primary, for: .normal)
         
         return button
     }()
@@ -187,8 +200,6 @@ final class PublicKeyView: UIView {
             )
             formatAndSetPublicKey(publicKey: publicKey.hexEncodedString())
         }
-        
-        updateColors()
     }
     
     // MARK: - Public functions
@@ -202,26 +213,8 @@ final class PublicKeyView: UIView {
         }
     }
         
-    @objc public func updateColors() {
-        backgroundView.backgroundColor = .black
-        backgroundView.alpha = 0.6
-        
-        containerView.backgroundColor = Colors.backgroundAlertView
-
-        identityTextView.textColor = Colors.text
-        identityTextView.backgroundColor = .clear
-
-        publicKeyLabel.textColor = Colors.text
-
-        hairline.backgroundColor = Colors.hairLine
-        
-        okButton.tintColor = .primary
-        okButton.setTitleColor(.primary, for: .normal)
-        okButton.backgroundColor = Colors.backgroundAlertView
-    }
-        
     // MARK: - Update functions
-       
+           
     private func formatAndSetPublicKey(publicKey: String) {
         var formattedPublicKey = ""
         for (index, char) in publicKey.enumerated() {
@@ -244,7 +237,7 @@ final class PublicKeyView: UIView {
     // MARK: - Actions
        
     @objc public func close() {
-        okButton.backgroundColor = Colors.backgroundAlertView
+        okButton.backgroundColor = .secondarySystemBackground
         
         if superview != nil {
             UIView.animate(withDuration: 0.2) {
@@ -260,7 +253,7 @@ final class PublicKeyView: UIView {
     }
     
     @objc func touchCancel() {
-        okButton.backgroundColor = Colors.backgroundAlertView
+        okButton.backgroundColor = .secondarySystemBackground
     }
 }
 

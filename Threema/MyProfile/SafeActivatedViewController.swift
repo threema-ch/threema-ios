@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2024 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -73,6 +73,23 @@ class SafeActivatedViewController: ThemedTableViewController {
         
         activityIndicator.hidesWhenStopped = true
         
+        serverNameLabel.textColor = .label
+        maxBackupBytesLabel.textColor = .label
+        retentionDaysLabel.textColor = .label
+        lastBackupLabel.textColor = .label
+        backupSizeLabel.textColor = .label
+        lastResultLabel.textColor = .label
+        
+        serverNameValueLabel.textColor = .secondaryLabel
+        maxBackupBytesValueLabel.textColor = .secondaryLabel
+        retentionDaysValueLabel.textColor = .secondaryLabel
+        lastBackupValueLabel.textColor = .secondaryLabel
+        backupSizeValueLabel.textColor = .secondaryLabel
+        lastResultValueLabel.textColor = .secondaryLabel
+        
+        backupNowButtonLabel.textColor = .primary
+        changePasswordButtonLabel.textColor = .primary
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(refreshViewNotification(notification:)),
@@ -110,12 +127,7 @@ class SafeActivatedViewController: ThemedTableViewController {
     @objc func refreshViewNotification(notification: Notification) {
         refreshView(updateCell: true)
     }
-    
-    @objc override func refresh() {
-        super.refresh()
-        updateColors()
-    }
-    
+        
     @objc func refreshView(updateCell: Bool) {
         let hyphen = "-"
         let safeConfigManager = SafeConfigManager()
@@ -171,9 +183,15 @@ class SafeActivatedViewController: ThemedTableViewController {
             .mediumStyleDateShortStyleTime(safeConfigManager.getLastBackup()!) : hyphen
         lastResultValueLabel.text = safeConfigManager.getLastResult() != nil ? safeConfigManager
             .getLastResult()! : hyphen
-        tableView.reloadData()
         
-        updateColors()
+        if lastResultValueLabel.text == #localize("safe_successful") {
+            lastResultValueLabel.textColor = Colors.green
+        }
+        else if lastResultValueLabel.text != "-" {
+            lastResultValueLabel.textColor = .systemRed
+        }
+        
+        tableView.reloadData()
     }
     
     @objc private func maybeHideActivityIndicator() {
@@ -194,29 +212,6 @@ class SafeActivatedViewController: ThemedTableViewController {
             backupNowCell.isUserInteractionEnabled = true
         }
         backupTimer = nil
-    }
-    
-    override func updateColors() {
-        super.updateColors()
-        let explainImage = explainButton.imageView?.image!.withTint(.primary)
-        explainButton.setImage(explainImage, for: .normal)
-        
-        serverNameValueLabel.textColor = Colors.textLight
-        maxBackupBytesValueLabel.textColor = Colors.textLight
-        retentionDaysValueLabel.textColor = Colors.textLight
-        lastBackupValueLabel.textColor = Colors.textLight
-        backupSizeValueLabel.textColor = Colors.textLight
-        lastResultValueLabel.textColor = Colors.textLight
-        activityIndicator.style = Colors.activityIndicatorViewStyle
-
-        backupNowButtonLabel.textColor = .primary
-        
-        if lastResultValueLabel.text == #localize("safe_successful") {
-            lastResultValueLabel.textColor = Colors.green
-        }
-        else if lastResultValueLabel.text != "-" {
-            lastResultValueLabel.textColor = UIColor.red
-        }
     }
     
     // MARK: UITableViewDelegates
@@ -267,7 +262,6 @@ class SafeActivatedViewController: ThemedTableViewController {
             changePasswordButtonLabel.isEnabled = false
             changePasswordButtonLabel.text = #localize("safe_change_password_disabled")
         }
-        updateColors()
     }
 }
 

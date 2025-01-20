@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2015-2023 Threema GmbH
+// Copyright (c) 2015-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -94,7 +94,6 @@
 #import <ThreemaFramework/LogLevelCustom.h>
 #import <ThreemaFramework/NaClCrypto.h>
 #import <ThreemaFramework/NonceHasher.h>
-#import <ThreemaFramework/NSData+ConvertUInt64.h>
 #import <ThreemaFramework/MessageDecoder.h>
 #import <ThreemaFramework/MessageListenerDelegate.h>
 #import <ThreemaFramework/MessageProcessorDelegate.h>

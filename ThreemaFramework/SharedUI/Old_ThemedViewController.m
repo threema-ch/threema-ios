@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2023 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -31,7 +31,6 @@
     [super viewDidLoad];
     
     self.view.backgroundColor = Colors.backgroundViewController;
-    [Colors setTextColor:Colors.text in:self.view];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -52,7 +51,6 @@
     self.navigationItem.prompt = [NavigationBarPromptHandler getCurrentPromptWithDuration:time];
     
     self.view.backgroundColor = [Colors backgroundViewController];
-    [Colors setTextColor:Colors.text in:self.view];
     
     [self.navigationController.view setNeedsLayout];
     [self.navigationController.view layoutIfNeeded];
@@ -60,7 +58,6 @@
 }
 
 - (void)refresh {
-    [Colors setTextColor:Colors.text in:self.view];
 }
 
 @end

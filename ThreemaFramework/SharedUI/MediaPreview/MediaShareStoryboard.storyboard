@@ -661,7 +661,7 @@
         <!--Options Navigation Controller-->
         <scene sceneID="f0r-5p-kaD">
             <objects>
-                <navigationController storyboardIdentifier="moreOptionsNavigationController" title="Options Navigation Controller" automaticallyAdjustsScrollViewInsets="NO" id="2uh-IC-pXM" sceneMemberID="viewController">
+                <navigationController storyboardIdentifier="moreOptionsNavigationController" title="Options Navigation Controller" automaticallyAdjustsScrollViewInsets="NO" id="2uh-IC-pXM" customClass="ThemedNavigationController" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="fwL-mG-vhS">
                         <rect key="frame" x="0.0" y="48" width="414" height="44"/>

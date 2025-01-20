@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2019-2024 Threema GmbH
+// Copyright (c) 2019-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -51,6 +51,11 @@ class Old_CompanyDirectoryContactCell: UITableViewCell {
         identityLabel.text = contact.id
         verificationLevel.image = StyleKit.verification3
         
+        nameLabel.textColor = .label
+        categoryLabel.textColor = .secondaryLabel
+        csiLabel.textColor = .secondaryLabel
+        identityLabel.textColor = .secondaryLabel
+        
         if ContactStore.shared().contact(for: contact.id) != nil {
             accessoryView = nil
             accessoryType = addContactActive == true ? .disclosureIndicator : .none
@@ -69,13 +74,7 @@ class Old_CompanyDirectoryContactCell: UITableViewCell {
             }
         }
     }
-    
-    func updateColors() {
-        categoryLabel.textColor = Colors.textLight
-        csiLabel.textColor = Colors.textLight
-        identityLabel.textColor = Colors.textLight
-    }
-    
+        
     @objc private func addContact() {
         ContactStore.shared().addWorkContact(
             with: contact.id,

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2023 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -27,10 +27,6 @@ extension BaseMessage {
     /// State to display in UI for this message
     public enum DisplayState {
         case none
-        
-        // Common states
-        case userAcknowledged
-        case userDeclined
         
         // Outgoing (own) messages
         case sending
@@ -55,17 +51,7 @@ extension BaseMessage {
             switch self {
             case .none:
                 return nil
-                
-            case .userAcknowledged:
-                // We always use the filled variant here
-                return UIImage(systemName: "hand.thumbsup.fill")?
-                    .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
-                
-            case .userDeclined:
-                // We always use the filled variant here
-                return UIImage(systemName: "hand.thumbsdown.fill")?
-                    .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
-                
+                                
             case .sending:
                 // We don't want a filled version here
                 return UIImage(systemName: "arrow.up.circle")?
@@ -120,32 +106,6 @@ extension BaseMessage {
                         .withTintColor(defaultColor, renderingMode: .alwaysOriginal)
                 }
                 return nil
-            case .userAcknowledged:
-                if !ownMessage {
-                    return UIImage(
-                        systemName: "arrowshape.turn.up.left",
-                        withConfiguration: configuration
-                    )?
-                        .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
-                }
-                return UIImage(
-                    systemName: "hand.thumbsup.fill",
-                    withConfiguration: configuration
-                )?
-                    .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
-            case .userDeclined:
-                if !ownMessage {
-                    return UIImage(
-                        systemName: "arrowshape.turn.up.left",
-                        withConfiguration: configuration
-                    )?
-                        .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
-                }
-                return UIImage(
-                    systemName: "hand.thumbsdown.fill",
-                    withConfiguration: configuration
-                )?
-                    .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
             case .sending:
                 return UIImage(
                     systemName: "arrow.up.circle",
@@ -183,10 +143,6 @@ extension BaseMessage {
             switch self {
             case .none:
                 #localize("message_display_status_none")
-            case .userAcknowledged:
-                #localize("message_display_status_user_acknowledged")
-            case .userDeclined:
-                #localize("message_display_status_user_declined")
             case .sending:
                 #localize("message_display_status_sending")
             case .sent:
@@ -210,10 +166,6 @@ extension BaseMessage {
             switch self {
             case .none:
                 ""
-            case .userAcknowledged:
-                #localize("accessibility_status_acknowledged_plus_time")
-            case .userDeclined:
-                #localize("accessibility_status_declined_plus_time")
             case .sending:
                 #localize("accessibility_status_sending_plus_time")
             case .sent:
@@ -230,30 +182,12 @@ extension BaseMessage {
     
     // MARK: - Message action images
     
-    public var userThumbsUpImage: UIImage? {
-        var imageName = "hand.thumbsup"
-        if userackDate != nil, userack.boolValue {
-            imageName = "hand.thumbsup.fill"
-        }
-        return UIImage(systemName: imageName)?
-            .withTintColor(Colors.thumbUp, renderingMode: .alwaysOriginal)
-    }
-    
-    public var userThumbsDownImage: UIImage? {
-        var imageName = "hand.thumbsdown"
-        if userackDate != nil, !userack.boolValue {
-            imageName = "hand.thumbsdown.fill"
-        }
-        return UIImage(systemName: imageName)?
-            .withTintColor(Colors.thumbDown, renderingMode: .alwaysOriginal)
-    }
-    
     public var messageMarkerStarImage: UIImage? {
-        var imageName = "star.fill"
+        var imageName = "star"
         if messageMarkers?.star.boolValue ?? false {
             imageName = "star.slash"
         }
-        return UIImage(systemName: imageName)?.withTintColor(.systemYellow, renderingMode: .alwaysOriginal)
+        return UIImage(systemName: imageName)
     }
     
     // MARK: - messageDisplayState
@@ -299,12 +233,6 @@ extension BaseMessage {
             else {
                 .none
             }
-
-        case .userAcknowledged:
-            .userAcknowledged
-            
-        case .userDeclined:
-            .userDeclined
         }
     }
     
@@ -316,10 +244,6 @@ extension BaseMessage {
             .none
         case .failed:
             .failed
-        case .userAcknowledged:
-            .userAcknowledged
-        case .userDeclined:
-            .userDeclined
         }
     }
     
@@ -338,10 +262,6 @@ extension BaseMessage {
             }
             
             return date
-        }
-
-        if let userackDate {
-            return userackDate
         }
             
         if isGroupMessage {
@@ -402,9 +322,6 @@ extension BaseMessage {
         switch state {
         case .none:
             return nil
-            
-        case .userAcknowledged, .userDeclined:
-            return userackDate
             
         case .sending:
             return nil

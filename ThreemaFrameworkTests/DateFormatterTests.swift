@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2024 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -110,7 +110,7 @@ class DateFormatterTests: XCTestCase {
     }
     
     // Detect if today is in the first seven days of the year
-    static var todayIsInTheFirstSevenDaysOfTheYear: Bool {
+    static var todayIsInTheFirst8DaysOfTheYear: Bool {
         var january1stComponents = Calendar.current.dateComponents([.year], from: Date())
         january1stComponents.day = 1
         january1stComponents.month = 1
@@ -123,7 +123,7 @@ class DateFormatterTests: XCTestCase {
         january1stComponents.timeZone = TimeZone(abbreviation: "GMT+1")
         
         var january6thComponents = Calendar.current.dateComponents([.year], from: Date())
-        january6thComponents.day = 6
+        january6thComponents.day = 7
         january6thComponents.month = 1
         
         january6thComponents.hour = 23

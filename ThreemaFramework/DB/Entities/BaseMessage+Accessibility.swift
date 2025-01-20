@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2023 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -60,12 +60,7 @@ extension BaseMessage {
         let dateString = DateFormatter.relativeLongStyleDateShortStyleTime(displayDate)
         var resolvedString = ""
         if messageDisplayState == .none {
-            if isGroupMessage, let groupReactionString = accessibilityGroupReactionState(with: dateString) {
-                resolvedString = groupReactionString
-            }
-            else {
-                resolvedString = dateString
-            }
+            resolvedString = dateString
         }
         else {
             // Style: "Delivered, Today at 15:44."
@@ -77,42 +72,6 @@ extension BaseMessage {
         }
         
         return resolvedString
-    }
-    
-    private func accessibilityGroupReactionState(with dateString: String) -> String? {
-        guard messageGroupReactionState != .none else {
-            return nil
-        }
-        
-        let myReactionString =
-            if isMyReaction(.acknowledged) {
-                "\(#localize("accessibility_status_group_acknowledged_my_reaction")), "
-            }
-            else if isMyReaction(.declined) {
-                "\(#localize("accessibility_status_group_declined_my_reaction")), "
-            }
-            else {
-                // We have to use a empty string when there is no own reaction. Otherwise the app will crash because a
-                // string is missing for the localizedString placeholder
-                ""
-            }
-        
-        let ack = groupReactionsCount(of: .acknowledged)
-        let dec = groupReactionsCount(of: .declined)
-        if ack > 0, dec > 0 {
-            let statusString = #localize("accessibility_status_group_acknowledged_declined_plus_time")
-            return "\(String.localizedStringWithFormat(statusString, ack, dec, myReactionString, dateString))."
-        }
-        else if ack > 0 {
-            let statusString = #localize("accessibility_status_group_acknowledged_plus_time")
-            return "\(String.localizedStringWithFormat(statusString, ack, myReactionString, dateString))."
-        }
-        else if dec > 0 {
-            let statusString = #localize("accessibility_status_group_declined_plus_time")
-            return "\(String.localizedStringWithFormat(statusString, dec, myReactionString, dateString))."
-        }
-        
-        return nil
     }
     
     /// Contains the sender.

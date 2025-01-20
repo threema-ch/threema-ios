@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2024 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -662,6 +662,40 @@ class MessageDecoderTests: XCTestCase {
         XCTAssertNotNil(result)
         XCTAssertEqual(result?.decoded?.messageID, expectedEditMessage.messageID)
         XCTAssertEqual(result?.decoded?.text, expectedEditMessage.text)
+    }
+    
+    func testDecodeGroupReactionMessage() throws {
+        var expectedReactionMessage = CspE2e_Reaction()
+        expectedReactionMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedReactionMessage.action = .apply(Data("✌🏻".utf8))
+
+        let msg = GroupReactionMessage()
+        msg.groupCreator = "ECHOECHO"
+        msg.groupID = MockData.generateGroupID()
+        msg.decoded = expectedReactionMessage
+
+        let result = MessageDecoder.decode(MSGTYPE_GROUP_REACTION, body: msg.body()) as? GroupReactionMessage
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.groupCreator, msg.groupCreator)
+        XCTAssertEqual(result?.groupID, msg.groupID)
+        XCTAssertEqual(result?.decoded?.messageID, expectedReactionMessage.messageID)
+        XCTAssertEqual(result?.decoded?.action, expectedReactionMessage.action)
+    }
+
+    func testDecodeReactionMessage() throws {
+        var expectedReactionMessage = CspE2e_Reaction()
+        expectedReactionMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedReactionMessage.action = .apply(Data("✌🏻".utf8))
+
+        let msg = ReactionMessage()
+        msg.decoded = expectedReactionMessage
+
+        let result = MessageDecoder.decode(MSGTYPE_REACTION, body: msg.body()) as? ReactionMessage
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.decoded?.messageID, expectedReactionMessage.messageID)
+        XCTAssertEqual(result?.decoded?.action, expectedReactionMessage.action)
     }
 
     func testDecodeGroupAudioMessage() {

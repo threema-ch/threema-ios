@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -39,6 +39,7 @@ final class MessageSymbolMetadataView: UIView {
                 
                 symbolImageView.image = image
                 showSymbol()
+                updateColors()
             }
             else {
                 hideSymbol()
@@ -125,13 +126,11 @@ final class MessageSymbolMetadataView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureLayout()
-        updateColors()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         configureLayout()
-        updateColors()
     }
     
     convenience init() {
@@ -156,18 +155,21 @@ final class MessageSymbolMetadataView: UIView {
     }
     
     // MARK: - Update
-    
+        
     func updateColors() {
         if let overrideColor {
-            symbolImageView.image = symbolImageView.image?.withTintColor(overrideColor, renderingMode: .alwaysOriginal)
-            Colors.setTextColor(overrideColor, label: metadataLabel)
+            symbolImageView.image = symbolImageView.image?.withTintColor(
+                overrideColor,
+                renderingMode: .alwaysOriginal
+            )
+            metadataLabel.textColor = overrideColor
         }
         else {
             symbolImageView.image = symbolImageView.image?.withTintColor(
-                Colors.textLight,
+                .secondaryLabel,
                 renderingMode: .alwaysOriginal
             )
-            Colors.setTextColor(Colors.textLight, label: metadataLabel)
+            metadataLabel.textColor = .secondaryLabel
         }
     }
     

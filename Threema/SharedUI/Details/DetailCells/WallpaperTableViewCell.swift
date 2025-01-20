@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -33,7 +33,6 @@ class WallpaperTableViewCell: ThemedCodeStackTableViewCell {
             }
             titleLabel.text = action.title
             stateLabel.text = #localize("settings_chat_wallpaper_default")
-            stateLabel.textColor = Colors.textLight
         }
     }
     
@@ -57,6 +56,7 @@ class WallpaperTableViewCell: ThemedCodeStackTableViewCell {
         let label = UILabel()
         
         label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.textColor = .label
         
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
@@ -71,15 +71,14 @@ class WallpaperTableViewCell: ThemedCodeStackTableViewCell {
         let label = UILabel()
         
         label.font = UIFont.preferredFont(forTextStyle: .body)
+        label.textColor = .secondaryLabel
         
         label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 0
         }
-        
-        label.textColor = Colors.textLight
-        
+                
         return label
     }()
         
@@ -90,10 +89,6 @@ class WallpaperTableViewCell: ThemedCodeStackTableViewCell {
         
         contentStack.addArrangedSubview(titleLabel)
         contentStack.addArrangedSubview(stateLabel)
-    }
-    
-    override func updateColors() {
-        super.updateColors()
     }
     
     // MARK: - Accessibility

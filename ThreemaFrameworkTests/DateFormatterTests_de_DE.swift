@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2024 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -199,7 +199,7 @@ class DateFormatterTests_de_DE: XCTestCase {
     
     func testRelativeMediumDateThisYearWithReset() throws {
         try XCTSkipIf(
-            DateFormatterTests.todayIsInTheFirstSevenDaysOfTheYear,
+            DateFormatterTests.todayIsInTheFirst8DaysOfTheYear,
             "Because the date is relative and based on the current year this will not work properly if today is in the first week of the year"
         )
         
@@ -216,7 +216,7 @@ class DateFormatterTests_de_DE: XCTestCase {
     
     func testRelativeMediumDateLastCalendarYear() throws {
         try XCTSkipIf(
-            DateFormatterTests.todayIsInTheFirstSevenDaysOfTheYear,
+            DateFormatterTests.todayIsInTheFirst8DaysOfTheYear,
             "Because the date is relative and based on the current year this will not work properly if today is in the first week of the year"
         )
         
@@ -247,7 +247,7 @@ class DateFormatterTests_de_DE: XCTestCase {
     
     func testRelativeMediumDateAndShortTimeThisYearWithReset() throws {
         try XCTSkipIf(
-            DateFormatterTests.todayIsInTheFirstSevenDaysOfTheYear,
+            DateFormatterTests.todayIsInTheFirst8DaysOfTheYear,
             "Because the date is relative and based on the current year this will not work properly if today is in the first week of the year"
         )
         
@@ -264,7 +264,7 @@ class DateFormatterTests_de_DE: XCTestCase {
     
     func testRelativeMediumDateAndShortTimeLastCalendarYear() throws {
         try XCTSkipIf(
-            DateFormatterTests.todayIsInTheFirstSevenDaysOfTheYear,
+            DateFormatterTests.todayIsInTheFirst8DaysOfTheYear,
             "Because the date is relative and based on the current year this will not work properly if today is in the first week of the year"
         )
         

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -251,7 +251,11 @@ final class ChatBarView: UIView {
         }
     }
     
-    private lazy var bottomHairlineView = UIView()
+    private lazy var bottomHairlineView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .separator
+        return view
+    }()
     
     // MARK: - Lifecycle
     
@@ -266,7 +270,9 @@ final class ChatBarView: UIView {
         super.init(frame: .zero)
         
         configureLayout()
-        updateColors()
+        
+        // This should give an effect similar to the one in the tab bar
+        backgroundColor = .clear
         
         chatTextView.chatTextViewDelegate = self
         chatTextView.mentionsTableViewDelegate = mentionsDelegate
@@ -431,21 +437,7 @@ final class ChatBarView: UIView {
     }
     
     // MARK: - Update
-    
-    func updateColors() {
-        bottomHairlineView.backgroundColor = Colors.hairLine
         
-        if UIAccessibility.isReduceTransparencyEnabled {
-            backgroundColor = Colors.backgroundChatBar
-        }
-        else {
-            // This should give an effect similar to the one in the tab bar
-            backgroundColor = .clear
-        }
-        
-        chatTextView.updateColors()
-    }
-    
     func updateSendButtonAccessibilityLabel(to text: String) {
         sendButton.accessibilityLabel = text
     }

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2024 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -973,9 +973,7 @@ final class ChatViewController: ThemedViewController {
     
     override func updateColors() {
         super.updateColors()
-        
-        chatProfileView.updateColors()
-        
+                
         for cell in tableView.visibleCells {
             if let chatViewBaseCell = cell as? ChatViewBaseTableViewCell {
                 chatViewBaseCell.updateColors()
@@ -995,6 +993,8 @@ final class ChatViewController: ThemedViewController {
         chatBarCoordinator.updateColors()
         
         scrollToBottomButton.updateColors()
+        
+        Colors.update(searchBar: chatSearchController.searchBar as! UISearchBar)
         
         // We don't want a transparent navigation bar appearance if we are in the process of restoring the scroll
         // position as this leads to a weird transition when the chat view is pushed in.
@@ -1325,6 +1325,13 @@ extension ChatViewController {
             // Loading will be handled by `UIScrollViewDelegate`
                 
             cell.downloadAndPlay()
+        }
+    }
+    
+    func showReactionAlert(for result: ReactionsManager.ReactionSendingResult) {
+        Task { @MainActor in
+            tableView.contextMenuInteraction?.dismissMenu()
+            UIAlertTemplate.showAlert(owner: self, title: result.alertTitle, message: result.alertMessage)
         }
     }
     
@@ -2066,10 +2073,21 @@ extension ChatViewController: UITableViewDelegate {
     ) -> UITargetedPreview? {
         
         guard let indexPath = configuration.identifier as? IndexPath,
-              let cell = tableView.cellForRow(at: indexPath) as? ChatViewBaseTableViewCell else {
+              let cell = tableView.cellForRow(at: indexPath) else {
             return nil
         }
-        return makeUITargetedPreview(for: cell)
+        
+        if let baseTableViewCell = cell as? ChatViewBaseTableViewCell {
+            return makeTargetedPreview(for: baseTableViewCell, forHighlighting: true)
+        }
+        else if let systemMessageCell = cell as? ChatViewSystemMessageTableViewCell {
+            let parameters = UIPreviewParameters()
+            parameters.backgroundColor = .clear
+            parameters.visiblePath = systemMessageCell.backgroundBorderPath
+            return UITargetedPreview(view: systemMessageCell.contentView, parameters: parameters)
+        }
+        
+        return nil
     }
     
     func tableView(
@@ -2077,32 +2095,109 @@ extension ChatViewController: UITableViewDelegate {
         previewForDismissingContextMenuWithConfiguration configuration: UIContextMenuConfiguration
     ) -> UITargetedPreview? {
         guard let indexPath = configuration.identifier as? IndexPath,
-              let cell = tableView.cellForRow(at: indexPath) as? ChatViewBaseTableViewCell else {
+              let cell = tableView.cellForRow(at: indexPath) else {
             return nil
         }
-        return makeUITargetedPreview(for: cell)
+        
+        if let baseTableViewCell = cell as? ChatViewBaseTableViewCell {
+            return makeTargetedPreview(for: baseTableViewCell, forHighlighting: false)
+        }
+        else if let systemMessageCell = cell as? ChatViewSystemMessageTableViewCell {
+            let parameters = UIPreviewParameters()
+            parameters.backgroundColor = .clear
+            parameters.visiblePath = systemMessageCell.backgroundBorderPath
+            
+            return UITargetedPreview(view: systemMessageCell.contentView, parameters: parameters)
+        }
+        
+        return nil
     }
     
-    private func makeUITargetedPreview(for cell: ChatViewBaseTableViewCell) -> UITargetedPreview? {
+    private func makeTargetedPreview(for cell: ChatViewBaseTableViewCell, forHighlighting: Bool) -> UITargetedPreview? {
+        
         let parameters = UIPreviewParameters()
-        parameters.visiblePath = cell.chatBubbleBorderPath
-        parameters.shadowPath = cell.chatBubbleBorderPath
         parameters.backgroundColor = .clear
         
-        // This translates the shadow of the preview from an offset to the position of `chatBubbleView`.
-        // It's very unclear why this is necessary, but it looks like the shadow's position is relative to the visible
-        // path causing it to be offset by the cell offset from the leftmost position.
-        // This is particularly noticeable for incoming messages.
-        let translate = CGAffineTransform(
-            translationX: -cell.chatBubbleBorderPath.bounds.minX,
-            y: -cell.chatBubbleBorderPath.bounds.minY
-        )
-        parameters.shadowPath?.apply(translate)
-        
-        guard cell.contentView.window != nil else {
-            return nil
+        // This is always `true` for now
+        if !cell.showEmojiPickerContextMenu {
+            parameters.visiblePath = cell.chatBubbleBorderPath
+            // For consistency, we also remove the shadow here.
+            parameters.shadowPath = UIBezierPath()
+           
+            return UITargetedPreview(view: cell.chatBubbleView, parameters: parameters)
         }
-        return UITargetedPreview(view: cell.contentView, parameters: parameters)
+        else {
+            // Will not be executed for now
+            guard let snapshot = cell.chatBubbleView.resizableSnapshotView(
+                from: cell.chatBubbleView.bounds,
+                afterScreenUpdates: false,
+                withCapInsets: .zero
+            ) else {
+                return nil
+            }
+            
+            let contextMenuView = ChatViewCellContextMenuView(
+                cellView: snapshot,
+                isOwnMessage: cell.messageIsOwnMessage,
+                forHighlighting: forHighlighting,
+                reactionsManager: cell.reactionsManager
+            )
+                        
+            let centerPoint = centerPointForPreviewTarget(cell: cell, previewFrame: contextMenuView.frame)
+           
+            parameters.visiblePath = UIBezierPath(rect: contextMenuView.frame)
+            // To not have a visible `shadowPath`, which defaults to the `visiblePath` if not specified, we create an
+            // empty bezier path.
+            parameters.shadowPath = UIBezierPath()
+            
+            let previewTarget = UIPreviewTarget(container: cell, center: centerPoint)
+            
+            return UITargetedPreview(view: contextMenuView, parameters: parameters, target: previewTarget)
+        }
+    }
+    
+    private func centerPointForPreviewTarget(cell: ChatViewBaseTableViewCell, previewFrame: CGRect) -> CGPoint {
+        let x: CGFloat =
+            if cell.messageIsOwnMessage {
+                cell.contentView.frame.maxX - previewFrame.width / 2 - ChatViewConfiguration.ChatBubble
+                    .defaultLeadingTrailingInset
+            }
+            else {
+                if cell.messageIsGroupMessage {
+                    cell.contentView.frame.minX + previewFrame.width / 2 + ChatViewConfiguration.GroupCells
+                        .profilePictureCellSpace + ChatViewConfiguration.GroupCells.profilePictureLeadingInset +
+                        UIFontMetrics.default
+                        .scaledValue(for: ChatViewConfiguration.GroupCells.maxProfilePictureSize)
+                }
+                else {
+                    cell.contentView.frame.minX + previewFrame.width / 2 + ChatViewConfiguration.ChatBubble
+                        .defaultLeadingTrailingInset
+                }
+            }
+                    
+        let centerPoint = CGPoint(
+            x: x,
+            y: cell.chatBubbleView.frame.maxY - previewFrame.height / 2
+        )
+        
+        return centerPoint
+    }
+    
+    func dismissContextMenu(showEmojiPicker: Bool = false, for reactionsManager: ReactionsManager) {
+        Task { @MainActor in
+            tableView.contextMenuInteraction?.dismissMenu()
+            
+            if showEmojiPicker {
+                present(EmojiPicker.sheet(with: reactionsManager), animated: true)
+            }
+        }
+    }
+    
+    func showExistingReactions(reactionsManager: ReactionsManager) {
+        present(
+            EmojiReactionModalViewController.sheet(reactionsManager),
+            animated: true
+        )
     }
 }
 

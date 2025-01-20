@@ -105,8 +105,6 @@
 	<integer>256</integer>
 	<key>ThreemaVersionSuffix</key>
 	<string>k</string>
-	<key>ThreemaWorkVersion</key>
-	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

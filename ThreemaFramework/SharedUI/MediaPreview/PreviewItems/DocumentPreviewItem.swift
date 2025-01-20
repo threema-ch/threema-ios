@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -77,7 +77,7 @@ class DocumentPreviewItem: MediaPreviewItem {
                 UIGraphicsBeginImageContextWithOptions(CGSize(width: 50, height: 50), false, 0.0)
                 let inset = (frameSize - size) / 2
                 image.draw(in: CGRect(x: inset, y: inset, width: size, height: size))
-                let finalImage = UIGraphicsGetImageFromCurrentImageContext()!.withTint(Colors.text)!
+                let finalImage = UIGraphicsGetImageFromCurrentImageContext()!.withTint(.label)!
                 UIGraphicsEndImageContext()
                 
                 seal.resolve(finalImage, nil)

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2016-2024 Threema GmbH
+// Copyright (c) 2016-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -86,7 +86,7 @@ static const CGFloat defaultCustomViewHeight = 24.0;
     
     label.numberOfLines = 1;
     ///***** BEGIN THREEMA MODIFICATION*********
-    label.textColor = [Colors textLight];
+    label.textColor = [UIColor secondaryLabelColor];
     ///***** END THREEMA MODIFICATION *********
     label.font = [UIFont systemFontOfSize:17];
     
@@ -100,7 +100,7 @@ static const CGFloat defaultCustomViewHeight = 24.0;
     textView.backgroundColor = [UIColor clearColor];
     textView.textAlignment = NSTextAlignmentCenter;
     ///***** BEGIN THREEMA MODIFICATION*********
-    textView.textColor = [Colors text];
+    textView.textColor = [UIColor labelColor];
     ///***** END THREEMA MODIFICATION *********
     textView.font = [UIFont systemFontOfSize:17.0];
         

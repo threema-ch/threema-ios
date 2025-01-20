@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -162,11 +162,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     }
     
     // MARK: - Update Functions
-    
-    func updateColor() {
-        updateView(with: voiceMessage)
-    }
-    
+        
     func render(_ voiceMessage: VoiceMessage?) {
         guard let audioURL = blobDataURL(for: voiceMessage) else {
             let msg = "URL for blobdata was unexpectedly nil"
@@ -175,8 +171,8 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
             return
         }
         
-        Task {
-            await updateWaveformImageViews(with: audioURL, and: voiceMessage?.objectID)
+        Task.detached(priority: .high) {
+            await self.updateWaveformImageViews(with: audioURL, and: voiceMessage?.objectID)
         }
     }
  
@@ -204,8 +200,11 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         let start = CACurrentMediaTime()
         
         let configuredSize = targetImageSize(from: imageView)
-        let completeWaveformConfig = waveformConfig(size: configuredSize, color: Colors.textLight)
-        let progressConfig = waveformConfig(size: configuredSize, color: .primary)
+        let completeWaveformConfig = waveformConfig(
+            size: configuredSize,
+            color: .secondaryLabel.resolvedColor(with: traitCollection)
+        )
+        let progressConfig = waveformConfig(size: configuredSize, color: .primary.resolvedColor(with: traitCollection))
         let analyzer = WaveformAnalyzer()
         let sampleCount = Int(completeWaveformConfig.size.width * completeWaveformConfig.scale)
         let waveformDrawer = DSWaveformImage.WaveformImageDrawer()
@@ -345,5 +344,15 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         DDLogVerbose("Rendering waveform for size \(bounds.size)")
         
         updateView(with: voiceMessage)
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
+            return
+        }
+        
+        render(voiceMessage)
     }
 }

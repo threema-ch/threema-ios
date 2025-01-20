@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2024 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -764,47 +764,25 @@ public class WebAbstractMessage: NSObject {
             guard let conversation = baseMessage.conversation else {
                 return
             }
-            
-            let group = businessInjector.groupManager.getGroup(conversation: conversation)
-            var contact: ContactEntity?
-            
-            if conversation.isGroup {
-                if let groupDeliveryReceipts = baseMessage.groupDeliveryReceipts,
-                   !groupDeliveryReceipts.isEmpty,
-                   baseMessage.isMyReaction(requestMessage.acknowledged ? .acknowledged : .declined) {
-                    return
-                }
-            }
-            else {
-                guard let c = conversation.contact else {
-                    return
-                }
-                contact = c
-                // Only send changed acks
-                if baseMessage.userackDate != nil, let currentAck = baseMessage.userack,
-                   currentAck.boolValue == requestMessage.acknowledged {
-                    return
-                }
-            }
-            let contactEntity = contact
 
             ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
                 Task {
-                    if requestMessage.acknowledged {
-                        if let group {
-                            await businessInjector.messageSender.sendUserAck(for: baseMessage, toGroup: group)
+                    do {
+                        if requestMessage.acknowledged {
+                            try await businessInjector.messageSender.sendReaction(
+                                to: baseMessage.objectID,
+                                reaction: EmojiVariant(base: .thumbsUpSign, skintone: nil)
+                            )
                         }
-                        else if let identity = contactEntity?.threemaIdentity {
-                            await businessInjector.messageSender.sendUserAck(for: baseMessage, toIdentity: identity)
+                        else {
+                            try await businessInjector.messageSender.sendReaction(
+                                to: baseMessage.objectID,
+                                reaction: EmojiVariant(base: .thumbsDownSign, skintone: nil)
+                            )
                         }
                     }
-                    else {
-                        if let group {
-                            await businessInjector.messageSender.sendUserDecline(for: baseMessage, toGroup: group)
-                        }
-                        else if let identity = contactEntity?.threemaIdentity {
-                            await businessInjector.messageSender.sendUserDecline(for: baseMessage, toIdentity: identity)
-                        }
+                    catch {
+                        DDLogError("[Threema Web] Sending reactions from web failed.")
                     }
                 }
             } onTimeout: {

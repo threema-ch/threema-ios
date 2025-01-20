@@ -3,9 +3,10 @@
     <device id="retina5_9" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="Stack View standard spacing" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -272,9 +273,10 @@
                                                     <color key="textColor" red="0.5568627451" green="0.5568627451" blue="0.57647058819999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                     <color key="highlightedColor" red="0.5568627451" green="0.5568627451" blue="0.57647058819999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                 </label>
-                                                <imageView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" image="Phone" highlightedImage="Phone" id="Jvb-1y-wcB">
-                                                    <rect key="frame" x="16" y="9.3333333333333357" width="25" height="25"/>
+                                                <imageView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" image="phone.fill" catalog="system" highlightedImage="phone.fill" id="Jvb-1y-wcB">
+                                                    <rect key="frame" x="18.166666666666664" y="12.666666666666666" width="19.666666666666668" height="17.666666666666668"/>
                                                     <autoresizingMask key="autoresizingMask"/>
+                                                    <color key="tintColor" systemColor="labelColor"/>
                                                 </imageView>
                                             </subviews>
                                         </tableViewCellContentView>
@@ -1467,21 +1469,17 @@
             <point key="canvasLocation" x="524" y="1985.4679802955666"/>
         </scene>
     </scenes>
-    <designables>
-        <designable name="HNt-4v-CIs">
-            <size key="intrinsicContentSize" width="46" height="30"/>
-        </designable>
-        <designable name="Q00-XE-5z0">
-            <size key="intrinsicContentSize" width="46" height="30"/>
-        </designable>
-    </designables>
     <inferredMetricsTieBreakers>
         <segue reference="Wuf-ev-MSL"/>
     </inferredMetricsTieBreakers>
     <resources>
         <image name="Info" width="22" height="22"/>
-        <image name="Phone" width="25" height="25"/>
         <image name="ThreemaSafeIntro.png" width="400" height="400"/>
         <image name="info.circle.fill" catalog="system" width="128" height="123"/>
+        <image name="phone.fill" catalog="system" width="128" height="114"/>
+        <image name="phone.fill" width="128" height="128"/>
+        <systemColor name="labelColor">
+            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
     </resources>
 </document>

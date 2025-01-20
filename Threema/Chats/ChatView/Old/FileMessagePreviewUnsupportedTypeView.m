@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2015-2024 Threema GmbH
+// Copyright (c) 2015-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -28,14 +28,12 @@
 + (instancetype)fileMessagePreviewUnsupportedTypeView {
     FileMessagePreviewUnsupportedTypeView *view = (FileMessagePreviewUnsupportedTypeView *)[BundleUtil loadXibNamed:@"FileMessagePreviewUnsupportedTypeView"];
 
+    view.backgroundColor = UIColor.systemGroupedBackgroundColor;
+    view.noPreviewLabel.textColor = UIColor.labelColor;
+    view.fileNameLabel.textColor = UIColor.labelColor;
+    view.fileSizeLabel.textColor = UIColor.secondaryLabelColor;
+    
     return view;
-}
-
-- (void)updateColors {
-    self.backgroundColor = Colors.backgroundGroupedViewController;
-    [_noPreviewLabel setTextColor: [Colors text]];
-    [_fileNameLabel setTextColor: [Colors text]];
-    [_fileSizeLabel setTextColor: [Colors textLight]];
 }
 
 - (void)setFileMessageEntity:(FileMessageEntity *)fileMessageEntity {
@@ -45,8 +43,6 @@
     [_fileSizeLabel setText: [ThreemaUtilityObjC formatDataLength:fileMessageEntity.fileSize.floatValue]];
     
     _thumbnailImage.image = [FileMessagePreview thumbnailForFileMessageEntity:fileMessageEntity];
-    
-    [self updateColors];
 }
 
 @end

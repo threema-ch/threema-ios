@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -27,6 +27,7 @@ import ThreemaMacros
 import ThreemaProtocols
 
 public final class MessageSender: NSObject, MessageSenderProtocol {
+    
     private let serverConnector: ServerConnectorProtocol
     private let myIdentityStore: MyIdentityStoreProtocol
     private let userSettings: UserSettingsProtocol
@@ -943,6 +944,334 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         taskManager.add(taskDefinition: task)
     }
 
+    // MARK: - Reactions
+    
+    public func sendReaction(
+        to objectID: NSManagedObjectID,
+        reaction: EmojiVariant
+    ) async throws -> ReactionsManager.ReactionSendingResult {
+        
+        // The following code intends to map our protocol for the "Reaction" message submitting
+        
+        // [Protocol Step] 1. Let reaction be the reaction to be applied to or withdrawn from a referred message which
+        // must contain a
+        // single fully-qualified emoji codepoint sequence that is part of the current Unicode standard.
+        
+        let (message, messageID, isOwnMessage): (BaseMessage?, Data?, Bool?) = await entityManager.perform {
+            guard let message = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage else {
+                return (nil, nil, nil)
+            }
+            return (message, message.id, message.isOwnMessage)
+        }
+        
+        guard let message, let messageID else {
+            DDLogError("[Reactions] Message not found.")
+            throw ReactionsManager.ReactionError.sendingFailed
+        }
+        
+        let (conversation, conversationIsGroup) = await entityManager.perform {
+            let conversation = self.entityManager.entityFetcher
+                .existingObject(with: message.conversation.objectID) as? ConversationEntity
+            return (conversation, conversation?.isGroup ?? false)
+        }
+        
+        guard let conversation else {
+            DDLogError("[Reactions] Conversation not found.")
+            throw ReactionsManager.ReactionError.sendingFailed
+        }
+        
+        // [Protocol Step] 2. Run the Legacy Reaction Mapping Steps with reaction and let legacy-reaction be the result.
+        // TODO: geht das uach mit braunen emojis ?
+        let legacyMapping = reaction.base.applyLegacyMapping()
+        
+        let localSupportsReaction = userSettings.sendEmojiReactions
+        
+        if !conversationIsGroup {
+            // Reaction if for message in 1:1 conversation
+            
+            let contact: Contact? = await entityManager.perform {
+                guard let contactEntity = self.entityManager.entityFetcher.contact(for: conversation.contact?.identity)
+                else {
+                    return nil
+                }
+                return Contact(contactEntity: contactEntity)
+            }
+            
+            guard let contact else {
+                DDLogError("[Reactions] Contact not found.")
+                throw ReactionsManager.ReactionError.sendingFailed
+            }
+            
+            let contactSupportsReaction = FeatureMask.check(contact: contact, for: .reactionSupport)
+           
+            // We cannot react to our own message, if we do not support sending reactions
+            if isOwnMessage ?? false, !localSupportsReaction {
+                return .noAction
+            }
+            
+            // We cannot react to our own message, if the other side does not support reactions.
+            if isOwnMessage ?? false, !contactSupportsReaction {
+                return .noAction
+            }
+            
+            // [Protocol Step] 3. If legacy-reaction is not defined and the sender or the receiver does not have
+            // REACTION_SUPPORT, log a warning and abort these steps.¹
+            if legacyMapping == nil {
+                if !localSupportsReaction {
+                    DDLogWarn(
+                        "Tried to send a Reaction, but it is no supported by us. This must be restricted by UI."
+                    )
+                    return .noSupportLocal
+                }
+                
+                if !contactSupportsReaction {
+                    return .noSupportRemoteSingle
+                }
+            }
+            
+            // [Protocol Step] 4. Let reacted-at be the current timestamp.
+            let reactedAt = Date.now
+            
+            // Since we do no longer save legacy acks/decs, we create a reaction anyways
+            let apply = await entityManager.performSave {
+                
+                // [Protocol Step]  7. Apply reaction (i.e. apply or withdraw) to the referred message with the
+                // reacted-at timestamp.
+                // We check if the user has already reacted with the same emoji…
+                var messageReactionEntity: MessageReactionEntity?
+                
+                if let existingReactions = self.entityManager.entityFetcher.messageReactionEntities(
+                    for: message,
+                    creator: nil
+                ), !existingReactions.isEmpty {
+                    
+                    messageReactionEntity = existingReactions.first {
+                        $0.reaction == reaction.rawValue
+                    }
+                    // … if so, we withdraw it (If the user supports reactions).
+                    if let messageReactionEntity {
+                        if contactSupportsReaction, localSupportsReaction {
+                            self.entityManager.entityDestroyer.delete(reaction: messageReactionEntity)
+                        }
+                        return false
+                    }
+                    
+                    // If we do apply and the contact does not support reactions, we remove all existing reactions. This
+                    // ensures that there cannot be a legacy ack and dec at the same time.
+                    if !contactSupportsReaction || !localSupportsReaction {
+                        for existingReaction in existingReactions {
+                            self.entityManager.entityDestroyer.delete(reaction: existingReaction)
+                        }
+                    }
+                }
+                
+                // … if not, we create a new reaction.
+                messageReactionEntity = self.entityManager.entityCreator.messageReactionEntity().then {
+                    $0.reaction = reaction.rawValue
+                    $0.date = reactedAt
+                    $0.message = message
+                }
+                
+                return true
+            }
+            
+            if !localSupportsReaction || !contactSupportsReaction, !apply {
+                return .noRemoving
+            }
+            
+            // [Protocol Step]  5. If both sender and receiver have REACTION_SUPPORT,…
+            if contactSupportsReaction, localSupportsReaction {
+                
+                // … run the 1:1 Messages Submit Steps with messages set from the following properties:
+                var e2eReactionMessage = CspE2e_Reaction()
+                e2eReactionMessage.messageID = try messageID.littleEndian()
+          
+                if apply {
+                    e2eReactionMessage.action = .apply(reaction.data)
+                }
+                else {
+                    e2eReactionMessage.action = .withdraw(reaction.data)
+                }
+                
+                let task = TaskDefinitionSendReactionMessage(
+                    reaction: e2eReactionMessage,
+                    receiverIdentity: contact.identity.string
+                )
+                
+                let (taskWait, _) = taskManager.addWithWait(taskDefinition: task)
+                try await taskWait.wait()
+
+                return .success
+            }
+            
+            // [Protocol Step] 6. If the sender or the receiver does not have REACTION_SUPPORT, run the 1:1 Messages
+            // Submit Steps with messages set from the following properties:
+            else if let legacyMapping {
+                switch legacyMapping {
+                case .ack:
+                    await sendUserAck(for: message, toIdentity: contact.identity)
+                case .dec:
+                    await sendUserDecline(for: message, toIdentity: contact.identity)
+                }
+                
+                return .success
+            }
+        }
+        else {
+            // Reaction is for group
+            guard let group = groupManager.getGroup(conversation: conversation) else {
+                DDLogError("[Reactions] Group not found.")
+                throw ReactionsManager.ReactionError.sendingFailed
+            }
+            
+            let (hasRemoteSupport, unsupported) = FeatureMask.check(message: message, for: .reactionSupport)
+            
+            if legacyMapping == nil {
+                // [Protocol Step] 3. If legacy-reaction is not defined:
+                // [Protocol Step] 3.1 If the sender does not have REACTION_SUPPORT, log a warning and abort these
+                // steps.
+                // [Protocol Step] 3.2 If all of the group members do not have REACTION_SUPPORT, log a warning and abort
+                // these steps.
+                if !localSupportsReaction {
+                    DDLogWarn(
+                        "Tried to send a Reaction, but it is not supported by us. This must be restricted by UI."
+                    )
+                    return .noSupportLocal
+                }
+                
+                if !hasRemoteSupport {
+                    DDLogWarn(
+                        "Tried to send a Reaction, but it is not supported by any receiver in the group."
+                    )
+                    return .noSupportRemoteGroup
+                }
+            }
+            
+            // [Protocol Step] 4. Let reacted-at be the current timestamp.
+            let reactedAt = Date.now
+            
+            // [Protocol Step] 5. Run the Group Messages Submit Steps with messages set from the following properties:
+            let apply = try await entityManager.performSave {
+                
+                guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+                else {
+                    throw MessageSenderError.unableToLoadMessage
+                }
+                
+                // [Protocol Step] 6. Apply reaction (i.e. apply or withdraw) to the referred message with the
+                // reacted-at timestamp.
+                // We check if the user has already reacted with the same emoji
+                var messageReactionEntity: MessageReactionEntity?
+                
+                if let existingReactions = self.entityManager.entityFetcher.messageReactionEntities(
+                    for: baseMessage,
+                    creator: nil
+                ), !existingReactions.isEmpty {
+                    
+                    messageReactionEntity = existingReactions.first {
+                        $0.reaction == reaction.rawValue
+                    }
+                    // … if so, we withdraw it (If the user supports reactions).
+                    if let messageReactionEntity {
+                        if hasRemoteSupport, localSupportsReaction {
+                            self.entityManager.entityDestroyer.delete(reaction: messageReactionEntity)
+                        }
+                        return false
+                    }
+                    
+                    // If we do apply and no contact does not support reactions, we remove all our own existing
+                    // reactions. This ensures that there cannot be a legacy ack and dec at the same time for contacts
+                    // that do not support reactions yet.
+                    if !hasRemoteSupport || !localSupportsReaction {
+                        for existingReaction in existingReactions {
+                            self.entityManager.entityDestroyer.delete(reaction: existingReaction)
+                        }
+                    }
+                }
+           
+                // If not, we create a new reaction
+                messageReactionEntity = self.entityManager.entityCreator.messageReactionEntity().then {
+                    $0.reaction = reaction.rawValue
+                    $0.date = reactedAt
+                    $0.message = baseMessage
+                }
+                
+                return true
+            }
+            
+            if !localSupportsReaction || !hasRemoteSupport, !apply {
+                return .noRemoving
+            }
+            
+            if localSupportsReaction {
+                var e2eReactionMessage = CspE2e_Reaction()
+                e2eReactionMessage.messageID = try messageID.littleEndian()
+                
+                if apply {
+                    e2eReactionMessage.action = .apply(reaction.data)
+                }
+                else {
+                    e2eReactionMessage.action = .withdraw(reaction.data)
+                }
+                
+                let task = TaskDefinitionSendReactionMessage(
+                    reaction: e2eReactionMessage,
+                    group: group
+                )
+                
+                if !unsupported.isEmpty {
+                    var receivers = Set<String>()
+                    
+                    for member in group.members {
+                        let contains = unsupported.contains { $0.identity == member.identity }
+                        
+                        guard !contains else {
+                            continue
+                        }
+                        receivers.insert(member.identity.string)
+                    }
+                    
+                    task.receivingGroupMembers = receivers
+                }
+                
+                let (waitTask, _) = taskManager.addWithWait(taskDefinition: task)
+                try await waitTask.wait()
+
+                // [Protocol Step] 3.3 If any of the group members do not have REACTION_SUPPORT, notify the user that
+                // the
+                // affected contacts will not receive the reaction.
+                if !unsupported.isEmpty {
+                    if let legacyMapping {
+                        switch legacyMapping {
+                        case .ack:
+                            await sendUserAck(for: message, toGroup: group, receivers: unsupported)
+                        case .dec:
+                            await sendUserDecline(for: message, toGroup: group, receivers: unsupported)
+                        }
+                        
+                        return .success
+                    }
+                    return .partialSupportRemoteGroup
+                }
+                else {
+                    return .success
+                }
+            }
+            else if let legacyMapping {
+                switch legacyMapping {
+                case .ack:
+                    await sendUserAck(for: message, toGroup: group, receivers: Array(group.members))
+                case .dec:
+                    await sendUserDecline(for: message, toGroup: group, receivers: Array(group.members))
+                }
+                
+                return .success
+            }
+        }
+        
+        return .error
+    }
+    
     // MARK: - Status update
 
     public func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> Promise<Void> {
@@ -1010,28 +1339,9 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         await sendReceipt(
             for: messages,
             receiptType: .read,
+            receivers: Array(group.members),
             toGroup: group
         )
-    }
-
-    public func sendUserAck(for message: BaseMessage, toIdentity: ThreemaIdentity) async {
-        await updateUserReaction(on: message, with: .ack)
-        await sendReceipt(for: [message], receiptType: .ack, toIdentity: toIdentity)
-    }
-
-    public func sendUserAck(for message: BaseMessage, toGroup: Group) async {
-        await updateUserReaction(on: message, with: .acknowledged)
-        await sendReceipt(for: [message], receiptType: .ack, toGroup: toGroup)
-    }
-
-    public func sendUserDecline(for message: BaseMessage, toIdentity: ThreemaIdentity) async {
-        await updateUserReaction(on: message, with: .decline)
-        await sendReceipt(for: [message], receiptType: .decline, toIdentity: toIdentity)
-    }
-
-    public func sendUserDecline(for message: BaseMessage, toGroup: Group) async {
-        await updateUserReaction(on: message, with: .declined)
-        await sendReceipt(for: [message], receiptType: .decline, toGroup: toGroup)
     }
 
     public func sendTypingIndicator(typing: Bool, toIdentity: ThreemaIdentity) {
@@ -1253,6 +1563,22 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             return (messageID, receiverIdentity, group)
         }
     }
+    
+    func sendUserAck(for message: BaseMessage, toIdentity: ThreemaIdentity) async {
+        await sendReceipt(for: [message], receiptType: .ack, toIdentity: toIdentity)
+    }
+
+    func sendUserAck(for message: BaseMessage, toGroup: Group, receivers: [Contact]) async {
+        await sendReceipt(for: [message], receiptType: .ack, receivers: receivers, toGroup: toGroup)
+    }
+
+    func sendUserDecline(for message: BaseMessage, toIdentity: ThreemaIdentity) async {
+        await sendReceipt(for: [message], receiptType: .decline, toIdentity: toIdentity)
+    }
+
+    func sendUserDecline(for message: BaseMessage, toGroup: Group, receivers: [Contact]) async {
+        await sendReceipt(for: [message], receiptType: .decline, receivers: receivers, toGroup: toGroup)
+    }
 
     private func sendReceipt(
         for messages: [BaseMessage],
@@ -1353,6 +1679,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     private func sendReceipt(
         for messages: [BaseMessage],
         receiptType: ReceiptType,
+        receivers: [Contact],
         toGroup: Group
     ) async {
         // Get message ID's and receipt dates for sending
@@ -1394,14 +1721,15 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                             receiptMessageIDs.append(key)
                             receiptReadDates.append(msgIDAndReadDate[key] as? Date)
                         }
-
+                        let receiverIdentities = receivers.map(\.identity.string)
+                        
                         if !receiptMessageIDs.isEmpty {
                             DDLogVerbose("Sending delivery receipt for message IDs: \(receiptMessageIDs)")
 
                             let taskSendDeliveryReceipts = TaskDefinitionSendGroupDeliveryReceiptsMessage(
                                 group: toGroup,
                                 from: self.myIdentityStore.identity,
-                                to: Array(toGroup.allMemberIdentities),
+                                to: receiverIdentities,
                                 receiptType: receiptType,
                                 receiptMessageIDs: receiptMessageIDs,
                                 receiptReadDates: receiptReadDates
@@ -1429,53 +1757,6 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 }
             }
         })
-    }
-
-    private func updateUserReaction(on message: BaseMessage, with receiptType: ReceiptType) async {
-        guard receiptType == .ack || receiptType == .decline else {
-            return
-        }
-
-        await entityManager.performSave {
-            guard message.deletedAt == nil else {
-                return
-            }
-            let ack = receiptType == .ack
-
-            message.userack = NSNumber(booleanLiteral: ack)
-            message.userackDate = Date()
-
-            if message.id == message.conversation.lastMessage?.id {
-                message.conversation.lastMessage = message
-            }
-        }
-    }
-
-    private func updateUserReaction(
-        on message: BaseMessage,
-        with groupReceiptType: GroupDeliveryReceipt.DeliveryReceiptType
-    ) async {
-        guard groupReceiptType == .acknowledged || groupReceiptType == .declined else {
-            return
-        }
-        
-        await entityManager.performSave {
-            guard message.deletedAt == nil else {
-                return
-            }
-            
-            let groupDeliveryReceipt = GroupDeliveryReceipt(
-                identity: MyIdentityStore.shared().identity,
-                deliveryReceiptType: groupReceiptType,
-                date: Date()
-            )
-
-            message.add(groupDeliveryReceipt: groupDeliveryReceipt)
-
-            if message.id == message.conversation.lastMessage?.id {
-                message.conversation.lastMessage = message
-            }
-        }
     }
     
     private func receivingConversations(for distributionList: DistributionListEntity) -> [ConversationEntity] {

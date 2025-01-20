@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2024 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -34,6 +34,7 @@ class SafeDeactivatedViewController: ThemedViewController {
         descriptionLabel.text = #localize("safe_enable_explain_short")
         introCircle.layer.cornerRadius = introCircle.frame.height / 2
         
+        setupColors()
         updateColors()
     }
     
@@ -41,10 +42,13 @@ class SafeDeactivatedViewController: ThemedViewController {
         updateColors()
     }
     
+    private func setupColors() {
+        descriptionLabel.textColor = .label
+    }
+    
     override func updateColors() {
         super.updateColors()
         
-        Colors.setTextColor(Colors.text, in: view)
         view.backgroundColor = Colors.backgroundGroupedViewController
         
         introCircle.backgroundColor = UIColor(red: 235.0 / 255.0, green: 235.0 / 255.0, blue: 235.0 / 255.0, alpha: 1.0)

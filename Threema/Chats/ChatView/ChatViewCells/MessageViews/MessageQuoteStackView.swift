@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -74,6 +74,7 @@ final class MessageQuoteStackView: UIStackView {
     private lazy var nameLabel: RTLAligningLabel = {
         let nameLabel = RTLAligningLabel()
         nameLabel.font = ChatViewConfiguration.Quote.nameFont
+        nameLabel.textColor = .secondaryLabel
         nameLabel.adjustsFontForContentSizeCategory = true
         nameLabel.numberOfLines = 0
       
@@ -84,6 +85,7 @@ final class MessageQuoteStackView: UIStackView {
         let quoteLabel = RTLAligningLabel()
         quoteLabel.adjustsFontForContentSizeCategory = true
         quoteLabel.numberOfLines = ChatViewConfiguration.Quote.maxQuoteLines
+        quoteLabel.textColor = .secondaryLabel
         
         return quoteLabel
     }()
@@ -195,9 +197,6 @@ final class MessageQuoteStackView: UIStackView {
         
         // The image in the quote only gets updated if we set it new again
         updateContent()
-        
-        Colors.setTextColor(Colors.textLight, label: nameLabel)
-        Colors.setTextColor(Colors.textLight, label: quoteLabel)
     }
     
     private func updateQuoteBarColor() {

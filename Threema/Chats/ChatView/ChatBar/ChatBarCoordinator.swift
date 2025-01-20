@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -357,8 +357,6 @@ final class ChatBarCoordinator {
     
     /// Updates colors for all subviews
     func updateColors() {
-        chatBar.updateColors()
-        chatBarContainerView.updateColors()
         mentionsTableViewController?.updateColors()
     }
     
@@ -674,7 +672,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
                 for: .editMessageSupport
             ).unsupported
             
-            // We filter out certain contacts in groups that will no receive the message anyway
+            // We filter out certain contacts in groups that will not receive the message anyway
             if let group {
                 var filteredUnsupportedContact = [Contact]()
                 

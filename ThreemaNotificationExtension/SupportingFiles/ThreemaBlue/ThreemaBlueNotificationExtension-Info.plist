@@ -29,7 +29,5 @@
 	</dict>
 	<key>ThreemaAppGroupIdentifier</key>
 	<string>group.ch.threema.work.red</string>
-	<key>ThreemaWorkVersion</key>
-	<true/>
 </dict>
 </plist>

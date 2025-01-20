@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2023 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -75,7 +75,7 @@ public class ThreemaEnvironment: NSObject {
         
         return true
     }
-    
+
     /// Max FS supported by this client. Mostly useful for manual testing of upgrades.
     static let fsMaxVersion = CspE2eFs_Version.v12
     

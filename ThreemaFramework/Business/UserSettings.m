@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2023 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -143,6 +143,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize resetTipKitOnNextLaunch;
 @synthesize jbDetectionDismissed;
 @synthesize contactList2;
+@synthesize sendEmojiReactions;
 
 /// Deprecated Keys, please add keys if they are removed:
 /// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
@@ -267,6 +268,8 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"ResetTipKitOnNextLaunch",
                                         [NSNumber numberWithBool:NO], @"JBDetectionDismissed",
                                         [NSNumber numberWithBool:NO], @"ContactList2",
+                                        [NSNumber numberWithBool:NO], @"SendEmojiReactions",
+
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
         
@@ -389,6 +392,18 @@ static UserSettings *instance;
     resetTipKitOnNextLaunch = [defaults boolForKey:@"ResetTipKitOnNextLaunch"];
     jbDetectionDismissed = [defaults boolForKey:@"JBDetectionDismissed"];
     contactList2 = [defaults boolForKey:@"ContactList2"];
+    
+    if ([ThreemaEnvironment env] == EnvironmentTypeXcode) {
+        sendEmojiReactions = [defaults boolForKey:@"SendEmojiReactions"];
+    }
+    else {
+        if([ThreemaAppObjc current] == ThreemaAppBlue || [ThreemaAppObjc current] == ThreemaAppGreen) {
+            sendEmojiReactions = true;
+        }
+        else {
+            sendEmojiReactions = false;
+        }
+    }
 }
 
 - (void)setAppMigratedToVersion:(NSInteger)newAppMigratedToVersion {
@@ -913,6 +928,12 @@ static UserSettings *instance;
 - (void)setContactList2:(BOOL)newContactList2 {
     contactList2 = newContactList2;
     [defaults setBool:contactList2 forKey:@"ContactList2"];
+    [defaults synchronize];
+}
+
+- (void)setSendEmojiReactions:(BOOL)newEmojiReactions {
+    sendEmojiReactions = newEmojiReactions;
+    [defaults setBool:sendEmojiReactions forKey:@"SendEmojiReactions"];
     [defaults synchronize];
 }
 

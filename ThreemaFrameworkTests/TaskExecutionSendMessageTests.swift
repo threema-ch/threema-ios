@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2024 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -1231,6 +1231,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
     func testExecuteNoticeGroupTextMessageWithReflecting() async throws {
         let expectedReflectID = MockData.generateReflectID()
         let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
+        let expectedOutgoingMessageSentReflectID = MockData.generateReflectID()
+        let expectedOutgoingMessageSentReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
@@ -1243,6 +1245,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedReflectID),
                     object: expectedReflectID,
                     userInfo: [expectedReflectID: Date()]
+                )
+                NotificationCenter.default.post(
+                    name: TaskManager.mediatorMessageAckObserverName(reflectID: expectedOutgoingMessageSentReflectID),
+                    object: expectedOutgoingMessageSentReflectID,
+                    userInfo: [expectedOutgoingMessageSentReflectID: Date()]
                 )
                 return nil
             }
@@ -1269,6 +1276,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
                         .ReflectData(
                             id: expectedReflectID,
                             message: expectedReflectMessage
+                        ),
+                    MediatorMessageProtocolMock
+                        .ReflectData(
+                            id: expectedOutgoingMessageSentReflectID,
+                            message: expectedOutgoingMessageSentReflectMessage
                         ),
                 ]
             )
@@ -1332,10 +1344,15 @@ class TaskExecutionSendMessageTests: XCTestCase {
         await fulfillment(of: [expect], timeout: 6)
 
         XCTAssertNil(expectError)
-        XCTAssertEqual(1, serverConnectorMock.reflectMessageCalls.count)
+        XCTAssertEqual(2, serverConnectorMock.reflectMessageCalls.count)
         XCTAssertEqual(
             1,
             serverConnectorMock.reflectMessageCalls.filter { $0.elementsEqual(expectedReflectMessage) }.count
+        )
+        XCTAssertEqual(
+            1,
+            serverConnectorMock.reflectMessageCalls
+                .filter { $0.elementsEqual(expectedOutgoingMessageSentReflectMessage) }.count
         )
         XCTAssertEqual(0, serverConnectorMock.sendMessageCalls.count)
         XCTAssertEqual(

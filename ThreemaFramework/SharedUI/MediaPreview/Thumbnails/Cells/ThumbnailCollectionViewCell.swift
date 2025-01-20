@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2023 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -33,7 +33,8 @@ class ThumbnailCollectionViewCell: UICollectionViewCell {
     }
     
     func updateSelectionState() {
-        layer.borderColor = isSelected ? UIColor.primary.cgColor : Colors.backgroundTableViewCell.cgColor
+        layer.borderColor = isSelected ? UIColor.primary.resolvedColor(with: traitCollection).cgColor : Colors
+            .backgroundView.resolvedColor(with: traitCollection).cgColor
     }
     
     override func prepareForReuse() {
@@ -44,14 +45,14 @@ class ThumbnailCollectionViewCell: UICollectionViewCell {
     }
     
     func setColors() {
-        backgroundColor = Colors.backgroundTableViewCell
+        backgroundColor = .secondarySystemGroupedBackground
         layer.borderWidth = 2
         layer.cornerRadius = 5
         if isSelected {
-            layer.borderColor = UIColor.primary.cgColor
+            layer.borderColor = UIColor.primary.resolvedColor(with: traitCollection).cgColor
         }
         else {
-            layer.borderColor = Colors.backgroundView.cgColor
+            layer.borderColor = Colors.backgroundView.resolvedColor(with: traitCollection).cgColor
         }
     }
     
@@ -81,5 +82,15 @@ class ThumbnailCollectionViewCell: UICollectionViewCell {
         get {
             false
         }
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
+            return
+        }
+        
+        updateSelectionState()
     }
 }

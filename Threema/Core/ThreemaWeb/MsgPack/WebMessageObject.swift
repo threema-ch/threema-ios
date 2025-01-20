@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2018-2024 Threema GmbH
+// Copyright (c) 2018-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -38,6 +38,7 @@ class WebMessageObject: NSObject {
     var statusType: String?
     var unread: Bool?
     var state: String?
+    var emoji: [[AnyHashable: Any]]?
     var quote: [AnyHashable: Any]?
     var file: [AnyHashable: Any]?
     var video: [AnyHashable: Any]?
@@ -89,18 +90,86 @@ class WebMessageObject: NSObject {
             self.state = "read"
         case .received:
             self.state = "sent"
-        case .userAcknowledged:
-            self.state = "user-ack"
-        case .userDeclined:
-            self.state = "user-dec"
         case .failed:
             self.state = "send-failed"
         }
         
-        if conversation.isGroup {
-            self.reactions = message.groupReactionsDictForWeb()
-        }
+        if let reactions = message.reactions {
+            var ackedIdentities = [String]()
+            var decedIdentities = [String]()
+            
+            if !UserSettings.shared().sendEmojiReactions {
+                for reaction in reactions {
+                    guard let emoji = Emoji(rawValue: reaction.reaction),
+                          let mapping = emoji.applyLegacyMapping() else {
+                        continue
+                    }
+                    if message.isGroupMessage {
+                        let id = reaction.creator?.identity ?? MyIdentityStore.shared().identity
+                        
+                        guard let id else {
+                            continue
+                        }
+                        
+                        switch mapping {
+                        case .ack:
+                            ackedIdentities.append(id)
+                        case .dec:
+                            decedIdentities.append(id)
+                        }
+                        
+                        self.reactions = ["ack": ackedIdentities, "dec": decedIdentities]
+                    }
+                    else {
+                        switch mapping {
+                        case .ack:
+                            self.state = "user-ack"
+                        case .dec:
+                            self.state = "user-dec"
+                        }
+                    }
+                }
+            }
+            else {
+                var info = [[String: Any]]()
+                
+                for reaction in reactions {
+                    let id = reaction.creator?.identity ?? MyIdentityStore.shared().identity
+                    
+                    guard let id else {
+                        continue
+                    }
+                    
+                    let existingEntry = info.first {
+                        guard let existingReaction = $0["emoji"] as? String,
+                              existingReaction == reaction.reaction else {
+                            return false
+                        }
+                        return true
+                    }
+                    
+                    if var existingEntry {
+                        let index = info.firstIndex { $0["emoji"] as? String == existingEntry["emoji"] as? String }
+                        
+                        guard let index, var ids = existingEntry["identities"] as? [String] else {
+                            continue
+                        }
+                        
+                        ids.append(id)
+                        existingEntry["identities"] = ids
+                       
+                        info.remove(at: index)
+                        info.append(existingEntry)
+                    }
+                    else {
+                        let dict = ["emoji": reaction.reaction, "identities": [id]] as [String: Any]
+                        info.append(dict)
+                    }
+                }
 
+                self.emoji = info
+            }
+        }
         if let lastEditedAt = message.lastEditedAt {
             self.lastEditedAt = lastEditedAt.millisecondsSince1970 / 1000
         }
@@ -226,6 +295,10 @@ class WebMessageObject: NSObject {
             objectDict.updateValue(reactions, forKey: "reactions")
         }
 
+        if let emoji {
+            objectDict.updateValue(emoji, forKey: "emojiReactions")
+        }
+        
         if let lastEditedAt {
             objectDict.updateValue(lastEditedAt, forKey: "lastEditedAt")
         }

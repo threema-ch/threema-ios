@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -135,7 +135,7 @@ final class ChatBubbleBackgroundView: UIView {
     
     // MARK: - Color
     
-    private var localBackgroundColor = Colors.chatBubbleReceived
+    private var localBackgroundColor: UIColor = .chatBubbleReceived
     
     // We override the default background color implementation to not set the actual background but the colors
     // of our custom layers.
@@ -164,5 +164,16 @@ final class ChatBubbleBackgroundView: UIView {
     
     private func updateColors() {
         backgroundLayer.fillColor = localBackgroundColor.cgColor
+    }
+    
+    // CGColors have no automatic theme change built in, so we track it ourselves
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
+            return
+        }
+        
+        updateColors()
     }
 }

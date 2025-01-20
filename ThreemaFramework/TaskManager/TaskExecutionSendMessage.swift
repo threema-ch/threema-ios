@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2020-2023 Threema GmbH
+// Copyright (c) 2020-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -123,6 +123,20 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                                     sentAt: reflectedAt ?? .now,
                                     isLocal: true
                                 )
+
+                                if let groupID = task.groupID, let groupCreatorIdentity = task.groupCreatorIdentity {
+                                    do {
+                                        // swiftformat:disable:next all
+                                        var receiver = D2d_ConversationId()
+                                        receiver.group.groupID = try groupID.littleEndian()
+                                        receiver.group.creatorIdentity = groupCreatorIdentity
+
+                                        try self.reflectOutgoingMessageSent(messageID: messageID, receiver: receiver)
+                                    }
+                                    catch {
+                                        seal.reject(error)
+                                    }
+                                }
                             }
                             else {
                                 DDLogError("MessageID missing for supposedly successfully sent note group message.")
@@ -339,27 +353,10 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
             }
 
             // Reflect outgoing message sent
-            if self.frameworkInjector.userSettings.enableMultiDevice,
-               let messageID = messageSentMessageID,
+            if let messageID = messageSentMessageID,
                let receiver = messageConversationID {
 
-                let envelope = self.frameworkInjector.mediatorMessageProtocol
-                    .getEnvelopeForOutgoingMessageUpdate(
-                        messageID: messageID,
-                        conversationID: receiver,
-                        deviceID: self.frameworkInjector.multiDeviceManager.thisDevice.deviceID
-                    )
-
-                do {
-                    try self.reflectMessage(
-                        envelope: envelope,
-                        ltReflect: .reflectOutgoingMessageUpdateToMediator,
-                        ltAck: .receiveOutgoingMessageUpdateAckFromMediator
-                    )
-                }
-                catch {
-                    return Promise(error: error)
-                }
+                try self.reflectOutgoingMessageSent(messageID: messageID, receiver: receiver)
             }
 
             return Promise()
@@ -447,5 +444,25 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
         }
         
         return currentMode
+    }
+
+    // swiftformat:disable:next acronyms
+    private func reflectOutgoingMessageSent(messageID: Data, receiver: D2d_ConversationId) throws {
+        guard frameworkInjector.userSettings.enableMultiDevice else {
+            return
+        }
+
+        let envelope = frameworkInjector.mediatorMessageProtocol
+            .getEnvelopeForOutgoingMessageUpdate(
+                messageID: messageID,
+                conversationID: receiver,
+                deviceID: frameworkInjector.multiDeviceManager.thisDevice.deviceID
+            )
+
+        try reflectMessage(
+            envelope: envelope,
+            ltReflect: .reflectOutgoingMessageUpdateToMediator,
+            ltAck: .receiveOutgoingMessageUpdateAckFromMediator
+        )
     }
 }

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2012-2024 Threema GmbH
+// Copyright (c) 2012-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -69,6 +69,10 @@
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(applicationDidEnterBackground:) name: UIApplicationDidEnterBackgroundNotification object: nil];
     
     [self configureNavigationBar];
+    
+    self.enterManuallyLabel.textColor = UIColor.labelColor;
+    self.scanIDLabel.textColor = UIColor.primary;
+    self.inviteFriendLabel.textColor = UIColor.primary;
 }
 
 - (void)viewDidAppear:(BOOL)animated {

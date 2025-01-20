@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2023-2024 Threema GmbH
+// Copyright (c) 2023-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -76,7 +76,7 @@ struct SettingsListImageItemView: View, SettingsListItemProtocol {
                     Text(subCellTitle)
                         .font(.footnote)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .foregroundColor(Color(uiColor: Colors.textLight))
+                        .foregroundColor(Color(uiColor: .secondaryLabel))
                 }
                 .padding(.leading, 1)
             }

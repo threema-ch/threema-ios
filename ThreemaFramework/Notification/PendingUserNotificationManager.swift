@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -200,8 +200,10 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 pendingUserNotification.baseMessage != nil,
                 userNotificationCenterManager.isDelivered(contentKey: pendingUserNotification.contentKey) {
 
-                // In general for edit message will not displayed a notification, but if a notification has already been
-                // delivered, the content of the notification is changed. Therefore `canShowUserNotification` is not
+                // In general we will not display a notification for an edit message, but if a notification has already
+                // been
+                // delivered, the content of the notification will be changed. Therefore `canShowUserNotification` is
+                // not
                 // validated in this case.
             }
             else {

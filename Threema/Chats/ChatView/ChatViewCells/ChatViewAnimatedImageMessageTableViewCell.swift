@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -141,9 +141,7 @@ final class ChatViewAnimatedImageMessageTableViewCell: ChatViewBaseTableViewCell
     override func updateColors() {
         super.updateColors()
         
-        captionTextLabel.updateColors()
         animatedImageTapView.updateColors()
-        messageDateAndStateView.updateColors()
     }
     
     private func updateCell(for thumbnailDisplayMessage: ThumbnailDisplayMessage?) {
@@ -224,11 +222,6 @@ extension ChatViewAnimatedImageMessageTableViewCell: ChatViewMessageActions {
         }
 
         typealias Provider = ChatViewMessageActionsProvider
-        
-        // Ack
-        let ackHandler = { (message: BaseMessage, ack: Bool) in
-            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
-        }
         
         // MessageMarkers
         let markStarHandler = { (message: BaseMessage) in
@@ -333,11 +326,25 @@ extension ChatViewAnimatedImageMessageTableViewCell: ChatViewMessageActions {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
         
+        // Reaction
+        let ackHandler = { (_: BaseMessage, ack: Bool) in
+            if ack {
+                self.reactionsManager?.send(EmojiVariant(base: .thumbsUpSign, skintone: nil))
+            }
+            else {
+                self.reactionsManager?.send(EmojiVariant(base: .thumbsDownSign, skintone: nil))
+            }
+        }
+        
+        let showEmojiPickerHandler: Provider.DefaultHandler = {
+            self.reactionsManager?.showEmojiPickerSheet()
+        }
+        
+        // Build menu
         return Provider.defaultActions(
             message: message,
             activityViewAnchor: contentView,
-            popOverSource: chatBubbleView,
-            ackHandler: ackHandler,
+            popOverSource: chatBubbleContentView,
             markStarHandler: markStarHandler,
             retryAndCancelHandler: retryAndCancelHandler,
             downloadHandler: downloadHandler,
@@ -350,13 +357,15 @@ extension ChatViewAnimatedImageMessageTableViewCell: ChatViewMessageActions {
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete
+            didDelete: didDelete,
+            ackHandler: ackHandler,
+            showEmojiPickerHandler: showEmojiPickerHandler
         )
     }
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
         get {
-            buildAccessibilityCustomActions()
+            buildAccessibilityCustomActions(reactionsManager: reactionsManager)
         }
         set {
             // No-op

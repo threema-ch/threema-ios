@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2023 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -45,7 +45,8 @@ public enum AppMigrationVersion: Int, Comparable, CaseIterable {
     case v6_2 = 25
     case v6_2_1 = 26
     case v6_3 = 27
-    // Add here new version for app migration...
+    case v6_6 = 28
+    // Add new version for app migration here...
 
     public static func isMigrationRequired(userSettings: UserSettingsProtocol) -> Bool {
         // If `appMigratedToVersion` greater than latest migration version means, that the BETA user has downgraded the

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2023 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -139,6 +139,10 @@ class MediatorReflectedOutgoingMessageProcessor {
             return try process(outgoingMessage: omsg, voipCallRingingMessage: amsg as! BoxVoIPCallRingingMessage)
         case is GroupCallStartMessage:
             return try process(outgoingMessage: omsg, groupCallStartMessage: amsg as! GroupCallStartMessage)
+        case is ReactionMessage:
+            return try process(outgoingMessage: omsg, reactionMessage: amsg as! ReactionMessage)
+        case is GroupReactionMessage:
+            return try process(outgoingMessage: omsg, groupReactionMessage: amsg as! GroupReactionMessage)
         default:
             return Promise { $0.reject(MediatorReflectedProcessorError.messageWontProcessed(
                 message: "Reflected outgoing message type \(omsg.loggingDescription) will be not processed"
@@ -557,6 +561,34 @@ class MediatorReflectedOutgoingMessageProcessor {
             reflectedAt: reflectedAt,
             isOutgoing: true
         )
+    }
+    
+    // MARK: Process Incoming Reaction Messages
+
+    private func process(
+        outgoingMessage omsg: D2d_OutgoingMessage,
+        reactionMessage amsg: ReactionMessage
+    ) throws -> Promise<Void> {
+        try messageStore.save(
+            reactionMessage: amsg,
+            conversationIdentity: getReceiverIdentity(for: omsg),
+            createdAt: getCreatedAt(for: omsg),
+            isOutgoing: true
+        )
+        return Promise()
+    }
+    
+    private func process(
+        outgoingMessage omsg: D2d_OutgoingMessage,
+        groupReactionMessage amsg: GroupReactionMessage
+    ) throws -> Promise<Void> {
+        try messageStore.save(
+            groupReactionMessage: amsg,
+            senderIdentity: frameworkInjector.myIdentityStore.identity,
+            createdAt: getCreatedAt(for: omsg),
+            isOutgoing: true
+        )
+        return Promise()
     }
 
     // MARK: Misc

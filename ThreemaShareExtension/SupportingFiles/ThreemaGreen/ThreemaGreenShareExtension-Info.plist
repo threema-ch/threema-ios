@@ -75,7 +75,5 @@ SUBQUERY(
 	<string>group.ch.threema.red</string>
 	<key>ThreemaVersionSuffix</key>
 	<string></string>
-	<key>ThreemaWorkVersion</key>
-	<false/>
 </dict>
 </plist>

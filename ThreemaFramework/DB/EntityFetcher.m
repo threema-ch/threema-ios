@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2023 Threema GmbH
+// Copyright (c) 2014-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -780,6 +780,11 @@
     return [self countEntityNamed:@"Message" withPredicate:@"sender == %@ AND conversation == %@", contact, conversation];
 }
 
+- (NSArray *)textMessagesForConversationEntity:(ConversationEntity *)conversation {
+    NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
+    return [self allEntitiesNamed:@"TextMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@", conversation];
+}
+
 - (NSArray *)imageMessagesForConversationEntity:(ConversationEntity *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:YES]];
     return [self allEntitiesNamed:@"ImageMessage" sortedBy:sortDescriptors withPredicate:@"conversation == %@ AND image.data != nil", conversation];
@@ -891,9 +896,21 @@
 
 - (DistributionListEntity *) distributionListEntityForDistributionListID:(NSNumber *)distributionListID {
     return [self singleEntityNamed:@"DistributionList" withPredicate: @"distributionListID == %@", distributionListID];
-  
 }
 
+- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessage *)message creator:(nullable ContactEntity *)creator {
+    return [self allEntitiesNamed:@"MessageReaction" sortedBy:nil withPredicate:@"message == %@ AND creator == %@", message, creator];
+    
+}
+
+- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessage *)message {
+    return [self allEntitiesNamed:@"MessageReaction" sortedBy:nil withPredicate:@"message == %@", message];
+}
+
+- (nullable MessageReactionEntity *) messageReactionEntityForMessageID:(nonnull NSData *)messageID creator:(nullable ContactEntity *)creator reaction:(nullable NSString *)reaction {
+    return [self singleEntityNamed:@"MessageReaction" withPredicate:@"message.id == %@ AND creator == %@ AND reaction = %@", messageID, creator, reaction];
+
+}
 - (LastGroupSyncRequestEntity *)lastGroupSyncRequestFor:(NSData *)groupId groupCreator:(NSString *)groupCreator sinceDate:(NSDate *)sinceDate {
     return [self singleEntityNamed:@"LastGroupSyncRequest" withPredicate: @"groupId == %@ AND groupCreator == %@ AND lastSyncRequest >= %@", groupId, groupCreator, sinceDate];
 }

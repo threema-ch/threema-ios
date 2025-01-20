@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2024 Threema GmbH
+// Copyright (c) 2024-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -151,15 +151,6 @@ final class ChatViewDeletedMessageTableViewCell: ChatViewBaseTableViewCell, Meas
         
         super.addContent(rootView: containerView)
     }
-
-    // MARK: - Updates
-
-    override func updateColors() {
-        super.updateColors()
-
-        deletedMessageView.updateColors()
-        messageDateAndStateView.updateColors()
-    }
 }
 
 // MARK: - Reusable
@@ -189,7 +180,8 @@ extension ChatViewDeletedMessageTableViewCell: ChatViewMessageActions {
             primaryActions = Provider.defaultPrimaryActionsSection(
                 message: message,
                 ackHandler: nil,
-                markStarHandler: markStarHandler
+                markStarHandler: markStarHandler,
+                showEmojiPickerHandler: nil
             )
         }
         else {
@@ -220,7 +212,7 @@ extension ChatViewDeletedMessageTableViewCell: ChatViewMessageActions {
         
         let basicActions = Provider.defaultBasicActions(
             message: message,
-            popOverSource: chatBubbleView,
+            popOverSource: chatBubbleContentView,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
@@ -235,10 +227,10 @@ extension ChatViewDeletedMessageTableViewCell: ChatViewMessageActions {
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
         get {
-            buildAccessibilityCustomActions()
+            buildAccessibilityCustomActions(reactionsManager: reactionsManager)
         }
         set {
-            // no-op
+            // No-op
         }
     }
 }

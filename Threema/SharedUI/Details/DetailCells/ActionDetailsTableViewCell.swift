@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -44,7 +44,7 @@ class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
             labelLabel.text = action.title
             isUserInteractionEnabled = !action.disabled
             
-            updateColors()
+            setupColors()
             updateIcon()
             updateTextAlignment()
         }
@@ -143,16 +143,14 @@ class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
         iconImageView.image = nil
     }
     
-    override func updateColors() {
-        super.updateColors()
-        
+    private func setupColors() {
         if let isDestructive = action?.destructive, isDestructive {
-            iconImageView.tintColor = Colors.red
-            Colors.setTextColor(Colors.red, in: self)
+            iconImageView.tintColor = .systemRed
+            labelLabel.textColor = .systemRed
         }
         else {
             iconImageView.tintColor = .primary
-            // Button color is automatically set to `main()`
+            labelLabel.textColor = .primary
         }
     }
     

@@ -39,12 +39,12 @@ SUBQUERY (
     SUBQUERY (
         $extensionItem.attachments,
         $attachment,
-        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.item" || 
-        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.data" || 
-        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.content" || 
-        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.archive" || 
-        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.contact" || 
-        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.message"
+        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.item&quot; || 
+        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.data&quot; || 
+        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.content&quot; || 
+        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.archive&quot; || 
+        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.contact&quot; || 
+        ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.message&quot;
     ).@count &lt;= 20
 ).@count == 1
 ||
@@ -55,7 +55,7 @@ SUBQUERY(
             SUBQUERY(
                 $extensionItem.attachments, 
                 $attachment, 
-                ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO "public.url"
+                ANY $attachment.registeredTypeIdentifiers UTI-CONFORMS-TO &quot;public.url&quot;
             ).@count &gt;= 1
         AND
             $extensionItem.attachments.@count &lt;= 20
@@ -75,7 +75,5 @@ SUBQUERY(
 	<string>group.ch.threema.work</string>
 	<key>ThreemaVersionSuffix</key>
 	<string>k</string>
-	<key>ThreemaWorkVersion</key>
-	<true/>
 </dict>
 </plist>

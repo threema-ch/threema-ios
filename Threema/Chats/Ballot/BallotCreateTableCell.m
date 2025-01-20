@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2014-2024 Threema GmbH
+// Copyright (c) 2014-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -40,7 +40,7 @@
     [Colors updateKeyboardAppearanceFor:_choiceTextField];
     UIImage *calendarImage = [[UIImage systemImageNamed:@"calendar"] imageWithTintColor:UIColor.primary renderingMode:UIImageRenderingModeAlwaysOriginal];
     [_dateButton setImage:calendarImage forState:UIControlStateNormal];
-    
+    [_choiceTextField setTextColor:UIColor.labelColor];
     [_dateButton setAccessibilityLabel:[BundleUtil localizedStringForKey:@"ballot_date_button"]];
 }
 
@@ -125,7 +125,8 @@
     _allDayLabel = [[UILabel alloc] initWithFrame:CGRectMake(_choiceTextField.frame.origin.x, _datePicker.frame.origin.y + _datePicker.frame.size.height + space, _choiceTextField.frame.size.width, 31.0)];
     _allDayLabel.text = [BundleUtil localizedStringForKey:@"ballot_allDay_switch"];
     _allDayLabel.font = [UIFont preferredFontForTextStyle:UIFontTextStyleSubheadline];
-    [_allDayLabel setValue:Colors.text forKey:@"textColor"];
+    
+    [_allDayLabel setTextColor:UIColor.labelColor];
     _allDayLabel.alpha = 0.0;
     [_allDayLabel setIsAccessibilityElement:NO];
     [_allDayLabel setAccessibilityElementsHidden:YES];

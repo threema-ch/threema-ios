@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2021-2024 Threema GmbH
+// Copyright (c) 2021-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -74,9 +74,6 @@ class EditNameTableViewCell: ThemedCodeTableViewCell {
                 nameTextField.textContentType = .none
                 maxNumberOfUTF8Bytes = kMaxGroupNameLength
             }
-            
-            // The placeholder color can only be set when a placeholder exits
-            Colors.setTextColor(Colors.text, textField: nameTextField)
         }
     }
     
@@ -113,6 +110,8 @@ class EditNameTableViewCell: ThemedCodeTableViewCell {
         textField.autocapitalizationType = .words
         textField.clearButtonMode = .whileEditing
         
+        textField.textColor = .label
+        
         textField.delegate = self
         
         return textField
@@ -134,11 +133,6 @@ class EditNameTableViewCell: ThemedCodeTableViewCell {
             nameTextField.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
             nameTextField.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
         ])
-    }
-    
-    override func updateColors() {
-        super.updateColors()
-        Colors.updateKeyboardAppearance(for: nameTextField)
     }
     
     // MARK: - Responder chain

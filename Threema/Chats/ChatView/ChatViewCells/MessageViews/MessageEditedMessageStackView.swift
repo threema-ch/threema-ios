@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -66,6 +66,7 @@ final class MessageEditedMessageStackView: UIStackView {
     private lazy var titleLabel: RTLAligningLabel = {
         let titleLabel = RTLAligningLabel()
         titleLabel.font = ChatViewConfiguration.EditedMessage.nameFont
+        titleLabel.textColor = .secondaryLabel
         titleLabel.adjustsFontForContentSizeCategory = true
         titleLabel.numberOfLines = 0
       
@@ -76,6 +77,7 @@ final class MessageEditedMessageStackView: UIStackView {
         let editMessageLabel = RTLAligningLabel()
         editMessageLabel.adjustsFontForContentSizeCategory = true
         editMessageLabel.numberOfLines = ChatViewConfiguration.EditedMessage.maxLines
+        editMessageLabel.textColor = .secondaryLabel
 
         return editMessageLabel
     }()
@@ -174,9 +176,6 @@ final class MessageEditedMessageStackView: UIStackView {
     func updateColors() {
         // The image in the edit message only gets updated if we set it new again
         updateContent()
-        
-        Colors.setTextColor(Colors.textLight, label: titleLabel)
-        Colors.setTextColor(Colors.textLight, label: editMessageLabel)
     }
     
     private func updateContent() {

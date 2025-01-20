@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2024 Threema GmbH
+// Copyright (c) 2024-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -42,6 +42,7 @@ final class GlobalSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         let label = UILabel()
 
         label.font = UIFont.preferredFont(forTextStyle: ChatViewConfiguration.SearchResults.nameTextStyle)
+        label.textColor = .label
         
         label.adjustsFontForContentSizeCategory = true
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -53,6 +54,7 @@ final class GlobalSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         let label = UILabel()
         
         label.font = UIFont.preferredFont(forTextStyle: ChatViewConfiguration.SearchResults.metadataTextStyle)
+        label.textColor = .secondaryLabel
         
         label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
                
@@ -65,6 +67,7 @@ final class GlobalSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         imageView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(
             textStyle: ChatViewConfiguration.SearchResults.metadataTextStyle
         )
+        imageView.tintColor = .secondaryLabel
                 
         return imageView
     }()
@@ -122,6 +125,7 @@ final class GlobalSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         label.numberOfLines = 2
         
         label.font = UIFont.preferredFont(forTextStyle: ChatViewConfiguration.SearchResults.messagePreviewTextTextStyle)
+        label.tintColor = .secondaryLabel
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 3
@@ -165,13 +169,7 @@ final class GlobalSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         
         return stack
     }()
-    
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        
-        updateColors()
-    }
-    
+       
     override func configureCell() {
         super.configureCell()
         
@@ -181,20 +179,11 @@ final class GlobalSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         
         contentStack.addArrangedSubview(topLineStack)
         contentStack.addArrangedSubview(bottomLineStack)
+        
+        backgroundColor = .clear
     }
     
     // MARK: - Updates
-    
-    override func updateColors() {
-        super.updateColors()
-        
-        conversationNameLabel.textColor = Colors.text
-        dateLabel.textColor = Colors.textLight
-        disclosureIndicatorImageView.tintColor = Colors.textLight
-        messagePreviewTextLabel.tintColor = Colors.textLight
-        markerStarImageView.tintColor = .systemYellow
-        backgroundColor = .clear
-    }
     
     private func updateCell(for message: BaseMessage?) {
         guard let message else {

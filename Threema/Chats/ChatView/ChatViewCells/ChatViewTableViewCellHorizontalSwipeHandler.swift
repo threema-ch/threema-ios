@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -54,6 +54,7 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
         
         let quoteImageView = UIImageView(image: quoteImage)
         quoteImageView.alpha = 0.0
+        quoteImageView.tintColor = .secondaryLabel
         
         return quoteImageView
     }()
@@ -67,7 +68,6 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
         super.init()
         
         configure(with: cell)
-        updateColors()
         addInteractions()
     }
     
@@ -89,11 +89,7 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
             quoteSymbolView.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
         ])
     }
-    
-    func updateColors() {
-        quoteSymbolView.image = quoteSymbolView.image?.withTint(Colors.textLight)
-    }
-    
+        
     // MARK: Private functions
     
     private func addInteractions() {

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -53,16 +53,13 @@ final class MessageDateAndStateVibrancyView {
     func updateColors() {
         
         if UIAccessibility.isReduceTransparencyEnabled {
-            blurEffectViewWorkaroundDateAndStateView.overrideColor = Colors.textLight
+            blurEffectViewWorkaroundDateAndStateView.overrideColor = .secondaryLabel
         }
         else if UIAccessibility.isDarkerSystemColorsEnabled {
-            blurEffectViewWorkaroundDateAndStateView.overrideColor = Colors.text
+            blurEffectViewWorkaroundDateAndStateView.overrideColor = .label
         }
         else {
             blurEffectViewWorkaroundDateAndStateView.overrideColor = .clear
         }
-        
-        dateAndStateView.updateColors()
-        blurEffectViewWorkaroundDateAndStateView.updateColors()
     }
 }

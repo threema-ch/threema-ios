@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2023 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -26,8 +26,6 @@ extension BaseMessage {
     public enum State {
         // Common
         case read
-        case userAcknowledged
-        case userDeclined
 
         // Outgoing
         case sending
@@ -52,18 +50,31 @@ extension BaseMessage {
         }
     }
     
-    /// Is reacting to this message allowed?
-    public var supportsReaction: Bool {
+    public var supportsLegacyReaction: Bool {
         // single chats can't ack their own messages
         if isOwnMessage,
            !isGroupMessage {
             return false
         }
-        
         // Group chats can only ack their own messages if it's sent
         if isOwnMessage,
            isGroupMessage,
            messageState == .failed || messageState == .sending {
+            return false
+        }
+        
+        return true
+    }
+
+    /// Is reacting to this message allowed?
+    public var supportsReaction: Bool {
+        // We do not allow reaction to messages that are deleted, or to our own messages that were not sent successfully
+       
+        guard deletedAt == nil else {
+            return false
+        }
+        
+        if isOwnMessage, messageState == .failed || messageState == .sending {
             return false
         }
         
@@ -147,17 +158,15 @@ extension BaseMessage {
     
     /// Is this a message in a distribution list?
     public var isDistributionListMessage: Bool {
-        // TODO: (IOS-4366) Maybe use distribution list messages relationship for this check
-        conversation.distributionList != nil
+        if let distributedMessages {
+            return !distributedMessages.isEmpty
+        }
+        return false
     }
 
     // MARK: - Private helper
     
     private var ownMessageState: State {
-        if let userAckState {
-            return userAckState
-        }
-                
         if let sendFailed, sendFailed.boolValue {
             return .failed
         }
@@ -175,27 +184,10 @@ extension BaseMessage {
     }
     
     private var otherMessageState: State {
-        if let userAckState {
-            return userAckState
-        }
-        
         if let read, read.boolValue {
             return .read
         }
         
         return .received
-    }
-    
-    private var userAckState: State? {
-        guard userackDate != nil else {
-            return nil
-        }
-        
-        if let userack, userack.boolValue {
-            return .userAcknowledged
-        }
-        else {
-            return .userDeclined
-        }
     }
 }

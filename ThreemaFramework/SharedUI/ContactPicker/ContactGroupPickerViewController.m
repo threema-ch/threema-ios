@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2015-2023 Threema GmbH
+// Copyright (c) 2015-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -85,9 +85,6 @@ typedef enum : NSUInteger {
     if ([_rightBarButtonTitle length] == 0) {
         _rightBarButtonTitle = [BundleUtil localizedStringForKey:@"send"];
     }
-    
-    self.overrideUserInterfaceStyle = [UserSettings sharedUserSettings].darkTheme ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
-    
     
     UIImage *contactImage = [BundleUtil imageNamed:@"person.fill"];
     contactImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_contacts"];
@@ -196,9 +193,6 @@ typedef enum : NSUInteger {
     self.view.backgroundColor = Colors.backgroundViewController;
     self.tableView.backgroundColor = Colors.backgroundNavigationController;
     self.navigationController.navigationBar.backgroundColor = Colors.backgroundNavigationController;
-    
-    _segmentedControl.backgroundColor = Colors.backgroundNavigationController;
-    _segmentedControl.selectedSegmentTintColor = Colors.backgroundSegmentedControl;
     
     _controlView.backgroundColor = Colors.backgroundView;
     _buttonView.backgroundColor = Colors.backgroundView;
@@ -358,13 +352,7 @@ typedef enum : NSUInteger {
     return UITableViewAutomaticDimension;
 }
 
-- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-    if ([cell isKindOfClass:[UITableViewCell class]]) {
-        if (![cell isKindOfClass:[GroupCell class]]) {
-            [Colors updateWithCell:cell setBackgroundColor:true];
-        }
-    }
-    
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {    
     if ([cell isKindOfClass:[ContactCell class]]) {
         ContactCell *contactCell = (ContactCell *)cell;
         [contactCell updateColors];

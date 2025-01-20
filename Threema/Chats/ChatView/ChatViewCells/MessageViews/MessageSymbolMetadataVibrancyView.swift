@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2024 Threema GmbH
+// Copyright (c) 2024-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -56,10 +56,10 @@ final class MessageSymbolMetadataVibrancyView: UIView {
     func updateColors() {
         
         if UIAccessibility.isReduceTransparencyEnabled {
-            blurEffectViewWorkaroundMessageSymbolMetadataView.overrideColor = Colors.textLight
+            blurEffectViewWorkaroundMessageSymbolMetadataView.overrideColor = .secondaryLabel
         }
         else if UIAccessibility.isDarkerSystemColorsEnabled {
-            blurEffectViewWorkaroundMessageSymbolMetadataView.overrideColor = Colors.text
+            blurEffectViewWorkaroundMessageSymbolMetadataView.overrideColor = .label
         }
         else {
             blurEffectViewWorkaroundMessageSymbolMetadataView.overrideColor = .clear

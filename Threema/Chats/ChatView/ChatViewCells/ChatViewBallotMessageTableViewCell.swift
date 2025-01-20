@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2024 Threema GmbH
+// Copyright (c) 2022-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -154,6 +154,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
     }
     
     private lazy var defaultSymbol = UIImage(systemName: "chart.pie.fill")?.withRenderingMode(.alwaysOriginal)
+        .withTint(.label)
 
     private lazy var iconView: UIImageView = {
         let imageView = UIImageView(image: defaultSymbol)
@@ -191,24 +192,19 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         // color as well
         if let ballotMessage = ballotMessageAndNeighbors?.message, !ballotMessage.willBeDeleted {
             if ballotMessage.isSummaryMessage() ?? false {
-                iconView.image = iconView.image?.withTintColor(Colors.textLight)
+                iconView.image = iconView.image?.withTintColor(.secondaryLabel)
             }
             else {
-                iconView.image = iconView.image?.withTintColor(Colors.text)
+                iconView.image = iconView.image?.withTintColor(.label)
                 messageSecondaryTextLabel.attributedText =
                     ballotMessage.ballot?.localizedMessageSecondaryText(
                         configuration: ChatViewConfiguration.SecondaryText.symbolConfiguration
                     )
             }
         }
-        
-        defaultSymbol = defaultSymbol?.withTint(Colors.text)
-        
+                
         // Other views
         messageQuoteStackView.updateColors()
-        messageTextView.updateColors()
-        messageSecondaryTextLabel.updateColors()
-        messageDateAndStateView.updateColors()
     }
     
     override func setEditing(_ editing: Bool, animated: Bool) {
@@ -301,9 +297,18 @@ extension ChatViewBallotMessageTableViewCell: ChatViewMessageActions {
         
         // Primary actions
         
-        // Ack
-        let ackHandler = { (message: BaseMessage, ack: Bool) in
-            self.chatViewTableViewCellDelegate?.sendAck(for: message, ack: ack)
+        // Reaction
+        let ackHandler = { (_: BaseMessage, ack: Bool) in
+            if ack {
+                self.reactionsManager?.send(EmojiVariant(base: .thumbsUpSign, skintone: nil))
+            }
+            else {
+                self.reactionsManager?.send(EmojiVariant(base: .thumbsDownSign, skintone: nil))
+            }
+        }
+        
+        let showEmojiPickerHandler: Provider.DefaultHandler = {
+            self.reactionsManager?.showEmojiPickerSheet()
         }
         
         // Message markers
@@ -314,7 +319,8 @@ extension ChatViewBallotMessageTableViewCell: ChatViewMessageActions {
         let primaryActions = Provider.defaultPrimaryActionsSection(
             message: message,
             ackHandler: ackHandler,
-            markStarHandler: markStarHandler
+            markStarHandler: markStarHandler,
+            showEmojiPickerHandler: showEmojiPickerHandler
         )
         
         // Basic actions
@@ -341,7 +347,7 @@ extension ChatViewBallotMessageTableViewCell: ChatViewMessageActions {
         
         let basicActions = Provider.defaultBasicActions(
             message: message,
-            popOverSource: chatBubbleView,
+            popOverSource: chatBubbleContentView,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
@@ -354,7 +360,7 @@ extension ChatViewBallotMessageTableViewCell: ChatViewMessageActions {
     
     override var accessibilityCustomActions: [UIAccessibilityCustomAction]? {
         get {
-            buildAccessibilityCustomActions()
+            buildAccessibilityCustomActions(reactionsManager: reactionsManager)
         }
         set {
             // No-op

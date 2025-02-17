@@ -33,7 +33,6 @@ struct DeveloperSettingsView: View {
     
     // Feature Flags
     @State var contactList2 = UserSettings.shared().contactList2
-    @State var sendEmojiReactions = UserSettings.shared().sendEmojiReactions
     
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
@@ -153,16 +152,6 @@ struct DeveloperSettingsView: View {
                     UserSettings.shared().contactList2 = newValue
                     exit(1)
                 }
-                
-                Toggle(isOn: $sendEmojiReactions) {
-                    Text(verbatim: "Emoji-Reactions Phase 2")
-                }
-                .onChange(of: sendEmojiReactions) { newValue in
-                    UserSettings.shared().sendEmojiReactions = newValue
-                }
-                #if !DEBUG
-                .disabled(true)
-                #endif
             }
             header: {
                 Text(verbatim: "Feature Flags")
@@ -188,7 +177,7 @@ struct DeveloperSettingsView: View {
                     businessInjector.entityManager.performAndWaitSave {
                         for contact in businessInjector.entityManager.entityFetcher
                             .allContacts() as? [ContactEntity] ?? [] {
-                            try! terminator.terminateAllSessions(with: contact, cause: .reset)
+                            _ = try! terminator.terminateAllSessions(with: contact, cause: .reset)
                         }
                     }
                 } label: {

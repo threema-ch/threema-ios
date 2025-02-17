@@ -112,7 +112,7 @@ struct WebClientInfoCapabilities {
     
     // Theoretically, this would be true from phase 1, but the web update will only be released around the launch of
     // phase 2
-    var emojiReactions = UserSettings.shared().sendEmojiReactions
+    var emojiReactions = ThreemaApp.current != .onPrem
     
     var mdm = WebClientInfoMdmRestrictions()
     

@@ -25,7 +25,6 @@ import ThreemaFramework
 class ReactionModel: ObservableObject {
     // MARK: - Published properties
 
-    @Published var showInfoBox = false
     @Published var prevCountPerReaction: [String: Int] = [:]
     @Published var countPerReaction: [String: Int] = [:]
     @Published var reactionEntries: [ReactionEntry] = [] {
@@ -78,7 +77,8 @@ class ReactionModel: ObservableObject {
                     
                     reactionEntries.append(ReactionEntry(
                         reaction: info.reactionString,
-                        userReactionEntries: userReactionEntries
+                        userReactionEntries: userReactionEntries,
+                        canBeRemoved: info.canBeRemoved
                     ))
                 }
                 
@@ -89,27 +89,7 @@ class ReactionModel: ObservableObject {
                     return
                 }
                 self.reactionEntries = reactionEntries
-                checkInfoBox()
             })
             .store(in: &subscriptions)
-    }
-    
-    private func checkInfoBox() {
-        guard !UserSettings.shared().sendEmojiReactions else {
-            return
-        }
-        
-        for reactionEntry in reactionEntries {
-            // If we cannot map the reaction, we assume it is not ack/deck mappable anyway
-            guard let emoji = Emoji(rawValue: reactionEntry.reaction) else {
-                showInfoBox = true
-                return
-            }
-            
-            if emoji.applyLegacyMapping() == nil {
-                showInfoBox = true
-                break
-            }
-        }
     }
 }

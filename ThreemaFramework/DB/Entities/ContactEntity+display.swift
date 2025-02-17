@@ -43,6 +43,49 @@ extension ContactEntity {
         return displayName
     }
     
+    @objc public var attributedDisplayName: NSAttributedString {
+        var attributedNameString = NSMutableAttributedString(string: displayName)
+        
+        // Check style for the title
+        if let state,
+           state.intValue == kStateInvalid {
+            // Contact is invalid
+            attributedNameString.addAttribute(
+                .strikethroughStyle,
+                value: 2,
+                range: NSMakeRange(0, attributedNameString.length)
+            )
+            attributedNameString.addAttribute(
+                .foregroundColor,
+                value: UIColor.secondaryLabel,
+                range: NSMakeRange(0, attributedNameString.length)
+            )
+        }
+        else if let state,
+                state.intValue == kStateInactive {
+            // Contact is inactive
+            attributedNameString.addAttribute(
+                .foregroundColor,
+                value: UIColor.secondaryLabel,
+                range: NSMakeRange(0, attributedNameString.length)
+            )
+        }
+        else {
+            attributedNameString.addAttribute(
+                .foregroundColor,
+                value: UIColor.label,
+                range: NSMakeRange(0, attributedNameString.length)
+            )
+        }
+        
+        if UserSettings.shared().blacklist.contains(identity) {
+            // Contact is blacklisted
+            attributedNameString = NSMutableAttributedString(string: "🚫 " + attributedNameString.string)
+        }
+
+        return attributedNameString
+    }
+    
     /// Could an other-Threema-type-icon be shown next to this contact?
     ///
     /// Most of the time it's most appropriate to show or hide an `OtherThreemaTypeImageView`.

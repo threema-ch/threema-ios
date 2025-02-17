@@ -364,7 +364,7 @@ class NotificationService: UNNotificationServiceExtension {
 
             ThreemaUtility.showLocalNotification(
                 identifier: "ErrorMessage",
-                title: "",
+                title: #localize("new_message_db_requires_migration_title"),
                 body: #localize("new_message_db_requires_migration"),
                 badge: 1,
                 userInfo: nil

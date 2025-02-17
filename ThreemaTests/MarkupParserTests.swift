@@ -488,6 +488,10 @@ class MarkupParserTests: XCTestCase {
                 "https://threema.ch/maps?saddr=Current%20Location&dirflg=d&daddr=Musterstraße%201,St%20Musterstadt",
                 "https://threema.ch/maps?saddr=Current%20Location&dirflg=d&daddr=Musterstra%C3%9Fe%201,St%20Musterstadt"
             ),
+            (
+                "info@threema.ch",
+                "mailto:info@threema.ch"
+            ),
         ]
 
         for test in tests {

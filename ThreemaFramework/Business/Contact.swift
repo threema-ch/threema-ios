@@ -102,6 +102,48 @@ public class Contact: NSObject {
 
     public let showOtherTypeIcon: Bool
     
+    /// This will return a attributed string from the displayName with invalid, inactive and blocked format
+    public var attributedDisplayName: NSAttributedString {
+        var attributedNameString = NSMutableAttributedString(string: displayName)
+        
+        // Check style for the title
+        if state == kStateInvalid {
+            // Contact is invalid
+            attributedNameString.addAttribute(
+                .strikethroughStyle,
+                value: 2,
+                range: NSMakeRange(0, attributedNameString.length)
+            )
+            attributedNameString.addAttribute(
+                .foregroundColor,
+                value: UIColor.secondaryLabel,
+                range: NSMakeRange(0, attributedNameString.length)
+            )
+        }
+        else if state == kStateInactive {
+            // Contact is inactive
+            attributedNameString.addAttribute(
+                .foregroundColor,
+                value: UIColor.secondaryLabel,
+                range: NSMakeRange(0, attributedNameString.length)
+            )
+        }
+        else {
+            attributedNameString.addAttribute(
+                .foregroundColor,
+                value: UIColor.label,
+                range: NSMakeRange(0, attributedNameString.length)
+            )
+        }
+        
+        if UserSettings.shared().blacklist.contains(identity) {
+            // Contact is blacklisted
+            attributedNameString = NSMutableAttributedString(string: "🚫 " + attributedNameString.string)
+        }
+        
+        return attributedNameString
+    }
+    
     /// Shorter version of `displayName` if available
     var shortDisplayName: String {
         // This is an "opt-in" feature

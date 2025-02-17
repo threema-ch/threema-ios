@@ -553,13 +553,12 @@ Process incoming message.
                 }
             }];
         } else if ([amsg isKindOfClass:[GroupTextMessage class]]) {
-            BOOL isMessageAlreadyProcessed = NO;
             [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
-                [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
+                [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
             } onError:onError];
         } else if ([amsg isKindOfClass:[GroupLocationMessage class]]) {
             [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
-                [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:^{
+                [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                     [self resolveAddressFor:(LocationMessageEntity*)message onCompletion:onCompletion];
                 }];
             } onError:onError];
@@ -569,12 +568,12 @@ Process incoming message.
             [self processIncomingVideoMessage:(GroupVideoMessage*)amsg sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupAudioMessage class]]) {
             [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
-                [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
+                [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
             } onError:onError];
         } else if ([amsg isKindOfClass:[GroupBallotCreateMessage class]]) {
             BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
             [decoder decodeCreateBallotFromGroupBox:(GroupBallotCreateMessage *)amsg sender:sender conversation:conversation onCompletion:^(BallotMessage *message) {
-                [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
+                [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
             } onError:^(NSError *error) {
                 onError(error);
             }];
@@ -583,7 +582,7 @@ Process incoming message.
             [self processIncomingGroupBallotVoteMessage:(GroupBallotVoteMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupFileMessage class]]) {
             [FileMessageDecoder decodeGroupMessageFromBox:(GroupFileMessage *)amsg sender:sender conversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
-                [self finalizeGroupMessage:message inConversation:conversation fromBoxMessage:amsg sender:sender onCompletion:onCompletion];
+                [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
             } onError:^(NSError *error) {
                 onError(error);
             }];
@@ -646,11 +645,6 @@ Process incoming message.
     onCompletion();
 }
 
-- (void)finalizeGroupMessage:(BaseMessage*)message inConversation:(ConversationEntity*)conversation fromBoxMessage:(AbstractGroupMessage*)boxMessage sender:(ContactEntity *)sender onCompletion:(void(^_Nonnull)(void))onCompletion {
-    [messageProcessorDelegate incomingMessageChanged:boxMessage baseMessage:message];
-    onCompletion();
-}
-
 - (void)conditionallyStartLoadingFileFromMessage:(FileMessageEntity*)message {
     BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
     [manager autoSyncBlobsFor:message.objectID];
@@ -683,12 +677,7 @@ Process incoming message.
                 DDLogError(@"Could not process image message %@", error);
             }
 
-            if (isGroupMessage == NO) {
-                [self finalizeMessage:imageMessageEntity inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
-            }
-            else {
-                [self finalizeGroupMessage:imageMessageEntity inConversation:conversation fromBoxMessage:(AbstractGroupMessage *)amsg sender:sender onCompletion:onCompletion];
-            }
+            [self finalizeMessage:imageMessageEntity inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
         }];
     } onError:onError];
 }
@@ -731,12 +720,7 @@ Process incoming message.
                 DDLogError(@"Error while downloading video thumbnail: %@", error);
             }
 
-            if (isGroupMessage == NO) {
-                [self finalizeMessage:videoMessageEntity inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
-            }
-            else {
-                [self finalizeGroupMessage:videoMessageEntity inConversation:conversation fromBoxMessage:(AbstractGroupMessage *)amsg sender:sender onCompletion:onCompletion];
-            }
+            [self finalizeMessage:videoMessageEntity inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
         }];
     } onError:onError];
 }

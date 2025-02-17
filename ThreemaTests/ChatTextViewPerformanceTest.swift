@@ -289,6 +289,9 @@ class ChatTextViewPerformanceTest: XCTestCase {
 // MARK: - ChatTextViewDelegate
 
 extension ChatTextViewPerformanceTest: ChatTextViewDelegate {
+    @available(iOS 18.0, *)
+    func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph) { }
+    
     func checkIfPastedStringIsMedia() -> Bool { false }
     
     func didEndEditing() { }

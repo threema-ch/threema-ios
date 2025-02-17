@@ -54,9 +54,11 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
 
     func didSelectText(in textView: MessageTextView?)
     
+    func presentContextMenu(cell: ChatViewBaseTableViewCell)
     func dismissContextMenu(showEmojiPicker: Bool, for reactionsManager: ReactionsManager)
     func showReactionAlert(for result: ReactionsManager.ReactionSendingResult)
     func showExistingReactions(reactionsManager: ReactionsManager)
+    func showReactionsView()
     
     var currentSearchText: String? { get }
     
@@ -307,6 +309,10 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         }
     }
     
+    func presentContextMenu(cell: ChatViewBaseTableViewCell) {
+        chatViewController?.presentContextMenu(cell: cell)
+    }
+    
     func dismissContextMenu(showEmojiPicker: Bool, for reactionsManager: ReactionsManager) {
         chatViewController?.dismissContextMenu(showEmojiPicker: showEmojiPicker, for: reactionsManager)
     }
@@ -317,6 +323,10 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     
     func showExistingReactions(reactionsManager: ReactionsManager) {
         chatViewController?.showExistingReactions(reactionsManager: reactionsManager)
+    }
+    
+    func showReactionsView() {
+        chatViewController?.showReactionsView()
     }
     
     // MARK: - CellHeightCache

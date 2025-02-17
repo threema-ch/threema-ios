@@ -23,11 +23,6 @@ import ThreemaMacros
 
 /// `EmojiPicker` extension to handle emoji search and display functionalities.
 extension EmojiPicker {
-    class SearchViewModel: ObservableObject {
-        @Published var searchResults: [EmojiVariant] = []
-        @Published var scale: CGFloat = ChatViewConfiguration.EmojiReactions.Picker.initialItemScale
-        @Published var searchText = ""
-    }
     
     /// View representing the list of emoji items based on search results.
     struct ItemList: View {
@@ -36,7 +31,7 @@ extension EmojiPicker {
         @Environment(\.contentSize) var contentSize
         @Environment(\.edgeInsets) var edgeInsets
         @Environment(\.willDeselectEmoji) private var willDeselectEmoji
-        @StateObject private var model: SearchViewModel = .init()
+        @StateObject private var model: EmojiSearchViewModel = .init()
         @FocusState private var isTextFieldFocused: Bool
         
         var body: some View {
@@ -59,50 +54,64 @@ extension EmojiPicker {
         private var searchBar: some View {
             SearchBarView(searchText: $model.searchText, isTextFieldFocused: _isTextFieldFocused)
                 .padding([.top, .leading, .trailing])
-                .onChange(of: model.searchText, perform: { searchText in
-                    withAnimation { toolbarVisible = searchText.isEmpty && !isTextFieldFocused }
-                    model.searchResults = Emoji.search(searchText)
-                    model.scale = config.initialItemScale
-                    withAnimation(.bouncy(extraBounce: 0.25).speed(1.2).delay(0.01)) {
-                        model.scale = 1
+                .onChange(of: model.searchResults) { _ in
+                    withAnimation {
+                        toolbarVisible = model.searchResults.isEmpty && !isTextFieldFocused
                     }
-                })
+                }
         }
     }
     
     struct SearchScrollGrid: View {
-        @EnvironmentObject private var model: SearchViewModel
+        @EnvironmentObject private var model: EmojiSearchViewModel
         
         var body: some View {
             if !model.searchText.isEmpty {
-                ScrollView {
-                    LazyVGrid(
-                        columns: Array(
-                            repeating: GridItem(
+                if model.searchResults.isEmpty {
+                    VStack {
+                        if model.isSearching {
+                            ProgressView()
+                        }
+                        else {
+                            Text(#localize("emoji_reaction_picker_search_no_result"))
+                                .italic()
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(24)
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .top
+                    )
+                    .background(.background)
+                }
+                else {
+                    ScrollView {
+                        LazyVGrid(
+                            columns: [GridItem(
                                 .adaptive(
                                     minimum: config.minEmojiViewWidth,
                                     maximum: config.maxEmojiViewWidth
                                 ),
                                 spacing: config.rowSpacing
-                            ),
-                            count: config.columns
-                        ),
-                        spacing: config.columnSpacing
-                    ) {
-                        ForEach(model.searchResults) { emoji in
-                            EquatableEmojiVariantView(emojiVariant: emoji)
-                                .equatable()
-                                .id(emoji.self)
-                                .scaleEffect(model.scale)
+                            )],
+                            spacing: config.columnSpacing
+                        ) {
+                            ForEach(model.searchResults) { emoji in
+                                EquatableEmojiVariantView(emojiVariant: emoji, allowSkinTypeSelection: false)
+                                    .equatable()
+                                    .id(emoji.self)
+                            }
                         }
+                        .padding(.horizontal)
                     }
-                    .padding(.horizontal)
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity
+                    )
+                    .background(.background)
                 }
-                .background(.background)
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity
-                )
             }
         }
     }
@@ -113,43 +122,48 @@ extension EmojiPicker {
         @FocusState var isTextFieldFocused: Bool
 
         var body: some View {
-            VStack {
+       
+            HStack {
                 HStack {
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.gray)
-                        TextField(
-                            "",
-                            text: $searchText,
-                            prompt: Text(#localize("emoji_reaction_picker_search_placeholder"))
-                        )
-                        .submitLabel(.done)
-                        .disableAutocorrection(true)
-                        .focused($isTextFieldFocused)
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.gray)
+                        .accessibilityHidden(true)
+                    TextField(
+                        "",
+                        text: $searchText,
+                        prompt: Text(#localize("emoji_reaction_picker_search_placeholder"))
+                    )
+                    .submitLabel(.done)
+                    .disableAutocorrection(true)
+                    .focused($isTextFieldFocused, equals: true)
+                }
+                .padding(6)
+                .background(.ultraThinMaterial)
+                .clipShape(Capsule())
+                .onTapGesture {
+                    isTextFieldFocused = true
+                }
+                
+                if isTextFieldFocused {
+                    Button {
+                        searchText.removeAll()
+                        isTextFieldFocused = false
+                    } label: {
+                        Text(#localize("cancel"))
+                            .font(.subheadline)
                     }
-                    .padding(6)
-                    .background(.ultraThinMaterial)
-                    .clipShape(Capsule())
-                    
-                    if isTextFieldFocused {
-                        Button {
-                            searchText.removeAll()
-                            isTextFieldFocused = false
-                        } label: {
-                            Text(#localize("cancel"))
-                                .font(.subheadline)
-                        }
-                    }
-                    else {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Text(#localize("Done"))
-                                .font(.subheadline)
-                        }
+                }
+                else {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.gray)
+                            .imageScale(.large)
                     }
                 }
             }
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         }
     }
 }

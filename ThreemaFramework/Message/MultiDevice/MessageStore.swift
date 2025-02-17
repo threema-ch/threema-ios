@@ -278,6 +278,11 @@ class MessageStore: MessageStoreProtocol {
                                 self.messageProcessorDelegate.changedManagedObjectID(reaction.objectID)
                             }
                         }
+
+                        if !isOutgoing {
+                            // Clean up user notifications, just in case message delivery receipt was pushed
+                            self.messageProcessorDelegate.incomingMessageFinished(deliveryReceiptMessage)
+                        }
                     }
                     else {
                         throw MediatorReflectedProcessorError.messageNotProcessed(
@@ -885,6 +890,11 @@ class MessageStore: MessageStoreProtocol {
                             for reaction in reactions {
                                 self.messageProcessorDelegate.changedManagedObjectID(reaction.objectID)
                             }
+                        }
+
+                        if !isOutgoing {
+                            // Clean up user notifications, just in case group message delivery receipt was pushed
+                            self.messageProcessorDelegate.incomingMessageFinished(groupDeliveryReceiptMessage)
                         }
                     }
                     else {

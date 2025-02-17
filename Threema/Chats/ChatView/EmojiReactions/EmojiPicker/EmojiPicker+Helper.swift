@@ -48,7 +48,7 @@ extension EmojiPicker {
 extension EmojiPicker {
     typealias DidSelectEmoji = (Emoji) -> Void
     @UserSetting(\.recentEmojis) static var recentEmojis: [String: Int]
-    @UserSetting(\.emojiVariantPreference) static var emojiVariantPreference: [Emoji: Emoji.SkinTone]
+    @UserSetting(\.emojiVariantPreference) static var emojiVariantPreference: [String: String]
     
     static func sheet(
         with delegate: any ReactionsModalDelegate
@@ -60,9 +60,12 @@ extension EmojiPicker {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     }
                     recentEmojis[$0.rawValue, default: 0] += 1
+                    
                     if let skintone = $0.skintone {
-                        // TODO: crashes the app
-                        // emojiVariantPreference[$0.base] = skintone
+                        emojiVariantPreference[$0.base.rawValue] = skintone.rawValue
+                    }
+                    else {
+                        emojiVariantPreference.removeValue(forKey: $0.base.rawValue)
                     }
                     
                     return delegate.send($0)

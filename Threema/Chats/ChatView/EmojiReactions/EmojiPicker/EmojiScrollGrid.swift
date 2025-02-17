@@ -28,7 +28,7 @@ extension EmojiPicker {
    
     struct ScrollGrid: View {
         @UserSetting(\.recentEmojis) private var recentEmojis: [String: Int]
-        @UserSetting(\.emojiVariantPreference) private var emojiVariantPreference: [Emoji: Emoji.SkinTone]
+        @UserSetting(\.emojiVariantPreference) private var emojiVariantPreference: [String: String]
         @Environment(\.reactionEntries) private var reactionEntries: [ReactionEntry]
         
         var body: some View {
@@ -39,16 +39,13 @@ extension EmojiPicker {
         private var scrollGrid: some View {
             ScrollView {
                 LazyVGrid(
-                    columns: Array(
-                        repeating: GridItem(
-                            .adaptive(
-                                minimum: config.minEmojiViewWidth,
-                                maximum: config.maxEmojiViewWidth
-                            ),
-                            spacing: config.rowSpacing
+                    columns: [GridItem(
+                        .adaptive(
+                            minimum: config.minEmojiViewWidth,
+                            maximum: config.maxEmojiViewWidth
                         ),
-                        count: config.columns
-                    ),
+                        spacing: config.rowSpacing
+                    )],
                     spacing: config.columnSpacing
                 ) {
                     if !reactionEntries.isEmpty {
@@ -66,7 +63,8 @@ extension EmojiPicker {
                                 if let emojiVariant = EmojiVariant(rawValue: reaction.reaction) {
                                     EquatableEmojiVariantView(
                                         emojiVariant: emojiVariant,
-                                        currentSection: nil
+                                        currentSection: nil,
+                                        allowSkinTypeSelection: false
                                     )
                                     .background {
                                         if reaction.reactedByMe {
@@ -86,7 +84,8 @@ extension EmojiPicker {
                             ForEach(recentEmojis, id: \.self) { emoji in
                                 EquatableEmojiVariantView(
                                     emojiVariant: emoji,
-                                    currentSection: .recent
+                                    currentSection: .recent,
+                                    allowSkinTypeSelection: false
                                 )
                             }
                         }
@@ -106,9 +105,10 @@ extension EmojiPicker {
                     EquatableEmojiVariantView(
                         emojiVariant: EmojiVariant(
                             base: emoji,
-                            skintone: emojiVariantPreference[emoji]
+                            skintone: .init(rawValue: emojiVariantPreference[emoji.rawValue] ?? "")
                         ),
-                        currentSection: section
+                        currentSection: section,
+                        allowSkinTypeSelection: true
                     )
                     .equatable()
                     .id(emoji.self)
@@ -130,15 +130,31 @@ extension EmojiPicker {
         }
         
         private func orderedRecentEmojis() -> [EmojiVariant] {
-            recentEmojis.keys
-                .sorted { recentEmojis[$0]! < recentEmojis[$1]! }
-                .compactMap { EmojiVariant(rawValue: $0) }
+            let recentVariants = Dictionary(uniqueKeysWithValues: recentEmojis.compactMap { key, value in
+                if let variant = EmojiVariant(rawValue: key) {
+                    return (variant, value)
+                }
+                return nil
+            })
+            
+            // We sort by count, then by sort order of the emoji
+            let sorted: [EmojiVariant] = recentVariants.keys.sorted {
+                let lhs = recentVariants[$0]!
+                let rhs = recentVariants[$1]!
+                if lhs == rhs {
+                    return $0.base.sortOrder < $1.base.sortOrder
+                }
+                return lhs > rhs
+            }
+            let capped = Array(sorted.prefix(15))
+            return capped
         }
     }
     
     struct EquatableEmojiVariantView: View {
         let emojiVariant: EmojiVariant
         var currentSection: EmojiCategory.Section? = nil
+        let allowSkinTypeSelection: Bool
         @EnvironmentObject private var model: SkinTonePicker.ViewModel
         @Environment(\.selectEmojiVariant) private var selectEmojiVariant
         @Environment(\.contentSize) private var contentSize
@@ -157,10 +173,11 @@ extension EmojiPicker {
                 minWidth: config.minEmojiViewWidth,
                 minHeight: config.minEmojiViewWidth
             )
+            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
             .onLongPress(
                 minimumDuration: config.minimumLongPressDuration,
                 coordinateSpace: .global,
-                isEnabled: emojiVariant.hasSkinToneOptions,
+                isEnabled: emojiVariant.hasSkinToneOptions && allowSkinTypeSelection,
                 {
                     if model.emojiSelection == nil, emojiVariant.hasSkinToneOptions {
                         hapticFeedBack()
@@ -257,7 +274,7 @@ extension EmojiPicker.EquatableEmojiVariantView: Equatable {
     }
 }
 
-nonisolated func hapticFeedBack(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
+nonisolated func hapticFeedBack(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .light) {
     Task { @MainActor in
         UIImpactFeedbackGenerator(style: style).impactOccurred()
     }

@@ -45,6 +45,8 @@ protocol ChatViewDataSourceDelegate: AnyObject {
     
     func didDeleteMessages()
     
+    func checkToShowReactionsTip()
+    
     var willDisappear: Bool { get }
 }
 
@@ -114,6 +116,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         didSet {
             if initialSetupCompleted {
                 DDLogVerbose("Initial setup completed!")
+                delegate?.checkToShowReactionsTip()
             }
         }
     }

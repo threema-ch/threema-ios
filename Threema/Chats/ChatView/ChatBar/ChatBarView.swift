@@ -32,6 +32,8 @@ protocol ChatBarViewDelegate: AnyObject {
     func sendTypingIndicator(startTyping: Bool)
     @discardableResult
     func sendOrPreviewPastedItem() -> Bool
+    @available(iOS 18.0, *)
+    func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph)
     func showAssetsSelector()
     func showCamera()
     func showImagePicker()
@@ -686,6 +688,11 @@ extension ChatBarView: ChatTextViewDelegate {
     
     func checkIfPastedStringIsMedia() -> Bool {
         chatBarViewDelegate?.checkIfPastedStringIsMedia() ?? false
+    }
+    
+    @available(iOS 18.0, *)
+    func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph) {
+        chatBarViewDelegate?.processAndSendGlyph(glyph)
     }
     
     // MARK: ChatTextViewDelegate Helpers

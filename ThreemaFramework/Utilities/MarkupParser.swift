@@ -266,13 +266,18 @@ extension MarkupParser {
                     // Corrects the wrong encoded URL from NSDataDetector under iOS17
                     if #available(iOS 17.0, *),
                        var urlSourceString = attributedString.string.substring(with: result.range) {
-
-                        // Add missing URL scheme, if happen when NSDataDetector detected an URL without scheme in the
-                        // text (eg. 'threema.ch')
+                        
+                        // Add missing URL scheme, if happen when NSDataDetector detected an URL without scheme in
+                        // the text (eg. 'threema.ch')
                         if let scheme = urlResult.scheme, !urlSourceString.starts(with: scheme) {
-                            urlSourceString = "\(scheme)://\(urlSourceString)"
+                            if scheme == "mailto" {
+                                urlSourceString = "\(scheme):\(urlSourceString)"
+                            }
+                            else {
+                                urlSourceString = "\(scheme)://\(urlSourceString)"
+                            }
                         }
-
+                        
                         let urlString = urlSourceString.removingPercentEncoding ?? String(urlSourceString)
                         url = URL(string: urlString, encodingInvalidCharacters: true)
                     }

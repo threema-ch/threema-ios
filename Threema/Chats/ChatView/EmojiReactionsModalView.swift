@@ -38,15 +38,11 @@ struct EmojiReactionModal: View {
             let reaction = model.reactionEntries[selectedIndex]
             VStack(spacing: 0) {
                 Spacer(minLength: 8)
-                if model.showInfoBox {
-                    infoBox
-                        .padding(.horizontal, 12)
-                        .padding(.bottom, 6)
-                }
                 reactionsRow
                 userList(
                     reaction.userReactionEntries,
-                    for: reaction
+                    for: reaction,
+                    canBeRemoved: reaction.canBeRemoved
                 )
             }
             .background(Color(UIColor.systemBackground))
@@ -92,7 +88,7 @@ struct EmojiReactionModal: View {
                 }
             }
             .id(reactionEntry)
-            .frame(width: UIScreen.main.bounds.width / 5.5)
+            .frame(idealWidth: UIScreen.main.bounds.width / 5.5)
             .onTapGesture {
                 withAnimation {
                     selectedIndex = index
@@ -127,19 +123,11 @@ struct EmojiReactionModal: View {
         }
     }
     
-    private var infoBox: some View {
-        GroupBox {
-            HStack(alignment: .firstTextBaseline) {
-                Image(systemName: "info.circle")
-                    .accessibilityHidden(true)
-                Text(#localize("reaction_alert_message_no_support_local"))
-            }
-            .foregroundStyle(.secondary)
-            .font(.subheadline)
-        }
-    }
-    
-    private func userList(_ userReactions: [UserReactionEntry], for reaction: ReactionEntry) -> some View {
+    private func userList(
+        _ userReactions: [UserReactionEntry],
+        for reaction: ReactionEntry,
+        canBeRemoved: Bool
+    ) -> some View {
         let sorted = userReactions.sorted {
             $0.isMe && !$1.isMe
         }
@@ -152,6 +140,7 @@ struct EmojiReactionModal: View {
                     .frame(width: 40, height: 40)
                     .clipShape(Circle())
                     .accessibilityHidden(true)
+                
                 Text(user.name)
                     .font(.subheadline)
                 
@@ -159,11 +148,13 @@ struct EmojiReactionModal: View {
             }
             .accessibilityElement(children: .combine)
             .overlay(alignment: .trailing) {
-                if user.isMe, UserSettings.shared().sendEmojiReactions,
+                if canBeRemoved,
+                   user.isMe,
                    let emoji = EmojiVariant(rawValue: reaction.reaction) {
                     HStack {
                         Spacer()
                         Button(role: .destructive) {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
                             model.removeOwnReaction(emoji)
                         }
                         label: {
@@ -174,9 +165,8 @@ struct EmojiReactionModal: View {
                     }
                 }
             }
-            // .id(user.id)
         }
-        .listStyle(PlainListStyle())
+        .listStyle(.plain)
     }
 }
 
@@ -216,6 +206,7 @@ extension EmojiReactionModal {
                     }
                 }
             }
+            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
             .accessibilityElement(children: .combine)
             .onAppear {
                 updateValue(

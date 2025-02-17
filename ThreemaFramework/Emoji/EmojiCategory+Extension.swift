@@ -43,17 +43,37 @@ extension EmojiCategory {
             case .smileysEmotion:
                 "face.smiling"
             case .animalsNature:
-                "cat"
+                if #available(iOS 17.0, *) {
+                    "cat"
+                }
+                else {
+                    "tortoise"
+                }
             case .food:
-                "birthday.cake"
+                if #available(iOS 16.0, *) {
+                    "birthday.cake"
+                }
+                else {
+                    "fork.knife"
+                }
             case .activities:
-                "soccerball"
+                if #available(iOS 16.0, *) {
+                    "soccerball"
+                }
+                else {
+                    "figure.walk"
+                }
             case .travelPlaces:
                 "car"
             case .objects:
                 "lightbulb"
             case .symbols:
-                "xmark.triangle.circle.square"
+                if #available(iOS 18.0, *) {
+                    "xmark.triangle.circle.square"
+                }
+                else {
+                    "checkmark.square"
+                }
             case .flags:
                 "flag"
             }

@@ -151,7 +151,7 @@ public class ImageURLSenderItemCreator: NSObject {
                 }
             }
             catch {
-                DDLogError(error.localizedDescription)
+                DDLogError("\(error.localizedDescription)")
                 return nil
             }
         }
@@ -238,7 +238,7 @@ public class ImageURLSenderItemCreator: NSObject {
             }
         }
         catch {
-            DDLogError(error.localizedDescription)
+            DDLogError("\(error.localizedDescription)")
         }
         return nil
     }

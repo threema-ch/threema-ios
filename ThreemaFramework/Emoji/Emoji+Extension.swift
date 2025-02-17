@@ -24,21 +24,10 @@ import Foundation
 import UIKit
 
 extension Emoji {
-    public typealias SearchIndex = [String: [String]]
+    public typealias SearchIndex = [EmojiVariant: [String]]
     
     // MARK: - Picker Search
-
-    public static func search(_ query: String) -> [EmojiVariant] {
-        guard let index = searchIndex ?? searchIndex(for: "en") else {
-            return []
-        }
-        
-        let lowercasedQuery = query.lowercased()
-        return index.filter { (_: String, descriptions: [String]) in
-            descriptions.contains { $0.contains(lowercasedQuery) }
-        }.keys.compactMap { EmojiVariant(rawValue: $0) }
-    }
-
+    
     public static var searchIndex: SearchIndex? = {
         let languageCode: (any ExpressibleByStringLiteral)? =
             if #available(iOS 16, *) {
@@ -48,7 +37,8 @@ extension Emoji {
                 Locale.current.languageCode
             }
         
-        guard let languageCode else {
+        guard let languageCode,
+              "\(languageCode)" != "en" else {
             return searchIndex(for: "en")
         }
         
@@ -69,7 +59,18 @@ extension Emoji {
         }
         do {
             let data = try Data(contentsOf: URL(fileURLWithPath: path))
-            return try JSONDecoder().decode(SearchIndex.self, from: data)
+            let translations = try JSONDecoder().decode([String: [String]].self, from: data)
+            
+            var index = SearchIndex()
+            translations.forEach { key, values in
+                guard let variant = EmojiVariant(rawValue: key) else {
+                    return
+                }
+                
+                return index[variant] = values
+            }
+            
+            return index
         }
         catch {
             DDLogError("Failed to load emoji search index: \(error)")
@@ -133,15 +134,22 @@ extension Emoji {
 
     /// A lookup dictionary to find emoji variants based on string representation. Reducing the need to parse the string
     /// multiple times.
-    private static var emojiVariantsLookup: [String: EmojiVariant] {
-        .init(
-            Emoji.allVariants.flatMap { emoji, variants in
-                variants.flatMap { skinTones, variantEmoji in
-                    skinTones.map { (variantEmoji, EmojiVariant(base: emoji, skintone: $0)) }
-                } + [(emoji.rawValue, EmojiVariant(base: emoji, skintone: nil))]
-            },
-            uniquingKeysWith: { $1 }
-        )
+    private static var emojiVariantsLookup: [String: EmojiVariant] = .init(
+        Emoji.allVariants.flatMap { emoji, variants in
+            variants.flatMap { skinTones, variantEmoji in
+                skinTones.map { (variantEmoji, EmojiVariant(base: emoji, skintone: $0)) }
+            } + [(emoji.rawValue, EmojiVariant(base: emoji, skintone: nil))]
+        },
+        uniquingKeysWith: { $1 }
+    )
+    
+    public func variant(for skinToneOption: SkinTone?) -> String {
+        if let skinToneOption {
+            variants?[[skinToneOption]] ?? rawValue
+        }
+        else {
+            rawValue
+        }
     }
     
     /// Parses a string and returns an `EmojiVariant` if the string corresponds to a known emoji.

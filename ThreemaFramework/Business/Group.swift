@@ -135,6 +135,27 @@ public class Group: NSObject {
         isSelfCreator && state == .active
     }
     
+    @objc public var attributedDisplayName: NSAttributedString {
+        let attributeString = NSMutableAttributedString(string: conversation.displayName)
+        attributeString.addAttribute(
+            .foregroundColor,
+            value: UIColor.label,
+            range: NSMakeRange(0, attributeString.length)
+        )
+        
+        guard isSelfMember else {
+            attributeString.addAttribute(
+                .strikethroughStyle,
+                value: 2,
+                range: NSMakeRange(0, attributeString.length)
+            )
+            
+            return attributeString
+        }
+        
+        return attributeString
+    }
+    
     public var canLeave: Bool {
         isSelfMember && !isOwnGroup
     }

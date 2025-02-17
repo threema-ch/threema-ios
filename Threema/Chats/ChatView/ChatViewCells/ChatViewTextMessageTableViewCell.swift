@@ -384,20 +384,6 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageActions {
         let didDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.didDeleteMessages()
         }
-        
-        // Reaction
-        let ackHandler = { (_: BaseMessage, ack: Bool) in
-            if ack {
-                self.reactionsManager?.send(EmojiVariant(base: .thumbsUpSign, skintone: nil))
-            }
-            else {
-                self.reactionsManager?.send(EmojiVariant(base: .thumbsDownSign, skintone: nil))
-            }
-        }
-        
-        let showEmojiPickerHandler: Provider.DefaultHandler = {
-            self.reactionsManager?.showEmojiPickerSheet()
-        }
 
         // Build menu
         return Provider.defaultActions(
@@ -413,9 +399,7 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageActions {
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,
             willDelete: willDelete,
-            didDelete: didDelete,
-            ackHandler: ackHandler,
-            showEmojiPickerHandler: showEmojiPickerHandler
+            didDelete: didDelete
         )
     }
     

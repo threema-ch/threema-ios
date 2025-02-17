@@ -759,7 +759,6 @@ enum ChatViewConfiguration {
         
         enum Picker {
             // Grid
-            static let columns = 7
             static let columnSpacing: CGFloat = 8
             static let rowSpacing: CGFloat = 0
             
@@ -784,7 +783,7 @@ enum ChatViewConfiguration {
         
         enum ContextMenuView {
             static let maxFrameWidthMultiplier = 0.7
-            static let viewPadding = 6.0
+            static let viewPadding = 4.0
             static let buttonPadding = 4.0
             static let buttonSpacing = 2.0
 

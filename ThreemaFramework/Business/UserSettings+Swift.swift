@@ -26,8 +26,13 @@ extension UserSettings {
         get { AppGroup.userDefaults().dictionary(forKey: "recentEmojis") as? [String: Int] ?? [:] }
     }
     
-    public var emojiVariantPreference: [Emoji: Emoji.SkinTone] {
+    public var emojiVariantPreference: [String: String] {
         set { AppGroup.userDefaults().set(newValue, forKey: "emojiVariantPreference") }
-        get { AppGroup.userDefaults().dictionary(forKey: "emojiVariantPreference") as? [Emoji: Emoji.SkinTone] ?? [:] }
+        get { AppGroup.userDefaults().dictionary(forKey: "emojiVariantPreference") as? [String: String] ?? [:] }
+    }
+    
+    public func resetEmojiReactions() {
+        AppGroup.userDefaults().removeObject(forKey: "recentEmojis")
+        AppGroup.userDefaults().removeObject(forKey: "emojiVariantPreference")
     }
 }

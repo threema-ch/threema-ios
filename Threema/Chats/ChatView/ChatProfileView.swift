@@ -345,10 +345,19 @@ final class ChatProfileView: UIStackView {
     private func configureNameObserver() {
         // Thanks to `keyPathsForValuesAffectingDisplayName` we should be subscribed to all relevant properties
         observe(conversation, \.displayName) { [weak self] in
-            self?.nameLabel.text = self?.conversation.displayName
+            guard let self else {
+                return
+            }
+            
+            if conversation.isGroup {
+                nameLabel.attributedText = group?.attributedDisplayName
+            }
+            else {
+                nameLabel.attributedText = conversation.contact?.attributedDisplayName
+            }
         }
     }
-    
+        
     private func configureSingleChatObservers() {
         guard let contact = conversation.contact else {
             return
@@ -362,9 +371,13 @@ final class ChatProfileView: UIStackView {
         }
         
         observe(contact, \.state) { [weak self] in
-            self?.nameLabel.text = self?.conversation.displayName
+            self?.nameLabel.attributedText = self?.conversation.contact?.attributedDisplayName
         }
         
+        observe(UserSettings.shared(), \.blacklist) { [weak self] in
+            self?.nameLabel.attributedText = self?.conversation.contact?.attributedDisplayName
+        }
+                
         // Needed to get appropriate height for verification and description stack (see
         // `nameAndMembersListStack`)
         membersListLabel.text = " "

@@ -1126,6 +1126,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [[ServerConnector sharedServerConnector] disconnectWait:ConnectionInitiatorApp];
     }
     
+    // This is needed to keep the notification actions up to date
+    [AppDelegate registerForLocalNotifications];
+    
     [SettingsBundleHelper resetSafeMode];
 }
 

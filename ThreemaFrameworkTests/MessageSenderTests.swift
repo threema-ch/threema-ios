@@ -1154,883 +1154,6 @@ class MessageSenderTests: XCTestCase {
     
     // MARK: - Reaction tests
     
-    // MARK: No local support (Phase 1)
-    
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: Legacy
-    /// Action: Apply
-    /// Mapping: None
-    func testApplyReactionNoMappingNoLocalNoRemote() async throws {
-        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedReadDate = Date()
-        
-        let reaction = Emoji.abacus
-        
-        let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 1
-            
-            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
-            return dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                readDate: expectedReadDate,
-                sender: contactEntity,
-                remoteSentDate: Date()
-            )
-        }
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            groupManager: GroupManagerMock(),
-            taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        XCTAssertEqual(result, .noSupportLocal)
-        XCTAssertTrue(taskManagerMock.addedTasks.isEmpty)
-    }
-    
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: Legacy
-    /// Action: Apply
-    /// Mapping: Success
-    func testApplyReactionMappingNoLocalNoRemote() async throws {
-        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedReadDate = Date()
-        let reaction = Emoji.thumbsUpSign
-        
-        let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 1
-            
-            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
-            return dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                readDate: expectedReadDate,
-                sender: contactEntity,
-                remoteSentDate: Date()
-            )
-        }
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            groupManager: GroupManagerMock(),
-            taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        let addedTasks = taskManagerMock.addedTasks.filter { task in
-            guard task is TaskDefinitionSendDeliveryReceiptsMessage else {
-                return false
-            }
-            return true
-        }
-        
-        let testTask = try XCTUnwrap(addedTasks.first as? TaskDefinitionSendDeliveryReceiptsMessage)
-       
-        XCTAssertFalse(taskManagerMock.addedTasks.isEmpty)
-        XCTAssertEqual(1, addedTasks.count)
-        XCTAssertEqual(ReceiptType.ack, testTask.receiptType)
-        XCTAssertEqual(expectedThreemaIdentity.string, testTask.toIdentity)
-        
-        XCTAssertEqual(result, .success)
-    }
-
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: Legacy
-    /// Action: Withdraw
-    /// Mapping: None
-    func testWithdrawReactionNoMappingNoLocalNoRemote() async throws {
-        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedReadDate = Date()
-        let reaction = Emoji.abacus
-        
-        let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 1
-
-            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
-            
-            let message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                readDate: expectedReadDate,
-                sender: contactEntity,
-                remoteSentDate: Date()
-            )
-            
-            let _ = MessageReactionEntity(
-                context: dbMainCnx.current,
-                reaction: reaction.rawValue,
-                message: message
-            )
-            
-            return message
-        }
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            groupManager: GroupManagerMock(),
-            taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        XCTAssertEqual(result, .noSupportLocal)
-    }
-    
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: Legacy
-    /// Action: Withdraw
-    /// Mapping: Success
-    func testWithdrawReactionMappingNoLocalNoRemote() async throws {
-        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedReadDate = Date()
-        let reaction = Emoji.thumbsUpSign
-        
-        let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 1
-
-            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
-            
-            let message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                readDate: expectedReadDate,
-                sender: contactEntity,
-                remoteSentDate: Date()
-            )
-            
-            let _ = MessageReactionEntity(
-                context: dbMainCnx.current,
-                reaction: reaction.rawValue,
-                message: message
-            )
-            
-            return message
-        }
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            groupManager: GroupManagerMock(),
-            taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        XCTAssertEqual(result, .noRemoving)
-    }
-    
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: Phase 1 or 2
-    /// Action: Apply
-    /// Mapping: None
-    func testApplyReactionNoMappingNoLocalYesRemote() async throws {
-        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedReadDate = Date()
-        
-        let reaction = Emoji.abacus
-        
-        let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 2024
-            
-            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
-            return dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                readDate: expectedReadDate,
-                sender: contactEntity,
-                remoteSentDate: Date()
-            )
-        }
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            groupManager: GroupManagerMock(),
-            taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        XCTAssertEqual(result, .noSupportLocal)
-        XCTAssertTrue(taskManagerMock.addedTasks.isEmpty)
-    }
-    
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: Phase 1 or 2
-    /// Action: Apply
-    /// Mapping: Success
-    func testApplyReactionMappingNoLocalYesRemote() async throws {
-        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedReadDate = Date()
-        let reaction = Emoji.thumbsUpSign
-        
-        let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 2024
-            
-            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
-            return dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                readDate: expectedReadDate,
-                sender: contactEntity,
-                remoteSentDate: Date()
-            )
-        }
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            groupManager: GroupManagerMock(),
-            taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        let addedTasks = taskManagerMock.addedTasks.filter { task in
-            guard task is TaskDefinitionSendDeliveryReceiptsMessage else {
-                return false
-            }
-            return true
-        }
-        
-        let testTask = try XCTUnwrap(addedTasks.first as? TaskDefinitionSendDeliveryReceiptsMessage)
-       
-        XCTAssertFalse(taskManagerMock.addedTasks.isEmpty)
-        XCTAssertEqual(1, addedTasks.count)
-        XCTAssertEqual(ReceiptType.ack, testTask.receiptType)
-        XCTAssertEqual(expectedThreemaIdentity.string, testTask.toIdentity)
-        
-        XCTAssertEqual(result, .success)
-    }
-
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: Phase 1 or 2
-    /// Action: Withdraw
-    /// Mapping: None
-    func testWithdrawReactionNoMappingNoLocalYesRemote() async throws {
-        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedReadDate = Date()
-        let reaction = Emoji.abacus
-        
-        let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 2024
-
-            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
-            
-            let message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                readDate: expectedReadDate,
-                sender: contactEntity,
-                remoteSentDate: Date()
-            )
-            
-            let _ = MessageReactionEntity(
-                context: dbMainCnx.current,
-                reaction: reaction.rawValue,
-                message: message
-            )
-            
-            return message
-        }
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            groupManager: GroupManagerMock(),
-            taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        XCTAssertEqual(result, .noSupportLocal)
-    }
-    
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: Phase 1 or 2
-    /// Action: Withdraw
-    /// Mapping: Success
-    func testWithdrawReactionMappingNoLocalYesRemote() async throws {
-        let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedReadDate = Date()
-        let reaction = Emoji.thumbsUpSign
-        
-        let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 1
-
-            let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
-            
-            let message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                readDate: expectedReadDate,
-                sender: contactEntity,
-                remoteSentDate: Date()
-            )
-            
-            let _ = MessageReactionEntity(
-                context: dbMainCnx.current,
-                reaction: reaction.rawValue,
-                message: message
-            )
-            
-            return message
-        }
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: MyIdentityStoreMock(),
-            userSettings: UserSettingsMock(),
-            groupManager: GroupManagerMock(),
-            taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        XCTAssertEqual(result, .noRemoving)
-    }
-    
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: All legacy
-    /// Action: Apply
-    /// Mapping: None
-    func testApplyReactionNoMappingNoLocalNoneRemote() async throws {
-        let membersWithoutCreator = ["MEMBER01", "MEMBER02"]
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedMessageID = MockData.generateMessageID()
-        
-        let reaction = Emoji.abacus
-        
-        let myIdentityStoreMock = MyIdentityStoreMock()
-        let userSettingMock = UserSettingsMock()
-
-        let (message, group) = dbPreparer.save {
-            let members = membersWithoutCreator.map { identityString in
-                let contactEntity = dbPreparer.createContact(identity: identityString)
-                contactEntity.featureMask = 1
-                return contactEntity
-            }
-            
-            let groupEntity = dbPreparer.createGroupEntity(
-                groupID: expectedGroupID,
-                groupCreator: nil
-            )
-            let conversation = dbPreparer.createConversation(groupID: expectedGroupID) { conversation in
-                conversation.groupMyIdentity = myIdentityStoreMock.identity
-                conversation.members?.formUnion(members)
-            }
-            
-            let group = Group(
-                myIdentityStore: myIdentityStoreMock,
-                userSettings: userSettingMock,
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-            
-            let message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                sender: members.first,
-                remoteSentDate: Date()
-            )
-            
-            return (message, group)
-        }
-        
-        let groupManager = GroupManagerMock(myIdentityStoreMock)
-        groupManager.getGroupReturns = [group]
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: myIdentityStoreMock,
-            userSettings: userSettingMock,
-            groupManager: groupManager,
-            taskManager: taskManagerMock,
-            entityManager: entityManager
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        XCTAssertEqual(result, .noSupportLocal)
-        XCTAssertTrue(taskManagerMock.addedTasks.isEmpty)
-    }
-
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: All legacy
-    /// Action: Apply
-    /// Mapping: Success
-    func testApplyReactionMappingNoLocalNoneRemote() async throws {
-        let membersWithoutCreator = ["MEMBER01", "MEMBER02"]
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedMessageID = MockData.generateMessageID()
-        
-        let reaction = Emoji.thumbsUpSign
-        
-        let myIdentityStoreMock = MyIdentityStoreMock()
-        let userSettingMock = UserSettingsMock()
-
-        let (message, group) = dbPreparer.save {
-            let members = membersWithoutCreator.map { identityString in
-                let contactEntity = dbPreparer.createContact(identity: identityString)
-                contactEntity.featureMask = 1
-                return contactEntity
-            }
-            
-            let groupEntity = dbPreparer.createGroupEntity(
-                groupID: expectedGroupID,
-                groupCreator: nil
-            )
-            let conversation = dbPreparer.createConversation(groupID: expectedGroupID) { conversation in
-                conversation.groupMyIdentity = myIdentityStoreMock.identity
-                conversation.members?.formUnion(members)
-            }
-            
-            let group = Group(
-                myIdentityStore: myIdentityStoreMock,
-                userSettings: userSettingMock,
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-            let message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                sender: members.first,
-                remoteSentDate: Date()
-            )
-            
-            return (message, group)
-        }
-        
-        let groupManager = GroupManagerMock()
-        groupManager.getGroupReturns = [group]
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: myIdentityStoreMock,
-            userSettings: userSettingMock,
-            groupManager: groupManager,
-            taskManager: taskManagerMock,
-            entityManager: entityManager
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        let addedTasks = taskManagerMock.addedTasks.filter { task in
-            guard task is TaskDefinitionSendGroupDeliveryReceiptsMessage else {
-                return false
-            }
-            return true
-        }
-        
-        let testTask = try XCTUnwrap(addedTasks.first as? TaskDefinitionSendGroupDeliveryReceiptsMessage)
-       
-        XCTAssertFalse(taskManagerMock.addedTasks.isEmpty)
-        XCTAssertEqual(1, addedTasks.count)
-        XCTAssertEqual(ReceiptType.ack, testTask.receiptType)
-        
-        XCTAssertEqual(result, .success)
-    }
-
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: Legacy and phase 1 or 2
-    /// Action: Apply
-    /// Mapping: None
-    func testApplyReactionNoMappingNoLocalSomeRemote() async throws {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedMessageID = MockData.generateMessageID()
-        
-        let reaction = Emoji.abacus
-        
-        let myIdentityStoreMock = MyIdentityStoreMock()
-        let userSettingMock = UserSettingsMock()
-
-        let (message, group) = dbPreparer.save {
-            let contactEntity1 = dbPreparer.createContact(identity: "MEMBER01")
-            contactEntity1.featureMask = 1
-            
-            let contactEntity2 = dbPreparer.createContact(identity: "MEMBER02")
-            contactEntity2.featureMask = 2024
-            
-            let members = [contactEntity1, contactEntity2]
-            
-            let groupEntity = dbPreparer.createGroupEntity(
-                groupID: expectedGroupID,
-                groupCreator: nil
-            )
-            
-            let conversation = dbPreparer.createConversation(groupID: expectedGroupID) { conversation in
-                conversation.groupMyIdentity = myIdentityStoreMock.identity
-                conversation.members?.formUnion(members)
-            }
-            let group = Group(
-                myIdentityStore: myIdentityStoreMock,
-                userSettings: userSettingMock,
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-            
-            let message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                sender: members.first,
-                remoteSentDate: Date()
-            )
-            
-            return (message, group)
-        }
-                
-        let groupManager = GroupManagerMock()
-        groupManager.getGroupReturns = [group]
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: myIdentityStoreMock,
-            userSettings: userSettingMock,
-            groupManager: groupManager,
-            taskManager: taskManagerMock,
-            entityManager: entityManager
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        XCTAssertEqual(result, .noSupportLocal)
-        XCTAssertTrue(taskManagerMock.addedTasks.isEmpty)
-    }
-    
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: Legacy and phase 1 or 2
-    /// Action: Apply
-    /// Mapping: Success
-    func testApplyReactionMappingNoLocalSomeRemote() async throws {
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedMessageID = MockData.generateMessageID()
-        
-        let reaction = Emoji.thumbsUpSign
-        
-        let myIdentityStoreMock = MyIdentityStoreMock()
-        let userSettingMock = UserSettingsMock()
-
-        let (message, group) = dbPreparer.save {
-            let contactEntity1 = dbPreparer.createContact(identity: "MEMBER01")
-            contactEntity1.featureMask = 1
-            
-            let contactEntity2 = dbPreparer.createContact(identity: "MEMBER02")
-            contactEntity2.featureMask = 2024
-            
-            let members = [contactEntity1, contactEntity2]
-            
-            let groupEntity = dbPreparer.createGroupEntity(
-                groupID: expectedGroupID,
-                groupCreator: nil
-            )
-            
-            let conversation = dbPreparer.createConversation(groupID: expectedGroupID) { conversation in
-                conversation.groupMyIdentity = myIdentityStoreMock.identity
-                conversation.members?.formUnion(members)
-            }
-            
-            let group = Group(
-                myIdentityStore: myIdentityStoreMock,
-                userSettings: userSettingMock,
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-            let message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                sender: members.first,
-                remoteSentDate: Date()
-            )
-            
-            return (message, group)
-        }
-        
-        let groupManager = GroupManagerMock()
-        groupManager.getGroupReturns = [group]
-    
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: myIdentityStoreMock,
-            userSettings: userSettingMock,
-            groupManager: groupManager,
-            taskManager: taskManagerMock,
-            entityManager: entityManager
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        let addedTasks = taskManagerMock.addedTasks.filter { task in
-            guard task is TaskDefinitionSendGroupDeliveryReceiptsMessage else {
-                return false
-            }
-            return true
-        }
-        
-        let testTask = try XCTUnwrap(addedTasks.first as? TaskDefinitionSendGroupDeliveryReceiptsMessage)
-       
-        XCTAssertFalse(taskManagerMock.addedTasks.isEmpty)
-        XCTAssertEqual(1, addedTasks.count)
-        XCTAssertEqual(ReceiptType.ack, testTask.receiptType)
-        
-        XCTAssertEqual(result, .success)
-    }
-    
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: All phase 1 or 2
-    /// Action: Apply
-    /// Mapping: None
-    func testApplyReactionNoMappingNoLocalALLRemote() async throws {
-        let membersWithoutCreator = ["MEMBER01", "MEMBER02"]
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedMessageID = MockData.generateMessageID()
-        
-        let reaction = Emoji.abacus
-        
-        let myIdentityStoreMock = MyIdentityStoreMock()
-        let userSettingMock = UserSettingsMock()
-
-        let (message, group) = dbPreparer.save {
-            let members = membersWithoutCreator.map { identityString in
-                let contactEntity = dbPreparer.createContact(identity: identityString)
-                contactEntity.featureMask = 2024
-                return contactEntity
-            }
-            
-            let groupEntity = dbPreparer.createGroupEntity(
-                groupID: expectedGroupID,
-                groupCreator: nil
-            )
-            let conversation = dbPreparer.createConversation(groupID: expectedGroupID) { conversation in
-                conversation.groupMyIdentity = myIdentityStoreMock.identity
-                conversation.members?.formUnion(members)
-            }
-            
-            let group = Group(
-                myIdentityStore: myIdentityStoreMock,
-                userSettings: userSettingMock,
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-            let message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                sender: members.first,
-                remoteSentDate: Date()
-            )
-            return (message, group)
-        }
-        
-        let groupManager = GroupManagerMock()
-        groupManager.getGroupReturns = [group]
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: myIdentityStoreMock,
-            userSettings: userSettingMock,
-            groupManager: groupManager,
-            taskManager: taskManagerMock,
-            entityManager: entityManager
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-       
-        XCTAssertEqual(result, .noSupportLocal)
-        XCTAssertTrue(taskManagerMock.addedTasks.isEmpty)
-    }
-    
-    /// Situation:
-    /// Local support: Phase 1
-    /// Remote support: All phase 1 or 2
-    /// Action: Apply
-    /// Mapping: Success
-    func testApplyReactionMappingNoLocalALLRemote() async throws {
-        let membersWithoutCreator = ["MEMBER01", "MEMBER02"]
-        let expectedGroupID = MockData.generateGroupID()
-        let expectedMessageID = MockData.generateMessageID()
-        
-        let reaction = Emoji.thumbsUpSign
-        
-        let myIdentityStoreMock = MyIdentityStoreMock()
-        let userSettingMock = UserSettingsMock()
-
-        let (message, group) = dbPreparer.save {
-            let members = membersWithoutCreator.map { identityString in
-                let contactEntity = dbPreparer.createContact(identity: identityString)
-                contactEntity.featureMask = 2024
-                return contactEntity
-            }
-            
-            let groupEntity = dbPreparer.createGroupEntity(
-                groupID: expectedGroupID,
-                groupCreator: nil
-            )
-            
-            let conversation = dbPreparer.createConversation(groupID: expectedGroupID) { conversation in
-                conversation.groupMyIdentity = myIdentityStoreMock.identity
-                conversation.members?.formUnion(members)
-            }
-            let group = Group(
-                myIdentityStore: myIdentityStoreMock,
-                userSettings: userSettingMock,
-                groupEntity: groupEntity,
-                conversation: conversation,
-                lastSyncRequest: nil
-            )
-            
-            let message = dbPreparer.createTextMessage(
-                conversation: conversation,
-                id: expectedMessageID,
-                isOwn: false,
-                sender: members.first,
-                remoteSentDate: Date()
-            )
-            
-            return (message, group)
-        }
-        
-        let groupManager = GroupManagerMock()
-        groupManager.getGroupReturns = [group]
-        
-        let messageSender = MessageSender(
-            serverConnector: ServerConnectorMock(),
-            myIdentityStore: myIdentityStoreMock,
-            userSettings: userSettingMock,
-            groupManager: groupManager,
-            taskManager: taskManagerMock,
-            entityManager: entityManager
-        )
-        
-        let result = try await messageSender.sendReaction(
-            to: message.objectID,
-            reaction: EmojiVariant(base: reaction, skintone: nil)
-        )
-        
-        let addedTasks = taskManagerMock.addedTasks.filter { task in
-            guard task is TaskDefinitionSendGroupDeliveryReceiptsMessage else {
-                return false
-            }
-            return true
-        }
-        
-        let testTask = try XCTUnwrap(addedTasks.first as? TaskDefinitionSendGroupDeliveryReceiptsMessage)
-       
-        XCTAssertFalse(taskManagerMock.addedTasks.isEmpty)
-        XCTAssertEqual(1, addedTasks.count)
-        XCTAssertEqual(ReceiptType.ack, testTask.receiptType)
-        
-        XCTAssertEqual(result, .success)
-    }
-    
-    // MARK: Local support (Phase 2)
-    
     /// Situation:
     /// Local support: Phase 2
     /// Remote support: Legacy
@@ -2188,7 +1311,7 @@ class MessageSenderTests: XCTestCase {
             reaction: EmojiVariant(base: reaction, skintone: nil)
         )
         
-        XCTAssertEqual(result, .noRemoving)
+        XCTAssertEqual(result, .noSupportRemoteSingle)
     }
     
     /// Situation:
@@ -2491,7 +1614,7 @@ class MessageSenderTests: XCTestCase {
         let userSettingMock = UserSettingsMock()
         userSettingMock.sendEmojiReactions = true
         
-        let (message, group) = dbPreparer.save {
+        let (message, _) = dbPreparer.save {
             let contactEntity1 = dbPreparer.createContact(identity: notSupportingMemberID)
             contactEntity1.featureMask = 1
             
@@ -2796,6 +1919,79 @@ class MessageSenderTests: XCTestCase {
                 id: expectedMessageID,
                 isOwn: false,
                 sender: members.first,
+                remoteSentDate: Date()
+            )
+            return (message, group)
+        }
+        
+        let groupManager = GroupManagerMock()
+        groupManager.getGroupReturns = [group]
+    
+        let messageSender = MessageSender(
+            serverConnector: ServerConnectorMock(),
+            myIdentityStore: myIdentityStoreMock,
+            userSettings: userSettingMock,
+            groupManager: groupManager,
+            taskManager: taskManagerMock,
+            entityManager: entityManager
+        )
+        
+        let result = try await messageSender.sendReaction(
+            to: message.objectID,
+            reaction: EmojiVariant(base: reaction, skintone: nil)
+        )
+        
+        let addedTasks = taskManagerMock.addedTasks.filter { task in
+            guard task is TaskDefinitionSendReactionMessage else {
+                return false
+            }
+            return true
+        }
+        
+        let testTask = try XCTUnwrap(addedTasks.first as? TaskDefinitionSendReactionMessage)
+        XCTAssertEqual(result, .success)
+        XCTAssertFalse(taskManagerMock.addedTasks.isEmpty)
+        XCTAssertEqual(1, addedTasks.count)
+        XCTAssertEqual(reaction.data(), testTask.reaction.apply)
+        XCTAssertEqual(Data(), testTask.reaction.withdraw)
+    }
+    
+    /// Situation:
+    /// Local support: Phase 2
+    /// Remote support: NoteGroup
+    /// Action: Apply
+    /// Mapping: Success
+    func testApplyReactionMappingYesLocalNoteGroup() async throws {
+        let expectedGroupID = MockData.generateGroupID()
+        let expectedMessageID = MockData.generateMessageID()
+               
+        let reaction = Emoji.adult
+        
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let userSettingMock = UserSettingsMock()
+        userSettingMock.sendEmojiReactions = true
+        
+        let (message, group) = dbPreparer.save {
+            let groupEntity = dbPreparer.createGroupEntity(
+                groupID: expectedGroupID,
+                groupCreator: nil
+            )
+            let conversation = dbPreparer.createConversation(groupID: expectedGroupID) { conversation in
+                conversation.groupMyIdentity = myIdentityStoreMock.identity
+            }
+            let group = Group(
+                myIdentityStore: myIdentityStoreMock,
+                userSettings: userSettingMock,
+                groupEntity: groupEntity,
+                conversation: conversation,
+                lastSyncRequest: nil
+            )
+            
+            let message = dbPreparer.createTextMessage(
+                conversation: conversation,
+                id: expectedMessageID,
+                isOwn: false,
+                sender: nil,
                 remoteSentDate: Date()
             )
             return (message, group)

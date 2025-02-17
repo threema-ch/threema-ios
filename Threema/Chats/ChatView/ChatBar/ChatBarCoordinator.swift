@@ -585,6 +585,28 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         }
     }
     
+    @available(iOS 18.0, *)
+    func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph) {
+        
+        let imageSender = ImageURLSenderItemCreator()
+        if let senderItem = imageSender.senderItem(from: glyph.imageContent, uti: UTType.png.identifier) {
+            Task {
+                do {
+                    try await businessInjector.messageSender.sendBlobMessage(
+                        for: senderItem,
+                        in: conversation.objectID
+                    )
+                }
+                catch {
+                    DDLogError("Could not create message and sync blobs due to: \(error)")
+                }
+            }
+        }
+        Task { @MainActor in
+            chatBar.resetKeyboard()
+        }
+    }
+    
     private func showPastedItemsPreview(_ items: [Any]) {
         guard let sendMediaAction = SendMediaAction(for: chatViewActionsHelper) else {
             assertionFailure()

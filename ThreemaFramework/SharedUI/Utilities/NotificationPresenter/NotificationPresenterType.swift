@@ -256,6 +256,15 @@ public struct NotificationPresenterType {
         notificationText: #localize("notification_threema_id_wrong_length"),
         notificationStyle: .error
     )
+    public static let emojisReset = NotificationPresenterType(
+        notificationText: #localize("notification_emojis_reset"),
+        notificationStyle: .success
+    )
+    
+    public static let emojiPartialGroup = NotificationPresenterType(
+        notificationText: #localize("notification_emojis_partial_group"),
+        notificationStyle: .warning
+    )
 }
 
 // MARK: - AccessibilityAnnouncementType

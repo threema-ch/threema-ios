@@ -98,7 +98,7 @@ class WebMessageObject: NSObject {
             var ackedIdentities = [String]()
             var decedIdentities = [String]()
             
-            if !UserSettings.shared().sendEmojiReactions {
+            if ThreemaApp.current != .onPrem {
                 for reaction in reactions {
                     guard let emoji = Emoji(rawValue: reaction.reaction),
                           let mapping = emoji.applyLegacyMapping() else {
@@ -757,7 +757,7 @@ struct WebVideo {
     }
     
     init(_ fileMessageEntity: FileMessageEntity) {
-        if let videoDuration = fileMessageEntity.duration {
+        if let videoDuration = fileMessageEntity.duration, !videoDuration.isNaN {
             self.duration = Int(videoDuration)
         }
         else {

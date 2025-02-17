@@ -68,4 +68,25 @@ extension TipKitManager {
 
         public init() { }
     }
+    
+    /// Tip shown when first receive a reaction
+    public struct ThreemaReactionLongPressInfoTip: Tip {
+        public var title: Text {
+            Text(#localize("emoji_reaction_tipkit_title"))
+        }
+
+        public var message: Text? {
+            Text(#localize("emoji_reaction_tipkit_description"))
+        }
+
+        public var image: Image? {
+            Image(systemName: "hand.tap")
+        }
+        
+        public var options: [any Option] {
+            MaxDisplayCount(2)
+        }
+        
+        public init() { }
+    }
 }

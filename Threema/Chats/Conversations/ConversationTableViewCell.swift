@@ -734,54 +734,12 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             return
         }
         
-        let displayName = conversation.displayName
-        
-        guard !conversation.isGroup else {
-            // Group conversation
-            if let group,
-               !group.isSelfMember {
-                let attributeString = NSMutableAttributedString(string: displayName)
-                attributeString.addAttribute(
-                    .strikethroughStyle,
-                    value: 2,
-                    range: NSMakeRange(0, attributeString.length)
-                )
-                nameLabel.attributedText = attributeString
-            }
-            else {
-                nameLabel.attributedText = NSMutableAttributedString(string: displayName)
-            }
-            nameLabel.textColor = .label
-            return
+        if conversation.isGroup {
+            nameLabel.attributedText = group?.attributedDisplayName
         }
-        
-        var attributedNameString = NSMutableAttributedString(string: displayName)
-        nameLabel.textColor = .label
-        
-        // Check style for the title
-        if let contact = conversation.contact,
-           let state = contact.state,
-           state.intValue == kStateInvalid {
-            // Contact is invalid
-            let attributeString = NSMutableAttributedString(string: displayName)
-            attributeString.addAttribute(.strikethroughStyle, value: 2, range: NSMakeRange(0, attributeString.length))
-            attributedNameString = attributeString
-            nameLabel.textColor = .secondaryLabel
+        else {
+            nameLabel.attributedText = conversation.contact?.attributedDisplayName
         }
-        else if let contact = conversation.contact,
-                let state = contact.state,
-                state.intValue == kStateInactive {
-            // Contact is inactive
-            nameLabel.textColor = .secondaryLabel
-        }
-        
-        if let contact = conversation.contact,
-           UserSettings.shared().blacklist.contains(contact.identity) {
-            // Contact is blacklisted
-            attributedNameString = NSMutableAttributedString(string: "🚫 " + attributedNameString.string)
-        }
-
-        nameLabel.attributedText = attributedNameString
     }
     
     private func updateDisplayStateImage() {

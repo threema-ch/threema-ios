@@ -94,7 +94,6 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, readwrite) NSInteger keepMessagesDays;
 
 @property (nonatomic, readwrite) BOOL contactList2;
-@property (nonatomic, readwrite) BOOL sendEmojiReactions;
 
 @property (nonatomic, readwrite) BOOL safeIntroShown;
 @end
@@ -143,6 +142,7 @@ enum AcceptPrivacyPolicyVariant {
 @property (nonatomic, readwrite) BOOL desktopInfoBannerShown;
 @property (nonatomic, readwrite) BOOL resetTipKitOnNextLaunch;
 @property (nonatomic, readwrite) BOOL jbDetectionDismissed;
+@property (nonatomic, readwrite) BOOL partialReactionSupportAlertShown;
 
 @property (nonatomic, readwrite) BOOL contactList2;
 

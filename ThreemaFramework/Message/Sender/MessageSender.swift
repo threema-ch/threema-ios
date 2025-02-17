@@ -981,11 +981,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         }
         
         // [Protocol Step] 2. Run the Legacy Reaction Mapping Steps with reaction and let legacy-reaction be the result.
-        // TODO: geht das uach mit braunen emojis ?
         let legacyMapping = reaction.base.applyLegacyMapping()
-        
-        let localSupportsReaction = userSettings.sendEmojiReactions
-        
+                
         if !conversationIsGroup {
             // Reaction if for message in 1:1 conversation
             
@@ -1003,11 +1000,6 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             }
             
             let contactSupportsReaction = FeatureMask.check(contact: contact, for: .reactionSupport)
-           
-            // We cannot react to our own message, if we do not support sending reactions
-            if isOwnMessage ?? false, !localSupportsReaction {
-                return .noAction
-            }
             
             // We cannot react to our own message, if the other side does not support reactions.
             if isOwnMessage ?? false, !contactSupportsReaction {
@@ -1017,13 +1009,6 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             // [Protocol Step] 3. If legacy-reaction is not defined and the sender or the receiver does not have
             // REACTION_SUPPORT, log a warning and abort these steps.¹
             if legacyMapping == nil {
-                if !localSupportsReaction {
-                    DDLogWarn(
-                        "Tried to send a Reaction, but it is no supported by us. This must be restricted by UI."
-                    )
-                    return .noSupportLocal
-                }
-                
                 if !contactSupportsReaction {
                     return .noSupportRemoteSingle
                 }
@@ -1050,7 +1035,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     }
                     // … if so, we withdraw it (If the user supports reactions).
                     if let messageReactionEntity {
-                        if contactSupportsReaction, localSupportsReaction {
+                        if contactSupportsReaction {
                             self.entityManager.entityDestroyer.delete(reaction: messageReactionEntity)
                         }
                         return false
@@ -1058,7 +1043,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     
                     // If we do apply and the contact does not support reactions, we remove all existing reactions. This
                     // ensures that there cannot be a legacy ack and dec at the same time.
-                    if !contactSupportsReaction || !localSupportsReaction {
+                    if !contactSupportsReaction {
                         for existingReaction in existingReactions {
                             self.entityManager.entityDestroyer.delete(reaction: existingReaction)
                         }
@@ -1075,12 +1060,12 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 return true
             }
             
-            if !localSupportsReaction || !contactSupportsReaction, !apply {
-                return .noRemoving
+            if !contactSupportsReaction, !apply {
+                return .noSupportRemoteSingle
             }
             
             // [Protocol Step]  5. If both sender and receiver have REACTION_SUPPORT,…
-            if contactSupportsReaction, localSupportsReaction {
+            if contactSupportsReaction {
                 
                 // … run the 1:1 Messages Submit Steps with messages set from the following properties:
                 var e2eReactionMessage = CspE2e_Reaction()
@@ -1124,7 +1109,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 throw ReactionsManager.ReactionError.sendingFailed
             }
             
-            let (hasRemoteSupport, unsupported) = FeatureMask.check(message: message, for: .reactionSupport)
+            var (hasRemoteSupport, unsupported) = FeatureMask.check(message: message, for: .reactionSupport)
+            
+            if group.isNoteGroup {
+                hasRemoteSupport = true
+            }
             
             if legacyMapping == nil {
                 // [Protocol Step] 3. If legacy-reaction is not defined:
@@ -1132,12 +1121,6 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 // steps.
                 // [Protocol Step] 3.2 If all of the group members do not have REACTION_SUPPORT, log a warning and abort
                 // these steps.
-                if !localSupportsReaction {
-                    DDLogWarn(
-                        "Tried to send a Reaction, but it is not supported by us. This must be restricted by UI."
-                    )
-                    return .noSupportLocal
-                }
                 
                 if !hasRemoteSupport {
                     DDLogWarn(
@@ -1173,7 +1156,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     }
                     // … if so, we withdraw it (If the user supports reactions).
                     if let messageReactionEntity {
-                        if hasRemoteSupport, localSupportsReaction {
+                        if hasRemoteSupport {
                             self.entityManager.entityDestroyer.delete(reaction: messageReactionEntity)
                         }
                         return false
@@ -1182,7 +1165,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     // If we do apply and no contact does not support reactions, we remove all our own existing
                     // reactions. This ensures that there cannot be a legacy ack and dec at the same time for contacts
                     // that do not support reactions yet.
-                    if !hasRemoteSupport || !localSupportsReaction {
+                    if !hasRemoteSupport {
                         for existingReaction in existingReactions {
                             self.entityManager.entityDestroyer.delete(reaction: existingReaction)
                         }
@@ -1199,72 +1182,75 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 return true
             }
             
-            if !localSupportsReaction || !hasRemoteSupport, !apply {
-                return .noRemoving
+            if !hasRemoteSupport, !apply {
+                return .noSupportRemoteGroup
             }
             
-            if localSupportsReaction {
-                var e2eReactionMessage = CspE2e_Reaction()
-                e2eReactionMessage.messageID = try messageID.littleEndian()
+            var e2eReactionMessage = CspE2e_Reaction()
+            e2eReactionMessage.messageID = try messageID.littleEndian()
                 
-                if apply {
-                    e2eReactionMessage.action = .apply(reaction.data)
-                }
-                else {
-                    e2eReactionMessage.action = .withdraw(reaction.data)
-                }
+            if apply {
+                e2eReactionMessage.action = .apply(reaction.data)
+            }
+            else {
+                e2eReactionMessage.action = .withdraw(reaction.data)
+            }
                 
-                let task = TaskDefinitionSendReactionMessage(
-                    reaction: e2eReactionMessage,
-                    group: group
-                )
+            let task = TaskDefinitionSendReactionMessage(
+                reaction: e2eReactionMessage,
+                group: group
+            )
                 
-                if !unsupported.isEmpty {
-                    var receivers = Set<String>()
+            if !unsupported.isEmpty {
+                var receivers = Set<String>()
                     
-                    for member in group.members {
-                        let contains = unsupported.contains { $0.identity == member.identity }
+                for member in group.members {
+                    let contains = unsupported.contains { $0.identity == member.identity }
                         
-                        guard !contains else {
-                            continue
-                        }
-                        receivers.insert(member.identity.string)
+                    guard !contains else {
+                        continue
                     }
-                    
-                    task.receivingGroupMembers = receivers
+                    receivers.insert(member.identity.string)
                 }
+                    
+                task.receivingGroupMembers = receivers
+            }
                 
-                let (waitTask, _) = taskManager.addWithWait(taskDefinition: task)
-                try await waitTask.wait()
+            let (waitTask, _) = taskManager.addWithWait(taskDefinition: task)
+            try await waitTask.wait()
 
-                // [Protocol Step] 3.3 If any of the group members do not have REACTION_SUPPORT, notify the user that
-                // the
-                // affected contacts will not receive the reaction.
-                if !unsupported.isEmpty {
-                    if let legacyMapping {
-                        switch legacyMapping {
-                        case .ack:
-                            await sendUserAck(for: message, toGroup: group, receivers: unsupported)
-                        case .dec:
-                            await sendUserDecline(for: message, toGroup: group, receivers: unsupported)
-                        }
-                        
-                        return .success
+            // [Protocol Step] 3.3 If any of the group members do not have REACTION_SUPPORT, notify the user that
+            // the
+            // affected contacts will not receive the reaction.
+            if !unsupported.isEmpty {
+                if let legacyMapping {
+                    switch legacyMapping {
+                    case .ack:
+                        await sendUserAck(for: message, toGroup: group, receivers: unsupported)
+                    case .dec:
+                        await sendUserDecline(for: message, toGroup: group, receivers: unsupported)
                     }
+                        
+                    return .success
+                }
+                    
+                // Checks for gateway ids in unsupported members
+                // If the group is message storing, we always show an alert
+                guard !group.isMessageStoringGatewayGroup else {
+                    return .partialSupportRemoteGroup
+                }
+                // Check if unsupported contains non gateway ids
+                let unsupportingNonGatewayMembers = unsupported.filter { !$0.hasGatewayID }
+                    
+                // If so we have unsupporting members
+                if !unsupportingNonGatewayMembers.isEmpty {
                     return .partialSupportRemoteGroup
                 }
                 else {
                     return .success
                 }
             }
-            else if let legacyMapping {
-                switch legacyMapping {
-                case .ack:
-                    await sendUserAck(for: message, toGroup: group, receivers: Array(group.members))
-                case .dec:
-                    await sendUserDecline(for: message, toGroup: group, receivers: Array(group.members))
-                }
-                
+            else {
                 return .success
             }
         }

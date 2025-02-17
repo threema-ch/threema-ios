@@ -25,25 +25,12 @@ import ThreemaFramework
 struct MessageReactionContextMenuView: View {
     typealias config = ChatViewConfiguration.EmojiReactions.ContextMenuView
     typealias animationConfig = ChatViewConfiguration.EmojiReactions.Animation
-
-    static let viewPadding = config.viewPadding
-    static let buttonPadding = config.buttonPadding
-
-    static let fontHeight = UIFont.preferredFont(forTextStyle: .title2).lineHeight
-    static let frameHeight = 2 * (viewPadding + buttonPadding) + fontHeight
-    
-    // We calculate the approximate width for the view: 2x padding on both sides, then for each of the 7 elements, the
-    // spacing, the padding and the width, which should be approx. the same as the height.
-    static let frameWidth = min(
-        2 * viewPadding + 7 * (4 + fontHeight + buttonPadding),
-        UIScreen.main.bounds.width * config.maxFrameWidthMultiplier
-    )
     
     let forHighlighting: Bool
     let isOwnMessage: Bool
     let reactionsManager: ReactionsManager?
     
-    private let font: Font = .title2
+    private let font: Font = .title
     
     @State private var opacity = 0.0
     
@@ -51,25 +38,23 @@ struct MessageReactionContextMenuView: View {
         VStack {
             if let reactionsManager {
                 HStack(spacing: config.buttonSpacing) {
-                    if reactionsManager.localReactionSupport, !reactionsManager.recipientHasGateWayID() {
+                    if !reactionsManager.recipientHasGateWayID() {
                         ForEach(
-                            reactionsManager.baseReactionEmojis + reactionsManager
+                            ReactionsManager.baseReactionEmojis + ReactionsManager
                                 .defaultReactionEmojis
                         ) { reaction in
                             Button {
-                                reactionsManager.send(EmojiVariant(base: reaction, skintone: nil))
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                reactionsManager.send(reaction)
                             } label: {
                                 Text(reaction.rawValue)
-                                    .padding(MessageReactionContextMenuView.buttonPadding)
+                                    .padding(config.buttonPadding)
                                     .opacity(
-                                        reactionsManager.recipientReactionSupport != .none || reactionsManager
+                                        reactionsManager.recipientReactionSupport != .none || ReactionsManager
                                             .baseReactionEmojis.contains(reaction) ? 1.0 : config.disabledButtonOpacity
                                     )
                                     .background {
-                                        if reactionsManager.isCurrentlySelected(emoji: EmojiVariant(
-                                            base: reaction,
-                                            skintone: nil
-                                        )) {
+                                        if reactionsManager.isCurrentlySelected(emoji: reaction) {
                                             Color(uiColor: Colors.chatReactionBubbleSelected)
                                                 .clipShape(Circle())
                                         }
@@ -78,17 +63,15 @@ struct MessageReactionContextMenuView: View {
                         }
                     }
                     else {
-                        ForEach(reactionsManager.baseReactionEmojis) { reaction in
+                        ForEach(ReactionsManager.baseReactionEmojis) { reaction in
                             Button {
-                                reactionsManager.send(EmojiVariant(base: reaction, skintone: nil))
+                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                reactionsManager.send(reaction)
                             } label: {
                                 Text(reaction.rawValue)
-                                    .padding(MessageReactionContextMenuView.buttonPadding)
+                                    .padding(config.buttonPadding)
                                     .background {
-                                        if reactionsManager.isCurrentlySelected(emoji: EmojiVariant(
-                                            base: reaction,
-                                            skintone: nil
-                                        )) {
+                                        if reactionsManager.isCurrentlySelected(emoji: reaction) {
                                             Color(uiColor: Colors.chatReactionBubbleSelected)
                                                 .clipShape(Circle())
                                         }
@@ -104,17 +87,20 @@ struct MessageReactionContextMenuView: View {
                             Image(.threemaCustomFaceSmilingBadgePlus)
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
+                                .foregroundStyle(Colors.chatReactionBubbleTextColor.color)
+                                .imageScale(.small)
                                 .offset(y: -1.0)
-                                .padding(MessageReactionContextMenuView.buttonPadding / 3)
+                                .padding(config.buttonPadding)
                                 .opacity(
-                                    reactionsManager.recipientReactionSupport != .none && reactionsManager
-                                        .localReactionSupport ? 1.0 : config.disabledButtonOpacity
+                                    reactionsManager.recipientReactionSupport != .none ? 1.0 : config
+                                        .disabledButtonOpacity
                                 )
                         }
                     }
                 }
                 .font(font)
-                .padding(MessageReactionContextMenuView.viewPadding)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .padding(config.viewPadding)
                 .background(.regularMaterial)
                 .opacity(opacity)
                 .clipShape(Capsule())
@@ -131,9 +117,6 @@ struct MessageReactionContextMenuView: View {
                 }
             }
         }
-        .padding(isOwnMessage ? .leading : .trailing, 2)
-        .minimumScaleFactor(0.5)
-        .frame(maxWidth: MessageReactionContextMenuView.frameWidth)
     }
 }
 

@@ -34,6 +34,8 @@ protocol ChatTextViewDelegate: AnyObject {
     func canStartEditing() -> Bool
     func didEndEditing()
     func checkIfPastedStringIsMedia() -> Bool
+    @available(iOS 18.0, *)
+    func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph)
 }
 
 final class ChatTextView: CustomResponderTextView {
@@ -44,6 +46,10 @@ final class ChatTextView: CustomResponderTextView {
         didSet {
             // This is to work around an issue where the cursor position would switch back to left (even though we
             // explicitly set it to right) after sending a few messages.
+            guard oldValue != textAlignment else {
+                return
+            }
+            
             textViewDidChange(self)
         }
     }
@@ -180,6 +186,8 @@ final class ChatTextView: CustomResponderTextView {
         super.init(frame: .zero, textContainer: container)
         
         self.pasteImageHandler = self
+        textStorage.markupParsingTextStorageDelegate = self
+        
         self.customTextStorage = textStorage
         
         configureTextView()
@@ -497,11 +505,11 @@ final class ChatTextView: CustomResponderTextView {
             selectedRange = NSRange(location: 0, length: 0)
         }
         
-        let currentText = customTextStorage?.removeCurrentText()
+        _ = customTextStorage?.removeCurrentText()
         
         guard chatTextViewDelegate != nil else {
             let message = "chatTextViewDelegate should not be nil"
-            DDLogError(message)
+            DDLogError("\(message)")
             assertionFailure(message)
             return
         }
@@ -745,7 +753,7 @@ extension ChatTextView: UITextViewDelegate {
                 guard let chatTextViewDelegate else {
                     let msg = "chatTextViewDelegate is unexpectedly nil"
                     assertionFailure(msg)
-                    DDLogError(msg)
+                    DDLogError("\(msg)")
                     return false
                 }
                 
@@ -814,10 +822,19 @@ extension ChatTextView {
     }
 }
 
+// MARK: - MarkupParsingTextStorageDelegate
+
+extension ChatTextView: MarkupParsingTextStorageDelegate {
+    @available(iOS 18.0, *)
+    func didInsertAdaptiveGlyph(glyph: NSAdaptiveImageGlyph) {
+        chatTextViewDelegate?.processAndSendGlyph(glyph)
+    }
+}
+
 // MARK: - PasteImageHandler
 
 extension ChatTextView: PasteImageHandler {
     func handlePasteItem() {
-        chatTextViewDelegate?.checkIfPastedStringIsMedia()
+        _ = chatTextViewDelegate?.checkIfPastedStringIsMedia()
     }
 }

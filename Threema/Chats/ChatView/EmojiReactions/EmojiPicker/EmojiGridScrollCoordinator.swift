@@ -147,6 +147,7 @@ extension EmojiSectionToolbar {
                     sectionHighlightBackground(in: frame)
                     sections(in: frame)
                 }
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             }
         }
         

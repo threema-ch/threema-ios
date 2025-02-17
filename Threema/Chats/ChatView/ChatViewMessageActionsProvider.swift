@@ -126,7 +126,6 @@ enum ChatViewMessageActionsProvider {
     ///   - selectHandler: Called when select is tapped
     ///   - willDelete: Called when full (not remote) delete is selected and before the delete happens
     ///   - didDelete: Called when full (not remote) delete is selected and after the delete happened
-    ///   - ackHandler: Called when a reaction is tapped
     /// - Returns: A set of default actions sections
     public static func defaultActions(
         message: BaseMessage,
@@ -144,27 +143,15 @@ enum ChatViewMessageActionsProvider {
         detailsHandler: @escaping DefaultHandler,
         selectHandler: @escaping DefaultHandler,
         willDelete: @escaping DefaultHandler,
-        didDelete: @escaping DefaultHandler,
-        ackHandler: @escaping (BaseMessage, Bool) -> Void?,
-        showEmojiPickerHandler: @escaping DefaultHandler
+        didDelete: @escaping DefaultHandler
     ) -> [MessageActionsSection] {
-        
-        // MARK: Primary actions
-
-        let primaryActionsSection = defaultPrimaryActionsSection(
-            message: message,
-            ackHandler: ackHandler,
-            markStarHandler: markStarHandler,
-            showEmojiPickerHandler: showEmojiPickerHandler
-        )
         
         // MARK: General actions
         
         var generalActions = [MessageAction]()
         
-        if UserSettings.shared().sendEmojiReactions {
-            generalActions.append(addStarMarkerAction(message: message, handler: markStarHandler))
-        }
+        generalActions.append(addStarMarkerAction(message: message, handler: markStarHandler))
+        
         // File/media actions
         
         assert(
@@ -249,49 +236,30 @@ enum ChatViewMessageActionsProvider {
         let moreActionsSection = MessageActionsSection(sectionType: .horizontalInline, actions: moreActions)
         
         // Return sections
-        return [
-            primaryActionsSection,
+        var actions = [
             generalActionsSection,
             shareActionsSection,
-            speakActionsSection,
             moreActionsSection,
         ]
+        
+        if UIAccessibility.isSpeakSelectionEnabled {
+            actions.insert(speakActionsSection, at: 2)
+        }
+        return actions
     }
     
     /// Default section of primary actions that should be supported by the provided message
     /// - Parameters:
     ///   - message: Message to create section for
-    ///   - ackHandler: Called when a reaction is tapped. Actions are note added if it is not provided.
     ///   - markStarHandler: Called when add/remove star is tapped
     /// - Returns: Section of default primary actions
     public static func defaultPrimaryActionsSection(
         message: BaseMessage,
-        ackHandler: ((BaseMessage, Bool) -> Void?)?,
-        markStarHandler: @escaping (BaseMessage) -> Void?,
-        showEmojiPickerHandler: DefaultHandler?
+        markStarHandler: @escaping (BaseMessage) -> Void?
     ) -> MessageActionsSection {
         var primaryActions = [MessageAction]()
         
-        if UserSettings.shared().sendEmojiReactions, message.supportsReaction {
-            if let ackHandler {
-                let thumbsUp = thumbsUpAction(message: message, handler: ackHandler)
-                let thumbsDown = thumbsDownAction(message: message, handler: ackHandler)
-                primaryActions.append(contentsOf: [thumbsUp, thumbsDown])
-            }
-            
-            if let showEmojiPickerHandler {
-                primaryActions.append(showEmojiPickerAction(handler: showEmojiPickerHandler))
-            }
-        }
-        else {
-            if let ackHandler, message.supportsLegacyReaction {
-                let thumbsUp = thumbsUpAction(message: message, handler: ackHandler)
-                let thumbsDown = thumbsDownAction(message: message, handler: ackHandler)
-                primaryActions.append(contentsOf: [thumbsUp, thumbsDown])
-            }
-            
-            primaryActions.append(addStarMarkerAction(message: message, handler: markStarHandler))
-        }
+        primaryActions.append(addStarMarkerAction(message: message, handler: markStarHandler))
         
         return MessageActionsSection(sectionType: .horizontalInline, actions: primaryActions)
     }
@@ -329,47 +297,6 @@ enum ChatViewMessageActionsProvider {
     }
     
     // MARK: - Actions (private helpers)
-
-    // MARK: Reaction actions
-    
-    private static func thumbsUpAction(
-        message: BaseMessage,
-        handler: @escaping (BaseMessage, Bool) -> Void?
-    ) -> MessageAction {
-                
-        MessageAction(
-            title: "👍"
-        ) {
-            handler(message, true)
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
-        }
-    }
-    
-    private static func thumbsDownAction(
-        message: BaseMessage,
-        handler: @escaping (BaseMessage, Bool) -> Void?
-    ) -> MessageAction {
-                
-        MessageAction(
-            title: "👎"
-        ) {
-            handler(message, false)
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
-        }
-    }
-    
-    private static func showEmojiPickerAction(
-        handler: @escaping DefaultHandler
-    ) -> MessageAction {
-                
-        MessageAction(
-            title: #localize("emoji_reaction_open_picker"),
-            image: UIImage(resource: .threemaCustomFaceSmilingBadgePlus),
-            handler: handler
-        )
-    }
     
     private static func addStarMarkerAction(
         message: BaseMessage,

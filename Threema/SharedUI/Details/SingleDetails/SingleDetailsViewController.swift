@@ -20,7 +20,6 @@
 
 import CocoaLumberjackSwift
 import ThreemaMacros
-import TipKit
 import UIKit
 
 final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewController {

@@ -32,6 +32,7 @@ public struct ReactionEntry: Identifiable, Hashable, Equatable {
     public let id = UUID()
     public let reaction: String
     public var userReactionEntries: [UserReactionEntry]
+    public let canBeRemoved: Bool
     
     public var reactedByMe: Bool {
         userReactionEntries.map(\.isMe).contains(true)
@@ -44,9 +45,10 @@ public struct ReactionEntry: Identifiable, Hashable, Equatable {
         return emoji.rawValue
     }
     
-    public init(reaction: String, userReactionEntries: [UserReactionEntry]) {
+    public init(reaction: String, userReactionEntries: [UserReactionEntry], canBeRemoved: Bool) {
         self.reaction = reaction
         self.userReactionEntries = userReactionEntries
+        self.canBeRemoved = canBeRemoved
     }
 }
 

@@ -33,8 +33,8 @@ import ThreemaMacros
         case thumbsDownEmojiAction = "THUMBSDOWNEMOJI"
         case heartEmojiAction = "HEARTEMOJI"
         case laughterEmojiAction = "LAUGHTEREMOJI"
-        case surprisedEmojiAction = "SURPRISEDEMOJI"
         case cryingEmojiAction = "CRYINGEMOJI"
+        case foldedHandsEmojiAction = "FOLDEDHANDSEMOJI"
         
         private var title: String {
             switch self {
@@ -43,24 +43,24 @@ import ThreemaMacros
             case .callBackAction:
                 #localize("call_back")
             case .thumbsUpEmojiAction:
-                Emoji.thumbsUpSign.rawValue
+                ReactionsManager.preferredEmojiVariant(for: .thumbsUpSign).rawValue
             case .thumbsDownEmojiAction:
-                Emoji.thumbsDownSign.rawValue
+                ReactionsManager.preferredEmojiVariant(for: .thumbsDownSign).rawValue
             case .heartEmojiAction:
                 Emoji.heavyBlackHeart.rawValue
             case .laughterEmojiAction:
                 Emoji.faceWithTearsOfJoy.rawValue
-            case .surprisedEmojiAction:
-                Emoji.faceWithOpenMouth.rawValue
             case .cryingEmojiAction:
                 Emoji.cryingFace.rawValue
+            case .foldedHandsEmojiAction:
+                ReactionsManager.preferredEmojiVariant(for: .personWithFoldedHands).rawValue
             }
         }
         
         private var options: UNNotificationActionOptions {
             switch self {
             case .replyAction, .thumbsUpEmojiAction, .thumbsDownEmojiAction, .heartEmojiAction, .laughterEmojiAction,
-                 .surprisedEmojiAction, .cryingEmojiAction:
+                 .cryingEmojiAction, .foldedHandsEmojiAction:
                 .authenticationRequired
             case .callBackAction:
                 .foreground
@@ -72,7 +72,7 @@ import ThreemaMacros
             case .replyAction:
                 UNNotificationActionIcon(systemImageName: "arrowshape.turn.up.left")
             case .thumbsUpEmojiAction, .thumbsDownEmojiAction, .heartEmojiAction, .laughterEmojiAction,
-                 .surprisedEmojiAction, .cryingEmojiAction:
+                 .cryingEmojiAction, .foldedHandsEmojiAction:
                 nil
             case .callBackAction:
                 UNNotificationActionIcon(systemImageName: "phone")
@@ -91,7 +91,7 @@ import ThreemaMacros
                     textInputPlaceholder: #localize("decryption_push_placeholder")
                 )
             case .thumbsUpEmojiAction, .thumbsDownEmojiAction, .heartEmojiAction, .laughterEmojiAction,
-                 .surprisedEmojiAction, .cryingEmojiAction, .callBackAction:
+                 .cryingEmojiAction, .foldedHandsEmojiAction, .callBackAction:
                 UNNotificationAction(
                     identifier: rawValue,
                     title: title,
@@ -109,7 +109,7 @@ import ThreemaMacros
             case .replyAction, .callBackAction:
                 false
             case .thumbsUpEmojiAction, .thumbsDownEmojiAction, .heartEmojiAction, .laughterEmojiAction,
-                 .surprisedEmojiAction, .cryingEmojiAction:
+                 .cryingEmojiAction, .foldedHandsEmojiAction:
                 true
             }
         }
@@ -123,17 +123,17 @@ import ThreemaMacros
             case .replyAction, .callBackAction:
                 return nil
             case .thumbsUpEmojiAction:
-                return EmojiVariant(base: .thumbsUpSign, skintone: nil)
+                return ReactionsManager.preferredEmojiVariant(for: .thumbsUpSign)
             case .thumbsDownEmojiAction:
-                return EmojiVariant(base: .thumbsDownSign, skintone: nil)
+                return ReactionsManager.preferredEmojiVariant(for: .thumbsDownSign)
             case .heartEmojiAction:
                 return EmojiVariant(base: .heavyBlackHeart, skintone: nil)
             case .laughterEmojiAction:
                 return EmojiVariant(base: .faceWithTearsOfJoy, skintone: nil)
-            case .surprisedEmojiAction:
-                return EmojiVariant(base: .faceWithOpenMouth, skintone: nil)
             case .cryingEmojiAction:
                 return EmojiVariant(base: .cryingFace, skintone: nil)
+            case .foldedHandsEmojiAction:
+                return ReactionsManager.preferredEmojiVariant(for: .personWithFoldedHands)
             }
         }
     }
@@ -146,24 +146,16 @@ import ThreemaMacros
         private var actions: [UNNotificationAction] {
             switch self {
             case .singleCategory, .groupCategory:
-                if UserSettings.shared().sendEmojiReactions {
-                    [
-                        Action.replyAction.action,
-                        Action.thumbsUpEmojiAction.action,
-                        Action.thumbsDownEmojiAction.action,
-                        Action.heartEmojiAction.action,
-                        Action.laughterEmojiAction.action,
-                        Action.surprisedEmojiAction.action,
-                        Action.cryingEmojiAction.action,
-                    ]
-                }
-                else {
-                    [
-                        Action.replyAction.action,
-                        Action.thumbsUpEmojiAction.action,
-                        Action.thumbsDownEmojiAction.action,
-                    ]
-                }
+                [
+                    Action.replyAction.action,
+                    Action.thumbsUpEmojiAction.action,
+                    Action.thumbsDownEmojiAction.action,
+                    Action.heartEmojiAction.action,
+                    Action.laughterEmojiAction.action,
+                    Action.cryingEmojiAction.action,
+                    Action.foldedHandsEmojiAction.action,
+                ]
+                
             case .callCategory:
                 [Action.replyAction.action, Action.callBackAction.action]
             }

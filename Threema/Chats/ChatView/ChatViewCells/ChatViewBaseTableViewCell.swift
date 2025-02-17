@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
 import ThreemaMacros
+import TipKit
 import UIKit
 
 /// Base class for all chat view cells with a chat bubble background
@@ -87,15 +88,6 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
     // Should the context menu emoji picker should be shown for this message?
     var showEmojiPickerContextMenu: Bool {
-        
-        // TODO: (IOS-5051) The first check must be removed when we fixed the ctx menu situation
-        return false
-        
-        // Can we even send emoji reactions?
-        guard UserSettings.shared().sendEmojiReactions else {
-            return false
-        }
-        
         // Can reactions even be applied to the message?
         guard messageSupportsReaction else {
             return false
@@ -290,6 +282,12 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         action: #selector(profilePictureTapped)
     )
     
+    private lazy var longPressContextMenuGestureRecognizer: UILongPressGestureRecognizer = {
+        let recognizer = UILongPressGestureRecognizer(target: self, action: #selector(contextMenuInteractionDetected))
+        recognizer.name = "ThreemaLongPressContextMenuGestureRecognizer"
+        return recognizer
+    }()
+        
     // MARK: Views
     
     private lazy var chatBubbleBackgroundView = ChatBubbleBackgroundView()
@@ -330,6 +328,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     }()
     
     private(set) var reactionsView: ChatViewBaseTableViewCellReactionsStackView?
+    
+    private var tipPopover: Any?
     
     // MARK: Constraints
     
@@ -379,7 +379,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     /// Handles all horizontal swipe interactions including cancelling other swipe actions via
     /// `ChatViewTableViewCellDelegateProtocol`
     private var swipeHandler: ChatViewTableViewCellHorizontalSwipeHandler?
-    
+        
     // MARK: - Configuration
     
     override func configureCell() {
@@ -395,6 +395,10 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
             cell: self,
             delegate: self
         )
+        
+        if !UIAccessibility.isVoiceOverRunning {
+            addGestureRecognizer(longPressContextMenuGestureRecognizer)
+        }
     }
     
     private func configureBackgrounds() {
@@ -883,17 +887,38 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
                 constant: -ChatViewConfiguration.ChatBubble.defaultTopBottomInset
             )
             
-            NSLayoutConstraint.activate([
-                reactionsView.topAnchor.constraint(
-                    equalTo: chatBubbleView.bottomAnchor,
-                    constant: -ChatViewConfiguration.ChatBubble.reactionBottomInset
-                ),
-                reactionsView.trailingAnchor.constraint(equalTo: chatBubbleView.trailingAnchor, constant: -2),
-                reactionsView.leadingAnchor.constraint(greaterThanOrEqualTo: chatBubbleView.leadingAnchor, constant: 2),
-                contentBottomSpacingConstraint,
-            ])
+            if messageIsOwnMessage {
+                NSLayoutConstraint.activate([
+                    reactionsView.topAnchor.constraint(
+                        equalTo: chatBubbleView.bottomAnchor,
+                        constant: -ChatViewConfiguration.ChatBubble.reactionBottomInset
+                    ),
+                    reactionsView.trailingAnchor.constraint(equalTo: chatBubbleView.trailingAnchor, constant: -2),
+                    reactionsView.leadingAnchor.constraint(
+                        greaterThanOrEqualTo: chatBubbleView.leadingAnchor,
+                        constant: 2
+                    ),
+                    contentBottomSpacingConstraint,
+                ])
+            }
+            else {
+                NSLayoutConstraint.activate([
+                    reactionsView.topAnchor.constraint(
+                        equalTo: chatBubbleView.bottomAnchor,
+                        constant: -ChatViewConfiguration.ChatBubble.reactionBottomInset
+                    ),
+                    reactionsView.leadingAnchor.constraint(equalTo: chatBubbleView.leadingAnchor, constant: 2),
+                    reactionsView.trailingAnchor.constraint(
+                        lessThanOrEqualTo: chatBubbleView.trailingAnchor,
+                        constant: -2
+                    ),
+                    contentBottomSpacingConstraint,
+                ])
+            }
             
             layoutIfNeeded()
+            
+            chatViewTableViewCellDelegate?.showReactionsView()
         }
     }
     
@@ -914,7 +939,37 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         ])
     }
     
+    public func showReactionsTip() {
+        guard #available(iOS 17, *), !UIAccessibility.isVoiceOverRunning else {
+            return
+        }
+        
+        let longPressInfoTip = TipKitManager.ThreemaReactionLongPressInfoTip()
+        Task(priority: .userInitiated) { @MainActor in
+            for await shouldDisplay in longPressInfoTip.shouldDisplayUpdates {
+                guard shouldDisplay, let reactionsView else {
+                    if let tipPopover = tipPopover as? TipUIPopoverViewController {
+                        tipPopover.dismiss(animated: true)
+                    }
+                    continue
+                }
+                
+                let controller = TipUIPopoverViewController(longPressInfoTip, sourceItem: reactionsView)
+                controller.popoverPresentationController?.permittedArrowDirections = [.up, .down]
+                controller.view.backgroundColor = .tertiarySystemGroupedBackground
+                tipPopover = controller
+                AppDelegate.shared().window.rootViewController?.present(controller, animated: true)
+            }
+        }
+    }
+    
     // MARK: - Actions
+    
+    @objc private func contextMenuInteractionDetected(gestureRecognizer: UIGestureRecognizer) {
+        if gestureRecognizer.state == .began {
+            chatViewTableViewCellDelegate?.presentContextMenu(cell: self)
+        }
+    }
     
     @objc private func profilePictureTapped() {
         guard let sender = messageAndNeighbors.message?.sender else {

@@ -139,11 +139,11 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize groupCallsDebugMessages;
 
 @synthesize keepMessagesDays;
+@synthesize partialReactionSupportAlertShown;
 
 @synthesize resetTipKitOnNextLaunch;
 @synthesize jbDetectionDismissed;
 @synthesize contactList2;
-@synthesize sendEmojiReactions;
 
 /// Deprecated Keys, please add keys if they are removed:
 /// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
@@ -159,6 +159,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 /// - `EnableFSv1_2ForTesting`
 /// - `useProfilePictureGenerator`
 /// - `BlockCommunication`
+/// - `SendEmojiReactions`
 
 static UserSettings *instance;
 
@@ -265,11 +266,10 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"VoiceMessagesShowTimeRemaining",
                                         [NSNumber numberWithBool:NO], @"GroupCallsDebugMessages",
                                         @-1, @"KeepMessagesDays",
+                                        [NSNumber numberWithBool:NO], @"PartialReactionSupportAlertShown",
                                         [NSNumber numberWithBool:NO], @"ResetTipKitOnNextLaunch",
                                         [NSNumber numberWithBool:NO], @"JBDetectionDismissed",
                                         [NSNumber numberWithBool:NO], @"ContactList2",
-                                        [NSNumber numberWithBool:NO], @"SendEmojiReactions",
-
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
         
@@ -390,20 +390,10 @@ static UserSettings *instance;
     hidePrivateChats = [defaults boolForKey:@"HidePrivateChats"];
     voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
     resetTipKitOnNextLaunch = [defaults boolForKey:@"ResetTipKitOnNextLaunch"];
+    partialReactionSupportAlertShown = [defaults boolForKey:@"PartialReactionSupportAlertShown"];
+    
     jbDetectionDismissed = [defaults boolForKey:@"JBDetectionDismissed"];
     contactList2 = [defaults boolForKey:@"ContactList2"];
-    
-    if ([ThreemaEnvironment env] == EnvironmentTypeXcode) {
-        sendEmojiReactions = [defaults boolForKey:@"SendEmojiReactions"];
-    }
-    else {
-        if([ThreemaAppObjc current] == ThreemaAppBlue || [ThreemaAppObjc current] == ThreemaAppGreen) {
-            sendEmojiReactions = true;
-        }
-        else {
-            sendEmojiReactions = false;
-        }
-    }
 }
 
 - (void)setAppMigratedToVersion:(NSInteger)newAppMigratedToVersion {
@@ -918,6 +908,11 @@ static UserSettings *instance;
     [defaults setBool:resetTipKitOnNextLaunch forKey:@"ResetTipKitOnNextLaunch"];
     [defaults synchronize];
 }
+- (void)setPartialReactionSupportAlertShown:(BOOL)newPartialReactionSupportAlertShown {
+    partialReactionSupportAlertShown = newPartialReactionSupportAlertShown;
+    [defaults setBool:partialReactionSupportAlertShown forKey:@"PartialReactionSupportAlertShown"];
+    [defaults synchronize];
+}
 
 - (void)setJbDetectionDismissed:(BOOL)newJBDetectionDismissed {
     jbDetectionDismissed = newJBDetectionDismissed;
@@ -928,12 +923,6 @@ static UserSettings *instance;
 - (void)setContactList2:(BOOL)newContactList2 {
     contactList2 = newContactList2;
     [defaults setBool:contactList2 forKey:@"ContactList2"];
-    [defaults synchronize];
-}
-
-- (void)setSendEmojiReactions:(BOOL)newEmojiReactions {
-    sendEmojiReactions = newEmojiReactions;
-    [defaults setBool:sendEmojiReactions forKey:@"SendEmojiReactions"];
     [defaults synchronize];
 }
 

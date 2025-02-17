@@ -297,20 +297,6 @@ extension ChatViewBallotMessageTableViewCell: ChatViewMessageActions {
         
         // Primary actions
         
-        // Reaction
-        let ackHandler = { (_: BaseMessage, ack: Bool) in
-            if ack {
-                self.reactionsManager?.send(EmojiVariant(base: .thumbsUpSign, skintone: nil))
-            }
-            else {
-                self.reactionsManager?.send(EmojiVariant(base: .thumbsDownSign, skintone: nil))
-            }
-        }
-        
-        let showEmojiPickerHandler: Provider.DefaultHandler = {
-            self.reactionsManager?.showEmojiPickerSheet()
-        }
-        
         // Message markers
         let markStarHandler = { (message: BaseMessage) in
             self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
@@ -318,9 +304,7 @@ extension ChatViewBallotMessageTableViewCell: ChatViewMessageActions {
         
         let primaryActions = Provider.defaultPrimaryActionsSection(
             message: message,
-            ackHandler: ackHandler,
-            markStarHandler: markStarHandler,
-            showEmojiPickerHandler: showEmojiPickerHandler
+            markStarHandler: markStarHandler
         )
         
         // Basic actions

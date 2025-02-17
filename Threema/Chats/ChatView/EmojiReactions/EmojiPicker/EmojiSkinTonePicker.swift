@@ -130,7 +130,7 @@ extension SkinTonePicker {
         var body: some View {
             VStack(alignment: alignment, spacing: -2) {
                 HStack(spacing: -10) {
-                    ForEach(Emoji.SkinTone.allCases) { skinTone in
+                    ForEach(skintoneCases(), id: \.self) { skinTone in
                         EmojiVariantView(emoji: EmojiVariant(base: targetEmoji.base, skintone: skinTone))
                             .frame(
                                 width: config.minEmojiViewWidth,
@@ -143,7 +143,7 @@ extension SkinTonePicker {
                         radius: config.cornerRadius,
                         cornerToLeaveSquare: determineNoRadius()
                     )
-                    .fill(.gray)
+                    .fill(UIColor.tertiarySystemGroupedBackground.color)
                     .padding(2)
                 }
                 .zIndex(0)
@@ -160,10 +160,11 @@ extension SkinTonePicker {
                         radius: config.cornerRadius,
                         cornerToLeaveSquare: [.topLeft, .topRight]
                     )
-                    .fill(.gray)
+                    .fill(UIColor.tertiarySystemGroupedBackground.color)
                     .padding(.horizontal, 2)
                 }
             }
+            .dynamicTypeSize(...DynamicTypeSize.accessibility3)
         }
         
         private func determineNoRadius() -> UIRectCorner {
@@ -172,6 +173,17 @@ extension SkinTonePicker {
             case .trailing: .bottomRight
             default: []
             }
+        }
+        
+        private func skintoneCases() -> [Emoji.SkinTone?] {
+            var allCases: [Emoji.SkinTone?] = Emoji.SkinTone.allCases
+            
+            if let skintone = targetEmoji.skintone {
+                allCases.removeAll { $0 == skintone }
+                allCases.insert(nil, at: 0)
+            }
+        
+            return allCases
         }
     }
 }

@@ -37,23 +37,19 @@ public class ReactionsManager: ObservableObject {
     }
     
     public enum ReactionSendingResult {
-        case noSupportRemoteSingle, noSupportRemoteGroup, partialSupportRemoteGroup, noSupportLocal, noRemoving,
+        case noSupportRemoteSingle, noSupportRemoteGroup, partialSupportRemoteGroup,
              success, noAction, unknownReaction, error
         
         public var alertTitle: String {
             switch self {
             case .success, .noAction:
                 ""
-            case .noSupportLocal:
-                #localize("reaction_alert_title_unavailable")
             case .noSupportRemoteSingle:
                 #localize("reaction_alert_title_unavailable")
             case .noSupportRemoteGroup:
                 #localize("reaction_alert_title_unavailable")
             case .partialSupportRemoteGroup:
                 #localize("reaction_alert_title_partial_support_remote_group")
-            case .noRemoving:
-                #localize("reaction_alert_title_no_removing")
             case .unknownReaction:
                 #localize("reaction_alert_message_unknown_reaction")
             case .error:
@@ -65,16 +61,12 @@ public class ReactionsManager: ObservableObject {
             switch self {
             case .success, .noAction, .unknownReaction:
                 ""
-            case .noSupportLocal:
-                #localize("reaction_alert_message_no_support_local")
             case .noSupportRemoteSingle:
                 #localize("reaction_alert_message_no_support_remote_single")
             case .noSupportRemoteGroup:
                 #localize("reaction_alert_message_no_support_remote_group")
             case .partialSupportRemoteGroup:
                 #localize("reaction_alert_message_partial_support_remote_group")
-            case .noRemoving:
-                #localize("reaction_alert_message_no_removing")
             case .error:
                 #localize("reaction_error_message")
             }
@@ -92,13 +84,21 @@ public class ReactionsManager: ObservableObject {
         public let sortDate: Date
         public let count: Int
         public let contacts: Set<Contact?>
+        public let canBeRemoved: Bool
         
-        public init(reaction: String, sortDate: Date, contacts: Set<Contact?>, count: Int) {
+        public init(
+            reaction: String,
+            sortDate: Date,
+            contacts: Set<Contact?>,
+            count: Int,
+            canBeRemoved: Bool
+        ) {
             self.emoji = EmojiVariant(rawValue: reaction)
             self.reactionString = reaction
             self.sortDate = sortDate
             self.contacts = contacts
             self.count = count
+            self.canBeRemoved = canBeRemoved
         }
         
         public var displayValue: String {
@@ -115,22 +115,22 @@ public class ReactionsManager: ObservableObject {
    
     /// True if at least one recipient of the conversation of the message supports emoji reactions
     public lazy var recipientReactionSupport: RecipientReactionSupport = checkRecipientsEmojiSupport()
-      
-    public lazy var localReactionSupport: Bool = UserSettings.shared().sendEmojiReactions
     
-    /// The default emojis we provide
-    public let defaultReactionEmojis: [Emoji] = [
-        .heavyBlackHeart,
-        .faceWithTearsOfJoy,
-        .faceWithOpenMouth,
-        .cryingFace,
-    ]
+    public static var baseReactionEmojis: [EmojiVariant] {
+        [
+            ReactionsManager.preferredEmojiVariant(for: .thumbsUpSign),
+            ReactionsManager.preferredEmojiVariant(for: .thumbsDownSign),
+        ]
+    }
     
-    // TODO: (IOS-4939) Skin tones and persistence
-    public let baseReactionEmojis: [Emoji] = [
-        .thumbsUpSign,
-        .thumbsDownSign,
-    ]
+    public static var defaultReactionEmojis: [EmojiVariant] {
+        [
+            .init(base: .heavyBlackHeart, skintone: nil),
+            .init(base: .faceWithTearsOfJoy, skintone: nil),
+            .init(base: .cryingFace, skintone: nil),
+            ReactionsManager.preferredEmojiVariant(for: .personWithFoldedHands),
+        ]
+    }
     
     @Published public var currentReactions = [ReactionInfo]()
     
@@ -208,11 +208,6 @@ public class ReactionsManager: ObservableObject {
     }
     
     public func showEmojiPickerSheet() {
-        guard localReactionSupport else {
-            reactionsManagerDelegate?.showReactionAlert(for: .noSupportLocal)
-            return
-        }
-        
         reactionsManagerDelegate?.dismissContextMenu(showEmojiPicker: true, for: self)
     }
     
@@ -245,18 +240,18 @@ public class ReactionsManager: ObservableObject {
         }
     }
     
-    /// The picker button is shown if we can send or if we have already received a non legacy mappable reaction for this
-    /// message and the recipient has support.
+    /// The picker button is shown if the recipient has support.
     public func pickerButtonVisible() -> Bool {
-        (localReactionSupport || messageHasNonLegacyMappableReactions()) &&
-            recipientReactionSupport != .none && !recipientHasGateWayID()
+        recipientReactionSupport != .none && !recipientHasGateWayID()
     }
     
     public func recipientHasGateWayID() -> Bool {
         let entityManager = businessInjector.entityManager
         return entityManager.performAndWait {
             guard let message = entityManager.entityFetcher
-                .existingObject(with: self.messageObjectID) as? BaseMessage, !message.conversation.isGroup,
+                .existingObject(with: self.messageObjectID) as? BaseMessage,
+                !message.willBeDeleted,
+                !message.conversation.isGroup,
                 let contact = message.conversation.contact else {
                 return false
             }
@@ -278,12 +273,10 @@ public class ReactionsManager: ObservableObject {
             actions.append(openPickerAction)
         }
         
-        let emojis = (localReactionSupport && recipientReactionSupport != .none) ? baseReactionEmojis +
-            defaultReactionEmojis : baseReactionEmojis
+        let emojis = recipientReactionSupport != .none ? ReactionsManager.baseReactionEmojis +
+            ReactionsManager.defaultReactionEmojis : ReactionsManager.baseReactionEmojis
         
-        for emoji in emojis
-            .map({ EmojiVariant(base: $0, skintone: nil) })
-            .reversed() {
+        for emoji in emojis.reversed() {
             actions.append(accessibilityAction(for: emoji))
         }
         
@@ -327,6 +320,13 @@ public class ReactionsManager: ObservableObject {
             summary.append(element)
         }
         return summary
+    }
+    
+    public static func preferredEmojiVariant(for emoji: Emoji) -> EmojiVariant {
+        EmojiVariant(
+            base: emoji,
+            skintone: .init(rawValue: UserSettings.shared().emojiVariantPreference[emoji.rawValue] ?? "")
+        )
     }
     
     // MARK: - Private function
@@ -387,7 +387,8 @@ public class ReactionsManager: ObservableObject {
                     reaction: infoItem.reactionString,
                     sortDate: date,
                     contacts: newContacts,
-                    count: infoItem.count + 1
+                    count: infoItem.count + 1,
+                    canBeRemoved: checkRecipientsEmojiSupport() != .none
                 )
                 newReactions.insert(newItem)
             }
@@ -396,7 +397,8 @@ public class ReactionsManager: ObservableObject {
                     reaction: reaction.reaction,
                     sortDate: reaction.date,
                     contacts: [contact],
-                    count: 1
+                    count: 1,
+                    canBeRemoved: checkRecipientsEmojiSupport() != .none
                 )
                 newReactions.insert(newItem)
             }
@@ -409,11 +411,31 @@ public class ReactionsManager: ObservableObject {
         let entityManager = businessInjector.entityManager
         return entityManager.performAndWait {
             guard let message = entityManager.entityFetcher
-                .existingObject(with: self.messageObjectID) as? BaseMessage
+                .existingObject(with: self.messageObjectID) as? BaseMessage,
+                !message.willBeDeleted
             else {
                 return .none
             }
+            
+            let isNoteGroup = {
+                guard !message.conversation.willBeDeleted, message.conversation.isGroup else {
+                    return false
+                }
                 
+                let businessInjector = BusinessInjector(forBackgroundProcess: true)
+                
+                guard let group = businessInjector.groupManager.getGroup(conversation: message.conversation),
+                      group.isNoteGroup else {
+                    return false
+                }
+                
+                return true
+            }()
+            
+            if isNoteGroup {
+                return .full
+            }
+            
             let (supported, unsupported) = FeatureMask.check(message: message, for: .reactionSupport)
                 
             if supported {

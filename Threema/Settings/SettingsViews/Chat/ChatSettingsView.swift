@@ -41,6 +41,14 @@ struct ChatSettingsView: View {
                 Toggle(isOn: $settingsVM.sendMessageFeedback) {
                     Text(#localize("settings_chat_send_message_feedback_label"))
                 }
+                Button(role: .destructive) {
+                    UserSettings.shared().resetEmojiReactions()
+                    NotificationPresenterWrapper.shared.present(type: .emojisReset)
+                } label: {
+                    Text(#localize("settings_chat_reset_emoji_label"))
+                }
+            } footer: {
+                Text(#localize("settings_chat_reset_emoji_footer"))
             }
         }
         .navigationBarTitle(#localize("settings_list_chat_title"), displayMode: .inline)

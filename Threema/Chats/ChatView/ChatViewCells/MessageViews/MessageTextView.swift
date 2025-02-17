@@ -158,6 +158,16 @@ final class MessageTextView: RTLAligningTextView {
         delegate = self
         isAccessibilityElement = false
         accessibilityElementsHidden = true
+        
+        // Needed to detect and ignore long-presses and pans on the view
+        for gestureRecognizer in gestureRecognizers ?? [] {
+            // To still allow link interactions, we do not override the delegate
+            guard !(gestureRecognizer.name?.contains("dragAddingItems") ?? false) else {
+                continue
+            }
+            
+            gestureRecognizer.delegate = self
+        }
     }
         
     // MARK: - Private Helper Functions
@@ -462,5 +472,71 @@ extension MessageTextView: UITextViewDelegate {
             return
         }
         messageTextViewDelegate?.didSelectText(in: self)
+    }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+
+extension MessageTextView: UIGestureRecognizerDelegate {
+    
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        guard !isTapLocationOnLink(location: otherGestureRecognizer.location(in: self)) else {
+            return false
+        }
+        
+        if (
+            otherGestureRecognizer is UILongPressGestureRecognizer && otherGestureRecognizer
+                .name == "ThreemaLongPressContextMenuGestureRecognizer"
+        ) ||
+            otherGestureRecognizer is UIPanGestureRecognizer {
+            return true
+        }
+        return false
+    }
+
+    func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        guard !isTapLocationOnLink(location: otherGestureRecognizer.location(in: self)) else {
+            return false
+        }
+        
+        if (
+            otherGestureRecognizer is UILongPressGestureRecognizer && otherGestureRecognizer
+                .name == "ThreemaLongPressContextMenuGestureRecognizer"
+        ) ||
+            otherGestureRecognizer is UIPanGestureRecognizer {
+            return true
+        }
+        return false
+    }
+    
+    private func isTapLocationOnLink(location: CGPoint) -> Bool {
+        guard let textPosition: UITextPosition = closestPosition(to: location) else {
+            return false
+        }
+        
+        guard let textRange: UITextRange = tokenizer.rangeEnclosingPosition(
+            textPosition,
+            with: UITextGranularity.word,
+            inDirection: UITextDirection(rawValue: 1)
+        ) else {
+            return false
+        }
+
+        let location = offset(from: beginningOfDocument, to: textRange.start)
+        let length = offset(from: textRange.start, to: textRange.end)
+        let range = NSRange(location: location, length: length)
+        
+        var isLink = false
+        attributedText.enumerateAttributes(in: range) { attributes, _, _ in
+            isLink = attributes.contains { $0.key == NSAttributedString.Key.link }
+        }
+        
+        return isLink
     }
 }

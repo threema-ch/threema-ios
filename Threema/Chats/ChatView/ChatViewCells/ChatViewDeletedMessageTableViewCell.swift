@@ -179,9 +179,7 @@ extension ChatViewDeletedMessageTableViewCell: ChatViewMessageActions {
             
             primaryActions = Provider.defaultPrimaryActionsSection(
                 message: message,
-                ackHandler: nil,
-                markStarHandler: markStarHandler,
-                showEmojiPickerHandler: nil
+                markStarHandler: markStarHandler
             )
         }
         else {
@@ -199,7 +197,6 @@ extension ChatViewDeletedMessageTableViewCell: ChatViewMessageActions {
         }
         
         // Delete
-        
         let willDelete: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.willDeleteMessage(with: message.objectID)
         }
@@ -209,7 +206,6 @@ extension ChatViewDeletedMessageTableViewCell: ChatViewMessageActions {
         }
         
         // Build menu
-        
         let basicActions = Provider.defaultBasicActions(
             message: message,
             popOverSource: chatBubbleContentView,

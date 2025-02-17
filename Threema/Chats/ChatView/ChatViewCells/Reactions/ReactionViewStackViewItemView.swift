@@ -66,6 +66,8 @@ class ReactionViewStackViewItemView: UIView {
             case .picker:
                 reactionsManager.showEmojiPickerSheet()
             }
+            
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
         }
         
         let button = UIButton(configuration: configuration, primaryAction: action)

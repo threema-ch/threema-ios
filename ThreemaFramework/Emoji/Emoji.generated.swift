@@ -3873,7 +3873,7 @@ extension Emoji {
         }
     }
 
-    var sortOrder: Int {
+    public var sortOrder: Int {
         switch self {
         case .hashKey: return 1549
         case .keycap: return 1550
@@ -5790,7 +5790,7 @@ extension Emoji {
         case dark = "1F3FF"
     }
 
-    public static var allVariants: [Emoji:[[SkinTone]:String]] {
+    public static var allVariants: [Emoji:[[SkinTone]:String]] = {
         return [
 			.fatherChristmas:[
 				[.light]: "🎅🏻", 
@@ -8307,16 +8307,9 @@ extension Emoji {
 				[.dark]: "✍🏿"
 			],
         ]
-    }
+    }()
+    
     public var variants: [[SkinTone]: String]? {
         Emoji.allVariants[self]
-    }
-    
-    public func variant(for skinToneOption: SkinTone?) -> String {
-        if let skinToneOption {
-            return variants?[[skinToneOption]] ?? self.rawValue
-        } else {
-            return self.rawValue
-        }
     }
 }

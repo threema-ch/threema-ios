@@ -49,22 +49,6 @@ extension BaseMessage {
             otherMessageState
         }
     }
-    
-    public var supportsLegacyReaction: Bool {
-        // single chats can't ack their own messages
-        if isOwnMessage,
-           !isGroupMessage {
-            return false
-        }
-        // Group chats can only ack their own messages if it's sent
-        if isOwnMessage,
-           isGroupMessage,
-           messageState == .failed || messageState == .sending {
-            return false
-        }
-        
-        return true
-    }
 
     /// Is reacting to this message allowed?
     public var supportsReaction: Bool {

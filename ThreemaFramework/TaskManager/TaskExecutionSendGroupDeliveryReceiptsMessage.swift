@@ -46,25 +46,6 @@ final class TaskExecutionSendGroupDeliveryReceiptsMessage: TaskExecution, TaskEx
             }
 
             if task.receiptType == .ack || task.receiptType == .decline {
-                
-                // We do no longer reflect group delivery receipts once the user is in phase 2
-                guard !self.frameworkInjector.userSettings.sendEmojiReactions else {
-                    return Promise { seal in seal.fulfill(true) }
-                }
-                
-                let msg = self.getGroupDeliveryReceiptMessage(
-                    groupID,
-                    groupCreatorIdentity,
-                    task.fromMember,
-                    self.frameworkInjector.myIdentityStore.identity,
-                    task.receiptType,
-                    task.receiptMessageIDs
-                )
-                try self.reflectMessage(
-                    message: msg,
-                    ltReflect: self.taskContext.logReflectMessageToMediator,
-                    ltAck: self.taskContext.logReceiveMessageAckFromMediator
-                )
                 return Promise { seal in seal.fulfill(true) }
             }
             else if task.receiptType == .read {

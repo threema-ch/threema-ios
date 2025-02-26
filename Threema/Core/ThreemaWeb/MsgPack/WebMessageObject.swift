@@ -98,7 +98,7 @@ class WebMessageObject: NSObject {
             var ackedIdentities = [String]()
             var decedIdentities = [String]()
             
-            if ThreemaApp.current != .onPrem {
+            if ThreemaApp.current == .onPrem {
                 for reaction in reactions {
                     guard let emoji = Emoji(rawValue: reaction.reaction),
                           let mapping = emoji.applyLegacyMapping() else {

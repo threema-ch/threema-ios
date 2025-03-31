@@ -305,8 +305,20 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         observeMessage(\.readDate) { [weak self] in
             self?.updateSnapshot(reconfigure: [.messageDisplayState(.read)])
         }
-        
+    
+        observeMessage(\.deletedAt) { [weak self] in
+            guard let self else {
+                return
+            }
+            // Do not reconfigure, because the message cell will change
+            dataSource.applySnapshotUsingReloadData(newSnapshot())
+        }
         observeMessage(\.lastEditedAt) { [weak self] in
+            // `lastEditedAt` getting triggered if the message will be remotely deleted
+            guard let msg = self?.message,
+                  msg.deletedAt == nil else {
+                return
+            }
             self?.updateSnapshot(reconfigure: [])
         }
         

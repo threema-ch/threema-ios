@@ -49,9 +49,9 @@
 }
 
 - (void)setup {
-    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], [ThreemaAppObjc appName]];
+    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], TargetManagerObjc.appName];
 
-    if ([LicenseStore requiresLicenseKey]) {
+    if (TargetManagerObjc.isBusinessApp) {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_confirm_description_work"];
     } else {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_confirm_description"];
@@ -61,7 +61,7 @@
     self.moreView.mainView = self.mainContentView;
     self.moreView.moreMessageText = [BundleUtil localizedStringForKey:@"more_information_confirm_id"];
     
-    _idLabel.textColor = Colors.primaryWizard;
+    _idLabel.textColor = UIColor.primary;
 }
 
 - (BOOL)isInputValid {

@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 public enum FeatureMaskError: Error {
@@ -29,7 +30,7 @@ public enum FeatureMaskError: Error {
 public class FeatureMask: NSObject, FeatureMaskProtocol {
     
     // MARK: - Local
-    
+
     /// Updates local feature mask and sends it to server
     @objc public static func updateLocalObjc() {
         FeatureMask.updateLocal()
@@ -85,7 +86,7 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
             }
         }
     }
-    
+
     /// Updates local feature mask and sends it to server
     ///
     /// Async version of `updateLocal(completion:)`
@@ -98,63 +99,144 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
             }
         }
     }
-    
+
     // MARK: - Contacts
-    
-    /// Checks if ContactEntities support a given feature mask, returns unsupported contacts.
-    /// - Parameters:
-    ///   - contacts: ContactEntities to check
-    ///   - mask: Mask to use
-    ///   - completion: Array of ContactEntities that are not supported. There is no guarantee on the queue the
-    ///                 completion handler is called on. So if you access the ContactEntities again you need to
-    ///                 perform the access on the right Core Data Context queue.
-    @objc public static func checkObjc(
-        contacts: Set<ContactEntity>,
-        for mask: Int,
-        completion: @escaping ([ContactEntity]) -> Void
-    ) {
-        FeatureMask.check(contacts: contacts, for: mask, completion: completion)
-    }
-    
-    /// Checks if ContactEntities support a given feature mask, returns unsupported contacts.
-    /// - Parameters:
-    ///   - contacts: ContactEntities to check
-    ///   - mask: Mask to use
-    ///   - force: Force sync to MD
-    ///   - completion: Array of ContactEntities that are not supported. There is no guarantee on the queue the
-    ///                 completion handler is called on. So if you access the ContactEntities again you need to
-    ///                 perform the access on the right Core Data Context queue.
-    public static func check(
-        contacts: Set<ContactEntity>,
-        for mask: Int,
-        force: Bool = false,
-        completion: @escaping ([ContactEntity]) -> Void
-    ) {
-        let unsupported = force ? Array(contacts) : filterUnsupported(contacts: contacts, for: mask)
-        
-        guard !unsupported.isEmpty else {
-            completion([])
-            return
+
+    /// Get Feature Masks of given contacts from sever.
+    /// - Parameter identities: Get Feature Masks for Identities
+    /// - Returns: Dictionary with Identity and it's Feature Mask
+    @objc static func getFeatureMask(for identities: [String]) async throws -> [String: Int] {
+        guard !identities.isEmpty else {
+            return [:]
         }
-        
-        let mediatorSyncableContacts = MediatorSyncableContacts()
-        let contactStore = ContactStore.shared()
-        
-        contactStore.updateFeatureMasks(forContacts: unsupported, contactSyncer: mediatorSyncableContacts) {
-            mediatorSyncableContacts.syncObjc { error in
-                if error == nil {
-                    // Re-read feature mask
-                    completion(filterUnsupported(contacts: unsupported, for: mask))
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let serverAPIConnector = ServerAPIConnector()
+            serverAPIConnector.getFeatureMasks(forIdentities: identities) { featureMasks in
+                var values: [String: Int] = [:]
+                if let masks = featureMasks as? [Int] {
+                    var index = 0
+                    for identity in identities {
+                        values[identity] = masks[index]
+                        index += 1
+                    }
                 }
-                else {
-                    // Always run onCompletion
-                    completion(unsupported)
+                continuation.resume(returning: values)
+            } onError: { error in
+                continuation.resume(throwing: error!)
+            }
+        }
+    }
+
+    /// Gets feature mask of contacts from directory server and updates them.
+    /// - Parameter identities: Identities to update Feature Mask for
+    @MainActor
+    public static func updateFeatureMask(for identities: [ThreemaIdentity]) async throws {
+        let featureMasks = try await FeatureMask.getFeatureMask(for: identities.map(\.string))
+
+        let mediatorSyncableContacts = MediatorSyncableContacts()
+        let entityManager = EntityManager()
+
+        await entityManager.performSave {
+            for featureMask in featureMasks {
+                guard featureMask.value >= 0 else {
+                    continue
+                }
+
+                guard let contactEntity = entityManager.entityFetcher.contact(for: featureMask.key) else {
+                    continue
+                }
+
+                let oldFeatureMask = contactEntity.featureMask
+
+                // Always update feature mask of local contact
+                contactEntity.featureMask = NSNumber(
+                    integerLiteral: featureMask.value
+                )
+
+                if !oldFeatureMask.isEqual(to: contactEntity.featureMask) {
+                    mediatorSyncableContacts.updateFeatureMask(
+                        identity: featureMask.key,
+                        value: contactEntity.featureMask
+                    )
                 }
             }
-        } onError: { _ in
-            // Always run onCompletion
-            completion(unsupported)
         }
+
+        try await mediatorSyncableContacts.sync().async()
+    }
+
+    /// Checks whether contacts support a specific feature mask, returns unsupported contacts.
+    /// - Parameters:
+    ///   - identities: Identities of contacts to check
+    ///   - mask: Mask to use
+    ///   - completion: Array of contact identities that are not supported. Is called on main thread.
+    @available(*, deprecated, renamed: "check(identities:for:force:)", message: "Use from Objective-C only")
+    @objc public static func check(
+        identities: Set<String>,
+        for mask: Int,
+        completion: @escaping ([String]) -> Void
+    ) {
+        Task { @MainActor in
+            let unsupported = await FeatureMask.check(
+                identities: Set(identities.map { ThreemaIdentity($0) }),
+                for: mask,
+                force: false
+            )
+
+            completion(unsupported.map(\.string))
+        }
+    }
+    
+    /// Checks whether contacts support a specific feature mask, returns unsupported contacts.
+    /// - Parameters:
+    ///   - identities: Identities of contacts to check
+    ///   - mask: Mask to use
+    ///   - force: Force the update of the feature mask and sync to MD of all contacts
+    /// - Returns: Array of contact identities that are not supported
+    @MainActor
+    public static func check(
+        identities: Set<ThreemaIdentity>,
+        for mask: Int,
+        force: Bool = false
+    ) async -> [ThreemaIdentity] {
+
+        func filterUnsupported(identities: any Sequence<ThreemaIdentity>, for mask: Int) async -> [ThreemaIdentity] {
+            let entityManager = EntityManager()
+            return await entityManager.perform {
+                // Load contacts to check feature mask
+                var contacts: Set<ContactEntity> = []
+                for identity in identities {
+                    guard let contact = entityManager.entityFetcher.contact(for: identity.string) else {
+                        continue
+                    }
+                    contacts.insert(contact)
+                }
+
+                // Get contacts has not the feature mask
+                return contacts.filter {
+                    (mask & $0.featureMask.intValue) == 0
+                }
+                .map(\.threemaIdentity)
+            }
+        }
+
+        let unsupported = force ? Array(identities) : await filterUnsupported(identities: identities, for: mask)
+
+        guard !unsupported.isEmpty else {
+            return []
+        }
+
+        do {
+            try await updateFeatureMask(for: unsupported)
+
+            return await filterUnsupported(identities: unsupported, for: mask)
+        }
+        catch {
+            DDLogError("Failed to update/sync contacts feature masks: \(error)")
+        }
+
+        return unsupported
     }
     
     /// Checks if a `Contact` supports a given `Common_CspFeatureMaskFlag`
@@ -203,20 +285,5 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
             }
         }
         return (isSupported, unsupported)
-    }
-
-    private static func filterUnsupported(contacts: any Sequence<ContactEntity>, for mask: Int) -> [ContactEntity] {
-        contacts.filter { contact in
-            // This should only be `nil` if contact is deleted
-            if let managedObjectContext = contact.managedObjectContext {
-                managedObjectContext.performAndWait {
-                    managedObjectContext.refresh(contact, mergeChanges: true)
-                    return (mask & contact.featureMask.intValue) == 0
-                }
-            }
-            else {
-                false
-            }
-        }
     }
 }

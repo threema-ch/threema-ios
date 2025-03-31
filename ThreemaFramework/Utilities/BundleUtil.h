@@ -33,6 +33,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable NSString *)threemaAppIdentifier;
 
++ (nullable NSString *)targetManagerKey;
+
 + (nullable id)objectForInfoDictionaryKey:(NSString *)key;
 
 + (nullable NSString *)pathForResource:(nullable NSString *)resource ofType:(nullable NSString *)type;

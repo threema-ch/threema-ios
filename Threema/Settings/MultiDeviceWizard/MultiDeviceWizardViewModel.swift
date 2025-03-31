@@ -43,7 +43,7 @@ class MultiDeviceWizardViewModel: ObservableObject {
     @Published var didTimeout = false
     @Published var didDisconnect = false
 
-    let businessInjector = BusinessInjector()
+    let businessInjector = BusinessInjector.ui
     let deviceLinker: DeviceLinking
     
     private var prepareLinkingTask: Task<Void, Never>?

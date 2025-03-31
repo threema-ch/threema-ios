@@ -588,7 +588,7 @@ final class ChatViewController: ThemedViewController {
     ///   - businessInjector: Business injector to load messages
     init(
         for conversation: ConversationEntity,
-        businessInjector: BusinessInjectorProtocol = BusinessInjector(),
+        businessInjector: BusinessInjectorProtocol = BusinessInjector.ui,
         chatScrollPositionProvider: ChatScrollPositionProvider = ChatScrollPosition.shared,
         showConversationInformation: ShowConversationInformation? = nil
     ) {
@@ -1110,9 +1110,9 @@ extension ChatViewController {
             }
             // Only show call icon if Threema calls are enabled and contact supports them
             else if UserSettings.shared()?.enableThreemaCall == true,
-                    let contact = conversation.contact {
-                let contactSet = Set<ContactEntity>([contact])
-                FeatureMask.check(contacts: contactSet, for: Int(FEATURE_MASK_VOIP)) { unsupportedContacts in
+                    let identity = conversation.contact?.identity {
+                let identities = Set<String>([identity])
+                FeatureMask.check(identities: identities, for: Int(FEATURE_MASK_VOIP)) { unsupportedContacts in
                     if unsupportedContacts.isEmpty == true ||
                         ProcessInfoHelper.isRunningForScreenshots {
                         self.navigationItem.rightBarButtonItem = self.callBarButtonItem

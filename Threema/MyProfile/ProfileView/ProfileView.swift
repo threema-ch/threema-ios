@@ -27,6 +27,8 @@ import ThreemaMacros
 struct ProfileView: View {
     @ObservedObject var model = ProfileViewModel()
     
+    private let businessInjector = BusinessInjector.ui
+    
     var body: some View {
         ThreemaNavigationView(.manual) {
             DynamicHeader {
@@ -87,8 +89,8 @@ struct ProfileView: View {
             return
         }
         
-        if UserSettings.shared().enableMultiDevice,
-           BusinessInjector().serverConnector.connectionState != .loggedIn {
+        if businessInjector.userSettings.enableMultiDevice,
+           businessInjector.serverConnector.connectionState != .loggedIn {
             
             UIAlertTemplate.showAlert(
                 owner: topViewController,
@@ -114,7 +116,7 @@ struct ProfileView: View {
             scanIdentity.containingViewController = topViewController
             scanIdentity.startScan()
             
-            BusinessInjector().contactStore
+            businessInjector.contactStore
                 .synchronizeAddressBook(
                     forceFullSync: true,
                     ignoreMinimumInterval: false,

@@ -33,7 +33,7 @@ extension ProfileView {
         var body: some View {
             Section {
                 QuickActionRow {
-                    if ThreemaApp.current != .onPrem {
+                    if !TargetManager.isOnPrem {
                         .init(
                             action: shareID,
                             icon: "square.and.arrow.up.fill",
@@ -127,7 +127,7 @@ extension ProfileView {
                     )
                 }, onDismiss: model.load, fullscreen: false)
             } footer: {
-                Text(String(format: #localize("myprofile_link_email_phone_footer"), ThreemaApp.appName))
+                Text(String(format: #localize("myprofile_link_email_phone_footer"), TargetManager.appName))
             }
             .disabled(model.readOnlyProfile)
         }
@@ -143,7 +143,7 @@ extension ProfileView {
                 LockedNavigationLink(shouldNavigate: $model.shouldNavigateToSafeSetup, label: {
                     ListItem(
                         title: #localize("safe_setup_backup_title"),
-                        subTitle: (model.isThreemaSafeActivated ? "On" : "Off").localized
+                        subTitle: #localize(model.isThreemaSafeActivated ? "On" : "Off")
                     )
                 }, destination: {
                     ThreemaSafeSection.safe
@@ -186,7 +186,7 @@ extension ProfileView {
                     )
                 }
                 .disabled(model.disableBackups)
-                if ThreemaApp.current != .onPrem {
+                if !TargetManager.isOnPrem {
                     LockedModalNavigationLink {
                         revocationKey
                     } label: {

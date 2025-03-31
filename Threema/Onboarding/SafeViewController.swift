@@ -126,7 +126,7 @@ import UIKit
                     alert.showAlert(
                         String.localizedStringWithFormat(
                             #localize("password_bad_regex"),
-                            ThreemaApp.currentName
+                            TargetManager.appName
                         ),
                         title: #localize("Password")
                     )
@@ -200,7 +200,7 @@ import UIKit
                 let safeStore = SafeStore(
                     safeConfigManager: safeConfigManager,
                     serverApiConnector: ServerAPIConnector(),
-                    groupManager: BusinessInjector().groupManager
+                    groupManager: BusinessInjector.ui.groupManager
                 )
                 let safeManager = SafeManager(
                     safeConfigManager: safeConfigManager,

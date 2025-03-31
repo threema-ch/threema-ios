@@ -149,7 +149,7 @@
 
     self.scrollView.contentSize = self.mainContentView.frame.size;
     
-    _finishButton.backgroundColor = Colors.primaryWizard;
+    _finishButton.backgroundColor = UIColor.primary;
     [_finishButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     
     if ([AppDelegate hasBottomSafeAreaInsets]) {
@@ -161,7 +161,7 @@
     _phoneImageView.image = [[UIImage systemImageNamed:@"phone.fill"] imageWithTintColor:Colors.textSetup];
     _mailImageView.image = [[UIImage systemImageNamed:@"envelope.fill"] imageWithTintColor:Colors.textSetup];
     
-    if (![LicenseStore requiresLicenseKey]) {
+    if (!TargetManagerObjc.isBusinessApp) {
         _emailView.hidden = YES;
     }
 }

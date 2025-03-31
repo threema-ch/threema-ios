@@ -32,12 +32,6 @@
 + (nonnull instancetype)sharedLicenseStore;
 - (nonnull instancetype) __unavailable init;
 
-+ (BOOL)requiresLicenseKey;
-
-+ (BOOL)isOnPrem;
-
-- (BOOL)getRequiresLicenseKey;
-
 - (BOOL)isValid;
 
 - (BOOL)isWithinCheckInterval;

@@ -57,7 +57,7 @@ public protocol NotificationManagerProtocol {
     
     @objc override convenience init() {
         self.init(
-            businessInjector: BusinessInjector()
+            businessInjector: BusinessInjector.ui
         )
     }
     
@@ -311,7 +311,7 @@ extension NotificationManager {
         let title = #localize("new_message_no_access_title")
         let message = String.localizedStringWithFormat(
             #localize("new_message_no_access_message"),
-            ThreemaApp.currentName
+            TargetManager.appName
         )
         ThreemaUtilityObjC.sendErrorLocalNotification(title, body: message, userInfo: nil) {
             ThreemaUtilityObjC.wait(forSeconds: 2, finish: completionHandler)
@@ -322,7 +322,7 @@ extension NotificationManager {
         let title = #localize("call_voip_not_supported_title")
         let message = String.localizedStringWithFormat(
             #localize("alert_no_access_message_microphone"),
-            ThreemaApp.currentName
+            TargetManager.appName
         )
         ThreemaUtilityObjC.sendErrorLocalNotification(title, body: message, userInfo: nil)
     }

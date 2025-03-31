@@ -72,7 +72,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (instancetype)initWithFetchedResultsControllerDelegate:(id<NSFetchedResultsControllerDelegate>)delegate members:(NSMutableSet *)members {
     self = [super init];
     if (self) {
-        _contactList = [ThreemaUtility isWorkFlavor] ? ContactListContactsAndWork : ContactListContacts;
+        _contactList = [TargetManagerObjc isBusinessApp] ? ContactListContactsAndWork : ContactListContacts;
 
         BusinessInjector *businessInjector = [[BusinessInjector alloc] init];
         _messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:businessInjector.myIdentityStore userSettings:businessInjector.userSettings groupManager:businessInjector.groupManagerObjC entityManager:businessInjector.entityManager];

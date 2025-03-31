@@ -120,7 +120,7 @@
     if ([licenseStore isValid] == NO) {
         [licenseStore performLicenseCheckWithCompletion:^(BOOL success) {
             if (success) {
-                if ([LicenseStore requiresLicenseKey] == true) {
+                if (TargetManagerObjc.isBusinessApp) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:[BundleUtil localizedStringForKey:@"already_licensed"] message:@"" actionOk:nil];
                     });
@@ -131,10 +131,10 @@
                 NSString *server = [query objectForKey:@"server"][0];
                 
                 // show license screen if
-                if (username == nil || password == nil || (server == nil && ThreemaAppObjc.current == ThreemaAppOnPrem)) {
+                if (username == nil || password == nil || (server == nil && TargetManagerObjc.isOnPrem)) {
                     [licenseStore setLicenseUsername:username];
                     [licenseStore setLicensePassword:password];
-                    if (ThreemaAppObjc.current == ThreemaAppOnPrem) {
+                    if (TargetManagerObjc.isOnPrem) {
                         [licenseStore setOnPremConfigUrl:server];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
@@ -143,7 +143,7 @@
                 } else {
                     [licenseStore setLicenseUsername:username];
                     [licenseStore setLicensePassword:password];
-                    if (ThreemaAppObjc.current == ThreemaAppOnPrem) {
+                    if (TargetManagerObjc.isOnPrem) {
                         [licenseStore setOnPremConfigUrl:server];
                     }
 
@@ -168,7 +168,7 @@
             }
         }];
     } else {
-        if ([LicenseStore requiresLicenseKey] == true) {
+        if (TargetManagerObjc.isBusinessApp) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:[BundleUtil localizedStringForKey:@"already_licensed"] message:@"" actionOk:nil];
             });
@@ -212,7 +212,7 @@
     // Check if the "other" app (Work if we are not the Work app, or vice versa) is also installed.
     // If so, we need to prompt the user for what to do.
     BOOL mustDisplayAppChooser = NO;
-    BOOL isWorkApp = [LicenseStore requiresLicenseKey];
+    BOOL isWorkApp = TargetManagerObjc.isBusinessApp;
     if (isWorkApp) {
         // This is the Work app. Check if the regular app is installed.
         if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"threema://app"]]) {

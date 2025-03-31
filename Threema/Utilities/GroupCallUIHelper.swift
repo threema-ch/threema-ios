@@ -85,7 +85,7 @@ extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
             return
         }
         
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector.ui
 
         if !businessInjector.pushSettingManager.canMasterDndSendPush() {
             return

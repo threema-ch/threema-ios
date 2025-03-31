@@ -772,7 +772,7 @@ extension VoIPCallPeerConnectionClient {
             }
             
             DispatchQueue.main.async {
-                let contact = BusinessInjector().entityManager.entityFetcher.contact(for: self.contactIdentity)
+                let contact = BusinessInjector.ui.entityManager.entityFetcher.contact(for: self.contactIdentity)
                 
                 let extensionConfig: VoIPCallSdpPatcher.RtpHeaderExtensionConfig = contact?
                     .isVideoCallAvailable() ?? false ? .ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER : .DISABLE

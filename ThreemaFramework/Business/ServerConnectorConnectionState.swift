@@ -119,17 +119,17 @@ class ServerConnectorConnectionState: NSObject {
 
     private func changeConnectionState(server: ServerConnection, value: ConnectionState) {
         disconnectCondition.lock()
-        let state = connectionState
+
         if server == .any || server == .chat {
             connectionStateChatServer = value
         }
         if userSettings.enableMultiDevice, server == .any || server == .mediator {
             connectionStateMediatorServer = value
         }
-        if state != connectionState {
-            DDLogNotice("Server connection state changed to \(nameFor(connectionState: connectionState))")
-            connectionStateDelegate.changed(connectionState: connectionState)
-        }
+
+        DDLogNotice("Server connection state changed to \(nameFor(connectionState: connectionState))")
+        connectionStateDelegate.changed(connectionState: connectionState)
+
         if connectionState == .disconnected {
             // Release wait on condition
             disconnectCondition.broadcast()

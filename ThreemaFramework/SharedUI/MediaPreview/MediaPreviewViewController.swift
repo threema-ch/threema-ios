@@ -71,8 +71,8 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     var errorList: [PhotosPickerError] = []
     
     var selection: IndexPath?
-    var itemDelegate: MediaPreviewURLDataProcessor?
-    
+    weak var itemDelegate: MediaPreviewURLDataProcessor?
+
     override open func viewDidLoad() {
         super.viewDidLoad()
         
@@ -476,6 +476,10 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     }
     
     @objc func sendButtonPressed(_ sender: Any) {
+        guard let itemDelegate else {
+            fatalError("ItemDelegate must be set")
+        }
+
         navigationItem.rightBarButtonItem?.isEnabled = false
         let label = #localize("processing_items_progress")
         let progressViewHandler = ProgressViewHandler(
@@ -484,7 +488,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             label: label
         )
         dismissKeyboard()
-        
+
         // Stop playing video when send button is pressed
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: kMediaPreviewPauseVideo), object: nil)
         
@@ -515,7 +519,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             DispatchQueue.main.async {
                 progressViewHandler.hideHud { [weak self] in
                     self?.completion?(returnVal, sendAsFile, captions)
-                    self?.itemDelegate = nil
+                    self?.navigationItem.rightBarButtonItem?.isEnabled = true
                 }
             }
         }

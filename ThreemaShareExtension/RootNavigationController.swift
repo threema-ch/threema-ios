@@ -42,7 +42,9 @@ class RootNavigationController: UINavigationController {
     weak var picker: ContactGroupPickerViewController?
     weak var progressViewController: ProgressViewController?
     var textPreview: TextPreviewViewController?
-    
+
+    private let dataProcessor = MediaPreviewURLDataProcessor()
+
     private var evaluatedPolicyDomainState: Data?
     
     override func viewDidLoad() {
@@ -52,6 +54,10 @@ class RootNavigationController: UINavigationController {
         
         setAppGroup()
         Colors.initTheme()
+        
+        if !UserSettings.shared().useSystemTheme {
+            overrideUserInterfaceStyle = UserSettings.shared().darkTheme ? .dark : .light
+        }
         
         // Check if we already have a suggested contact
         setContactsFromIntent()
@@ -176,7 +182,6 @@ class RootNavigationController: UINavigationController {
                 .getDescription(for: Array(recipientConversations).compactMap { $0 })
         }
         
-        let dataProcessor = MediaPreviewURLDataProcessor()
         dataProcessor.cancelAction = { [weak self] in self?.cancelTapped() }
         dataProcessor.memoryConstrained = true
         
@@ -192,7 +197,7 @@ class RootNavigationController: UINavigationController {
                 guard let strongSelf = self else {
                     fatalError()
                 }
-                
+
                 strongSelf.itemSender.sendAsFile = sendAsFile
                 strongSelf.itemSender.itemsToSend = dataItems
                 strongSelf.itemSender.captions = captions
@@ -413,11 +418,11 @@ class RootNavigationController: UINavigationController {
     private func showNeedStartAppFirst() {
         let title = String.localizedStringWithFormat(
             #localize("need_to_start_app_first_title"),
-            ThreemaApp.currentName
+            TargetManager.appName
         )
         let message = String.localizedStringWithFormat(
             #localize("need_to_start_app_first_message"),
-            ThreemaApp.currentName
+            TargetManager.appName
         )
         showAlert(with: title, message: message, closeOnOK: true)
     }
@@ -643,22 +648,31 @@ class RootNavigationController: UINavigationController {
     }
     
     private func startSending() {
-        itemSender.itemCount().done { itemCount in
+        itemSender.itemCount().then(on: .main) { itemCount -> Promise<Bool> in
+
             let count = self.recipientConversations!.count * itemCount
             
             if count == 0, itemCount == 0 {
                 self.finishAndClose(success: false)
+                return .value(false)
             }
             
             if !self.canConnect() {
                 let title = #localize("cannot_connect_title")
                 let message = #localize("cannot_connect_message")
                 self.showAlert(with: title, message: message, closeOnOK: false)
+
+                throw ThreemaProtocolError.notLoggedIn
             }
-        }.ensure(on: DispatchQueue.main) {
+
+            return .value(true)
+        }.done(on: .main) { showProgress in
+            guard showProgress else {
+                return
+            }
             self.showProgressUI()
-        }.catch { _ in
-            DDLogError("Unknown error occurred")
+        }.catch {
+            DDLogError("Start sending failed: \($0)")
         }
     }
     

@@ -60,7 +60,7 @@ class SafeServerViewController: IDCreationPageViewController {
         keyboardResize = KeyboardResizeCenterY(parent: view, resize: mainContentView)
 
         titleLabel.text = #localize("safe_configure_choose_server")
-        if ThreemaApp.current == .onPrem {
+        if TargetManager.isOnPrem {
             descriptionLabel.text = #localize("safe_configure_server_explain_onprem")
         }
         else {
@@ -85,7 +85,7 @@ class SafeServerViewController: IDCreationPageViewController {
         serverUsernameField.text = serverUsername
         serverPasswordField.text = serverPassword
         
-        serverSwitch.onTintColor = Colors.primaryWizard
+        serverSwitch.onTintColor = .primary
     }
     
     // MARK: - Controlling the Keyboard
@@ -111,7 +111,7 @@ class SafeServerViewController: IDCreationPageViewController {
             let safeStore = SafeStore(
                 safeConfigManager: safeConfigManager,
                 serverApiConnector: ServerAPIConnector(),
-                groupManager: BusinessInjector().groupManager
+                groupManager: BusinessInjector.ui.groupManager
             )
             
             if let customServer = serverField.text,

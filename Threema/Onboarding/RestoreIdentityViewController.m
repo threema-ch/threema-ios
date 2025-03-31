@@ -52,7 +52,7 @@
     _scanView.isAccessibilityElement = YES;
     [_scanView setAccessibilityHint: [BundleUtil localizedStringForKey:@"scan_id_backup"]];
     _scanLabel.text = [BundleUtil localizedStringForKey:@"scan_id_backup"];
-    _scanLabel.textColor = Colors.primaryWizard;
+    _scanLabel.textColor = UIColor.primary;
     
     self.view.backgroundColor = [UIColor clearColor];
 
@@ -69,22 +69,22 @@
 
     _scanView.layer.cornerRadius = 3;
     _scanView.layer.borderWidth = 1;
-    _scanView.layer.borderColor = Colors.primaryWizard.CGColor;
+    _scanView.layer.borderColor = UIColor.primary.CGColor;
     _scanView.isAccessibilityElement = YES;
     _scanView.accessibilityTraits = UIAccessibilityTraitButton;
 
     _doneButton.layer.cornerRadius = 3;
     
     _cancelButton.layer.borderWidth = 1;
-    _cancelButton.layer.borderColor = Colors.primaryWizard.CGColor;
+    _cancelButton.layer.borderColor = UIColor.primary.CGColor;
     _cancelButton.layer.cornerRadius = 3;
     
     [_doneButton setTitle:[BundleUtil localizedStringForKey:@"Done"] forState:UIControlStateNormal];
     [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"cancel"] forState:UIControlStateNormal];
-    _doneButton.backgroundColor = Colors.primaryWizard;
+    _doneButton.backgroundColor = UIColor.primary;
     [_doneButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     
-    [_cancelButton setTitleColor:Colors.primaryWizard forState:UIControlStateNormal];
+    [_cancelButton setTitleColor:UIColor.primary forState:UIControlStateNormal];
     
     NSString *placeholder = [BundleUtil localizedStringForKey:@"Password"];
     _passwordTextField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder attributes:@{NSForegroundColorAttributeName: THREEMA_COLOR_PLACEHOLDER}];
@@ -95,12 +95,12 @@
     _titleLabel.text = [BundleUtil localizedStringForKey:@"restore_id_export"];
     _titleLabel.accessibilityIdentifier = @"restore_id_export";
     
-    _scanImageView.image = [[UIImage systemImageNamed:@"qrcode.viewfinder"] imageWithTintColor:Colors.primaryWizard];
+    _scanImageView.image = [[UIImage systemImageNamed:@"qrcode.viewfinder"] imageWithTintColor:UIColor.primary];
     
     _backupTextView.accessibilityIdentifier = @"backupTextView";
     
-    _backupTextView.tintColor = Colors.primaryWizard;
-    _passwordTextField.tintColor = Colors.primaryWizard;
+    _backupTextView.tintColor = UIColor.primary;
+    _passwordTextField.tintColor = UIColor.primary;
         
     UITapGestureRecognizer *mainTapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedMainView:)];
     [self.mainContentView addGestureRecognizer:mainTapGesture];

@@ -280,8 +280,13 @@
                     [messageProcessorDelegate incomingMessageFinished:amsg];
                 }
                 onCompletion(amsg, fsMessageInfo);
-            } onError:^(NSError *error) {
-                [messageProcessorDelegate incomingMessageFinished:amsg];
+            } onError:^(NSError *error, id<MessageProcessorDelegate> _Nullable delegate) {
+                if (delegate) {
+                    [delegate incomingMessageFinished:amsg];
+                }
+                else {
+                    [messageProcessorDelegate incomingMessageFinished:amsg];
+                }
                 onError(error, fsMessageInfo);
             }];
         }
@@ -342,14 +347,14 @@ Process incoming message.
 @param onCompletion: Completion handler with MessageProcessorDelegate, use it when calling MessageProcessorDelegate in completion block of processVoIPCall, to prevent blocking of dispatch queue 'ServerConnector.registerMessageProcessorDelegateQueue')
 @param onError: Error handler
 */
-- (void)processIncomingMessage:(AbstractMessage*)amsg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError *err))onError {
+- (void)processIncomingMessage:(AbstractMessage*)amsg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError *err, id<MessageProcessorDelegate> _Nullable))onError {
 
     ContactEntity *sender;
     ContactEntity *receiver;
     __block ConversationEntity *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver];
 
     if (sender == nil) {
-        onError([ThreemaError threemaError:@"Sender not found as contact"]);
+        onError([ThreemaError threemaError:@"Sender not found as contact"], nil);
         return;
     }
 
@@ -377,15 +382,21 @@ Process incoming message.
             [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 onCompletion(nil);
             }];
-        } onError:onError];
+        } onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
+        }];
     } else if ([amsg isKindOfClass:[BoxImageMessage class]]) {
         [self processIncomingImageMessage:(BoxImageMessage *)amsg sender:sender conversation:conversation onCompletion:^{
             onCompletion(nil);
-        } onError:onError];
+        } onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
+        }];
     } else if ([amsg isKindOfClass:[BoxVideoMessage class]]) {
         [self processIncomingVideoMessage:(BoxVideoMessage*)amsg sender:sender conversation:conversation onCompletion:^{
             onCompletion(nil);
-        } onError:onError];
+        } onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
+        }];
     } else if ([amsg isKindOfClass:[BoxLocationMessage class]]) {
         [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
             LocationMessageEntity *locationMessage = (LocationMessageEntity *)message;
@@ -394,17 +405,23 @@ Process incoming message.
                     onCompletion(nil);
                 }];
             }];
-        } onError:onError];
+        } onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
+        }];
     } else if ([amsg isKindOfClass:[BoxAudioMessage class]]) {
         [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
             [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 onCompletion(nil);
             }];
-        } onError:onError];
+        } onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
+        }];
     } else if ([amsg isKindOfClass:[DeliveryReceiptMessage class]]) {
         [self processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)amsg onCompletion:^{
             onCompletion(nil);
-        } onError:onError];
+        } onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
+        }];
     } else if ([amsg isKindOfClass:[TypingIndicatorMessage class]]) {
         [self processIncomingTypingIndicator:(TypingIndicatorMessage*)amsg];
         onCompletion(nil);
@@ -414,14 +431,16 @@ Process incoming message.
             [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 onCompletion(nil);
             }];
-        } onError:^(NSError *error) {
-            onError(error);
+        } onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
         }];
     } else if ([amsg isKindOfClass:[BoxBallotVoteMessage class]]) {
         // TODO: This could be generate duplicate system messages, if message will processed multiple (race condition)
         [self processIncomingBallotVoteMessage:(BoxBallotVoteMessage*)amsg onCompletion:^{
             onCompletion(nil);
-        } onError:onError];
+        } onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
+        }];
     } else if ([amsg isKindOfClass:[BoxFileMessage class]]) {
         [FileMessageDecoder decodeMessageFromBox:(BoxFileMessage *)amsg sender:sender conversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessage *message) {
             // Do not download blob when message will processed via Notification Extension,
@@ -433,11 +452,15 @@ Process incoming message.
             [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 onCompletion(nil);
             }];
-        } onError:onError];
+        } onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
+        }];
     } else if ([amsg isKindOfClass:[ContactSetPhotoMessage class]]) {
         [self processIncomingContactSetPhotoMessage:(ContactSetPhotoMessage *)amsg onCompletion:^{
             onCompletion(nil);
-        } onError:onError];
+        } onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
+        }];
     } else if ([amsg isKindOfClass:[ContactDeletePhotoMessage class]]) {
         [self processIncomingContactDeletePhotoMessage:(ContactDeletePhotoMessage *)amsg onCompletion:^{
             onCompletion(nil);
@@ -461,10 +484,12 @@ Process incoming message.
         // Android basically handles it the same way as an `UnknownTypeMessage`. On iOS this is too complicated for now.
         onCompletion(nil);
     } else if ([amsg isKindOfClass:[UnknownTypeMessage class]]) {
-        onError([ThreemaError threemaError:[NSString stringWithFormat:@"Unknown message type (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorUnknownMessageType]);
+        onError([ThreemaError threemaError:[NSString stringWithFormat:@"Unknown message type (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorUnknownMessageType], nil);
     } else if ([amsg isKindOfClass:[DeleteMessage class]]) {
         // On error case `onError` will be called and message is `nil`
-        BaseMessage *message = [entityManager deleteMessageFor:amsg conversation:conversation onError:onError];
+        BaseMessage *message = [entityManager deleteMessageFor:amsg conversation:conversation onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
+        }];
         if (message) {
             [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 onCompletion(nil);
@@ -472,7 +497,9 @@ Process incoming message.
         }
     } else if ([amsg isKindOfClass:[EditMessage class]]) {
         // On error case `onError` will be called and message is `nil`
-        BaseMessage *message = [entityManager editMessageFor:amsg conversation:conversation onError:onError];
+        BaseMessage *message = [entityManager editMessageFor:amsg conversation:conversation onError:^(NSError * _Nonnull error) {
+            onError(error, nil);
+        }];
         if (message) {
             [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 onCompletion(nil);
@@ -493,7 +520,7 @@ Process incoming message.
         }
     } else {
         // Do not Ack message, try process this message later because of protocol changes
-        onError([ThreemaError threemaError:@"Invalid message class"]);
+        onError([ThreemaError threemaError:@"Invalid message class"], nil);
     }
 }
 
@@ -950,66 +977,56 @@ Process incoming message.
 }
 
 
-- (void)processIncomingVoIPCallOfferMessage:(BoxVoIPCallOfferMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)processIncomingVoIPCallOfferMessage:(BoxVoIPCallOfferMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable delegateError))onError {
     VoIPCallOfferMessage *message = [VoIPCallMessageDecoder decodeVoIPCallOfferFrom:msg];
     if (message == nil) {
-        onError([ThreemaError threemaError:@"Error parsing json for voip call offer"]);
+        onError([ThreemaError threemaError:@"Error parsing json for voip call offer"], nil);
         return;
     }
     
-    [messageProcessorDelegate processVoIPCall:message identity:msg.fromIdentity onCompletion:^(id<MessageProcessorDelegate>  _Nonnull delegate) {
-        onCompletion(delegate);
-    } onError:onError];
+    [messageProcessorDelegate processVoIPCall:message identity:msg.fromIdentity onCompletion:onCompletion onError:onError];
 }
 
-- (void)processIncomingVoIPCallAnswerMessage:(BoxVoIPCallAnswerMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)processIncomingVoIPCallAnswerMessage:(BoxVoIPCallAnswerMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable))onError {
     VoIPCallAnswerMessage *message = [VoIPCallMessageDecoder decodeVoIPCallAnswerFrom:msg];
     if (message == nil) {
-        onError([ThreemaError threemaError:@"Error parsing json for ballot vote"]);
+        onError([ThreemaError threemaError:@"Error parsing json for ballot vote"], nil);
         return;
     }
 
-    [messageProcessorDelegate processVoIPCall:message identity:msg.fromIdentity onCompletion:^(id<MessageProcessorDelegate>  _Nonnull delegate) {
-        onCompletion(delegate);
-    } onError:onError];
+    [messageProcessorDelegate processVoIPCall:message identity:msg.fromIdentity onCompletion:onCompletion onError:onError];
 }
 
-- (void)processIncomingVoIPCallIceCandidatesMessage:(BoxVoIPCallIceCandidatesMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)processIncomingVoIPCallIceCandidatesMessage:(BoxVoIPCallIceCandidatesMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable))onError {
     VoIPCallIceCandidatesMessage *message = [VoIPCallMessageDecoder decodeVoIPCallIceCandidatesFrom:msg];
     if (message == nil) {
-        onError([ThreemaError threemaError:@"Error parsing json for ice candidates"]);
+        onError([ThreemaError threemaError:@"Error parsing json for ice candidates"], nil);
         return;
     }
 
-    [messageProcessorDelegate processVoIPCall:message identity:msg.fromIdentity onCompletion:^(id<MessageProcessorDelegate>  _Nonnull delegate) {
-        onCompletion(delegate);
-    } onError:onError];
+    [messageProcessorDelegate processVoIPCall:message identity:msg.fromIdentity onCompletion:onCompletion onError:onError];
 }
 
-- (void)processIncomingVoIPCallHangupMessage:(BoxVoIPCallHangupMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)processIncomingVoIPCallHangupMessage:(BoxVoIPCallHangupMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable))onError {
     VoIPCallHangupMessage *message = [VoIPCallMessageDecoder decodeVoIPCallHangupFrom:msg contactIdentity:msg.fromIdentity];
     
     if (message == nil) {
-        onError([ThreemaError threemaError:@"Error parsing json for hangup"]);
+        onError([ThreemaError threemaError:@"Error parsing json for hangup"], nil);
         return;
     }
     
-    [messageProcessorDelegate processVoIPCall:message identity:nil onCompletion:^(id<MessageProcessorDelegate>  _Nullable delegate) {
-        onCompletion(delegate);
-    } onError:onError];
+    [messageProcessorDelegate processVoIPCall:message identity:nil onCompletion:onCompletion onError:onError];
 }
 
-- (void)processIncomingVoipCallRingingMessage:(BoxVoIPCallRingingMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)processIncomingVoipCallRingingMessage:(BoxVoIPCallRingingMessage *)msg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable))onError {
     VoIPCallRingingMessage *message = [VoIPCallMessageDecoder decodeVoIPCallRingingFrom:msg contactIdentity:msg.fromIdentity];
 
     if (message == nil) {
-        onError([ThreemaError threemaError:@"Error parsing json for ringing"]);
+        onError([ThreemaError threemaError:@"Error parsing json for ringing"], nil);
         return;
     }
     
-    [messageProcessorDelegate processVoIPCall:message identity:nil onCompletion:^(id<MessageProcessorDelegate>  _Nonnull delegate) {
-        onCompletion(delegate);
-    } onError:onError];
+    [messageProcessorDelegate processVoIPCall:message identity:nil onCompletion: onCompletion onError:onError];
 }
 
 

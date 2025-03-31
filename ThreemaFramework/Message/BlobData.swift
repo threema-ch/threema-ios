@@ -39,4 +39,5 @@ import Foundation
     var blobExternalFilename: String? { get }
     var blobThumbnailExternalFilename: String? { get }
     var deletedAt: Date? { get }
+    var isPersistingBlob: Bool { get }
 }

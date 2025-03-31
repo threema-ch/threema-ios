@@ -30,6 +30,15 @@ extension Colors {
         }
     }
     
+    public class var pillText: UIColor {
+        switch theme {
+        case .light, .undefined:
+            .secondaryLabel.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
+        case .dark:
+            .secondaryLabel.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
+        }
+    }
+    
     public class var pillShadow: UIColor {
         switch theme {
         case .light, .undefined:

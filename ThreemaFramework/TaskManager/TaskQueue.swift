@@ -90,7 +90,7 @@ final class TaskQueue {
         var droppedItems = [TaskQueue.QueueItem]()
         
         taskQueueQueue.sync {
-            
+
             var interruptedTask: TaskDefinition?
             
             if let item = queue.peek(), item.taskDefinition.state == .executing {
@@ -297,6 +297,11 @@ final class TaskQueue {
         }
     }
             
+    func executeSubTask(taskDefinition subTask: TaskDefinitionProtocol) async throws {
+        let injector = frameworkInjectorResolver.backgroundFrameworkInjector
+        try await subTask.create(frameworkInjector: injector).execute().async()
+    }
+
     func encode() -> Data? {
         guard !queue.list.isEmpty else {
             return nil
@@ -529,11 +534,6 @@ final class TaskQueue {
     ///
     /// - Parameter item: Dropped queue item
     private func dropped(item: QueueItem) {
-        assert(
-            item.taskDefinition.type == .dropOnDisconnect,
-            "Dropping is only supported for dropped on disconnect tasks"
-        )
-        
         if !item.taskDefinition.isDropped {
             DDLogError("\(item.taskDefinition) dropped but not marked as such. This should only happen in tests")
         }

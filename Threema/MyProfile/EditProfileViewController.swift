@@ -133,7 +133,7 @@ import ThreemaMacros
         profile.sendProfilePicture = sendProfilePicture
         profile.profilePictureContactList = shareWith
                
-        if BusinessInjector().settingsStore.isMultiDeviceRegistered {
+        if BusinessInjector.ui.settingsStore.isMultiDeviceRegistered {
             let progressString = #localize("syncing_profile")
             let syncHelper = UISyncHelper(viewController: self, progressString: progressString)
             syncHelper.execute(profile: profile)

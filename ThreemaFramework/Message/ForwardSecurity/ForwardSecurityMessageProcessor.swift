@@ -27,6 +27,7 @@ import ThreemaProtocols
     private let dhSessionStore: DHSessionStoreProtocol
     private let identityStore: MyIdentityStoreProtocol
     private let messageSender: MessageSenderProtocol
+    private let taskManager: TaskManagerProtocol
     private let localSupportedVersionRange: CspE2eFs_VersionRange
     
     struct Listener {
@@ -39,11 +40,13 @@ import ThreemaProtocols
         dhSessionStore: DHSessionStoreProtocol,
         identityStore: MyIdentityStoreProtocol,
         messageSender: MessageSenderProtocol,
+        taskManager: TaskManagerProtocol,
         localSupportedVersionRange: CspE2eFs_VersionRange = ThreemaEnvironment.fsVersion
     ) {
         self.dhSessionStore = dhSessionStore
         self.identityStore = identityStore
         self.messageSender = messageSender
+        self.taskManager = taskManager
         self.localSupportedVersionRange = localSupportedVersionRange
         
         super.init()
@@ -420,7 +423,13 @@ import ThreemaProtocols
             version: ThreemaEnvironment.fsVersion,
             ephemeralPublicKey: session.myEphemeralPublicKey
         )
-        sendMessageToContact(contact: sender, message: accept)
+        
+        // Accept needs to be sent directly (as stated in the protocol) and not in a new task. Otherwise this might lead
+        // to an invalide state at the sender. (IOS-5241)
+        let message = ForwardSecurityEnvelopeMessage(data: accept)
+        message.toIdentity = sender.identity
+        let task = TaskDefinitionSendAbstractMessage(message: message)
+        try await taskManager.executeSubTask(taskDefinition: task)
     }
     
     private func checkFSFeatureMask(for contact: ForwardSecurityContact) async -> Bool {

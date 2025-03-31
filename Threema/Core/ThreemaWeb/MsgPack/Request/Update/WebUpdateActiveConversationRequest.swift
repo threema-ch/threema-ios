@@ -49,7 +49,7 @@ class WebUpdateActiveConversationRequest: WebAbstractMessage {
             if groupID != nil {
                 let conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
                 
-                entityManager.performSyncBlockAndSafe {
+                entityManager.performAndWaitSave {
                     if conversation?.unreadMessageCount == -1 {
                         conversation!.unreadMessageCount = 0
                     }

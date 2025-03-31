@@ -66,6 +66,13 @@
     }
 }
 
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+
+    [_pageContainerView setFrame:self.view.frame];
+    [_pageContainerView resetPageFrames];
+}
+
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
@@ -96,9 +103,9 @@
     [self.view addSubview:_pageContainerView];
 
     [self.view bringSubviewToFront:_controlsView];
-    [_pageLeftButton setImage:[[UIImage systemImageNamed:@"chevron.left"] imageWithTintColor:Colors.primaryWizard] forState:UIControlStateNormal];
+    [_pageLeftButton setImage:[[UIImage systemImageNamed:@"chevron.left"] imageWithTintColor:UIColor.primary] forState:UIControlStateNormal];
     _pageLeftButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
-    [_pageRightButton setImage:[[UIImage systemImageNamed:@"chevron.right"] imageWithTintColor:Colors.primaryWizard] forState:UIControlStateNormal];
+    [_pageRightButton setImage:[[UIImage systemImageNamed:@"chevron.right"] imageWithTintColor:UIColor.primary] forState:UIControlStateNormal];
     _pageRightButton.imageView.contentMode = UIViewContentModeScaleAspectFit;
     _pageLeftButton.accessibilityLabel = [BundleUtil localizedStringForKey:@"previous"];
     _pageRightButton.accessibilityLabel = [BundleUtil localizedStringForKey:@"next"];

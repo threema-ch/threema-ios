@@ -96,6 +96,10 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, readwrite) BOOL contactList2;
 
 @property (nonatomic, readwrite) BOOL safeIntroShown;
+
+@property (nonatomic, readwrite) BOOL ipcCommunicationEnabled;
+@property (nonatomic, readwrite) NSData *ipcSecretPrefix;
+
 @end
 
 @interface UserSettings : NSObject <UserSettingsProtocol>

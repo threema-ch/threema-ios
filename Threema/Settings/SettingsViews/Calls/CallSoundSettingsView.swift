@@ -59,6 +59,6 @@ struct CallSoundSettingsView_Previews: PreviewProvider {
     static var previews: some View {
         CallSoundSettingsView()
             .tint(UIColor.primary.color)
-            .environmentObject(BusinessInjector().settingsStore as! SettingsStore)
+            .environmentObject(BusinessInjector.ui.settingsStore as! SettingsStore)
     }
 }

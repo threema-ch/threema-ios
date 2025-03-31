@@ -23,6 +23,10 @@ import Foundation
 
 extension AudioMessageEntity: BlobData {
     
+    public var isPersistingBlob: Bool {
+        isGroupMessage
+    }
+    
     public var blobIdentifier: Data? {
         get {
             // swiftformat:disable:next acronyms

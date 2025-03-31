@@ -29,7 +29,7 @@ import Foundation
     private lazy var safeStore = SafeStore(
         safeConfigManager: safeConfigManager,
         serverApiConnector: ServerAPIConnector(),
-        groupManager: BusinessInjector().groupManager
+        groupManager: BusinessInjector.ui.groupManager
     )
     private lazy var safeManager = SafeManager(
         safeConfigManager: safeConfigManager,
@@ -108,7 +108,7 @@ import Foundation
         }
         
         if !safeManager.isActivated, !mdmSetup.isSafeBackupForce(), !mdmSetup.isSafeBackupDisable(),
-           !LicenseStore.shared().getRequiresLicenseKey(), !UserSettings.shared().safeIntroShown {
+           !TargetManager.isBusinessApp, !UserSettings.shared().safeIntroShown {
             return true
         }
         

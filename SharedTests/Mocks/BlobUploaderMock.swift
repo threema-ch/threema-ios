@@ -35,7 +35,7 @@ class BlobUploaderMock: BlobUploaderProtocol {
         self.blobIDs = blobIDs
     }
 
-    func upload(data: Data, origin: BlobOrigin) -> Promise<Data> {
+    func upload(data: Data, origin: BlobOrigin, setPersistParam: Bool) -> Promise<Data> {
         Promise { seal in
             guard !blobIDs.isEmpty else {
                 seal.reject(BlobUploaderMockError.noBlobID)

@@ -144,7 +144,7 @@ final class ChatBarCoordinator {
         self.chatViewController = chatViewController
         self.chatBarCoordinatorDelegate = chatBarCoordinatorDelegate
         self.chatViewTableViewVoiceMessageCellDelegate = chatViewTableViewVoiceMessageCellDelegate
-        self.businessInjector = BusinessInjector()
+        self.businessInjector = BusinessInjector.ui
                     
         // If we received an notification, we check if it has text or an image in it,
         // else we check for draft texts.
@@ -310,8 +310,7 @@ final class ChatBarCoordinator {
 
         chatBar
             .updateSendButtonAccessibilityLabel(
-                to: "compose_bar_send_edited_message_button_accessibility_label"
-                    .localized
+                to: #localize("compose_bar_send_edited_message_button_accessibility_label")
             )
         messageToEdit = message
         let editedView = ChatBarEditedMessageView(editedMessage: message, delegate: self)
@@ -870,14 +869,14 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     }
     
     func showContact(identity: String) {
-        if let contact = BusinessInjector().entityManager.entityFetcher.contact(for: identity) {
+        if let contact = businessInjector.entityManager.entityFetcher.contact(for: identity) {
             let detailsViewController = SingleDetailsViewController(for: Contact(contactEntity: contact))
             let navigationController = ThemedNavigationController(rootViewController: detailsViewController)
             navigationController.modalPresentationStyle = .formSheet
             
             chatViewController?.present(navigationController, animated: true)
         }
-        else if identity == BusinessInjector().myIdentityStore.identity {
+        else if identity == businessInjector.myIdentityStore.identity {
             // TODO: IOS-2927 Refactor `MeContactDetailsViewController` to allow removing `MainStoryboard`
             let storyboard = UIStoryboard(name: "MainStoryboard", bundle: nil)
             let vc = storyboard.instantiateViewController(withIdentifier: "meContactDetailsViewController")

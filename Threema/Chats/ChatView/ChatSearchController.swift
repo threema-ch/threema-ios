@@ -250,7 +250,10 @@ final class ChatSearchController: NSObject {
         
         self.context = context
 
-        self.entityFetcher = EntityFetcher(context, myIdentityStore: BusinessInjector().myIdentityStore)
+        self.entityFetcher = EntityFetcher(
+            context,
+            myIdentityStore: BusinessInjector.ui.myIdentityStore
+        )
         
         super.init()
     }

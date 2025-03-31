@@ -69,7 +69,8 @@
     
     BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings]];
     Old_BlobUploader *uploader = [[Old_BlobUploader alloc] initWithBlobURL:blobUrl delegate:self];
-    [uploader uploadWithBlobs:@[boxImageData] origin:isNoteGroup ? BlobOriginLocal : BlobOriginPublic];
+    
+    [uploader uploadWithBlobs:@[boxImageData] origin:isNoteGroup ? BlobOriginLocal : BlobOriginPublic setPersistParam: !isNoteGroup];
 }
 
 - (void)uploadCompletedWithBlobId:(NSData*)blobId {

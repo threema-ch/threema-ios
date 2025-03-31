@@ -33,7 +33,7 @@ struct NotificationTypeSelectionView: View {
     private let padding = 16.0
     
     init() {
-        let settingsStore = BusinessInjector().settingsStore as! SettingsStore
+        let settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
         _settingsStore = ObservedObject(initialValue: settingsStore)
         _selectedType = State(initialValue: settingsStore.notificationType)
         _showPreview = State(initialValue: settingsStore.pushShowPreview)

@@ -151,7 +151,7 @@ class ServerConnectorConnectionStateTests: XCTestCase {
 
             if isMultiDeviceEnabled {
                 XCTAssertEqual(serverConnectionState.connectionState, .disconnected)
-                XCTAssertEqual(changedCalls.count, 0)
+                XCTAssertEqual(changedCalls.count, 1)
             }
             else {
                 XCTAssertEqual(serverConnectionState.connectionState, .loggedIn)
@@ -175,7 +175,7 @@ class ServerConnectorConnectionStateTests: XCTestCase {
             serverConnectionState.loggedInMediatorServer()
 
             XCTAssertEqual(serverConnectionState.connectionState, .disconnected)
-            XCTAssertEqual(changedCalls.count, 0)
+            XCTAssertEqual(changedCalls.count, 1)
         }
     }
 
@@ -194,8 +194,8 @@ class ServerConnectorConnectionStateTests: XCTestCase {
             serverConnectionState.loggedInMediatorServer()
 
             XCTAssertEqual(serverConnectionState.connectionState, .loggedIn)
-            XCTAssertEqual(changedCalls.count, 1)
-            XCTAssertEqual(changedCalls.first, .loggedIn)
+            XCTAssertEqual(changedCalls.count, 2)
+            XCTAssertEqual(changedCalls.last, .loggedIn)
         }
     }
 }

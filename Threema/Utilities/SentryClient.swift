@@ -115,7 +115,7 @@ import ThreemaMacros
             let confirm = UIAlertController(
                 title: String.localizedStringWithFormat(
                     #localize("sentry_crash_send_title"),
-                    ThreemaApp.currentName
+                    TargetManager.appName
                 ),
                 message: #localize("sentry_crash_send_description"),
                 preferredStyle: .alert

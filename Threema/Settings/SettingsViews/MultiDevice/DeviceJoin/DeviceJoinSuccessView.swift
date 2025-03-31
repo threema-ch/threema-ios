@@ -43,7 +43,7 @@ struct DeviceJoinSuccessView: View {
                             title: #localize("multi_device_join_linked_successfully_title"),
                             description: String.localizedStringWithFormat(
                                 #localize("multi_device_join_linked_successfully_info"),
-                                ThreemaApp.appName
+                                TargetManager.appName
                             )
                         )
                         

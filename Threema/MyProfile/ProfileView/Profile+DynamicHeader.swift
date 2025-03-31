@@ -177,7 +177,7 @@ extension ProfileView {
                             }
                         }
                         .onTapGesture {
-                            if ThreemaApp.current != .onPrem {
+                            if !TargetManager.isOnPrem {
                                 UIPasteboard.general.string = model.publicKey.identity
                                 NotificationPresenterWrapper.shared.present(type: .copyIDSuccess)
                             }

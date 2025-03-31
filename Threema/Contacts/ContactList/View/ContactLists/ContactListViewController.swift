@@ -221,8 +221,8 @@ extension ContactListViewController {
         .init(
             title: #localize("no_contacts"),
             systemImage: "person.2.fill",
-            description: ThreemaApp
-                .current == .onPrem ? "" : "no_contacts_sync\(UserSettings.shared().syncContacts ? "on" : "off")"
+            description: TargetManager
+                .isOnPrem ? "" : "no_contacts_sync\(UserSettings.shared().syncContacts ? "on" : "off")"
                 .localized,
             actions: [
                 .init(title: #localize("contactList_add"), block: { [weak self] in

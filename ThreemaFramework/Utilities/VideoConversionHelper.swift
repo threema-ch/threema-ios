@@ -109,15 +109,6 @@ class VideoConversionHelper: NSObject {
             DDLogError("No video track found")
             return nil
         }
-        var srcVideoSize = __CGSizeApplyAffineTransform(videoTrack.naturalSize, videoTrack.preferredTransform)
-        
-        if srcVideoSize.width < 0 {
-            srcVideoSize.width = -srcVideoSize.width
-        }
-        
-        if srcVideoSize.height < 0 {
-            srcVideoSize.height = -srcVideoSize.height
-        }
         
         let sortedPresetNames =
             switch videoQualitySetting {
@@ -155,7 +146,6 @@ class VideoConversionHelper: NSObject {
             let tmpSession = createExportSession(
                 presetName: presetName,
                 asset: asset,
-                srcVideoSize: srcVideoSize,
                 outputURL: outputURL
             )
 
@@ -193,21 +183,13 @@ class VideoConversionHelper: NSObject {
     private func createExportSession(
         presetName: String,
         asset: AVAsset,
-        srcVideoSize: CGSize,
         outputURL: URL
     ) -> AVAssetExportSession? {
                 
         guard let exportSession = AVAssetExportSession(asset: asset, presetName: presetName) else {
             return nil
         }
-                
-        let videoComposition = AVMutableVideoComposition(propertiesOf: asset)
-        videoComposition.renderSize = CGSizeMake(srcVideoSize.width, srcVideoSize.height)
-        videoComposition.colorPrimaries = AVVideoColorPrimaries_ITU_R_709_2
-        videoComposition.colorTransferFunction = AVVideoTransferFunction_ITU_R_709_2
-        videoComposition.colorYCbCrMatrix = AVVideoYCbCrMatrix_ITU_R_709_2
-        
-        exportSession.videoComposition = videoComposition
+                        
         exportSession.outputURL = outputURL
         exportSession.shouldOptimizeForNetworkUse = true
         let fileType: AVFileType = .mp4

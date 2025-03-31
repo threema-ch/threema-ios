@@ -134,7 +134,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.fsmp = ForwardSecurityMessageProcessor(
             dhSessionStore: dhSessionStore,
             identityStore: myIdentityStore,
-            messageSender: messageSender
+            messageSender: messageSender,
+            taskManager: TaskManagerMock()
         )
         self.settingsStore = settingsStore
         self.conversationStoreInternal = conversationStore

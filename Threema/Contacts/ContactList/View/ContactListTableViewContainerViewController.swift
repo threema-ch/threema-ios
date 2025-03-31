@@ -26,9 +26,7 @@ class ContactListTableViewContainerViewController: ContainerViewController {
     private lazy var groups = GroupListViewController(itemsDelegate: self)
     private lazy var distributionList = DistributionListViewController(itemsDelegate: self)
     
-    #if THREEMA_WORK || THREEMA_ONPREM
-        private lazy var work = WorkContactListViewController(itemsDelegate: self)
-    #endif
+    private lazy var work = WorkContactListViewController(itemsDelegate: self)
     
     private lazy var internalNavItem = ContactListNavigationItem(delegate: self)
     
@@ -37,13 +35,15 @@ class ContactListTableViewContainerViewController: ContainerViewController {
     override var navigationItem: ContactListNavigationItem { internalNavItem }
     
     override var viewControllers: [UIViewController] {
-        #if THREEMA_WORK
+        if TargetManager.isWork {
             [contacts, groups, distributionList, work]
-        #elseif THREEMA_ONPREM
+        }
+        else if TargetManager.isOnPrem {
             [work, groups, distributionList]
-        #else
+        }
+        else {
             [contacts, groups, distributionList]
-        #endif
+        }
     }
     
     init() {
@@ -60,9 +60,9 @@ class ContactListTableViewContainerViewController: ContainerViewController {
             contacts.refresh()
             groups.refresh()
             distributionList.refresh()
-            #if THREEMA_WORK || THREEMA_ONPREM
+            if TargetManager.isBusinessApp {
                 work.refresh()
-            #endif
+            }
         }
     }
     
@@ -91,15 +91,16 @@ extension ContactListTableViewContainerViewController: ContactListActionDelegate
     }
     
     func filterChanged(_ item: ContactListFilterItem) {
-        #if THREEMA_WORK
+        if TargetManager.isWork {
             navigationItem.shouldShowWorkButton = item == .contacts
             guard let workIndex = viewControllers.firstIndex(of: work), workContactsEnabled, item == .contacts else {
                 return switchToViewController(at: item.rawValue)
             }
             switchToViewController(at: workIndex)
-        #else
+        }
+        else {
             switchToViewController(at: item.rawValue)
-        #endif
+        }
     }
     
     func didToggleWorkContacts(_ isTurnedOn: Bool) {

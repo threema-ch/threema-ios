@@ -70,7 +70,7 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
 
     var isAppInBackground = false
 
-    func connect(initiator: ConnectionInitiator) {
+    func connect(initiator: ConnectionInitiator, completionHandler: ((Bool) -> Void)? = nil) {
         // no-op
     }
 
@@ -233,8 +233,8 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     func processVoIPCall(
         _ message: NSObject,
         identity: String?,
-        onCompletion: @escaping (any MessageProcessorDelegate) -> Void,
-        onError: @escaping (any Error) -> Void
+        onCompletion: @escaping ((any MessageProcessorDelegate)?) -> Void,
+        onError: @escaping (any Error, (any MessageProcessorDelegate)?) -> Void
     ) {
         // no-op
     }

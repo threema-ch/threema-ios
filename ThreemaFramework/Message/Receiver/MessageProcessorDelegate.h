@@ -96,9 +96,9 @@ NS_SWIFT_NAME(readMessage(inConversations:));
 
  @param message: VoIP message
  @param identity: Identity from contact of the message
- @param onCompletion: Completion handler with MessageProcessorDelegate, use it when call MessageProcessorDelegate in completion block of processVoIPCall, to prevent blocking of dispatch queue 'ServerConnector.registerMessageProcessorDelegateQueue')
- @param onError: Error handler
+ @param onCompletion: Completion handler with MessageProcessorDelegate, use it when call MessageProcessorDelegate in completion block (e.g. of processVoIPCall), to prevent blocking of dispatch queue 'ServerConnector.queueMessageProcessorDelegate')
+ @param onError: Error handler with MessageProcessorDelegate, use it when call MessageProcessorDelegate in error block (e.g. of processVoIPCall), to prevent blocking of dispatch queue 'ServerConnector.queueMessageProcessorDelegate')
  */
-- (void)processVoIPCall:(NSObject * _Nonnull)message identity:(NSString * _Nullable)identity onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nonnull delegate))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError;
+- (void)processVoIPCall:(NSObject * _Nonnull)message identity:(NSString * _Nullable)identity onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable))onError;
 
 @end

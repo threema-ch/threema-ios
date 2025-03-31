@@ -162,11 +162,11 @@
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
-    if ([ThreemaAppObjc current] == ThreemaAppOnPrem) {
-        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"myprofile_link_phone_onprem_footer"], _serverName, [ThreemaAppObjc appName]];
+    if (TargetManagerObjc.isOnPrem) {
+        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"myprofile_link_phone_onprem_footer"], _serverName, TargetManagerObjc.appName];
     }
     
-    return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"myprofile_link_phone_footer"], [ThreemaAppObjc appName]];
+    return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"myprofile_link_phone_footer"], TargetManagerObjc.appName];
 }
 
 @end

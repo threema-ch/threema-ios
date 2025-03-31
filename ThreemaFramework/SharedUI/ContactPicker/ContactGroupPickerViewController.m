@@ -105,7 +105,7 @@ typedef enum : NSUInteger {
         distributionImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_distribution_list"];
         [self.segmentedControl setImage:distributionImage forSegmentAtIndex:ModeDistributionList];
         
-        if ([LicenseStore requiresLicenseKey]) {
+        if (TargetManagerObjc.isBusinessApp) {
             [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContact animated:NO];
             UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
             workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
@@ -114,7 +114,7 @@ typedef enum : NSUInteger {
         }
     }
     else {
-        if ([LicenseStore requiresLicenseKey]) {
+        if (TargetManagerObjc.isBusinessApp) {
             [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContact animated:NO];
             UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
             workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];

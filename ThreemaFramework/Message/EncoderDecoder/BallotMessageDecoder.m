@@ -137,7 +137,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             ballot.conversation = conversation;
             ((BallotMessage *)message).ballot = ballot;
         }];
-        onCompletion(message);
+        onCompletion((BallotMessage *)message);
     } onError:onError];
 }
 

@@ -88,8 +88,7 @@
 
 - (void)loadDataFromDirectory:(NSString*)directory {
     _bundle = [NSBundle bundleWithPath:directory];
-    ThreemaApp currentApp = [ThreemaAppObjc current];
-    if (currentApp == ThreemaAppWork || currentApp == ThreemaAppOnPrem) {
+    if (TargetManagerObjc.isBusinessApp) {
         NSString *loginPath = [_bundle pathForResource:@"login" ofType:@"json"];
         NSData *loginJsonData = [NSData dataWithContentsOfFile:loginPath];
         NSError *error;
@@ -101,7 +100,7 @@
         [[LicenseStore sharedLicenseStore] setLicenseUsername:loginJson[@"username"]];
         [[LicenseStore sharedLicenseStore] setLicensePassword:loginJson[@"password"]];
         
-        if (currentApp == ThreemaAppOnPrem) {
+        if (TargetManagerObjc.isOnPrem) {
             [[LicenseStore sharedLicenseStore] setOnPremConfigUrl:loginJson[@"server"]];
         }
     }
@@ -124,7 +123,7 @@
     [profile removeObjectForKey:@"LastUpload"];
     [[MyIdentityStore sharedMyIdentityStore] setProfilePicture:profile];
     
-    if ([LicenseStore requiresLicenseKey]) {
+    if (TargetManagerObjc.isBusinessApp) {
         [[MyIdentityStore sharedMyIdentityStore] setPushFromName:@"Julia S."];
         [[MyIdentityStore sharedMyIdentityStore] setLinkedEmail:@"***@***"];
         [[MyIdentityStore sharedMyIdentityStore] setLinkedMobileNo:@"1234567890"];
@@ -194,7 +193,7 @@
     BOOL isWork = [[data objectForKey:@"isWork"] boolValue];
     if (isWork) {
         contact.verificationLevel = [NSNumber numberWithInt:kVerificationLevelServerVerified];
-        if ([LicenseStore requiresLicenseKey]) {
+        if (TargetManagerObjc.isBusinessApp) {
             contact.workContact = [NSNumber numberWithBool:YES];
         }
         

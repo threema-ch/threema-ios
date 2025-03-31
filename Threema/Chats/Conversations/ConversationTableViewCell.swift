@@ -117,7 +117,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     private var cancellables = Set<AnyCancellable>()
     
-    private let businessInjector = BusinessInjector()
+    private let businessInjector = BusinessInjector.ui
     
     private lazy var constantScaler = UIFontMetrics(forTextStyle: Configuration.dateDraftTextStyle)
 

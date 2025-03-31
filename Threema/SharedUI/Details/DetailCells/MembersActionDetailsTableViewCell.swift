@@ -136,7 +136,7 @@ class MembersActionDetailsTableViewCell: ThemedCodeTableViewCell {
         super.updateColors()
 
         iconImageView.tintColor = .primary
-        iconBackgroundView.backgroundColor = Colors.secondary
+        iconBackgroundView.backgroundColor = .secondary
         labelLabel.textColor = .primary
     }
     

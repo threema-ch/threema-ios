@@ -36,7 +36,7 @@ class LinkedDevicesViewModel: ObservableObject {
     @Published var state: State = .refreshing
     @Published var deviceLimitReached = false
     
-    nonisolated let businessInjector = BusinessInjector()
+    let businessInjector = BusinessInjector.ui
     
     nonisolated func refresh() async {
         do {

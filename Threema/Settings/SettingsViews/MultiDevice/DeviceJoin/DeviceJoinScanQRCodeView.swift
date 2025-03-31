@@ -73,7 +73,7 @@ struct DeviceJoinScanQRCodeView: View {
                             title: #localize("multi_device_join_scan_qr_code_title"),
                             description: String.localizedStringWithFormat(
                                 #localize("multi_device_join_scan_qr_code_info"),
-                                ThreemaApp.appName
+                                TargetManager.appName
                             )
                         )
                         
@@ -98,7 +98,7 @@ struct DeviceJoinScanQRCodeView: View {
                                     #localize(
                                         "multi_device_join_scan_qr_code_scanner_view_accessibility_hint"
                                     ),
-                                    ThreemaApp.appName
+                                    TargetManager.appName
                                 ))
                             }
                             else {
@@ -329,7 +329,7 @@ struct DeviceJoinScanQRCodeView: View {
                     retryErrorTitle = #localize("multi_device_join_incompatible_version_title")
                     retryErrorMessage = String.localizedStringWithFormat(
                         #localize("multi_device_join_incompatible_version_message"),
-                        ThreemaApp.appName
+                        TargetManager.appName
                     )
                     
                     Task { @MainActor in

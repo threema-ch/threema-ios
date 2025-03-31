@@ -36,7 +36,7 @@ public class AuthTokenManager: NSObject {
     }
     
     @objc public func obtainToken(completionHandler: @escaping AuthTokenCompletionHandler) {
-        if !LicenseStore.isOnPrem() {
+        if !TargetManager.isOnPrem {
             completionHandler(nil, nil)
             return
         }

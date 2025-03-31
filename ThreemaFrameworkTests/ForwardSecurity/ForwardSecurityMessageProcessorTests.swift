@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import PromiseKit
 import ThreemaEssentials
 import ThreemaProtocols
 import XCTest
@@ -495,14 +496,14 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         
         // Note that Bob only processes one message, i.e. the init message. He does not yet process
         // the text message
-        try await processOneReceivedMessage(senderContext: aliceContext, recipientContext: bobContext)
+        _ = try await processOneReceivedMessage(senderContext: aliceContext, recipientContext: bobContext)
         
         // Alice should process the accept message now (while supporting version 1.1)
         range.max = UInt32(CspE2eFs_Version.v11.rawValue)
         
         setSupportedVersionRange(range)
         
-        try await processReceivedMessages(senderContext: bobContext, recipientContext: aliceContext)
+        _ = try await processReceivedMessages(senderContext: bobContext, recipientContext: aliceContext)
         
         // Alice should now have initiated a session with negotiated version 1.0
         let aliceSession = try XCTUnwrap(aliceContext.dhSessionStore.bestDHSession(
@@ -847,7 +848,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             text: ForwardSecurityMessageProcessorTests.aliceMessage2,
             senderContext: aliceContext
         )
-        aliceContext.dummySender.sendMessage(abstractMessage: message.outerMessage, isPersistent: true)
+        aliceContext.dummySender.sendAbstractMessage(message.outerMessage)
         
         // Now Bob processes the text message from Alice. This should not fail, even if the applied version is not
         // known.
@@ -970,7 +971,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             text: ForwardSecurityMessageProcessorTests.aliceMessage2,
             senderContext: aliceContext
         )
-        aliceContext.dummySender.sendMessage(abstractMessage: message.outerMessage, isPersistent: true)
+        aliceContext.dummySender.sendAbstractMessage(message.outerMessage)
         
         // Now Bob processes the text message from Alice. Note that the message should be rejected and therefore return
         // an empty list.
@@ -1290,9 +1291,9 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
     ) throws -> AbstractMessage {
         let encapMessages = try makeEncapTextMessage(text: message, senderContext: senderContext)
         if let auxMessage = encapMessages.auxMessage {
-            senderContext.dummySender.sendMessage(abstractMessage: auxMessage, isPersistent: true)
+            senderContext.dummySender.sendAbstractMessage(auxMessage)
         }
-        senderContext.dummySender.sendMessage(abstractMessage: encapMessages.outerMessage, isPersistent: true)
+        senderContext.dummySender.sendAbstractMessage(encapMessages.outerMessage)
         
         // "Commit" message and set last update date if any message was an FS message
         if encapMessages.auxMessage != nil || encapMessages.outerMessage is ForwardSecurityEnvelopeMessage {
@@ -1313,9 +1314,9 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             groupIdentity: groupIdentity
         )
         if let auxMessage = encapMessages.auxMessage {
-            senderContext.dummySender.sendMessage(abstractMessage: auxMessage, isPersistent: true)
+            senderContext.dummySender.sendAbstractMessage(auxMessage)
         }
-        senderContext.dummySender.sendMessage(abstractMessage: encapMessages.outerMessage, isPersistent: true)
+        senderContext.dummySender.sendAbstractMessage(encapMessages.outerMessage)
         
         // "Commit" message and set last update date if any message was an FS message
         if encapMessages.auxMessage != nil || encapMessages.outerMessage is ForwardSecurityEnvelopeMessage {
@@ -1326,9 +1327,9 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
     private func sendUnsupportedFSMessage(senderContext: UserContext) throws {
         let encapMessages = try makeEncapUnsupportedFSMessage(senderContext: senderContext)
         if let auxMessage = encapMessages.auxMessage {
-            senderContext.dummySender.sendMessage(abstractMessage: auxMessage, isPersistent: true)
+            senderContext.dummySender.sendAbstractMessage(auxMessage)
         }
-        senderContext.dummySender.sendMessage(abstractMessage: encapMessages.outerMessage, isPersistent: true)
+        senderContext.dummySender.sendAbstractMessage(encapMessages.outerMessage)
         
         // "Commit" message and set last update date if any message was an FS message
         if encapMessages.auxMessage != nil || encapMessages.outerMessage is ForwardSecurityEnvelopeMessage {
@@ -1353,6 +1354,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         recipientContext: UserContext
     ) async throws -> [AbstractMessage] {
         var decapsulatedMessages: [AbstractMessage] = []
+        
         while !senderContext.dummySender.sentAbstractMessagesQueue.isEmpty {
             if let decap = try await processOneReceivedMessage(
                 senderContext: senderContext,
@@ -1361,6 +1363,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
                 decapsulatedMessages.append(decap)
             }
         }
+        
         return decapsulatedMessages
     }
     
@@ -1374,10 +1377,11 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         }
         
         let message = senderContext.dummySender.sentAbstractMessagesQueue.removeFirst()
+        let forwardSecurityEnvelopeMessage = try XCTUnwrap(message as? ForwardSecurityEnvelopeMessage)
         
         let (decap, fsMessageInfo) = try await recipientContext.fsmp.processEnvelopeMessage(
             sender: recipientContext.peerContact,
-            envelopeMessage: message as! ForwardSecurityEnvelopeMessage
+            envelopeMessage: forwardSecurityEnvelopeMessage
         )
         if let fsMessageInfo {
             _ = fsMessageInfo.updateVersionsIfNeeded() // Is this what we want?
@@ -1471,12 +1475,15 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         let peerContact = ForwardSecurityContact(identity: peerIdentity, publicKey: peerPublicKey)
         let mockIdentityStore = MyIdentityStoreMock(identity: myIdentity, secretKey: mySecretKey)
         
-        let messageSenderMock = MessageSenderMock()
+        let dummySender = DummySender()
+        let messageSenderMock = FSMessageSenderMock(dummySender: dummySender)
+        let taskManagerMock = FSTaskManagerMock(dummySender: dummySender)
         
         let fsmp = ForwardSecurityMessageProcessor(
             dhSessionStore: dhSessionStore,
             identityStore: mockIdentityStore,
             messageSender: messageSenderMock,
+            taskManager: taskManagerMock,
             localSupportedVersionRange: localSupportedVersionRange
         )
         
@@ -1485,9 +1492,85 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
             dhSessionStore: dhSessionStore,
             identityStore: mockIdentityStore,
             fsmp: fsmp,
-            dummySender: messageSenderMock
+            dummySender: dummySender
         )
     }
+}
+
+private class DummySender {
+    var sentAbstractMessagesQueue = [AbstractMessage]()
+    
+    func sendAbstractMessage(_ abstractMessage: AbstractMessage) {
+        sentAbstractMessagesQueue.append(abstractMessage)
+    }
+}
+
+private class FSMessageSenderMock: MessageSenderProtocol {
+    
+    var dummySender: DummySender
+    
+    init(dummySender: DummySender) {
+        self.dummySender = dummySender
+    }
+    
+    func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool, completion: (() -> Void)?) {
+        dummySender.sentAbstractMessagesQueue.append(abstractMessage)
+        completion?()
+    }
+    
+    // Empty implementations for protocol conformance
+    func sendBallotMessage(for ballot: Ballot) { }
+    func sendBallotVoteMessage(for ballot: Ballot) { }
+    func sendBaseMessage(with objectID: NSManagedObjectID, to receivers: MessageSenderReceivers) async { }
+    func sendDeleteMessage(with objectID: NSManagedObjectID, receiversExcluded: [Contact]?) throws { }
+    func sendEditMessage(with objectID: NSManagedObjectID, rawText: String, receiversExcluded: [Contact]?) throws { }
+    func sendReaction(
+        to objectID: NSManagedObjectID,
+        reaction: EmojiVariant
+    ) async throws -> ReactionsManager.ReactionSendingResult { .error }
+    func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> PromiseKit.Promise<Void> { Promise() }
+    func sendTypingIndicator(typing: Bool, toIdentity: ThreemaIdentity) { }
+    func sendReadReceipt(for messages: [BaseMessage], toIdentity: ThreemaIdentity) async { }
+    func sendReadReceipt(for messages: [BaseMessage], toGroupIdentity: GroupIdentity) async { }
+    func doSendReadReceipt(to contactEntity: ContactEntity?) -> Bool { false }
+    func doSendReadReceipt(to conversation: ConversationEntity) -> Bool { false }
+    func doSendTypingIndicator(to contact: ContactEntity?) -> Bool { false }
+    func doSendTypingIndicator(to conversation: ConversationEntity) -> Bool { false }
+}
+
+private class FSTaskManagerMock: TaskManagerProtocol {
+    
+    var dummySenderQueue: DummySender
+    
+    init(dummySender: DummySender) {
+        self.dummySenderQueue = dummySender
+    }
+    
+    func executeSubTask(taskDefinition: any TaskDefinitionProtocol) async throws {
+        let abstractMessageTask = try XCTUnwrap(taskDefinition as? TaskDefinitionSendAbstractMessage)
+        dummySenderQueue.sentAbstractMessagesQueue.append(abstractMessageTask.message)
+    }
+    
+    // Empty implementations for protocol conformance
+    func add(taskDefinition: any TaskDefinitionProtocol) -> (any CancelableTask)? { nil }
+    func addWithWait(taskDefinition: any TaskDefinitionProtocol) -> (any WaitTask, (any CancelableTask)?) {
+        (DefaultWaitTask(completionTask: Task { }), nil)
+    }
+
+    func add(
+        taskDefinition: any TaskDefinitionProtocol,
+        completionHandler: @escaping TaskCompletionHandler
+    ) -> (any CancelableTask)? { nil }
+    func add(taskDefinitionTuples: [(
+        taskDefinition: any TaskDefinitionProtocol,
+        completionHandler: TaskCompletionHandler
+    )]) -> [(any CancelableTask)?] { [] }
+    func spool() { }
+    static func removeAllTasks() { }
+    static func removeCurrentTask() { }
+    static func isEmpty() -> Bool { false }
+    func addObjc(taskDefinition: AnyObject) { }
+    func addObjc(taskDefinition: AnyObject, completionHandler: @escaping (AnyObject, (any Error)?) -> Void) { }
 }
 
 class RejectStatusListener: ForwardSecurityStatusListener {
@@ -1568,5 +1651,5 @@ private struct UserContext {
     let dhSessionStore: DHSessionStoreProtocol
     let identityStore: MyIdentityStoreProtocol
     let fsmp: ForwardSecurityMessageProcessor
-    let dummySender: MessageSenderMock
+    let dummySender: DummySender
 }

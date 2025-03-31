@@ -250,13 +250,20 @@ class TaskExecution: NSObject {
                     // sending FS messages is determined base on the feature mask. Thus we try to fetch the feature mask
                     // if it is 0.
                     if toContact.featureMask == 0 {
-                        DDLogNotice("Fetch feature mask of \(toContact.identity), because it is currently 0.")
-                        self.frameworkInjector.contactStore.updateFeatureMasks(forIdentities: [toContact.identity]) {
-                            seal.fulfill_()
-                        } onError: { _ in
-                            DDLogWarn(
-                                "Failed to update feature mask of \(toContact.identity). Current value \(toContact.featureMask)"
-                            )
+                        let contactIdentity = toContact.threemaIdentity
+                        let contactFeatureMask = toContact.featureMask
+
+                        Task {
+                            do {
+                                DDLogNotice("Fetch feature mask of \(contactIdentity), because it is currently 0.")
+                                try await FeatureMask.updateFeatureMask(for: [contactIdentity])
+                            }
+                            catch {
+                                DDLogWarn(
+                                    "Failed to update feature mask of \(contactIdentity). Current value \(contactFeatureMask)"
+                                )
+                            }
+
                             // This is a best effort, thus we will always succeed
                             seal.fulfill_()
                         }

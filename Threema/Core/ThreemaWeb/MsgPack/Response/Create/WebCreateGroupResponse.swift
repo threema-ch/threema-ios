@@ -43,7 +43,7 @@ class WebCreateGroupResponse: WebAbstractMessage {
 
         Task {
             do {
-                let businessInjector = BusinessInjector()
+                let businessInjector = BusinessInjector.ui
                 try await businessInjector.runInBackground { backgroundBusinessInjector in
                     let (group, _) = try await backgroundBusinessInjector.groupManager.createOrUpdate(
                         for: GroupIdentity(
@@ -86,7 +86,7 @@ class WebCreateGroupResponse: WebAbstractMessage {
     }
     
     func createErrorResponse(errorDescription: String, completion: @escaping () -> Void) {
-        DDLogError(errorDescription)
+        DDLogError("\(errorDescription)")
         
         ack!.success = false
         ack!.error = errorDescription

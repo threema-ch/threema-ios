@@ -33,7 +33,7 @@ class PublicServerInfoProvider: ServerInfoProvider {
     }
 
     private func chatServerNamePrefix(ipv6: Bool) -> String {
-        var keyName = LicenseStore.requiresLicenseKey() ? "ThreemaWork" : "Threema"
+        var keyName = TargetManager.isBusinessApp ? "ThreemaWork" : "Threema"
         keyName += "ServerNamePrefix"
         if ipv6 {
             keyName += "v6"
@@ -62,7 +62,7 @@ class PublicServerInfoProvider: ServerInfoProvider {
         if ipv6 {
             keyName += "v6"
         }
-        if LicenseStore.requiresLicenseKey() {
+        if TargetManager.isBusinessApp {
             keyName += "Work"
         }
 

@@ -39,8 +39,8 @@ final class DistributionListDetailsDataSource: UITableViewDiffableDataSource<
     private weak var distributionListDetailsViewController: DistributionListDetailsViewController?
     private weak var tableView: UITableView?
     
-    private lazy var businessInjector = BusinessInjector()
-    var settingsStore = BusinessInjector().settingsStore as! SettingsStore
+    private lazy var businessInjector = BusinessInjector.ui
+    private lazy var settingsStore = businessInjector.settingsStore as! SettingsStore
     private lazy var mdmSetup = MDMSetup(setup: false)
     
     private static let contentConfigurationCellIdentifier = "contentConfigurationCellIdentifier"

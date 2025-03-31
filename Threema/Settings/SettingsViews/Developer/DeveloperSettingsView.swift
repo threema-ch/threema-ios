@@ -34,6 +34,8 @@ struct DeveloperSettingsView: View {
     // Feature Flags
     @State var contactList2 = UserSettings.shared().contactList2
     
+    @State var ipcCommunicationEnabled = UserSettings.shared().ipcCommunicationEnabled
+
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
     
@@ -152,6 +154,13 @@ struct DeveloperSettingsView: View {
                     UserSettings.shared().contactList2 = newValue
                     exit(1)
                 }
+                
+                Toggle(isOn: $ipcCommunicationEnabled) {
+                    Text(verbatim: "IPC Communication")
+                }
+                .onChange(of: ipcCommunicationEnabled) { newValue in
+                    UserSettings.shared().ipcCommunicationEnabled = newValue
+                }
             }
             header: {
                 Text(verbatim: "Feature Flags")
@@ -171,7 +180,7 @@ struct DeveloperSettingsView: View {
             
             Section {
                 Button {
-                    let businessInjector = BusinessInjector()
+                    let businessInjector = BusinessInjector.ui
                     let terminator = try! ForwardSecuritySessionTerminator(businessInjector: businessInjector)
                     
                     businessInjector.entityManager.performAndWaitSave {
@@ -185,7 +194,7 @@ struct DeveloperSettingsView: View {
                 }
                 
                 Button {
-                    let businessInjector = BusinessInjector()
+                    let businessInjector = BusinessInjector.ui
                     let terminator = try! ForwardSecuritySessionTerminator(businessInjector: businessInjector)
                     
                     businessInjector.entityManager.performAndWait {

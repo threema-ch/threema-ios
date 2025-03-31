@@ -127,7 +127,7 @@ public class BrandingUtils: NSObject {
     
     private static func logo() async -> LogoType {
         await withCheckedContinuation { continuation in
-            if LicenseStore.requiresLicenseKey(), let logoURLString = Colors.licenseLogoURL {
+            if TargetManager.isBusinessApp, let logoURLString = Colors.licenseLogoURL {
                 // Not consumer and has logoURL
                 guard let logoURL = URL(string: logoURLString) else {
                     DDLogError("Generating logo URL failed")

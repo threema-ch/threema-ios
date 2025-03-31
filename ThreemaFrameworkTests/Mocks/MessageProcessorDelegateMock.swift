@@ -77,16 +77,8 @@ class MessageProcessorDelegateMock: NSObject, MessageProcessorDelegate {
     func processVoIPCall(
         _ message: NSObject,
         identity: String?,
-        onCompletion: @escaping (any MessageProcessorDelegate) -> Void,
-        onError: @escaping (any Error) -> Void
-    ) {
-        // no-op
-    }
-
-    func processVoIPCall(
-        _ message: NSObject,
-        identity: String?,
-        onCompletion: ((MessageProcessorDelegate) -> Void)? = nil
+        onCompletion: @escaping ((any MessageProcessorDelegate)?) -> Void,
+        onError: @escaping (any Error, (any MessageProcessorDelegate)?) -> Void
     ) {
         // no-op
     }

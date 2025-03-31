@@ -291,7 +291,7 @@ class ConversationsViewControllerHelper {
         var sheetMessage: String?
         var actions = [UIAlertAction]()
         
-        guard let group = BusinessInjector().groupManager.getGroup(conversation: conversation) else {
+        guard let group = BusinessInjector.ui.groupManager.getGroup(conversation: conversation) else {
             return
         }
         
@@ -473,7 +473,7 @@ class ConversationsViewControllerHelper {
             style: .destructive
         ) { _ in
             
-            BusinessInjector().groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
+            BusinessInjector.ui.groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
             handler(true)
         }
         return leaveAction
@@ -492,7 +492,7 @@ class ConversationsViewControllerHelper {
             title: #localize("group_leave_and_delete_button"),
             style: .destructive
         ) { _ in
-            BusinessInjector().groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
+            BusinessInjector.ui.groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
 
             // the task added by the previous leave call takes care of deleting hidden contacts
             ConversationsViewControllerHelper.deleteConversation(
@@ -517,7 +517,7 @@ class ConversationsViewControllerHelper {
             title: #localize("group_dissolve_button"),
             style: .destructive
         ) { _ in
-            BusinessInjector().groupManager.dissolve(groupID: group.groupID, to: nil)
+            BusinessInjector.ui.groupManager.dissolve(groupID: group.groupID, to: nil)
             handler(true)
         }
         return dissolveAction
@@ -537,7 +537,7 @@ class ConversationsViewControllerHelper {
             title: #localize("group_dissolve_and_delete_button"),
             style: .destructive
         ) { _ in
-            let businessInjector = BusinessInjector()
+            let businessInjector = BusinessInjector.ui
             businessInjector.groupManager.dissolve(groupID: group.groupID, to: nil)
 
             guard let conversation = businessInjector.entityManager.entityFetcher.conversationEntity(

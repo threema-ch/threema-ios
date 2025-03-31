@@ -134,8 +134,10 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                 ))
             }
 
-            // Send and delivery receipt
-            // Notice: This message will be (reflected) sent immediately, before the next task will be executed!
+            // Send delivery receipt
+            // This message will be (reflected) sent immediately, before the next task will be executed!
+            // This prevents the delay of sending a delivery receipt and a potential race with sending of the read
+            // receipt if the message is immediately read.
             let task = TaskDefinitionSendDeliveryReceiptsMessage(
                 fromIdentity: self.frameworkInjector.myIdentityStore.identity,
                 toIdentity: processedMsg.fromIdentity,

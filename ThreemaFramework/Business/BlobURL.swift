@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 @objc public class BlobURL: NSObject {
@@ -69,9 +70,25 @@ import Foundation
         }, completionHandler: completionHandler)
     }
     
-    @objc public func upload(origin: BlobOrigin, completionHandler: @escaping (URL?, String?, Error?) -> Void) {
+    @objc public func upload(
+        origin: BlobOrigin,
+        setPersistParam: Bool,
+        completionHandler: @escaping (URL?, String?, Error?) -> Void
+    ) {
+        let persistBlob: Int = {
+            if setPersistParam {
+                if origin == .public {
+                    return 1
+                }
+                else {
+                    DDLogWarn("Blob persist parameter cannot be enabled if scope is local")
+                }
+            }
+            return 0
+        }()
+        
         genericBlobURL(blobID: nil, origin: origin) { blobServerInfo -> String in
-            blobServerInfo.uploadURL
+            blobServerInfo.uploadURL.replacingOccurrences(of: "{persistBlob}", with: String(persistBlob))
         } completionHandler: { url, error in
             AuthTokenManager.shared().obtainToken { authToken, err in
                 self.queue.async {
@@ -137,6 +154,9 @@ import Foundation
                         ),
                         blobID: blobID
                     )
+                    
+                    DDLogDebug("Blob mirror URL: \(url.absoluteString)")
+                    
                     self.queue.async {
                         completionHandler(url, nil)
                     }
@@ -150,6 +170,9 @@ import Foundation
                 }
                 
                 let url = self.substituteBlobID(url: extractURL(blobServerInfo!), blobID: blobID)
+                
+                DDLogDebug("Blob server URL: \(url.absoluteString)")
+                
                 self.queue.async {
                     completionHandler(url, nil)
                 }

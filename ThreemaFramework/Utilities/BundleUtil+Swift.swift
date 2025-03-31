@@ -21,8 +21,7 @@
 import Foundation
 
 extension BundleUtil {
-    @available(*, deprecated, message: "Use the macro #localize(key) instead.")
-    public static func localizedString(for key: String) -> String.LocalizationValue {
+    public static func getFallBackString(for key: String) -> String.LocalizationValue {
         String.LocalizationValue(BundleUtil.localizedString(forKey: key))
     }
 }

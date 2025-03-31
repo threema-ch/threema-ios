@@ -54,6 +54,7 @@ class ContactStoreTests: XCTestCase {
             csi: expectedCsi,
             jobTitle: expectedJobTitle,
             department: expectedDepartment,
+            featureMask: 0,
             acquaintanceLevel: .direct,
             entityManager: em,
             contactSyncer: nil

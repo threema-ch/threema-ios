@@ -44,7 +44,7 @@
 }
 
 + (void)checkUpdateWorkDataForce:(BOOL)force sendForce:(BOOL)sendForce onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError*))onError {
-    if (![LicenseStore requiresLicenseKey]) {
+    if (!TargetManagerObjc.isBusinessApp) {
         if (onCompletion != nil) {
             onCompletion();
         }
@@ -254,7 +254,7 @@
 }
 
 + (void)checkUpdateThreemaMDM:(void(^)(void))onCompletion onError:(void(^)(NSError*))onError {
-    if ([LicenseStore requiresLicenseKey] == NO) {
+    if (!TargetManagerObjc.isBusinessApp) {
         DDLogWarn(@"No license is required");
         onCompletion();
         return;

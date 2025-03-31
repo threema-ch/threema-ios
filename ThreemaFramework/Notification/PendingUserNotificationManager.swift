@@ -371,7 +371,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
         }
         .catch { error in
             DDLogError(
-                "[Push] Adding notification to notification center failed: \(error.localizedDescription)"
+                "[Push] Adding notification to notification center failed: \(error)"
             )
             seal(false)
         }

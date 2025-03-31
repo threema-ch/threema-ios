@@ -50,14 +50,14 @@ class Old_BlobUploader: NSObject {
         self.blobUploadItems = [BlobUploadItem]()
     }
     
-    @objc func upload(blobs: [Data], origin: BlobOrigin) {
+    @objc func upload(blobs: [Data], origin: BlobOrigin, setPersistParam: Bool) {
         guard !blobs.isEmpty else {
             return
         }
         
         // Start all upload tasks
         for blob in blobs {
-            blobUploadItems.append(startUpload(blob, origin: origin))
+            blobUploadItems.append(startUpload(blob, setPersistParam: setPersistParam, origin: origin))
         }
     }
 
@@ -66,7 +66,7 @@ class Old_BlobUploader: NSObject {
         HTTPClient.invalidateAndCancelSession(for: self)
     }
     
-    private func startUpload(_ blob: Data, origin: BlobOrigin) -> BlobUploadItem {
+    private func startUpload(_ blob: Data, setPersistParam: Bool, origin: BlobOrigin) -> BlobUploadItem {
         let boundary = "---------------------------Boundary_Line"
         let contentType = String(format: "multipart/form-data; boundary=%@", boundary)
 
@@ -80,7 +80,7 @@ class Old_BlobUploader: NSObject {
         blobItemIndex += 1
         let blobUploadItem = BlobUploadItem(String(blobItemIndex))
         
-        blobURL.upload(origin: origin) { uploadURL, authorization, error in
+        blobURL.upload(origin: origin, setPersistParam: setPersistParam) { uploadURL, authorization, error in
             if uploadURL == nil {
                 DDLogError(String(format: "Upload failed with error: %@", error!.localizedDescription))
                 self.delegate.uploadFailed()

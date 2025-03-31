@@ -40,8 +40,8 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
     override func viewDidLoad() {
         orphanedFilesDescription.text = String.localizedStringWithFormat(
             #localize("settings_orphaned_files_description"),
-            ThreemaApp.currentName,
-            ThreemaApp.currentName
+            TargetManager.appName,
+            TargetManager.appName
         )
         orphanedFilesMoveToBin.text = #localize("settings_orphaned_files_button")
         orphanedFilesRestore.text = #localize("settings_orphaned_files_bin_restore_button")
@@ -112,7 +112,7 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
                     #localize("settings_orphaned_files_footer"),
                     "\(orphanedFiles.count)",
                     "\((totalFilesCount ?? 0) + orphanedFiles.count)",
-                    ThreemaApp.currentName
+                    TargetManager.appName
                 )
             }
             else {
@@ -129,7 +129,7 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
                         fromByteCount: orphanedFilesBinSize ?? 0,
                         countStyle: .file
                     ),
-                    ThreemaApp.currentName
+                    TargetManager.appName
                 )
             }
             else {

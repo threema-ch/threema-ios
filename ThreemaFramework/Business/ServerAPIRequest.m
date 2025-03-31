@@ -208,7 +208,7 @@
 }
 
 + (void)addAuthorization:(NSMutableURLRequest*)request {
-    if ([LicenseStore isOnPrem]) {
+    if (TargetManagerObjc.isOnPrem) {
         // OnPrem requires Basic Authorization header
         NSString *userPass = [NSString stringWithFormat:@"%@:%@", [LicenseStore sharedLicenseStore].licenseUsername, [LicenseStore sharedLicenseStore].licensePassword];
         NSString *userPassBase64 = [[userPass dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0];

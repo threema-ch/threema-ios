@@ -144,6 +144,8 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize resetTipKitOnNextLaunch;
 @synthesize jbDetectionDismissed;
 @synthesize contactList2;
+@synthesize ipcCommunicationEnabled;
+@synthesize ipcSecretPrefix;
 
 /// Deprecated Keys, please add keys if they are removed:
 /// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
@@ -195,7 +197,7 @@ static UserSettings *instance;
         BOOL defaultDarkTheme = NO;
         BOOL defaultUseSystemTheme = true;
         BOOL defaultWorkInfoShown = false;
-        if ([LicenseStore requiresLicenseKey]) {
+        if (TargetManagerObjc.isBusinessApp) {
             defaultDarkTheme = YES;
             defaultUseSystemTheme = false;
             defaultWorkInfoShown = true;
@@ -270,6 +272,9 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"ResetTipKitOnNextLaunch",
                                         [NSNumber numberWithBool:NO], @"JBDetectionDismissed",
                                         [NSNumber numberWithBool:NO], @"ContactList2",
+                                        [NSNumber numberWithBool:YES], @"IPCCommunicationEnabled",
+                                        [NSData data], @"IPCSecretPrefix",
+
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
         
@@ -293,7 +298,7 @@ static UserSettings *instance;
     blockUnknown = [defaults boolForKey:@"BlockUnknown"];
     enablePoi = [defaults boolForKey:@"EnablePOI"];
     hideStaleContacts = [defaults boolForKey:@"HideStaleContacts"];
-    
+
     inAppSounds = [defaults boolForKey:@"InAppSounds"];
     inAppVibrate = [defaults boolForKey:@"InAppVibrate"];
     inAppPreview = [defaults boolForKey:@"InAppPreview"];
@@ -301,11 +306,11 @@ static UserSettings *instance;
     pushGroupSound = [defaults stringForKey:@"PushGroupSound"];
     pushDecrypt = [defaults boolForKey:@"PushDecrypt"];
     notificationType = [defaults objectForKey: @"NotificationType"];
-    
+
     imageSize = [defaults stringForKey:@"ImageSize"];
     videoQuality = [defaults stringForKey:@"VideoQuality"];
     autoSaveMedia = [defaults boolForKey:@"AutoSaveMedia"];
-    
+
     disableBigEmojis = [defaults boolForKey:@"DisableBigEmojis"];
     sendMessageFeedback = [defaults boolForKey:@"SendMessageFeedback"];
     darkTheme = [defaults boolForKey:@"DarkTheme"];
@@ -316,46 +321,46 @@ static UserSettings *instance;
     if ([[NSFileManager defaultManager] fileExistsAtPath:wallpaperPath]) {
         wallpaper = [NSData dataWithContentsOfFile:wallpaperPath];
     }
-    
+
     sortOrderFirstName = [defaults boolForKey:@"SortOrderFirstName"];
     displayOrderFirstName = [defaults boolForKey:@"DisplayOrderFirstName"];
-    
+
     validationLogging = [defaults boolForKey:@"ValidationLogging"];
     enableIPv6 = [defaults boolForKey:@"EnableIPv6"];
     companyDirectory = [defaults boolForKey:@"CompanyDirectory"];
-    
+
     askedForPushDecryption = [defaults boolForKey:@"AskedForPushDecryption"];
-    
+
     sendProfilePicture = [[defaults objectForKey:@"SendProfilePicture"] intValue];
-    
+
     profilePictureContactList = [defaults arrayForKey:@"ProfilePictureContactList"];
     profilePictureRequestList = [defaults arrayForKey:@"ProfilePictureRequestList"];
-    
+
     showGalleryPreview = [defaults boolForKey:@"ShowGalleryPreview"];
     disableProximityMonitoring = [defaults boolForKey:@"DisableProximityMonitoring"];
-    
+
     enableThreemaCall = [defaults boolForKey:@"EnableThreemaCall"];
     enableThreemaGroupCalls = [defaults boolForKey:@"EnableThreemaGroupCalls"];
     alwaysRelayCalls = [defaults boolForKey:@"AlwaysRelayCalls"];
-    
+
     /// This setting was renamed but we needed to keep the key
     includeCallsInRecents = [defaults boolForKey:@"EnableCallKit"];
-    
+
     previewLimit = [defaults floatForKey:@"PreviewLimit"];
-    
+
     acceptedPrivacyPolicyDate = [defaults objectForKey:@"AcceptedPrivacyPolicyDate"];
     acceptedPrivacyPolicyVariant = [[defaults objectForKey:@"AcceptedPrivacyPolicyVariant"] intValue];
-    
+
     voIPSound = [defaults stringForKey:@"VoIPSound"];
-    
+
     threemaWeb = [defaults boolForKey:@"ThreemaWeb"];
-    
+
     openPlusIconInChat = [defaults boolForKey:@"OpenPlusIconInChat"];
 
     enableMultiDevice = [defaults boolForKey:@"EnableMultiDevice"];
     deviceID = [defaults dataForKey:@"DeviceID"];
     allowSeveralLinkedDevices = [defaults boolForKey:@"AllowSeveralLinkedDevices"];
-    
+
     groupCallsDebugMessages = [defaults boolForKey:@"GroupCallsDebugMessages"];
     keepMessagesDays = [defaults integerForKey:@"KeepMessagesDays"];
 
@@ -363,10 +368,10 @@ static UserSettings *instance;
     safeIntroShown = [defaults boolForKey:@"SafeIntroShown"];
     evaluatedPolicyDomainStateApp = [defaults dataForKey:@"EvaluatedPolicyDomainStateApp"];
     evaluatedPolicyDomainStateShareExtension = [defaults dataForKey:@"EvaluatedPolicyDomainStateShareExtension"];
-    
+
     workInfoShown = [defaults boolForKey:@"WorkInfoShown"];
     desktopInfoBannerShown = [defaults boolForKey:@"DesktopInfoBannerShown"];
-    
+
     NSString *tmpSentryAppDevice = [defaults stringForKey:@"SentryAppDevice"];
     if (tmpSentryAppDevice != nil) {
         if ([tmpSentryAppDevice isEqualToString:@""]) {
@@ -381,12 +386,12 @@ static UserSettings *instance;
     masterDndWorkingDays = [NSOrderedSet orderedSetWithArray:[defaults arrayForKey:@"MasterDNDWorkingDays"]];
     masterDndStartTime = [defaults objectForKey:@"MasterDNDStartTime"];
     masterDndEndTime = [defaults objectForKey:@"MasterDNDEndTime"];
-    
+
     enableVideoCall = [defaults boolForKey:@"EnableVideoCall"];
     threemaVideoCallQualitySetting = [[defaults objectForKey:@"ThreemaVideoCallQualitySetting"] intValue];
-            
+
     threemaAudioMessagePlaySpeed = [[defaults objectForKey:@"ThreemaAudioMessagePlaySpeed"] intValue];
-    
+
     hidePrivateChats = [defaults boolForKey:@"HidePrivateChats"];
     voiceMessagesShowTimeRemaining = [defaults boolForKey:@"VoiceMessagesShowTimeRemaining"];
     resetTipKitOnNextLaunch = [defaults boolForKey:@"ResetTipKitOnNextLaunch"];
@@ -394,6 +399,15 @@ static UserSettings *instance;
     
     jbDetectionDismissed = [defaults boolForKey:@"JBDetectionDismissed"];
     contactList2 = [defaults boolForKey:@"ContactList2"];
+
+    if ([ThreemaEnvironment env] == EnvironmentTypeXcode) {
+        ipcCommunicationEnabled = [defaults boolForKey:@"IPCCommunicationEnabled"];
+    }
+    else {
+        ipcCommunicationEnabled = true;
+    }
+
+    ipcSecretPrefix = [defaults objectForKey:@"IPCSecretPrefix"];
 }
 
 - (void)setAppMigratedToVersion:(NSInteger)newAppMigratedToVersion {
@@ -923,6 +937,18 @@ static UserSettings *instance;
 - (void)setContactList2:(BOOL)newContactList2 {
     contactList2 = newContactList2;
     [defaults setBool:contactList2 forKey:@"ContactList2"];
+    [defaults synchronize];
+}
+
+- (void)setIpcCommunicationEnabled:(BOOL)newIpcCommunicationEnabled {
+    ipcCommunicationEnabled = newIpcCommunicationEnabled;
+    [defaults setBool:ipcCommunicationEnabled forKey:@"IPCCommunicationEnabled"];
+    [defaults synchronize];
+}
+
+- (void)setIpcSecretPrefix:(NSData *)newIpcSecretPrefix {
+    ipcSecretPrefix = newIpcSecretPrefix;
+    [defaults setObject:ipcSecretPrefix forKey:@"IPCSecretPrefix"];
     [defaults synchronize];
 }
 

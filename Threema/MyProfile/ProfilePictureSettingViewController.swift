@@ -30,7 +30,6 @@ class ProfilePictureSettingViewController: ThemedTableViewController {
     var editProfileVC: EditProfileViewController?
     
     private var selectedIndexPath: IndexPath?
-    private let businessInjector = BusinessInjector()
     private let receiverOfProfilePicture = [SendProfilePictureNone, SendProfilePictureAll, SendProfilePictureContacts]
     
     override func viewDidLoad() {

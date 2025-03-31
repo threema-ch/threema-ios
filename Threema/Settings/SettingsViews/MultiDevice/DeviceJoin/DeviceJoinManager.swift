@@ -58,11 +58,11 @@ class DeviceJoinManager: ObservableObject {
     // MARK: Localization helper
     
     static var downloadURL: String {
-        switch ThreemaApp.current {
-        case .threema, .green:
-            "https://three.ma/md"
-        case .work, .onPrem, .blue:
+        if TargetManager.isBusinessApp {
             "https://three.ma/mdw"
+        }
+        else {
+            "https://three.ma/md"
         }
     }
 }

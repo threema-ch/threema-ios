@@ -184,7 +184,7 @@ public class WebAbstractMessage: NSObject {
             case "thumbnail"?:
                 let requestThumbnail = WebThumbnailRequest(message: self)
                 var conversation: ConversationEntity?
-                var entityManager = EntityManager()
+                let entityManager = EntityManager()
                 
                 if requestThumbnail.type == "contact" {
                     conversation = entityManager.entityFetcher.conversationEntity(forIdentity: requestThumbnail.id)
@@ -220,8 +220,7 @@ public class WebAbstractMessage: NSObject {
                         return
                     }
                     else {
-                        if let image = imageMessageEntity.image,
-                           image.data == nil {
+                        if let image = imageMessageEntity.image {
                             let confirmResponse = WebConfirmResponse(
                                 message: requestThumbnail,
                                 success: false,
@@ -231,7 +230,7 @@ public class WebAbstractMessage: NSObject {
                             completionHandler(confirmResponse.messagePack(), false)
                             return
                         }
-                        else if let thumbnail = imageMessageEntity.thumbnail, thumbnail.data == nil {
+                        else if let thumbnail = imageMessageEntity.thumbnail {
                             let confirmResponse = WebConfirmResponse(
                                 message: requestThumbnail,
                                 success: false,
@@ -290,7 +289,7 @@ public class WebAbstractMessage: NSObject {
             case "ack"?:
                 let requestAck = WebAckRequest(message: self)
                 var conversation: ConversationEntity?
-                let businessInjector = BusinessInjector()
+                let businessInjector = BusinessInjector.ui
                 
                 if requestAck.type == "contact" {
                     conversation = businessInjector.entityManager.entityFetcher
@@ -680,7 +679,7 @@ public class WebAbstractMessage: NSObject {
     
     private func updateReadStateForMessage(requestMessage: WebReadRequest) {
         var conversation: ConversationEntity?
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector.ui
         
         if requestMessage.type == "contact" {
             conversation = businessInjector.entityManager.entityFetcher
@@ -761,7 +760,7 @@ public class WebAbstractMessage: NSObject {
     ) {
         if baseMessage != nil {
                         
-            guard let conversation = baseMessage.conversation else {
+            guard baseMessage.conversation != nil else {
                 return
             }
 
@@ -771,13 +770,13 @@ public class WebAbstractMessage: NSObject {
                         if requestMessage.acknowledged {
                             try await businessInjector.messageSender.sendReaction(
                                 to: baseMessage.objectID,
-                                reaction: EmojiVariant(base: .thumbsUpSign, skintone: nil)
+                                reaction: EmojiVariant(base: .thumbsUp, skintone: nil)
                             )
                         }
                         else {
                             try await businessInjector.messageSender.sendReaction(
                                 to: baseMessage.objectID,
-                                reaction: EmojiVariant(base: .thumbsDownSign, skintone: nil)
+                                reaction: EmojiVariant(base: .thumbsDown, skintone: nil)
                             )
                         }
                     }

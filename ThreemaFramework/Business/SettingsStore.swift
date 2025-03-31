@@ -879,9 +879,9 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         compareAndAssign(&sendMessageFeedback, userSettings.sendMessageFeedback)
 
         // Media
-        compareAndAssign(&userSettings.imageSize, imageSize)
-        compareAndAssign(&userSettings.videoQuality, videoQuality)
-        compareAndAssign(&userSettings.autoSaveMedia, autoSaveMedia)
+        compareAndAssign(&userSettings.imageSize, userSettings.imageSize)
+        compareAndAssign(&userSettings.videoQuality, userSettings.videoQuality)
+        compareAndAssign(&userSettings.autoSaveMedia, userSettings.autoSaveMedia)
         
         // Threema Calls
         compareAndAssign(&enableThreemaCall, userSettings.enableThreemaCall)

@@ -21,60 +21,60 @@
 #import <Foundation/Foundation.h>
 #import "ThreemaFramework.h"
 
-extern NSString * const MDM_CONFIGURATION_KEY;
-extern NSString * const MDM_FEEDBACK_KEY;
-extern NSString * const MDM_THREEMA_CONFIGURATION_KEY;
+extern NSString * _Nonnull const MDM_CONFIGURATION_KEY;
+extern NSString * _Nonnull const MDM_FEEDBACK_KEY;
+extern NSString * _Nonnull const MDM_THREEMA_CONFIGURATION_KEY;
 
-extern NSString * const MDM_KEY_LICENSE_USERNAME;
-extern NSString * const MDM_KEY_LICENSE_PASSWORD;
-extern NSString * const MDM_KEY_NICKNAME;
-extern NSString * const MDM_KEY_LINKED_EMAIL;
-extern NSString * const MDM_KEY_LINKED_PHONE;
-extern NSString * const MDM_KEY_FIRST_NAME;
-extern NSString * const MDM_KEY_LAST_NAME;
-extern NSString * const MDM_KEY_CSI;
-extern NSString * const MDM_KEY_JOB_TITLE;
-extern NSString * const MDM_KEY_DEPARTMENT;
-extern NSString * const MDM_KEY_CATEGORY;
-extern NSString * const MDM_KEY_CONTACT_SYNC;
-extern NSString * const MDM_KEY_READONLY_PROFILE;
-extern NSString * const MDM_KEY_ID_BACKUP;
-extern NSString * const MDM_KEY_ID_BACKUP_PASSWORD;
-extern NSString * const MDM_KEY_BLOCK_UNKNOWN;
-extern NSString * const MDM_KEY_HIDE_INACTIVE_IDS;
-extern NSString * const MDM_KEY_DISABLE_SAVE_TO_GALLERY;
-extern NSString * const MDM_KEY_DISABLE_ADD_CONTACT;
-extern NSString * const MDM_KEY_DISABLE_EXPORT;
-extern NSString * const MDM_KEY_DISABLE_BACKUPS;
-extern NSString * const MDM_KEY_DISABLE_ID_EXPORT;
-extern NSString * const MDM_KEY_DISABLE_SYSTEM_BACKUPS;
-extern NSString * const MDM_KEY_DISABLE_MESSAGE_PREVIEW;
-extern NSString * const MDM_KEY_DISABLE_SEND_PROFILE_PICTURE;
-extern NSString * const MDM_KEY_DISABLE_CALLS;
-extern NSString * const MDM_KEY_DISABLE_VIDEO_CALLS;
-extern NSString * const MDM_KEY_DISABLE_GROUP_CALLS;
-extern NSString * const MDM_KEY_DISABLE_CREATE_GROUP;
-extern NSString * const MDM_KEY_SKIP_WIZARD;
-extern NSString * const MDM_KEY_DISABLE_WEB;
-extern NSString * const MDM_KEY_WEB_HOSTS;
-extern NSString * const MDM_KEY_DISABLE_SHARE_MEDIA;
-extern NSString * const MDM_KEY_DISABLE_WORK_DIRECTORY;
-extern NSString * const MDM_KEY_KEEP_MESSAGE_DAYS;
+extern NSString * _Nonnull const MDM_KEY_LICENSE_USERNAME;
+extern NSString * _Nonnull const MDM_KEY_LICENSE_PASSWORD;
+extern NSString * _Nonnull const MDM_KEY_NICKNAME;
+extern NSString * _Nonnull const MDM_KEY_LINKED_EMAIL;
+extern NSString * _Nonnull const MDM_KEY_LINKED_PHONE;
+extern NSString * _Nonnull const MDM_KEY_FIRST_NAME;
+extern NSString * _Nonnull const MDM_KEY_LAST_NAME;
+extern NSString * _Nonnull const MDM_KEY_CSI;
+extern NSString * _Nonnull const MDM_KEY_JOB_TITLE;
+extern NSString * _Nonnull const MDM_KEY_DEPARTMENT;
+extern NSString * _Nonnull const MDM_KEY_CATEGORY;
+extern NSString * _Nonnull const MDM_KEY_CONTACT_SYNC;
+extern NSString * _Nonnull const MDM_KEY_READONLY_PROFILE;
+extern NSString * _Nonnull const MDM_KEY_ID_BACKUP;
+extern NSString * _Nonnull const MDM_KEY_ID_BACKUP_PASSWORD;
+extern NSString * _Nonnull const MDM_KEY_BLOCK_UNKNOWN;
+extern NSString * _Nonnull const MDM_KEY_HIDE_INACTIVE_IDS;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_SAVE_TO_GALLERY;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_ADD_CONTACT;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_EXPORT;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_BACKUPS;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_ID_EXPORT;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_SYSTEM_BACKUPS;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_MESSAGE_PREVIEW;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_SEND_PROFILE_PICTURE;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_CALLS;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_VIDEO_CALLS;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_GROUP_CALLS;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_CREATE_GROUP;
+extern NSString * _Nonnull const MDM_KEY_SKIP_WIZARD;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_WEB;
+extern NSString * _Nonnull const MDM_KEY_WEB_HOSTS;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_SHARE_MEDIA;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_WORK_DIRECTORY;
+extern NSString * _Nonnull const MDM_KEY_KEEP_MESSAGE_DAYS;
 
-extern NSString * const MDM_KEY_SAFE_ENABLE;
-extern NSString * const MDM_KEY_SAFE_PASSWORD;
-extern NSString * const MDM_KEY_SAFE_SERVER_URL;
-extern NSString * const MDM_KEY_SAFE_SERVER_USERNAME;
-extern NSString * const MDM_KEY_SAFE_SERVER_PASSWORD;
-extern NSString * const MDM_KEY_SAFE_RESTORE_ENABLE;
-extern NSString * const MDM_KEY_SAFE_RESTORE_ID;
+extern NSString * _Nonnull const MDM_KEY_SAFE_ENABLE;
+extern NSString * _Nonnull const MDM_KEY_SAFE_PASSWORD;
+extern NSString * _Nonnull const MDM_KEY_SAFE_SERVER_URL;
+extern NSString * _Nonnull const MDM_KEY_SAFE_SERVER_USERNAME;
+extern NSString * _Nonnull const MDM_KEY_SAFE_SERVER_PASSWORD;
+extern NSString * _Nonnull const MDM_KEY_SAFE_RESTORE_ENABLE;
+extern NSString * _Nonnull const MDM_KEY_SAFE_RESTORE_ID;
 
-extern NSString * const MDM_KEY_SAFE_PASSWORD_PATTERN;
-extern NSString * const MDM_KEY_SAFE_PASSWORD_MESSAGE;
+extern NSString * _Nonnull const MDM_KEY_SAFE_PASSWORD_PATTERN;
+extern NSString * _Nonnull const MDM_KEY_SAFE_PASSWORD_MESSAGE;
 
-extern NSString * const MDM_KEY_THREEMA_CONFIGURATION;
-extern NSString * const MDM_KEY_THREEMA_OVERRIDE;
-extern NSString * const MDM_KEY_THREEMA_PARAMS;
+extern NSString * _Nonnull const MDM_KEY_THREEMA_CONFIGURATION;
+extern NSString * _Nonnull const MDM_KEY_THREEMA_OVERRIDE;
+extern NSString * _Nonnull const MDM_KEY_THREEMA_PARAMS;
 
 typedef enum : int {
     CallsPolicyTypeAllowAll,

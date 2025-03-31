@@ -503,24 +503,15 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
     }
     
     func updateFeatureMask(for contact: ForwardSecurityContact) async -> Bool {
-        await withCheckedContinuation { continuation in
-            entityManager.performAndWaitSave {
-                guard let contactEntity = self.entityManager.entityFetcher.contact(for: contact.identity) else {
-                    continuation.resume(returning: false)
-                    return
-                }
-                
-                FeatureMask.check(
-                    contacts: [contactEntity],
-                    for: Int(FEATURE_MASK_FORWARD_SECURITY),
-                    force: true
-                ) { _ in
-                    // Feature mask has been updated in DB, will be respected on next message send
-                    self.entityManager.performAndWait {
-                        continuation.resume(returning: contactEntity.isForwardSecurityAvailable())
-                    }
-                }
+        // Feature mask has been updated in DB, will be respected on next message send
+        try? await FeatureMask.updateFeatureMask(for: [ThreemaIdentity(contact.identity)])
+
+        return await entityManager.perform {
+            guard let contactEntity = self.entityManager.entityFetcher.contact(for: contact.identity) else {
+                return false
             }
+            
+            return contactEntity.isForwardSecurityAvailable()
         }
     }
     

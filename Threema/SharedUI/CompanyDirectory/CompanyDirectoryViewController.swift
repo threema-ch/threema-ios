@@ -494,14 +494,16 @@ extension CompanyDirectoryViewController: UITableViewDelegate {
                 acquaintanceLevel: .direct
             ) { contactEntity in
                 // show chat
-                self.navigationController?.dismiss(animated: true, completion: {
-                    let info = [kKeyContact: contactEntity, kKeyForceCompose: true] as [String: Any]
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                        object: nil,
-                        userInfo: info
-                    )
-                })
+                Task { @MainActor in
+                    self.navigationController?.dismiss(animated: true, completion: {
+                        let info = [kKeyContact: contactEntity, kKeyForceCompose: true] as [String: Any]
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                            object: nil,
+                            userInfo: info
+                        )
+                    })
+                }
             } onError: { error in
                 DDLogError("Add work contact failed \(error)")
             }

@@ -75,22 +75,7 @@ static CFStringRef appSyncNotificationKey;
     NSAssert(appId != nil, @"appId not set, you need to set an id for the app or extension");
 
     // Log AppGroupType, because of connection problem (Notification Extension steals connection from App and contrary)
-    NSString *appGroupTypeDesc;
-    switch (type) {
-        case AppGroupTypeApp:
-            appGroupTypeDesc = @"App";
-            break;
-        case AppGroupTypeShareExtension:
-            appGroupTypeDesc = @"ShareExtension";
-            break;
-        case AppGroupTypeNotificationExtension:
-            appGroupTypeDesc = @"NotificationExtension";
-            break;
-        default:
-            appGroupTypeDesc = @"Unknown";
-            break;
-    }
-    DDLogWarn(@"Set AppGroupType %@ to active: %d", appGroupTypeDesc, active);
+    DDLogWarn(@"Set AppGroupType %@ to active: %@", [AppGroup nameForType:type], active == YES ? @"YES" : @"NO");
 
     NSUserDefaults *defaults = [self userDefaults];
     [defaults setBool:active forKey:[self keyForType:type]];
@@ -188,6 +173,17 @@ static CFStringRef appSyncNotificationKey;
         default:
             DDLogError(@"unknown AppGroupType %d", type);
             return KEY_APP_GROUP_TYPE_SHARE_EXTENSION;
+    }
+}
+
++ (NSString *)nameForType:(AppGroupType)type {
+    switch (type) {
+        case AppGroupTypeApp: return @"App";
+        case AppGroupTypeShareExtension: return @"ShareExtension";
+        case AppGroupTypeNotificationExtension: return @"NotificationExtension";
+        default:
+            NSAssert(NO, @"Unknown App Group type");
+            return @"Unknown";
     }
 }
 

@@ -27,7 +27,7 @@ import WebKit
 class SupportViewController: UIViewController {
     
     private var webView: WKWebView!
-    private var myIdentity = BusinessInjector().myIdentityStore
+    private var myIdentity = BusinessInjector.ui.myIdentityStore
     
     // MARK: - Lifecycle
     

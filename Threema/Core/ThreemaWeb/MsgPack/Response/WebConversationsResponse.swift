@@ -27,7 +27,7 @@ class WebConversationsResponse: WebAbstractMessage {
         
         var conversationArray = [[AnyHashable: Any]]()
 
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector.ui
         let allConversations = businessInjector.entityManager.entityFetcher
             .allConversationsSorted() as? [ConversationEntity]
 

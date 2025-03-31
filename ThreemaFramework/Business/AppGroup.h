@@ -50,4 +50,6 @@ typedef enum : int {
 
 + (void)notifyAppGroupSyncNeeded;
 
++ (nonnull NSString *)nameForType:(AppGroupType)type;
+
 @end

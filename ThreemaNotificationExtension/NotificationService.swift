@@ -107,9 +107,6 @@ class NotificationService: UNNotificationServiceExtension {
         // Checking database file exists as early as possible
         AppSetup.registerIfADatabaseFileExists()
 
-        AppGroup.setActive(true, for: AppGroupTypeNotificationExtension)
-        AppGroup.setActive(false, for: AppGroupTypeShareExtension)
-
         DDLogNotice("[Push] Notification did receive: \(request.content)")
         
         logMemoryUsage()
@@ -180,7 +177,7 @@ class NotificationService: UNNotificationServiceExtension {
                     backgroundBusinessInjector.contactStore,
                     backgroundBusinessInjector.groupManager,
                     backgroundBusinessInjector.entityManager,
-                    backgroundBusinessInjector.licenseStore.getRequiresLicenseKey()
+                    TargetManager.isBusinessApp
                 ),
                 backgroundBusinessInjector.pushSettingManager,
                 backgroundBusinessInjector.entityManager
@@ -229,7 +226,16 @@ class NotificationService: UNNotificationServiceExtension {
                 self.backgroundBusinessInjector.serverConnector.registerMessageProcessorDelegate(delegate: self)
                 self.backgroundBusinessInjector.serverConnector.registerConnectionStateDelegate(delegate: self)
                 
-                self.backgroundBusinessInjector.serverConnector.connect(initiator: .notificationExtension)
+                AppGroup.setActive(true, for: AppGroupTypeNotificationExtension)
+                AppGroup.setActive(false, for: AppGroupTypeShareExtension)
+
+                self.backgroundBusinessInjector.serverConnector
+                    .connect(initiator: .notificationExtension) { isConnecting in
+                        if !isConnecting {
+                            DDLogNotice("[Push] Not connecting do forced exit")
+                            self.exitIfAllTasksProcessed(force: true, willExpire: true)
+                        }
+                    }
             }
             
             let result = NotificationService.stopProcessingGroup?.wait(timeout: .now() + kNSETimeout)
@@ -480,7 +486,7 @@ class NotificationService: UNNotificationServiceExtension {
         message: VoIPCallOfferMessage,
         from identity: String?,
         onCompletion: @escaping ((MessageProcessorDelegate) -> Void),
-        onError: @escaping (any Error) -> Void
+        onError: @escaping (any Error, any MessageProcessorDelegate) -> Void
     ) {
         
         // Check if blocked
@@ -499,7 +505,7 @@ class NotificationService: UNNotificationServiceExtension {
 
         // Cancel the actual task processing of Offer message, because this message must be processed from the App
         // again!
-        onError(ThreemaProtocolError.doNotProcessOfferMessageInNotificationExtension)
+        onError(ThreemaProtocolError.doNotProcessOfferMessageInNotificationExtension, self)
 
         DDLogNotice("[Push] will Report Incoming VoIP Push Payload to OS.")
         CXProvider.reportNewIncomingVoIPPushPayload(payload) { error in
@@ -528,7 +534,7 @@ class NotificationService: UNNotificationServiceExtension {
         let title = #localize("new_message_no_access_title")
         let message = String.localizedStringWithFormat(
             #localize("new_message_no_access_message"),
-            ThreemaApp.appName
+            TargetManager.appName
         )
         
         ThreemaUtility.showLocalNotification(
@@ -553,7 +559,7 @@ class NotificationService: UNNotificationServiceExtension {
                 backgroundBusinessInjector.contactStore,
                 backgroundBusinessInjector.groupManager,
                 backgroundBusinessInjector.entityManager,
-                backgroundBusinessInjector.licenseStore.getRequiresLicenseKey()
+                TargetManager.isBusinessApp
             ),
             backgroundBusinessInjector.pushSettingManager,
             backgroundBusinessInjector.entityManager
@@ -585,7 +591,7 @@ class NotificationService: UNNotificationServiceExtension {
                 backgroundBusinessInjector.contactStore,
                 backgroundBusinessInjector.groupManager,
                 backgroundBusinessInjector.entityManager,
-                backgroundBusinessInjector.licenseStore.getRequiresLicenseKey()
+                TargetManager.isBusinessApp
             ),
             backgroundBusinessInjector.pushSettingManager,
             backgroundBusinessInjector.entityManager
@@ -644,13 +650,21 @@ extension NotificationService: MessageProcessorDelegate {
                                                 
                 if let conversation = msg.conversation {
                     databaseManager.addDirtyObject(conversation)
+                    
                     if let contact = conversation.contact {
                         databaseManager.addDirtyObject(contact)
                     }
+                    
                     if message is ReactionMessage || message is GroupReactionMessage,
                        let reactions = baseMessage.reactions {
                         for reaction in reactions {
                             databaseManager.addDirtyObject(reaction)
+                        }
+                    }
+                    else if message is EditMessage || message is EditGroupMessage,
+                            let editHistoryEntries = baseMessage.historyEntries {
+                        for entry in editHistoryEntries {
+                            databaseManager.addDirtyObject(entry)
                         }
                     }
 
@@ -783,8 +797,8 @@ extension NotificationService: MessageProcessorDelegate {
     func processVoIPCall(
         _ message: NSObject,
         identity: String?,
-        onCompletion: @escaping ((any MessageProcessorDelegate) -> Void),
-        onError: @escaping (any Error) -> Void
+        onCompletion: @escaping ((any MessageProcessorDelegate)?) -> Void,
+        onError: @escaping (any Error, (any MessageProcessorDelegate)?) -> Void
     ) {
         switch message {
         case is VoIPCallOfferMessage:

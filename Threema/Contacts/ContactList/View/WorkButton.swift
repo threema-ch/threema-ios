@@ -18,39 +18,37 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#if THREEMA_WORK || THREEMA_ONPREM
-    import SwiftUI
-    import ThreemaFramework
-    import ThreemaMacros
+import SwiftUI
+import ThreemaFramework
+import ThreemaMacros
 
-    struct WorkButton: View {
-        @State var isTurnedOn = false {
-            didSet { didToggle(isTurnedOn) }
-        }
-        
-        var didToggle: (_ isTurnedOn: Bool) -> Void
+struct WorkButton: View {
+    @State var isTurnedOn = false {
+        didSet { didToggle(isTurnedOn) }
+    }
     
-        var body: some View {
-            Button {
-                isTurnedOn.toggle()
-            } label: {
-                Image("threema.case.\(isTurnedOn ? "circle.fill" : "fill.circle")")
-                    .imageScale(.large)
-            }
-            .accessibilityLabel(#localize("segmentcontrol_work_contacts"))
+    var didToggle: (_ isTurnedOn: Bool) -> Void
+    
+    var body: some View {
+        Button {
+            isTurnedOn.toggle()
+        } label: {
+            Image("threema.case.\(isTurnedOn ? "circle.fill" : "fill.circle")")
+                .imageScale(.large)
         }
+        .accessibilityLabel(#localize("segmentcontrol_work_contacts"))
     }
+}
 
-    typealias WorkButtonView = UIHostingController<WorkButton>
+typealias WorkButtonView = UIHostingController<WorkButton>
 
-    extension WorkButtonView {
-        convenience init(_ didToggle: @escaping (Bool) -> Void) {
-            self.init(rootView: WorkButton(didToggle: didToggle))
-            view.backgroundColor = .clear
-        }
+extension WorkButtonView {
+    convenience init(_ didToggle: @escaping (Bool) -> Void) {
+        self.init(rootView: WorkButton(didToggle: didToggle))
+        view.backgroundColor = .clear
     }
+}
 
-    #Preview {
-        WorkButton(isTurnedOn: false, didToggle: { _ in })
-    }
-#endif
+#Preview {
+    WorkButton(isTurnedOn: false, didToggle: { _ in })
+}

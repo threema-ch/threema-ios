@@ -41,9 +41,9 @@ struct NotificationReminderView: View {
             Text(
                 String.localizedStringWithFormat(
                     #localize("push_reminder_message"),
-                    ThreemaApp.currentName,
-                    ThreemaApp.currentName,
-                    ThreemaApp.currentName
+                    TargetManager.appName,
+                    TargetManager.appName,
+                    TargetManager.appName
                 )
             )
             .font(.title3)

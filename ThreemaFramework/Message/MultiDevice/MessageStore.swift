@@ -342,6 +342,13 @@ class MessageStore: MessageStoreProtocol {
             messageProcessorDelegate.incomingMessageChanged(editMessage, baseMessage: msg)
             messageProcessorDelegate.incomingMessageFinished(editMessage)
         }
+        else {
+            if let entries = msg.historyEntries {
+                for entry in entries {
+                    messageProcessorDelegate.changedManagedObjectID(entry.objectID)
+                }
+            }
+        }
     }
 
     func save(editGroupMessage: EditGroupMessage, createdAt: Date, isOutgoing: Bool) throws {
@@ -355,6 +362,13 @@ class MessageStore: MessageStoreProtocol {
         if !isOutgoing {
             messageProcessorDelegate.incomingMessageChanged(editGroupMessage, baseMessage: msg)
             messageProcessorDelegate.incomingMessageFinished(editGroupMessage)
+        }
+        else {
+            if let entries = msg.historyEntries {
+                for entry in entries {
+                    messageProcessorDelegate.changedManagedObjectID(entry.objectID)
+                }
+            }
         }
     }
 

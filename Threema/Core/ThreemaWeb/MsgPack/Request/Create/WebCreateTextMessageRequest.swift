@@ -62,7 +62,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
     }
     
     func sendMessage(completion: @escaping () -> Void) {
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector.ui
         let entityManager = businessInjector.entityManager
         let groupManager = businessInjector.groupManager
         let messagePermission = MessagePermission(
@@ -130,7 +130,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
     private func sendMessage(conversation: ConversationEntity, completion: @escaping () -> Void) {
         ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
             Task {
-                let businessInjector = BusinessInjector()
+                let businessInjector = BusinessInjector.ui
                 let textMessages = await businessInjector.messageSender.sendTextMessage(
                     containing: self.text,
                     in: conversation,

@@ -70,7 +70,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>ITSEncryptionExportComplianceCode</key>
-	<string>fb225681-2943-4538-98e8-732e6ac4cd2e</string>
+	<string>$(APP_ENCRYPTION_EXPORT_COMPLIANCE_CODE)</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>comgooglemaps</string>
@@ -100,15 +100,17 @@
 		<string>INSendMessageIntent</string>
 	</array>
 	<key>SentryClientDsn</key>
-	<string>https://8d95950d8b9c472fbd68a79bea8fa26b@bugs.threema.ch/11</string>
+	<string>$(SENTRY_CLIENT_DSN)</string>
+	<key>TargetManagerKey</key>
+	<string>$(TARGET_MANAGER_KEY)</string>
 	<key>ThreemaAppGroupIdentifier</key>
-	<string>group.ch.threema.red</string>
+	<string>$(GROUP_IDENTIFIER)</string>
 	<key>ThreemaAppIdentifier</key>
-	<string>ch.threema.red.iapp</string>
+	<string>$(APP_BUNDLE_IDENTIFIER)</string>
 	<key>ThreemaMaxGroupMembers</key>
 	<integer>256</integer>
 	<key>ThreemaVersionSuffix</key>
-	<string></string>
+	<string>$(THREEMA_VERSION_SUFFIX)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
@@ -120,7 +122,7 @@
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
-	<string>ThreemaGreenLaunchScreen</string>
+	<string>$(INFOPLIST_KEY_UILaunchStoryboardName)</string>
 	<key>UIPrerenderedIcon</key>
 	<true/>
 	<key>UIRequiredDeviceCapabilities</key>

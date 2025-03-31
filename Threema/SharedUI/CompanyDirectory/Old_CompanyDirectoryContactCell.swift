@@ -86,10 +86,14 @@ class Old_CompanyDirectoryContactCell: UITableViewCell {
             department: contact.department,
             acquaintanceLevel: .direct
         ) { _ in
-            self.setupCell()
+            DispatchQueue.main.async {
+                self.setupCell()
+            }
         } onError: { error in
             DDLogError("Add work contact failed \(error)")
-            self.setupCell()
+            DispatchQueue.main.async {
+                self.setupCell()
+            }
         }
     }
 }

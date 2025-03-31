@@ -55,6 +55,6 @@ extension Colors {
     }
     
     @objc public class var textWizardLink: UIColor {
-        primaryWizard
+        .primary
     }
 }

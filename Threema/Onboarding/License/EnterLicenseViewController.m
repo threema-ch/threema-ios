@@ -42,7 +42,7 @@
 
 + (EnterLicenseViewController*)instantiate {
     NSString *storyboardName = @"License";
-    if ([LicenseStore isOnPrem]) {
+    if (TargetManagerObjc.isOnPrem) {
         storyboardName = @"LicenseOnPrem";
     }
 
@@ -75,7 +75,7 @@
     _logoImageView.image = [Colors threemaLogo];
     _logoImageView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     
-    if ([ThreemaAppObjc current] == ThreemaAppOnPrem) {
+    if (TargetManagerObjc.isOnPrem) {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"enter_license_onprem_description"];
         _threemaAdminInfoLabel.text = [BundleUtil localizedStringForKey:@"enter_license_onprem_admin_description"];
     } else {
@@ -121,11 +121,11 @@
     mainTapGesture.cancelsTouchesInView = false;
     [self.view addGestureRecognizer:mainTapGesture];
        
-    _confirmButton.backgroundColor = Colors.primaryWizard;
+    _confirmButton.backgroundColor = UIColor.primary;
     [_confirmButton setTitleColor:[UIColor labelColor] forState:UIControlStateNormal];
-    _licenseUsernameTextField.tintColor = Colors.primaryWizard;
-    _licensePasswordTextField.tintColor = Colors.primaryWizard;
-    _serverTextField.tintColor = Colors.primaryWizard;
+    _licenseUsernameTextField.tintColor = UIColor.primary;
+    _licensePasswordTextField.tintColor = UIColor.primary;
+    _serverTextField.tintColor = UIColor.primary;
         
     // use other spacing for small screens
     if (self.view.frame.size.height < 500.0) {
@@ -149,7 +149,7 @@
         if (isPasswordSetByMDM == NO) {
             _licensePasswordTextField.text = _licenseStore.licensePassword;
         }
-        if ([LicenseStore isOnPrem]) {
+        if (TargetManagerObjc.isOnPrem) {
             _serverTextField.text = _licenseStore.onPremConfigUrl;
         }
         if (_licenseStore.errorMessage && ![_licenseStore.errorMessage isEqualToString:@"License username/password too short"]) {
@@ -274,7 +274,7 @@
         [_licenseStore setLicensePassword:_licensePasswordTextField.text];
     }
 
-    if ([LicenseStore isOnPrem]) {
+    if (TargetManagerObjc.isOnPrem) {
         [_licenseStore setOnPremConfigUrl:_serverTextField.text];
     }
     [_licenseStore performLicenseCheckWithCompletion:^(BOOL success) {

@@ -222,7 +222,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     // if database must migrate and app runs in background (e.g of push request), show local notification to start app in foreground
     DatabaseManager *dbManager = [DatabaseManager dbManager];
     requiresMigration = [dbManager storeRequiresMigration];
-    if (([dbManager storeRequiresImport] || requiresMigration == RequiresMigration || [AppMigration isMigrationRequiredWithUserSettings:[BusinessInjector new].userSettings] ) && [self isAppInBackground]) {
+    if (([dbManager storeRequiresImport] || requiresMigration == RequiresMigration || [AppMigration isMigrationRequiredWithUserSettings:[UserSettings sharedUserSettings]]) && [self isAppInBackground]) {
         [NotificationManager showNoAccessToDatabaseNotificationWithCompletionHandler:^{
             sleep(2);
             exit(EXIT_SUCCESS);
@@ -251,7 +251,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 }];
             }
         }
-        else if (requiresMigration == RequiresMigration || ([AppMigration isMigrationRequiredWithUserSettings:[BusinessInjector new].userSettings] && [AppSetup hasPreexistingDatabaseFile])) {
+        else if (requiresMigration == RequiresMigration || ([AppMigration isMigrationRequiredWithUserSettings:[UserSettings sharedUserSettings]] && [AppSetup hasPreexistingDatabaseFile])) {
             DDLogVerbose(@"Store requires migration");
             migrating = YES;
             
@@ -321,7 +321,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 if (requiresMigration == RequiresMigrationError) {
                     [ThreemaUtilityObjC sendErrorLocalNotification:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_title"] body:[BundleUtil localizedStringForKey:@"error_message_requires_migration_error_description"] userInfo:nil];
                 }
-                else if (requiresMigration == RequiresMigration || [AppMigration isMigrationRequiredWithUserSettings:[BusinessInjector new].userSettings]) {
+                else if (requiresMigration == RequiresMigration || [AppMigration isMigrationRequiredWithUserSettings:[UserSettings sharedUserSettings]]) {
                     DDLogVerbose(@"Store requires migration");
                     databaseImported = YES;
                     /* run phase 2 (which involves migration) separately to avoid getting killed with "failed to launch in time" */
@@ -391,7 +391,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 /* do not run launchPhase3 at this point, as we shouldn't load the main storyboard and cause any database accesses */
             });
         } else {
-            if ([AppMigration isMigrationRequiredWithUserSettings:[BusinessInjector new].userSettings]) {
+            if ([AppMigration isMigrationRequiredWithUserSettings:[UserSettings sharedUserSettings]]) {
                 NSError *error;
                 // AppMigration makes sure to only throw erros that are considered fatal i.e. the migration failed and we expect
                 // the app to not be usable without it.
@@ -500,23 +500,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #pragma mark - Storyboards
 
 + (UIStoryboard *)getLaunchStoryboard {
-    switch ([ThreemaAppObjc current]) {
-        case ThreemaAppThreema:
-            return [UIStoryboard storyboardWithName:@"ThreemaLaunchScreen" bundle:nil];
-            break;
-        case ThreemaAppWork:
-            return [UIStoryboard storyboardWithName:@"ThreemaWorkLaunchScreen" bundle:nil];
-            break;
-        case ThreemaAppOnPrem:
-            return [UIStoryboard storyboardWithName:@"ThreemaOnPremLaunchScreen" bundle:nil];
-            break;
-        case ThreemaAppGreen:
-            return [UIStoryboard storyboardWithName:@"ThreemaGreenLaunchScreen" bundle:nil];
-            break;
-        case ThreemaAppBlue:
-            return [UIStoryboard storyboardWithName:@"ThreemaBlueLaunchScreen" bundle:nil];
-            break;
-    }
+    NSString *storyboardName = [[BundleUtil mainBundle] objectForInfoDictionaryKey:@"UILaunchStoryboardName"];
+    return [UIStoryboard storyboardWithName:storyboardName bundle:nil];
 }
 
 + (UIStoryboard *)getMainStoryboard {
@@ -809,7 +794,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)handleLicenseMissing:(NSNotification*)notification {
-    if ([LicenseStore requiresLicenseKey] == NO) {
+    if (!TargetManagerObjc.isBusinessApp) {
         return;
     }
     
@@ -919,7 +904,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
         // Maybe is already connected, called by identity created
         if ([[ServerConnector sharedServerConnector] connectionState] == ConnectionStateDisconnecting || [[ServerConnector sharedServerConnector] connectionState] == ConnectionStateDisconnected) {
-            [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp];
+            [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp onCompletion:nil];
         }
     }
         
@@ -1183,7 +1168,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [self performSelectorOnMainThread:@selector(presentApplicationUI) withObject:nil waitUntilDone:YES];
         [self performSelectorOnMainThread:@selector(updateAllContacts) withObject:nil waitUntilDone:NO];
     }
-    else if ([LicenseStore requiresLicenseKey]) {
+    else if (TargetManagerObjc.isBusinessApp) {
         // check again for threema safe if a url have changed in mdm
         [self handlePresentingScreensWithForce:YES];        
     }
@@ -1200,7 +1185,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
     [[DatabaseManager dbManager] refreshDirtyObjects: YES];
     
-    [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp];
+    [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp onCompletion:nil];
     [FeatureMask updateLocalObjc];
     [AppDelegate registerForLocalNotifications];
     
@@ -1278,7 +1263,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     if (ProcessInfoHelper.isRunningForScreenshots)  {
         NSMutableOrderedSet *workIdentities = [NSMutableOrderedSet new];
 
-        if ([LicenseStore requiresLicenseKey] == YES) {
+        if (TargetManagerObjc.isBusinessApp) {
             [workIdentities addObject:@"H3BK2FVH"];
             [workIdentities addObject:@"JYNBZX53"];
             [workIdentities addObject:@"RFH4BE5C"];
@@ -1345,7 +1330,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         EntityManager *entityManager = [[EntityManager alloc] init];
         ContactEntity *contact = [entityManager.entityFetcher contactForId:personHandle.value];
         if (contact) {
-            [FeatureMask checkObjcWithContacts:[NSSet setWithObjects:contact, nil] for:FEATURE_MASK_VOIP completion:^(NSArray *unsupportedContacts) {
+            [FeatureMask checkWithIdentities:[NSSet setWithObjects:personHandle.value, nil] for:FEATURE_MASK_VOIP completion:^(NSArray *unsupportedContacts) {
                 if (unsupportedContacts.count == 0) {
                     VoIPCallUserAction *action = [[VoIPCallUserAction alloc] initWithAction:ActionCall contactIdentity:contact.identity callID:nil completion:nil];
                     [[VoIPCallStateManager shared] processUserAction:action];
@@ -1671,7 +1656,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (void)licenseConfirmed {
     [self.window.rootViewController dismissViewControllerAnimated:YES completion:^{
         [[ServerConnector sharedServerConnector] setIsAppInBackground:[[AppDelegate sharedAppDelegate] isAppInBackground]];
-        [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp];
+        [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp onCompletion:nil];
     }];
 }
 
@@ -1710,7 +1695,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         requiresMigration != RequiresMigrationNone ||
         isAliveCheck) {
         
-        NSString *appName = [BundleUtil localizedStringForKey: [ThreemaAppObjc appName]];
+        NSString *appName = [BundleUtil localizedStringForKey: [TargetManagerObjc appName]];
         [voIPCallStateManager startAndCancelCallFrom: appName showWebNotification:false completion:completion];
         return;
     }

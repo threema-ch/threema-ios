@@ -410,7 +410,6 @@ extension DistributionListDetailsViewController: UITableViewDelegate {
         // Figure out title and maybe action
         
         var title: String?
-        var action: Details.Action?
         
         switch section {
 
@@ -430,7 +429,6 @@ extension DistributionListDetailsViewController: UITableViewDelegate {
         
         let headerView: DetailsSectionHeaderView? = tableView.dequeueHeaderFooter()
         headerView?.title = title
-        headerView?.action = action
         
         return headerView
     }

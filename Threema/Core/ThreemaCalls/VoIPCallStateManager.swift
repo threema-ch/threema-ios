@@ -221,7 +221,7 @@ import UserNotifications
               let callerIdentity = dictionaryPayload["NotificationExtensionOffer"] as? String else {
             DDLogError("Received invalid push payload with dictionary \(dictionaryPayload)")
             startAndCancelCall(
-                from: BundleUtil.localizedString(forKey: ThreemaApp.currentName),
+                from: BundleUtil.localizedString(forKey: TargetManager.appName),
                 showWebNotification: true
             ) {
                 completion(false)
@@ -255,7 +255,7 @@ import UserNotifications
         callUpdate.supportsUngrouping = false
         callUpdate.hasVideo = false
         
-        let config = CXProviderConfiguration(localizedName: localizedName)
+        let config = CXProviderConfiguration()
         config.supportsVideo = true
         config.maximumCallGroups = 1
         config.maximumCallsPerCallGroup = 1
@@ -270,14 +270,14 @@ import UserNotifications
                     let title = #localize("webClientSession_error_voip_title")
                     let localizedMessage = String.localizedStringWithFormat(
                         #localize("webClientSession_error_voip_message"),
-                        ThreemaApp.currentName
+                        TargetManager.appName
                     )
 
                     NotificationManager.showThreemaWebError(title: title, body: localizedMessage)
                 }
                 else {
                     let localizedMessage = #localize("new_message_db_requires_migration")
-                    NotificationManager.showThreemaWebError(title: ThreemaApp.currentName, body: localizedMessage)
+                    NotificationManager.showThreemaWebError(title: TargetManager.appName, body: localizedMessage)
                 }
             }
             

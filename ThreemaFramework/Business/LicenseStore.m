@@ -85,24 +85,6 @@ static LicenseStore *singleton;
     return self;
 }
 
-+ (BOOL)requiresLicenseKey {
-    NSBundle *bundle = [BundleUtil mainBundle];
-    if ([bundle.bundleIdentifier hasPrefix:WORK_APP_ID] || [bundle.bundleIdentifier hasPrefix:ONPREM_APP_ID]) {
-        return YES;
-    }
-    
-    return NO;
-}
-
-+ (BOOL)isOnPrem {
-    NSBundle *bundle = [BundleUtil mainBundle];
-    return ([bundle.bundleIdentifier hasPrefix:ONPREM_APP_ID]);
-}
-
-- (BOOL)getRequiresLicenseKey {
-    return [LicenseStore requiresLicenseKey];
-}
-
 - (BOOL)isWithinCheckInterval {
     NSDate *lastCheck = [MyIdentityStore sharedMyIdentityStore].licenseLastCheck;
     if (lastCheck == nil) {
@@ -133,7 +115,7 @@ static LicenseStore *singleton;
 
 
 - (BOOL)isValid {
-    if ([LicenseStore requiresLicenseKey]) {
+    if (TargetManagerObjc.isBusinessApp) {
         if (_didCheckLicense) {
             if ([self isWithinCheckInterval] == NO) {
                 // force fresh license check
@@ -212,7 +194,7 @@ static LicenseStore *singleton;
 
 - (void)performUpdateWorkInfoForce:(BOOL)force {
     // Only send the update work info when there is a valid license username and a valid threema id
-    if (![LicenseStore requiresLicenseKey] || _licenseUsername.length < 1 || !AppSetup.isCompleted) {
+    if (!TargetManagerObjc.isBusinessApp || _licenseUsername.length < 1 || !AppSetup.isCompleted) {
         return;
     }
         

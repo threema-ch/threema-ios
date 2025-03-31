@@ -98,7 +98,7 @@ class ConversationsViewController: ThemedTableViewController {
         return fetchedResultsController
     }()
     
-    private lazy var businessInjector = BusinessInjector()
+    private lazy var businessInjector = BusinessInjector.ui
     private lazy var notificationManager = NotificationManager(businessInjector: businessInjector)
     private lazy var utilities = ConversationActions(businessInjector: businessInjector)
     

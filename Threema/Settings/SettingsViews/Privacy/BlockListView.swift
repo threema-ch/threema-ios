@@ -97,6 +97,6 @@ struct BlockListView_Previews: PreviewProvider {
             BlockListView()
         }
         .tint(UIColor.primary.color)
-        .environmentObject(BusinessInjector().settingsStore as! SettingsStore)
+        .environmentObject(BusinessInjector.ui.settingsStore as! SettingsStore)
     }
 }

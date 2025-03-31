@@ -22,7 +22,7 @@ import Foundation
 
 @objc public class ServerInfoProviderFactory: NSObject {
     static let serverInfoProvider: ServerInfoProvider =
-        if LicenseStore.isOnPrem() {
+        if TargetManager.isOnPrem {
             OnPremServerInfoProvider()
         }
         else {

@@ -109,11 +109,31 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
         return Promise()
     }
 
-    /// Checks whether the contact has not changed since the task was created
+    /// Checks whether the contact has not changed since the task was created, or not already exists on creation
     /// - Parameters:
     ///   - delta: Delta changes of sync contact
     /// - Returns: True if the contact has not changed since the task was created. False otherwise.
     private func checkPrecondition(delta: DeltaSyncContact) -> Bool {
+        switch delta.syncAction {
+        case .create:
+            // Will the contact created, because of incoming message and unknown sender,
+            // the contact must be sync before storing into the database.
+            // Otherwise the contact will be stored into the database before syncing.
+            guard (frameworkInjector.entityManager.performAndWait {
+                self.frameworkInjector.entityManager.entityFetcher
+                    .contact(for: delta.syncContact.identity) != nil
+            })
+            else {
+                return true
+            }
+
+            return checkContactHasChanged(delta)
+        case .update:
+            return checkContactHasChanged(delta)
+        }
+    }
+
+    private func checkContactHasChanged(_ delta: DeltaSyncContact) -> Bool {
         let sContact = delta.syncContact
 
         var allTrue = false
@@ -136,18 +156,23 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
             let sameWorkStatus = (
                 sContact.hasIdentityType && sContact
                     .identityType ==
-                    (self.frameworkInjector.userSettings.workIdentities.contains(contact.identity) ? .work : .regular)
+                    (
+                        self.frameworkInjector.userSettings.workIdentities
+                            .contains(contact.identity) ? .work : .regular
+                    )
             ) || !sContact.hasIdentityType
             let sameAcquaintanceLevel = (
                 sContact.hasAcquaintanceLevel && sContact
                     .acquaintanceLevel == (contact.isContactHidden ? .groupOrDeleted : .direct)
             ) || !sContact.hasAcquaintanceLevel
 
-            let sameFirstname = (sContact.hasFirstName && sContact.firstName == contact.firstName ?? "") || !sContact
+            let sameFirstname = (sContact.hasFirstName && sContact.firstName == contact.firstName ?? "") ||
+                !sContact
                 .hasFirstName
             let sameLastname = (sContact.hasLastName && sContact.lastName == contact.lastName ?? "") || !sContact
                 .hasLastName
-            let sameNickname = (sContact.hasNickname && sContact.nickname == contact.publicNickname ?? "") || !sContact
+            let sameNickname = (sContact.hasNickname && sContact.nickname == contact.publicNickname ?? "") ||
+                !sContact
                 .hasNickname
 
             let sameProfilePicture = (

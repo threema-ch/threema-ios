@@ -32,7 +32,7 @@ class WebReceiversResponse: WebAbstractMessage {
             let webcontact = WebContact(c)
             contacts.append(webcontact.objectDict())
         }
-        let groupManager = BusinessInjector().groupManager
+        let groupManager = BusinessInjector.ui.groupManager
         for conversation in allGroupConversations {
             if let group = groupManager.getGroup(conversation: conversation) {
                 let webGroup = WebGroup(group: group)

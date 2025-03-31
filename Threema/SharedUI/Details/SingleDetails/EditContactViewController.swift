@@ -318,7 +318,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
 extension EditContactViewController {
     private func saveChanges() {
         // Save the data
-        BusinessInjector().contactStore.updateContact(
+        BusinessInjector.ui.contactStore.updateContact(
             withIdentity: contact.identity,
             avatar: profilePictureData,
             firstName: firstName,

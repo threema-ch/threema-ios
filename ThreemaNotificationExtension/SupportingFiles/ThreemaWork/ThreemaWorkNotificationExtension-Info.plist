@@ -28,6 +28,6 @@
 		<string>$(PRODUCT_MODULE_NAME).NotificationService</string>
 	</dict>
 	<key>ThreemaAppGroupIdentifier</key>
-	<string>group.ch.threema.work</string>
+	<string>$(GROUP_IDENTIFIER)</string>
 </dict>
 </plist>

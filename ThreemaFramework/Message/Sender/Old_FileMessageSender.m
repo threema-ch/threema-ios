@@ -172,21 +172,26 @@
         message.webRequestId = _webRequestId;
         message.correlationID = _correlationId;
         if (thumbnailImage) {
-                NSData *thumbnailData = nil;
-                if ([UTIConverter isPNGImageMimeType:message.mimeType]) {
-                    thumbnailData = UIImagePNGRepresentation(thumbnailImage);
-                    message.mimeTypeThumbnail = message.mimeType;
-                } else {
-                    // UIImageJPEGRepresentation caused a memory leak. The exact cause for the leak is unknown.
-                    // For more information see: IOS-1576
-                    thumbnailData = [MediaConverter JPEGRepresentationFor:thumbnailImage];
-                }
+            NSData *thumbnailData = nil;
+            if ([UTIConverter isPNGImageMimeType:message.mimeType]) {
+                thumbnailData = UIImagePNGRepresentation(thumbnailImage);
+                message.mimeTypeThumbnail = message.mimeType;
+            } else {
+                // UIImageJPEGRepresentation caused a memory leak. The exact cause for the leak is unknown.
+                // For more information see: IOS-1576
+                thumbnailData = [MediaConverter JPEGRepresentationFor:thumbnailImage];
+            }
 
+            if (thumbnailData) {
                 ImageDataEntity *dbThumbnail = [entityManager.entityCreator imageDataEntity];
                 dbThumbnail.data = thumbnailData;
-                dbThumbnail.height = [NSNumber numberWithInt:thumbnailImage.size.height];
-                dbThumbnail.width = [NSNumber numberWithInt:thumbnailImage.size.width];
+                dbThumbnail.height = thumbnailImage.size.height;
+                dbThumbnail.width = thumbnailImage.size.width;
                 message.thumbnail = dbThumbnail;
+            }
+            else {
+                DDLogError(@"Unable to create thumbnail data for item");
+            }
         }
         
         message.caption = _item.caption;

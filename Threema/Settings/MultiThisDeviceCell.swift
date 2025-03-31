@@ -52,7 +52,7 @@ class MultiThisDeviceCell: MultiDeviceCell {
     @objc func enabledSwitchValueChanged(_ sender: UISwitch) {
         if sender.isOn {
             var duplicates: NSSet?
-            guard !BusinessInjector().entityManager.entityFetcher.hasDuplicateContacts(
+            guard !BusinessInjector.ui.entityManager.entityFetcher.hasDuplicateContacts(
                 withDuplicateIdentities: &duplicates
             ) else {
                 var duplicateIdentitiesDesc = "?"
@@ -85,7 +85,7 @@ class MultiThisDeviceCell: MultiDeviceCell {
                 self.parentViewController?.activityIndicator.hidesWhenStopped = true
                 self.parentViewController?.activityIndicator.startAnimating()
                 
-                let dl = DeviceLinking(businessInjector: BusinessInjector())
+                let dl = DeviceLinking(businessInjector: BusinessInjector.ui)
                 dl.disableMultiDevice()
                     .ensure {
                         self.parentViewController?.load()
@@ -112,7 +112,7 @@ class MultiThisDeviceCell: MultiDeviceCell {
         // add switch to cell
         accessoryView = enabledSwitch
 
-        if BusinessInjector().userSettings.allowSeveralLinkedDevices {
+        if BusinessInjector.ui.userSettings.allowSeveralLinkedDevices {
             let tapGestureRecognizer = UITapGestureRecognizer(
                 target: self,
                 action: #selector(platformIconTapped(tapGestureRecognizer:))
@@ -124,7 +124,7 @@ class MultiThisDeviceCell: MultiDeviceCell {
 
     @objc
     private func platformIconTapped(tapGestureRecognizer: UITapGestureRecognizer) {
-        let bi = BusinessInjector()
+        let bi = BusinessInjector.ui
         let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: bi.myIdentityStore)
         if deviceGroupKeyManager.dgk != nil {
             MultiDeviceWizardManager.shared.showWizard(

@@ -29,7 +29,7 @@ import ThreemaMacros
     @objc class func newBanner(baseMessage: BaseMessage) {
         DispatchQueue.main.async {
             // Reload CoreData object because of concurrency problem
-            let businessInjector = BusinessInjector()
+            let businessInjector = BusinessInjector.ui
             let entityManager = businessInjector.entityManager
             let message = entityManager.entityFetcher.getManagedObject(by: baseMessage.objectID) as! PreviewableMessage
 
@@ -242,7 +242,7 @@ import ThreemaMacros
         let titleFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline)
         let bodyFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .subheadline)
         
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector.ui
         let profilePictureView = ProfilePictureImageView()
         
         if let conversation = businessInjector.entityManager.entityFetcher
@@ -292,7 +292,7 @@ import ThreemaMacros
         banner.onTap = {
             banner.bannerQueue.dismissAllForced()
             // switch to selected conversation
-            let entityManager = BusinessInjector().entityManager
+            let entityManager = businessInjector.entityManager
             entityManager.performBlock {
                 if let conversation = entityManager.entityFetcher.getManagedObject(by: conversationManagedObjectID) {
                     NotificationCenter.default.post(

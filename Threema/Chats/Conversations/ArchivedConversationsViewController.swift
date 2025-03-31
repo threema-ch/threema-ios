@@ -52,7 +52,7 @@ class ArchivedConversationsViewController: ThemedTableViewController {
         action: #selector(unarchiveSelected)
     )
     
-    private let businessInjector = BusinessInjector()
+    private let businessInjector = BusinessInjector.ui
     private lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
         let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = businessInjector.entityManager
             .entityFetcher

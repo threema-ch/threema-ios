@@ -122,16 +122,12 @@ public final class ThreemaUtility: NSObject {
     }()
     
     // MARK: - Other threema type
-    
-    @objc public static let isWorkFlavor = ThreemaApp.current == .work ||
-        ThreemaApp.current == .blue ||
-        ThreemaApp.current == .onPrem
-    
+        
     /// Icon to show if `Contact.showOtherThreemaIcon` is `true`
     ///
     /// If you need a view for it use `OtherThreemaTypeImageView`
     @objc public static var otherThreemaTypeIcon: UIImage {
-        if isWorkFlavor {
+        if TargetManager.isBusinessApp {
             StyleKit.houseIcon
         }
         else {
@@ -141,7 +137,7 @@ public final class ThreemaUtility: NSObject {
     
     /// Accessibility label to use if `Contact.showOtherThreemaIcon` is `true`
     public static var otherThreemaTypeAccessibilityLabel: String {
-        if isWorkFlavor {
+        if TargetManager.isBusinessApp {
             #localize("threema_type_icon_private_accessibility_label")
         }
         else {
@@ -159,11 +155,11 @@ public final class ThreemaUtility: NSObject {
             return true
         }
         
-        if contact.isEchoEcho() || contact.isGatewayID() || LicenseStore.isOnPrem() {
+        if contact.isEchoEcho() || contact.isGatewayID() || TargetManager.isOnPrem {
             return true
         }
         
-        if LicenseStore.requiresLicenseKey() {
+        if TargetManager.isBusinessApp {
             return UserSettings.shared().workIdentities.contains(contact.identity)
         }
         else {
@@ -288,7 +284,7 @@ public final class ThreemaUtility: NSObject {
     
     public static func accessibilityString(atTime timeInterval: TimeInterval, with prefixKey: String) -> String {
         let accessibilityTime = accessibilityTimeString(for: Int(timeInterval))
-        return String.localizedStringWithFormat("%@ %@", prefixKey.localized, accessibilityTime)
+        return String.localizedStringWithFormat("%@ %@", prefixKey, accessibilityTime)
     }
     
     public static func accessibilityTimeString(for totalSeconds: Int) -> String {

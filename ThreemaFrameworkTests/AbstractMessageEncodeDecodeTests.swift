@@ -264,6 +264,39 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
     }
     
+    func testBoxEmptyMessage() throws {
+        let msg: BoxEmptyMessage = abstractMessage(
+            expectedFromIdentity,
+            expectedToIdentity,
+            expectedMessageID,
+            expectedPushFromName,
+            expectedDate,
+            expectedDeliveryDate,
+            expectedDelivered,
+            expectedUserAck,
+            expectedSendUserAck,
+            expectedNonce,
+            expectedFlags,
+            expectedReceivedAfterInitialQueueSend
+        )
+        
+        let result: BoxEmptyMessage? = try encodeDecode(message: msg)
+        
+        XCTAssertNotNil(result)
+        XCTAssertEqual(expectedFromIdentity, result?.fromIdentity)
+        XCTAssertEqual(expectedToIdentity, result?.toIdentity)
+        XCTAssertEqual(expectedMessageID, result?.messageID)
+        XCTAssertEqual(expectedPushFromName, result?.pushFromName)
+        XCTAssertEqual(expectedDate, result?.date)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedDelivered), result?.delivered)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedUserAck), result?.userAck)
+        XCTAssertEqual(NSNumber(booleanLiteral: expectedSendUserAck), result?.sendUserAck)
+        XCTAssertTrue(expectedNonce.elementsEqual((result?.nonce)!))
+        XCTAssertEqual(NSNumber(integerLiteral: expectedFlags), (result?.flags)!)
+        XCTAssertFalse((result?.receivedAfterInitialQueueSend)!)
+        XCTAssertNil(try XCTUnwrap(result) as? QuotedMessageProtocol)
+    }
+    
     func testBoxFileMessage() throws {
         let jsonData: Data = BytesUtility.generateRandomBytes(length: 6)!
         

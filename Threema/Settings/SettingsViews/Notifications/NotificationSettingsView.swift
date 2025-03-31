@@ -142,7 +142,7 @@ struct NotificationSettingsView: View {
 
             // MARK: - DND
             
-            if LicenseStore.requiresLicenseKey() {
+            if TargetManager.isBusinessApp {
                 Section(
                     header: Text(#localize("settings_notifications_masterDnd_section_header")),
                     footer: Text(#localize("settings_notifications_masterDnd_section_footer"))

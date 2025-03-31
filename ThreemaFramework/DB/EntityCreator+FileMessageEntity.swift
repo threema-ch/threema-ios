@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 enum EntityCreatorError: Error {
@@ -85,7 +86,7 @@ extension EntityCreator {
         // Thumbnail
         if let thumbnailImage = item.getThumbnail() {
             
-            let thumbnailData: Data!
+            let thumbnailData: Data?
             
             if UTIConverter.isPNGImageMimeType(entity.mimeType) {
                 thumbnailData = thumbnailImage.pngData()
@@ -95,11 +96,14 @@ extension EntityCreator {
                 thumbnailData = MediaConverter.jpegRepresentation(for: thumbnailImage)
             }
             
-            if let thumbnail = imageDataEntity() {
+            if let thumbnailData, let thumbnail = imageDataEntity() {
                 thumbnail.data = thumbnailData
                 thumbnail.height = Int16(thumbnailImage.size.height)
                 thumbnail.width = Int16(thumbnailImage.size.width)
                 entity.thumbnail = thumbnail
+            }
+            else {
+                DDLogError("Unable to create thumbnail data for item")
             }
         }
         

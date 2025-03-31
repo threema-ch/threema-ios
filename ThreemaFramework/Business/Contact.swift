@@ -147,7 +147,7 @@ public class Contact: NSObject {
     /// Shorter version of `displayName` if available
     var shortDisplayName: String {
         // This is an "opt-in" feature
-        guard ThreemaApp.current == .threema || ThreemaApp.current == .green else {
+        guard !TargetManager.isBusinessApp else {
             return displayName
         }
 

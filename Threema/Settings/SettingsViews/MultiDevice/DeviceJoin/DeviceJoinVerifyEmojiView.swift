@@ -94,7 +94,7 @@ struct DeviceJoinVerifyEmojiView: View {
                         Label(
                             String.localizedStringWithFormat(
                                 #localize("multi_device_join_sending_info"),
-                                ThreemaApp.appName
+                                TargetManager.appName
                             ),
                             systemImage: "info.circle"
                         )

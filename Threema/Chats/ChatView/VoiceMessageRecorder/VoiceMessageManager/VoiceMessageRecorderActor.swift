@@ -78,7 +78,7 @@ actor VoiceMessageRecorderActor: VoiceMessageManagerProtocolBase {
     init(
         delegate: VoiceMessageAudioRecorderDelegate?,
         audioSessionManager: AudioSessionManagerProtocol,
-        messageSender: MessageSenderProtocol = BusinessInjector().messageSender
+        messageSender: MessageSenderProtocol = BusinessInjector.ui.messageSender
     ) {
         self.audioSessionManager = audioSessionManager
         self.messageSender = messageSender

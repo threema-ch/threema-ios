@@ -26,7 +26,7 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     override init() {
         // no-op
     }
-    
+
     init(
         blacklist: [Any]? = nil,
         enableIPv6: Bool = false,
@@ -135,8 +135,12 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var keepMessagesDays = -1
 
     var safeIntroShown = false
-    
+
     var contactList2 = false
-    
+
     var sendEmojiReactions = false
+
+    var ipcCommunicationEnabled = true
+
+    var ipcSecretPrefix: Data!
 }

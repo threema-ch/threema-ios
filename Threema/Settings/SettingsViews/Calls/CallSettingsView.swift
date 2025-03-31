@@ -145,7 +145,7 @@ struct CallSettingsView: View {
 
     private func voIPFooterString() -> String {
         let setting = settingsVM.alwaysRelayCalls ? "on" : "off"
-        let onPrem = ThreemaApp.current == .onPrem ? "_onprem" : ""
+        let onPrem = TargetManager.isOnPrem ? "_onprem" : ""
         return BundleUtil.localizedString(forKey: "settings_threema_calls\(onPrem)_hide_voip_call_ip_footer_\(setting)")
     }
 }
@@ -159,6 +159,6 @@ struct CallSettingsView_Previews: PreviewProvider {
                 .navigationBarTitleDisplayMode(.inline)
         }
         .tint(UIColor.primary.color)
-        .environmentObject(BusinessInjector().settingsStore as! SettingsStore)
+        .environmentObject(BusinessInjector.ui.settingsStore as! SettingsStore)
     }
 }

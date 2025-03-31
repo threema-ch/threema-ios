@@ -70,7 +70,7 @@ class SettingsWebViewViewController: UIViewController, WKNavigationDelegate {
             webView.backgroundColor = Colors.backgroundWizard
             navigationController?.navigationBar.barStyle = .black
             navigationController?.navigationBar.isTranslucent = true
-            navigationController?.navigationBar.tintColor = Colors.primaryWizard
+            navigationController?.navigationBar.tintColor = .primary
             
             navigationController?.navigationBar.overrideUserInterfaceStyle = .dark
         }

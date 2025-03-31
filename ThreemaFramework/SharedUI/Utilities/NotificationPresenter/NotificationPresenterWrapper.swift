@@ -189,7 +189,7 @@ import ThreemaMacros
     }
     
     private func applyDefaultTextParameters(to style: inout StatusBarNotificationTextStyle) {
-        style.textColor = .secondaryLabel.resolvedColor(with: UITraitCollection.current)
+        style.textColor = Colors.pillText
         style.font = Configuration.defaultFont
     }
     

@@ -61,7 +61,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readwrite) BOOL isAppInBackground;
 
-- (void)connect:(ConnectionInitiator)initiator NS_SWIFT_NAME(connect(initiator:));
+/**
+ Connect to chat or mediator server.
+
+ @param initiator: Initiator/Caller of connect
+ @param onCompletion: BOOL true means is trying to connect to the server
+ */
+- (void)connect:(ConnectionInitiator)initiator onCompletion:(void(^ _Nullable)(BOOL isConnecting))onCompletion NS_SWIFT_NAME(connect(initiator:completionHandler:));
+
 - (void)connectWait:(ConnectionInitiator)initiator NS_SWIFT_NAME(connectWait(initiator:));
 - (void)connectWaitDoNotUnblockIncomingMessages:(ConnectionInitiator)initiator NS_SWIFT_NAME(connectWaitDoNotUnblockIncomingMessages(initiator:));
 /// Unblock receiving incoming messages

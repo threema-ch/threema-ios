@@ -28,7 +28,7 @@ import UIKit
         }
     }
     
-    @IBInspectable var accentColor: UIColor = Colors.primaryWizard {
+    @IBInspectable var accentColor: UIColor = .primary {
         didSet {
             setup()
         }

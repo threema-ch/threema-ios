@@ -22,7 +22,7 @@ import SwiftUI
 import ThreemaFramework
 
 struct SettingsView: View {
-    @StateObject var settingsStore = BusinessInjector().settingsStore as! SettingsStore
+    @StateObject var settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
     @ObservedObject var settingsViewModel = SettingsViewModel()
 
     // MARK: - Body
@@ -34,16 +34,14 @@ struct SettingsView: View {
                 GeneralSection()
                 DesktopSection()
                 ConnectionSection()
-                #if !THREEMA_WORK && !THREEMA_ONPREM
-                    if !LicenseStore.requiresLicenseKey() {
-                        ThreemaWorkAdvertisingSection()
-                        InviteConsumerSection()
-                    }
-                #endif
                 
-                #if THREEMA_WORK || THREEMA_ONPREM
+                if TargetManager.isBusinessApp {
                     RateBusinessSection()
-                #endif
+                }
+                else {
+                    ThreemaWorkAdvertisingSection()
+                    InviteConsumerSection()
+                }
                 
                 AboutSection()
             }

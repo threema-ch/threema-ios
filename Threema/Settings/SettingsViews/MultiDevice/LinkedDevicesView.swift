@@ -56,7 +56,7 @@ struct LinkedDevicesView: View {
     // a running app (simulator & device)
     NavigationView {
         LinkedDevicesView()
-            .environmentObject(BusinessInjector().settingsStore as! SettingsStore)
+            .environmentObject(BusinessInjector.ui.settingsStore as! SettingsStore)
     }
 }
 
@@ -416,7 +416,7 @@ private struct AddDeviceSection: View {
                 Text(verbatim: """
                     \(String.localizedStringWithFormat(
                     #localize("multi_device_new_linked_device_instructions"),
-                    ThreemaApp.appName,
+                    TargetManager.appName,
                     DeviceJoinManager.downloadURL
                     ))
                     
@@ -482,7 +482,7 @@ private struct AddDeviceSection: View {
     NavigationView {
         List {
             AddDeviceSection(showWizard: .constant(false))
-                .environmentObject(BusinessInjector().settingsStore as! SettingsStore)
+                .environmentObject(BusinessInjector.ui.settingsStore as! SettingsStore)
                 .environmentObject(LinkedDevicesViewModel())
         }
     }

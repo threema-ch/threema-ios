@@ -23,17 +23,13 @@ import Foundation
 import PromiseKit
 import ThreemaProtocols
 
-enum DeltaUpdateType: Int, Codable {
+@objc enum DeltaUpdateType: Int, Codable {
     case unchanged
     case removed
     case updated
 }
 
 class MediatorSyncableContacts: NSObject {
-    @objc static let deltaUpdateTypeUnchanged = DeltaUpdateType.unchanged.rawValue
-    @objc static let deltaUpdateTypeRemoved = DeltaUpdateType.removed.rawValue
-    @objc static let deltaUpdateTypeUpdated = DeltaUpdateType.updated.rawValue
-
     private let chunkSize = 100
     private var deltaSyncContacts = [DeltaSyncContact]()
 
@@ -182,6 +178,39 @@ class MediatorSyncableContacts: NSObject {
             delta.syncContact.update(conversationVisibility: .normal)
         }
 
+        apply(delta)
+    }
+
+    /// Create contact with defaults values for syncing as create new contact.
+    /// - Parameters:
+    ///   - identity: Identity of the contact
+    ///   - publicKey: Public key of the contact
+    ///   - featureMask: Feature mask of the contact
+    ///   - isWork: Is contact a work contact, than verification is fully verified otherwise unverified
+    @objc func createWithDefaultValues(identity: String, publicKey: Data, featureMask: Int, isWork: Bool) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        var delta = getDelta(identity)
+        delta.syncContact.update(identity: identity)
+        delta.syncContact.update(publicKey: publicKey)
+        delta.syncContact.update(activityState: .active)
+        delta.syncContact.update(featureMask: UInt64(featureMask))
+        delta.syncContact.update(identityType: isWork ? .work : .regular)
+        delta.syncContact.update(verificationLevel: isWork ? .fullyVerified : .unverified)
+        delta.syncContact
+            .update(workVerificationLevel: isWork ? .workSubscriptionVerified : Sync_Contact.WorkVerificationLevel.none)
+        delta.syncContact.update(acquaintanceLevel: .groupOrDeleted)
+        delta.syncContact.update(createdAt: .now)
+        delta.syncContact.update(syncState: .initial)
+        delta.syncContact.update(readReceipt: .default)
+        delta.syncContact.update(typingIndicator: .default)
+        delta.syncContact.update(notificationSoundIsMuted: false)
+        delta.syncContact.update(notificationTriggerType: .on, notificationTriggerExpiresAt: nil)
+        delta.syncContact.update(conversationCategory: .default)
+        delta.syncContact.update(conversationVisibility: .normal)
+        delta.syncAction = .create
         apply(delta)
     }
 
@@ -439,7 +468,17 @@ class MediatorSyncableContacts: NSObject {
         delta.contactImageEncryptionKey = encryptionKey
         apply(delta)
     }
-    
+
+    @objc func setSyncActionToUpdate(identity: String) {
+        guard userSettings.enableMultiDevice else {
+            return
+        }
+
+        var delta = getDelta(identity)
+        delta.syncAction = .update
+        apply(delta)
+    }
+
     /// Create tasks to synchronize the contacts, load and scale profile picture if is necessary
     func sync() -> Promise<Void> {
         guard userSettings.enableMultiDevice else {
@@ -447,30 +486,7 @@ class MediatorSyncableContacts: NSObject {
             return Promise()
         }
 
-        // Load images for profile picture
-        entityManager.performAndWait {
-            let identities = self.deltaSyncContacts.map(\.syncContact.identity)
-
-            for identity in identities {
-                if let contact = self.entityManager.entityFetcher.contact(for: identity) {
-                    var delta = self.getDelta(identity)
-
-                    if delta.profilePicture == .updated,
-                       let imageData = contact.imageData {
-                        delta.image = imageData
-                    }
-
-                    if delta.contactProfilePicture == .updated,
-                       delta.contactImageBlobID != nil,
-                       delta.contactImageEncryptionKey != nil,
-                       let imageData = contact.contactImage?.data {
-                        delta.contactImage = imageData
-                    }
-
-                    self.apply(delta)
-                }
-            }
-        }
+        loadImagesForProfilePicture()
 
         // Syncing a large number of contacts in a single transaction might exceed the transaction
         // limit on the mediator server
@@ -517,11 +533,56 @@ class MediatorSyncableContacts: NSObject {
             }
     }
 
+    /// Synchronize contacts as sub task
+    @objc func syncAsSubTask() async throws {
+        guard userSettings.enableMultiDevice else {
+            DDLogInfo("Do not sync because multi device is not activated")
+            return
+        }
+
+        loadImagesForProfilePicture()
+
+        // Syncing a large number of contacts in a single transaction might exceed the transaction
+        // limit on the mediator server
+        let chunked = deltaSyncContacts.chunked(into: chunkSize)
+
+        for chunk in chunked {
+            let task = TaskDefinitionUpdateContactSync(deltaSyncContacts: chunk)
+            try await taskManager.executeSubTask(taskDefinition: task)
+        }
+    }
+
     func getChunkSize() -> Int {
         chunkSize
     }
     
     // MARK: Private Methods
+
+    private func loadImagesForProfilePicture() {
+        entityManager.performAndWait {
+            let identities = self.deltaSyncContacts.map(\.syncContact.identity)
+
+            for identity in identities {
+                if let contact = self.entityManager.entityFetcher.contact(for: identity) {
+                    var delta = self.getDelta(identity)
+
+                    if delta.profilePicture == .updated,
+                       let imageData = contact.imageData {
+                        delta.image = imageData
+                    }
+
+                    if delta.contactProfilePicture == .updated,
+                       delta.contactImageBlobID != nil,
+                       delta.contactImageEncryptionKey != nil,
+                       let imageData = contact.contactImage?.data {
+                        delta.contactImage = imageData
+                    }
+
+                    self.apply(delta)
+                }
+            }
+        }
+    }
 
     private func apply(_ delta: DeltaSyncContact) {
         if let index = deltaSyncContacts.firstIndex(where: { item in

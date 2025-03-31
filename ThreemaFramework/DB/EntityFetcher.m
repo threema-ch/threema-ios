@@ -1051,7 +1051,7 @@
         if (contactList == ContactListContactsAndWork) {
             // do not predicate for work contacts
         } else {
-            if ([LicenseStore requiresLicenseKey]) {
+            if (TargetManagerObjc.isBusinessApp) {
                 NSPredicate *predicate = [NSPredicate predicateWithFormat:@"workContact == %@ ", @0];
                 [predicates addObject:predicate];
             }

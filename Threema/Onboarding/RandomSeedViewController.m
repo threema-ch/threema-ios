@@ -85,9 +85,9 @@
 - (void)setup {
     _randomDataBackground.layer.cornerRadius = 5.0;
     
-    _progressView.tintColor = Colors.primaryWizard;
+    _progressView.tintColor = UIColor.primary;
     
-    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], [ThreemaAppObjc appName]];
+    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], TargetManagerObjc.appName];
     _actionLabel.text = [BundleUtil localizedStringForKey:@"move_your_finger"];
     
     self.moreView.mainView = self.mainContentView;
@@ -113,11 +113,11 @@
     _fingerView.image = [StyleKit finger];
     
     _cancelButton.layer.borderWidth = 1;
-    _cancelButton.layer.borderColor = Colors.primaryWizard.CGColor;
+    _cancelButton.layer.borderColor = UIColor.primary.CGColor;
     _cancelButton.layer.cornerRadius = 5;
     _cancelButton.titleLabel.adjustsFontSizeToFitWidth = YES;
     _cancelButton.titleLabel.minimumScaleFactor = 0.6;
-    [_cancelButton setTitleColor:Colors.primaryWizard forState:UIControlStateNormal];
+    [_cancelButton setTitleColor:UIColor.primary forState:UIControlStateNormal];
     [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"cancel"] forState:UIControlStateNormal];
 }
 
@@ -188,7 +188,7 @@
     
     if (progress >= 1.0) {
         for (UILabel *label in _labelMatrix) {
-            label.textColor = Colors.primaryWizard;
+            label.textColor = UIColor.primary;
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -203,7 +203,7 @@
             int random = arc4random();
             if (random % 10 > 8) {
                 UILabel *label = _labelMatrix[i];
-                label.textColor = Colors.primaryWizard;
+                label.textColor = UIColor.primary;
             }
         }
 

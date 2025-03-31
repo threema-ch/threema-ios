@@ -52,7 +52,7 @@ public class DeleteRevokeIdentityManager: NSObject {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: BusinessInjector().groupManager
+            groupManager: BusinessInjector.ui.groupManager
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -73,7 +73,7 @@ public class DeleteRevokeIdentityManager: NSObject {
 
         KKPasscodeLock.shared().disablePasscode()
 
-        if LicenseStore.requiresLicenseKey() {
+        if TargetManager.isBusinessApp {
             // Delete the license when we delete the ID, to give the user a chance to use a new license.
             // The license may have been supplied by MDM, so we load it again.
             LicenseStore.shared().deleteLicense()
@@ -88,7 +88,7 @@ public class DeleteRevokeIdentityManager: NSObject {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: BusinessInjector().groupManager
+            groupManager: BusinessInjector.ui.groupManager
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,

@@ -190,6 +190,10 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
         try queue.enqueue(task: task, completionHandler: completionHandler)
     }
 
+    func executeSubTask(taskDefinition: any TaskDefinitionProtocol) async throws {
+        try await TaskManager.taskQueue?.executeSubTask(taskDefinition: taskDefinition)
+    }
+
     @objc public static func interrupt() {
         TaskManager.taskQueue?.interrupt()
     }

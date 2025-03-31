@@ -21,31 +21,9 @@
 import Foundation
 
 extension Colors {
-    
-    @objc public class var primaryWizard: UIColor {
-        switch ThreemaApp.current {
-        case .threema, .green:
-            darkColor(for: Asset.TargetColors.Threema.primary)
-        case .work, .blue:
-            darkColor(for: Asset.TargetColors.ThreemaWork.primary)
-        case .onPrem:
-            darkColor(for: Asset.TargetColors.OnPrem.primary)
-        }
-    }
-    
-    @objc public class var secondary: UIColor {
-        switch ThreemaApp.current {
-        case .threema, .green:
-            color(for: Asset.TargetColors.Threema.secondary)
-        case .work, .blue:
-            color(for: Asset.TargetColors.ThreemaWork.secondary)
-        case .onPrem:
-            color(for: Asset.TargetColors.OnPrem.secondary)
-        }
-    }
-        
+                
     @objc public class var threemaLogo: UIImage! {
-        switch ThreemaApp.current {
+        switch TargetManager.current {
         case .threema:
             UIImage(resource: .threema)
         case .work:
@@ -64,7 +42,7 @@ extension Colors {
     }
         
     @objc public class var threemaLogoForPasscode: UIImage! {
-        switch ThreemaApp.current {
+        switch TargetManager.current {
         case .threema:
             UIImage(resource: .passcodeLogo)
         case .work:
@@ -79,44 +57,11 @@ extension Colors {
     }
     
     @objc public class var consumerLogoRoundCorners: UIImage! {
-        switch ThreemaApp.current {
+        switch TargetManager.current {
         case .blue:
             UIImage(resource: .passcodeLogoGreen)
         case .threema, .work, .onPrem, .green:
             UIImage(resource: .passcodeLogo)
         }
-    }
-    
-    @objc public class var backgroundCircleButton: UIColor {
-        switch theme {
-        case .light, .undefined:
-            switch ThreemaApp.current {
-            case .threema, .green:
-                Asset.TargetColors.Threema.circleButton.color
-            case .work, .blue:
-                Asset.TargetColors.ThreemaWork.circleButton.color
-            case .onPrem:
-                Asset.TargetColors.OnPrem.circleButton.color
-            }
-        case .dark:
-            .quaternarySystemFill
-        }
-    }
-        
-    public class var grayCircleSymbol: UIColor {
-        switch theme {
-        case .light, .undefined:
-            Asset.SharedColors.white.color
-        case .dark:
-            Asset.SharedColors.gray700.color
-        }
-    }
-    
-    @objc public class var threemaConsumerColor: UIColor {
-        color(for: Asset.TargetColors.Threema.primary)
-    }
-    
-    @objc public class var threemaWorkColor: UIColor {
-        color(for: Asset.TargetColors.ThreemaWork.primary)
     }
 }

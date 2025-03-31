@@ -60,6 +60,31 @@
     [_moreView.okButton addTarget:self action:@selector(tappedMoreMessage:) forControlEvents:UIControlEventTouchUpInside];
 }
 
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+    
+    if (SYSTEM_IS_IPAD) {
+        CGRect mainRect = _mainContentView.frame;
+        
+        if ([AppDelegate hasBottomSafeAreaInsets]) {
+            mainRect.size.height -= 20.0;
+        }
+        
+        // stick to lower left corner of main view
+        CGRect rect = [RectUtil setPositionOf:_moreView.frame x:CGRectGetMinX(mainRect) y:CGRectGetMaxY(mainRect)];
+        _moreView.frame = rect;
+    } else {
+        if ([self shouldAdaptToSmallScreen]) {
+            // e.g. iPhone 4 etc
+            [self adaptToSmallScreen];
+        }
+        
+        if ([AppDelegate hasBottomSafeAreaInsets]) {
+            _moreView.frame = CGRectMake(_moreView.frame.origin.x, _moreView.frame.origin.y - 20.0, _moreView.frame.size.width, _moreView.frame.size.height);
+        }
+    }
+}
+
 - (void)adaptToSmallScreen {
     CGRect rect = [RectUtil offsetRect:self.view.frame byX:0.0 byY:-28.0];
     self.view.frame = rect;

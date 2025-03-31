@@ -25,7 +25,8 @@ import PromiseKit
 protocol BlobUploaderProtocol {
     func upload(
         data: Data,
-        origin: BlobOrigin
+        origin: BlobOrigin,
+        setPersistParam: Bool
     ) -> Promise<Data>
 }
 
@@ -70,95 +71,106 @@ class BlobUploader: NSObject, BlobUploaderProtocol {
     func upload(
         blobData: Data,
         origin: BlobOrigin,
+        setPersistParam: Bool,
         objectID: NSManagedObjectID,
         delegate: BlobManagerDelegate? = nil
     ) async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
-            blobURL.upload(origin: origin, completionHandler: { uploadURL, authorization, error in
+            blobURL.upload(
+                origin: origin,
+                setPersistParam: setPersistParam,
+                completionHandler: { uploadURL, authorization, error in
                 
-                if let error {
-                    continuation.resume(throwing: error)
-                    return
-                }
+                    if let error {
+                        continuation.resume(throwing: error)
+                        return
+                    }
                 
-                guard let uploadURL else {
-                    continuation.resume(throwing: BlobUploaderError.invalidUploadURL)
-                    return
-                }
+                    guard let uploadURL else {
+                        continuation.resume(throwing: BlobUploaderError.invalidUploadURL)
+                        return
+                    }
                 
-                let task = self
-                    .upload(for: uploadURL, and: blobData, authorization: authorization) { data, error in
+                    let task = self
+                        .upload(for: uploadURL, and: blobData, authorization: authorization) { data, error in
                         
-                        // Upload was completed
-                        if let error {
-                            continuation.resume(throwing: error)
-                        }
-                        else if let data {
-                            // We got data, so we create the ID for it
-                            guard let blobIDHex = String(bytes: data, encoding: .ascii),
-                                  let blobID = BytesUtility.toBytes(hexString: blobIDHex) else {
-                                continuation.resume(throwing: BlobUploaderError.idGenerationFailed)
-                                return
+                            // Upload was completed
+                            if let error {
+                                continuation.resume(throwing: error)
                             }
+                            else if let data {
+                                // We got data, so we create the ID for it
+                                guard let blobIDHex = String(bytes: data, encoding: .ascii),
+                                      let blobID = BytesUtility.toBytes(hexString: blobIDHex) else {
+                                    continuation.resume(throwing: BlobUploaderError.idGenerationFailed)
+                                    return
+                                }
                             
-                            let id = Data(blobID)
-                            continuation.resume(returning: id)
-                        }
-                        else {
-                            continuation.resume(
-                                throwing: BlobUploaderError.uploadFailed(message: "[BlobUploader] Upload unsuccessful.")
-                            )
-                        }
+                                let id = Data(blobID)
+                                continuation.resume(returning: id)
+                            }
+                            else {
+                                continuation.resume(
+                                    throwing: BlobUploaderError
+                                        .uploadFailed(message: "[BlobUploader] Upload unsuccessful.")
+                                )
+                            }
                         
-                        // Remove completed Task
-                        self.progressObservers.removeValue(forKey: objectID)
-                        self.activeTasks.removeValue(forKey: objectID)
-                    }
+                            // Remove completed Task
+                            self.progressObservers.removeValue(forKey: objectID)
+                            self.activeTasks.removeValue(forKey: objectID)
+                        }
                 
-                // Add created task to keep track
-                self.activeTasks[objectID] = task
-                let observer = task.progress.observe(\.fractionCompleted) { progress, _ in
-                    Task {
-                        await delegate?.updateProgress(for: objectID, didUpdate: progress)
+                    // Add created task to keep track
+                    self.activeTasks[objectID] = task
+                    let observer = task.progress.observe(\.fractionCompleted) { progress, _ in
+                        Task {
+                            await delegate?.updateProgress(for: objectID, didUpdate: progress)
+                        }
                     }
+                    self.progressObservers[objectID] = observer
                 }
-                self.progressObservers[objectID] = observer
-            })
+            )
         }
     }
 
     func upload(
         data: Data,
-        origin: BlobOrigin
+        origin: BlobOrigin,
+        setPersistParam: Bool
     ) -> Promise<Data> {
         Promise { seal in
-            blobURL.upload(origin: .local, completionHandler: { uploadURL, authorization, error in
-                if let error {
-                    seal.reject(error)
-                    return
-                }
-
-                guard let uploadURL else {
-                    seal.reject(BlobUploaderError.invalidUploadURL)
-                    return
-                }
-
-                self.upload(for: uploadURL, and: data, authorization: authorization) { data, error in
+            blobURL.upload(
+                origin: .local,
+                setPersistParam: setPersistParam,
+                completionHandler: { uploadURL, authorization, error in
                     if let error {
                         seal.reject(error)
                         return
                     }
 
-                    guard let data,
-                          let idHex = String(bytes: data, encoding: .ascii),
-                          let id = BytesUtility.toBytes(hexString: idHex) else {
-                        seal.reject(BlobUploaderError.uploadFailed(message: "[BlobUploader] Upload unsuccessful."))
+                    guard let uploadURL else {
+                        seal.reject(BlobUploaderError.invalidUploadURL)
                         return
                     }
 
-                    seal.fulfill(Data(id))
+                    self.upload(for: uploadURL, and: data, authorization: authorization) { data, error in
+                        if let error {
+                            seal.reject(error)
+                            return
+                        }
+
+                        guard let data,
+                              let idHex = String(bytes: data, encoding: .ascii),
+                              let id = BytesUtility.toBytes(hexString: idHex) else {
+                            seal.reject(BlobUploaderError.uploadFailed(message: "[BlobUploader] Upload unsuccessful."))
+                            return
+                        }
+
+                        seal.fulfill(Data(id))
+                    }
                 }
-            })
+            )
         }
     }
 

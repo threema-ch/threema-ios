@@ -116,7 +116,7 @@ extension SettingsView {
                             .threemaNavigationBar(#localize("settings_list_passcode_lock_title"))
                     },
                     title: #localize("settings_list_passcode_lock_title"),
-                    accessoryText: (isPasswordRequired ? "On" : "Off").localized,
+                    accessoryText: #localize(isPasswordRequired ? "On" : "Off"),
                     image: .systemImage("lock.fill")
                 )
                 .onAppear {
@@ -193,7 +193,7 @@ extension SettingsView {
                     .onReceive(connectionStateProvider.$connectionState, perform: didChange)
                     .onAppear { didChange() }
                 version
-                if LicenseStore.requiresLicenseKey() {
+                if TargetManager.isBusinessApp {
                     license
                 }
             }
@@ -236,97 +236,94 @@ extension SettingsView {
             self.connectionState = connectionState
         }
     }
-    
-    #if !THREEMA_WORK && !THREEMA_ONPREM
-    
-        // MARK: - ThreemaWorkSection
-    
-        struct ThreemaWorkAdvertisingSection: View {
-            private let appURL = URL(string: "threemawork://app")
         
-            private var canOpenThreemaWork: Bool {
-                UIApplication.shared.canOpenURL(appURL!)
-            }
+    // MARK: - ThreemaWorkSection
+    
+    struct ThreemaWorkAdvertisingSection: View {
+        private let appURL = URL(string: "threemawork://app")
         
-            var body: some View {
-                Section {
-                    if canOpenThreemaWork {
-                        SectionItem {
-                            UIApplication.shared.open(appURL!, options: [:], completionHandler: nil)
-                        } label: {
-                            label
-                        }
+        private var canOpenThreemaWork: Bool {
+            UIApplication.shared.canOpenURL(appURL!)
+        }
+        
+        var body: some View {
+            Section {
+                if canOpenThreemaWork {
+                    SectionItem {
+                        UIApplication.shared.open(appURL!, options: [:], completionHandler: nil)
+                    } label: {
+                        label
                     }
-                    else {
-                        SectionItem {
-                            uiViewController(ThreemaWorkViewController())
-                                .threemaNavigationBar(title)
-                        } label: {
-                            label
-                        }
+                }
+                else {
+                    SectionItem {
+                        uiViewController(ThreemaWorkViewController())
+                            .threemaNavigationBar(title)
+                    } label: {
+                        label
                     }
                 }
             }
+        }
         
-            private var title: String {
-                #localize("settings_threema_work")
-            }
-            
-            private var label: SettingsListImageItemView {
-                .init(
-                    cellTitle: title,
-                    subCellTitle: #localize("settings_threema_work_subtitle"),
-                    image: Image(uiImage: UIImage(resource: .threemaWorkSettings))
+        private var title: String {
+            #localize("settings_threema_work")
+        }
+        
+        private var label: SettingsListImageItemView {
+            .init(
+                cellTitle: title,
+                subCellTitle: #localize("settings_threema_work_subtitle"),
+                image: Image(uiImage: UIImage(resource: .threemaWorkSettings))
+            )
+        }
+    }
+    
+    // MARK: - InviteSection
+    
+    struct InviteConsumerSection: View {
+        var body: some View {
+            Section {
+                if let link = TargetManager.rateLink {
+                    SectionItem(
+                        action: {
+                            UIApplication.shared.open(link, options: [:], completionHandler: nil)
+                            
+                        },
+                        title: String.localizedStringWithFormat(
+                            #localize("settings_list_rate"),
+                            TargetManager.appName
+                        ),
+                        image: .systemImage("star.fill")
+                    )
+                }
+                SectionItem(
+                    action: inviteFriends,
+                    title: #localize("settings_list_invite_a_friend_title"),
+                    image: .systemImage("person.2.wave.2.fill")
+                )
+                SectionItem(
+                    action: {
+                        topViewController.map { AddThreemaChannelAction.run(in: $0) }
+                    },
+                    title: #localize("settings_list_threema_channel_title"),
+                    image: .systemImage("antenna.radiowaves.left.and.right")
                 )
             }
         }
-    
-        // MARK: - InviteSection
-    
-        struct InviteConsumerSection: View {
-            var body: some View {
-                Section {
-                    if let link = ThreemaApp.rateLink {
-                        SectionItem(
-                            action: {
-                                UIApplication.shared.open(link, options: [:], completionHandler: nil)
-                                
-                            },
-                            title: String.localizedStringWithFormat(
-                                #localize("settings_list_rate"),
-                                ThreemaApp.appName
-                            ),
-                            image: .systemImage("star.fill")
-                        )
-                    }
-                    SectionItem(
-                        action: inviteFriends,
-                        title: #localize("settings_list_invite_a_friend_title"),
-                        image: .systemImage("person.2.wave.2.fill")
-                    )
-                    SectionItem(
-                        action: {
-                            topViewController.map { AddThreemaChannelAction.run(in: $0) }
-                        },
-                        title: #localize("settings_list_threema_channel_title"),
-                        image: .systemImage("antenna.radiowaves.left.and.right")
-                    )
-                }
-            }
         
-            private func inviteFriends() {
-                _ = topViewController.map { currentVC in
-                    InviteController().then {
-                        $0.parentViewController = currentVC
-                        $0.shareViewController = currentVC
-                        $0.actionSheetViewController = currentVC
-                        $0.rect = .zero
-                        $0.invite()
-                    }
+        private func inviteFriends() {
+            _ = topViewController.map { currentVC in
+                InviteController().then {
+                    $0.parentViewController = currentVC
+                    $0.shareViewController = currentVC
+                    $0.actionSheetViewController = currentVC
+                    $0.rect = .zero
+                    $0.invite()
                 }
             }
         }
-    #endif
+    }
     
     // MARK: - AboutSection
     
@@ -339,7 +336,7 @@ extension SettingsView {
                         title: "settings_list_support_title",
                         symbol: .systemImage("lightbulb.fill")
                     )
-                    if !LicenseStore.isOnPrem() {
+                    if !TargetManager.isOnPrem {
                         (
                             view: uiViewController(PrivacyPolicyViewController()),
                             title: "settings_list_privacy_policy_title",
@@ -371,17 +368,17 @@ extension SettingsView {
     struct RateBusinessSection: View {
         var body: some View {
             Section {
-                if let link = ThreemaApp.rateLink {
+                if let link = TargetManager.rateLink {
                     SectionItem(
                         action: {
                             UIApplication.shared.open(link, options: [:], completionHandler: nil)
                             
                         },
-                        title: String.localizedStringWithFormat(#localize("settings_list_rate"), ThreemaApp.appName),
+                        title: String.localizedStringWithFormat(#localize("settings_list_rate"), TargetManager.appName),
                         image: .systemImage("star.fill")
                     )
                 }
-                if !LicenseStore.isOnPrem() {
+                if !TargetManager.isOnPrem {
                     SectionItem(
                         action: {
                             topViewController.map { AddThreemaWorkChannelAction.run(in: $0) }

@@ -106,7 +106,7 @@ typedef enum : NSUInteger {
 
 -(void)viewWillAppear:(BOOL)animated {
 
-    if ([LicenseStore requiresLicenseKey]) {
+    if (TargetManagerObjc.isBusinessApp) {
         self.navigationItem.titleView = self.segmentControl;
     } else {
         self.title = [BundleUtil localizedStringForKey:@"members"];

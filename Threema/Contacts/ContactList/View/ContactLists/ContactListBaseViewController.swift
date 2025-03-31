@@ -23,7 +23,7 @@ import ThreemaFramework
 
 @objc class ContactListBaseViewController: ThemedTableViewController {
     weak var itemsDelegate: ContactListActionDelegate?
-    var businessInjector: BusinessInjectorProtocol = BusinessInjector()
+    var businessInjector: BusinessInjectorProtocol = BusinessInjector.ui
     
     init(itemsDelegate: ContactListActionDelegate? = nil) {
         self.itemsDelegate = itemsDelegate

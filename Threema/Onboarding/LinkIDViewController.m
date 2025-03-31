@@ -236,16 +236,16 @@
     _phoneTextField.delegate = self;
     _phoneTextField.accessibilityHint = [BundleUtil localizedStringForKey:@"phone number"];
     
-    if ([LicenseStore requiresLicenseKey]) {
+    if (TargetManagerObjc.isBusinessApp) {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_link_description_work"];
     } else {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_link_description"];
     }
     
     self.moreView.mainView = self.mainContentView;
-    if ([LicenseStore requiresLicenseKey]) {
+    if (TargetManagerObjc.isBusinessApp) {
         _titleLabel.text = [BundleUtil localizedStringForKey:@"id_link_title_work"];
-        self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_link_id_work"], [ThreemaAppObjc appName], [ThreemaAppObjc appName]];
+        self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_link_id_work"], TargetManagerObjc.appName, TargetManagerObjc.appName];
     } else {
         _titleLabel.text = [BundleUtil localizedStringForKey:@"id_link_title"];
         self.moreView.moreMessageText = [BundleUtil localizedStringForKey:@"more_information_link_id"];
@@ -258,9 +258,9 @@
         _phoneTextField.enabled = NO;
     }
     
-    _emailTextField.tintColor = Colors.primaryWizard;
-    _phoneTextField.tintColor = Colors.primaryWizard;
-    _selectedCountryButton.backgroundColor = Colors.primaryWizard;
+    _emailTextField.tintColor = UIColor.primary;
+    _phoneTextField.tintColor = UIColor.primary;
+    _selectedCountryButton.backgroundColor = UIColor.primary;
     [_selectedCountryButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     
     _phoneImageView.image = [[UIImage systemImageNamed:@"phone.fill"] imageWithTintColor:Colors.white];
@@ -460,8 +460,8 @@
     
     if (_questionView == nil) {
         _questionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
-        if ([LicenseStore requiresLicenseKey]) {
-            _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input_work"], [ThreemaAppObjc appName]];
+        if (TargetManagerObjc.isBusinessApp) {
+            _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input_work"], TargetManagerObjc.appName];
         } else {
             _questionView.questionLabel.text = [BundleUtil localizedStringForKey:@"id_link_no_input"];            
         }
@@ -479,7 +479,7 @@
 }
 
 - (void)hideEmailIfNeeded {
-    _emailView.hidden = ![LicenseStore requiresLicenseKey];
+    _emailView.hidden = !TargetManagerObjc.isBusinessApp;
 }
 
 #pragma mark - IntroQuestionViewDelegate

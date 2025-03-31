@@ -50,7 +50,7 @@ class RestoreOptionDataViewController: IDCreationPageViewController {
         titleLabel.text = #localize("restore_option_title")
         descriptionLabel.text = String.localizedStringWithFormat(
             #localize("restore_option_data_description"),
-            ThreemaApp.currentName
+            TargetManager.appName
         )
         keepLocalButton.setTitle(#localize("restore_option_data_keep_data"), for: .normal)
         keepLocalLabel.text = #localize("restore_option_data_keep_data_description")
@@ -81,7 +81,7 @@ extension RestoreOptionDataViewController {
             let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
             let message = String.localizedStringWithFormat(
                 #localize("restore_option_data_delete_data_explain"),
-                ThreemaApp.currentName
+                TargetManager.appName
             )
             alert.showAlert(message, title: #localize("safe_restore"))
         }

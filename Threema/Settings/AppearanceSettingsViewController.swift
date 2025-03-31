@@ -120,9 +120,8 @@ class AppearanceSettingsViewController: ThemedTableViewController {
         darkThemeButton.imageView?.contentMode = .scaleAspectFit
         systemThemeButton.imageView?.contentMode = .scaleAspectFit
 
-        displayOrderValue
-            .text = (UserSettings.shared().displayOrderFirstName ? "SortOrder_Firstname" : "SortOrder_Lastname")
-            .localized
+        displayOrderValue.text = UserSettings.shared()
+            .displayOrderFirstName ? #localize("SortOrder_Firstname") : #localize("SortOrder_Lastname")
         displayOrderValue.textColor = .secondaryLabel
         
         if let mdmSetup = MDMSetup(setup: false) {
@@ -151,8 +150,9 @@ class AppearanceSettingsViewController: ThemedTableViewController {
                 #localize("settings_appearance_theme_selected"),
                 #localize("settings_appearance_system_theme")
             )
-            systemThemeButton.accessibilityLabel = "settings_appearance_system_theme"
-                .localized + ", " + #localize("settings_appearance_theme_active")
+            systemThemeButton
+                .accessibilityLabel = #localize("settings_appearance_system_theme") + ", " +
+                #localize("settings_appearance_theme_active")
         }
         else {
             updateButtonSelectionForCurrentTheme()
@@ -171,8 +171,9 @@ class AppearanceSettingsViewController: ThemedTableViewController {
                 #localize("settings_appearance_theme_selected"),
                 #localize("settings_appearance_dark_theme")
             )
-            darkThemeButton.accessibilityLabel = "settings_appearance_dark_theme"
-                .localized + ", " + #localize("settings_appearance_theme_active")
+            darkThemeButton
+                .accessibilityLabel = #localize("settings_appearance_dark_theme") + ", " +
+                #localize("settings_appearance_theme_active")
         case .light, .undefined:
             lightThemeButton.applySelectedStyle()
             darkThemeButton.applyDeselectStyle()
@@ -181,8 +182,9 @@ class AppearanceSettingsViewController: ThemedTableViewController {
                 #localize("settings_appearance_theme_selected"),
                 #localize("settings_appearance_light_theme")
             )
-            lightThemeButton.accessibilityLabel = "settings_appearance_light_theme"
-                .localized + ", " + #localize("settings_appearance_theme_active")
+            lightThemeButton
+                .accessibilityLabel = #localize("settings_appearance_light_theme") + ", " +
+                #localize("settings_appearance_theme_active")
         }
     }
 }
@@ -220,29 +222,23 @@ extension AppearanceSettingsViewController {
     }
     
     override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        // Special app icons
         if section == 1 {
-            switch ThreemaApp.current {
-            case .threema:
+            if TargetManager.current == .threema {
                 return UITableView.automaticDimension
-            case .blue:
-                return UITableView.automaticDimension
-            default:
-                return 0
             }
+            return 0
         }
         return UITableView.automaticDimension
     }
     
     override func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        // Special app icons
         if section == 1 {
-            switch ThreemaApp.current {
-            case .threema:
+            if TargetManager.current == .threema {
                 return UITableView.automaticDimension
-            case .blue:
-                return UITableView.automaticDimension
-            default:
-                return 0
             }
+            return 0
         }
         return UITableView.automaticDimension
     }
@@ -256,8 +252,8 @@ extension AppearanceSettingsViewController {
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         if section == 2 {
-            return (UserSettings.shared().hideStaleContacts ? "show_stale_contacts_on" : "show_stale_contacts_off")
-                .localized
+            return UserSettings.shared()
+                .hideStaleContacts ? #localize("show_stale_contacts_on") : #localize("show_stale_contacts_off")
         }
         return nil
     }
@@ -267,10 +263,11 @@ extension AppearanceSettingsViewController {
         case 0:
             1
         case 1:
-            switch ThreemaApp.current {
-            case .threema:
+            // Special app icons
+            if TargetManager.current == .threema {
                 1
-            default:
+            }
+            else {
                 0
             }
         case 2:

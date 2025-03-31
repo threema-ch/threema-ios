@@ -321,7 +321,7 @@ extension LinkedContactManager {
             accessDenied(in: viewController)
         case .restricted:
             accessRestricted(in: viewController)
-        case CNAuthorizationStatus(rawValue: 4): // TODO: (IOS-4889) In order to still compile the code in Xcode 15, we use 4 instead of `.limited`
+        case .limited:
             // TODO: (IOS-4890) Rethink contact linking if limited access is enabled
             // For now we just allow linking, however if the contact is not accessible only a [limited] label appears
             accessAuthorized(in: view, of: viewController)
@@ -387,7 +387,7 @@ extension LinkedContactManager {
             let localizedAlertTile = #localize("restricted_contacts_access_title")
             let localizedAlertMessage = String.localizedStringWithFormat(
                 #localize("restricted_linked_contact_access_message"),
-                ThreemaApp.currentName
+                TargetManager.appName
             )
             let localizedUnlinkTitle = #localize("unlink_contact")
             
@@ -562,7 +562,7 @@ extension LinkedContactManager {
             return #localize("[restricted]")
         case .authorized:
             return contactDescription ?? #localize("[not found]")
-        case CNAuthorizationStatus(rawValue: 4): // TODO: (IOS-4889) In order to still compile the code in Xcode 15, we use 4 instead of `.limited`
+        case .limited:
             // TODO: (IOS-4890) Rethink contact linking if limited access is enabled
             return contactDescription ?? #localize("[limited]")
         @unknown default:
@@ -681,7 +681,7 @@ extension LinkedContactManager {
             editAccessDenied(in: viewController, provider: provider)
         case .restricted:
             editAccessRestricted(in: viewController, provider: provider)
-        case CNAuthorizationStatus(rawValue: 4): // TODO: (IOS-4889) In order to still compile the code in Xcode 15, we use 4 instead of `.limited`
+        case .limited:
             // TODO: (IOS-4890) Rethink contact linking if limited access is enabled
             // For now we handle it like authorized access and show a not found error if contact is not accessible
             editAccessAuthorized(in: viewController, provider: provider)
@@ -765,7 +765,7 @@ extension LinkedContactManager {
         let localizedRestrictedTitle = #localize("restricted_contacts_access_title")
         let localizedRestrictedMessage = String.localizedStringWithFormat(
             #localize("restricted_linked_contact_access_edit_message"),
-            ThreemaApp.currentName
+            TargetManager.appName
         )
         
         showUnlinkAndEditActionSheet(

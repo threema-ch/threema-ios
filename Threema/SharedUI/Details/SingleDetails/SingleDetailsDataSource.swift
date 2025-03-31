@@ -55,9 +55,9 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     private weak var tableView: UITableView?
     private let linkedContactManager: LinkedContactManager
     
-    private lazy var businessInjector = BusinessInjector()
+    private lazy var businessInjector = BusinessInjector.ui
 
-    var settingsStore = BusinessInjector().settingsStore as! SettingsStore
+    var settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
     private var cancellables = Set<AnyCancellable>()
     
     private lazy var photoBrowserWrapper: MWPhotoBrowserWrapper? = {
@@ -510,10 +510,10 @@ extension SingleDetailsDataSource {
             }
             
             // Check feature mask
-            let contactSet = Set<ContactEntity>([strongSelf.contact])
+            let identities = Set<String>([strongSelf.contact.identity])
             FeatureMask
                 .check(
-                    contacts: contactSet,
+                    identities: identities,
                     for: Int(FEATURE_MASK_VOIP)
                 ) { [weak self, weak viewController] unsupportedContacts in
                     if let strongSelf = self, unsupportedContacts.isEmpty == true {
@@ -805,7 +805,7 @@ extension SingleDetailsDataSource {
     private var contactInfo: [SingleDetails.Row] {
         var rows = [SingleDetails.Row]()
         
-        if LicenseStore.requiresLicenseKey() {
+        if TargetManager.isBusinessApp {
             if let jobTitle = contact.jobTitle,
                !jobTitle.isEmpty {
                 rows.append(.value(label: #localize("job_title"), value: jobTitle))
@@ -1075,13 +1075,16 @@ extension SingleDetailsDataSource {
                 guard let strongSelf = self else {
                     return
                 }
-                ContactPhotoSender(BusinessInjector().entityManager).startWithImage(toMember: strongSelf.contact) {
-                    NotificationPresenterWrapper.shared.present(type: .profilePictureSentSuccess)
-                } onError: { error in
-                    DDLogError("Unable to send profile picture on user request: \(error?.localizedDescription ?? "")")
+                ContactPhotoSender(strongSelf.businessInjector.entityManager)
+                    .startWithImage(toMember: strongSelf.contact) {
+                        NotificationPresenterWrapper.shared.present(type: .profilePictureSentSuccess)
+                    } onError: { error in
+                        DDLogError(
+                            "Unable to send profile picture on user request: \(error?.localizedDescription ?? "")"
+                        )
                     
-                    NotificationPresenterWrapper.shared.present(type: .profilePictureSentError)
-                }
+                        NotificationPresenterWrapper.shared.present(type: .profilePictureSentError)
+                    }
             }
             rows.append(.action(sendPictureNowAction))
         }
@@ -1219,7 +1222,7 @@ extension SingleDetailsDataSource {
         
         var fsClearSessionsDisabled = true
         do {
-            fsClearSessionsDisabled = try BusinessInjector().dhSessionStore
+            fsClearSessionsDisabled = try businessInjector.dhSessionStore
                 .bestDHSession(myIdentity: MyIdentityStore.shared().identity, peerIdentity: contact.identity) == nil
         }
         catch {
@@ -1238,8 +1241,11 @@ extension SingleDetailsDataSource {
             
             DispatchQueue.main.async {
                 do {
-                    let sessionTerminator = try ForwardSecuritySessionTerminator(businessInjector: BusinessInjector())
-                    try sessionTerminator.terminateAllSessions(with: strongSelf.contact.identity, cause: .reset)
+                    let sessionTerminator = try ForwardSecuritySessionTerminator(
+                        businessInjector: strongSelf
+                            .businessInjector
+                    )
+                    _ = try sessionTerminator.terminateAllSessions(with: strongSelf.contact.identity, cause: .reset)
                     
                     strongSelf.reload(sections: [.fsActions])
                     strongSelf.refresh(sections: [.fsActions])

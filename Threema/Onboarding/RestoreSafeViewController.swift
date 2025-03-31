@@ -69,11 +69,11 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
         okButton.setTitle(#localize("restore"), for: .normal)
         okButton.accessibilityIdentifier = "RestoreSafeViewControllerRestoreButton"
         
-        forgotIDButton.setTitleColor(Colors.primaryWizard, for: .normal)
+        forgotIDButton.setTitleColor(UIColor.primary, for: .normal)
         
         // check MDM for Threema Safe restore
         let mdmSetup = MDMSetup(setup: true)!
-        if LicenseStore.shared().getRequiresLicenseKey() {
+        if TargetManager.isBusinessApp {
             if !mdmSetup.isSafeBackupDisable() {
                 activateSafeAnyway = true
             }
@@ -82,10 +82,10 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
                 expertOptionsButton.isHidden = true
                 
                 let safeConfigManager = SafeConfigManager()
-                let safeStore = SafeStore(
+                let _ = SafeStore(
                     safeConfigManager: safeConfigManager,
                     serverApiConnector: ServerAPIConnector(),
-                    groupManager: BusinessInjector().groupManager
+                    groupManager: BusinessInjector.ui.groupManager
                 )
 
                 restoreCustomServer = mdmSetup.safeServerURL()
@@ -262,7 +262,7 @@ extension RestoreSafeViewController {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: BusinessInjector().groupManager
+            groupManager: BusinessInjector.ui.groupManager
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,

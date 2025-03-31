@@ -30,10 +30,10 @@ class SettingsViewModel: ObservableObject {
         case .appStore:
             return false
         case .testFlight:
-            if ThreemaApp.current == .green || ThreemaApp.current == .blue || ThreemaApp.current == .onPrem {
-                return false
+            if TargetManager.current == .threema || TargetManager.current == .work {
+                return true
             }
-            return true
+            return false
         case .xcode:
             return true
         }
@@ -44,7 +44,7 @@ class SettingsViewModel: ObservableObject {
         case .appStore:
             return false
         case .testFlight:
-            if ThreemaApp.current == .green || ThreemaApp.current == .blue {
+            if TargetManager.isSandbox {
                 return true
             }
             return false
@@ -54,12 +54,12 @@ class SettingsViewModel: ObservableObject {
     }
     
     func giveFeedback() {
-        if let contact = BusinessInjector().entityManager.entityFetcher
+        if let contact = BusinessInjector.ui.entityManager.entityFetcher
             .contact(for: Constants.betaFeedbackIdentity) {
             showConversation(for: contact)
         }
         else {
-            BusinessInjector().contactStore.addContact(
+            BusinessInjector.ui.contactStore.addContact(
                 with: Constants.betaFeedbackIdentity,
                 verificationLevel: Int32(kVerificationLevelUnverified)
             ) { [self] contact, _ in

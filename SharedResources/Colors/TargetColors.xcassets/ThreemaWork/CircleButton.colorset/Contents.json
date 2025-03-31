@@ -20,13 +20,8 @@
         }
       ],
       "color" : {
-        "color-space" : "srgb",
-        "components" : {
-          "alpha" : "1.000",
-          "blue" : "0x21",
-          "green" : "0x21",
-          "red" : "0x21"
-        }
+        "platform" : "ios",
+        "reference" : "quaternarySystemFillColor"
       },
       "idiom" : "universal"
     }

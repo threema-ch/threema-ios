@@ -39,10 +39,11 @@ extension ProfileView {
                     VStack {
                         Spacer()
                         Image(uiImage: model.qrCodeImage)
+                            .interpolation(.none)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .accessibilityIgnoresInvertColors(true)
-                            .padding(20)
+                            .padding(16)
                             .accessibilityLabel(#localize("profile_big_qr_code"))
                             .background {
                                 Color.white

@@ -25,6 +25,17 @@ import Intents
 extension AppDelegate {
     // MARK: - Intents
     
+    static var keyWindow: UIWindow? {
+        guard let window = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap(\.windows)
+            .first(where: { $0.isKeyWindow })
+        else {
+            return nil
+        }
+        return window
+    }
+    
     /// Used to handle Siri suggestions in widgets, search or on lock screen
     @objc func handleINSendMessageIntent(userActivity: NSUserActivity) -> Bool {
         guard let interaction = userActivity.interaction else {

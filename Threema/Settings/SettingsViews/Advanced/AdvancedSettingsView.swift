@@ -358,7 +358,7 @@ struct AdvancedSettingsView: View {
     }
     
     private func logMIME() {
-        let entityManager = BusinessInjector().entityManager
+        let entityManager = BusinessInjector.ui.entityManager
         DDLogNotice(
             "There are \(entityManager.entityFetcher.countFileMessagesWithNoMIMEType()) file messages with no MIME type"
         )

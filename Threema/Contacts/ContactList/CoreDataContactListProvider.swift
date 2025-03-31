@@ -36,7 +36,7 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
     private let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>
     
     init(
-        entityFetcher: EntityFetcher = BusinessInjector().entityManager.entityFetcher,
+        entityFetcher: EntityFetcher = BusinessInjector.ui.entityManager.entityFetcher,
         at fetchedResultsControllerKeyPath: KeyPath<
             ContactListFetchManager,
             NSFetchedResultsController<NSFetchRequestResult>
@@ -51,7 +51,7 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
         fetchedResultsController.delegate = self
         try? fetchedResultsController.performFetch()
         
-        BusinessInjector()
+        BusinessInjector.ui
             .settingsStore
             .blacklist
             .publisher

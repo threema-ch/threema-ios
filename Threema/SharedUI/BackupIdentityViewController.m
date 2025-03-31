@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "BackupIdentityViewController.h"
-#import "QRCodeGenerator.h"
 #import "AppDelegate.h"
 #import "MyIdentityStore.h"
 #import "IdentityBackupStore.h"
@@ -92,8 +91,8 @@
     UIFontDescriptor *fontDescriptor = [UIFontDescriptor preferredFontDescriptorWithTextStyle:UIFontTextStyleTitle3];
     self.identityBackupLabel.font = [UIFont fontWithName:@"Courier" size:fontDescriptor.pointSize];
     
-    qrCodeImage = [QRCodeGenerator renderQrCodeString:self.backupData withDimension:self.qrImageView.frame.size.width*2];
-    self.qrImageView.image = [qrCodeImage imageWithTint:Colors.qrCodeTint];
+    qrCodeImage = [QRCodeGeneratorObjC generateQRCodeFor:self.backupData size:self.qrImageView.frame.size.width*2];
+    self.qrImageView.image = qrCodeImage;
 }
 
 - (void)dealloc {

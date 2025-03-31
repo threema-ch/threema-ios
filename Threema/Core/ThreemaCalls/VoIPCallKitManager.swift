@@ -39,7 +39,7 @@ final class VoIPCallKitManager: NSObject {
     }
     
     class func providerConfiguration(for contactIdentity: String?) -> CXProviderConfiguration {
-        let providerConfiguration = CXProviderConfiguration(localizedName: ThreemaApp.currentName)
+        let providerConfiguration = CXProviderConfiguration()
         providerConfiguration.supportsVideo = true
         providerConfiguration.maximumCallGroups = 1
         providerConfiguration.maximumCallsPerCallGroup = 1
@@ -47,7 +47,7 @@ final class VoIPCallKitManager: NSObject {
         providerConfiguration.includesCallsInRecents = UserSettings.shared().includeCallsInRecents
         
         if let identity = contactIdentity {
-            let pushSettingManager = BusinessInjector().pushSettingManager
+            let pushSettingManager = BusinessInjector.ui.pushSettingManager
             let pushSetting = pushSettingManager.find(forContact: ThreemaIdentity(identity))
             if pushSetting.canSendPush(), pushSetting.muted == false {
                 let voIPSound = UserSettings.shared()?.voIPSound
@@ -97,8 +97,8 @@ extension VoIPCallKitManager {
         update.supportsHolding = false
         update.supportsDTMF = false
         update.hasVideo = false
-        let entityManager = BusinessInjector().entityManager
-        entityManager.performBlockAndWait {
+        let entityManager = BusinessInjector.ui.entityManager
+        entityManager.performAndWait {
             if let contact = entityManager.entityFetcher.contact(for: contactIdentity) {
                 update.localizedCallerName = contact.displayName
                 self.callerName = contact.displayName
@@ -128,9 +128,9 @@ extension VoIPCallKitManager {
         update.supportsHolding = false
         update.supportsDTMF = false
         update.hasVideo = false
-        let entityManager = BusinessInjector().entityManager
+        let entityManager = BusinessInjector.ui.entityManager
         entityManager.performBlock {
-            if let contact = BusinessInjector().entityManager.entityFetcher.contact(for: contactIdentity) {
+            if let contact = BusinessInjector.ui.entityManager.entityFetcher.contact(for: contactIdentity) {
                 update.localizedCallerName = contact.displayName
                 self.callerName = contact.displayName
             }
@@ -168,7 +168,7 @@ extension VoIPCallKitManager {
             let update = CXCallUpdate()
             update.remoteHandle = CXHandle(type: .generic, value: contactIdentity)
             update.hasVideo = false
-            let entityManager = BusinessInjector().entityManager
+            let entityManager = BusinessInjector.ui.entityManager
             entityManager.performAndWait {
                 if let contact = entityManager.entityFetcher.contact(for: contactIdentity) {
                     update.localizedCallerName = contact.displayName

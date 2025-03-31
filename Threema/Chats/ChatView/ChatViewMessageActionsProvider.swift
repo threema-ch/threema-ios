@@ -439,7 +439,7 @@ enum ChatViewMessageActionsProvider {
             image: UIImage(systemName: "trash"),
             attributes: .destructive
         ) {
-            let businessInjector = BusinessInjector()
+            let businessInjector = BusinessInjector.ui
             var actions = [UIAlertAction]()
             actions.append(
                 UIAlertAction(title: #localize("message_delete_for_me"), style: .destructive) { _ in

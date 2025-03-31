@@ -39,7 +39,7 @@ class WebAvatarResponse: WebAbstractMessage {
             size = request.maxSize!
         }
         
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector.ui
         let entityManager = businessInjector.entityManager
         
         if type == "contact", let contact = entityManager.entityFetcher.contact(for: id) {

@@ -100,7 +100,7 @@ extension Ballot {
             string.append(choices)
         }
         
-        if numberOfReceivedVotes() != 0 {
+        if numberOfReceivedVotes() != 0, ballotDisplayMode != .summary {
             string.append(newline)
             let participants = localizedParticipantsVoted
             string.append(participants)
@@ -121,7 +121,12 @@ extension Ballot {
                     choices
                 }
                 else {
-                    localizedParticipantsVoted
+                    if ballotDisplayMode == .summary {
+                        #localize("ballot_message_tap_to_vote")
+                    }
+                    else {
+                        localizedParticipantsVoted
+                    }
                 }
             }
             else {

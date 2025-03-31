@@ -57,7 +57,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     private weak var groupDetailsViewController: GroupDetailsViewController?
     private weak var tableView: UITableView?
     
-    private lazy var businessInjector = BusinessInjector()
+    private lazy var businessInjector = BusinessInjector.ui
     private lazy var mdmSetup = MDMSetup(setup: false)
     
     private lazy var photoBrowserWrapper: MWPhotoBrowserWrapper? = {
@@ -862,8 +862,7 @@ extension GroupDetailsDataSource {
                 
                 // Safety net if creating new groups got disabled in the meantime
                 guard let mdmSetup = strongSelf.mdmSetup, !mdmSetup.disableCreateGroup() else {
-                    let localizedDisabledByDevicePolicy = BundleUtil
-                        .localizedString(forKey: "disabled_by_device_policy")
+                    let localizedDisabledByDevicePolicy = #localize("disabled_by_device_policy")
                     UIAlertTemplate.showAlert(
                         owner: strongGroupDetailsViewController,
                         title: localizedDisabledByDevicePolicy,
@@ -1015,7 +1014,7 @@ extension GroupDetailsDataSource {
             strongSelf.groupDetailsViewController?.present(navigationController, animated: true)
         }
         
-        let settingsStore = BusinessInjector().settingsStore
+        let settingsStore = businessInjector.settingsStore
         row.append(.wallpaper(
             action: wallpaperAction,
             isDefault: !settingsStore.wallpaperStore.hasCustomWallpaper(for: conversation.objectID)

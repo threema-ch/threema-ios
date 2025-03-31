@@ -32,7 +32,7 @@ extension ContactEntity {
     /// Shorter version of `displayName` if available
     public var shortDisplayName: String {
         // This is an "op-in" feature
-        guard ThreemaApp.current == .threema || ThreemaApp.current == .green else {
+        guard !TargetManager.isBusinessApp else {
             return displayName
         }
         
@@ -90,11 +90,11 @@ extension ContactEntity {
     ///
     /// Most of the time it's most appropriate to show or hide an `OtherThreemaTypeImageView`.
     @objc public var showOtherThreemaTypeIcon: Bool {
-        if isEchoEcho() || isGatewayID() || ThreemaApp.current == .onPrem {
+        if isEchoEcho() || isGatewayID() || TargetManager.isOnPrem {
             return false
         }
         
-        if ThreemaApp.current == .work || ThreemaApp.current == .blue {
+        if TargetManager.isWork {
             return !UserSettings.shared().workIdentities.contains(identity)
         }
         else {

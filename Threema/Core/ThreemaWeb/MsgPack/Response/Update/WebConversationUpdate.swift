@@ -33,7 +33,7 @@ class WebConversationUpdate: WebAbstractMessage {
     init(conversation: ConversationEntity, objectMode: ObjectMode, session: WCSession) {
         self.mode = objectMode.rawValue
         
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector.ui
         var index = 0
         
         if let allConversations = businessInjector.entityManager.entityFetcher

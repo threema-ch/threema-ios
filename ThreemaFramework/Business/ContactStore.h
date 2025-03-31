@@ -41,9 +41,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)fetchWorkIdentities:(NSArray *)identities onCompletion:(void(^)(NSArray *foundIdentities))onCompletion onError:(void(^)(NSError *error))onError;
 
-- (void)fetchPublicKeyForIdentity:(NSString*)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(void(^)(NSData *publicKey))onCompletion onError:(void(^)(NSError *error))onError
-    NS_SWIFT_NAME(fetchPublicKey(for:acquaintanceLevel:onCompletion:onError:));
-
 - (void)fetchPublicKeyForIdentity:(nullable NSString *)identity acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject ignoreBlockUnknown:(BOOL)ignoreBlockUnknown onCompletion:(void(^)(NSData * _Nullable publicKey))onCompletion onError:(nullable void(^)(NSError * _Nullable error))onError
     NS_SWIFT_NAME(fetchPublicKey(for:acquaintanceLevel:entityManager:ignoreBlockUnknown:onCompletion:onError:));
 
@@ -60,8 +57,6 @@ NS_ASSUME_NONNULL_BEGIN
 /* synchronize contacts from address book with server */
 - (void)synchronizeAddressBookForceFullSync:(BOOL)forceFullSync ignoreMinimumInterval:(BOOL)ignoreMinimumInterval onCompletion:(nullable void(^)(BOOL addressBookAccessGranted))onCompletion onError:(nullable void(^)(NSError * _Nullable error))onError
     NS_SWIFT_NAME(synchronizeAddressBook(forceFullSync:ignoreMinimumInterval:onCompletion:onError:));
-
-- (void)updateFeatureMasksForIdentities:(nonnull NSArray<NSString *> *)Identities onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError;
 
 - (void)reflectContact:(nullable NSString *)identity NS_SWIFT_NAME(reflect(_:));
 
@@ -113,8 +108,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addWorkContactAndUpdateFeatureMaskWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname csi:(nullable NSString *)csi jobTitle:(nullable NSString *)jobTitle department:(nullable NSString *)department acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(nonnull void(^)(ContactEntity * nonnull))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError
     NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:csi:jobTitle:department:acquaintanceLevel:onCompletion:onError:));
 
-- (nullable NSString *)addWorkContactWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname csi:(nullable NSString *)csi jobTitle:(nullable NSString *)jobTitle department:(nullable NSString *)department acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts
-    NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:csi:jobTitle:department:acquaintanceLevel:entityManager:contactSyncer:));
+- (nullable NSString *)addWorkContactWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname csi:(nullable NSString *)csi jobTitle:(nullable NSString *)jobTitle department:(nullable NSString *)department featureMask:(nullable NSNumber *)featureMask acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts
+    NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:csi:jobTitle:department:featureMask:acquaintanceLevel:entityManager:contactSyncer:));
 
 - (void)resetImportedStatus;
 
@@ -134,9 +129,6 @@ NS_ASSUME_NONNULL_BEGIN
 /* synchronize contacts from address book with server */
 - (void)synchronizeAddressBookForceFullSync:(BOOL)forceFullSync onCompletion:(nullable void(^)(BOOL addressBookAccessGranted))onCompletion onError:(nullable void(^)(NSError * _Nullable error))onError
     NS_SWIFT_NAME(synchronizeAddressBook(forceFullSync:onCompletion:onError:));
-
-- (void)updateFeatureMasksForContacts:(nonnull NSArray *)contacts contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError;
-- (void)updateFeatureMasksForIdentities:(nonnull NSArray *)identities contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts onCompletion:(nonnull void(^)(void))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError;
 
 - (void)linkedIdentitiesForEmail:(NSString *)email AndMobileNo:(NSString *)mobileNo onCompletion:(void(^)(NSArray *identities))onCompletion
     NS_SWIFT_NAME(linkedIdentities(for:and:onCompletion:));

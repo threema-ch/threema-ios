@@ -25,7 +25,10 @@ import Foundation
 /// instance of business injector.
 /// Otherwise inconsistencies might occur in the database.
 public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
-
+    
+    /// Shared instance to be used for everything in the UI (MainThread)
+    public static let ui = BusinessInjector()
+    
     // This must be initialized lazy, because `BusinessInjector` is used in `AppMigration` and
     // the migration of files (see `AppFileMigration.run()`) must be completed before the `TaskManager`
     // is initialized!
@@ -180,7 +183,7 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         groupManager,
         entityManager,
         taskManager,
-        licenseStore.getRequiresLicenseKey()
+        TargetManager.isBusinessApp
     )
 
     public func runInBackground<T>(
@@ -248,7 +251,8 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
             fsmpInstance = ForwardSecurityMessageProcessor(
                 dhSessionStore: dhSessionStore,
                 identityStore: myIdentityStore,
-                messageSender: messageSender
+                messageSender: messageSender,
+                taskManager: taskManager
             )
             
             fsStatusSender = ForwardSecurityStatusSender(entityManager: entityManager)

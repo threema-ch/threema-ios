@@ -43,17 +43,17 @@ import ThreemaMacros
             case .callBackAction:
                 #localize("call_back")
             case .thumbsUpEmojiAction:
-                ReactionsManager.preferredEmojiVariant(for: .thumbsUpSign).rawValue
+                ReactionsManager.preferredEmojiVariant(for: .thumbsUp).rawValue
             case .thumbsDownEmojiAction:
-                ReactionsManager.preferredEmojiVariant(for: .thumbsDownSign).rawValue
+                ReactionsManager.preferredEmojiVariant(for: .thumbsDown).rawValue
             case .heartEmojiAction:
-                Emoji.heavyBlackHeart.rawValue
+                Emoji.redHeart.rawValue
             case .laughterEmojiAction:
                 Emoji.faceWithTearsOfJoy.rawValue
             case .cryingEmojiAction:
                 Emoji.cryingFace.rawValue
             case .foldedHandsEmojiAction:
-                ReactionsManager.preferredEmojiVariant(for: .personWithFoldedHands).rawValue
+                ReactionsManager.preferredEmojiVariant(for: .foldedHands).rawValue
             }
         }
         
@@ -123,17 +123,17 @@ import ThreemaMacros
             case .replyAction, .callBackAction:
                 return nil
             case .thumbsUpEmojiAction:
-                return ReactionsManager.preferredEmojiVariant(for: .thumbsUpSign)
+                return ReactionsManager.preferredEmojiVariant(for: .thumbsUp)
             case .thumbsDownEmojiAction:
-                return ReactionsManager.preferredEmojiVariant(for: .thumbsDownSign)
+                return ReactionsManager.preferredEmojiVariant(for: .thumbsDown)
             case .heartEmojiAction:
-                return EmojiVariant(base: .heavyBlackHeart, skintone: nil)
+                return EmojiVariant(base: .redHeart, skintone: nil)
             case .laughterEmojiAction:
                 return EmojiVariant(base: .faceWithTearsOfJoy, skintone: nil)
             case .cryingEmojiAction:
                 return EmojiVariant(base: .cryingFace, skintone: nil)
             case .foldedHandsEmojiAction:
-                return ReactionsManager.preferredEmojiVariant(for: .personWithFoldedHands)
+                return ReactionsManager.preferredEmojiVariant(for: .foldedHands)
             }
         }
     }

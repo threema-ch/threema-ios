@@ -84,7 +84,7 @@ class MultiDeviceViewController: ThemedTableViewController {
             self.activityIndicator.startAnimating()
         }
 
-        let bi = BusinessInjector()
+        let bi = BusinessInjector.ui
         thisDevice = bi.multiDeviceManager.thisDevice
 
         if bi.userSettings.enableMultiDevice {
@@ -164,7 +164,7 @@ extension MultiDeviceViewController {
             cell.parentViewController = self
             cell.deviceInfo = thisDevice
 
-            let bi = BusinessInjector()
+            let bi = BusinessInjector.ui
 
             cell.enabled = bi.userSettings.enableMultiDevice
             return cell
@@ -205,7 +205,7 @@ extension MultiDeviceViewController {
             activityIndicator.hidesWhenStopped = true
             activityIndicator.startAnimating()
 
-            let dl = DeviceLinking(businessInjector: BusinessInjector())
+            let dl = DeviceLinking(businessInjector: BusinessInjector.ui)
 
             if otherDevicesCount == 1 {
                 dl.disableMultiDevice()

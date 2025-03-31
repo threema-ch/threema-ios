@@ -42,10 +42,13 @@ extension ContactStore {
             entityManager
         )
 
+        let featureMasks = try await FeatureMask.getFeatureMask(for: batchAddContacts.map(\.identity))
+
         let identities = await entityManager.perform {
             var identities = [String]()
             for batchAddContact in batchAddContacts {
-                guard let publicKey = batchAddContact.publicKey else {
+                guard let publicKey = batchAddContact.publicKey,
+                      let featureMask = featureMasks[batchAddContact.identity] else {
                     continue
                 }
 
@@ -57,6 +60,7 @@ extension ContactStore {
                     csi: batchAddContact.csi,
                     jobTitle: batchAddContact.jobTitle,
                     department: batchAddContact.department,
+                    featureMask: NSNumber(integerLiteral: featureMask),
                     acquaintanceLevel: .direct,
                     entityManager: entityManager,
                     contactSyncer: mediatorSyncableContacts
@@ -92,23 +96,7 @@ extension ContactStore {
             }
         }
 
-        try await withCheckedThrowingContinuation { continuation in
-            self.updateFeatureMasks(forIdentities: identities, contactSyncer: mediatorSyncableContacts) {
-                continuation.resume()
-            } onError: { error in
-                continuation.resume(throwing: error)
-            }
-        }
-
-        try await withCheckedThrowingContinuation { continuation in
-            mediatorSyncableContacts.sync()
-                .done(on: .global()) {
-                    continuation.resume()
-                }
-                .catch { error in
-                    continuation.resume(throwing: error)
-                }
-        }
+        try await mediatorSyncableContacts.sync().async()
     }
     
     /// Update the state of the contact to active and sync it with multi device if activated

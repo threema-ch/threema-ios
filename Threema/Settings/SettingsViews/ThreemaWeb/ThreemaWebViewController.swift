@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import PromiseKit
 import SwiftUI
+import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 import UIKit
@@ -312,8 +313,8 @@ class ThreemaWebViewController: ThemedTableViewController {
             else {
                 return String.localizedStringWithFormat(
                     #localize("settings_threema_web_connectioninfo"),
-                    ThreemaApp.currentName,
-                    ThreemaApp.currentName
+                    TargetManager.appName,
+                    TargetManager.appName
                 )
             }
         case .webSessions:
@@ -458,10 +459,10 @@ class ThreemaWebQRCodeScanner: QRScannerViewControllerDelegate {
     
     fileprivate var threemaWebServerURL: String = BundleUtil.object(forInfoDictionaryKey: "ThreemaWebURL") as! String
     fileprivate var downloadString: String {
-        switch ThreemaApp.current {
-        case .work, .blue, .onPrem:
+        if TargetManager.isBusinessApp {
             ThreemaURLProvider.workDownload.absoluteString
-        default:
+        }
+        else {
             ThreemaURLProvider.consumerDownload.absoluteString
         }
     }
@@ -508,11 +509,15 @@ class ThreemaWebQRCodeScanner: QRScannerViewControllerDelegate {
 
         // Don't enable Threema Web until all contacts have a non-nil feature mask
         if let identities = ContactStore.shared().contactsWithFeatureMaskNil(), !identities.isEmpty {
-            ContactStore.shared().updateFeatureMasks(forIdentities: identities) {
-                scannedCodeHandler()
-            } onError: { error in
-                DDLogError("Update feature mask failed: \(error)")
-                scannedCodeHandler()
+            Task { @MainActor in
+                do {
+                    try await FeatureMask.updateFeatureMask(for: identities.map { ThreemaIdentity($0) })
+                    scannedCodeHandler()
+                }
+                catch {
+                    DDLogError("Update feature mask failed: \(error)")
+                    scannedCodeHandler()
+                }
             }
         }
         else {
@@ -575,7 +580,7 @@ class ThreemaWebQRCodeScanner: QRScannerViewControllerDelegate {
                 session.updateValue(overrideSaltyRtcPort, forKey: "saltyRTCPort")
             }
             
-            if LicenseStore.requiresLicenseKey() == true {
+            if TargetManager.isBusinessApp {
                 let mdmSetup = MDMSetup(setup: false)!
                 if let webHosts = mdmSetup.webHosts() {
                     if WCSessionManager.isWebHostAllowed(

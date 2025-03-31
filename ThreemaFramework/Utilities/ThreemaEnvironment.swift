@@ -105,7 +105,7 @@ public class ThreemaEnvironment: NSObject {
         #if DEBUG
             return true
         #else
-            if ThreemaApp.current == .green || ThreemaApp.current == .blue {
+            if TargetManager.isSandbox {
                 return true
             }
             return false

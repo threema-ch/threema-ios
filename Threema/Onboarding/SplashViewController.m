@@ -150,10 +150,10 @@
         _animatedView = [[FLAnimatedImageView alloc] initWithFrame:rect];
         
         NSString *animationName = @"logoAnimation";
-        if (ThreemaAppObjc.current == ThreemaAppOnPrem) {
+        if (TargetManagerObjc.isOnPrem) {
             animationName = [NSString stringWithFormat:@"%@_onprem", animationName];
         }
-        else if (ThreemaAppObjc.current == ThreemaAppWork || ThreemaAppObjc.current == ThreemaAppBlue) {
+        else if (TargetManagerObjc.isWork) {
             animationName = [NSString stringWithFormat:@"%@_work", animationName];
         }
 
@@ -173,12 +173,12 @@
     _controlsView.hidden = YES;
     _controlsView.frame = [RectUtil rect:_controlsView.frame centerHorizontalIn:_containerView.frame];
     
-    _setupButton.backgroundColor = Colors.primaryWizard;
+    _setupButton.backgroundColor = UIColor.primary;
     _setupButton.layer.cornerRadius = 5;
     _setupButton.accessibilityIdentifier = @"SplashViewControllerSetupButton";
     [_setupButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     
-    _restoreButton.backgroundColor = Colors.primaryWizard;
+    _restoreButton.backgroundColor = UIColor.primary;
     _restoreButton.layer.borderWidth = 1;
     _restoreButton.layer.borderColor = _setupButton.backgroundColor.CGColor;
     _restoreButton.layer.cornerRadius = 5;
@@ -195,20 +195,20 @@
     
     _welcomeLabel.text = [BundleUtil localizedStringForKey:@"lets_get_started"];
     
-    _restoreTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"restore_title_text"], [ThreemaAppObjc appName]];
-    _setupTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"setup_title_text"], [ThreemaAppObjc appName]];
+    _restoreTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"restore_title_text"], TargetManagerObjc.appName];
+    _setupTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"setup_title_text"], TargetManagerObjc.appName];
     
     [_setupButton setTitle:[BundleUtil localizedStringForKey:@"setup_threema"] forState:UIControlStateNormal];
     [_restoreButton setTitle:[BundleUtil localizedStringForKey:@"restore_id"] forState:UIControlStateNormal];
     
-    if (ThreemaAppObjc.current == ThreemaAppOnPrem) {
+    if (TargetManagerObjc.isOnPrem) {
         _privacyPolicyInfo.hidden = true;
     }
     else {
         NSString *privacyPolicyText;
 
-        if ([LicenseStore requiresLicenseKey]) {
-            privacyPolicyText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privacy_policy_about_work"], [ThreemaAppObjc appName]];
+        if (TargetManagerObjc.isBusinessApp) {
+            privacyPolicyText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privacy_policy_about_work"], TargetManagerObjc.appName];
         } else {
             privacyPolicyText = [BundleUtil localizedStringForKey:@"privacy_policy_about"];
         }
@@ -522,20 +522,15 @@
     MFMailComposeViewController *mailController = [[MFMailComposeViewController alloc] init];
     mailController.mailComposeDelegate = self;
     
-    switch ([ThreemaAppObjc current]) {
-        case ThreemaAppThreema:
-        case ThreemaAppGreen:
-            [mailController setToRecipients:@[@"support@threema.ch"]];
-            break;
-        case ThreemaAppWork:
-        case ThreemaAppOnPrem:
-        case ThreemaAppBlue:
-            [mailController setToRecipients:@[@"support-work@threema.ch"]];
-            break;
+    if (TargetManagerObjc.isBusinessApp) {
+        [mailController setToRecipients:@[@"support-work@threema.ch"]];
+    }
+    else {
+        [mailController setToRecipients:@[@"support@threema.ch"]];
     }
         
     [mailController setSubject:[BundleUtil localizedStringForKey:@"contact_support_mail_subject"]];
-    NSString *message = [NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"contact_support_mail_message"], [ThreemaAppObjc appName], errorCode];
+    NSString *message = [NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"contact_support_mail_message"], TargetManagerObjc.appName, errorCode];
     [mailController setMessageBody:message isHTML:NO];
     
     [self presentViewController:mailController animated:YES completion:nil];
@@ -601,7 +596,7 @@
             [self setupBackgroundView];
         } completion:nil];
     }
-    else if (ThreemaAppObjc.current == ThreemaAppOnPrem) {
+    else if (TargetManagerObjc.isOnPrem) {
         if ((int)frameIndex == 62  && _privacyView.hidden == YES) {
             [self slidePrivacyControlsIn];
         }
@@ -758,30 +753,24 @@
         [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"try_again"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
             [self createIdentity];
         }]];
-        switch (ThreemaAppObjc.current) {
-            case ThreemaAppThreema:
-            case ThreemaAppGreen:
-                if([MFMailComposeViewController canSendMail]) {
-                    [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"contact_support"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
-                        [self cancelPressed];
-                        [self contactSupport:error.localizedDescription];
-                    }]];
-                }
-                break;
-            case ThreemaAppWork:
-            case ThreemaAppOnPrem:
-            case ThreemaAppBlue:
-                [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"enter_license_enter_new_credentials"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
+        if (TargetManagerObjc.isBusinessApp) {
+            [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"enter_license_enter_new_credentials"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
+                [self cancelPressed];
+                [self presentLicenseViewController];
+            }]];
+            if([MFMailComposeViewController canSendMail]) {
+                [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"contact_support"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
                     [self cancelPressed];
-                    [self presentLicenseViewController];
+                    [self contactSupport:error.localizedDescription];
                 }]];
-                if([MFMailComposeViewController canSendMail]) {
-                    [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"contact_support"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
-                        [self cancelPressed];
-                        [self contactSupport:error.localizedDescription];
-                    }]];
-                }
-                break;
+            }
+        } else {
+            if([MFMailComposeViewController canSendMail]) {
+                [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"contact_support"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
+                    [self cancelPressed];
+                    [self contactSupport:error.localizedDescription];
+                }]];
+            }
         }
         [[[AppDelegate sharedAppDelegate] currentTopViewController] presentViewController:errAlert animated:YES completion:nil];
     }];
@@ -824,7 +813,7 @@
 }
 
 - (void)checkRefreshStoreReceipt {
-    if ([LicenseStore requiresLicenseKey]) {
+    if (TargetManagerObjc.isBusinessApp) {
         return;
     }
     
@@ -841,7 +830,7 @@
 - (IBAction)setupAction:(id)sender {
     _triggeredSetup = YES;
     // Check for ID Export, if Threema Work or if Threema and has no existing ID
-    if ([LicenseStore requiresLicenseKey] || (![LicenseStore requiresLicenseKey] && ![self checkForIDExists])) {
+    if (TargetManagerObjc.isBusinessApp || (!TargetManagerObjc.isBusinessApp && ![self checkForIDExists])) {
         if ([self checkForIDBackup] == NO) {
             [self showSetupViewController];
             [self slideOut:self fromRightToLeft:YES onCompletion:nil];

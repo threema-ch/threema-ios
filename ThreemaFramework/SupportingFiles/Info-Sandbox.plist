@@ -14,8 +14,8 @@
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(VERSION_NUMBER)</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(VERSION_NUMBER)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
@@ -43,9 +43,9 @@
 	<key>ThreemaBlobURLv6</key>
 	<string>https://ds-blobp-{blobIdPrefix}.threema.ch/{blobId}</string>
 	<key>ThreemaBlobUploadURL</key>
-	<string>https://blobp-upload.threema.ch/upload</string>
+	<string>https://blobp-upload.threema.ch/upload?persist={persistBlob}</string>
 	<key>ThreemaBlobUploadURLv6</key>
-	<string>https://ds-blobp-upload.threema.ch/upload</string>
+	<string>https://ds-blobp-upload.threema.ch/upload?persist={persistBlob}</string>
 	<key>ThreemaCoreDataVersion</key>
 	<string>$(COREDATA_VERSION)</string>
 	<key>ThreemaRendezvousServerURL</key>

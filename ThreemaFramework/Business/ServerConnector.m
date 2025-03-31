@@ -75,6 +75,7 @@ static const int MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION = 500000;
 
     NSMutableArray *connectionInitiators;
 
+    ProcessCoordinator *processCoordinator;
     ServerConnectorConnectionState *serverConnectorConnectionState;
 
     BOOL autoReconnect;
@@ -198,7 +199,7 @@ struct pktExtension {
         socketQueue = dispatch_queue_create("ch.threema.ServerConnector.socketQueue", NULL);
         sendMessageQueue = dispatch_queue_create("ch.threema.ServerConnector.sendMessageQueue", NULL);
         disconnectCondition = [[NSCondition alloc] init];
-        
+
         serverConnectorConnectionState = [[ServerConnectorConnectionState alloc]  initWithUserSettings:[UserSettings sharedUserSettings] connectionStateDelegate:self];
         reconnectAttempts = 0;
         lastSentEchoSeq = 0;
@@ -223,6 +224,8 @@ struct pktExtension {
         queueMessageListenerDelegate = dispatch_queue_create("ch.threema.ServerConnector.queueMessageListenerDelegate", NULL);
         queueMessageProcessorDelegate = dispatch_queue_create("ch.threema.ServerConnector.queueMessageProcessorDelegate", NULL);
         queueTaskExecutionTransactionDelegate = dispatch_queue_create("ch.threema.ServerConnector.queueTaskExecutionTransactionDelegate", NULL);
+
+        processCoordinator = [[ProcessCoordinator alloc] initWithServerConnector:self userSettings:[UserSettings sharedUserSettings]];
     }
     return self;
 }
@@ -268,7 +271,7 @@ struct pktExtension {
 }
 
 - (void)registerMessageProcessorDelegate:(id<MessageProcessorDelegate>)delegate {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         if (delegate != nil) {
             clientMessageProcessorDelegate = delegate;
         }
@@ -276,7 +279,7 @@ struct pktExtension {
 }
 
 - (void)unregisterMessageProcessorDelegate:(id<MessageProcessorDelegate>)delegate {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         if ([delegate isEqual:clientMessageProcessorDelegate]) {
             clientMessageProcessorDelegate = nil;
         }
@@ -301,7 +304,68 @@ struct pktExtension {
 
 #pragma mark - Chat (Mediator) Server connection handling
 
-- (void)connect:(ConnectionInitiator)initiator {
+- (void)connect:(ConnectionInitiator)initiator onCompletion:(void(^ _Nullable)(BOOL))onCompletion {
+    if ([[UserSettings sharedUserSettings] ipcCommunicationEnabled]) {
+        DDLogNotice(@"[Darwin] Connect");
+        [processCoordinator requestAccessWithCompletionHandler:^(enum AccessState state) {
+            switch (state) {
+                case AccessStateUnused:
+                    if ([AppGroup getCurrentType] == AppGroupTypeApp) {
+                        DDLogNotice(@"[Darwin] Resource is unused (App), request access again");
+                        [self connect:initiator onCompletion:onCompletion];
+                    }
+                    else {
+                        DDLogNotice(@"[Darwin] Resource is unused (NOT App), disconnecting from server");
+                        [self _disconnect];
+                        if (onCompletion) {
+                            onCompletion(NO);
+                        }
+                    }
+                    break;
+                case AccessStateRequested:
+                    DDLogNotice(@"[Darwin] Resource is requested, request access again");
+                    [self connect:initiator onCompletion:onCompletion];
+                    break;
+                case AccessStateUsing:
+                    DDLogNotice(@"[Darwin] Resource is using, connecting to server");
+                    [self _connectWithConnectionInitiator:initiator];
+                    if (onCompletion) {
+                        onCompletion(YES);
+                    }
+                    break;
+                case AccessStateWillRelease:
+                    DDLogNotice(@"[Darwin] Resource will release, disconnecting from server");
+                    if (AppGroup.getCurrentType == AppGroupTypeApp) {
+                        // This is happen when the Share Extension and the App is active at the same time,
+                        // e.g. when sharing Debug_log via Share Extension.
+                        // In this case disconnect immediately and wait a little time to reconnect.
+                        [self _disconnectAndReconnectAfterDelay];
+                    }
+                    else {
+                        [self _disconnect];
+                    }
+                    if (onCompletion) {
+                        onCompletion(NO);
+                    }
+                    break;
+                default:
+                    DDLogError(@"[Darwin] Unknown access state %@, do not connect", [ProcessCoordinator nameForAccessState:state]);
+                    if (onCompletion) {
+                        onCompletion(NO);
+                    }
+                    break;
+            }
+        }];
+    }
+    else {
+        [self _connectWithConnectionInitiator:initiator];
+        if (onCompletion) {
+            onCompletion(YES);
+        }
+    }
+}
+
+- (void)_connectWithConnectionInitiator:(ConnectionInitiator)initiator {
     if (!doUnblockIncomingMessages) {
         DDLogNotice(@"Cannot connect - incoming messages are blocked");
         return;
@@ -322,6 +386,52 @@ struct pktExtension {
 }
 
 - (void)connectWait:(ConnectionInitiator)initiator {
+    if ([[UserSettings sharedUserSettings] ipcCommunicationEnabled]) {
+        DDLogNotice(@"[Darwin] Connect wait");
+        [processCoordinator requestAccessWithCompletionHandler:^(enum AccessState state) {
+            switch (state) {
+                case AccessStateUnused:
+                    if ([AppGroup getCurrentType] == AppGroupTypeApp) {
+                        DDLogNotice(@"[Darwin] Resource is unused (App), request access again");
+                        [self connectWait:initiator];
+                    }
+                    else {
+                        DDLogNotice(@"[Darwin] Resource is unused (NOT App), disconnecting from server");
+                        [self _disconnect];
+                    }
+                    break;
+                case AccessStateRequested:
+                    DDLogNotice(@"[Darwin] Resource is requested, request access again");
+                    [self connectWait:initiator];
+                    break;
+                case AccessStateUsing:
+                    DDLogNotice(@"[Darwin] Resource is using, connecting to server");
+                    [self _connectWaitWithConnectionInitiator:initiator];
+                    break;
+                case AccessStateWillRelease:
+                    DDLogNotice(@"[Darwin] Resource will release, disconnecting from server");
+                    if (AppGroup.getCurrentType == AppGroupTypeApp) {
+                        // This is happen when the Share Extension and the App is active at the same time,
+                        // e.g. when sharing Debug_log via Share Extension.
+                        // In this case disconnect immediately and wait a little time to reconnect.
+                        [self _disconnectAndReconnectAfterDelay];
+                    }
+                    else {
+                        [self _disconnect];
+                    }
+                    break;
+                default:
+                    DDLogError(@"[Darwin] Unknown access state %@, do not connect", [ProcessCoordinator nameForAccessState:state]);
+                    break;
+            }
+        }];
+    }
+    else {
+        [self _connectWaitWithConnectionInitiator:initiator];
+    }
+}
+
+- (void)_connectWaitWithConnectionInitiator:(ConnectionInitiator)initiator {
     if (!doUnblockIncomingMessages) {
         DDLogNotice(@"Cannot connect - incoming messages are blocked");
         return;
@@ -402,8 +512,8 @@ struct pktExtension {
             return;
         }
     }
-    
-    if ([AppGroup amIActive] == NO) {
+
+    if ([[UserSettings sharedUserSettings] ipcCommunicationEnabled] == NO && [AppGroup amIActive] == NO) {
         if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
             DDLogNotice(@"Not active -> don't connect now, retry later");
             // keep delay at constant rate to avoid too long waits when becoming active again
@@ -612,6 +722,18 @@ struct pktExtension {
     [socket disconnect];
 }
 
+/**
+ Disconnect anyway and reconnect after a little delay
+ */
+- (void)_disconnectAndReconnectAfterDelay {
+    [self _disconnect];
+
+    // Keep delay at constant rate to avoid too long waits when becoming active again
+    reconnectAttempts = 1;
+    autoReconnect = YES;
+    [self reconnectAfterDelay];
+}
+
 - (void)disconnect:(ConnectionInitiator)initiator {
     dispatch_async(socketQueue, ^{
         if ([self isOthersConnectedDisconnectBy:initiator] == NO) {
@@ -798,7 +920,9 @@ struct pktExtension {
                 break;
             }
             
-            if ([AppGroup amIActive] && [AppGroup getCurrentType] != AppGroupTypeShareExtension) {
+            if (((![[UserSettings sharedUserSettings] ipcCommunicationEnabled] && [AppGroup amIActive])
+                  || [[UserSettings sharedUserSettings] ipcCommunicationEnabled])
+                 && [AppGroup getCurrentType] != AppGroupTypeShareExtension) {
                 struct plMessage *plmsg = (struct plMessage*)pl->data;
                 int minlen = (sizeof(struct plMessage) + kNonceLen + plmsg->metadata_len + kNaClBoxOverhead + 1);
                 if (datalen <= minlen || (plmsg->metadata_len > 0 && plmsg->metadata_len <= kNaClBoxOverhead)) {
@@ -889,7 +1013,7 @@ struct pktExtension {
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, reconnectDelay * NSEC_PER_SEC);
         dispatch_after(popTime, socketQueue, ^(void){
             isWaitingForReconnect = false;
-            [self _connect];
+            [self connect:[AppGroup getCurrentType] onCompletion:nil];
         });
     }
 }
@@ -1597,85 +1721,85 @@ struct pktExtension {
 #pragma mark - MessageProcessorDelegate
 
 - (void)beforeDecode {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate beforeDecode];
     });
 }
 
 - (void)changedManagedObjectID:(NSManagedObjectID *)objectID {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate changedManagedObjectID:objectID];
     });
 }
 
 - (void)incomingMessageStarted:(AbstractMessage * _Nonnull)message {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate incomingMessageStarted:message];
     });
 }
 
 - (void)incomingMessageChanged:(AbstractMessage * _Nonnull)message baseMessage:(BaseMessage * _Nonnull)baseMessage {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate incomingMessageChanged:message baseMessage:baseMessage];
     });
 }
 
 - (void)incomingMessageFinished:(AbstractMessage * _Nonnull)message {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate incomingMessageFinished:message];
     });
 }
 
 - (void)incomingMessageFailed:(BoxedMessage *)message {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate incomingMessageFailed:message];
     });
 }
 
 - (void)incomingAbstractMessageFailed:(AbstractMessage *)message {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate incomingAbstractMessageFailed:message];
     });
 }
 
 - (void)incomingForwardSecurityMessageWithNoResultFinished:(AbstractMessage *)message {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate incomingForwardSecurityMessageWithNoResultFinished:message];
     });
 }
 
 - (void)readMessage:(NSSet *)inConversations {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate readMessage:inConversations];
     });
 }
 
 - (void)taskQueueEmpty {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate taskQueueEmpty];
     });
 }
 
 - (void)chatQueueDry {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate chatQueueDry];
     });
 }
 
 - (void)reflectionQueueDry {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate reflectionQueueDry];
     });
 }
 
 - (void)processTypingIndicator:(TypingIndicatorMessage * _Nonnull)message {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate processTypingIndicator:message];
     });
 }
 
-- (void)processVoIPCall:(NSObject *)message identity:(NSString *)identity onCompletion:(void (^_Nonnull)(id<MessageProcessorDelegate> _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
-    dispatch_async(queueMessageProcessorDelegate, ^{
+- (void)processVoIPCall:(NSObject *)message identity:(NSString *)identity onCompletion:(void (^_Nonnull)(id<MessageProcessorDelegate> _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nonnull))onError {
+    dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate processVoIPCall:message identity:identity onCompletion:onCompletion onError:onError];
     });
 }

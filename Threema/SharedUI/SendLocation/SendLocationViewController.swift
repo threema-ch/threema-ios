@@ -630,7 +630,7 @@ extension SendLocationViewController {
         }
         
         // Sending
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector.ui
         businessInjector.messageSender.sendLocationMessage(
             coordinates: poi.location.coordinate,
             accuracy: poi == currentLocationPOI ? currentLocationPOI.location.horizontalAccuracy : 0.0,

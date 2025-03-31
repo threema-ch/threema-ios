@@ -261,7 +261,7 @@ static void soundCompletionCallback(SystemSoundID soundId, __unused void* __null
             }];
         }
         else {
-            NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"scanned_non_threema_id_message"], [ThreemaAppObjc appName]];
+            NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"scanned_non_threema_id_message"], TargetManagerObjc.appName];
             [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:[BundleUtil localizedStringForKey:@"scanned_non_threema_id_title"] message:message actionOk:^(__unused UIAlertAction * _Nonnull okAction) {
                 [controller startRunning];
                 return;

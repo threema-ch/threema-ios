@@ -1190,7 +1190,7 @@ class BlobManagerTests: XCTestCase {
                 }
             }
             else {
-                blobURL.upload(origin: .local) { url, _, _ in
+                blobURL.upload(origin: .local, setPersistParam: false) { url, _, _ in
                     
                     guard let url else {
                         continuation.resume(throwing: BlobManagerTestsError.urlIsNil)

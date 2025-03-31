@@ -149,7 +149,7 @@ extension ThumbnailDisplayMessage {
         let mimeType = UTIConverter.mimeType(fromUTI: blobUTTypeIdentifier)
         let ext = UTIConverter.preferredFileExtension(forMimeType: mimeType)
         
-        return "\(ThreemaApp.currentName.replacingOccurrences(of: " ", with: "_"))_\(DateFormatter.getDateForExport(date)).\(ext ?? "")"
+        return "\(TargetManager.appName.replacingOccurrences(of: " ", with: "_"))_\(DateFormatter.getDateForExport(date)).\(ext ?? "")"
     }
     
     public func createSaveMediaItem() -> AlbumManager.SaveMediaItem? {

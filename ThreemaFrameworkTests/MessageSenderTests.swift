@@ -1210,7 +1210,7 @@ class MessageSenderTests: XCTestCase {
         let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
         let expectedMessageID = MockData.generateMessageID()
         let expectedReadDate = Date()
-        let reaction = Emoji.thumbsUpSign
+        let reaction = Emoji.thumbsUp
         
         let message = dbPreparer.save {
             let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
@@ -1269,7 +1269,7 @@ class MessageSenderTests: XCTestCase {
         let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
         let expectedMessageID = MockData.generateMessageID()
         let expectedReadDate = Date()
-        let reaction = Emoji.thumbsUpSign
+        let reaction = Emoji.thumbsUp
         
         let message = dbPreparer.save {
             let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
@@ -1524,7 +1524,7 @@ class MessageSenderTests: XCTestCase {
         let expectedGroupID = MockData.generateGroupID()
         let expectedMessageID = MockData.generateMessageID()
         
-        let reaction = Emoji.thumbsUpSign
+        let reaction = Emoji.thumbsUp
         
         let myIdentityStoreMock = MyIdentityStoreMock()
         let userSettingMock = UserSettingsMock()
@@ -1702,7 +1702,7 @@ class MessageSenderTests: XCTestCase {
         let notSupportingMemberID = "MEMBER01"
         let supportingMemberID = "MEMBER02"
         
-        let reaction = Emoji.thumbsUpSign
+        let reaction = Emoji.thumbsUp
         
         let myIdentityStoreMock = MyIdentityStoreMock()
         let userSettingMock = UserSettingsMock()
@@ -1885,7 +1885,7 @@ class MessageSenderTests: XCTestCase {
        
         let membersWithoutCreator = ["MEMBER01", "MEMBER02"]
         
-        let reaction = Emoji.thumbsUpSign
+        let reaction = Emoji.thumbsUp
         
         let myIdentityStoreMock = MyIdentityStoreMock()
         let userSettingMock = UserSettingsMock()
@@ -1965,7 +1965,7 @@ class MessageSenderTests: XCTestCase {
         let expectedGroupID = MockData.generateGroupID()
         let expectedMessageID = MockData.generateMessageID()
                
-        let reaction = Emoji.adult
+        let reaction = Emoji.abacus
         
         let myIdentityStoreMock = MyIdentityStoreMock()
         let userSettingMock = UserSettingsMock()

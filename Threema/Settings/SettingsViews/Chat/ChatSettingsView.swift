@@ -214,7 +214,7 @@ struct WallpaperSectionView: View {
         isSelectingCustom = false
 
         guard let selectedUIImage else {
-            if LicenseStore.requiresLicenseKey() {
+            if TargetManager.isBusinessApp {
                 selectEmpty()
             }
             else {

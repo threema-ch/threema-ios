@@ -106,7 +106,8 @@ final class ChatProfileView: UIStackView {
     
     private let conversation: ConversationEntity
     private let entityManager: EntityManager
-    private lazy var group: Group? = BusinessInjector().groupManager.getGroup(conversation: conversation)
+    private lazy var group: Group? = BusinessInjector.ui.groupManager
+        .getGroup(conversation: conversation)
 
     // We need to hold on to the observers until the object is deallocated.
     // `invalidate()` is automatically called on destruction of them (according to the `invalidate()` header
@@ -472,7 +473,7 @@ final class ChatProfileView: UIStackView {
     // MARK: - Update functions
         
     private func updateGroupMembersListLabel() {
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector.ui
         businessInjector.entityManager.performAndWait {
             let group = businessInjector.groupManager.getGroup(conversation: self.conversation)
             // We always want at least one space in the label to keep it at a constant height
@@ -482,7 +483,8 @@ final class ChatProfileView: UIStackView {
     
     private func updateDistributionListRecipientsLabel() {
         // We always want at least one space in the label to keep it at a constant height
-        let distributionList = BusinessInjector().distributionListManager.distributionList(for: conversation)
+        let distributionList = BusinessInjector.ui.distributionListManager
+            .distributionList(for: conversation)
         
         membersListLabel.text = distributionList?.recipientsSummary ?? " "
     }

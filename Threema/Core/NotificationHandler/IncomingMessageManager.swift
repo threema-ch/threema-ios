@@ -51,7 +51,7 @@ import ThreemaFramework
     }
     
     @objc override convenience init() {
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector.ui
         let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
         self.init(
             pendingUserNotificationManager: PendingUserNotificationManager(
@@ -63,7 +63,7 @@ import ThreemaFramework
                     businessInjector.contactStore,
                     businessInjector.groupManager,
                     businessInjector.entityManager,
-                    businessInjector.licenseStore.getRequiresLicenseKey()
+                    TargetManager.isBusinessApp
                 ),
                 businessInjector.pushSettingManager,
                 businessInjector.entityManager
@@ -77,7 +77,7 @@ import ThreemaFramework
                     backgroundBusinessInjector.contactStore,
                     backgroundBusinessInjector.groupManager,
                     backgroundBusinessInjector.entityManager,
-                    backgroundBusinessInjector.licenseStore.getRequiresLicenseKey()
+                    TargetManager.isBusinessApp
                 ),
                 backgroundBusinessInjector.pushSettingManager,
                 backgroundBusinessInjector.entityManager
@@ -282,16 +282,24 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                 if !AppDelegate.shared().active {
                     let databaseManager = DatabaseManager()
                     databaseManager.addDirtyObject(msg)
+                   
                     if let conversation = msg.conversation {
                         databaseManager.addDirtyObject(conversation)
                         if let contact = conversation.contact {
                             databaseManager.addDirtyObject(contact)
                         }
                     }
+                    
                     if message is ReactionMessage || message is GroupReactionMessage,
                        let reactions = baseMessage.reactions {
                         for reaction in reactions {
                             databaseManager.addDirtyObject(reaction)
+                        }
+                    }
+                    else if message is EditMessage || message is EditGroupMessage,
+                            let editHistoryEntries = baseMessage.historyEntries {
+                        for entry in editHistoryEntries {
+                            databaseManager.addDirtyObject(entry)
                         }
                     }
                 }
@@ -324,7 +332,7 @@ extension IncomingMessageManager: MessageProcessorDelegate {
             for: message,
             stage: .final
         ) {
-            businessInjector.entityManager.performAndWait {
+            _ = businessInjector.entityManager.performAndWait {
                 self.show(
                     pendingUserNotification: pendingUserNotification,
                     pendingUserNotificationManager: self.backgroundPendingUserNotificationManager,
@@ -436,8 +444,8 @@ extension IncomingMessageManager: MessageProcessorDelegate {
     func processVoIPCall(
         _ message: NSObject,
         identity: String?,
-        onCompletion: @escaping ((any MessageProcessorDelegate) -> Void),
-        onError: @escaping (any Error) -> Void
+        onCompletion: @escaping ((any MessageProcessorDelegate)?) -> Void,
+        onError: @escaping (any Error, (any MessageProcessorDelegate)?) -> Void
     ) {
         switch message {
         case is VoIPCallOfferMessage:

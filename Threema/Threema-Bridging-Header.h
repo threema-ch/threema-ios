@@ -78,7 +78,6 @@
 #import "CustomResponderTextView.h"
 #import "IdentityBackupStore.h"
 #import "RevocationKeyHandler.h"
-#import "QRCodeGenerator.h"
 #import "BackupPasswordViewController.h"
 #import "BackupPasswordVerifyViewController.h"
 #import "NewMessageToaster.h"

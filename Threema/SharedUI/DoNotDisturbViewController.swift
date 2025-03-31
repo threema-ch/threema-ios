@@ -50,7 +50,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
         
     // MARK: - Properties
 
-    private lazy var businessInjector = BusinessInjector()
+    private lazy var businessInjector = BusinessInjector.ui
 
     private lazy var dataSource = TableViewDiffableSimpleHeaderAndFooterDataSource<Section, Row>(
         tableView: tableView,

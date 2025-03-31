@@ -39,7 +39,7 @@ class DistributionListCreateEditViewController: ThemedCodeModernGroupedTableView
     }
     
     private var recipients = Set<Contact>()
-    private let businessInjector = BusinessInjector()
+    private let businessInjector = BusinessInjector.ui
     
     private var distributionList: DistributionList?
     private var conversation: ConversationEntity?

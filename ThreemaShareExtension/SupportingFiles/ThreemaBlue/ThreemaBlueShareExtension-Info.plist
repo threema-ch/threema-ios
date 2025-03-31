@@ -72,7 +72,7 @@ SUBQUERY(
 		<string>com.apple.share-services</string>
 	</dict>
 	<key>ThreemaAppGroupIdentifier</key>
-	<string>group.ch.threema.work.red</string>
+	<string>$(GROUP_IDENTIFIER)</string>
 	<key>ThreemaVersionSuffix</key>
 	<string>k</string>
 </dict>

@@ -60,7 +60,10 @@ class WebTypingUpdate: WebAbstractMessage {
     
     func sendTypingToContact() {
         ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
-            BusinessInjector().messageSender.sendTypingIndicator(typing: self.isTyping, toIdentity: self.id)
+            BusinessInjector.ui.messageSender.sendTypingIndicator(
+                typing: self.isTyping,
+                toIdentity: self.id
+            )
         } onTimeout: {
             DDLogError("Sending typing indicator message timed out")
         }

@@ -38,18 +38,20 @@ public class ReactionsManager: ObservableObject {
     
     public enum ReactionSendingResult {
         case noSupportRemoteSingle, noSupportRemoteGroup, partialSupportRemoteGroup,
-             success, noAction, unknownReaction, error
+             success, noAction, notGroupMemeber, unknownReaction, error
         
-        public var alertTitle: String {
+        public var alertTitle: String? {
             switch self {
             case .success, .noAction:
-                ""
+                nil
             case .noSupportRemoteSingle:
                 #localize("reaction_alert_title_unavailable")
             case .noSupportRemoteGroup:
                 #localize("reaction_alert_title_unavailable")
             case .partialSupportRemoteGroup:
                 #localize("reaction_alert_title_partial_support_remote_group")
+            case .notGroupMemeber:
+                #localize("group_is_not_member")
             case .unknownReaction:
                 #localize("reaction_alert_message_unknown_reaction")
             case .error:
@@ -57,10 +59,10 @@ public class ReactionsManager: ObservableObject {
             }
         }
         
-        public var alertMessage: String {
+        public var alertMessage: String? {
             switch self {
-            case .success, .noAction, .unknownReaction:
-                ""
+            case .success, .notGroupMemeber, .noAction, .unknownReaction:
+                nil
             case .noSupportRemoteSingle:
                 #localize("reaction_alert_message_no_support_remote_single")
             case .noSupportRemoteGroup:
@@ -118,17 +120,17 @@ public class ReactionsManager: ObservableObject {
     
     public static var baseReactionEmojis: [EmojiVariant] {
         [
-            ReactionsManager.preferredEmojiVariant(for: .thumbsUpSign),
-            ReactionsManager.preferredEmojiVariant(for: .thumbsDownSign),
+            ReactionsManager.preferredEmojiVariant(for: .thumbsUp),
+            ReactionsManager.preferredEmojiVariant(for: .thumbsDown),
         ]
     }
     
     public static var defaultReactionEmojis: [EmojiVariant] {
         [
-            .init(base: .heavyBlackHeart, skintone: nil),
+            .init(base: .redHeart, skintone: nil),
             .init(base: .faceWithTearsOfJoy, skintone: nil),
             .init(base: .cryingFace, skintone: nil),
-            ReactionsManager.preferredEmojiVariant(for: .personWithFoldedHands),
+            ReactionsManager.preferredEmojiVariant(for: .foldedHands),
         ]
     }
     
@@ -137,7 +139,7 @@ public class ReactionsManager: ObservableObject {
     // MARK: - Private properties
 
     private weak var reactionsManagerDelegate: ReactionsManagerProtocol?
-    private lazy var businessInjector = BusinessInjector()
+    private lazy var businessInjector = BusinessInjector.ui
     private var reactionObserver: NSKeyValueObservation?
     
     // MARK: - Lifecycle

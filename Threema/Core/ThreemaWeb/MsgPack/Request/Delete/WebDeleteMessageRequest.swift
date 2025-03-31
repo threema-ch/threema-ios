@@ -62,35 +62,46 @@ class WebDeleteMessageRequest: WebAbstractMessage {
     }
     
     func delete() {
-        ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
+        var acknowledgement = WebAbstractMessageAcknowledgement(requestID, false, nil)
+        
         guard let conversation else {
             DDLogError("Conversation was nil when it must not be.")
             return
         }
         
-        let entityManager = EntityManager()
+        let businessInjector = BusinessInjector(forBackgroundProcess: true)
         
-        guard let message = entityManager.entityFetcher.message(with: messageID, conversation: conversation) else {
-            DDLogError("Could not fetch message")
-            ack!.success = false
-            ack!.error = "invalidMessage"
+        businessInjector.entityManager.performAndWaitSave {
+            guard let conv = businessInjector.entityManager.entityFetcher
+                .getManagedObject(by: conversation.objectID) as? ConversationEntity else {
+                acknowledgement.success = false
+                acknowledgement.error = "invalidMessage"
+                DDLogError("Could not fetch conversation")
+                self.ack = acknowledgement
+                
+                return
+            }
             
-            return
-        }
-        
-        entityManager.performAndWaitSave {
+            guard let message = businessInjector.entityManager.entityFetcher.message(
+                with: self.messageID,
+                conversation: conv
+            ) else {
+                DDLogError("Could not fetch message")
+                acknowledgement.success = false
+                acknowledgement.error = "invalidMessage"
+                self.ack = acknowledgement
+                
+                return
+            }
+            
             if message.isKind(of: BaseMessage.self) || message.isKind(of: SystemMessageEntity.self) {
-                entityManager.entityDestroyer.delete(baseMessage: message)
+                businessInjector.entityManager.entityDestroyer.delete(baseMessage: message)
 
-                if let conversation = self.conversation {
-                    conversation.lastMessage = MessageFetcher(
-                        for: conversation,
-                        with: entityManager
-                    ).lastDisplayMessage()
-                }
+                conv.lastMessage = MessageFetcher(for: conv, with: businessInjector.entityManager).lastDisplayMessage()
             }
         }
         
-        ack!.success = true
+        acknowledgement.success = true
+        ack = acknowledgement
     }
 }

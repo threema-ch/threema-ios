@@ -33,20 +33,13 @@ struct DeltaSyncContact: Codable {
     }
 
     var syncContact: Sync_Contact
+    var syncAction: SyncAction
     var profilePicture: DeltaUpdateType = .unchanged
     var image: Data?
     var contactProfilePicture: DeltaUpdateType = .unchanged
     var contactImage: Data?
     var contactImageBlobID: Data?
     var contactImageEncryptionKey: Data?
-    var syncAction: SyncAction {
-        didSet {
-            if oldValue == .create, syncAction == .update {
-                DDLogNotice("Sync action was create and a downgrade to update was tried. This is invalid.")
-                syncAction = .create
-            }
-        }
-    }
 
     /// Last update of the associated conversation if there is any
     var lastConversationUpdate: Date?

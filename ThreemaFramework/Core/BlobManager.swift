@@ -612,6 +612,7 @@ public actor BlobManager: BlobManagerProtocol {
         var thumbnailData: Data?
         var encryptionKey: Data?
         var origin: BlobOrigin?
+        var setPersistParam: Bool?
         
         let em = entityManager
         em.performBlockAndWait {
@@ -627,6 +628,7 @@ public actor BlobManager: BlobManagerProtocol {
             thumbnailData = bd.blobThumbnail
             encryptionKey = bd.blobEncryptionKey
             origin = bd.blobOrigin
+            setPersistParam = bd.isPersistingBlob
         }
         
         guard let blobData else {
@@ -642,6 +644,11 @@ public actor BlobManager: BlobManagerProtocol {
         guard let origin else {
             DDLogNotice("[BlobManager] There is no origin available for given blob.")
             throw BlobManagerError.noOrigin
+        }
+        
+        guard let setPersistParam else {
+            DDLogNotice("[BlobManager] There is no persist indicator set for given blob thumbnail.")
+            throw BlobManagerError.noPersistParam
         }
                        
         switch state {
@@ -699,7 +706,8 @@ public actor BlobManager: BlobManagerProtocol {
                 objectID: objectID,
                 encryptionKey: encryptionKey,
                 nonce: ThreemaProtocol.nonce02,
-                trackProgress: false
+                trackProgress: false,
+                setPersistParam: setPersistParam
             )
             
             guard let thumbnailID else {
@@ -739,6 +747,7 @@ public actor BlobManager: BlobManagerProtocol {
         var data: Data?
         var encryptionKey: Data?
         var origin: BlobOrigin?
+        var setPersistParam: Bool?
         
         let em = entityManager
         em.performBlockAndWait {
@@ -754,6 +763,7 @@ public actor BlobManager: BlobManagerProtocol {
             data = bd.blobData
             encryptionKey = bd.blobEncryptionKey
             origin = bd.blobOrigin
+            setPersistParam = bd.isPersistingBlob
         }
         
         guard let blobData else {
@@ -769,6 +779,11 @@ public actor BlobManager: BlobManagerProtocol {
         guard let origin else {
             DDLogNotice("[BlobManager] There is no origin available for given blob.")
             throw BlobManagerError.noOrigin
+        }
+        
+        guard let setPersistParam else {
+            DDLogNotice("[BlobManager] There is no persist indicator set for given blob.")
+            throw BlobManagerError.noPersistParam
         }
                
         switch state {
@@ -833,7 +848,8 @@ public actor BlobManager: BlobManagerProtocol {
                 objectID: objectID,
                 encryptionKey: encryptionKey,
                 nonce: ThreemaProtocol.nonce01,
-                trackProgress: true
+                trackProgress: true,
+                setPersistParam: setPersistParam
             )
             
             guard let dataID else {
@@ -862,7 +878,8 @@ public actor BlobManager: BlobManagerProtocol {
         objectID: NSManagedObjectID,
         encryptionKey: Data?,
         nonce: Data,
-        trackProgress: Bool
+        trackProgress: Bool,
+        setPersistParam: Bool
     ) async throws -> Data? {
         
         // Encrypt
@@ -883,6 +900,7 @@ public actor BlobManager: BlobManagerProtocol {
         let data = try await blobUploader.upload(
             blobData: encryptedData,
             origin: origin,
+            setPersistParam: setPersistParam,
             objectID: objectID,
             delegate: self
         )

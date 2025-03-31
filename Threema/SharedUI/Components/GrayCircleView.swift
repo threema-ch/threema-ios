@@ -43,7 +43,7 @@ extension GrayCircleView {
         
         /// Dynamic symbol color
         static var symbolColor: UIColor {
-            Colors.grayCircleSymbol
+            .secondarySystemBackground
         }
     }
 }

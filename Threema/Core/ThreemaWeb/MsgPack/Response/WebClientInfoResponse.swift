@@ -36,7 +36,7 @@ class WebClientInfoResponse: WebAbstractMessage {
         self.os = "ios"
         self.osVersion = UIDevice.current.systemVersion
         self.appVersion = AppInfo.appVersion.version ?? "-"
-        self.isWork = LicenseStore.requiresLicenseKey()
+        self.isWork = TargetManager.isBusinessApp
         let tmpPushToken = AppGroup.userDefaults().object(forKey: kPushNotificationDeviceToken) as? Data
         if tmpPushToken != nil {
             #if DEBUG
@@ -109,10 +109,7 @@ struct WebClientInfoCapabilities {
     var imageFormat = WebClientInfoImageFormat()
     var quotesV2Support = true
     var groupReactions = true
-    
-    // Theoretically, this would be true from phase 1, but the web update will only be released around the launch of
-    // phase 2
-    var emojiReactions = ThreemaApp.current != .onPrem
+    var emojiReactions = true
     
     var mdm = WebClientInfoMdmRestrictions()
     
@@ -128,7 +125,7 @@ struct WebClientInfoCapabilities {
             "emojiReactions": emojiReactions,
         ]
         
-        if LicenseStore.shared().getRequiresLicenseKey() {
+        if TargetManager.isBusinessApp {
             objectDict.updateValue(mdm.objectDict(), forKey: "mdm")
         }
         

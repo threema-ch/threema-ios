@@ -421,9 +421,9 @@ extension SystemMessageEntity {
         public var backgroundColor: UIColor {
             switch self {
             case .work:
-                Colors.threemaWorkColor
+                .threemaWorkColor
             case .consumer:
-                Colors.threemaConsumerColor
+                .threemaConsumerColor
             }
         }
     }
@@ -491,7 +491,7 @@ extension SystemMessageEntity {
             }
             return .callMessage(type: .rejectedUnknownIncoming)
         case 14:
-            if ThreemaApp.current == .work || ThreemaApp.current == .blue {
+            if TargetManager.isWork {
                 return .workConsumerInfo(type: .consumer)
             }
             else {

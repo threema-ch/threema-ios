@@ -73,6 +73,7 @@ import UIKit
     private func configure() {
         addObservers()
         ServerConnector.shared().registerConnectionStateDelegate(delegate: self)
+        statusView.isHidden = true
         addSubview(statusView)
         updateStatusView()
     }
@@ -94,24 +95,33 @@ import UIKit
     
     private func updateStatusView() {
         DispatchQueue.main.async { [self] in
-            switch ServerConnector.shared().connectionState {
-            case .disconnecting, .disconnected, .connecting:
-                if ProcessInfoHelper.isRunningForScreenshots {
+            // The display of connection state is delayed because the process coordinator checks
+            // whether it can establish a server connection, it takes a little longer to connect.
+            var deadline: DispatchTime = .now()
+            if statusView.isHidden {
+                deadline = .now() + .seconds(1)
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: deadline) { [self] in
+                switch ServerConnector.shared().connectionState {
+                case .disconnecting, .disconnected, .connecting:
+                    if ProcessInfoHelper.isRunningForScreenshots {
+                        statusView.backgroundColor = .systemGreen
+                        statusView.isHidden = true
+                    }
+                    else {
+                        statusView.backgroundColor = .systemRed
+                        statusView.isHidden = AppDelegate.shared().isAppInBackground()
+                    }
+
+                case .connected:
+                    statusView.backgroundColor = .systemOrange
+                    statusView.isHidden = AppDelegate.shared().isAppInBackground()
+
+                case .loggedIn:
                     statusView.backgroundColor = .systemGreen
                     statusView.isHidden = true
                 }
-                else {
-                    statusView.backgroundColor = .systemRed
-                    statusView.isHidden = false
-                }
-           
-            case .connected:
-                statusView.backgroundColor = .systemOrange
-                statusView.isHidden = false
-
-            case .loggedIn:
-                statusView.backgroundColor = .systemGreen
-                statusView.isHidden = true
             }
         }
     }

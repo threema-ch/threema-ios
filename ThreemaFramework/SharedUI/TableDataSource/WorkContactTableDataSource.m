@@ -234,6 +234,19 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return conversations;
 }
 
+- (BOOL)canSelectCellAtIndexPath:(NSIndexPath *)indexPath {
+    ContactEntity *contact = [self workContactAtIndexPath:indexPath];
+    if (contact != nil) {
+        NSString *reason = nil;
+        if ([_messagePermission canSendTo:contact.identity reason:&reason]) {
+            return true;
+        }
+        
+        [[NotificationPresenterWrapper shared] presentErrorWithErrorText:reason];
+    }
+    return false;
+}
+
 - (void)selectedCellAtIndexPath:(NSIndexPath *)indexPath selected:(BOOL)selected {
     ContactEntity *contact = [self workContactAtIndexPath:indexPath];
     

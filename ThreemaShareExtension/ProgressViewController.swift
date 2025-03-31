@@ -121,7 +121,7 @@ class ProgressViewController: UIViewController {
     @IBAction func cancelButtonPressed(_ sender: Any) {
         guard let rootNavController = delegate else {
             let message = "Delegate was unexpecedly nil"
-            DDLogError(message)
+            DDLogError("\(message)")
             fatalError(message)
         }
         rootNavController.progressViewDidCancel()

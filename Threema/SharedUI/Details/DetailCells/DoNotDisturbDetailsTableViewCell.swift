@@ -47,7 +47,8 @@ class DoNotDisturbDetailsTableViewCell: ThemedCodeStackTableViewCell {
             
             switch type {
             case let .contact(contact):
-                pushSetting = BusinessInjector().pushSettingManager.find(forContact: contact.threemaIdentity)
+                pushSetting = BusinessInjector.ui.pushSettingManager
+                    .find(forContact: contact.threemaIdentity)
             case let .group(group):
                 pushSetting = group.pushSetting
             }

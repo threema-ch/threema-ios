@@ -49,6 +49,6 @@ public struct LocalizationMacro: ExpressionMacro {
             fatalError("compiler bug: the macro does not have any arguments")
         }
         
-        return "String(localized: \(argument), defaultValue: BundleUtil.localizedString(for: \(argument)))"
+        return "String(localized: \(argument), defaultValue: BundleUtil.getFallBackString(for: \(argument)))"
     }
 }

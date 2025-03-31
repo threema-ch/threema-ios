@@ -78,7 +78,7 @@ class DeleteContactAction: NSObject {
     /// Contact to be deleted with this action
     private let contact: ContactEntity
     
-    private lazy var businessInjector = BusinessInjector()
+    private lazy var businessInjector = BusinessInjector.ui
 
     /// Create a new contact delete action
     ///
@@ -287,8 +287,8 @@ extension DeleteContactAction {
         
         // Delete any PFS sessions
         do {
-            try BusinessInjector().dhSessionStore.deleteAllDHSessions(
-                myIdentity: BusinessInjector().myIdentityStore.identity,
+            try businessInjector.dhSessionStore.deleteAllDHSessions(
+                myIdentity: businessInjector.myIdentityStore.identity,
                 peerIdentity: contact.identity
             )
         }

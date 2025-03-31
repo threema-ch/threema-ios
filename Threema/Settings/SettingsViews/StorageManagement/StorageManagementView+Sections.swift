@@ -241,7 +241,7 @@ extension StorageManagementView.StorageSection {
             case .threema:
                 String.localizedStringWithFormat(
                     #localize("storage_threema"),
-                    ThreemaApp.currentName
+                    TargetManager.appName
                 )
             }
         }

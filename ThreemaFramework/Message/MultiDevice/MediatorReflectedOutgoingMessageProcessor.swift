@@ -538,10 +538,15 @@ class MediatorReflectedOutgoingMessageProcessor {
 
             messageProcessorDelegate.processVoIPCall(voipMessage as! NSObject, identity: identity) { delegate in
                 if !isOutgoing {
-                    delegate.incomingMessageFinished(amsg)
+                    if let delegate {
+                        delegate.incomingMessageFinished(amsg)
+                    }
+                    else {
+                        self.messageProcessorDelegate.incomingMessageFinished(amsg)
+                    }
                 }
                 seal.fulfill_()
-            } onError: { error in
+            } onError: { error, _ in
                 seal.reject(error)
             }
         }

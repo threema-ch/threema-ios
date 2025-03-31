@@ -142,7 +142,7 @@ struct VoiceMessageRecorderView: View {
             .font(.subheadline)
             .monospacedDigit()
             .dynamicTypeSize(...DynamicTypeSize.accessibility4)
-            .accessibilityLabel(ThreemaUtility.accessibilityString(atTime: model.duration, with: "duration"))
+            .accessibilityLabel(ThreemaUtility.accessibilityString(atTime: model.duration, with: #localize("duration")))
     }
     
     private var minBarHeight: CGFloat {
@@ -206,10 +206,10 @@ extension VoiceMessageRecorderView {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
             }
         )
-        .accessibilityLabel((
+        .accessibilityLabel(#localize(
             model.recordingState == .paused || model
                 .recordingState == .stopped || model.recordingState == .recordingStopping ? "play" : "pause"
-        ).localized)
+        ))
     }
     
     private var addButton: some View {

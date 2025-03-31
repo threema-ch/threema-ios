@@ -213,20 +213,24 @@
     }
     
     [[ContactStore sharedContactStore] addContactWithIdentity:enteredId verificationLevel:kVerificationLevelUnverified onCompletion:^(ContactEntity * _Nullable contact, __unused BOOL alreadyExists) {
-        [MBProgressHUD hideHUDForView:self.view animated:YES];
-        
-        [self dismissViewControllerAnimated:YES completion:^{
-            [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowContact object:nil userInfo:[NSDictionary dictionaryWithObject:contact forKey:kKeyContact]];
-        }];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
+
+            [self dismissViewControllerAnimated:YES completion:^{
+                [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowContact object:nil userInfo:[NSDictionary dictionaryWithObject:contact forKey:kKeyContact]];
+            }];
+        });
     } onError:^(NSError * _Nonnull error) {
-        [MBProgressHUD hideHUDForView:self.view animated:YES];
-        
-        if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == 404) {
-            [UIAlertTemplate showAlertWithOwner:self title:[BundleUtil localizedStringForKey:@"identity_not_found_title"] message:[BundleUtil localizedStringForKey:@"identity_not_found_message"] actionOk:nil];
-            
-        } else {
-            [UIAlertTemplate showAlertWithOwner:self title:error.localizedDescription message:error.localizedFailureReason actionOk:nil];
-        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
+
+            if ([error.domain isEqualToString:NSURLErrorDomain] && error.code == 404) {
+                [UIAlertTemplate showAlertWithOwner:self title:[BundleUtil localizedStringForKey:@"identity_not_found_title"] message:[BundleUtil localizedStringForKey:@"identity_not_found_message"] actionOk:nil];
+
+            } else {
+                [UIAlertTemplate showAlertWithOwner:self title:error.localizedDescription message:error.localizedFailureReason actionOk:nil];
+            }
+        });
     }];
     
     return YES;

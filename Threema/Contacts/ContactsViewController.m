@@ -90,7 +90,7 @@ typedef enum : NSUInteger {
         
         _entityManager = [[EntityManager alloc] init];
         
-        if ([LicenseStore requiresLicenseKey]) {
+        if (TargetManagerObjc.isBusinessApp) {
             _companyDirectoryCellView = [[CompanyDirectoryCellView alloc] init];
         }
     }
@@ -118,7 +118,7 @@ typedef enum : NSUInteger {
         distributionImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_distribution_list"];
         [self.segmentedControl setImage:distributionImage forSegmentAtIndex:ModeDistributionLists];
         
-        if ([LicenseStore requiresLicenseKey]) {
+        if (TargetManagerObjc.isBusinessApp) {
             [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContacts animated:NO];
             UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
             workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
@@ -127,7 +127,7 @@ typedef enum : NSUInteger {
         }
     }
     else {
-        if ([LicenseStore requiresLicenseKey]) {
+        if (TargetManagerObjc.isBusinessApp) {
             [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContacts animated:NO];
             UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
             workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
@@ -336,15 +336,15 @@ typedef enum : NSUInteger {
 }
 
 - (void)updateNoDataForContacts {
-    if ([AppDelegate sharedAppDelegate].isWorkContactsLoading && [LicenseStore requiresLicenseKey]) {
-        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], [ThreemaAppObjc appName]];
+    if ([AppDelegate sharedAppDelegate].isWorkContactsLoading && TargetManagerObjc.isBusinessApp) {
+        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], TargetManagerObjc.appName];
         _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:@"no_contacts_loading"];
         
         [self shouldShowNoContactIndicatorView:YES];
     }
     else {
         _noContactsTitleLabel.text = [BundleUtil localizedStringForKey:@"no_contacts"];
-        if ([ThreemaAppObjc current] == ThreemaAppOnPrem) {
+        if (TargetManagerObjc.isOnPrem) {
             _noContactsMessageLabel.text = @"";
         } else {
             _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:([UserSettings sharedUserSettings].syncContacts ? @"no_contacts_syncon" : @"no_contacts_syncoff")];
@@ -355,13 +355,13 @@ typedef enum : NSUInteger {
 
 - (void)updateNoDataForWorkContacts {
     if ([AppDelegate sharedAppDelegate].isWorkContactsLoading) {
-        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], [ThreemaAppObjc appName]];
+        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], TargetManagerObjc.appName];
         _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:@"no_contacts_loading"];
         [self shouldShowNoContactIndicatorView:YES];
     }
     else {
-        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], [ThreemaAppObjc appName]];
-        _noContactsMessageLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts_message"], [ThreemaAppObjc appName]];
+        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], TargetManagerObjc.appName];
+        _noContactsMessageLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts_message"], TargetManagerObjc.appName];
         [self shouldShowNoContactIndicatorView:NO];
     }
 }
@@ -1320,8 +1320,8 @@ typedef enum : NSUInteger {
 }
 
 - (void)show429ErrorMessage:(UIRefreshControl *)sender {
-    if ([LicenseStore requiresLicenseKey]) {
-        NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"pull_to_sync_429_message_work"], ThreemaAppObjc.appName];
+    if (TargetManagerObjc.isBusinessApp) {
+        NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"pull_to_sync_429_message_work"], TargetManagerObjc.appName];
         [UIAlertTemplate showAlertWithOwner:self title:nil message:message actionOk:^(UIAlertAction * _Nonnull okAction) {
             [self updateWorkDataAndEndRefreshing:sender];
         }];

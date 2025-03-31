@@ -94,5 +94,9 @@ final class BoxEmptyMessage: AbstractMessage {
         true
     }
     
-    // `NSSecureCoding` is inherited from `AbstractMessage`
+    // MARK: NSSecureCoding
+
+    override public static var supportsSecureCoding: Bool {
+        true
+    }
 }

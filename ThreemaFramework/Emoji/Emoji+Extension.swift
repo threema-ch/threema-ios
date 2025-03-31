@@ -63,7 +63,7 @@ extension Emoji {
             
             var index = SearchIndex()
             translations.forEach { key, values in
-                guard let variant = EmojiVariant(rawValue: key) else {
+                guard let variant = EmojiVariant(rawValue: key), variant.base.isAvailable else {
                     return
                 }
                 
@@ -90,23 +90,25 @@ extension Emoji {
     }
     
     public var isAvailable: Bool {
-        isEmojiAvailable(rawValue)
-    }
-    
-    private func isEmojiAvailable(_ emoji: String) -> Bool {
-        guard let font = UIFont(name: "AppleColorEmoji", size: 20) else {
-            return false
+        // All pre iOS 15 are availabe due to our minimum target
+        if version < 14.0 {
+            true
         }
-        let ctFont = CTFontCreateWithName(font.fontName as CFString, font.pointSize, nil)
-        // Convert the emoji string to an array of UTF-16 code units
-        let characters = Array(emoji.utf16)
-        var glyphs = [CGGlyph](repeating: 0, count: characters.count)
-
-        // Attempt to get glyphs for the characters in the emoji string
-        let success = CTFontGetGlyphsForCharacters(ctFont, characters, &glyphs, characters.count)
-
-        // If successful, the emoji is available
-        return success
+        else if version == 14.0, #available(iOS 15.4, *) {
+            true
+        }
+        else if version == 15.0, #available(iOS 16.4, *) {
+            true
+        }
+        else if version == 15.1, #available(iOS 17.4, *) {
+            true
+        }
+        else if version == 16.0, #available(iOS 18.4, *) {
+            true
+        }
+        else {
+            false
+        }
     }
     
     // MARK: - Legacy Mapping

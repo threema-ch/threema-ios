@@ -113,7 +113,7 @@ class TaskExecutionBlobTransaction: TaskExecutionTransaction {
         }
 
         func upload() -> Promise<Void> {
-            blobUploader.upload(data: blob, origin: .local)
+            blobUploader.upload(data: blob, origin: .local, setPersistParam: false)
                 .then { blobID in
                     self.blobID = blobID
                     return Promise()

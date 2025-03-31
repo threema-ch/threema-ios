@@ -95,7 +95,7 @@ class NotificationResponse: NSObject {
     }
 
     @objc convenience init(response: UNNotificationResponse, completion: @escaping (() -> Void)) {
-        let businessInjector = BusinessInjector()
+        let businessInjector = BusinessInjector.ui
         self.init(
             businessInjector: businessInjector,
             notificationManager: NotificationManager(businessInjector: businessInjector),

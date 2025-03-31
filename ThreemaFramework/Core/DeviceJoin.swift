@@ -299,7 +299,7 @@ public final class DeviceJoin {
             $0.identityData = identityData
             
             // Add credentials for "a Threema Work app"
-            if [.work, .blue, .onPrem].contains(ThreemaApp.current) {
+            if TargetManager.isBusinessApp {
                 $0.workCredentials = try gatherWorkCredentials()
             }
             

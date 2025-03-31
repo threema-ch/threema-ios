@@ -68,7 +68,7 @@ final class EditGroupViewController: ThemedCodeModernGroupedTableViewController 
     private var groupName: String?
     // TODO: Store members or at least member changes?
     
-    private var groupManager: GroupManagerProtocol = BusinessInjector().groupManager
+    private var groupManager: GroupManagerProtocol = BusinessInjector.ui.groupManager
     
     // MARK: Subview
     

@@ -52,7 +52,7 @@
     
     // Add App Store receipt if available (but not for Work)
     NSURL *receiptUrl = [[NSBundle mainBundle] appStoreReceiptURL];
-    if (receiptUrl && [[NSFileManager defaultManager] fileExistsAtPath:receiptUrl.path] && ![LicenseStore requiresLicenseKey]) {
+    if (receiptUrl && [[NSFileManager defaultManager] fileExistsAtPath:receiptUrl.path] && !TargetManagerObjc.isBusinessApp) {
         NSData *receiptData = [NSData dataWithContentsOfURL:receiptUrl];
         if (receiptData) {
             request[@"appStoreReceipt"] = [receiptData base64EncodedStringWithOptions:0];
@@ -145,7 +145,7 @@
     
     NSDictionary *request = @{
         @"identity": identityStore.identity,
-        @"appVariant": [LicenseStore requiresLicenseKey] ? @"work" : @"consumer"
+        @"appVariant": TargetManagerObjc.isBusinessApp ? @"work" : @"consumer"
     };
 
     [self sendSignedRequest:request toApiPath:@"identity/fetch_priv" forStore:identityStore onCompletion:^(id jsonObject) {
@@ -300,7 +300,7 @@
     static NSString *apiPath = @"identity/link_mobileno";
     
     NSString *urlScheme = @"threema";
-    if ([LicenseStore requiresLicenseKey]) {
+    if (TargetManagerObjc.isBusinessApp) {
         urlScheme = @"threemawork";
     }
     

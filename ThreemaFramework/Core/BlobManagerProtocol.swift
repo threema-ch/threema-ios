@@ -44,6 +44,7 @@ public enum BlobManagerError: Error {
     case markDoneFailed
     case noteGroupNeedsNoSync
     case notConnected
+    case noPersistParam
 }
 
 /// Defines the public functions used in BlobManager.swift

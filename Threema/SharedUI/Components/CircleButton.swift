@@ -76,7 +76,6 @@ final class CircleButton: ThemedCodeButton {
         
         configureButton(with: sfSymbolName)
         registerObservers()
-        updateColors()
         updateSize()
         
         self.accessibilityLabel = accessibilityLabel
@@ -95,6 +94,8 @@ final class CircleButton: ThemedCodeButton {
 
         assert(image != nil, "Symbol not found")
         setImage(image, for: .normal)
+        
+        backgroundColor = .backgroundCircleButton
                         
         // Layout
         NSLayoutConstraint.activate([
@@ -113,12 +114,7 @@ final class CircleButton: ThemedCodeButton {
     }
     
     // MARK: - Updates
-    
-    override func updateColors() {
-        super.updateColors()
-        backgroundColor = Colors.backgroundCircleButton
-    }
-    
+        
     private func updateSize() {
         sizeConstraint.constant = buttonConfiguration.scaledMediumSize
         layer.cornerRadius = buttonConfiguration.scaledMediumSize / 2

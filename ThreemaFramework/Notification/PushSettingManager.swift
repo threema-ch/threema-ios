@@ -66,7 +66,7 @@ public actor PushSettingManager: PushSettingManagerProtocol {
             GroupManager(entityManager: entityManager, taskManager: taskManager),
             entityManager,
             taskManager,
-            LicenseStore.shared().getRequiresLicenseKey()
+            TargetManager.isBusinessApp
         )
     }
 

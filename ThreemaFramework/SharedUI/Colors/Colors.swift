@@ -58,11 +58,7 @@ public final class Colors: NSObject {
         case .light, .undefined:
             colorAsset.color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
         case .dark:
-            darkColor(for: colorAsset)
+            colorAsset.color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
         }
-    }
-    
-    class func darkColor(for colorAsset: ColorAsset) -> UIColor {
-        colorAsset.color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
     }
 }

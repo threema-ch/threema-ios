@@ -84,7 +84,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
     
     // MARK: - Private Properties
     
-    private weak var userSettings = BusinessInjector().userSettings
+    private weak var userSettings = BusinessInjector.ui.userSettings
     
     private var showsRemaining: Bool {
         set {
@@ -639,7 +639,7 @@ extension ChatViewVoiceMessageTableViewCell {
            !voiceMessage.isOwnMessage,
            voiceMessage.consumed == nil {
             // Set the consumed date for the voice message
-            let em = BusinessInjector().entityManager
+            let em = BusinessInjector.ui.entityManager
             em.performAndWaitSave {
                 if let vm = em.entityFetcher.getManagedObject(by: voiceMessage.objectID) as? FileMessageEntity {
                     vm.consumed = Date()

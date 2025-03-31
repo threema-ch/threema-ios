@@ -113,7 +113,7 @@
     
     _titleLabel.text = [BundleUtil localizedStringForKey:@"id_pick_nickname_title"];
     
-    if ([LicenseStore requiresLicenseKey]) {
+    if (TargetManagerObjc.isBusinessApp) {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_pick_nickname_description_work"];
     } else {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_pick_nickname_description"];
@@ -128,7 +128,7 @@
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
     _nicknameTextfield.enabled = ![mdmSetup readonlyProfile];
     
-    _nicknameTextfield.tintColor = Colors.primaryWizard;
+    _nicknameTextfield.tintColor = UIColor.primary;
     
     _contactImageView.image = [UIImage systemImageNamed:@"person.fill"];
 }

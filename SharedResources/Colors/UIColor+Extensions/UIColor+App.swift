@@ -35,46 +35,65 @@ extension UIColor {
     }
     
     @objc public static let primary = UIColor { _ in
-        switch ThreemaApp.current {
+        switch TargetManager.current {
         case .threema, .green:
             Threema.primary
         case .work, .blue:
             ThreemaWork.primary
         case .onPrem:
-            OnPrem.primary
+            ThreemaOnPrem.primary
         }
     }
     
     @objc public static var secondary = UIColor { _ in
-        switch ThreemaApp.current {
+        switch TargetManager.current {
         case .threema, .green:
             Threema.secondary
         case .work, .blue:
             ThreemaWork.secondary
         case .onPrem:
-            OnPrem.secondary
+            ThreemaOnPrem.secondary
         }
     }
     
     @objc public static let chatBubbleSent = UIColor { _ in
-        switch ThreemaApp.current {
+        switch TargetManager.current {
         case .threema, .green:
             Threema.chatBubbleSent
         case .work, .blue:
             ThreemaWork.chatBubbleSent
         case .onPrem:
-            OnPrem.chatBubbleSent
+            ThreemaOnPrem.chatBubbleSent
         }
     }
     
     @objc public static let chatBubbleSentSelected = UIColor { _ in
-        switch ThreemaApp.current {
+        switch TargetManager.current {
         case .threema, .green:
             Threema.chatBubbleSentSelected
         case .work, .blue:
             ThreemaWork.chatBubbleSentSelected
         case .onPrem:
-            OnPrem.chatBubbleSentSelected
+            ThreemaOnPrem.chatBubbleSentSelected
         }
+    }
+    
+    @objc public static let backgroundCircleButton = UIColor { _ in
+        switch TargetManager.current {
+        case .threema, .green:
+            Threema.circleButton
+        case .work, .blue:
+            ThreemaWork.circleButton
+        case .onPrem:
+            ThreemaOnPrem.circleButton
+        }
+    }
+    
+    @objc public static let threemaConsumerColor = UIColor { _ in
+        Threema.primary
+    }
+    
+    @objc public static let threemaWorkColor = UIColor { _ in
+        ThreemaWork.primary
     }
 }

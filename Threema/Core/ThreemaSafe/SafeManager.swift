@@ -610,8 +610,7 @@ import ThreemaMacros
                                 continuation.resume(
                                     throwing: SafeError
                                         .backupFailed(
-                                            message: BundleUtil
-                                                .localizedString(forKey: "safe_upload_size_exceeded")
+                                            message: #localize("safe_upload_size_exceeded")
                                         )
                                 )
                                 return
@@ -625,8 +624,8 @@ import ThreemaMacros
                             ) { _, error in
                                 if let error {
                                     continuation.resume(throwing: SafeError.backupFailed(
-                                        message: error.contains("Payload Too Large") ? BundleUtil
-                                            .localizedString(forKey: "safe_upload_size_exceeded") :
+                                        message: error
+                                            .contains("Payload Too Large") ? #localize("safe_upload_size_exceeded") :
                                             "\(#localize("safe_upload_failed")) (\(error))"
                                     ))
                                 }
@@ -783,8 +782,9 @@ import ThreemaMacros
                                     
                                     self.safeConfigManager
                                         .setLastResult(
-                                            errorMessage.contains("Payload Too Large") ? BundleUtil
-                                                .localizedString(forKey: "safe_upload_size_exceeded") :
+                                            errorMessage
+                                                .contains("Payload Too Large") ?
+                                                #localize("safe_upload_size_exceeded") :
                                                 "\(#localize("safe_upload_failed")) (\(errorMessage))"
                                         )
                                 }
@@ -943,17 +943,14 @@ import ThreemaMacros
                                 else {
                                     
                                     // Reset app migration and start a new run
-                                    let businessInjector = BusinessInjector()
+                                    let businessInjector = BusinessInjector.ui
                                     if AppMigrationVersion
                                         .isMigrationRequired(userSettings: businessInjector.userSettings) {
                                         do {
                                             try AppMigration(reset: true).run()
                                         }
                                         catch {
-                                            let msg = BundleUtil
-                                                .localizedString(
-                                                    forKey: "safe_activation_app_migration_failed_error_message"
-                                                )
+                                            let msg = #localize("safe_activation_app_migration_failed_error_message")
                                             completionHandler(SafeError.restoreError(message: msg))
                                             return
                                         }
@@ -972,11 +969,7 @@ import ThreemaMacros
                                         ) { error in
                                             if error != nil {
                                                 completionHandler(
-                                                    SafeError
-                                                        .restoreError(
-                                                            message: BundleUtil
-                                                                .localizedString(forKey: "safe_activation_failed")
-                                                        )
+                                                    SafeError.restoreError(message: #localize("safe_activation_failed"))
                                                 )
                                             }
                                             else {
@@ -1187,7 +1180,7 @@ import ThreemaMacros
     
     /// Checks Threema Safe configuration for Threema Work and OnPrem
     @objc func performThreemaSafeLaunchChecks() {
-        guard LicenseStore.shared().getRequiresLicenseKey(),
+        guard TargetManager.isBusinessApp,
               let mdm = MDMSetup(setup: false) else {
             return
         }

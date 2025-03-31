@@ -102,7 +102,7 @@ import ThreemaMacros
         message: "Only use from Objective-C. Use `AppMigrationVersion.isMigrationRequired(userSettings:)` otherwise",
         renamed: "AppMigrationVersion.isMigrationRequired(userSettings:)"
     )
-    @objc static func isMigrationRequired(userSettings: UserSettingsProtocol) -> Bool {
+    @objc static func isMigrationRequired(userSettings: UserSettings) -> Bool {
         AppMigrationVersion.isMigrationRequired(userSettings: userSettings)
     }
 
@@ -376,7 +376,7 @@ import ThreemaMacros
         DDLogNotice("[AppMigration] App migration to version 5.3.1 started")
         os_signpost(.begin, log: osPOILog, name: "5.3.1 migration")
 
-        try BusinessInjector().dhSessionStore.executeNull()
+        try BusinessInjector.ui.dhSessionStore.executeNull()
 
         os_signpost(.end, log: osPOILog, name: "5.3.1 migration")
         DDLogNotice("[AppMigration] App migration to version 5.3.1 successfully finished")
@@ -388,7 +388,7 @@ import ThreemaMacros
         DDLogNotice("[AppMigration] App migration to version 5.4 started")
         os_signpost(.begin, log: osPOILog, name: "5.4 migration")
 
-        try BusinessInjector().dhSessionStore.executeNull()
+        try BusinessInjector.ui.dhSessionStore.executeNull()
 
         businessInjector.entityManager.performAndWaitSave {
             // Set for all conversations the last update
@@ -628,7 +628,7 @@ import ThreemaMacros
         AppGroup.userDefaults().removeObject(forKey: "VideoCallSpeakerInfoShown")
 
         // Upgrade FS session data base to database version 5
-        try BusinessInjector().dhSessionStore.executeNull()
+        try BusinessInjector.ui.dhSessionStore.executeNull()
 
         // Remove unknown group alert list for pending group messages
         AppGroup.userDefaults().removeObject(forKey: "UnknownGroupAlertList")

@@ -170,12 +170,18 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
 
 - (void)fetchThumbnailForFileMessageEntity:(FileMessageEntity *)fileMessageEntity onCompletionInternal:(void(^ _Nonnull)(FileMessageEntity * _Nonnull)) onCompletionInternal  onErrorInternal:(void(^ _Nonnull)(NSError * _Nonnull))onErrorInternal {
 
-    [entityManager performAsyncBlockAndSafe:^{
-        NSManagedObjectID *objectID = fileMessageEntity.objectID;
-        NSData *blobID = fileMessageEntity.blobThumbnailId;
-        BlobOrigin blobOrigin = fileMessageEntity.blobOrigin;
-        BlobOrigin blobOriginForDone = BlobOriginPublic;
-        BOOL isNotGroupMessage = fileMessageEntity.conversation.groupId == nil;
+    __block NSManagedObjectID *objectID;
+    __block NSData *blobID;
+    __block BlobOrigin blobOrigin;
+    __block BlobOrigin blobOriginForDone = BlobOriginPublic;
+    __block BOOL isNotGroupMessage;
+
+    [entityManager performBlockAndWait:^{
+        objectID = fileMessageEntity.objectID;
+        blobID = fileMessageEntity.blobThumbnailId;
+        blobOrigin = fileMessageEntity.blobOrigin;
+        blobOriginForDone = BlobOriginPublic;
+        isNotGroupMessage = fileMessageEntity.conversation.groupId == nil;
 
         if (isNotGroupMessage) {
             blobOriginForDone = fileMessageEntity.blobOrigin;
@@ -183,52 +189,55 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
         else if ([[UserSettings sharedUserSettings] enableMultiDevice]) {
             blobOriginForDone = BlobOriginLocal;
         }
+    }];
 
-        if (blobID) {
-            [ActivityIndicatorProxy startActivity];
+    if (blobID) {
+        [ActivityIndicatorProxy startActivity];
 
-            BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:dispatch_get_current_queue()];
-            BlobDownloader *downloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:dispatch_get_current_queue()];
-            [downloader downloadWithBlobID:blobID origin:blobOrigin timeout:self->timeoutDownloadThumbnail completion:^(NSData *data, NSError *error) {
-                if (data != nil && error == nil) {
-                    NSString *encryptionKeyHex = [_json objectForKey: JSON_FILE_KEY_ENCRYPTION_KEY];
-                    NSData *encryptionKey = [encryptionKeyHex decodeHex];
+        dispatch_queue_t downloaderQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+        BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings] queue:downloaderQueue];
+        BlobDownloader *downloader = [[BlobDownloader alloc] initWithBlobURL:blobUrl queue:downloaderQueue];
+        [downloader downloadWithBlobID:blobID origin:blobOrigin timeout:self->timeoutDownloadThumbnail completion:^(NSData *data, NSError *error) {
+            if (data != nil && error == nil) {
+                NSString *encryptionKeyHex = [_json objectForKey: JSON_FILE_KEY_ENCRYPTION_KEY];
+                NSData *encryptionKey = [encryptionKeyHex decodeHex];
 
-                    /* Decrypt the box */
-                    NSData *decodedData = [[NaClCrypto sharedCrypto] safeSymmetricDecryptData:data withKey:encryptionKey nonce:[NSData dataWithBytesNoCopy:kNonce_2 length:sizeof(kNonce_2) freeWhenDone:NO]];
-                    if (decodedData == nil) {
-                        DDLogError(@"Could not decode thumbnail data");
+                /* Decrypt the box */
+                NSData *decodedData = [[NaClCrypto sharedCrypto] safeSymmetricDecryptData:data withKey:encryptionKey nonce:[NSData dataWithBytesNoCopy:kNonce_2 length:sizeof(kNonce_2) freeWhenDone:NO]];
+                if (decodedData == nil) {
+                    DDLogError(@"Could not decode thumbnail data");
+                }
+
+                [self updateDBMessageWithThumbnail:decodedData objectID:objectID onCompletionInternal:^(FileMessageEntity * _Nonnull message) {
+                    if (isNotGroupMessage) {
+                        [downloader markDownloadDoneFor:blobID origin:blobOriginForDone];
                     }
 
-                    [self updateDBMessageWithThumbnail:decodedData objectID:objectID onCompletionInternal:^(FileMessageEntity * _Nonnull message) {
-                        if (isNotGroupMessage) {
-                            [downloader markDownloadDoneFor:blobID origin:blobOriginForDone];
-                        }
-
-                        onCompletionInternal(message);
-                        [ActivityIndicatorProxy stopActivity];
-                    } onErrorInternal:onErrorInternal];
-                }
-                else {
-                    DDLogError(@"Could not download thumbnail for file message %@", error.localizedDescription);
-                    [self updateDBMessageWithThumbnail:nil objectID:objectID onCompletionInternal:^(FileMessageEntity * _Nonnull message) {
-                        onCompletionInternal(message);
-                        [ActivityIndicatorProxy stopActivity];
-                    } onErrorInternal:onErrorInternal];
-                }
-            }];
-        } else {
-            [self updateDBMessageWithThumbnail:nil objectID:objectID onCompletionInternal:^(FileMessageEntity * _Nonnull message) {
-                onCompletionInternal(message);
-            } onErrorInternal:onErrorInternal];
-        }
-    }];
+                    onCompletionInternal(message);
+                    [ActivityIndicatorProxy stopActivity];
+                } onErrorInternal:onErrorInternal];
+            }
+            else {
+                DDLogError(@"Could not download thumbnail for file message %@", error.localizedDescription);
+                [self updateDBMessageWithThumbnail:nil objectID:objectID onCompletionInternal:^(FileMessageEntity * _Nonnull message) {
+                    onCompletionInternal(message);
+                    [ActivityIndicatorProxy stopActivity];
+                } onErrorInternal:onErrorInternal];
+            }
+        }];
+    } else {
+        [self updateDBMessageWithThumbnail:nil objectID:objectID onCompletionInternal:^(FileMessageEntity * _Nonnull message) {
+            onCompletionInternal(message);
+        } onErrorInternal:onErrorInternal];
+    }
 }
 
 - (void)createDBMessageWithCompletionInternal:(void(^ _Nonnull)(FileMessageEntity * _Nonnull))onCompletionInternal onErrorInternal:(void(^ _Nonnull)(NSError * _Nonnull))onErrorInternal{
     [entityManager getOrCreateMessageFor:_boxMessage sender:_sender conversation:_conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
-        [entityManager performAsyncBlockAndSafe:^{
-            FileMessageEntity *fileMessageEntity = (FileMessageEntity*)message;
+        __block FileMessageEntity *fileMessageEntity;
+
+        [entityManager performSyncBlockAndSafe:^{
+            fileMessageEntity = (FileMessageEntity*)message;
 
             GroupManager *groupManager = [[[BusinessInjector alloc] initWithEntityManager:entityManager] groupManagerObjC];
             Group *group = [groupManager getGroupWithConversation:_conversation];
@@ -274,33 +283,37 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
             }
 
             fileMessageEntity.json = [[NSString alloc] initWithData:_jsonData encoding:NSUTF8StringEncoding];
-            onCompletionInternal(fileMessageEntity);
         }];
+
+        onCompletionInternal(fileMessageEntity);
     } onError:onErrorInternal];
 }
 
 - (void)updateDBMessageWithThumbnail:(nullable NSData *)thumbnailData objectID:(nonnull NSManagedObjectID *)objectID onCompletionInternal:(void(^ _Nonnull)(FileMessageEntity * _Nonnull))onCompletionInternal onErrorInternal:(void(^ _Nonnull)(NSError * _Nonnull))onErrorInternal {
-    [entityManager performAsyncBlockAndSafe:^{
-        FileMessageEntity *msg = [[entityManager entityFetcher] existingObjectWithID:objectID];
-        if (msg == nil) {
+
+    __block FileMessageEntity *fileMessage;
+
+    [entityManager performSyncBlockAndSafe:^{
+        fileMessage = [[entityManager entityFetcher] existingObjectWithID:objectID];
+        if (fileMessage == nil) {
             onErrorInternal([ThreemaError threemaError:@"Loading file message to update thumbnail failed"]);
             return;
         }
 
-        if (msg.thumbnail == nil && thumbnailData) {
+        if (fileMessage.thumbnail == nil && thumbnailData) {
             ImageDataEntity *thumbnail = [entityManager.entityCreator imageDataEntity];
             thumbnail.data = thumbnailData;
-            
+
             // load image to determine size
             UIImage *thumbnailImage = [UIImage imageWithData:thumbnailData];
-            thumbnail.width = [NSNumber numberWithInt:thumbnailImage.size.width];
-            thumbnail.height = [NSNumber numberWithInt:thumbnailImage.size.height];
-            
-            msg.thumbnail = thumbnail;
-        }
+            thumbnail.width = thumbnailImage.size.width;
+            thumbnail.height = thumbnailImage.size.height;
 
-        onCompletionInternal(msg);
+            fileMessage.thumbnail = thumbnail;
+        }
     }];
+
+    onCompletionInternal(fileMessage);
 }
 
 @end

@@ -82,7 +82,7 @@ class WebUpdateContactRequest: WebAbstractMessage {
             }
         }
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             updatedContact?.firstName = self.firstName
             updatedContact?.lastName = self.lastName
             

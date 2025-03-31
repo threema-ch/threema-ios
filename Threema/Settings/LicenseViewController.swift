@@ -27,7 +27,7 @@ import WebKit
 class LicenseViewController: ThemedViewController {
 
     private var webView: WKWebView!
-    private var myIdentity = BusinessInjector().myIdentityStore
+    private var myIdentity = BusinessInjector.ui.myIdentityStore
 
     private let licenseFileName = "license"
     

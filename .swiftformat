@@ -11,6 +11,7 @@
 --exclude NaClCrypto/**
 --exclude protobuf/**
 --exclude SaltyRTC/**
+--exclude **/DerivedData
 --exclude Vendor/**
 --exclude WebRTC**
 

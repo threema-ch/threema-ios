@@ -59,6 +59,10 @@
     return [[BundleUtil mainBundle] objectForInfoDictionaryKey:@"ThreemaAppIdentifier"];
 }
 
++ (NSString *)targetManagerKey {
+    return [[BundleUtil mainBundle] objectForInfoDictionaryKey:@"TargetManagerKey"];
+}
+
 + (id)objectForInfoDictionaryKey:(NSString *)key {
     id value = [[self frameworkBundle] objectForInfoDictionaryKey:key];
     if (value == nil) {

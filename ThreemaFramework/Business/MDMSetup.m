@@ -96,7 +96,18 @@ static NSDictionary *_mdmCacheSetup;
     self = [super init];
     if (self) {
         isSetup = setup;
-        isLicenseRequired = [[LicenseStore sharedLicenseStore] getRequiresLicenseKey] == YES;
+        isLicenseRequired = TargetManagerObjc.isBusinessApp;
+        
+        queue = dispatch_queue_create("ch.threema.MdmConfiguration", NULL);
+    }
+    return self;
+}
+
+- (MDMSetup*)initMockupWithIsBusinessApp:(BOOL)isBusinessApp setup:(BOOL)setup {
+    self = [super init];
+    if (self) {
+        isSetup = setup;
+        isLicenseRequired = isBusinessApp;
         
         queue = dispatch_queue_create("ch.threema.MdmConfiguration", NULL);
     }

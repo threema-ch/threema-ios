@@ -50,7 +50,7 @@ class DeviceLinking: NSObject {
         self.safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: BusinessInjector().groupManager
+            groupManager: businessInjector.groupManager
         )
         self.safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -61,7 +61,7 @@ class DeviceLinking: NSObject {
 
     @objc
     override convenience init() {
-        self.init(businessInjector: BusinessInjector())
+        self.init(businessInjector: BusinessInjector.ui)
     }
 
     deinit {
@@ -201,16 +201,13 @@ class DeviceLinking: NSObject {
         
         switch ThreemaEnvironment.env() {
         case .testFlight:
-            switch ThreemaApp.current {
-            case .threema, .work, .onPrem:
+            if !TargetManager.isSandbox {
                 // Disable it if we downgrade consumer, work or onprem from 5.0
                 if AppInfo.version.major < 5 {
                     autoDisableMultiDevice()
                 }
-            case .green, .blue:
-                // Never disable it for green & blue
-                break
             }
+        // Never disable it for green & blue
         case .appStore, .xcode:
             // Never disable it of Xcode and App store builds
             break

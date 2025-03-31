@@ -70,7 +70,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<true/>
 	<key>ITSEncryptionExportComplianceCode</key>
-	<string>42516de1-bbb1-4524-8c2c-e17f7a522fbd</string>
+	<string>$(APP_ENCRYPTION_EXPORT_COMPLIANCE_CODE)</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>comgooglemaps</string>
@@ -96,15 +96,19 @@
 		<string>INSendMessageIntent</string>
 	</array>
 	<key>SentryClientDsn</key>
-	<string>https://e9f51a03f5e5461896e0208c2f54bcf4@bugs.threema.ch/4</string>
+	<string>$(SENTRY_CLIENT_DSN)</string>
+	<key>TargetManagerKey</key>
+	<string>$(TARGET_MANAGER_KEY)</string>
 	<key>ThreemaAppGroupIdentifier</key>
-	<string>group.ch.threema.work</string>
+	<string>$(GROUP_IDENTIFIER)</string>
 	<key>ThreemaAppIdentifier</key>
-	<string>ch.threema.work.iapp</string>
+	<string>$(APP_BUNDLE_IDENTIFIER)</string>
 	<key>ThreemaMaxGroupMembers</key>
 	<integer>256</integer>
+	<key>ThreemaRateLink</key>
+	<string>$(APPSTORE_RATE_LINK)</string>
 	<key>ThreemaVersionSuffix</key>
-	<string>k</string>
+	<string>$(THREEMA_VERSION_SUFFIX)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
@@ -116,7 +120,7 @@
 	<key>UIFileSharingEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
-	<string>ThreemaWorkLaunchScreen</string>
+	<string>$(INFOPLIST_KEY_UILaunchStoryboardName)</string>
 	<key>UIPrerenderedIcon</key>
 	<true/>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -142,7 +146,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>ThreemaRateLink</key>
-	<string>itms-apps://itunes.apple.com/app/id1105927783?action=write-review</string>
 </dict>
 </plist>

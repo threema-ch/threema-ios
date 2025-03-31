@@ -70,16 +70,16 @@ class LinkEmailViewController: ThemedTableViewController {
     // MARK: - TableViewDelegates
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        if ThreemaApp.current == .onPrem {
+        if TargetManager.isOnPrem {
             return String.localizedStringWithFormat(
                 #localize("myprofile_link_email_onprem_footer"),
                 serverName,
-                ThreemaApp.currentName
+                TargetManager.appName
             )
         }
         return String.localizedStringWithFormat(
             #localize("myprofile_link_email_footer"),
-            ThreemaApp.currentName
+            TargetManager.appName
         )
     }
     

@@ -129,7 +129,8 @@ struct DeviceJoinSendDataView: View {
     private func sendData() {
         Task {
             // Disconnect all Threema Web Sessions
-            if let webClientSessions = BusinessInjector().entityManager.entityFetcher.allActiveWebClientSessions() {
+            if let webClientSessions = BusinessInjector.ui.entityManager.entityFetcher
+                .allActiveWebClientSessions() {
                 for session in webClientSessions {
                     if let session = session as? WebClientSessionEntity {
                         WCSessionManager.shared.stopSession(session)

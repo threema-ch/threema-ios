@@ -25,14 +25,12 @@ class ContactListNavigationItem: UINavigationItem {
     private weak var delegate: ContactListActionDelegate?
     private lazy var contactAddMenu = UIMenu(delegate?.add ?? { _ in })
     private lazy var contactListFilter = ScrollableMenuView(delegate?.filterChanged ?? { _ in })
-    #if THREEMA_WORK
-        private lazy var switchWorkContacts = WorkButtonView(delegate?.didToggleWorkContacts ?? { _ in })
-        var shouldShowWorkButton = true {
-            willSet {
-                setLeftBarButton(newValue ? UIBarButtonItem(customView: switchWorkContacts.view) : nil, animated: false)
-            }
+    private lazy var switchWorkContacts = WorkButtonView(delegate?.didToggleWorkContacts ?? { _ in })
+    var shouldShowWorkButton = true {
+        willSet {
+            setLeftBarButton(newValue ? UIBarButtonItem(customView: switchWorkContacts.view) : nil, animated: false)
         }
-    #endif
+    }
     
     init(delegate: ContactListActionDelegate? = nil) {
         self.delegate = delegate
@@ -40,9 +38,10 @@ class ContactListNavigationItem: UINavigationItem {
 
         titleView = contactListFilter.view
         rightBarButtonItem = UIBarButtonItem(systemItem: .add, menu: contactAddMenu)
-        #if THREEMA_WORK
+        
+        if TargetManager.isWork {
             leftBarButtonItem = UIBarButtonItem(customView: switchWorkContacts.view)
-        #endif
+        }
     }
     
     @available(*, unavailable)

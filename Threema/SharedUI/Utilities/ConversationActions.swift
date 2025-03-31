@@ -49,7 +49,7 @@ class ConversationActions: NSObject {
     }
     
     @objc override convenience init() {
-        self.init(businessInjector: BusinessInjector())
+        self.init(businessInjector: BusinessInjector.ui)
     }
     
     // MARK: - Reading

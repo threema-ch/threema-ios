@@ -220,7 +220,7 @@ import UIKit
         textField.addTarget(self, action: #selector(primaryActionTriggered), for: .primaryActionTriggered)
         textField.delegate = self
 
-        textField.tintColor = Colors.primaryWizard
+        textField.tintColor = .primary
 
         addSubview(background)
         addSubview(icon)

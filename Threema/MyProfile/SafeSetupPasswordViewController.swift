@@ -55,7 +55,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
         self.safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: BusinessInjector().groupManager
+            groupManager: BusinessInjector.ui.groupManager
         )
         self.safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -305,7 +305,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                         title: #localize("Password"),
                         message: String.localizedStringWithFormat(
                             #localize("password_bad_regex"),
-                            ThreemaApp.currentName
+                            TargetManager.appName
                         )
                     )
                     return nil
@@ -368,7 +368,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             let safeStore = SafeStore(
                 safeConfigManager: SafeConfigManager(),
                 serverApiConnector: ServerAPIConnector(),
-                groupManager: BusinessInjector().groupManager
+                groupManager: BusinessInjector.ui.groupManager
             )
             
             if let customServer = serverField.text, let customServerURL = URL(string: customServer) {
@@ -491,7 +491,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             }
         case 1:
             var explainText = "safe_configure_server_explain"
-            if ThreemaApp.current == .onPrem {
+            if TargetManager.isOnPrem {
                 explainText = "safe_configure_server_explain_onprem"
             }
             return !safeManager.isActivated && !mdmSetup.isSafeBackupServerPreset() && !isForcedBackup ? BundleUtil

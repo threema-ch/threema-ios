@@ -23,7 +23,7 @@ import SwiftUI
 import ThreemaMacros
 
 struct ContactsCleanupView: View {
-    @StateObject var settingsStore = BusinessInjector().settingsStore as! SettingsStore
+    @StateObject var settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
 
     @State private var showLogDisabledError = false
     @State private var showNoDuplicatesError = false
@@ -52,6 +52,15 @@ struct ContactsCleanupView: View {
                         HStack {
                             Spacer()
                             Text(#localize("settings_advanced_contacts_cleanup_unused"))
+                            Spacer()
+                        }
+                    }
+                    Button {
+                        cleanupOwnContact()
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text(#localize("settings_advanced_contacts_cleanup_own"))
                             Spacer()
                         }
                     }
@@ -121,7 +130,7 @@ struct ContactsCleanupView: View {
     /// Returns true if stats were logged.
     private func logContactStats() -> Bool {
         let ISOFormatter = ISO8601DateFormatter()
-        let entityManager = BusinessInjector().entityManager
+        let entityManager = BusinessInjector.ui.entityManager
 
         guard settingsStore.validationLogging else {
             showLogDisabledError = true
@@ -343,6 +352,17 @@ struct ContactsCleanupView: View {
         }
     }
 
+    private func cleanupOwnContact() {
+        let entityManager = BusinessInjector.ui.entityManager
+        
+        entityManager.performAndWaitSave {
+            if entityManager.entityDestroyer.deleteOwnContact() {
+                NotificationPresenterWrapper.shared.present(type: .generalSuccess)
+                DDLogNotice("Deleted own contact from advanced settings.")
+            }
+        }
+    }
+
     /// Replace duplicate contacts by main contact and remove duplicate contacts if they
     /// have no 1:1 conversations
     ///
@@ -365,7 +385,7 @@ struct ContactsCleanupView: View {
             return
         }
         
-        let entityManager = BusinessInjector().entityManager
+        let entityManager = BusinessInjector.ui.entityManager
 
         entityManager.performAndWaitSave {
             var duplicates: NSSet?

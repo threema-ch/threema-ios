@@ -77,7 +77,7 @@ class RestoreOptionBackupViewController: IDCreationPageViewController {
         let faqLabelText = NSAttributedString(
             string: String.localizedStringWithFormat(
                 #localize("backup_faq_link_text"),
-                ThreemaApp.currentName
+                TargetManager.appName
             ),
             attributes: linkAttributes
         )

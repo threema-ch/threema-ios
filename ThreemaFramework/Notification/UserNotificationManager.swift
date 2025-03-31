@@ -116,8 +116,13 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             userNotificationContent.body = bodyWithoutPreview(for: pendingUserNotification)
         }
         
-        // Add thumbnail attachment if file, image or video message
-        if settingsStore.pushShowPreview, let (name, url) = addAttachment(for: pendingUserNotification) {
+        // Adds the thumbnail attachment if it is a file, image or video message. Note that we are only adding
+        // attachement for the `final` stage.
+        // This due to an error: If a notification with an attachment is removed for the `base` stage,
+        // then the attachment for the `final` stage will not be displayed.
+        if settingsStore.pushShowPreview,
+           pendingUserNotification.stage == .final,
+           let (name, url) = addAttachment(for: pendingUserNotification) {
             userNotificationContent.attachmentName = name
             userNotificationContent.attachmentURL = url
         }
@@ -266,7 +271,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
                 }
                 
                 try image.data.write(to: attachmentURL, options: .completeFileProtectionUntilFirstUserAuthentication)
-                
+
                 return (name: attachmentName, url: attachmentURL)
             }
             catch {
@@ -463,18 +468,17 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             }
         }
         else {
-            let key = pendingUserNotification.isGroupMessage ?? false ? "new_group_message" : "new_message"
-            return key.localized
+            return pendingUserNotification
+                .isGroupMessage ?? false ? #localize("new_group_message") : #localize("new_message")
         }
     }
     
     private func bodyWithoutPreview(for pendingUserNotification: PendingUserNotification) -> String {
         if let abstractMessage = pendingUserNotification.abstractMessage, abstractMessage is GroupCallStartMessage {
-            return abstractMessage.pushNotificationBody()
+            abstractMessage.pushNotificationBody()
         }
         else {
-            let key = pendingUserNotification.isGroupMessage ?? false ? "new_group_message" : "new_message"
-            return key.localized
+            pendingUserNotification.isGroupMessage ?? false ? #localize("new_group_message") : #localize("new_message")
         }
     }
     

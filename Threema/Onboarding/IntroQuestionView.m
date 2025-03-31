@@ -52,10 +52,10 @@
     _yesButton.layer.cornerRadius = 3;
     _okButton.layer.cornerRadius = 3;
     
-    _yesButton.backgroundColor = Colors.primaryWizard;
+    _yesButton.backgroundColor = UIColor.primary;
     [_yesButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     _yesButton.accessibilityIdentifier = @"setupYesButton";
-    _okButton.backgroundColor = Colors.primaryWizard;
+    _okButton.backgroundColor = UIColor.primary;
     [_okButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     _okButton.accessibilityIdentifier = @"setupOKButton";
 
@@ -68,7 +68,7 @@
     [_noButton setTitle:[BundleUtil localizedStringForKey:@"no"] forState:UIControlStateNormal];
     [_okButton setTitle:[BundleUtil localizedStringForKey:@"ok"] forState:UIControlStateNormal];
     
-    [_noButton setTitleColor:Colors.primaryWizard forState:UIControlStateNormal];
+    [_noButton setTitleColor:UIColor.primary forState:UIControlStateNormal];
 }
 
 - (IBAction)yesAction:(id)sender {

@@ -239,7 +239,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
             let displayName = participant.displayName
             let profilePicture = participant.profilePicture
             let audioMuteState = await participant.audioMuteState
-            let isRunningForScreenshots = await participant.dependencies.isRunningForScreenshots
+            let isRunningForScreenshots = participant.dependencies.isRunningForScreenshots
             
             computedAccessibilityLabel = await participant.cellAccessibilityLabel()
             

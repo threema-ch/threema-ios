@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-extension RTCIceGatheringState: CustomDebugStringConvertible {
+extension RTCIceGatheringState: @retroactive CustomDebugStringConvertible {
     public var debugDescription: String {
         switch self {
         case .new:

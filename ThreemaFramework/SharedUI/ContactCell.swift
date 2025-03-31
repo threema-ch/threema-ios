@@ -297,7 +297,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
             nickname = "~\(publicNickname)"
         }
         
-        if LicenseStore.requiresLicenseKey() {
+        if TargetManager.isBusinessApp {
             metadataLabel.text =
                 if let jobTitle = contact.jobTitle,
                 !jobTitle.isEmpty {

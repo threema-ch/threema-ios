@@ -73,6 +73,10 @@ class TaskManagerMock: NSObject, TaskManagerProtocol {
         return cancelableTasks
     }
     
+    func executeSubTask(taskDefinition: any ThreemaFramework.TaskDefinitionProtocol) async throws {
+        // no-op
+    }
+
     static func removeAllTasks() {
         // no-op
     }

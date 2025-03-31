@@ -109,7 +109,7 @@ enum AddThreemaChannelAction {
     
     private static func dispatchInitialMessages(messages: [String], with contact: ContactEntity) {
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) {
-            let businessInjector = BusinessInjector()
+            let businessInjector = BusinessInjector.ui
 
             guard let conversation = businessInjector.entityManager.entityFetcher.conversation(for: contact) else {
                 DDLogWarn("Unable to add initial messages to Threema Channel. Reason: conversation not found.")

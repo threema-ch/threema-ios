@@ -81,7 +81,7 @@ final class VerificationLevelInfoViewController: ThemedViewController {
     
     // MARK: Helper properties
     
-    private let isWork = LicenseStore.requiresLicenseKey()
+    private let isWork = TargetManager.isBusinessApp
 
     // MARK: - Lifecycle
     

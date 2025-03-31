@@ -145,6 +145,9 @@ static dispatch_queue_t backgroundQueue;
                     origin = BlobOriginLocal;
                 }
             }
+            
+            // Set persist param if this is sent to a group that is not a note group
+            BOOL setPersistParam = group != nil && origin == BlobOriginPublic;
                         
             NSData *data = [self encryptedData];
             if (data == nil) {
@@ -162,7 +165,7 @@ static dispatch_queue_t backgroundQueue;
 
             BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings]];
             _blobUploader = [[Old_BlobUploader alloc] initWithBlobURL:blobUrl delegate:self];
-            [_blobUploader uploadWithBlobs:blobs origin:origin];
+            [_blobUploader uploadWithBlobs:blobs origin:origin setPersistParam:setPersistParam];
         });
     });
 }

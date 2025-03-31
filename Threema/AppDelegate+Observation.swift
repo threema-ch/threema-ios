@@ -39,7 +39,7 @@ extension AppDelegate {
     // backups until the user accepts the new password
     @objc private func companyMDMSafePasswordCheck() {
         
-        let safeManager = SafeManager(groupManager: BusinessInjector().groupManager)
+        let safeManager = SafeManager(groupManager: BusinessInjector.ui.groupManager)
         
         guard AppSetup.isCompleted else {
             return

@@ -59,7 +59,7 @@ class GroupCallCollectionViewDataSource: UICollectionViewDiffableDataSource<
                 cell.participant = fetchedParticipant
                 
                 // Workaround for when running screenshots
-                guard await !(fetchedParticipant?.dependencies.isRunningForScreenshots ?? false) else {
+                guard !(fetchedParticipant?.dependencies.isRunningForScreenshots ?? false) else {
                     return
                 }
                 

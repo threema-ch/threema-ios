@@ -301,7 +301,10 @@ class VoIPCallService: NSObject {
     }
 
     override convenience init() {
-        self.init(businessInjector: BusinessInjector(), peerConnectionClient: VoIPCallPeerConnectionClient())
+        self.init(
+            businessInjector: BusinessInjector.ui,
+            peerConnectionClient: VoIPCallPeerConnectionClient()
+        )
     }
 }
 
@@ -782,8 +785,12 @@ extension VoIPCallService {
                                     
                                     // No access to microphone, stop call
                                     let rootVC = self.callViewController != nil ? self
-                                        .callViewController! : UIApplication
-                                        .shared.windows.first!.rootViewController!
+                                        .callViewController! : AppDelegate.keyWindow?.rootViewController
+                                    
+                                    guard let rootVC else {
+                                        completion()
+                                        return
+                                    }
                                     
                                     DispatchQueue.main.async {
                                         UIAlertTemplate.showOpenSettingsAlert(
@@ -1153,7 +1160,7 @@ extension VoIPCallService {
             DDLogWarn("VoipCallService: [cid=\(hangup.callID.callID)]: Hangup received")
             // If we receive a hangup message without having had a call with this callID in any state,
             // we assume that it belonged to a missed call whose other messages were already dropped by the server.
-            let businessInjector = BusinessInjector()
+            let businessInjector = BusinessInjector.ui
             CallSystemMessageHelper
                 .maybeAddMissedCallNotificationToConversation(
                     with: hangup,
@@ -1187,7 +1194,7 @@ extension VoIPCallService {
                     if granted {
                         self.callInitiator = true
                         
-                        let entityManager = BusinessInjector().entityManager
+                        let entityManager = self.businessInjector.entityManager
                         
                         entityManager.performAndWaitSave {
                             if let conversation = entityManager.entityFetcher
@@ -1197,13 +1204,18 @@ extension VoIPCallService {
                         }
                         
                         self.contactIdentity = action.contactIdentity
-                        self.createPeerConnectionForInitiator(action: action, completion: completion)
-                        self.businessInjector.serverConnector.connect(initiator: .threemaCall)
+                        self.businessInjector.serverConnector.connect(initiator: .threemaCall) { _ in
+                            // No special handling required. If there is no connection and peer connection
+                            // cannot be esablished, a toast message is displayed to the user.
+                            self.createPeerConnectionForInitiator(action: action, completion: completion)
+                        }
                     }
                     else {
                         DispatchQueue.main.async {
                             // No access to microphone, stop call
-                            let rootVC = UIApplication.shared.windows.first!.rootViewController!
+                            guard let rootVC = AppDelegate.keyWindow?.rootViewController else {
+                                return
+                            }
                         
                             UIAlertTemplate.showOpenSettingsAlert(
                                 owner: rootVC,
@@ -1315,14 +1327,14 @@ extension VoIPCallService {
     /// - parameter action: VoIPCallUserAction
     /// - parameter completion: Completion block
     private func createPeerConnectionForInitiator(action: VoIPCallUserAction, completion: @escaping (() -> Void)) {
-        let entityManager = BusinessInjector().entityManager
+        let entityManager = businessInjector.entityManager
         entityManager.performBlock {
             guard let contactIdentity = self.contactIdentity,
                   let contact = entityManager.entityFetcher.contact(for: self.contactIdentity) else {
                 completion()
                 return
             }
-            FeatureMask.check(contacts: [contact], for: Int(FEATURE_MASK_VOIP_VIDEO)) { unsupportedContacts in
+            FeatureMask.check(identities: [contactIdentity], for: Int(FEATURE_MASK_VOIP_VIDEO)) { unsupportedContacts in
                 self.threemaVideoCallAvailable = false
                 if unsupportedContacts.isEmpty && UserSettings.shared().enableVideoCall {
                     self.threemaVideoCallAvailable = true
@@ -1348,7 +1360,7 @@ extension VoIPCallService {
                     }
                     await CallHistoryManager(
                         identity: action.contactIdentity,
-                        businessInjector: BusinessInjector()
+                        businessInjector: self.businessInjector
                     ).store(callID: callID.callID, date: Date())
                 }
                 
@@ -1440,13 +1452,14 @@ extension VoIPCallService {
                                                     self.callKitManager?.endCall()
                                                     self.invalidateInitCallTimeout()
 
-                                                    let rootVC = UIApplication.shared.windows.first!.rootViewController!
+                                                    guard let rootVC = AppDelegate.keyWindow?.rootViewController else {
+                                                        return
+                                                    }
+                                                    
                                                     UIAlertTemplate.showAlert(
                                                         owner: rootVC,
-                                                        title: BundleUtil
-                                                            .localizedString(forKey: "call_voip_not_supported_title"),
-                                                        message: BundleUtil
-                                                            .localizedString(forKey: "call_contact_not_reachable")
+                                                        title: #localize("call_voip_not_supported_title"),
+                                                        message: #localize("call_contact_not_reachable")
                                                     )
                                                 })
                                             }
@@ -1480,7 +1493,7 @@ extension VoIPCallService {
     private func createPeerConnectionForIncomingCall(completion: @escaping () -> Void) {
         peerConnectionClient.close()
 
-        let entityManager = BusinessInjector().entityManager
+        let entityManager = businessInjector.entityManager
         entityManager.performBlock {
             
             guard let offer = self.incomingOffer,
@@ -1490,7 +1503,7 @@ extension VoIPCallService {
                 completion()
                 return
             }
-            FeatureMask.check(contacts: [contact], for: Int(FEATURE_MASK_VOIP_VIDEO)) { _ in
+            FeatureMask.check(identities: Set([identity]), for: Int(FEATURE_MASK_VOIP_VIDEO)) { _ in
                 if self.incomingOffer?.isVideoAvailable ?? false && UserSettings.shared().enableVideoCall {
                     self.threemaVideoCallAvailable = true
                     self.callViewController?.enableThreemaVideoCall()
@@ -1624,7 +1637,7 @@ extension VoIPCallService {
                 viewWasHidden = false
             }
             
-            let rootVC = UIApplication.shared.windows.first!.rootViewController
+            let rootVC = AppDelegate.keyWindow?.rootViewController
             var presentingVC = (rootVC?.presentedViewController ?? rootVC)
             
             if let navController = presentingVC as? UINavigationController {
@@ -1651,7 +1664,7 @@ extension VoIPCallService {
     
     private func showCallActiveAlert() {
         Task { @MainActor in
-            guard let vc = UIApplication.shared.windows.first?.rootViewController else {
+            guard let vc = AppDelegate.keyWindow?.rootViewController else {
                 return
             }
             
@@ -2260,7 +2273,6 @@ extension VoIPCallService {
     /// Add call message to conversation
     private func addCallMessageToConversation(oldCallState: CallState) {
         
-        let businessInjector = BusinessInjector()
         let entityManager = businessInjector.entityManager
         let utilities = ConversationActions(businessInjector: businessInjector)
         
@@ -2436,7 +2448,7 @@ extension VoIPCallService {
     private func addRejectedMessageToConversation(contactIdentity: String, reason: Int) {
         var systemMessage: SystemMessageEntity?
         
-        let entityManager = BusinessInjector().entityManager
+        let entityManager = businessInjector.entityManager
         entityManager.performAndWaitSave {
             if let conversation = entityManager.conversation(for: contactIdentity, createIfNotExisting: true),
                let contact = entityManager.entityFetcher.contact(for: contactIdentity) {

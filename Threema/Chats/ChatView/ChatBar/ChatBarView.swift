@@ -156,8 +156,7 @@ final class ChatBarView: UIView {
     private lazy var sendButton: ChatBarButton = {
         let imageButton = ChatBarButton(
             sfSymbolName: "arrow.up.circle.fill",
-            accessibilityLabel: BundleUtil
-                .localizedString(forKey: "compose_bar_send_message_button_accessibility_label"),
+            accessibilityLabel: #localize("compose_bar_send_message_button_accessibility_label"),
             defaultColor: { .primary },
             customScalableSize: Config.sendButtonSize
         ) { [weak self] _ in

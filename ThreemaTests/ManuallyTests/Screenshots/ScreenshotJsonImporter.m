@@ -76,21 +76,21 @@ static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
         DDLogInfo(@"ScreenshotJsonImporter: resetting device");
         [[MyIdentityStore sharedMyIdentityStore] destroy];
         
-        if ([LicenseStore requiresLicenseKey]) {
+        if (TargetManagerObjc.isBusinessApp) {
             [[LicenseStore sharedLicenseStore] deleteLicense];
         }
     }
     
     NSString *srcroot = [[[NSProcessInfo processInfo] environment] objectForKey:@"SRCROOT"];
     NSString *appPath = nil;
-    switch ([ThreemaAppObjc current]) {
-        case ThreemaAppThreema:
+    switch (TargetManagerObjc.current) {
+        case TargetManagerThreema:
             appPath = @"consumer";
             break;
-        case ThreemaAppWork:
+        case TargetManagerWork:
             appPath = @"work";
             break;
-        case ThreemaAppOnPrem:
+        case TargetManagerOnPrem:
             appPath = @"onprem";
             break;
         default:
@@ -99,7 +99,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
     }
     NSString *screenshotProject = [NSString stringWithFormat:@"screenshot/chat_data/%@", appPath                                                                  ];
     NSURL *screenShotDataURL = [NSURL URLWithString:[srcroot stringByReplacingOccurrencesOfString:@"ios-client" withString:screenshotProject]];
-
         
     if (_language == nil) {
         XCTFail(@"no language code %@, probably not started from screenshot environment", _language);

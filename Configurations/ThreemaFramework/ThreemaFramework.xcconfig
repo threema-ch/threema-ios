@@ -21,5 +21,11 @@
 /// Configuration settings file format documentation can be found at:
 /// https://help.apple.com/xcode/#/dev745c5c974
 
-// Import the shared configuration
-#include "../SharedConfig.xcconfig"
+/// Import the shared configuration
+#include "../Base/BaseConfig.xcconfig"
+
+PRODUCT_NAME = ThreemaFramework
+PRODUCT_BUNDLE_IDENTIFIER = ch.threema.ThreemaFramework
+
+/// Build Settings
+SKIP_INSTALL = YES

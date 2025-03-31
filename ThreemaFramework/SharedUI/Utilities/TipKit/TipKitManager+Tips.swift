@@ -28,7 +28,7 @@ extension TipKitManager {
     /// Tip shown when type icon is show for first time
     public struct ThreemaTypeTip: Tip {
         public var title: Text {
-            if LicenseStore.requiresLicenseKey() {
+            if TargetManager.isBusinessApp {
                 Text(#localize("contact_threema_title"))
             }
             else {
@@ -37,7 +37,7 @@ extension TipKitManager {
         }
 
         public var message: Text? {
-            if LicenseStore.requiresLicenseKey() {
+            if TargetManager.isBusinessApp {
                 Text(#localize("contact_threema_info"))
             }
             else {

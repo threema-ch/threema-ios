@@ -1109,6 +1109,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 throw ReactionsManager.ReactionError.sendingFailed
             }
             
+            guard group.isSelfMember else {
+                DDLogError("[Reactions] Not member of group.")
+                return .notGroupMemeber
+            }
+            
             var (hasRemoteSupport, unsupported) = FeatureMask.check(message: message, for: .reactionSupport)
             
             if group.isNoteGroup {

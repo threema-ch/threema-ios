@@ -1117,7 +1117,7 @@ open class StyleKit: NSObject {
         
         //// Color Declarations
         let fillColor = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000)
-        let fillColor5 = Colors.primaryWizard as UIColor
+        let fillColor5 = .primary as UIColor
         let fillColor6 = UIColor(red: 0.847, green: 0.847, blue: 0.847, alpha: 1.000)
         
         //// finger_with_circles Group

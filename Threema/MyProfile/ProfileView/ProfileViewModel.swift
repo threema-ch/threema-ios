@@ -86,7 +86,7 @@ final class ProfileViewModel: ObservableObject {
    
     convenience init() {
         self.init(
-            businessInjector: BusinessInjector(),
+            businessInjector: BusinessInjector.ui,
             safeConfigManager: SafeConfigManager(),
             serverAPIConnector: ServerAPIConnector()
         )
@@ -211,10 +211,7 @@ final class ProfileViewModel: ObservableObject {
         }
         
         let qrString = "3mid:\(publicKey.identity),\(publicKey.key.hexString)"
-        qrCodeImage = QRCodeGenerator.renderQrCodeString(
-            qrString,
-            withDimension: Int32(AppDelegate.shared().window.frame.width)
-        )
+        qrCodeImage = QRCodeGenerator.generateQRCode(for: qrString, size: AppDelegate.shared().window.frame.width)
     }
     
     private func loadNickname() {

@@ -192,7 +192,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     BlobURL *blobUrl = [[BlobURL alloc] initWithServerConnector:[ServerConnector sharedServerConnector] userSettings:[UserSettings sharedUserSettings]];
     Old_BlobUploader *uploader = [[Old_BlobUploader alloc] initWithBlobURL:blobUrl delegate:self];
-    [uploader uploadWithBlobs:@[boxImageData] origin:BlobOriginPublic];
+    [uploader uploadWithBlobs:@[boxImageData] origin:BlobOriginPublic setPersistParam:true];
 }
 
 - (void)uploadCompletedWithBlobId:(NSData*)blobId {

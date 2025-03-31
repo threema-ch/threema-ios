@@ -36,7 +36,7 @@ import ThreemaMacros
     private var observerAlreadySet = false
     
     override private init() {
-        self.businessInjector = BusinessInjector()
+        self.businessInjector = BusinessInjector.ui
         super.init()
         
         // Remove legacy files
@@ -184,7 +184,7 @@ extension WCSessionManager {
                     webClientSession.isConnecting = true
                     var session: WCSession? = self.sessions[webClientSession.initiatorPermanentPublicKey]
                     
-                    if LicenseStore.requiresLicenseKey() == true {
+                    if TargetManager.isBusinessApp {
                         let mdmSetup = MDMSetup(setup: false)!
                         if let webHosts = mdmSetup.webHosts() {
                             if WCSessionManager.isWebHostAllowed(
@@ -200,10 +200,9 @@ extension WCSessionManager {
                                         userInfo: nil
                                     )
                                 }
-                                else {
-                                    let rootVC = UIApplication.shared.windows.first!.rootViewController
+                                else if let rootVC = AppDelegate.keyWindow?.rootViewController {
                                     UIAlertTemplate.showAlert(
-                                        owner: rootVC!,
+                                        owner: rootVC,
                                         title: BundleUtil
                                             .localizedString(forKey: "webClient_scan_error_mdm_host_title"),
                                         message: BundleUtil
@@ -272,7 +271,7 @@ extension WCSessionManager {
                     self.sessions[webClientSession.initiatorPermanentPublicKey] = session
                 }
                 
-                if LicenseStore.requiresLicenseKey() == true {
+                if TargetManager.isBusinessApp {
                     let mdmSetup = MDMSetup(setup: false)!
                     if let webHosts = mdmSetup.webHosts() {
                         if WCSessionManager.isWebHostAllowed(
@@ -287,10 +286,9 @@ extension WCSessionManager {
                                     userInfo: nil
                                 )
                             }
-                            else {
-                                let rootVC = UIApplication.shared.windows.first!.rootViewController
+                            else if let rootVC = AppDelegate.keyWindow?.rootViewController {
                                 UIAlertTemplate.showAlert(
-                                    owner: rootVC!,
+                                    owner: rootVC,
                                     title: #localize("webClient_scan_error_mdm_host_title"),
                                     message: #localize("webClient_scan_error_mdm_host_message")
                                 )
@@ -301,8 +299,8 @@ extension WCSessionManager {
                     }
                 }
                                 
-                if wca != nil {
-                    session!.setWcaForConnection(wca: wca!)
+                if let wca {
+                    session!.setWcaForConnection(wca: wca)
                 }
                 self.addWCSessionToRunning(webClientSession: webClientSession)
                 self.addObservers()
@@ -1330,7 +1328,7 @@ extension WCSessionManager {
     @objc func refreshDirtyObjects(_ notification: Notification) {
         if let objectID = notification.userInfo?[kKeyObjectID] as? NSManagedObjectID {
             if let managedObject = businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: objectID) as? NSManagedObject {
+                .getManagedObject(by: objectID) {
                 DDLogInfo("[t-dirty-objects] Send dirty object to webclient (insert and update): \(objectID)")
                 var insertedObjects = Set<NSManagedObject>()
                 insertedObjects.insert(managedObject)

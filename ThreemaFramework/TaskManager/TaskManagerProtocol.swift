@@ -66,6 +66,10 @@ protocol TaskManagerProtocol: TaskManagerProtocolObjc {
         completionHandler: TaskCompletionHandler
     )]) -> [CancelableTask?]
     
+    /// Execute task immediately, independent of the task queue or which task is already running.
+    /// - Parameter taskDefinition: Task to execute
+    func executeSubTask(taskDefinition: TaskDefinitionProtocol) async throws
+
     /// Process all tasks
     func spool()
     

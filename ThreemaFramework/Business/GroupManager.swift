@@ -495,51 +495,43 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
     /// - Parameter identities: identities to fetch from the database or directory server
     /// - Returns: The fetched contact or an error
     private func fetchContacts(for identities: [String]) async throws -> [FetchedContactOrError] {
-        let prefetchedIdentities = try await prefetchIdentities(for: identities)
+        var fetchedResults = [FetchedContactOrError]()
 
-        return await withTaskGroup(
-            of: FetchedContactOrError.self,
-            returning: [FetchedContactOrError].self
-        ) { taskGroup in
-            for identity in prefetchedIdentities {
-                taskGroup.addTask {
-                    await withCheckedContinuation { continuation in
-                        self.contactStore.fetchPublicKey(
-                            for: identity,
-                            acquaintanceLevel: .groupOrDeleted,
-                            entityManager: self.entityManager,
-                            ignoreBlockUnknown: true,
-                            onCompletion: { _ in
-                                guard self.entityManager.entityFetcher.contact(for: identity) != nil else {
-                                    continuation.resume(returning: .localNotFound)
-                                    return
-                                }
-                                continuation.resume(returning: .added)
+        let prefetchedIdentities = try await prefetchIdentities(for: identities)
+        for identity in prefetchedIdentities {
+            await fetchedResults.append(
+                withCheckedContinuation { continuation in
+                    self.contactStore.fetchPublicKey(
+                        for: identity,
+                        acquaintanceLevel: .groupOrDeleted,
+                        entityManager: self.entityManager,
+                        ignoreBlockUnknown: true,
+                        onCompletion: { _ in
+                            guard self.entityManager.entityFetcher.contact(for: identity) != nil else {
+                                continuation.resume(returning: .localNotFound)
+                                return
                             }
-                        ) { error in
-                            DDLogError("Error fetch public key")
-                            if let nsError = error as? NSError, nsError.domain == NSURLErrorDomain,
-                               nsError.code == 404 {
-                                continuation.resume(returning: .revokedOrInvalid(identity))
-                            }
-                            else if let nsError = error as? NSError,
-                                    nsError.code == ThreemaProtocolError.blockUnknownContact.rawValue {
-                                continuation.resume(returning: .blocked(identity))
-                            }
-                            else {
-                                continuation.resume(returning: .error)
-                            }
+                            continuation.resume(returning: .added)
+                        }
+                    ) { error in
+                        DDLogError("Error fetch public key")
+                        if let nsError = error as? NSError, nsError.domain == NSURLErrorDomain,
+                           nsError.code == 404 {
+                            continuation.resume(returning: .revokedOrInvalid(identity))
+                        }
+                        else if let nsError = error as? NSError,
+                                nsError.code == ThreemaProtocolError.blockUnknownContact.rawValue {
+                            continuation.resume(returning: .blocked(identity))
+                        }
+                        else {
+                            continuation.resume(returning: .error)
                         }
                     }
                 }
-            }
-
-            var fetchedResults = [FetchedContactOrError]()
-            for await fetchedResult in taskGroup {
-                fetchedResults.append(fetchedResult)
-            }
-            return fetchedResults
+            )
         }
+
+        return fetchedResults
     }
 
     private func prefetchIdentities(for identities: [String]) async throws -> Set<String> {
@@ -693,22 +685,33 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                         .existingObject(with: conversationObjectID) as? ConversationEntity else {
                         throw GroupError.groupConversationNotFound
                     }
-
-                    var dbImage: ImageDataEntity? = conversation.groupImage
-                    if dbImage == nil {
-                        dbImage = self.entityManager.entityCreator.imageDataEntity()
+                    
+                    let imageEntity: ImageDataEntity
+                    
+                    func setImageDataEntity(_ imageDataEntity: ImageDataEntity) {
+                        imageDataEntity.data = imageData
+                        imageDataEntity.width = Int16(image.size.width)
+                        imageDataEntity.height = Int16(image.size.height)
                     }
-
-                    guard dbImage?.data != imageData else {
-                        return
+                    
+                    if let groupImageEntity = conversation.groupImage {
+                        guard groupImageEntity.data != imageData else {
+                            return
+                        }
+                        
+                        setImageDataEntity(groupImageEntity)
+                        imageEntity = groupImageEntity
                     }
-
-                    dbImage?.data = imageData
-                    dbImage?.width = Int16(image.size.width)
-                    dbImage?.height = Int16(image.size.height)
+                    else if let newImageEntity = self.entityManager.entityCreator.imageDataEntity() {
+                        setImageDataEntity(newImageEntity)
+                        imageEntity = newImageEntity
+                    }
+                    else {
+                        fatalError("No existing group image entity and unable to create new one")
+                    }
 
                     conversation.groupImageSetDate = sentDate
-                    conversation.groupImage = dbImage
+                    conversation.groupImage = imageEntity
 
                     self.postSystemMessage(
                         in: conversation,

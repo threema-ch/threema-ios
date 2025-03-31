@@ -44,6 +44,10 @@ import Reachability
         reachability.stopNotifier()
     }
     
+    @objc func isReachabilityUnavailable() -> Bool {
+        lastConnectionType == .unavailable
+    }
+    
     @objc func didLastConnectionTypeChange() -> Bool {
         let newConnectionType = reachability.connection
         

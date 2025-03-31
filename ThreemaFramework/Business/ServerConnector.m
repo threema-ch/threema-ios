@@ -225,7 +225,9 @@ struct pktExtension {
         queueMessageProcessorDelegate = dispatch_queue_create("ch.threema.ServerConnector.queueMessageProcessorDelegate", NULL);
         queueTaskExecutionTransactionDelegate = dispatch_queue_create("ch.threema.ServerConnector.queueTaskExecutionTransactionDelegate", NULL);
 
-        processCoordinator = [[ProcessCoordinator alloc] initWithServerConnector:self userSettings:[UserSettings sharedUserSettings]];
+        if ([[UserSettings sharedUserSettings] ipcCommunicationEnabled]) {
+            processCoordinator = [[ProcessCoordinator alloc] initWithServerConnector:self userSettings:[UserSettings sharedUserSettings]];
+        }
     }
     return self;
 }
@@ -484,15 +486,21 @@ struct pktExtension {
         DDLogNotice(@"Cannot connect - identity not provisioned");
         return;
     }
-    
+
     if (self.connectionState == ConnectionStateDisconnecting) {
-        // TODO: Remove comment IOS-3558
         DDLogNotice(@"Connect: State was disconnecting.");
+        // Set to the connection state `disconnected`, only if MD is activated.
+        // Because 'Starscream' (WebSocket Library) does not allways fire the `cancelled`
+        // event on disconnect and than the connection state wrongly remains on `disconnecting`.
+        if ([[UserSettings sharedUserSettings] enableMultiDevice] && reconnectAttempts >= 3) {
+            [serverConnectorConnectionState disconnected];
+        }
+
         if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
             // The socketDidDisconnect callback has not been called yet; ensure that we reconnect
             // as soon as the previous disconnect has finished.
-            reconnectAttempts = 1;
             autoReconnect = YES;
+            [self reconnectAfterDelay];
             return;
         }
     } else if (self.connectionState != ConnectionStateDisconnected) {
@@ -1368,13 +1376,13 @@ struct pktExtension {
 
 - (void)networkStatusDidChange:(NSNotification *)notice
 {
-    if ([reachabilityWrapper didLastConnectionTypeChange]) {
+    if ([reachabilityWrapper didLastConnectionTypeChange] && ([reachabilityWrapper isReachabilityUnavailable] || [serverConnectorConnectionState connectionState] == ConnectionStateDisconnected || [serverConnectorConnectionState connectionState] == ConnectionStateDisconnecting)) {
         if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
-            DDLogNotice(@"Internet status changed - forcing reconnect");
+            DDLogNotice(@"Internet status is or was unavailable - forcing reconnect");
             [self reconnect];
         }
         else {
-            DDLogNotice(@"Internet status changed - disconnect Notification Extension");
+            DDLogNotice(@"Internet status is or was unavailable - disconnect Notification Extension");
             [serverConnectorConnectionState disconnecting];
             [socket disconnect];
         }

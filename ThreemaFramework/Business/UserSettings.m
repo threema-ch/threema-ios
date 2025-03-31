@@ -404,7 +404,7 @@ static UserSettings *instance;
         ipcCommunicationEnabled = [defaults boolForKey:@"IPCCommunicationEnabled"];
     }
     else {
-        ipcCommunicationEnabled = true;
+        ipcCommunicationEnabled = false;
     }
 
     ipcSecretPrefix = [defaults objectForKey:@"IPCSecretPrefix"];

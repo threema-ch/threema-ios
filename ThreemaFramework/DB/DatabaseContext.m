@@ -146,7 +146,7 @@ static dispatch_queue_t directContextsQueue;
     
     // This notification should only be observed when a private context exists, but we check anyway
     if (privateContext) {
-        for (NSManagedObject *objectID in objectIDs) {
+        for (NSManagedObjectID *objectID in objectIDs) {
             [privateContext performBlock:^{
                 NSManagedObject *object = [privateContext objectWithID:objectID];
                 [privateContext refreshObject:object mergeChanges:YES];

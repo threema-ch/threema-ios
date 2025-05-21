@@ -1,0 +1,50 @@
+{
+  "configurations" : [
+    {
+      "id" : "339407C4-83D5-4A6F-A45C-EF8AF1313CEC",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "commandLineArgumentEntries" : [
+      {
+        "argument" : "-isRunningForTests"
+      },
+      {
+        "argument" : "-com.apple.CoreData.SQLDebug 1",
+        "enabled" : false
+      },
+      {
+        "argument" : "-com.apple.CoreData.ConcurrencyDebug 1",
+        "enabled" : false
+      }
+    ],
+    "environmentVariableEntries" : [
+      {
+        "key" : "SQLITE_ENABLE_THREAD_ASSERTIONS",
+        "value" : "1"
+      },
+      {
+        "enabled" : false,
+        "key" : "SQLITE_AUTO_TRACE",
+        "value" : ""
+      },
+      {
+        "key" : "SQLITE_ENABLE_FILE_ASSERTIONS",
+        "value" : ""
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Threema.xcodeproj",
+      "identifier" : "F2EAFBBE2D6CC9C400DFFD48",
+      "name" : "Custom OnPrem"
+    }
+  },
+  "testTargets" : [
+
+  ],
+  "version" : 1
+}

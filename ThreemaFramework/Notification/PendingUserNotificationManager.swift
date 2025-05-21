@@ -39,7 +39,7 @@ public protocol PendingUserNotificationManagerProtocol {
     ) -> PendingUserNotification?
     func pendingUserNotification(
         for abstractMessage: AbstractMessage,
-        baseMessage: BaseMessage,
+        baseMessage: BaseMessageEntity,
         stage: UserNotificationStage
     ) -> PendingUserNotification?
     func pendingUserNotification(for boxedMessage: BoxedMessage, stage: UserNotificationStage)
@@ -146,7 +146,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     /// - Returns: Pending user notification or nil
     public func pendingUserNotification(
         for abstractMessage: AbstractMessage,
-        baseMessage: BaseMessage,
+        baseMessage: BaseMessageEntity,
         stage: UserNotificationStage
     ) -> PendingUserNotification? {
         var pendingUserNotification: PendingUserNotification?

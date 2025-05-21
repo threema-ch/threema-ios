@@ -219,7 +219,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     }
                     
                     if let requestID {
-                        message.webRequestID = requestID
+                        // swiftformat:disable:next acronyms
+                        message.webRequestId = requestID
                     }
                     
                     // Distribution list handling
@@ -374,10 +375,6 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             )
             
             return fileMessageEntity.id
-        }
-        
-        guard let messageID else {
-            throw MessageSenderError.noID
         }
         
         // Fetch it again to get a non temporary objectID
@@ -617,7 +614,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
     // MARK: - BallotMessage
     
-    @objc public func sendBallotMessage(for ballot: Ballot) {
+    @objc public func sendBallotMessage(for ballot: BallotEntity) {
         guard BallotMessageEncoder.passesSanityCheck(ballot) else {
             DDLogError("Ballot did not pass sanity check. Do not send.")
             return
@@ -629,11 +626,12 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             var group: Group?
             var conversation: ConversationEntity?
 
-            if let messageBallot = self.entityManager.entityFetcher.getManagedObject(by: ballot.objectID) as? Ballot,
-               let message = self.entityManager.entityCreator
-               .ballotMessage(for: messageBallot.conversation) {
+            if let messageBallot = self.entityManager.entityFetcher
+                .getManagedObject(by: ballot.objectID) as? BallotEntity,
+                let message = self.entityManager.entityCreator
+                .ballotMessage(for: messageBallot.conversation) {
 
-                message.ballot = messageBallot
+                message.updateBallot(ballot)
 
                 messageID = message.id
 
@@ -670,7 +668,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         }
     }
 
-    @objc public func sendBallotVoteMessage(for ballot: Ballot) {
+    @objc public func sendBallotVoteMessage(for ballot: BallotEntity) {
         guard BallotMessageEncoder.passesSanityCheck(ballot) else {
             DDLogError("Ballot did not pass sanity check. Do not send.")
             return
@@ -678,24 +676,22 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
         let (ballotID, receiverIdentity, group, conversation) = entityManager.performAndWait {
             let ballotID = ballot.id
-
             var receiverIdentity: ThreemaIdentity?
-            let group = self.groupManager.getGroup(conversation: ballot.conversation)
-            if let group {
-                self.groupManager.periodicSyncIfNeeded(for: group)
+            var group: Group?
+            var conv: ConversationEntity?
+            
+            if let conversation = ballot.conversation {
+                conv = conversation
+                group = self.groupManager.getGroup(conversation: conversation)
+                if let group {
+                    self.groupManager.periodicSyncIfNeeded(for: group)
+                }
+                else {
+                    receiverIdentity = conversation.contact?.threemaIdentity
+                }
             }
-            else {
-                receiverIdentity = ballot.conversation.contact?.threemaIdentity
-            }
 
-            let conversation = ballot.conversation
-
-            return (ballotID, receiverIdentity, group, conversation)
-        }
-
-        guard let ballotID else {
-            DDLogError("Ballot ID is nil")
-            return
+            return (ballotID, receiverIdentity, group, conv)
         }
 
         taskManager.add(
@@ -727,7 +723,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
     public func sendBaseMessage(with objectID: NSManagedObjectID, to receivers: MessageSenderReceivers) async {
         let isBlobData: Bool? = entityManager.performAndWaitSave {
-            guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+            guard let baseMessage = self.entityManager.entityFetcher
+                .existingObject(with: objectID) as? BaseMessageEntity
             else {
                 return nil
             }
@@ -743,7 +740,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         @Sendable func resetSendingErrorIfValid() {
             entityManager.performAndWaitSave {
                 // We just checked above that a base message with this objectID exists
-                guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+                guard let baseMessage = self.entityManager.entityFetcher
+                    .existingObject(with: objectID) as? BaseMessageEntity
                 else {
                     return
                 }
@@ -779,7 +777,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         @Sendable func setSendingError() {
             entityManager.performAndWaitSave {
                 // We just checked above that a base message with this objectID exists
-                let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+                let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessageEntity
                 baseMessage?.sendFailed = true
             }
         }
@@ -808,7 +806,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
     public func sendDeleteMessage(with objectID: NSManagedObjectID, receiversExcluded: [Contact]?) throws {
         let (messageID, receiverIdentity, group) = try entityManager.performAndWait {
-            guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+            guard let baseMessage = self.entityManager.entityFetcher
+                .existingObject(with: objectID) as? BaseMessageEntity
             else {
                 throw MessageSenderError.unableToLoadMessage
             }
@@ -821,11 +820,6 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             }
 
             return (messageID, receiverIdentity, group)
-        }
-
-        guard let messageID else {
-            DDLogError("Message ID is nil")
-            throw MessageSenderError.sendingFailed
         }
 
         var e2eDeleteMessage = CspE2e_DeleteMessage()
@@ -860,7 +854,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         }
 
         let (hasTextChanged, messageID, receiverIdentity, group) = try entityManager.performAndWaitSave {
-            guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+            guard let baseMessage = self.entityManager.entityFetcher
+                .existingObject(with: objectID) as? BaseMessageEntity
             else {
                 throw MessageSenderError.unableToLoadMessage
             }
@@ -917,11 +912,6 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             return
         }
 
-        guard let messageID else {
-            DDLogError("Message ID is nil")
-            throw MessageSenderError.sendingFailed
-        }
-
         var e2eEditMessage = CspE2e_EditMessage()
         e2eEditMessage.messageID = try messageID.littleEndian()
         e2eEditMessage.text = ThreemaUtility.trimCharacters(in: rawText)
@@ -957,8 +947,9 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         // must contain a
         // single fully-qualified emoji codepoint sequence that is part of the current Unicode standard.
         
-        let (message, messageID, isOwnMessage): (BaseMessage?, Data?, Bool?) = await entityManager.perform {
-            guard let message = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage else {
+        let (message, messageID, isOwnMessage): (BaseMessageEntity?, Data?, Bool?) = await entityManager.perform {
+            guard let message = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessageEntity
+            else {
                 return (nil, nil, nil)
             }
             return (message, message.id, message.isOwnMessage)
@@ -1026,7 +1017,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 var messageReactionEntity: MessageReactionEntity?
                 
                 if let existingReactions = self.entityManager.entityFetcher.messageReactionEntities(
-                    for: message,
+                    forMessage: message,
                     creator: nil
                 ), !existingReactions.isEmpty {
                     
@@ -1141,7 +1132,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             // [Protocol Step] 5. Run the Group Messages Submit Steps with messages set from the following properties:
             let apply = try await entityManager.performSave {
                 
-                guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+                guard let baseMessage = self.entityManager.entityFetcher
+                    .existingObject(with: objectID) as? BaseMessageEntity
                 else {
                     throw MessageSenderError.unableToLoadMessage
                 }
@@ -1152,7 +1144,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 var messageReactionEntity: MessageReactionEntity?
                 
                 if let existingReactions = self.entityManager.entityFetcher.messageReactionEntities(
-                    for: baseMessage,
+                    forMessage: baseMessage,
                     creator: nil
                 ), !existingReactions.isEmpty {
                     
@@ -1295,7 +1287,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     /// - Parameters:
     ///   - messages: Messages to send the read receipt for
     ///   - toIdentity: Receiver of the message
-    public func sendReadReceipt(for messages: [BaseMessage], toIdentity: ThreemaIdentity) async {
+    public func sendReadReceipt(for messages: [BaseMessageEntity], toIdentity: ThreemaIdentity) async {
         let doSendReadReceipt = await entityManager.perform {
             // If multi device not activated and if sending read receipt to contact is disabled, then there is nothing
             // to do
@@ -1316,7 +1308,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     /// - Parameters:
     ///   - messages: Messages to send the read receipt for
     ///   - toGroupIdentity: Group of the messages
-    public func sendReadReceipt(for messages: [BaseMessage], toGroupIdentity: GroupIdentity) async {
+    public func sendReadReceipt(for messages: [BaseMessageEntity], toGroupIdentity: GroupIdentity) async {
         // Multi device must be activated to do the sending (reflect only) of the read receipt
         guard userSettings.enableMultiDevice else {
             return
@@ -1540,7 +1532,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     private func getMessageIDAndReceiver(for objectID: NSManagedObjectID) throws
         -> (messageID: Data?, receiverIdentity: ThreemaIdentity?, group: Group?) {
         try entityManager.performAndWait {
-            guard let baseMessage = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+            guard let baseMessage = self.entityManager.entityFetcher
+                .existingObject(with: objectID) as? BaseMessageEntity
             else {
                 throw MessageSenderError.unableToLoadMessage
             }
@@ -1555,24 +1548,24 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         }
     }
     
-    func sendUserAck(for message: BaseMessage, toIdentity: ThreemaIdentity) async {
+    func sendUserAck(for message: BaseMessageEntity, toIdentity: ThreemaIdentity) async {
         await sendReceipt(for: [message], receiptType: .ack, toIdentity: toIdentity)
     }
 
-    func sendUserAck(for message: BaseMessage, toGroup: Group, receivers: [Contact]) async {
+    func sendUserAck(for message: BaseMessageEntity, toGroup: Group, receivers: [Contact]) async {
         await sendReceipt(for: [message], receiptType: .ack, receivers: receivers, toGroup: toGroup)
     }
 
-    func sendUserDecline(for message: BaseMessage, toIdentity: ThreemaIdentity) async {
+    func sendUserDecline(for message: BaseMessageEntity, toIdentity: ThreemaIdentity) async {
         await sendReceipt(for: [message], receiptType: .decline, toIdentity: toIdentity)
     }
 
-    func sendUserDecline(for message: BaseMessage, toGroup: Group, receivers: [Contact]) async {
+    func sendUserDecline(for message: BaseMessageEntity, toGroup: Group, receivers: [Contact]) async {
         await sendReceipt(for: [message], receiptType: .decline, receivers: receivers, toGroup: toGroup)
     }
 
     private func sendReceipt(
-        for messages: [BaseMessage],
+        for messages: [BaseMessageEntity],
         receiptType: ReceiptType,
         toIdentity: ThreemaIdentity
     ) async {
@@ -1592,7 +1585,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     msgIDAndReadDate[message.id] = receiptType == .read ? message
                         .readDate : nil
 
-                    if message.noDeliveryReceiptFlagSet() {
+                    if message.noDeliveryReceiptFlagSet {
                         DDLogWarn(
                             "Exclude from sending receipt (noDeliveryReceiptFlagSet) for message ID: \(message.id.hexString)"
                         )
@@ -1668,7 +1661,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     }
 
     private func sendReceipt(
-        for messages: [BaseMessage],
+        for messages: [BaseMessageEntity],
         receiptType: ReceiptType,
         receivers: [Contact],
         toGroup: Group

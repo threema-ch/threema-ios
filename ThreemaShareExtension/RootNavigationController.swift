@@ -339,7 +339,7 @@ class RootNavigationController: UINavigationController {
             
             for item in items {
                 let attributes: [NSAttributedString.Key: Any] = [
-                    NSAttributedString.Key.foregroundColor: UIColor.primary as Any,
+                    NSAttributedString.Key.foregroundColor: UIColor.tintColor as Any,
                 ]
                 
                 item.setTitleTextAttributes(attributes, for: .normal)
@@ -474,7 +474,7 @@ class RootNavigationController: UINavigationController {
                 self.evaluatedPolicyDomainState = data
                 
                 Task { @MainActor in
-                    let title: String! =
+                    let title: String =
                         if LAContext().unlockType() == .faceID {
                             #localize("alert_biometrics_changed_title_face")
                         }
@@ -484,7 +484,11 @@ class RootNavigationController: UINavigationController {
                     UIAlertTemplate.showAlert(
                         owner: vc,
                         title: title,
-                        message: #localize("alert_biometrics_changed_message")
+                        message: String.localizedStringWithFormat(
+                            #localize("alert_biometrics_changed_message"),
+                            TargetManager.appName,
+                            TargetManager.appName
+                        )
                     ) { _ in
                     }
                 }

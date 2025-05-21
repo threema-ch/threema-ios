@@ -171,16 +171,16 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
             view.heightAnchor.constraint(lessThanOrEqualToConstant: ChatViewConfiguration.VoiceMessage.waveformHeight),
         ])
         
-        accessibilityTraits = .allowsDirectInteraction
+        self?.accessibilityTraits = .allowsDirectInteraction
         return view
     }()
     
     private lazy var micIconOrPlaybackSpeedButton: MessageVoiceMessageSpeedButton = {
-        let button = MessageVoiceMessageSpeedButton(action: { [weak self] themedButton in
+        let button = MessageVoiceMessageSpeedButton { [weak self] themedButton in
             guard let self, let speedIconButton = themedButton as? MessageVoiceMessageSpeedButton else {
                 let msg = "Wrong kind of button"
                 assertionFailure(msg)
-                DDLogError(msg)
+                DDLogError("\(msg)")
                 return
             }
             
@@ -193,7 +193,7 @@ final class ChatViewVoiceMessageTableViewCell: ChatViewBaseTableViewCell, Measur
                 speedIconButton.toggleOrUpdateView()
                 self.voiceMessageCellDelegate?.updatePlaybackSpeed(newSpeedSetting)
             }
-        })
+        }
         button.translatesAutoresizingMaskIntoConstraints = false
         
         button.isPlaying = false
@@ -558,7 +558,7 @@ extension ChatViewVoiceMessageTableViewCell {
         guard let voiceMessage = voiceMessageAndNeighbors?.message else {
             let msg = "Cannot take any button action without a message"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             return
         }
         
@@ -729,7 +729,7 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
         typealias Provider = ChatViewMessageActionsProvider
             
         // MessageMarkers
-        let markStarHandler = { (message: BaseMessage) in
+        let markStarHandler = { (message: BaseMessageEntity) in
             self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
         }
         
@@ -878,8 +878,7 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
                 [UIAccessibilityCustomAction]()
             let customActionArray = [
                 UIAccessibilityCustomAction(
-                    name: BundleUtil
-                        .localizedString(forKey: "accessibility_voiceMessage_forward_hint")
+                    name: #localize("accessibility_voiceMessage_forward_hint")
                 ) { _ in
                     if let voiceMessage = self.voiceMessageAndNeighbors?.message {
                         self.waveformView.delegate?.currentTimeForward(for: voiceMessage)
@@ -888,8 +887,7 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
                     return false
                 },
                 UIAccessibilityCustomAction(
-                    name: BundleUtil
-                        .localizedString(forKey: "accessibility_voiceMessage_rewind_hint")
+                    name: #localize("accessibility_voiceMessage_rewind_hint")
                 ) { _ in
                     if let voiceMessage = self.voiceMessageAndNeighbors?.message {
                         self.waveformView.delegate?.currentTimeRewind(for: voiceMessage)
@@ -898,8 +896,7 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
                     return false
                 },
                 UIAccessibilityCustomAction(
-                    name: BundleUtil
-                        .localizedString(forKey: "accessibility_voiceMessage_speed_hint")
+                    name: #localize("accessibility_voiceMessage_speed_hint")
                 ) { _ in
                     let newSpeedSetting = UserSettings.shared().threemaAudioMessagePlaySpeedSwitchToNextValue()
                     UIAccessibility.post(

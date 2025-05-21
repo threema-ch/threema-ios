@@ -275,21 +275,20 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
     }
     
-    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessage) {
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessageEntity) {
         businessInjector.entityManager.performAndWaitSave {
             if let msg = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: baseMessage.objectID) as? BaseMessage {
+                .getManagedObject(by: baseMessage.objectID) as? BaseMessageEntity {
                 if !AppDelegate.shared().active {
                     let databaseManager = DatabaseManager()
                     databaseManager.addDirtyObject(msg)
                    
-                    if let conversation = msg.conversation {
-                        databaseManager.addDirtyObject(conversation)
-                        if let contact = conversation.contact {
-                            databaseManager.addDirtyObject(contact)
-                        }
+                    let conversation = msg.conversation
+                    databaseManager.addDirtyObject(conversation)
+                    if let contact = conversation.contact {
+                        databaseManager.addDirtyObject(contact)
                     }
-                    
+        
                     if message is ReactionMessage || message is GroupReactionMessage,
                        let reactions = baseMessage.reactions {
                         for reaction in reactions {
@@ -304,12 +303,11 @@ extension IncomingMessageManager: MessageProcessorDelegate {
                     }
                 }
 
-                if let conversation = msg.conversation {
-                    let totalCount = self.businessInjector.unreadMessages
-                        .totalCount(doCalcUnreadMessagesCountOf: [conversation], withPerformBlockAndWait: false)
-                    self.notificationManager.updateTabBarBadge(badgeTotalCount: totalCount)
-                }
-
+                let conversation = msg.conversation
+                let totalCount = self.businessInjector.unreadMessages
+                    .totalCount(doCalcUnreadMessagesCountOf: [conversation], withPerformBlockAndWait: false)
+                self.notificationManager.updateTabBarBadge(badgeTotalCount: totalCount)
+                
                 if let pendingUserNotification = self.pendingUserNotificationManager.pendingUserNotification(
                     for: message,
                     baseMessage: msg,

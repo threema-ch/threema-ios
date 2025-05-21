@@ -22,13 +22,13 @@
 #import <ThreemaFramework/BoxFileMessage.h>
 #import <ThreemaFramework/GroupFileMessage.h>
 
-@class ConversationEntity;
+@class ConversationEntity, BaseMessageEntity;
 
 @interface FileMessageDecoder : NSObject
 
-+ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError *err))onError;
++ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(BaseMessageEntity *message))onCompletion onError:(void(^)(NSError *err))onError;
 
-+ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError *err))onError;
++ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(BaseMessageEntity *message))onCompletion onError:(void(^)(NSError *err))onError;
 
 + (nullable NSString *)decodeFilenameFromBox:(nonnull BoxFileMessage *)message;
 

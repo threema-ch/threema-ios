@@ -64,7 +64,7 @@ final class FileIcon: UIImageView {
     private lazy var fileSymbolLabel: UILabel = {
         let label = UILabel()
         
-        label.textColor = Colors.black
+        label.textColor = .black
         
         // We don't adapt to content sizes as this would break the appearance completely
         if let roundedFontDescriptor = Configuration.font.fontDescriptor.withDesign(
@@ -158,7 +158,7 @@ final class FileIcon: UIImageView {
     // MARK: - Updates
     
     func updateColors() {
-        fileSymbolLabel.textColor = Colors.black
+        fileSymbolLabel.textColor = .black
     }
     
     // MARK: - Set file type

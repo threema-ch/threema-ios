@@ -31,7 +31,7 @@ public protocol UserNotificationManagerProtocol {
         _ from: UserNotificationContent,
         _ to: inout UNMutableNotificationContent,
         _ silent: Bool,
-        _ baseMessage: BaseMessage?
+        _ baseMessage: BaseMessageEntity?
     )
 }
 
@@ -180,7 +180,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         _ from: UserNotificationContent,
         _ to: inout UNMutableNotificationContent,
         _ silent: Bool,
-        _ baseMessage: BaseMessage?
+        _ baseMessage: BaseMessageEntity?
     ) {
         
         var pushSound: String = from.categoryIdentifier.elementsEqual("GROUP") ? userSettings
@@ -299,8 +299,9 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         }
         
         // Is blockUnknown active?
-        if entityManager.entityFetcher.contact(for: senderIdentity) == nil, userSettings.blockUnknown,
-           !TrustedContacts(rawValue: senderIdentity).ignoreBlockUnknown {
+        if entityManager.entityFetcher.contact(for: senderIdentity) == nil,
+           userSettings.blockUnknown,
+           !PredefinedContacts(rawValue: senderIdentity).ignoreBlockUnknown {
             return false
         }
         
@@ -342,7 +343,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         }
 
         // TODO: (IOS-5090) Is this check necessary?
-        // BaseMessage checks
+        // BaseMessageEntity checks
         if let flags = pendingUserNotification.baseMessage?.flags {
             guard flags.intValue & Int(MESSAGE_FLAG_SEND_PUSH) != 0,
                   flags.intValue & Int(MESSAGE_FLAG_IMMEDIATE_DELIVERY) == 0 else {
@@ -357,8 +358,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     private func groupInfos(for pendingUserNotification: PendingUserNotification)
         -> (groupID: String, groupCreator: String)? {
         if let baseMessage = pendingUserNotification.baseMessage,
-           let conversation = baseMessage.conversation,
-           let group = entityManager.entityFetcher.groupEntity(for: conversation) {
+           let group = entityManager.entityFetcher.groupEntity(for: baseMessage.conversation) {
             // swiftformat:disable:next acronyms
             return (group.groupId.base64EncodedString(), group.groupCreator ?? MyIdentityStore.shared().identity)
         }
@@ -385,16 +385,15 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     }
     
     private func nickname(for pendingUserNotification: PendingUserNotification) -> String {
-        if let baseMessage = pendingUserNotification.baseMessage,
-           let conversation = baseMessage.conversation {
-            if conversation.isGroup {
+        if let baseMessage = pendingUserNotification.baseMessage {
+            if baseMessage.conversation.isGroup {
                 if let contact = entityManager.entityFetcher.contact(for: pendingUserNotification.senderIdentity),
                    let publicNickname = contact.publicNickname {
                     return publicNickname
                 }
             }
             else {
-                if let contact = conversation.contact,
+                if let contact = baseMessage.conversation.contact,
                    let publicNickname = contact.publicNickname {
                     return publicNickname
                 }

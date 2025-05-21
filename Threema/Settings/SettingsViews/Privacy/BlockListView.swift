@@ -47,7 +47,10 @@ struct BlockListView: View {
                         .foregroundStyle(.secondary)
                 }
             } footer: {
-                Text(#localize("settings_privacy_blocklist_footer"))
+                Text(String.localizedStringWithFormat(
+                    #localize("settings_privacy_blocklist_footer"),
+                    TargetManager.localizedAppName
+                ))
             }
         }
         .onReceive(pubIncomingUpdate) { _ in
@@ -61,9 +64,19 @@ struct BlockListView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
-                .tint(Color(.primary))
-                .alert(#localize("settings_privacy_blocklist_alert_add_description"), isPresented: $showingAlert) {
-                    TextField(#localize("settings_privacy_blocklist_alert_threema_id"), text: $blockThreemaID)
+                .tint(.accentColor)
+                .alert(
+                    String.localizedStringWithFormat(
+                        #localize("settings_privacy_blocklist_alert_add_description"),
+                        TargetManager.localizedAppName
+                    ), isPresented: $showingAlert
+                ) {
+                    TextField(
+                        String.localizedStringWithFormat(
+                            #localize("settings_privacy_blocklist_alert_threema_id"),
+                            TargetManager.localizedAppName
+                        ), text: $blockThreemaID
+                    )
                     Button(#localize("add_button")) {
                         let blockID = blockThreemaID.uppercased()
                         blockThreemaID = ""
@@ -96,7 +109,7 @@ struct BlockListView_Previews: PreviewProvider {
         NavigationView {
             BlockListView()
         }
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
         .environmentObject(BusinessInjector.ui.settingsStore as! SettingsStore)
     }
 }

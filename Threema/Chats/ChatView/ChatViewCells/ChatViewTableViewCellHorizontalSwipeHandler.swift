@@ -125,7 +125,7 @@ class ChatViewTableViewCellHorizontalSwipeHandler: NSObject {
         @unknown default:
             let msg = "Unhandled case in swipe gesture recognizer."
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
         }
         
         if swipeForCellDetail {

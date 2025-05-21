@@ -134,8 +134,11 @@ final class ChatViewController: ThemedViewController {
                 
                 // When we start in `preview` mode the messages are not marked as read
                 // so we should retry now
-                DispatchQueue.global(qos: .userInteractive).async {
-                    self.unreadMessagesSnapshot.synchronousReconfiguration()
+                if oldValue == .preview {
+                    DispatchQueue.global(qos: .userInteractive).async {
+                        self.unreadMessagesSnapshot.synchronousReconfiguration()
+                    }
+                    chatBarCoordinator.loadDraft()
                 }
                 
             case .search:
@@ -219,7 +222,7 @@ final class ChatViewController: ThemedViewController {
             target: self,
             action: #selector(showDeleteMessagesAlert)
         )
-        button.tintColor = Colors.red
+        button.tintColor = .systemRed
         return button
     }()
     
@@ -422,7 +425,7 @@ final class ChatViewController: ThemedViewController {
                     return
                 }
                 guard let message = entityManager.entityFetcher
-                    .existingObject(with: newestUnreadMessageObjectID) as? BaseMessage else {
+                    .existingObject(with: newestUnreadMessageObjectID) as? BaseMessageEntity else {
                     
                     jumpToBottom()
                     return
@@ -539,7 +542,7 @@ final class ChatViewController: ThemedViewController {
     
     private var isUserInteractiveScroll = false
     
-    private var isApplicationInForeground = true
+    private(set) var isApplicationInForeground = true
     var willDisappear = false {
         didSet {
             DDLogVerbose("\(#function) willDisappear \(willDisappear)")
@@ -924,7 +927,7 @@ final class ChatViewController: ThemedViewController {
     // MARK: - Public functions
     
     @objc func isRecording() -> Bool {
-        chatBarCoordinator.chatBar.recordingState.isRecording
+        chatBarCoordinator.chatBar.recordingState == .recording
     }
     
     @objc func isPlayingAudioMessage() -> Bool {
@@ -1022,9 +1025,9 @@ final class ChatViewController: ThemedViewController {
             dataSource.removeUnreadMessageLine()
         }
         
-        chatBarCoordinator.saveDraft()
-        
         isApplicationInForeground = false
+        
+        chatBarCoordinator.saveDraft()
     }
     
     @objc private func applicationWillEnterForeground() {
@@ -1551,17 +1554,15 @@ extension ChatViewController {
     func jumpToAndSelect(_ messageObjectID: NSManagedObjectID) {
         isJumping = true
         
-        guard let message = entityManager.entityFetcher.existingObject(with: messageObjectID) as? BaseMessage else {
+        guard let message = entityManager.entityFetcher.existingObject(with: messageObjectID) as? BaseMessageEntity
+        else {
             DDLogWarn(
                 "Unable to load message (\(messageObjectID.uriRepresentation())) to jump to."
             )
             return
         }
         
-        guard let messageDate = message.date else {
-            DDLogWarn("Unable to load date for message (\(messageObjectID.uriRepresentation())) to jump to.")
-            return
-        }
+        let messageDate = message.date
         
         dataSource.loadMessages(around: messageDate).done { [weak self] in
             guard let indexPath = self?.dataSource.indexPath(
@@ -1592,7 +1593,10 @@ extension ChatViewController {
         }
     }
     
-    private func completeJumping(to message: BaseMessage? = nil, completion: ((BaseMessage?) -> Void)? = nil) {
+    private func completeJumping(
+        to message: BaseMessageEntity? = nil,
+        completion: ((BaseMessageEntity?) -> Void)? = nil
+    ) {
         // Wait a bit until scrolling should be somewhat completed
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(400)) {
             self.isJumping = false
@@ -1631,7 +1635,7 @@ extension ChatViewController {
         }
     }
     
-    private func jump(toUnreadMessage unreadMessageMessageID: Data, completion: ((BaseMessage?) -> Void)? = nil) {
+    private func jump(toUnreadMessage unreadMessageMessageID: Data, completion: ((BaseMessageEntity?) -> Void)? = nil) {
         dataSource.initialSetupCompleted = true
         let position: UITableView.ScrollPosition = .top
         jump(to: unreadMessageMessageID, at: position, completion: { baseMessage in
@@ -1697,7 +1701,7 @@ extension ChatViewController {
         to messageID: Data,
         at scrollPosition: UITableView.ScrollPosition = .top,
         animated: Bool = false,
-        completion: ((BaseMessage?) -> Void)? = nil,
+        completion: ((BaseMessageEntity?) -> Void)? = nil,
         onError: (() -> Void)? = nil
     ) {
         guard let message = entityManager.entityFetcher.message(
@@ -1714,18 +1718,15 @@ extension ChatViewController {
     }
     
     private func jump(
-        to message: BaseMessage,
+        to message: BaseMessageEntity,
         at scrollPosition: UITableView.ScrollPosition = .top,
         animated: Bool,
-        completion: ((BaseMessage?) -> Void)?,
+        completion: ((BaseMessageEntity?) -> Void)?,
         onError: (() -> Void)? = nil
     ) {
         isJumping = true
         
-        guard let messageDate = message.date else {
-            DDLogWarn("Unable to load date for message (\(message.objectID.uriRepresentation())) to jump to.")
-            return
-        }
+        let messageDate = message.date
         
         dataSource.loadMessages(around: messageDate).done {
             // TODO: This is a workaround that will be resolved with IOS-2720
@@ -1757,9 +1758,9 @@ extension ChatViewController {
                 if let newestUnreadMessage = self.unreadMessagesSnapshot.unreadMessagesState?
                     .oldestConsecutiveUnreadMessage,
                     let message = self.entityManager.entityFetcher
-                    .getManagedObject(by: newestUnreadMessage) as? BaseMessage,
-                    let messageID = message.id {
+                    .getManagedObject(by: newestUnreadMessage) as? BaseMessageEntity {
                     // We either succeed right away or do this on the next snapshot apply
+                    let messageID = message.id
                     DDLogVerbose("willEnterForegroundCompletion setup")
                     self.willEnterForegroundCompletion = { completion in
                         self.jump(to: messageID, animated: true, completion: { _ in
@@ -1981,6 +1982,8 @@ extension ChatViewController: UITableViewDelegate {
         dataSource.didSelectRow(at: indexPath)
         tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
         updateSelectionTitle()
+
+        hideKeyboard()
     }
     
     @objc func endMultiselect() {
@@ -2037,7 +2040,7 @@ extension ChatViewController: UITableViewDelegate {
         // We only show the iOS ContextMenu for `ChatViewSystemMessageTableViewCell`s, for others we show our custom
         // implementations. See `presentContextMenu()` below.
         guard let cell = tableView.cellForRow(at: indexPath) as? ChatViewMessageActions,
-              let systemMessageCell = cell as? ChatViewSystemMessageTableViewCell else {
+              cell is ChatViewSystemMessageTableViewCell else {
             return nil
         }
 
@@ -2317,7 +2320,7 @@ extension ChatViewController: ChatViewDataSourceDelegate {
         DispatchQueue.main.async {
             guard let message = self.entityManager.entityFetcher.getManagedObject(
                 by: messageIdentifier
-            ) as? BaseMessage,
+            ) as? BaseMessageEntity,
                 message.isOwnMessage else {
                 return
             }
@@ -3015,12 +3018,12 @@ extension ChatViewController {
     
     private func chatViewDataSourceLoadAround() -> Date? {
         if let globalSearchMessageID = showConversationInformation?.messageObjectID,
-           let message = entityManager.entityFetcher.getManagedObject(by: globalSearchMessageID) as? BaseMessage {
+           let message = entityManager.entityFetcher.getManagedObject(by: globalSearchMessageID) as? BaseMessageEntity {
             message.date
         }
         else if let newestUnreadMessage = unreadMessagesSnapshot.unreadMessagesState?.oldestConsecutiveUnreadMessage,
                 let message = entityManager.entityFetcher
-                .getManagedObject(by: newestUnreadMessage) as? BaseMessage {
+                .getManagedObject(by: newestUnreadMessage) as? BaseMessageEntity {
             message.date
         }
         else {

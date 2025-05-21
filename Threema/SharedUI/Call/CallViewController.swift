@@ -170,7 +170,7 @@ class CallViewController: UIViewController {
                             pointSize: 36.0,
                             symbolWeight: .thin,
                             symbolScale: .large,
-                            paletteColors: [Colors.black, Colors.black, Colors.white]
+                            paletteColors: [.black, .black, .white]
                         )
                     speakerButton.setImage(
                         speakerImage,
@@ -192,7 +192,7 @@ class CallViewController: UIViewController {
                             pointSize: 36.0,
                             symbolWeight: .thin,
                             symbolScale: .large,
-                            paletteColors: [Colors.black, Colors.black, Colors.white]
+                            paletteColors: [.black, .black, .white]
                         )
                     speakerButton.setImage(
                         headphonesImage,
@@ -215,7 +215,7 @@ class CallViewController: UIViewController {
                             pointSize: 36.0,
                             symbolWeight: .thin,
                             symbolScale: .large,
-                            paletteColors: [Colors.black, Colors.black, Colors.white]
+                            paletteColors: [.black, .black, .white]
                         )
                     speakerButton.setImage(
                         bluetoothImage,
@@ -238,7 +238,7 @@ class CallViewController: UIViewController {
                             pointSize: 36.0,
                             symbolWeight: .thin,
                             symbolScale: .large,
-                            paletteColors: [Colors.white, Colors.white, Colors.white]
+                            paletteColors: [.white, .white, .white]
                         )
                     speakerButton.setImage(
                         earpeaceImage,
@@ -400,7 +400,10 @@ extension CallViewController {
         case .outgoingRinging:
             timerString = #localize("call_status_ringing")
         case .incomingRinging:
-            timerString = #localize("call_status_incom_ringing")
+            timerString = String.localizedStringWithFormat(
+                #localize("call_status_incom_ringing"),
+                TargetManager.localizedAppName
+            )
         case .sendAnswer:
             timerString = #localize("call_status_ringing")
         case .receivedAnswer:
@@ -426,7 +429,10 @@ extension CallViewController {
         case .rejectedUnknown:
             timerString = #localize("call_rejected")
         case .rejectedDisabled:
-            timerString = #localize("call_rejected_disabled")
+            timerString = String.localizedStringWithFormat(
+                #localize("call_rejected_disabled"),
+                TargetManager.localizedAppName
+            )
         case .microphoneDisabled:
             timerString = #localize("call_mic_access")
         }
@@ -526,9 +532,8 @@ extension CallViewController {
             let businessContact = Contact(contactEntity: contact)
             profilePictureView.info = .contact(businessContact)
             showProfilePicture(contact: contact)
+            verificationLevel.image = businessContact.verificationLevelImage
         }
-        
-        verificationLevel.image = contact?.verificationLevelImage()
 
         if isTesting == false {
             debugLabel.isHidden = true
@@ -548,7 +553,7 @@ extension CallViewController {
                 pointSize: 50.0,
                 symbolWeight: .semibold,
                 symbolScale: .large,
-                paletteColors: [Colors.white, Colors.white, Colors.green]
+                paletteColors: [.white, .white, .systemGreen]
             )
         acceptButton.setImage(acceptButtonImage, for: .normal)
         acceptButton.setImage(acceptButtonImage, for: .selected)
@@ -559,7 +564,7 @@ extension CallViewController {
                 pointSize: 50.0,
                 symbolWeight: .semibold,
                 symbolScale: .large,
-                paletteColors: [Colors.white, Colors.white, Colors.red]
+                paletteColors: [.white, .white, .systemRed]
             )
         rejectButton.setImage(rejectButtonImage, for: .normal)
         rejectButton.setImage(rejectButtonImage, for: .selected)
@@ -570,7 +575,7 @@ extension CallViewController {
                 pointSize: 50.0,
                 symbolWeight: .semibold,
                 symbolScale: .large,
-                paletteColors: [Colors.white, Colors.white, Colors.red]
+                paletteColors: [.white, .white, .systemRed]
             )
         endButton.setImage(endButtonImage, for: .normal)
         endButton.setImage(endButtonImage, for: .selected)
@@ -581,7 +586,7 @@ extension CallViewController {
                 pointSize: 40,
                 symbolWeight: .thin,
                 symbolScale: .large,
-                paletteColors: [Colors.white, Colors.white, Colors.white]
+                paletteColors: [.white, .white, .white]
             )
         cameraButton.setImage(cameraButtonImage, for: .normal)
         cameraButton.setImage(cameraButtonImage, for: .selected)
@@ -602,7 +607,7 @@ extension CallViewController {
                 pointSize: 40.0,
                 symbolWeight: .thin,
                 symbolScale: .large,
-                paletteColors: [Colors.white, Colors.white, Colors.white]
+                paletteColors: [.white, .white, .white]
             )
         cameraSwitchButton.setImage(cameraSwitchButtonImage, for: .normal)
         cameraSwitchButton.setImage(cameraSwitchButtonImage, for: .selected)
@@ -613,7 +618,7 @@ extension CallViewController {
                 pointSize: 40.0,
                 symbolWeight: .thin,
                 symbolScale: .large,
-                paletteColors: [Colors.red, Colors.white, Colors.white]
+                paletteColors: [.systemRed, .white, .white]
             )
         cellularWarningButton.setImage(cellularWarningButtonImage, for: .normal)
         cellularWarningButton.setImage(cellularWarningButtonImage, for: .selected)
@@ -624,7 +629,7 @@ extension CallViewController {
                 pointSize: 28,
                 symbolWeight: .semibold,
                 symbolScale: .large,
-                paletteColors: [Colors.white]
+                paletteColors: [.white]
             )
         hideButton.imageView?.contentMode = .scaleAspectFit
         hideButton.setImage(hideButtonImage, for: .normal)
@@ -699,17 +704,16 @@ extension CallViewController {
                         pointSize: 40,
                         symbolWeight: .thin,
                         symbolScale: .large,
-                        paletteColors: [Colors.white, Colors.white, Colors.white]
+                        paletteColors: [.white, .white, .white]
                     )
 
             cameraButton?.setImage(cameraButtonImage, for: .normal)
             cameraButton?.setImage(cameraButtonImage, for: .selected)
             cameraButton?.setImage(cameraButtonImage, for: .highlighted)
-            cameraButton?.accessibilityLabel = BundleUtil
-                .localizedString(
-                    forKey: isLocalVideoActive ? "call_camera_deactivate_button" :
-                        "call_camera_activate_button"
-                )
+            cameraButton?
+                .accessibilityLabel = isLocalVideoActive ? #localize("call_camera_deactivate_button") :
+                #localize("call_camera_activate_button")
+                
             cameraButton?.alpha = 1.0
             cameraButton?.isHidden = !isCallInitiator && !alreadyAccepted
             cameraSwitchButton?
@@ -735,7 +739,7 @@ extension CallViewController {
                             pointSize: 40,
                             symbolWeight: .thin,
                             symbolScale: .large,
-                            paletteColors: [Colors.gray, Colors.gray, Colors.gray]
+                            paletteColors: [.systemGray, .systemGray, .systemGray]
                         )
 
                 cameraButton?.setImage(cameraButtonImage, for: .normal)
@@ -771,7 +775,10 @@ extension CallViewController {
             self.debugLabel.isHidden = true
             self.cellularWarningButton.isHidden = true
         
-            self.timerLabel.text = #localize("call_status_incom_ringing")
+            self.timerLabel.text = String.localizedStringWithFormat(
+                #localize("call_status_incom_ringing"),
+                TargetManager.localizedAppName
+            )
         }
     }
     
@@ -803,7 +810,7 @@ extension CallViewController {
                     pointSize: 40,
                     symbolWeight: .thin,
                     symbolScale: .large,
-                    paletteColors: [Colors.white, Colors.white, Colors.white]
+                    paletteColors: [.white, .white, .white]
                 )
         cameraButton?.setImage(cameraButtonImage, for: .normal)
         cameraButton?.setImage(cameraButtonImage, for: .selected)
@@ -834,7 +841,7 @@ extension CallViewController {
                 pointSize: 40,
                 symbolWeight: .thin,
                 symbolScale: .large,
-                paletteColors: [Colors.white, Colors.white, Colors.white]
+                paletteColors: [.white, .white, .white]
             )
         cameraButton?.setImage(cameraButtonImage, for: .normal)
         cameraButton?.setImage(cameraButtonImage, for: .selected)
@@ -849,7 +856,7 @@ extension CallViewController {
                     pointSize: 36.0,
                     symbolWeight: .thin,
                     symbolScale: .large,
-                    paletteColors: [Colors.black, Colors.black, Colors.white]
+                    paletteColors: [.black, .black, .white]
                 ),
             for: .normal
         )
@@ -1060,11 +1067,9 @@ extension CallViewController {
     
     private func switchCamera() {
         useBackCamera = !useBackCamera
-        cameraSwitchButton.accessibilityLabel = BundleUtil
-            .localizedString(
-                forKey: useBackCamera ? "call_camera_switch_to_front_button" :
-                    "call_camera_switch_to_back_button"
-            )
+        cameraSwitchButton
+            .accessibilityLabel = useBackCamera ? #localize("call_camera_switch_to_front_button") :
+            #localize("call_camera_switch_to_back_button")
         endLocalVideo(switchCamera: true)
         startLocalVideo(useBackCamera: useBackCamera, switchCamera: true)
     }
@@ -1468,20 +1473,17 @@ extension CallViewController {
     }
     
     private func updateAccessibilityLabels() {
-        muteButton.accessibilityLabel = BundleUtil
-            .localizedString(forKey: muteButton.isSelected ? "call_unmute" : "call_mute")
-        speakerButton.accessibilityLabel = BundleUtil
-            .localizedString(forKey: speakerButton.tag == 1 ? "call_earpiece" : "call_speaker")
+        muteButton.accessibilityLabel = muteButton.isSelected ? #localize("call_unmute") : #localize("call_mute")
+        speakerButton.accessibilityLabel = speakerButton
+            .tag == 1 ? #localize("call_earpiece") : #localize("call_speaker")
         endButton.accessibilityLabel = #localize("call_end")
         acceptButton.accessibilityLabel = #localize("call_accept")
         rejectButton.accessibilityLabel = #localize("call_reject")
         hideButton.accessibilityLabel = #localize("call_hide_call")
         
-        cameraButton.accessibilityLabel = BundleUtil
-            .localizedString(
-                forKey: isLocalVideoActive ? "call_camera_deactivate_button" :
-                    "call_camera_activate_button"
-            )
+        cameraButton
+            .accessibilityLabel = isLocalVideoActive ? #localize("call_camera_deactivate_button") :
+            #localize("call_camera_activate_button")
         cameraSwitchButton.accessibilityLabel = #localize("call_camera_switch_to_back_button")
     }
     

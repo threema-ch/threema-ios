@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 import SwiftUI
 import UIKit
@@ -44,7 +45,8 @@ public class WallpaperStore {
         let filename = wallpapers[key] ?? uniqueFilename()
         let wallpaperPath: URL = wallpaperPath(filename: filename)
         
-        FileUtility.shared.write(fileURL: wallpaperPath, contents: MediaConverter.pngRepresentation(for: wallpaper))
+        let compressed = compressImageData(wallpaper.pngData())
+        FileUtility.shared.write(fileURL: wallpaperPath, contents: compressed)
         
         wallpapers.updateValue(filename, forKey: key)
         
@@ -54,7 +56,8 @@ public class WallpaperStore {
     
     public func saveDefaultWallpaper(_ wallpaper: UIImage?) {
         if let wallpaper {
-            UserSettings.shared().wallpaper = MediaConverter.pngRepresentation(for: wallpaper)
+            let compressed = compressImageData(wallpaper.pngData())
+            UserSettings.shared().wallpaper = compressed
         }
         else {
             UserSettings.shared().wallpaper = nil
@@ -72,10 +75,18 @@ public class WallpaperStore {
            let filename = wallpapers[key] as? String,
            let data = FileUtility.shared.read(fileURL: wallpaperPath(filename: filename)),
            let wallpaper = UIImage(data: data) {
+            
+            // In order to fix to large wallpapers that were saved before we compressed them, we check each upon loading
+            migrateExistingWallpaper(data: data, id: conversationID)
+            
             return wallpaper
         }
         else if let data = BusinessInjector().userSettings.wallpaper,
                 let wallpaper = UIImage(data: data) {
+            
+            // In order to fix to large wallpapers that were saved before we compressed them, we check each upon loading
+            migrateExistingWallpaper(data: data, id: nil)
+            
             return wallpaper
         }
         else {
@@ -133,8 +144,20 @@ public class WallpaperStore {
     
     public func defaultIsThreemaWallpaper() -> Bool {
         // Check the default background for light and dark theme
-        UserSettings.shared().wallpaper == MediaConverter.pngRepresentation(for: defaultWallPaperDark()) ||
-            UserSettings.shared().wallpaper == MediaConverter.pngRepresentation(for: defaultWallPaperLight())
+        if UserSettings.shared().wallpaper == compressImageData(defaultWallPaperDark().pngData()) ||
+            UserSettings.shared().wallpaper == compressImageData(defaultWallPaperLight().pngData()) {
+            return true
+        }
+        else if UserSettings.shared().wallpaper == compressImageData(defaultWallPaperDark(true).pngData()) ||
+            UserSettings.shared().wallpaper == MediaConverter
+            .pngRepresentation(for: defaultWallPaperLight(true)) {
+            // We need this to replace the old default wallpaper with the new one
+            saveDefaultWallpaper(defaultWallPaper)
+            return true
+        }
+        else {
+            return false
+        }
     }
     
     public func defaultIsEmptyWallpaper() -> Bool {
@@ -164,13 +187,64 @@ public class WallpaperStore {
         )
     }
     
-    private func defaultWallPaperDark() -> UIImage {
-        UIImage(resource: .chatBackground)
+    private func defaultWallPaperDark(_ old: Bool = false) -> UIImage {
+        UIImage(resource: old ? .chatBackgroundOld : .chatBackground)
             .draw(withTintColor: Colors.backgroundChatLines(colorTheme: .dark))
     }
     
-    private func defaultWallPaperLight() -> UIImage {
-        UIImage(resource: .chatBackground)
+    private func defaultWallPaperLight(_ old: Bool = false) -> UIImage {
+        UIImage(resource: old ? .chatBackgroundOld : .chatBackground)
             .draw(withTintColor: Colors.backgroundChatLines(colorTheme: .light))
+    }
+    
+    /// Compresses de passed in image data until it's smaller than the maximal size defined in the function
+    /// - Parameter data: Image data to compress
+    /// - Returns: Comnpressed data or original if is alsready smaller than size
+    private func compressImageData(_ data: Data?) -> Data? {
+        let maxSize = 1_500_000
+        guard let data, data.count >= maxSize else {
+            return data
+        }
+        
+        var compressed: Data = data
+        DDLogInfo("[WallpaperStore] Compressing image data. Original size: \(data.count)")
+        
+        while compressed.count > maxSize {
+            guard let freshlyCompressed = MediaConverter.scaleImageData(
+                to: compressed,
+                toMaxSize: 3000,
+                useJPEG: true,
+                withQuality: 0.5
+            ) else {
+                break
+            }
+            compressed = freshlyCompressed
+        }
+        
+        DDLogInfo("[WallpaperStore] Compressed image data. Final size: \(compressed.count)")
+        return compressed
+    }
+    
+    /// Compresses given image data in background and saves it.
+    /// - Parameters:
+    ///   - data: Data of image to compress
+    ///   - id: Optional id, if nil, data will be saved to default wallpaper
+    private func migrateExistingWallpaper(data: Data, id: NSManagedObjectID?) {
+        Task.detached {
+            if let compressed = self.compressImageData(data), compressed.count != data.count,
+               let compressedImage = UIImage(data: compressed) {
+                DDLogNotice(
+                    "[WallpaperStore] Compressed exitsting wallpaper from \(data.count) to \(compressed.count) bytes."
+                )
+                
+                // Views will be updated by the notification thrown in the save functions.
+                if let id {
+                    self.saveWallpaper(compressedImage, for: id)
+                }
+                else {
+                    self.saveDefaultWallpaper(compressedImage)
+                }
+            }
+        }
     }
 }

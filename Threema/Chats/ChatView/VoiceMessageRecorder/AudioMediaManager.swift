@@ -23,15 +23,20 @@ import CocoaLumberjackSwift
 import ThreemaFramework
 
 class AudioMediaManager<FileUtil: FileUtilityProtocol>: AudioMediaManagerProtocol {
+   
     static func concatenateRecordingsAndSave(
         combine urls: [URL],
-        to audioFile: URL
-    ) async throws {
+        to audioFile: URL,
+        completion: @escaping () -> Void
+    ) throws -> AVAsset {
         let composition = AVMutableComposition()
+        
         for url in urls {
             let asset = AVURLAsset(url: url)
+        
             if let track = asset.tracks(withMediaType: .audio).first {
                 let timeRange = CMTimeRange(start: .zero, duration: asset.duration)
+                
                 if let compositionTrack = composition.addMutableTrack(
                     withMediaType: .audio,
                     preferredTrackID: kCMPersistentTrackID_Invalid
@@ -40,11 +45,22 @@ class AudioMediaManager<FileUtil: FileUtilityProtocol>: AudioMediaManagerProtoco
                 }
             }
         }
-        return try await save(composition, to: audioFile)
+        
+        // Remove combined files
+        for url in urls {
+            FileUtil.shared.delete(at: url)
+        }
+        
+        Task {
+            try await save(composition, to: audioFile)
+            completion()
+        }
+            
+        return composition
     }
     
     static func save(_ asset: AVAsset, to url: URL) async throws {
-        // remove old file
+        // Remove old file
         FileUtil.shared.delete(at: url)
         
         guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
@@ -53,9 +69,14 @@ class AudioMediaManager<FileUtil: FileUtilityProtocol>: AudioMediaManagerProtoco
         exportSession.outputURL = url
         exportSession.outputFileType = .m4a
         exportSession.shouldOptimizeForNetworkUse = true
+        
         await exportSession.export()
-        DDLogInfo("ExportSession: \(url.absoluteString), status: \(String(describing: exportSession.status))")
+        
         if exportSession.status != .completed {
+            assertionFailure()
+            DDLogError(
+                "[Voice Recorder] ExportSession: \(url.absoluteString), status: \(String(describing: exportSession.status))"
+            )
             throw VoiceMessageError.exportFailed
         }
     }

@@ -25,7 +25,7 @@ import ThreemaEssentials
 
 public protocol UnreadMessagesProtocol: UnreadMessagesProtocolObjc {
     func read(for conversation: ConversationEntity, isAppInBackground: Bool) -> Int
-    func read(for messages: [BaseMessage], in conversation: ConversationEntity, isAppInBackground: Bool) -> Int
+    func read(for messages: [BaseMessageEntity], in conversation: ConversationEntity, isAppInBackground: Bool) -> Int
 }
 
 @objc public protocol UnreadMessagesProtocolObjc {
@@ -193,7 +193,8 @@ extension UnreadMessagesProtocolObjc {
     public func read(for conversation: ConversationEntity, isAppInBackground: Bool) -> Int {
 
         // Only send receipt if not Group
-        guard let messages = entityManager.entityFetcher.unreadMessages(for: conversation) as? [BaseMessage] else {
+        guard let messages = entityManager.entityFetcher.unreadMessages(for: conversation) as? [BaseMessageEntity]
+        else {
             return 0
         }
 
@@ -201,7 +202,7 @@ extension UnreadMessagesProtocolObjc {
     }
     
     public func read(
-        for messages: [BaseMessage],
+        for messages: [BaseMessageEntity],
         in conversation: ConversationEntity,
         isAppInBackground: Bool
     ) -> Int {
@@ -212,7 +213,7 @@ extension UnreadMessagesProtocolObjc {
         }
 
         // Unread messages are only incoming messages
-        var unreadMessages = [BaseMessage]()
+        var unreadMessages = [BaseMessageEntity]()
 
         for baseMessage in messages where !baseMessage.isOwnMessage {
             unreadMessages.append(baseMessage)
@@ -258,7 +259,7 @@ extension UnreadMessagesProtocolObjc {
         return unreadMessages.count
     }
 
-    private func updateMessageRead(messages: [BaseMessage]) {
+    private func updateMessageRead(messages: [BaseMessageEntity]) {
         entityManager.performAndWaitSave {
             for message in messages {
                 message.read = NSNumber(booleanLiteral: true)

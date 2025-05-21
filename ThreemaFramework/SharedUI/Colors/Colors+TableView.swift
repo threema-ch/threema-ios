@@ -24,36 +24,36 @@ extension Colors {
     @objc public class var separator: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         case .dark:
-            Asset.SharedColors.gray750.color
+            UIColor(resource: .gray750)
         }
     }
     
     @objc public class var backgroundTableView: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray150.color
+            UIColor(resource: .gray150)
         case .dark:
-            Asset.SharedColors.black.color
+            .black
         }
     }
     
     @objc public class var plainBackgroundTableView: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.white.color
+            .white
         case .dark:
-            Asset.SharedColors.black.color
+            .black
         }
     }
         
     @objc public class var backgroundTableViewCellSelected: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.backgroundCellSelectedLight.color
+            UIColor(resource: .backgroundCellSelectedLight)
         case .dark:
-            Asset.SharedColors.backgroundCellSelectedDark.color
+            UIColor(resource: .backgroundCellSelectedDark)
         }
     }
 }

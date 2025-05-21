@@ -52,6 +52,6 @@ class UserNotificationManagerMock: UserNotificationManagerProtocol {
         _ from: UserNotificationContent,
         _ to: inout UNMutableNotificationContent,
         _ silent: Bool,
-        _ baseMessage: BaseMessage?
+        _ baseMessage: BaseMessageEntity?
     ) { }
 }

@@ -77,7 +77,10 @@ struct ContactsCleanupView: View {
         }
         .alert(
             #localize("settings_advanced_contacts_cleanup_stats_logged") +
-                #localize("settings_advanced_contacts_cleanup_submit_logs"),
+                String.localizedStringWithFormat(
+                    #localize("settings_advanced_contacts_cleanup_submit_logs"),
+                    TargetManager.localizedAppName
+                ),
             isPresented: $showContactStatsLogged
         ) {
             Button("ok") { }
@@ -167,9 +170,10 @@ struct ContactsCleanupView: View {
                     let contactCreatedAt = contact.createdAt != nil ? ISOFormatter
                         .string(from: contact.createdAt!) : "-"
                     let contactTotalMessageCount: Int = entityManager.entityFetcher.countMessages(forContact: contact)
-                    let partialCnContactID = contact.cnContactID?.prefix(8) ?? "-"
+                    // swiftformat:disable:next acronyms
+                    let partialCnContactID = contact.cnContactId?.prefix(8) ?? "-"
                     let prefix =
-                        "ID=\(partialID), ContactID=\(getCoreDataID(contact)), ContactCreatedAt=\(contactCreatedAt), ContactHidden=\(contact.isContactHidden), Contact#Msg=\(contactTotalMessageCount), LinkedContact=\(partialCnContactID)"
+                        "ID=\(partialID), ContactID=\(getCoreDataID(contact)), ContactCreatedAt=\(contactCreatedAt), ContactHidden=\(contact.isHidden), Contact#Msg=\(contactTotalMessageCount), LinkedContact=\(partialCnContactID)"
                     
                     let conversations = getAllConversations(contact: contact)
                     
@@ -216,11 +220,11 @@ struct ContactsCleanupView: View {
     fileprivate func getAllConversations(contact: ContactEntity) -> Set<ConversationEntity> {
         let conversations = Set<ConversationEntity>(
             contact
-                .conversations as? Set<ConversationEntity> ?? Set<ConversationEntity>()
+                .conversations ?? Set<ConversationEntity>()
         )
         let groupConversations = Set<ConversationEntity>(
             contact
-                .groupConversations as? Set<ConversationEntity> ?? Set<ConversationEntity>()
+                .groupConversations ?? Set<ConversationEntity>()
         )
         return conversations.union(groupConversations)
     }
@@ -234,13 +238,13 @@ struct ContactsCleanupView: View {
     ) {
         // can't use NSBatchUpdateRequest because "A batch update cannot be used to alter relationships"
         // https://developer.apple.com/library/archive/featuredarticles/CoreData_Batch_Guide/BatchUpdates/BatchUpdates.html#//apple_ref/doc/uid/TP40016086-CH2-SW4
-        let fetch = NSFetchRequest<BaseMessage>(entityName: "Message")
+        let fetch = NSFetchRequest<BaseMessageEntity>(entityName: "Message")
         fetch.predicate = NSPredicate(
             format: "isOwn == false && sender IN %@", duplicateContacts
         )
         
         do {
-            let messages = try fetch.execute() as [BaseMessage]
+            let messages = try fetch.execute() as [BaseMessageEntity]
             if !messages.isEmpty {
                 for message in messages {
                     message.sender = mainContact
@@ -327,7 +331,7 @@ struct ContactsCleanupView: View {
         partialID: String,
         entityManager: EntityManager
     ) {
-        var rejectedMessages = [BaseMessage]()
+        var rejectedMessages = [BaseMessageEntity]()
         
         for duplicateContact in duplicateContacts {
             if let rejectedByContact = duplicateContact.rejectedMessages {
@@ -338,9 +342,9 @@ struct ContactsCleanupView: View {
         if !rejectedMessages.isEmpty {
             for message in rejectedMessages {
                 for contact in duplicateContacts {
-                    message.removeRejectedBy(contact)
+                    message.removeFromRejectedBy(contact)
                 }
-                message.addRejectedBy(mainContact)
+                message.addToRejectedBy(mainContact)
             }
             
             DDLogNotice(
@@ -491,7 +495,10 @@ struct ContactsCleanupView: View {
                         
             alertMessage = String(
                 format: #localize("settings_advanced_contacts_cleanup_unused_message")
-                    + #localize("settings_advanced_contacts_cleanup_submit_logs"),
+                    + String.localizedStringWithFormat(
+                        #localize("settings_advanced_contacts_cleanup_submit_logs"),
+                        TargetManager.localizedAppName
+                    ),
                 removableContacts.count
             )
             showUnusedContactsCleanupDone = true

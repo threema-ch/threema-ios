@@ -141,7 +141,7 @@ enum VideoURLSenderItemCreatorError: Error {
         return getExportSession(asset: asset).then(on: bgq) { exportSession in
             self.convertVideo(on: exportSession, asset: asset)
         }.compactMap(on: bgq) { url in
-            URLSenderItem(url: url, type: kUTTypeMPEG4 as String, renderType: 1, sendAsFile: true)
+            URLSenderItem(url: url, type: UTType.mpeg4Movie.identifier, renderType: 1, sendAsFile: true)
         }
     }
     
@@ -187,7 +187,7 @@ enum VideoURLSenderItemCreatorError: Error {
         }.done { (url: URL) in
             senderItem = URLSenderItem(
                 url: url,
-                type: kUTTypeMPEG4 as String,
+                type: UTType.mpeg4Movie.identifier,
                 renderType: 1,
                 sendAsFile: true
             )

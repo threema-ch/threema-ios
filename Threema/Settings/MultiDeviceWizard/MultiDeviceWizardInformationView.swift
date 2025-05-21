@@ -41,12 +41,15 @@ struct MultiDeviceWizardInformationView: View {
                         )
                         .padding(.bottom, 2.0)
                         
-                        Text(#localize("md_wizard_info_download_text"))
+                        Text(String.localizedStringWithFormat(
+                            #localize("md_wizard_info_download_text"),
+                            TargetManager.localizedAppName
+                        ))
                         
                         Link(destination: URL(string: "https://three.ma/md")!) {
                             Text(verbatim: "three.ma/md")
                         }
-                        .foregroundColor(Color(.primary))
+                        .foregroundColor(.accentColor)
                         .highPriorityGesture(DragGesture())
                     }
                     .padding(.top)
@@ -61,6 +64,8 @@ struct MultiDeviceWizardInformationView: View {
                         
                         Text(LocalizedStringKey(String.localizedStringWithFormat(
                             #localize("md_wizard_info_linking_text"),
+                            TargetManager.appName,
+                            TargetManager.localizedAppName,
                             DeviceLinking(businessInjector: injectedBusinessInjector).threemaSafeServer
                         )))
                     }
@@ -83,7 +88,7 @@ struct MultiDeviceWizardInformationView: View {
                     Text(#localize("md_wizard_cancel"))
                 }
                 .buttonStyle(.bordered)
-                .tint(Color(.primary))
+                .tint(.accentColor)
                     
                 Spacer()
                     

@@ -24,18 +24,18 @@ import Foundation
 @objc(LastGroupSyncRequestEntity)
 public final class LastGroupSyncRequestEntity: TMAManagedObject {
     
-    // Attributes
-    @NSManaged @objc(groupCreator) public var groupCreator: String
+    // MARK: Attributes
+
+    @NSManaged public var groupCreator: String
     // swiftformat:disable:next acronyms
-    @NSManaged @objc(groupId) public var groupId: Data
-    @NSManaged @objc(lastSyncRequest) public var lastSyncRequest: Date
+    @NSManaged public var groupId: Data
+    @NSManaged public var lastSyncRequest: Date
    
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
+    ///   - context: `NSManagedObjectContext` to insert created entity into
     ///   - groupCreator: ID of the creator of the group of which the request was made
     ///   - groupID: ID of the group of which the request was made
     ///   - lastSyncRequest: Date when the request was made

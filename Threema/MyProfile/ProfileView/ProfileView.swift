@@ -79,7 +79,7 @@ struct ProfileView: View {
             Button(action: scanAction, label: {
                 Image(systemName: "qrcode.viewfinder")
             })
-            .tint(UIColor.primary.color)
+            .tint(.accentColor)
             .accessibilityLabel(#localize("scan_identity"))
         }
     }

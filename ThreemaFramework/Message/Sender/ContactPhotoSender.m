@@ -26,7 +26,6 @@
 #import "ContactRequestPhotoMessage.h"
 #import "NSString+Hex.h"
 #import "ActivityIndicatorProxy.h"
-#import "ContactEntity.h"
 #import "ThreemaError.h"
 #import "ContactStore.h"
 #import "EntityCreator.h"
@@ -99,7 +98,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     ContactEntity *contact = [[entityManager entityFetcher] contactForId:identity];
     
-    if (contact.isGatewayId || contact.isEchoEcho) {
+    if (contact.isGatewayID || contact.isEchoEcho) {
         return nil;
     }
     
@@ -110,7 +109,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return nil;
     }
     
-    if (!contact.isProfilePictureSended) {
+    if (!contact.profilePictureSent) {
         return contact;
     }
     return nil;
@@ -143,7 +142,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if (toMember != nil) {
             // save to database
             [entityManager performAsyncBlockAndSafe:^{
-                toMember.profilePictureSended = YES;
+                toMember.profilePictureSent = YES;
                 toMember.profilePictureUpload = [NSDate date];
             }];
             /* send to the specified member only */
@@ -163,7 +162,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             if (toMember != nil) {
                 // save to database
                 [entityManager performAsyncBlockAndSafe:^{
-                    toMember.profilePictureSended = YES;
+                    toMember.profilePictureSent = YES;
                     toMember.profilePictureUpload = [NSDate date];
                     NSData *blobID = profilePicture[@"BlobId"];
                     toMember.profilePictureBlobID = [blobID base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed];
@@ -278,7 +277,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     // save to database
     [entityManager performAsyncBlockAndSafe:^{
-        toMember.profilePictureSended = YES;
+        toMember.profilePictureSent = YES;
         toMember.profilePictureUpload = [NSDate date];
         toMember.profilePictureBlobID = [blobId[0] base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed];
     }];

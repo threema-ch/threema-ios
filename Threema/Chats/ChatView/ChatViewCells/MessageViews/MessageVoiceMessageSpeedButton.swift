@@ -136,7 +136,7 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
                 resource: .threemaMicFillBadge
             ).applying(
                 configuration: UIImage.SymbolConfiguration(scale: config.micIconSymbolConfigurationScale),
-                paletteColors: [.primary, Colors.fillMicrophoneButton, Colors.fillMicrophoneButton]
+                paletteColors: [.tintColor, Colors.fillMicrophoneButton, Colors.fillMicrophoneButton]
             )
             setImage(image, for: .normal)
             return

@@ -81,7 +81,7 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
             return
         }
 
-        guard let contact = message.conversation?.contact, contact.identity == receiverIdentity else {
+        guard let contact = message.conversation.contact, contact.identity == receiverIdentity else {
             throw MediatorReflectedProcessorError.messageNotProcessed(message: "id: \(id.hexString)")
         }
 

@@ -35,7 +35,7 @@ struct BulletText: View {
         } icon: {
             if showIcon {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(UIColor.primary.color)
+                    .foregroundColor(.accentColor)
             }
         }
         .labelStyle(TrailingLabelStyle())

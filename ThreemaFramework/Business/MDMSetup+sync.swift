@@ -45,7 +45,7 @@ extension MDMSetup {
             return
         }
 
-        TaskManager().add(taskDefinition: TaskDefinitionMdmParameterSync(mdmParameters: mdmParameters()))
+        _ = TaskManager().add(taskDefinition: TaskDefinitionMdmParameterSync(mdmParameters: mdmParameters()))
     }
 
     func mdmParameters() -> Sync_MdmParameters {

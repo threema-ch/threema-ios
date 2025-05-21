@@ -105,21 +105,14 @@ extension ChatViewControllerActionsHelper: ChatViewControllerActionsProtocol {
         }
     }
     
-    func present(_ viewControllerToPresent: UIViewController!, animated flag: Bool, completion: (() -> Void)!) {
+    func present(_ viewControllerToPresent: UIViewController, animated flag: Bool, completion: (() -> Void)?) {
         guard let chatViewController else {
             fatalError("\(#function) should not be called.")
         }
         chatViewController.present(viewControllerToPresent, animated: flag, completion: completion)
     }
     
-    func present(_ viewControllerToPresent: UIViewController!, animated flag: Bool) {
-        guard let chatViewController else {
-            fatalError("\(#function) should not be called.")
-        }
-        chatViewController.present(viewControllerToPresent, animated: flag)
-    }
-    
-    func dismissViewController(animated flag: Bool, completion: (() -> Void)!) {
+    func dismissViewController(animated flag: Bool, completion: (() -> Void)?) {
         guard let chatViewController else {
             fatalError("\(#function) should not be called.")
         }
@@ -138,7 +131,7 @@ extension ChatViewControllerActionsHelper: ChatViewControllerActionsProtocol {
         DDLogError("\(message)")
     }
     
-    func object(at indexPath: IndexPath!) -> Any! {
+    func object(at indexPath: IndexPath) -> Any! {
         fatalError("\(#function) should not be called.")
     }
     

@@ -114,11 +114,11 @@ import PromiseKit
         let firstType = item.type
         let checkedType = checkSecondaryType(item)
         
-        let isText = UTIConverter.type(checkedType, conformsTo: kUTTypePlainText as String)
-        let isURL = UTIConverter.type(checkedType, conformsTo: kUTTypeURL as String)
+        let isText = UTIConverter.type(checkedType, conformsTo: UTType.plainText.identifier)
+        let isURL = UTIConverter.type(checkedType, conformsTo: UTType.url.identifier)
         
-        let firstTypeIsFileURL = UTIConverter.type(firstType, conformsTo: kUTTypeFileURL as String)
-        let secondTypeIsFileURL = UTIConverter.type(checkedType, conformsTo: kUTTypeFileURL as String)
+        let firstTypeIsFileURL = UTIConverter.type(firstType, conformsTo: UTType.fileURL.identifier)
+        let secondTypeIsFileURL = UTIConverter.type(checkedType, conformsTo: UTType.fileURL.identifier)
         let anyTypeIsFileURL = firstTypeIsFileURL || secondTypeIsFileURL
         
         return (isText || isURL) && !anyTypeIsFileURL
@@ -129,7 +129,7 @@ import PromiseKit
     }
     
     private func getContentItems(items: Set<IntermediateItem>) -> Set<IntermediateItem> {
-        items.filter { UTIConverter.type(checkSecondaryType($0), conformsTo: kUTTypeContent as String) }
+        items.filter { UTIConverter.type(checkSecondaryType($0), conformsTo: UTType.content.identifier) }
     }
     
     public func filterContentItems() {
@@ -183,7 +183,7 @@ import PromiseKit
             }
             else {
                 let err = "Generating a preview text from an item that is not a string or an url is not allowed"
-                DDLogError(err)
+                DDLogError("\(err)")
                 fatalError(err)
             }
             text.append("\n")
@@ -236,9 +236,9 @@ import PromiseKit
         if checkItemType() == .Media {
             return Promise { seal in
                 let isFileItem = intermediateItem.itemProvider
-                    .hasItemConformingToTypeIdentifier(kUTTypeFileURL as String)
+                    .hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)
                 let isContent = intermediateItem.itemProvider
-                    .hasItemConformingToTypeIdentifier(kUTTypeContent as String)
+                    .hasItemConformingToTypeIdentifier(UTType.content.identifier)
                 if (isFileItem && isContent) || forceLoadFileURLItem {
                     intermediateItem.itemProvider.loadFileRepresentation(forTypeIdentifier: type) { item, error in
                         if let error {
@@ -289,7 +289,7 @@ import PromiseKit
                 if self.isDataLoadable(type: type), let dataItem = item as? Data {
                     self.loadDataItem(dataItem: dataItem, type: type, seal: seal)
                 }
-                if UTIConverter.type(type, conformsTo: kUTTypeImage as String), let imageItem = item as? UIImage {
+                if UTIConverter.type(type, conformsTo: UTType.image.identifier), let imageItem = item as? UIImage {
                     self.loadImageItem(imageItem: imageItem, seal: seal)
                 }
                 if let item {
@@ -304,7 +304,7 @@ import PromiseKit
     }
     
     private func isDataLoadable(type: String) -> Bool {
-        UTIConverter.type(type, conformsTo: kUTTypeData as String) ||
+        UTIConverter.type(type, conformsTo: UTType.data.identifier) ||
             UTIConverter.isPassMimeType(UTIConverter.mimeType(fromUTI: type))
     }
     
@@ -366,7 +366,7 @@ import PromiseKit
             }
         guard let dataItem = imageData else {
             let errorDescription = "Could not create jpeg representation of image item"
-            DDLogError(errorDescription)
+            DDLogError("\(errorDescription)")
             let errorTemp = NSError(domain: errorDescription, code: 0, userInfo: nil)
             seal.reject(errorTemp)
             return

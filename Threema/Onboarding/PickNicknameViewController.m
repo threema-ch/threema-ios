@@ -120,7 +120,7 @@
     }
     
     self.moreView.mainView = self.mainContentView;
-    self.moreView.moreMessageText = [BundleUtil localizedStringForKey:@"more_information_pick_nickname"];
+    self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_pick_nickname"], TargetManagerObjc.localizedAppName];
 
     UITapGestureRecognizer *mainTapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedMainView:)];
     [self.mainContentView addGestureRecognizer:mainTapGesture];
@@ -128,7 +128,7 @@
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
     _nicknameTextfield.enabled = ![mdmSetup readonlyProfile];
     
-    _nicknameTextfield.tintColor = UIColor.primary;
+    _nicknameTextfield.tintColor = UIColor.tintColor;
     
     _contactImageView.image = [UIImage systemImageNamed:@"person.fill"];
 }
@@ -157,7 +157,7 @@
     
     if (_nicknameQuestionView == nil) {
         _nicknameQuestionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
-        _nicknameQuestionView.questionLabel.text = [BundleUtil localizedStringForKey:@"id_pick_nickname_question"];
+        _nicknameQuestionView.questionLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_pick_nickname_question"], TargetManagerObjc.localizedAppName];
         _nicknameQuestionView.delegate = self;
         _nicknameQuestionView.frame = [RectUtil rect:_nicknameQuestionView.frame centerIn:self.view.frame round:YES];
 

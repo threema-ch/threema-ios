@@ -41,4 +41,8 @@ extension UIPreviewAction: QuickActionUpdate {
     func hide() {
         // no-op: Because the buttons will anyway disappear when the action is called
     }
+    
+    func popOverSourceView() -> UIView? {
+        nil
+    }
 }

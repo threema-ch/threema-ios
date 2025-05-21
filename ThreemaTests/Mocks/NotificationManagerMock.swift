@@ -30,7 +30,7 @@ class NotificationManagerMock: NotificationManagerProtocol {
         updateUnreadMessagesCountCallCount += 1
     }
 
-    func updateUnreadMessagesCount(baseMessage: BaseMessage?) {
+    func updateUnreadMessagesCount(baseMessage: BaseMessageEntity?) {
         updateUnreadMessagesCountCallCount += 1
     }
 }

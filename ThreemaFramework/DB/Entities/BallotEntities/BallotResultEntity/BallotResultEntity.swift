@@ -25,35 +25,35 @@ import Foundation
 @objc(BallotResultEntity)
 public final class BallotResultEntity: TMAManagedObject {
     
-    // Attributes
-    @NSManaged @objc(createDate) public var createDate: Date?
-    @NSManaged @objc(modifyDate) public var modifyDate: Date?
-    // swiftformat:disable:next acronyms
-    @NSManaged @objc(participantId) public var participantId: String
-    // TODO: (IOS-4752) Change to Int16 once all uses are written in swift.
-    @NSManaged @objc(value) public var value: NSNumber?
+    // MARK: Attributes
 
-    // Relationships
-    @NSManaged @objc(ballotChoice) public var ballotChoice: BallotChoice
+    @NSManaged public var createDate: Date?
+    @NSManaged public var modifyDate: Date?
+    // swiftformat:disable:next acronyms
+    @NSManaged public var participantId: String
+    @NSManaged public var value: NSNumber?
+
+    // MARK: Relationships
+
+    @NSManaged public var ballotChoice: BallotChoiceEntity
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
-    ///   - createDate: Date when created
-    ///   - modifyDate: Date when last modified
+    ///   - context: `NSManagedObjectContext` to insert created entity into
+    ///   - createDate: `Date` when created
+    ///   - modifyDate: `Date` when last modified
     ///   - participantID: ID of the participant
     ///   - value: Value of the result
-    ///   - ballotChoice: BallotChoiceEntity the result belongs to
+    ///   - ballotChoice: `BallotChoiceEntity` the result belongs to
     public init(
         context: NSManagedObjectContext,
         createDate: Date? = nil,
         modifyDate: Date? = nil,
         participantID: String,
         value: Bool? = nil,
-        ballotChoice: BallotChoice
+        ballotChoice: BallotChoiceEntity
     ) {
         let entity = NSEntityDescription.entity(forEntityName: "BallotResult", in: context)!
         super.init(entity: entity, insertInto: context)

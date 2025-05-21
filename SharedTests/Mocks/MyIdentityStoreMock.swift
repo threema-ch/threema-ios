@@ -23,6 +23,10 @@ import ThreemaFramework
 import ThreemaMacros
 
 class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
+    var companyName: String!
+    
+    var directoryCategories: NSMutableDictionary!
+    
     var department: String!
     
     var jobTitle: String!

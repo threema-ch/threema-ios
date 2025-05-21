@@ -36,7 +36,7 @@ class MessageDraftStoreTests: XCTestCase {
         
         let databasePreparer = DatabasePreparer(context: managedObjectContext)
         databasePreparer.save {
-            contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)
+            contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO")
             
             conversation = databasePreparer.createConversation(
                 typing: false,

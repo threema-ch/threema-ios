@@ -124,7 +124,7 @@ class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
         }
         gestureRecognizers?.removeAll()
         
-        let timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+        _ = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
             if playerItem.status != .readyToPlay, playerItem.status != .failed {
                 return
             }

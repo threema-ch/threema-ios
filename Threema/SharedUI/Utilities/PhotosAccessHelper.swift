@@ -188,8 +188,7 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
                 // loaded.
                 if result.itemProvider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
                     DispatchQueue.main.async {
-                        hud?.detailsLabel.text = BundleUtil
-                            .localizedString(forKey: "loading_files_takes_time_description")
+                        hud?.detailsLabel.text = #localize("loading_files_takes_time_description")
                     }
                     // Unfortunately the progress object returned here immediately shows 100% progress
                     result.itemProvider

@@ -84,10 +84,10 @@ class SwitchDetailsTableViewCell: ThemedCodeStackTableViewCell {
         super.updateColors()
         
         if let isDestructive = action?.destructive, isDestructive {
-            switchControl.onTintColor = Colors.red
+            switchControl.onTintColor = .systemRed
         }
         else {
-            switchControl.onTintColor = .primary
+            switchControl.onTintColor = .tintColor
         }
     }
     

@@ -1,0 +1,17 @@
+[package]
+name = "rust-library"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rust_library"
+crate-type = ["staticlib"]
+
+[dependencies]
+uniffi = { version = "0.28", optional = true }
+
+[build-dependencies]
+uniffi = { version = "0.28", features = ["build"], optional = true }
+
+[features]
+uniffi = ["dep:uniffi"]

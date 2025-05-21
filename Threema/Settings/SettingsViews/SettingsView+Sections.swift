@@ -79,32 +79,32 @@ extension SettingsView {
                 ItemSection {
                     (
                         view: PrivacySettingsView(),
-                        title: "settings_list_privacy_title",
+                        title: #localize("settings_list_privacy_title"),
                         symbol: .systemImage("hand.raised.fill")
                     )
                     (
                         view: AppearanceSettingsViewControllerRepresentable(),
-                        title: "settings_list_appearance_title",
+                        title: #localize("settings_list_appearance_title"),
                         symbol: .systemImage("paintbrush.fill")
                     )
                     (
                         view: NotificationSettingsView(),
-                        title: "settings_list_notifications_title",
+                        title: #localize("settings_list_notifications_title"),
                         symbol: .systemImage("app.badge")
                     )
                     (
                         view: ChatSettingsView(),
-                        title: "settings_list_chat_title",
+                        title: #localize("settings_list_chat_title"),
                         symbol: .systemImage("bubble.left.and.bubble.right.fill")
                     )
                     (
                         view: MediaSettingsView(),
-                        title: "settings_list_media_title",
+                        title: #localize("settings_list_media_title"),
                         symbol: .systemImage("photo.fill")
                     )
                     (
                         view: StorageManagementView(model: .init(businessInjector: injected)),
-                        title: "settings_list_storage_management_title",
+                        title: #localize("settings_list_storage_management_title"),
                         symbol: .systemImage("tray.full.fill")
                     )
                 }
@@ -126,7 +126,7 @@ extension SettingsView {
                 ItemSection {
                     (
                         view: CallSettingsView(),
-                        title: "settings_threema_calls",
+                        title: #localize("settings_threema_calls"),
                         symbol: .bundleImage("threema.phone.fill")
                     )
                 }
@@ -139,26 +139,39 @@ extension SettingsView {
     struct DesktopSection: View {
         
         private let mdm = MDMSetup(setup: false)
-        private var disableWeb: Bool {
-            mdm?.disableWeb() ?? false
-        }
+        @State private var disableWeb = false
+        @State private var disableMultiDevice = false
 
         var body: some View {
             Section {
                 ItemSection {
-                    if !disableWeb {
+                    if !disableMultiDevice {
                         (
                             view: LinkedDevicesView(),
-                            title: "settings_list_threema_desktop_title",
+                            title: String.localizedStringWithFormat(
+                                #localize("settings_list_threema_desktop_title"),
+                                TargetManager.appName
+                            ),
                             symbol: .systemImage("desktopcomputer")
                         )
+                    }
+                    if !disableWeb {
                         (
                             view: threemaWeb,
-                            title: "settings_list_threema_web_title",
+                            title: String.localizedStringWithFormat(
+                                #localize("settings_list_threema_web_title"),
+                                TargetManager.appName
+                            ),
                             symbol: .systemImage("menubar.dock.rectangle")
                         )
                     }
                 }
+            }
+            .onAppear {
+                checkDesktopWebDisabled()
+            }
+            .onReceive(\.mdmChanged) { _ in
+                checkDesktopWebDisabled()
             }
         }
         
@@ -177,7 +190,12 @@ extension SettingsView {
                     }
                     .asAnyView
                 })
-                .threemaNavigationBar("settings_list_threema_web_title")
+                .threemaNavigationBar(#localize("settings_list_threema_web_title"))
+        }
+        
+        private func checkDesktopWebDisabled() {
+            disableWeb = mdm?.disableWeb() ?? false
+            disableMultiDevice = mdm?.disableMultiDevice() ?? false
         }
     }
     
@@ -257,8 +275,12 @@ extension SettingsView {
                 }
                 else {
                     SectionItem {
-                        uiViewController(ThreemaWorkViewController())
-                            .threemaNavigationBar(title)
+                        uiViewController(SettingsWebViewViewController(
+                            url: ThreemaURLProvider.workInfo,
+                            title: #localize("settings_threema_work"),
+                            allowsContentJavaScript: true
+                        ))
+                        .threemaNavigationBar(title)
                     } label: {
                         label
                     }
@@ -306,7 +328,10 @@ extension SettingsView {
                     action: {
                         topViewController.map { AddThreemaChannelAction.run(in: $0) }
                     },
-                    title: #localize("settings_list_threema_channel_title"),
+                    title: String.localizedStringWithFormat(
+                        #localize("settings_list_threema_channel_title"),
+                        TargetManager.localizedAppName
+                    ),
                     image: .systemImage("antenna.radiowaves.left.and.right")
                 )
             }
@@ -332,30 +357,40 @@ extension SettingsView {
             Section {
                 ItemSection {
                     (
-                        view: uiViewController(SupportViewController()),
-                        title: "settings_list_support_title",
+                        view: uiViewController(SettingsWebViewViewController(
+                            url: ThreemaURLProvider.supportFaq(),
+                            title: #localize("settings_list_support_title"),
+                            allowsContentJavaScript: true
+                        )),
+                        title: #localize("settings_list_support_title"),
                         symbol: .systemImage("lightbulb.fill")
                     )
                     if !TargetManager.isOnPrem {
                         (
-                            view: uiViewController(PrivacyPolicyViewController()),
-                            title: "settings_list_privacy_policy_title",
+                            view: uiViewController(SettingsWebViewViewController(
+                                url: ThreemaURLProvider.privacyPolicy,
+                                title: #localize("settings_list_privacy_policy_title")
+                            )),
+                            title: #localize("settings_list_privacy_policy_title"),
                             symbol: .systemImage("lock.shield.fill")
                         )
                         (
-                            view: uiViewController(TermsOfServiceViewController()),
-                            title: "settings_list_tos_title",
+                            view: uiViewController(SettingsWebViewViewController(
+                                url: ThreemaURLProvider.termsOfService,
+                                title: #localize("settings_list_tos_title")
+                            )),
+                            title: #localize("settings_list_tos_title"),
                             symbol: .systemImage("signature")
                         )
                     }
                     (
                         view: uiViewController(LicenseViewController()),
-                        title: "settings_list_license_title",
+                        title: #localize("settings_list_license_title"),
                         symbol: .systemImage("c.circle")
                     )
                     (
                         view: AdvancedSettingsView(),
-                        title: "settings_advanced",
+                        title: #localize("settings_advanced"),
                         symbol: .systemImage("ellipsis.circle.fill")
                     )
                 }
@@ -383,7 +418,10 @@ extension SettingsView {
                         action: {
                             topViewController.map { AddThreemaWorkChannelAction.run(in: $0) }
                         },
-                        title: #localize("settings_list_threema_work_channel_title"),
+                        title: String.localizedStringWithFormat(
+                            #localize("settings_list_threema_work_channel_title"),
+                            TargetManager.appName
+                        ),
                         image: .systemImage("antenna.radiowaves.left.and.right")
                     )
                 }
@@ -414,11 +452,11 @@ extension SettingsView {
                                 .asAnyView
                         }
                         .navigationBarTitle(
-                            item.title.localized,
+                            item.title,
                             displayMode: .inline
                         )
                     },
-                    title: item.title.localized,
+                    title: item.title,
                     image: item.symbol
                 )
             }

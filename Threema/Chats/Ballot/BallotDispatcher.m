@@ -26,7 +26,7 @@
 
 @implementation BallotDispatcher
 
-+ (UIViewController *)viewControllerForBallot:(Ballot *)ballot {
++ (UIViewController *)viewControllerForBallot:(BallotEntity *)ballot {
     if ([ballot isClosed]) {
         return [BallotResultViewController ballotResultViewControllerForBallot: ballot];
     } else {
@@ -34,7 +34,7 @@
     }
 }
 
-+ (void)showViewControllerForBallot:(Ballot *)ballot onNavigationController:(UINavigationController*)navigationController {
++ (void)showViewControllerForBallot:(BallotEntity *)ballot onNavigationController:(UINavigationController*)navigationController {
     /* present open ballots as modal dialogs as the user must take action or cancel, and simply push closed ballots */
     if ([ballot isClosed]) {
         BallotResultViewController *viewController = [BallotResultViewController ballotResultViewControllerForBallot: ballot];

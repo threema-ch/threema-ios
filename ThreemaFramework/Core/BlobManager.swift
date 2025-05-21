@@ -165,7 +165,7 @@ public actor BlobManager: BlobManagerProtocol {
             var blobID: String?
             var blobThumbnailID: String?
             
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 guard let message = em.entityFetcher.existingObject(with: objectID) as? FileMessage else {
                     return
                 }
@@ -297,7 +297,7 @@ public actor BlobManager: BlobManagerProtocol {
 
             // Upload succeeded, we reset the progress
             em = entityManager
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 guard let blobData = em.entityFetcher
                     .existingObject(with: objectID) as? BlobData
                 else {
@@ -334,7 +334,7 @@ public actor BlobManager: BlobManagerProtocol {
         var origin: BlobOrigin?
         
         let em = entityManager
-        em.performBlockAndWait {
+        em.performAndWait {
             guard let bd = em.entityFetcher
                 .existingObject(with: objectID) as? BlobData
             else {
@@ -364,7 +364,7 @@ public actor BlobManager: BlobManagerProtocol {
                 
         switch state {
         case .remote:
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 // Note: This will also reset the error of the belonging incomingDataState
                 blobData.blobError = false
                 if blobData.blobProgress == nil {
@@ -384,7 +384,7 @@ public actor BlobManager: BlobManagerProtocol {
             
             // This is save. Delegate calls will not result in another update of the progress as the
             // objectID is no-more in `activeObjectIDs`.
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 blobData.blobThumbnail = thumbnail
             }
             
@@ -415,7 +415,7 @@ public actor BlobManager: BlobManagerProtocol {
         var origin: BlobOrigin?
         
         let em = entityManager
-        em.performBlockAndWait {
+        em.performAndWait {
             guard let bd = em.entityFetcher
                 .existingObject(with: objectID) as? BlobData
             else {
@@ -446,7 +446,7 @@ public actor BlobManager: BlobManagerProtocol {
         
         switch state {
         case .remote:
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 blobData.blobError = false
                 if blobData.blobProgress == nil {
                     // If not already done, we set the progress to 0.0 to indicate work has started
@@ -465,14 +465,14 @@ public actor BlobManager: BlobManagerProtocol {
             
             // This is save. Delegate calls will not result in another update of the progress as the
             // objectID is no-more in `activeObjectIDs`.
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 blobData.blobData = data
             }
             
             try await markDownloadDone(for: dataID, objectID: objectID, origin: origin)
             
             // Download succeeded, we reset the progress
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 blobData.blobProgress = nil
             }
             
@@ -531,7 +531,7 @@ public actor BlobManager: BlobManagerProtocol {
         var messageID: String?
         let em = entityManager
         em.performAndWaitSave {
-            guard let fetchedMessage = em.entityFetcher.existingObject(with: objectID) as? BaseMessage
+            guard let fetchedMessage = em.entityFetcher.existingObject(with: objectID) as? BaseMessageEntity
             else {
                 return
             }
@@ -540,7 +540,7 @@ public actor BlobManager: BlobManagerProtocol {
         }
         
         guard let isGroupMessage, !isGroupMessage else {
-            DDLogInfo("[BlobManager] Do not mark downloads done for group messages. id: \(messageID)")
+            DDLogInfo("[BlobManager] Do not mark downloads done for group messages. id: \(messageID ?? "nil")")
             return
         }
         
@@ -615,7 +615,7 @@ public actor BlobManager: BlobManagerProtocol {
         var setPersistParam: Bool?
         
         let em = entityManager
-        em.performBlockAndWait {
+        em.performAndWait {
             guard let bd = em.entityFetcher
                 .existingObject(with: objectID) as? BlobData
             else {
@@ -657,7 +657,7 @@ public actor BlobManager: BlobManagerProtocol {
                 throw BlobManagerError.noID
             }
 
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 // Note: This will also reset the error of the belonging incomingDataState
                 blobData.blobError = false
                 if blobData.blobProgress == nil {
@@ -677,7 +677,7 @@ public actor BlobManager: BlobManagerProtocol {
 
             // This is save. Delegate calls will not result in another update of the progress as the
             // objectID is no-more in `activeObjectIDs`.
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 blobData.blobThumbnail = thumbnail
             }
 
@@ -690,7 +690,7 @@ public actor BlobManager: BlobManagerProtocol {
                 return
             }
 
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 // Note: This will also reset the error of the belonging outgoingDataState
                 blobData.blobError = false
                 if blobData.blobProgress == nil {
@@ -715,7 +715,7 @@ public actor BlobManager: BlobManagerProtocol {
             }
 
             // Assign ID to message & save
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 blobData.blobThumbnailIdentifier = thumbnailID
             }
             
@@ -750,7 +750,7 @@ public actor BlobManager: BlobManagerProtocol {
         var setPersistParam: Bool?
         
         let em = entityManager
-        em.performBlockAndWait {
+        em.performAndWait {
             guard let bd = em.entityFetcher
                 .existingObject(with: objectID) as? BlobData
             else {
@@ -792,7 +792,7 @@ public actor BlobManager: BlobManagerProtocol {
                 throw BlobManagerError.noID
             }
 
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 blobData.blobError = false
                 if blobData.blobProgress == nil {
                     // If not already done, we set the progress to 0.0 to indicate work has started
@@ -811,14 +811,14 @@ public actor BlobManager: BlobManagerProtocol {
 
             // This is save. Delegate calls will not result in another update of the progress as the
             // objectID is no-more in `activeObjectIDs`.
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 blobData.blobData = data
             }
 
             try await markDownloadDone(for: blobID, objectID: objectID, origin: origin)
 
             // Download succeeded, we reset the progress
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 blobData.blobProgress = nil
             }
             
@@ -833,7 +833,7 @@ public actor BlobManager: BlobManagerProtocol {
             // There might have been an issue where the app was terminated while uploading and we need to clean up
             await BlobManager.state.removeProgress(for: objectID)
             
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 blobData.blobError = false
                 if blobData.blobProgress == nil {
                     // If not already done, we set the progress to 0.0 to indicate work has started
@@ -857,7 +857,7 @@ public actor BlobManager: BlobManagerProtocol {
             }
             
             // Assign ID to message & save
-            em.performSyncBlockAndSafe {
+            em.performAndWaitSave {
                 blobData.blobIdentifier = dataID
             }
             
@@ -914,7 +914,7 @@ public actor BlobManager: BlobManagerProtocol {
     private func resetStatesForBlob(with objectID: NSManagedObjectID) {
         
         let em = entityManager
-        em.performSyncBlockAndSafe {
+        em.performAndWaitSave {
             guard let blob = em.entityFetcher
                 .existingObject(with: objectID) as? BlobData
             else {
@@ -935,7 +935,7 @@ public actor BlobManager: BlobManagerProtocol {
     private func setErrorStateForBlob(with objectID: NSManagedObjectID) {
         // Reset BlobData values, to reflect state
         let em = entityManager
-        em.performSyncBlockAndSafe {
+        em.performAndWaitSave {
             guard let blob = em.entityFetcher.existingObject(with: objectID) as? BlobData else {
                 DDLogWarn("[BlobManager] Could not set blob error because it was not found.")
                 return
@@ -982,7 +982,7 @@ public actor BlobManager: BlobManagerProtocol {
         let em = entityManager
         
         return await em.perform {
-            guard let message = em.entityFetcher.existingObject(with: objectID) as? BaseMessage else {
+            guard let message = em.entityFetcher.existingObject(with: objectID) as? BaseMessageEntity else {
                 return "nil"
             }
             
@@ -1052,8 +1052,6 @@ extension BlobManager {
             isAlreadyDownloaded
         ) = try await em.performSave {
             guard let message = em.entityFetcher.existingObject(with: objectID) as? ImageMessageEntity,
-                  let messageID = message.id,
-                  let conversationObjectID = message.conversation?.objectID,
                   let blobID = message.blobIdentifier,
                   let imageNonce = message.imageNonce,
                   let publicKey = message.conversation.contact?.publicKey else {
@@ -1065,8 +1063,8 @@ extension BlobManager {
             message.blobProgress = 0
 
             return (
-                messageID,
-                conversationObjectID,
+                message.id,
+                message.conversation.objectID,
                 blobID,
                 message.blobOrigin,
                 message.encryptionKey,

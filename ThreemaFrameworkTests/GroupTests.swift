@@ -61,18 +61,15 @@ class GroupTests: XCTestCase {
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: expectedMember01,
-                verificationLevel: 0
+                identity: expectedMember01
             )
             let member02 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: expectedMember02,
-                verificationLevel: 0
+                identity: expectedMember02
             )
             member03 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER03",
-                verificationLevel: 0
+                identity: "MEMBER03"
             )
             groupEntity = dbPreparer.createGroupEntity(
                 groupID: expectedGroupID,
@@ -209,58 +206,50 @@ class GroupTests: XCTestCase {
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER01",
-                verificationLevel: 0
+                identity: "MEMBER01"
             )
-            member01.lastName = "Muster"
-            member01.firstName = "Hans"
+            member01.setLastName(to: "Muster")
+            member01.setFirstName(to: "Hans")
             
             let member02 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER02",
-                verificationLevel: 0
+                identity: "MEMBER02"
             )
-            member02.lastName = "Xmen"
-            member02.firstName = "Amy"
+            member02.setLastName(to: "Xmen")
+            member02.setFirstName(to: "Amy")
 
             let member03 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER03",
-                verificationLevel: 0
+                identity: "MEMBER03"
             )
-            member03.lastName = "Weber"
+            member03.setLastName(to: "Weber")
 
             let member04 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER04",
-                verificationLevel: 0
+                identity: "MEMBER04"
             )
-            member04.firstName = "Fritzli"
+            member04.setFirstName(to: "Fritzli")
             
             let member05 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER05",
-                verificationLevel: 0
+                identity: "MEMBER05"
             )
             let member06 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER06",
-                verificationLevel: 0
+                identity: "MEMBER06"
             )
 
             let member07 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER07",
-                verificationLevel: 0
+                identity: "MEMBER07"
             )
-            member07.lastName = "Weber 2"
+            member07.setLastName(to: "Weber 2")
 
             let member08 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER08",
-                verificationLevel: 0
+                identity: "MEMBER08"
             )
-            member08.firstName = "Fritzli 2"
+            member08.setFirstName(to: "Fritzli 2")
             
             let groupID = MockData.generateGroupID()
 
@@ -369,36 +358,32 @@ class GroupTests: XCTestCase {
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER01",
-                verificationLevel: 0
+                identity: "MEMBER01"
             )
-            member01.firstName = "Em"
-            member01.lastName = "il"
+            member01.setFirstName(to: "Em")
+            member01.setLastName(to: "il")
             
             let member02 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER02",
-                verificationLevel: 0
+                identity: "MEMBER02"
             )
-            member02.firstName = "Emi"
-            member02.lastName = "ly"
+            member02.setFirstName(to: "Emi")
+            member02.setLastName(to: "ly")
 
             let member03 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER03",
-                verificationLevel: 0
+                identity: "MEMBER03"
             )
-            member03.firstName = "Emi"
-            member03.lastName = "l"
+            member03.setFirstName(to: "Emi")
+            member03.setLastName(to: "l")
             member03.publicNickname = "Should not matter"
 
             let member04 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER04",
-                verificationLevel: 0
+                identity: "MEMBER04"
             )
-            member04.firstName = "Em"
-            member04.lastName = "ily"
+            member04.setFirstName(to: "Em")
+            member04.setLastName(to: "ily")
 
             let groupID = MockData.generateGroupID()
 
@@ -463,20 +448,18 @@ class GroupTests: XCTestCase {
 
         let member01 = dbPreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: "MEMBER01",
-            verificationLevel: 0
+            identity: "MEMBER01"
         )
-        member01.lastName = "Muster"
-        member01.firstName = "Hans"
+        member01.setLastName(to: "Muster")
+        member01.setFirstName(to: "Hans")
         members.append(member01)
 
         let member02 = dbPreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: "MEMBER02",
-            verificationLevel: 0
+            identity: "MEMBER02"
         )
-        member02.lastName = "Xmen"
-        member02.firstName = "Amy"
+        member02.setLastName(to: "Xmen")
+        member02.setFirstName(to: "Amy")
         members.append(member02)
 
         let groupManager = GroupManager(
@@ -544,20 +527,18 @@ class GroupTests: XCTestCase {
 
         let member01 = dbPreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: "MEMBER01",
-            verificationLevel: 0
+            identity: "MEMBER01"
         )
-        member01.lastName = "Muster"
-        member01.firstName = "Hans"
+        member01.setLastName(to: "Muster")
+        member01.setFirstName(to: "Hans")
         members.append(member01)
 
         let member02 = dbPreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: "MEMBER02",
-            verificationLevel: 0
+            identity: "MEMBER02"
         )
-        member02.lastName = "Xmen"
-        member02.firstName = "Amy"
+        member02.setLastName(to: "Xmen")
+        member02.setFirstName(to: "Amy")
         members.append(member02)
 
         let groupManager = GroupManager(
@@ -620,8 +601,7 @@ class GroupTests: XCTestCase {
                 members.insert(
                     dbPreparer.createContact(
                         publicKey: MockData.generatePublicKey(),
-                        identity: member,
-                        verificationLevel: kVerificationLevelUnverified
+                        identity: member
                     )
                 )
             }
@@ -638,8 +618,7 @@ class GroupTests: XCTestCase {
             members.insert(
                 dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: "MEMBER03",
-                    verificationLevel: kVerificationLevelUnverified
+                    identity: "MEMBER03"
                 )
             )
         }
@@ -701,8 +680,7 @@ class GroupTests: XCTestCase {
                 members.insert(
                     dbPreparer.createContact(
                         publicKey: MockData.generatePublicKey(),
-                        identity: member,
-                        verificationLevel: kVerificationLevelUnverified
+                        identity: member
                     )
                 )
             }
@@ -747,8 +725,7 @@ class GroupTests: XCTestCase {
                 members.insert(
                     dbPreparer.createContact(
                         publicKey: MockData.generatePublicKey(),
-                        identity: member,
-                        verificationLevel: kVerificationLevelUnverified
+                        identity: member
                     )
                 )
             }

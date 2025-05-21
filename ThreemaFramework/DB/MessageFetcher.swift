@@ -37,8 +37,8 @@ public class MessageFetcher: NSObject {
     }
     
     /// Get a fresh fetched request for the messages of the conversation
-    var messagesFetchRequest: NSFetchRequest<BaseMessage> {
-        let fetchRequest = NSFetchRequest<BaseMessage>(entityName: entityName)
+    var messagesFetchRequest: NSFetchRequest<BaseMessageEntity> {
+        let fetchRequest = NSFetchRequest<BaseMessageEntity>(entityName: entityName)
         
         fetchRequest.predicate = conversationPredicate
         fetchRequest.sortDescriptors = sortDescriptors(ascending: orderAscending)
@@ -242,8 +242,8 @@ public class MessageFetcher: NSObject {
         let fetchRequest = dateFetchRequest
         
         let datePredicates = NSCompoundPredicate(orPredicateWithSubpredicates: [
-            NSPredicate(format: "%K > %@", #keyPath(BaseMessage.date), date as NSDate),
-            NSPredicate(format: "%K > %@", #keyPath(BaseMessage.remoteSentDate), date as NSDate),
+            NSPredicate(format: "%K > %@", #keyPath(BaseMessageEntity.date), date as NSDate),
+            NSPredicate(format: "%K > %@", #keyPath(BaseMessageEntity.remoteSentDate), date as NSDate),
         ])
         
         fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
@@ -265,8 +265,8 @@ public class MessageFetcher: NSObject {
             let fetchRequest = dateFetchRequest
             
             let datePredicates = NSCompoundPredicate(orPredicateWithSubpredicates: [
-                NSPredicate(format: "%K > %@", #keyPath(BaseMessage.date), date as NSDate),
-                NSPredicate(format: "%K > %@", #keyPath(BaseMessage.remoteSentDate), date as NSDate),
+                NSPredicate(format: "%K > %@", #keyPath(BaseMessageEntity.date), date as NSDate),
+                NSPredicate(format: "%K > %@", #keyPath(BaseMessageEntity.remoteSentDate), date as NSDate),
             ])
             
             fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
@@ -288,11 +288,11 @@ public class MessageFetcher: NSObject {
     ///   - offset: Offset of first message to load
     ///   - count: Maximum number of messages to load
     /// - Returns: Up to `count` messages. This is empty if there are no messages.
-    public func messages(at offset: Int, count: Int) -> [BaseMessage] {
+    public func messages(at offset: Int, count: Int) -> [BaseMessageEntity] {
         oldMessagesFetchRequest.fetchOffset = offset
         oldMessagesFetchRequest.fetchLimit = count
         
-        guard let result = entityManager.entityFetcher.execute(oldMessagesFetchRequest) as? [BaseMessage] else {
+        guard let result = entityManager.entityFetcher.execute(oldMessagesFetchRequest) as? [BaseMessageEntity] else {
             return []
         }
         
@@ -300,18 +300,19 @@ public class MessageFetcher: NSObject {
     }
     
     /// All unread messages in this conversation. This might be an empty array.
-    public func unreadMessages() -> [BaseMessage] {
-        guard let result = entityManager.entityFetcher.execute(unreadMessagesFetchRequest) as? [BaseMessage] else {
+    public func unreadMessages() -> [BaseMessageEntity] {
+        guard let result = entityManager.entityFetcher.execute(unreadMessagesFetchRequest) as? [BaseMessageEntity]
+        else {
             return []
         }
         
         return result
     }
     
-    public func unreadMessages(limit: Int = 0) -> [BaseMessage] {
+    public func unreadMessages(limit: Int = 0) -> [BaseMessageEntity] {
         let fetchRequest = limitedUnreadMessagesFetchRequest
         fetchRequest.fetchLimit = limit
-        guard let result = entityManager.entityFetcher.execute(fetchRequest) as? [BaseMessage] else {
+        guard let result = entityManager.entityFetcher.execute(fetchRequest) as? [BaseMessageEntity] else {
             return []
         }
         
@@ -327,8 +328,9 @@ public class MessageFetcher: NSObject {
     /// rejections.
     ///
     /// - Returns: Messages with at least one `rejectedBy` contact
-    public func rejectedGroupMessages() -> [BaseMessage] {
-        guard let result = entityManager.entityFetcher.execute(rejectedMessagesFetchRequest) as? [BaseMessage] else {
+    public func rejectedGroupMessages() -> [BaseMessageEntity] {
+        guard let result = entityManager.entityFetcher.execute(rejectedMessagesFetchRequest) as? [BaseMessageEntity]
+        else {
             return []
         }
         
@@ -340,23 +342,23 @@ public class MessageFetcher: NSObject {
     /// This is the message that should show up in Chats. Some messages are filtered. Thus this might not be the actual
     /// last message in the conversation (use `lastMessage()` for that).
     /// - Returns: Last display message if there is any
-    @objc public func lastDisplayMessage() -> BaseMessage? {
+    @objc public func lastDisplayMessage() -> BaseMessageEntity? {
         lastMessageExcludesFetchRequest.fetchLimit = 10
         let excludedMessages = entityManager.entityFetcher.execute(lastMessageExcludesFetchRequest)
 
         let fetchRequest = lastMessagesFetchRequest(exclude: excludedMessages)
         fetchRequest.fetchLimit = 1
 
-        return entityManager.entityFetcher.execute(fetchRequest)?.first as? BaseMessage
+        return entityManager.entityFetcher.execute(fetchRequest)?.first as? BaseMessageEntity
     }
     
     /// Last message of the conversation
     /// - Returns: Last message of the conversation if there is any
-    func lastMessage() -> BaseMessage? {
+    func lastMessage() -> BaseMessageEntity? {
         let fetchRequest = lastMessagesFetchRequest(exclude: nil)
         fetchRequest.fetchLimit = 1
 
-        return entityManager.entityFetcher.execute(fetchRequest)?.first as? BaseMessage
+        return entityManager.entityFetcher.execute(fetchRequest)?.first as? BaseMessageEntity
     }
 
     /// Number of media messages in the conversation
@@ -424,8 +426,8 @@ public class MessageFetcher: NSObject {
     // in the order they are send out. `remoteSentDate` is a fallback in case `date` is not around.
     private func sortDescriptors(ascending: Bool) -> [NSSortDescriptor] {
         [
-            NSSortDescriptor(keyPath: \BaseMessage.date, ascending: ascending),
-            NSSortDescriptor(keyPath: \BaseMessage.remoteSentDate, ascending: ascending),
+            NSSortDescriptor(keyPath: \BaseMessageEntity.date, ascending: ascending),
+            NSSortDescriptor(keyPath: \BaseMessageEntity.remoteSentDate, ascending: ascending),
         ]
     }
         

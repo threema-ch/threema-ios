@@ -24,7 +24,6 @@
 #import "MyIdentityStore.h"
 #import "LicenseStore.h"
 #import "ContactStore.h"
-#import "ContactEntity.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "MDMSetup.h"
 #import "UserSettings.h"

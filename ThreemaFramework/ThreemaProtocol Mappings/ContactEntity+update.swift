@@ -40,7 +40,7 @@ extension ContactEntity {
         }
 
         if syncContact.hasAcquaintanceLevel {
-            isContactHidden = syncContact.acquaintanceLevel == .groupOrDeleted
+            isHidden = syncContact.acquaintanceLevel == .groupOrDeleted
         }
 
         if syncContact.hasContactDefinedProfilePicture {
@@ -66,11 +66,11 @@ extension ContactEntity {
         }
 
         if syncContact.hasFeatureMask {
-            featureMask = NSNumber(value: syncContact.featureMask)
+            setFeatureMask(to: Int(syncContact.featureMask))
         }
 
         if syncContact.hasFirstName {
-            firstName = syncContact.firstNameNullable
+            setFirstName(to: syncContact.firstNameNullable)
         }
 
         if syncContact.hasIdentityType {
@@ -86,7 +86,7 @@ extension ContactEntity {
         }
 
         if syncContact.hasLastName {
-            lastName = syncContact.lastNameNullable
+            setLastName(to: syncContact.lastNameNullable)
         }
 
         if syncContact.hasNickname {
@@ -123,7 +123,7 @@ extension ContactEntity {
         }
 
         if syncContact.hasSyncState {
-            importedStatus = ImportedStatus(rawValue: syncContact.syncState.rawValue)!
+            contactImportStatus = ContactEntity.ImportStatus(rawValue: syncContact.syncState.rawValue) ?? .initial
         }
 
         if syncContact.hasTypingIndicatorPolicyOverride {
@@ -145,7 +145,8 @@ extension ContactEntity {
         }
 
         if syncContact.hasVerificationLevel {
-            verificationLevel = NSNumber(integerLiteral: syncContact.verificationLevel.rawValue)
+            contactVerificationLevel = ContactEntity
+                .VerificationLevel(rawValue: syncContact.verificationLevel.rawValue) ?? .unverified
         }
 
         if syncContact.hasWorkVerificationLevel {

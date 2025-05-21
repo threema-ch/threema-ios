@@ -25,57 +25,42 @@ import ThreemaFramework
 protocol AudioMediaManagerProtocol: AnyObject {
     associatedtype FileUtil: FileUtilityProtocol
     
-    /// Removes the files at the specified URLs from the filesystem.
-    /// This operation is performed on a background thread.
-    /// - Parameter urls: An array of `URL` objects representing the files to be deleted.
-    static func cleanupFiles(_ urls: [URL])
+    static func audioURL() -> URL
+    static func concatenateRecordingsAndSave(
+        combine urls: [URL],
+        to audioFile: URL,
+        completion: @escaping () -> Void
+    ) async throws -> AVAsset
     
-    /// Generates a temporary URL for an audio file with a unique name based on the current date and time.
-    /// - Parameter namedFile: The base name for the audio file.
-    /// - Returns: A `URL` object pointing to the temporary audio file location.
-    static func tmpAudioURL(with namedFile: String) -> URL
-    
-    /// Concatenates multiple audio recordings and saves the result to a specified file.
-    /// This function creates a composition of the provided audio URLs and then saves the composition
-    /// to the destination URL.
-    /// - Parameters:
-    ///   - urls: An array of `URL` objects representing the audio files to be concatenated.
-    ///   - audioFile: The destination `URL` where the final audio file will be saved.
-    static func concatenateRecordingsAndSave(combine urls: [URL], to audioFile: URL) async throws
-    
-    /// Saves an `AVAsset` to a specified URL.
-    /// This function attempts to delete any existing file at the destination URL before initiating the export.
-    /// It creates an `AVAssetExportSession` with the `AVAssetExportPresetAppleM4A` preset to export the asset.
-    /// If the export session is not created or the export does not complete successfully, it returns a failure.
-    /// - Parameters:
-    ///   - asset: The `AVAsset` to be saved.
-    ///   - url: The destination `URL` where the asset should be saved.
-    static func save(_ asset: AVAsset, to url: URL) async throws
-    
-    /// Moves a file from a given URL to the persistent directory (Documents).
-    /// - Parameter url: The source URL of the file to be moved.
     static func moveToPersistentDir(from url: URL) throws -> URL
-    
-    /// Copies  a file from a given URL to the destination
-    /// - Parameter source: The source URL of the file to be copied.
-    /// - Parameter destination: The destination URL of the file to be copied.
     static func copy(source: URL, destination: URL) throws
+    static func cleanupFiles(_ urls: URL)
 }
 
 extension AudioMediaManager {
-    static func cleanupFiles(_ urls: [URL]) {
+    static func cleanupFiles(_ url: URL) {
         Task(priority: .background) {
-            urls.forEach(FileUtil.shared.delete)
+            FileUtil.shared.delete(at: url)
         }
     }
     
-    static func tmpAudioURL(with namedFile: String) -> URL {
-        let fullFileName = "\(namedFile)-\(DateFormatter.getDateForExport(.now))"
+    static func audioURL() -> URL {
+        let fullFileName = "voice_recording_\(DateFormatter.getDateForExport(.now))"
         let url = FileUtil.shared.appTemporaryDirectory
             .appendingPathComponent(fullFileName)
             .appendingPathExtension(MEDIA_EXTENSION_AUDIO)
 
-        DDLogInfo("new Tmp fileURL: \(url)")
+        DDLogInfo("[Voice Recorder] New audio url: \(url)")
+        return url
+    }
+    
+    static func playAudioURL() -> URL {
+        let fullFileName = "voice_play_\(DateFormatter.getDateForExport(.now))"
+        let url = FileUtil.shared.appTemporaryDirectory
+            .appendingPathComponent(fullFileName)
+            .appendingPathExtension(MEDIA_EXTENSION_AUDIO)
+
+        DDLogInfo("[Voice Recorder] New play url: \(url)")
         return url
     }
 

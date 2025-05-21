@@ -118,10 +118,10 @@ import ThreemaMacros
         SafeManager.backupIsRunning
     }
     
-    // Activate safe with password of MDM
+    /// Activate safe with the MDM configuration. If the Threema Safe password is missing,
+    /// a dialog for entering the password is displayed.
     @objc func activateThroughMDM() {
-        guard let mdm = MDMSetup(setup: false),
-              let safePassword = mdm.safePassword() else {
+        guard let mdm = MDMSetup(setup: false) else {
             return
         }
 
@@ -139,7 +139,7 @@ import ThreemaMacros
         
         activate(
             identity: MyIdentityStore.shared().identity,
-            safePassword: safePassword,
+            safePassword: mdm.safePassword(),
             customServer: customServer,
             serverUser: serverUser,
             serverPassword: serverPassword,
@@ -317,6 +317,8 @@ import ThreemaMacros
         safeConfigManager.setBackupStartedAt(nil)
         safeConfigManager.setIsTriggered(false)
         
+        NotificationCenter.default.post(name: NSNotification.Name(kSafeBackupUIRefresh), object: nil)
+        
         DispatchQueue.main.async {
             self.setBackupReminder()
         }
@@ -444,8 +446,20 @@ import ThreemaMacros
            let retentionDays = safeConfigManager.getRetentionDays() {
             
             let notification = UNMutableNotificationContent()
-            notification.title = #localize("safe_setup_backup_title")
-            notification.body = #localize("safe_expired_notification")
+            notification.title = String.localizedStringWithFormat(
+                String
+                    .localizedStringWithFormat(
+                        #localize("safe_setup_backup_title"),
+                        TargetManager.localizedAppName
+                    ),
+                TargetManager.localizedAppName
+            )
+            notification.body = String.localizedStringWithFormat(
+                #localize("safe_expired_notification"),
+                TargetManager.localizedAppName,
+                TargetManager.localizedAppName,
+                TargetManager.localizedAppName
+            )
             notification.categoryIdentifier = "SAFE_SETUP"
             notification.userInfo = ["threema": ["nil": "nil"], "key": notificationKey]
             
@@ -458,7 +472,9 @@ import ThreemaMacros
                     let days = Double(exactly: seconds / Double(oneDayInSeconds))?.rounded(.up)
                     notification.body = String.localizedStringWithFormat(
                         #localize("safe_failed_notification"),
-                        abs(days!)
+                        TargetManager.localizedAppName,
+                        abs(days ?? 1),
+                        TargetManager.localizedAppName
                     )
                 }
                 else {
@@ -918,71 +934,65 @@ import ThreemaMacros
         safeApiService.download(
             backup: backupURL,
             user: serverUser,
-            password: serverPassword,
-            completionHandler: { comp in
-                do {
-                    let encryptedData = try comp()
+            password: serverPassword
+        ) { comp in
+            do {
+                let encryptedData = try comp()
                     
-                    if encryptedData != nil {
-                        decryptedData = try self.safeStore.decryptBackupData(key: key, data: Array(encryptedData!))
+                if encryptedData != nil {
+                    decryptedData = try self.safeStore.decryptBackupData(key: key, data: Array(encryptedData!))
                         
-                        try? self.safeStore.restoreData(
-                            identity: identity,
-                            data: decryptedData!,
-                            onlyIdentity: restoreIdentityOnly,
-                            completionHandler: { error in
-                                if let error {
-                                    switch error {
-                                    case let .restoreError(message):
-                                        completionHandler(SafeError.restoreError(message: message))
-                                    case let .restoreFailed(message):
-                                        completionHandler(SafeError.restoreFailed(message: message))
-                                    default: break
-                                    }
+                    try? self.safeStore.restoreData(
+                        identity: identity,
+                        data: decryptedData!,
+                        onlyIdentity: restoreIdentityOnly
+                    ) { error in
+                        if let error {
+                            switch error {
+                            case let .restoreError(message):
+                                completionHandler(SafeError.restoreError(message: message))
+                            case let .restoreFailed(message):
+                                completionHandler(SafeError.restoreFailed(message: message))
+                            default: break
+                            }
+                        }
+                        else {
+                                    
+                            // Reset app migration and start a new run
+                            let businessInjector = BusinessInjector.ui
+                            if AppMigrationVersion
+                                .isMigrationRequired(userSettings: businessInjector.userSettings) {
+                                do {
+                                    try AppMigration(reset: true).run()
                                 }
-                                else {
+                                catch {
+                                    let msg = String.localizedStringWithFormat(
+                                        #localize("safe_activation_app_migration_failed_error_message"),
+                                        TargetManager.localizedAppName
+                                    )
+                                    completionHandler(SafeError.restoreError(message: msg))
+                                    return
+                                }
+                            }
                                     
-                                    // Reset app migration and start a new run
-                                    let businessInjector = BusinessInjector.ui
-                                    if AppMigrationVersion
-                                        .isMigrationRequired(userSettings: businessInjector.userSettings) {
-                                        do {
-                                            try AppMigration(reset: true).run()
-                                        }
-                                        catch {
-                                            let msg = #localize("safe_activation_app_migration_failed_error_message")
-                                            completionHandler(SafeError.restoreError(message: msg))
-                                            return
-                                        }
-                                    }
-                                    
-                                    if !restoreIdentityOnly || activateSafeAnyway {
-                                        // activate Threema Safe
-                                        self.activate(
-                                            key: key,
-                                            customServer: customServer,
-                                            serverUser: serverUser,
-                                            serverPassword: serverPassword,
-                                            server: server.absoluteString,
-                                            maxBackupBytes: nil,
-                                            retentionDays: nil
-                                        ) { error in
-                                            if error != nil {
-                                                completionHandler(
-                                                    SafeError.restoreError(message: #localize("safe_activation_failed"))
-                                                )
-                                            }
-                                            else {
-                                                // show Threema Safe-Intro
-                                                UserSettings.shared()?.safeIntroShown = false
-                                                // trigger backup
-                                                NotificationCenter.default.post(
-                                                    name: NSNotification.Name(kSafeBackupTrigger),
-                                                    object: nil
-                                                )
-                                                completionHandler(nil)
-                                            }
-                                        }
+                            if !restoreIdentityOnly || activateSafeAnyway {
+                                // activate Threema Safe
+                                self.activate(
+                                    key: key,
+                                    customServer: customServer,
+                                    serverUser: serverUser,
+                                    serverPassword: serverPassword,
+                                    server: server.absoluteString,
+                                    maxBackupBytes: nil,
+                                    retentionDays: nil
+                                ) { error in
+                                    if error != nil {
+                                        completionHandler(
+                                            SafeError.restoreError(message: String.localizedStringWithFormat(
+                                                #localize("safe_activation_failed"),
+                                                TargetManager.localizedAppName
+                                            ))
+                                        )
                                     }
                                     else {
                                         // show Threema Safe-Intro
@@ -996,51 +1006,61 @@ import ThreemaMacros
                                     }
                                 }
                             }
-                        )
-                    }
-                }
-                catch let SafeApiService.SafeApiError.requestFailed(message) {
-                    completionHandler(
-                        SafeError
-                            .restoreFailed(
-                                message: "\(#localize("safe_no_backup_found")) (\(message))"
-                            )
-                    )
-                }
-                catch let SafeStore.SafeError.restoreFailed(message) {
-                    completionHandler(SafeError.restoreFailed(message: message))
-                    
-                    if let decryptedData,
-                       let json = try? JSONSerialization.jsonObject(
-                           with: Data(decryptedData),
-                           options: .mutableContainers
-                       ),
-                       var json = json as? [String: Any],
-                       var user = json["user"] as? [String: Any] {
-                        // Remove sensitive data
-                        if user.removeValue(forKey: "privatekey") != nil {
-                            json["user"] = user
-
-                            if let dataWithoutPrimaryKey = try? JSONSerialization.data(withJSONObject: json),
-                               let dataWithoutPrimaryKeyString = String(bytes: dataWithoutPrimaryKey, encoding: .utf8) {
-                                // Save decrypted backup data into application documents folder, for analyzing failures
-                                _ = FileUtility.shared.write(
-                                    fileURL: FileUtility.shared.appDocumentsDirectory?
-                                        .appendingPathComponent("safe-backup.json"),
-                                    text: dataWithoutPrimaryKeyString
+                            else {
+                                // show Threema Safe-Intro
+                                UserSettings.shared()?.safeIntroShown = false
+                                // trigger backup
+                                NotificationCenter.default.post(
+                                    name: NSNotification.Name(kSafeBackupTrigger),
+                                    object: nil
                                 )
+                                completionHandler(nil)
                             }
                         }
                     }
                 }
-                catch {
-                    completionHandler(
-                        SafeError
-                            .restoreFailed(message: #localize("safe_no_backup_found"))
-                    )
+            }
+            catch let SafeApiService.SafeApiError.requestFailed(message) {
+                completionHandler(
+                    SafeError
+                        .restoreFailed(
+                            message: "\(#localize("safe_no_backup_found")) (\(message))"
+                        )
+                )
+            }
+            catch let SafeStore.SafeError.restoreFailed(message) {
+                completionHandler(SafeError.restoreFailed(message: message))
+                    
+                if let decryptedData,
+                   let json = try? JSONSerialization.jsonObject(
+                       with: Data(decryptedData),
+                       options: .mutableContainers
+                   ),
+                   var json = json as? [String: Any],
+                   var user = json["user"] as? [String: Any] {
+                    // Remove sensitive data
+                    if user.removeValue(forKey: "privatekey") != nil {
+                        json["user"] = user
+
+                        if let dataWithoutPrimaryKey = try? JSONSerialization.data(withJSONObject: json),
+                           let dataWithoutPrimaryKeyString = String(bytes: dataWithoutPrimaryKey, encoding: .utf8) {
+                            // Save decrypted backup data into application documents folder, for analyzing failures
+                            _ = FileUtility.shared.write(
+                                fileURL: FileUtility.shared.appDocumentsDirectory?
+                                    .appendingPathComponent("safe-backup.json"),
+                                text: dataWithoutPrimaryKeyString
+                            )
+                        }
+                    }
                 }
             }
-        )
+            catch {
+                completionHandler(
+                    SafeError
+                        .restoreFailed(message: #localize("safe_no_backup_found"))
+                )
+            }
+        }
     }
     
     @objc func initTrigger() {
@@ -1113,10 +1133,15 @@ import ThreemaMacros
                 DispatchQueue.main.async {
                     UIAlertTemplate.showAlert(
                         owner: topViewController,
-                        title: #localize("safe_setup_backup_title"),
+                        title: String.localizedStringWithFormat(
+                            #localize("safe_setup_backup_title"),
+                            TargetManager.localizedAppName
+                        ),
                         message: String.localizedStringWithFormat(
                             #localize("safe_failed_notification"),
-                            abs(days)
+                            TargetManager.localizedAppName,
+                            abs(days),
+                            TargetManager.localizedAppName
                         )
                     )
                 }

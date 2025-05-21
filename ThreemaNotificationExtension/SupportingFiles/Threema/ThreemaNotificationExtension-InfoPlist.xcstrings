@@ -5,124 +5,130 @@
       "comment" : "Bundle display name",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "gsw-CH" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "pt" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "state" : "needs_review",
+            "value" : "Threema"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema NotificationExtension"
+            "value" : "Threema"
           }
         }
       }
@@ -131,6 +137,12 @@
       "comment" : "Bundle name",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разширение на Threema известие"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -199,7 +211,7 @@
         },
         "pt" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Threema NotificationExtension"
           }
         },

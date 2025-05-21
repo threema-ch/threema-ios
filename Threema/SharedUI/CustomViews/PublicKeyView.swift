@@ -115,11 +115,11 @@ final class PublicKeyView: UIView {
         button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
         
         button.backgroundColor = .secondarySystemBackground
-        button.tintColor = .primary
-        button.setTitleColor(.primary, for: .normal)
         
         return button
     }()
+
+    private var onDismiss: (() -> Void)?
        
     // MARK: - Initialization
     
@@ -131,12 +131,12 @@ final class PublicKeyView: UIView {
         configureView()
     }
     
-    @objc init(identity: String, publicKey: Data) {
+    @objc init(identity: String, publicKey: Data, onDismiss: (() -> Void)? = nil) {
         super.init(frame: UIScreen.main.bounds)
         
         self.identity = identity
         self.publicKey = publicKey
-        
+        self.onDismiss = onDismiss
         configureView()
     }
             
@@ -246,6 +246,8 @@ final class PublicKeyView: UIView {
                 self.removeFromSuperview()
             }
         }
+        
+        onDismiss?()
     }
     
     @objc func touchButtonDown() {

@@ -28,6 +28,8 @@ typedef enum : NSUInteger {
     RequiresMigrationError = 2
 } StoreRequiresMigration;
 
+@class BallotMessageEntity;
+
 @interface DatabaseManager : NSObject
 
 @property (strong, nonatomic) NSManagedObjectModel *managedObjectModel;

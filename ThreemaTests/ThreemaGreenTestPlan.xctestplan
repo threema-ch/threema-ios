@@ -1,0 +1,57 @@
+{
+  "configurations" : [
+    {
+      "id" : "60CF117B-329A-46BC-8C66-375C9A06058D",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "commandLineArgumentEntries" : [
+      {
+        "argument" : "-isRunningForTests"
+      },
+      {
+        "argument" : "-com.apple.CoreData.SQLDebug 1",
+        "enabled" : false
+      },
+      {
+        "argument" : "-com.apple.CoreData.ConcurrencyDebug 1",
+        "enabled" : false
+      }
+    ],
+    "environmentVariableEntries" : [
+      {
+        "key" : "SQLITE_ENABLE_THREAD_ASSERTIONS",
+        "value" : "1"
+      },
+      {
+        "enabled" : false,
+        "key" : "SQLITE_AUTO_TRACE",
+        "value" : "1"
+      },
+      {
+        "key" : "SQLITE_ENABLE_FILE_ASSERTIONS",
+        "value" : "1"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Threema.xcodeproj",
+      "identifier" : "2DEDB15424C9903400FC9099",
+      "name" : "Threema Green"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Threema.xcodeproj",
+        "identifier" : "2412D2AD2DA639DC008823F5",
+        "name" : "Threema Green Tests"
+      }
+    }
+  ],
+  "version" : 1
+}

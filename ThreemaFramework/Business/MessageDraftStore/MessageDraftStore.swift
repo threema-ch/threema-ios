@@ -53,7 +53,7 @@ import ThreemaMacros
                     [String: String]()
                 }))
             for contact in entityManager.entityFetcher.allContacts() as? [ContactEntity] ?? [] {
-                for conv in contact.conversations as? Set<ConversationEntity> ?? Set<ConversationEntity>() {
+                for conv in contact.conversations ?? Set<ConversationEntity>() {
                     @MessageDraftCoordinator(conversation: conv) var mdc
                     guard let mdc, let storeKey = $mdc.storeKey else {
                         return

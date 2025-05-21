@@ -30,7 +30,7 @@ struct WaveformProgressViewModifier: ViewModifier {
     func body(content: Content) -> some View {
         GeometryReader { geometry in
             content
-                .maskedWaveForm(progress: progress, primary: UIColor.primary.color, secondary: .gray)
+                .maskedWaveForm(progress: progress, primary: .accentColor, secondary: .gray)
                 .gesture(
                     DragGesture()
                         .onChanged { value in

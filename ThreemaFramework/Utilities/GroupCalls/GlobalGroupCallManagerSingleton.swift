@@ -77,8 +77,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             groupCallCrypto: GroupCallCrypto(),
             groupCallDateFormatter: GroupCallDateFormatterAdapter(),
             userSettings: GroupCallUserSettings(
-                ipv6Enabled: UserSettings.shared().enableIPv6,
-                disableProximityMonitoring: UserSettings.shared().disableProximityMonitoring
+                ipv6Enabled: UserSettings.shared().enableIPv6
             ),
             groupCallSystemMessageAdapter: GroupCallSystemMessageAdapter<BusinessInjector>(
                 businessInjector: BusinessInjector(forBackgroundProcess: true)
@@ -595,7 +594,7 @@ extension GlobalGroupCallManagerSingleton {
             sendContactProfilePicture: true
         )
         
-        TaskManager().add(taskDefinition: taskDefinition)
+        _ = TaskManager().add(taskDefinition: taskDefinition)
     }
 }
 
@@ -745,7 +744,7 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerSingletonDelegate {
             
             uiDelegate.newBannerForStartGroupCall(
                 conversationManagedObjectID: conversationObjectID,
-                title: title ?? "",
+                title: title,
                 body: body,
                 identifier: groupModel.groupIdentity.id.hexString
             )

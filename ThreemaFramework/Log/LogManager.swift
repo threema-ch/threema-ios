@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import libthreemaSwift
 
 @objc public class LogManager: NSObject {
     
@@ -40,6 +41,8 @@ import Foundation
         .appendingPathComponent(
             "app-setup-steps.log"
         )
+    
+    private static let libthreemaLogDispatcher = LibthreemaLogDispatcher()
             
     /// Log levels definition for Swift. Includes new Notice Log level at the end, to not break the standard Log levels
     /// like in <CocoaLumberjack/DDLog.h>
@@ -68,6 +71,16 @@ import Foundation
         else {
             removeFileLogger(debugLogFile)
         }
+        
+        // libthreema logging
+        // .trace should only be used to closely debug something
+      
+        // TODO: (IOS-5283) See ticket
+//        let libthreemaMinLogLevel: LogLevel = debug ? .debug : .info
+//        libthreemaSwift.initialize(
+//            minLogLevel: libthreemaMinLogLevel,
+//            logDispatcher: libthreemaLogDispatcher
+//        )
     }
 
     @objc public static func addFileLogger(_ logFile: URL?) {
@@ -76,9 +89,7 @@ import Foundation
         }
         
         if let existingLogger = findFileLogger(logFile),
-           existingLogger.isEmpty {
-        
-            let fileLogger: FileLoggerCustom! = FileLoggerCustom(logFile: logFile)
+           existingLogger.isEmpty, let fileLogger = FileLoggerCustom(logFile: logFile) {
             DDLog.add(fileLogger, with: logLevel())
         }
     }

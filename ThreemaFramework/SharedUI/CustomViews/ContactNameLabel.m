@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ContactNameLabel.h"
-#import "ContactEntity.h"
 #import "UserSettings.h"
 #import "BundleUtil.h"
 #import "ThreemaFramework/ThreemaFramework-swift.h"
@@ -51,7 +50,7 @@
     NSMutableDictionary *boldDict = [NSMutableDictionary dictionaryWithObject:[UIFont preferredFontForTextStyle:UIFontTextStyleHeadline] forKey:NSFontAttributeName];
     NSMutableDictionary *regularDict = [NSMutableDictionary dictionaryWithObject:normalFont forKey:NSFontAttributeName];
     
-    if (contact.state.intValue == kStateInvalid) {
+    if (contact.contactState == ContactStateInvalid) {
         regularDict[NSStrikethroughStyleAttributeName] = [NSNumber numberWithInt:NSUnderlineStyleThick];
         boldDict[NSStrikethroughStyleAttributeName] = [NSNumber numberWithInt:NSUnderlineStyleThick];
     }

@@ -29,7 +29,7 @@
 #endif
 @implementation VideoMessageLoader
 
-- (void)updateDBObject:(BaseMessage<BlobData> *)message with:(NSData *)data {
+- (void)updateDBObject:(BaseMessageEntity<BlobData> *)message with:(NSData *)data {
     [super updateDBObject:message with:data];
 
     /* Add to photo library */

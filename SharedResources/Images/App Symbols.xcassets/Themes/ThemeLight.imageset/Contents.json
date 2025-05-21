@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "ThemeLight.svg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

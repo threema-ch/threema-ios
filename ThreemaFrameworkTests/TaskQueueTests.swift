@@ -166,8 +166,7 @@ class TaskQueueTests: XCTestCase {
         dbPreparer.save {
             let contactEntity = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: expectedReceiverIdentity,
-                verificationLevel: 0
+                identity: expectedReceiverIdentity
             )
             dbPreparer.createConversation(contactEntity: contactEntity)
         }
@@ -216,8 +215,7 @@ class TaskQueueTests: XCTestCase {
         dbPreparer.save {
             let contactEntity = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: expectedReceiverIdentity,
-                verificationLevel: 0
+                identity: expectedReceiverIdentity
             )
             dbPreparer.createConversation(contactEntity: contactEntity)
         }
@@ -261,8 +259,7 @@ class TaskQueueTests: XCTestCase {
 
         dbPreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: expectedReceiver,
-            verificationLevel: 0
+            identity: expectedReceiver
         )
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
@@ -1307,8 +1304,7 @@ class TaskQueueTests: XCTestCase {
         let expectedContactEntity = dbPreparer.save {
             let expectedContactEntity = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "ECHOECHO",
-                verificationLevel: 0
+                identity: "ECHOECHO"
             )
             dbPreparer.createConversation(
                 typing: false,

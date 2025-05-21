@@ -273,7 +273,7 @@
 }
 
 - (NSString *)activityViewController:(UIActivityViewController *)activityViewController subjectForActivityType:(UIActivityType)activityType {
-    NSString *subject = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"backup_mail_subject"], [MyIdentityStore sharedMyIdentityStore].identity];
+    NSString *subject = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"backup_mail_subject"], TargetManagerObjc.localizedAppName, [MyIdentityStore sharedMyIdentityStore].identity];
     return subject;
 }
 

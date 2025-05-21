@@ -71,9 +71,9 @@ public enum MessageSenderReceivers {
         in conversation: ConversationEntity
     ) async
 
-    func sendBallotMessage(for ballot: Ballot)
+    func sendBallotMessage(for ballot: BallotEntity)
 
-    func sendBallotVoteMessage(for ballot: Ballot)
+    func sendBallotVoteMessage(for ballot: BallotEntity)
 
     // MARK: - Generic sending
 
@@ -108,9 +108,9 @@ public enum MessageSenderReceivers {
     
     func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> Promise<Void>
 
-    func sendReadReceipt(for messages: [BaseMessage], toIdentity: ThreemaIdentity) async
+    func sendReadReceipt(for messages: [BaseMessageEntity], toIdentity: ThreemaIdentity) async
 
-    func sendReadReceipt(for messages: [BaseMessage], toGroupIdentity: GroupIdentity) async
+    func sendReadReceipt(for messages: [BaseMessageEntity], toGroupIdentity: GroupIdentity) async
 
     func sendTypingIndicator(typing: Bool, toIdentity: ThreemaIdentity)
 
@@ -210,7 +210,7 @@ extension MessageSenderProtocol {
     }
 
     func sendReadReceipt(
-        for messages: [BaseMessage],
+        for messages: [BaseMessageEntity],
         toGroupIdentity: GroupIdentity,
         completion: @escaping () -> Void
     ) {

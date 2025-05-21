@@ -591,7 +591,7 @@ final class ChatViewSnapshotProvider {
     private func messageIsOwn(messageID: NSManagedObjectID) -> Bool {
         var isOwn = false
         entityManager.performAndWait {
-            if let message = self.entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessage {
+            if let message = self.entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessageEntity {
                 isOwn = message.isOwnMessage
             }
         }

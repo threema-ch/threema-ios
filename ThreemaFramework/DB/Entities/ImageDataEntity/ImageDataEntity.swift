@@ -22,26 +22,27 @@ import CoreData
 import Foundation
 
 @objc(ImageDataEntity)
-public class ImageDataEntity: TMAManagedObject {
+public final class ImageDataEntity: TMAManagedObject {
     
-    // Attributes
-    @NSManaged @objc(data) public var data: Data
-    @NSManaged @objc(height) public var height: Int16
-    @NSManaged @objc(width) public var width: Int16
+    // MARK: Attributes
+
+    @NSManaged public var data: Data
+    @NSManaged public var height: Int16
+    @NSManaged public var width: Int16
     
-    // Relationships
+    // MARK: Relationships
+
     @NSManaged public var message: ImageMessageEntity?
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
-    ///   - data: Data for the entity
+    ///   - context: `NSManagedObjectContext` to insert created entity into
+    ///   - data: `Data` for the entity
     ///   - height: Height of the underlying image
     ///   - width: Width of the underlying image
-    ///   - message: ImageMessageEntity the entity belongs to
+    ///   - message: `ImageMessageEntity` the entity belongs to
     public init(
         context: NSManagedObjectContext,
         data: Data,

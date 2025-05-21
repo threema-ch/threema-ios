@@ -61,8 +61,8 @@ class DatabasePreparer {
     @discardableResult func createBallot(
         conversation: ConversationEntity,
         ballotID: Data = MockData.generateBallotID()
-    ) -> Ballot {
-        let ballot = createEntity(objectType: Ballot.self)
+    ) -> BallotEntity {
+        let ballot = createEntity(objectType: BallotEntity.self)
         ballot.conversation = conversation
         ballot.id = ballotID
         return ballot
@@ -70,8 +70,8 @@ class DatabasePreparer {
     
     @discardableResult func createBallotMessage(
         conversation: ConversationEntity,
-        ballot: Ballot,
-        ballotState: Int = Int(kBallotMessageStateOpenBallot),
+        ballot: BallotEntity,
+        ballotState: Int = BallotEntity.BallotState.open.rawValue,
         date: Date = Date(),
         delivered: Bool = true,
         id: Data = MockData.generateMessageID(),
@@ -79,11 +79,10 @@ class DatabasePreparer {
         read: Bool = true,
         readDate: Date? = nil,
         sent: Bool = true,
-        userack: Bool = false,
         sender: ContactEntity? = nil,
         remoteSentDate: Date? = nil // can be set to nil for outgoing messages
-    ) -> BallotMessage {
-        let ballotMessage = createEntity(objectType: BallotMessage.self)
+    ) -> BallotMessageEntity {
+        let ballotMessage = createEntity(objectType: BallotMessageEntity.self)
         ballotMessage.conversation = conversation
         ballotMessage.ballot = ballot
         ballotMessage.ballotState = NSNumber(integerLiteral: ballotState)
@@ -94,7 +93,6 @@ class DatabasePreparer {
         ballotMessage.read = NSNumber(booleanLiteral: read)
         ballotMessage.readDate = readDate
         ballotMessage.sent = NSNumber(booleanLiteral: sent)
-        ballotMessage.userack = NSNumber(booleanLiteral: userack)
         ballotMessage.sender = sender
         ballotMessage.remoteSentDate = remoteSentDate
         return ballotMessage
@@ -104,21 +102,21 @@ class DatabasePreparer {
         publicKey: Data = MockData.generatePublicKey(),
         identity: String,
         featureMask: Int = 1, // Voice calls
-        verificationLevel: Int = 0,
+        verificationLevel: ContactEntity.VerificationLevel = .unverified,
         nickname: String? = nil,
-        state: NSNumber? = NSNumber(value: kStateActive)
+        state: ContactEntity.ContactState = .active
     ) -> ContactEntity {
         let contact = createEntity(objectType: ContactEntity.self)
         contact.publicKey = publicKey
-        contact.identity = identity
-        contact.featureMask = NSNumber(integerLiteral: featureMask)
-        contact.verificationLevel = NSNumber(integerLiteral: verificationLevel)
+        contact.setIdentity(to: identity)
+        contact.setFeatureMask(to: featureMask)
+        contact.contactVerificationLevel = verificationLevel
+        contact.contactState = state
+        
         if let nickname {
             contact.publicNickname = nickname
         }
-        if let state {
-            contact.state = state
-        }
+        
         return contact
     }
     
@@ -214,7 +212,6 @@ class DatabasePreparer {
         read: Bool = true,
         readDate: Date? = nil,
         sent: Bool = true,
-        userack: Bool = false,
         sender: ContactEntity?,
         remoteSentDate: Date? // can be set to nil for outgoing messages
     ) -> ImageMessageEntity {
@@ -229,7 +226,7 @@ class DatabasePreparer {
         imageMessageEntity.read = NSNumber(booleanLiteral: read)
         imageMessageEntity.readDate = readDate
         imageMessageEntity.sent = NSNumber(booleanLiteral: sent)
-        imageMessageEntity.userack = NSNumber(booleanLiteral: userack)
+        imageMessageEntity.userack = false
         imageMessageEntity.sender = sender
         imageMessageEntity.remoteSentDate = remoteSentDate
         return imageMessageEntity
@@ -464,10 +461,10 @@ class DatabasePreparer {
         else if objectType is FileDataEntity.Type {
             entityName = "FileData"
         }
-        else if objectType is Ballot.Type {
+        else if objectType is BallotEntity.Type {
             entityName = "Ballot"
         }
-        else if objectType is BallotMessage.Type {
+        else if objectType is BallotMessageEntity.Type {
             entityName = "BallotMessage"
         }
         else if objectType is SystemMessageEntity.Type {

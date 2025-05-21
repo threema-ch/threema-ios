@@ -355,7 +355,7 @@ extension ConversationsViewController {
         archiveAction.image = UIImage(systemName: "archivebox.fill")
         archiveAction.title = #localize("archive")
         archiveAction.accessibilityLabel = #localize("archive")
-        archiveAction.backgroundColor = Colors.gray
+        archiveAction.backgroundColor = .systemGray
         
         // Delete
         
@@ -458,7 +458,7 @@ extension ConversationsViewController {
         }
         readAction.title = unreadTitle
         readAction.accessibilityLabel = unreadTitle
-        readAction.backgroundColor = Colors.blue
+        readAction.backgroundColor = .systemBlue
         return readAction
     }
 }
@@ -765,7 +765,10 @@ extension ConversationsViewController {
                 UIAlertTemplate.showAlert(
                     owner: self,
                     title: #localize("privateChat_alert_title"),
-                    message: #localize("privateChat_setup_alert_message"),
+                    message: String.localizedStringWithFormat(
+                        #localize("privateChat_setup_alert_message"),
+                        TargetManager.localizedAppName
+                    ),
                     titleOk: #localize("privateChat_code_alert_confirm"), actionOk: { _ in
                         self.lockScreen.presentLockScreenView(
                             viewController: self,

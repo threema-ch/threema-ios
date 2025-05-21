@@ -127,7 +127,7 @@ extension BlobData {
     
     /// Helper to log error and abort during debug
     private func error(_ message: String) -> BlobDisplayState {
-        DDLogError(message)
+        DDLogError("\(message)")
         assertionFailure()
         return .fileNotFound
     }

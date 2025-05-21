@@ -200,7 +200,7 @@ extension MediatorMessageProcessorTests: MessageProcessorDelegate {
     
     func incomingMessageStarted(_ message: AbstractMessage) { }
     
-    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessage) { }
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessageEntity) { }
 
     func incomingMessageFinished(_ message: AbstractMessage) { }
     

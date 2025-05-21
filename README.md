@@ -68,9 +68,9 @@ If you build the Threema OnPrem target, credentials from the [Threema OnPrem](ht
 
 ## <a name="building"></a>Building
 
-To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (16.1+) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
+To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (16.3+) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
 
-### 1. Install Dependencies
+### 1. Install & Build Dependencies
 
 1. If your Xcode installation is fresh make sure that command line tools are selected
 
@@ -78,28 +78,33 @@ To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://dev
    sudo xcode-select --switch /Applications/Xcode.app
    ```
 
-2. Install and build the dependencies
+2. Install the third-party tools needed to build our Rust dependencies
+
+   1. If you don't have Rust, install & set it up using [Rustup](https://rustup.rs)
+
+      ```sh
+      make setup-rust
+      ```
+
+      (You might want to add `$HOME/.cargo/bin` to your `PATH`.)
+
+   2. Install the other tools needed
+
+      ```sh
+      make setup
+      ```
+
+   (If you don't have [homebrew](https://brew.sh) see their [official install instructions](https://brew.sh).)
+
+3. Download, install and build all dependencies (you want to rerun this if you update the repository)
 
    ```sh
-   ./scripts/build.sh --dependencies
+   make dependencies
    ```
 
-   This downloads the `WebRTC.xcframework` if it is missing. (If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
+   Besides building our Rust dependencies, this downloads the `WebRTC.xcframework` if it is missing. (If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).)
 
-3. Install & intialize [Rustup](https://rustup.rs) for building SaltyRTC. The build happens during the first compilation of the project which also installs the specific toolchain and targets needed.
-   ```sh
-   brew install rustup
-   rustup-init
-   ```
-   (If you don't have [homebrew](https://brew.sh) see their [official install instructions](https://github.com/Carthage/Carthage#installing-carthage).)
-
-   (You might want to add $HOME/.cargo/bin to your PATH.)
-
-4. Ensure that submodules are checked out
-
-   ```sh
-   git submodule update --init
-   ```
+To uninstall the dependencies you can run `make dependencies-clean`.
 
 ### 2. Setup Project
 

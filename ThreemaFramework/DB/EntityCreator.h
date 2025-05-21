@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
+#import <CoreData/CoreData.h>
 
 #import <ThreemaFramework/BoxTextMessage.h>
 #import <ThreemaFramework/GroupTextMessage.h>
@@ -35,21 +36,25 @@
 #import <ThreemaFramework/BoxLocationMessage.h>
 #import <ThreemaFramework/GroupLocationMessage.h>
 
-#import <ThreemaFramework/BallotMessage.h>
 #import <ThreemaFramework/BoxBallotCreateMessage.h>
 #import <ThreemaFramework/GroupBallotCreateMessage.h>
-
-#import <ThreemaFramework/BallotChoice.h>
 
 @class AudioDataEntity;
 @class AudioMessageEntity;
 @class CallEntity;
+@class ContactEntity;
+@class ConversationEntity;
+@class BallotEntity;
+@class BallotChoiceEntity;
+@class BallotMessageEntity;
+@class BaseMessageEntity;
 @class DistributionListEntity;
 @class FileMessageEntity;
 @class FileDataEntity;
 @class GroupCallEntity;
 @class GroupEntity;
 @class ImageMessageEntity;
+@class ImageDataEntity;
 @class LastGroupSyncRequestEntity;
 @class LocationMessageEntity;
 @class MessageHistoryEntryEntity;
@@ -84,7 +89,7 @@
 - (LocationMessageEntity *)locationMessageEntityFromBox:(BoxLocationMessage *)boxMsg;
 - (LocationMessageEntity *)locationMessageEntityFromGroupBox:(GroupLocationMessage *)boxMsg;
 
-- (BallotMessage *)ballotMessageFromBox:(AbstractMessage *)boxMsg;
+- (BallotMessageEntity *)ballotMessageFromBox:(AbstractMessage *)boxMsg;
 
 - (FileMessageEntity *)fileMessageEntityFromBox:(AbstractMessage *)boxMsg;
 
@@ -110,7 +115,7 @@
 
 - (SystemMessageEntity *)systemMessageEntityForConversationEntity:(ConversationEntity *)conversation;
 
-- (BallotMessage *)ballotMessageForConversationEntity:(ConversationEntity *)conversation;
+- (BallotMessageEntity *)ballotMessageForConversationEntity:(ConversationEntity *)conversation;
 
 - (ContactEntity *)contact;
 
@@ -122,9 +127,9 @@
 
 - (GroupEntity *)groupEntity;
 
-- (Ballot *)ballot;
+- (BallotEntity *)ballot;
 
-- (BallotChoice *)ballotChoice;
+- (BallotChoiceEntity *)ballotChoice;
 
 - (BallotResultEntity *)ballotResultEntity;
 
@@ -132,7 +137,7 @@
 
 - (MessageMarkersEntity *)messageMarkersEntity;
 
-- (MessageHistoryEntryEntity *)messageHistoryEntryFor:(BaseMessage *)message NS_SWIFT_NAME(messageHistoryEntry(for:));;
+- (MessageHistoryEntryEntity *)messageHistoryEntryFor:(BaseMessageEntity *)message NS_SWIFT_NAME(messageHistoryEntry(for:));;
 
 - (WebClientSessionEntity *)webClientSessionEntity;
 

@@ -35,30 +35,36 @@ public class ProfilePictureGenerator: ProfilePictureGeneratorProtocol {
         case group
         case me
         case noteGroup
+        case directoryContact
     }
     
     public static var unknownContactImage: UIImage = ProfilePictureGenerator.generateImage(
         for: .contact(letters: ""),
-        color: UIColor.primary
+        color: .primary
     )
     
     public static var unknownDistributionListImage: UIImage = ProfilePictureGenerator.generateImage(
         for: .distributionList,
-        color: UIColor.primary
+        color: .primary
     )
     
     public static var unknownGatewayImage: UIImage = ProfilePictureGenerator.generateImage(
         for: .gateway,
-        color: UIColor.primary
+        color: .primary
     )
     
     public static var unknownGroupImage: UIImage = ProfilePictureGenerator.generateImage(
         for: .group,
-        color: UIColor.primary
+        color: .primary
     )
     
     public static var unknownContactGroupCallsImage: UIImage = ProfilePictureGenerator.generateGroupCallImage(
         initials: "",
+        color: .primary
+    )
+    
+    public static var directoryContactImage: UIImage = ProfilePictureGenerator.generateImage(
+        for: .directoryContact,
         color: .primary
     )
     
@@ -87,6 +93,8 @@ public class ProfilePictureGenerator: ProfilePictureGeneratorProtocol {
                 UIImage(systemName: "person.3.fill")
             case .noteGroup:
                 UIImage(systemName: "note.text")
+            case .directoryContact:
+                UIImage(systemName: "building.2.fill")
             }
         
         let imageSize = CGSize(width: imageWidth, height: imageWidth)

@@ -1,0 +1,68 @@
+{
+  "configurations" : [
+    {
+      "id" : "66C8CE5A-6FD0-4D0F-A1EC-346CE0F0026D",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "commandLineArgumentEntries" : [
+      {
+        "argument" : "-isRunningForTests"
+      },
+      {
+        "argument" : "-com.apple.CoreData.SQLDebug 1",
+        "enabled" : false
+      },
+      {
+        "argument" : "-com.apple.CoreData.ConcurrencyDebug 1",
+        "enabled" : false
+      }
+    ],
+    "environmentVariableEntries" : [
+      {
+        "key" : "SQLITE_ENABLE_THREAD_ASSERTIONS",
+        "value" : "1"
+      },
+      {
+        "enabled" : false,
+        "key" : "SQLITE_AUTO_TRACE",
+        "value" : "1"
+      },
+      {
+        "key" : "SQLITE_ENABLE_FILE_ASSERTIONS",
+        "value" : "1"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Threema.xcodeproj",
+      "identifier" : "0A7DF6C11C9FDBDE002D4DC3",
+      "name" : "Threema Work"
+    }
+  },
+  "testTargets" : [
+    {
+      "enabled" : false,
+      "skippedTests" : [
+        "DbLoadTests"
+      ],
+      "target" : {
+        "containerPath" : "container:Threema.xcodeproj",
+        "identifier" : "4D5C4CA11CD79C8500512FE6",
+        "name" : "Threema Work Tests"
+      }
+    },
+    {
+      "enabled" : false,
+      "target" : {
+        "containerPath" : "container:Threema.xcodeproj",
+        "identifier" : "CEFBD1901E51FB6C00722ED7",
+        "name" : "ScreenshotsWithDataWork"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -54,7 +54,7 @@
     
     UINavigationController *nav = [[PortraitNavigationController alloc] initWithRootViewController:qrController];
     nav.navigationBar.barStyle = UIBarStyleBlackTranslucent;
-    nav.navigationBar.tintColor = UIColor.primary;
+    nav.navigationBar.tintColor = UIColor.tintColor;
     nav.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
     
     [self.containingViewController presentViewController:nav animated:YES completion:nil];

@@ -27,7 +27,7 @@ class WebBlobResponse: WebAbstractMessage {
     var messageID: String
     var type: String
     
-    var baseMessage: BaseMessage
+    var baseMessage: BaseMessageEntity
     
     init(request: WebBlobRequest, imageMessage: ImageMessageEntity) {
         self.id = request.id
@@ -110,7 +110,7 @@ class WebBlobResponse: WebAbstractMessage {
         if imageMessageEntity.image == nil {
             let loader = ImageMessageLoader()
             DispatchQueue.main.sync {
-                loader.start(with: imageMessageEntity, onCompletion: { loadedMessage in
+                loader.start(withMessage: imageMessageEntity) { loadedMessage in
                     let webBlob = WebBlob(imageMessageEntity: loadedMessage as! ImageMessageEntity)
                     if webBlob.blob != nil {
                         self.data = webBlob.objectDict()
@@ -123,13 +123,13 @@ class WebBlobResponse: WebAbstractMessage {
                     }
                     self.args?.updateValue(self.ack?.success, forKey: "success")
                     completion!()
-                }, onError: { _ in
+                } onError: { _ in
                     self.ack?.success = false
                     self.ack?.error = "blobDownloadFailed"
                     self.args?.updateValue(self.ack?.success, forKey: "success")
                     self.args?.updateValue(self.ack?.error, forKey: "error")
                     completion!()
-                })
+                }
             }
         }
         else {
@@ -154,7 +154,7 @@ class WebBlobResponse: WebAbstractMessage {
             if videoMessageEntity.video == nil {
                 let loader = VideoMessageLoader()
                 
-                loader.start(with: videoMessageEntity, onCompletion: { loadedMessage in
+                loader.start(withMessage: videoMessageEntity) { loadedMessage in
                     let webBlob = WebBlob(videoMessageEntity: loadedMessage as! VideoMessageEntity)
                     if webBlob.blob != nil {
                         self.data = webBlob.objectDict()
@@ -168,13 +168,13 @@ class WebBlobResponse: WebAbstractMessage {
                     self.args?.updateValue(self.ack?.success, forKey: "success")
                     completion!()
                     
-                }, onError: { _ in
+                } onError: { _ in
                     self.ack?.success = false
                     self.ack?.error = "blobDownloadFailed"
                     self.args?.updateValue(self.ack?.success, forKey: "success")
                     self.args?.updateValue(self.ack?.error, forKey: "error")
                     completion!()
-                })
+                }
             }
             else {
                 let webBlob = WebBlob(videoMessageEntity: videoMessageEntity)
@@ -198,7 +198,7 @@ class WebBlobResponse: WebAbstractMessage {
         if audioMessageEntity.audio == nil {
             DispatchQueue.main.sync {
                 let loader = BlobMessageLoader()
-                loader.start(with: audioMessageEntity, onCompletion: { loadedMessage in
+                loader.start(withMessage: audioMessageEntity) { loadedMessage in
                     let webBlob = WebBlob(audioMessageEntity: loadedMessage as! AudioMessageEntity)
                     if webBlob.blob != nil {
                         self.data = webBlob.objectDict()
@@ -211,13 +211,13 @@ class WebBlobResponse: WebAbstractMessage {
                     }
                     self.args?.updateValue(self.ack?.success, forKey: "success")
                     completion!()
-                }, onError: { _ in
+                } onError: { _ in
                     self.ack?.success = false
                     self.ack?.error = "blobDownloadFailed"
                     self.args?.updateValue(self.ack?.success, forKey: "success")
                     self.args?.updateValue(self.ack?.error, forKey: "error")
                     completion!()
-                })
+                }
             }
         }
         else {
@@ -241,7 +241,7 @@ class WebBlobResponse: WebAbstractMessage {
         if fileMessageEntity.data == nil {
             DispatchQueue.main.sync {
                 let loader = BlobMessageLoader()
-                loader.start(with: fileMessageEntity, onCompletion: { loadedMessage in
+                loader.start(withMessage: fileMessageEntity) { loadedMessage in
                     let webBlob = WebBlob(fileMessageEntity: loadedMessage as! FileMessageEntity)
                     if webBlob.blob != nil {
                         self.data = webBlob.objectDict()
@@ -254,13 +254,13 @@ class WebBlobResponse: WebAbstractMessage {
                     }
                     self.args?.updateValue(self.ack?.success, forKey: "success")
                     completion!()
-                }, onError: { _ in
+                } onError: { _ in
                     self.ack?.success = false
                     self.ack?.error = "blobDownloadFailed"
                     self.args?.updateValue(self.ack?.success, forKey: "success")
                     self.args?.updateValue(self.ack?.error, forKey: "error")
                     completion!()
-                })
+                }
             }
         }
         else {

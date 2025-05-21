@@ -68,7 +68,7 @@ class WebDeleteGroupRequest: WebAbstractMessage {
 
                 backgroundBusinessInjector.groupManager.dissolve(groupID: group.groupID, to: nil)
 
-                backgroundBusinessInjector.entityManager.performSyncBlockAndSafe {
+                backgroundBusinessInjector.entityManager.performAndWaitSave {
                     backgroundBusinessInjector.entityManager.entityDestroyer.delete(conversation: conversation)
                 }
                 

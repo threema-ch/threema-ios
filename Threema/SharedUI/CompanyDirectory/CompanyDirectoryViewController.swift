@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaFramework
 import ThreemaMacros
 
 @objc class CompanyDirectoryViewController: ThemedViewController {
@@ -54,8 +55,7 @@ import ThreemaMacros
         tableView.setupAutoAdjust()
         
         noEntriesFoundTitleLabel.text = #localize("companydirectory_noentries_title")
-        noEntriesFoundDescriptionLabel.text = BundleUtil
-            .localizedString(forKey: "companydirectory_noentries_description")
+        noEntriesFoundDescriptionLabel.text = #localize("companydirectory_noentries_description")
         
         title = MyIdentityStore.shared()?.companyName
         
@@ -606,7 +606,7 @@ extension UITableView {
         }
     }
 
-    func fitContentInset(inset: UIEdgeInsets!) {
+    func fitContentInset(inset: UIEdgeInsets) {
         contentInset = inset
         scrollIndicatorInsets = inset
     }

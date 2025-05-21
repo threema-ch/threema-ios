@@ -86,6 +86,7 @@
 @implementation SplashViewController {
     MDMSetup *mdmSetup;
     BOOL didWorkApiFetch;
+    UINavigationController *privacyPolicyNavigationController;
 }
 
 - (instancetype)initWithCoder:(NSCoder *)coder
@@ -101,7 +102,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    if (AppSetup.shouldDirectlyShowSetupWizard) {
+    if (AppSetup.shouldDirectlyShowSetupWizard || TargetManagerObjc.isCustomOnPrem) {
         _bgImagescale = 1.5;
     } else {
         // during intro image will be zoomed
@@ -173,12 +174,12 @@
     _controlsView.hidden = YES;
     _controlsView.frame = [RectUtil rect:_controlsView.frame centerHorizontalIn:_containerView.frame];
     
-    _setupButton.backgroundColor = UIColor.primary;
+    _setupButton.backgroundColor = UIColor.tintColor;
     _setupButton.layer.cornerRadius = 5;
     _setupButton.accessibilityIdentifier = @"SplashViewControllerSetupButton";
     [_setupButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     
-    _restoreButton.backgroundColor = UIColor.primary;
+    _restoreButton.backgroundColor = UIColor.tintColor;
     _restoreButton.layer.borderWidth = 1;
     _restoreButton.layer.borderColor = _setupButton.backgroundColor.CGColor;
     _restoreButton.layer.cornerRadius = 5;
@@ -205,19 +206,13 @@
         _privacyPolicyInfo.hidden = true;
     }
     else {
-        NSString *privacyPolicyText;
-
-        if (TargetManagerObjc.isBusinessApp) {
-            privacyPolicyText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privacy_policy_about_work"], TargetManagerObjc.appName];
-        } else {
-            privacyPolicyText = [BundleUtil localizedStringForKey:@"privacy_policy_about"];
-        }
+        NSString *privacyPolicyText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privacy_policy_about"], TargetManagerObjc.appName];
         
         _privacyPolicyInfo.font = [UIFont systemFontOfSize:16.0];
         _privacyPolicyInfo.tapDelegate = self;
         NSDictionary *normalAttributes = @{NSFontAttributeName: _privacyPolicyInfo.font, NSForegroundColorAttributeName: [UIColor whiteColor]};
         NSDictionary *linkAttributes = @{@"ZSWTappableLabelTappableRegionAttributeName": @YES,
-                                         @"ZSWTappableLabelHighlightedForegroundAttributeName": Colors.red,
+                                         @"ZSWTappableLabelHighlightedForegroundAttributeName": UIColor.systemRedColor,
                                          NSForegroundColorAttributeName: Colors.textWizardLink,
                                          NSUnderlineStyleAttributeName: @(NSUnderlineStyleSingle),
                                          @"NSTextCheckingResult": @1
@@ -310,7 +305,9 @@
 
                 [self presentUI];
             } onError:^(NSError *error) {
-                [UIAlertTemplate showAlertWithOwner:self title:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_title"] message:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"] actionOk:^(UIAlertAction *action __unused)  {
+                NSString *title = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_title"], TargetManagerObjc.appName];
+                NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjc.appName];
+                [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
                     exit(0);
                 }];
                 return;
@@ -335,17 +332,30 @@
     } else if (AppSetup.shouldDirectlyShowSetupWizard) {
         [self presentPageViewController];
     } else {
-        // Show logo if `shouldDirectlyShowSetupWizard` is false
-        _threemaLogoView.hidden = NO;
+        if (TargetManagerObjc.isCustomOnPrem) {
+            CGFloat duration = 1.0;
+            UIViewAnimationOptions options = UIViewAnimationOptionCurveEaseInOut;
+            [UIView animateWithDuration:duration delay:0.0 options:options animations:^{
+                _bgImagescale = 1.5;
+                [self setupBackgroundView];
+            } completion:^(BOOL finished) {
+                _threemaLogoView.hidden = NO;
+                [self checkRefreshStoreReceipt];
+                [self slidePrivacyControlsIn];
+            }];
+        } else {
+            // Show logo if `shouldDirectlyShowSetupWizard` is false
+            _threemaLogoView.hidden = NO;
 
-        [self setupAnimatedView];
-        [self checkRefreshStoreReceipt];
+            [self setupAnimatedView];
+            [self checkRefreshStoreReceipt];
 
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1200 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
-            if (_animatedView.superview == nil) {
-                [_containerView addSubview:_animatedView];
-            }
-        });
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1200 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
+                if (_animatedView.superview == nil) {
+                    [_containerView addSubview:_animatedView];
+                }
+            });
+        }
     }
 }
 
@@ -396,7 +406,7 @@
             [[ServerConnector sharedServerConnector] deactivateMultiDevice];
             
             NSString *title = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_title"];
-            NSString *message = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_message"];
+            NSString *message =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_message"], TargetManagerObjc.appName];
             NSString *linkButton = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_reset_button"];
             [UIAlertTemplate showAlertWithOwner:self title:title message:message titleOk:linkButton actionOk:^(UIAlertAction * _Nonnull action) {
                 [[UIApplication sharedApplication] openURL:[ThreemaURLProviderObjc getURL:ThreemaURLProviderTypeMultiDeviceReset] options:@{} completionHandler:nil];
@@ -446,7 +456,8 @@
 - (void)presentLicenseViewController {
     BOOL showInfoView = false;
     LicenseStore *licenseStore = [LicenseStore sharedLicenseStore];
-    if (licenseStore.licenseUsername == nil && licenseStore.licensePassword == nil && licenseStore.onPremConfigUrl == nil) {
+    // In Custom OnPrem Apps, the Threema Private info view is not displayed. Additionally, the view is not shown when one of the fields (username, password, or URL) is already set.    
+    if (licenseStore.licenseUsername == nil && licenseStore.licensePassword == nil && licenseStore.onPremConfigUrl == nil && !TargetManagerObjc.isCustomOnPrem) {
         showInfoView = true;
     }
     
@@ -530,7 +541,7 @@
     }
         
     [mailController setSubject:[BundleUtil localizedStringForKey:@"contact_support_mail_subject"]];
-    NSString *message = [NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"contact_support_mail_message"], TargetManagerObjc.appName, errorCode];
+    NSString *message = [NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"contact_support_mail_message"], TargetManagerObjc.appName, TargetManagerObjc.localizedAppName, errorCode];
     [mailController setMessageBody:message isHTML:NO];
     
     [self presentViewController:mailController animated:YES completion:nil];
@@ -547,7 +558,7 @@
     if (_existingBackupQuestionView == nil) {
         _existingBackupQuestionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
         _existingBackupQuestionView.tag = 1;
-        _existingBackupQuestionView.questionLabel.text = [BundleUtil localizedStringForKey:@"backup_found_message"];;
+        _existingBackupQuestionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"backup_found_message"], TargetManagerObjc.localizedAppName];
         _existingBackupQuestionView.delegate = self;
         _existingBackupQuestionView.frame = [RectUtil rect:_existingBackupQuestionView.frame centerIn:self.view.frame round:YES];
         
@@ -566,7 +577,7 @@
     if (_existingIdQuestionView == nil) {
         _existingIdQuestionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
         _existingIdQuestionView.tag = 2;
-        _existingIdQuestionView.questionLabel.text = [[NSString alloc] initWithFormat:[BundleUtil localizedStringForKey:@"id_exists"], [[MyIdentityStore sharedMyIdentityStore] identity]];
+        _existingIdQuestionView.questionLabel.text = [[NSString alloc] initWithFormat:[BundleUtil localizedStringForKey:@"id_exists"], TargetManagerObjc.localizedAppName, [[MyIdentityStore sharedMyIdentityStore] identity]];
         _existingIdQuestionView.delegate = self;
         _existingIdQuestionView.frame = [RectUtil rect:_existingIdQuestionView.frame centerIn:self.view.frame round:YES];
         
@@ -1091,11 +1102,24 @@
 #pragma mark - ZSWTappableLabel delegate
 
 - (void)tappableLabel:(ZSWTappableLabel *)tappableLabel tappedAtIndex:(NSInteger)idx withAttributes:(NSDictionary *)attributes {
-    UIViewController *vc = [[PrivacyPolicyViewController alloc]init];
-    UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:vc];
-    [self presentViewController:nc animated:YES completion:nil];
+    NSURL *url = [ThreemaURLProviderObjc getURL:ThreemaURLProviderTypePrivacyPolicy];
+    NSString *title = [BundleUtil localizedStringForKey:@"settings_list_privacy_policy_title"];
+    UIViewController *vc = [[SettingsWebViewViewController alloc] initWithUrl:url title:title allowsContentJavaScript:false isSetupWizard:true];
+    privacyPolicyNavigationController = [[UINavigationController alloc] initWithRootViewController:vc];
+    
+    UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(donePressed)];
+    vc.navigationItem.rightBarButtonItem = doneButton;
+    vc.navigationController.navigationBar.barStyle = UIBarStyleBlack;
+    vc.navigationController.navigationBar.translucent = true;
+    vc.navigationController.navigationBar.tintColor = UIColor.tintColor;
+    vc.navigationController.navigationBar.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    
+    [self presentViewController:privacyPolicyNavigationController animated:YES completion:nil];
 }
 
+- (void)donePressed {
+    [privacyPolicyNavigationController dismissViewControllerAnimated:true completion:nil];
+}
 
 #pragma mark - MFMailComposeViewControllerDelegate
 

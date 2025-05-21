@@ -54,8 +54,7 @@ final class IntentCreatorTests: XCTestCase {
         dp.save {
             let contact1 = dp.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: "TESTER01",
-                verificationLevel: 0
+                identity: "TESTER01"
             )
             dp.createConversation(typing: false, unreadMessageCount: 2, visibility: .default) { conversation in
                 dp.createTextMessage(
@@ -112,8 +111,7 @@ final class IntentCreatorTests: XCTestCase {
         dp.save {
             let contact1 = dp.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: "TESTER01",
-                verificationLevel: 0
+                identity: "TESTER01"
             )
             dp.createConversation(typing: false, unreadMessageCount: 2, visibility: .default) { conversation in
                 dp.createTextMessage(
@@ -171,8 +169,7 @@ final class IntentCreatorTests: XCTestCase {
         dp.save {
             let contact1 = dp.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: "TESTER01",
-                verificationLevel: 0
+                identity: "TESTER01"
             )
             dp.createConversation(typing: false, unreadMessageCount: 2, visibility: .default) { conversation in
                 conversation.changeCategory(to: .private)
@@ -232,8 +229,7 @@ final class IntentCreatorTests: XCTestCase {
         dp.save {
             let contact1 = dp.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: "TESTER01",
-                verificationLevel: 0
+                identity: "TESTER01"
             )
             dp.createConversation(typing: false, unreadMessageCount: 2, visibility: .default) { conversation in
                 _ = contact1.conversations!.insert(conversation)

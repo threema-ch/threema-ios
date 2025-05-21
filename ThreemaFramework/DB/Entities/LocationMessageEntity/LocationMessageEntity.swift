@@ -22,21 +22,21 @@ import CoreData
 import Foundation
 
 @objc(LocationMessageEntity)
-public final class LocationMessageEntity: BaseMessage {
+public final class LocationMessageEntity: BaseMessageEntity {
     
-    // Attributes
-    @NSManaged @objc(accuracy) public var accuracy: NSNumber?
-    @NSManaged @objc(latitude) public var latitude: NSNumber
-    @NSManaged @objc(longitude) public var longitude: NSNumber
-    @NSManaged @objc(poiAddress) public var poiAddress: String?
-    @NSManaged @objc(poiName) public var poiName: String?
+    // MARK: Attributes
+
+    @NSManaged public var accuracy: NSNumber?
+    @NSManaged public var latitude: NSNumber
+    @NSManaged public var longitude: NSNumber
+    @NSManaged public var poiAddress: String?
+    @NSManaged public var poiName: String?
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
+    ///   - context: `NSManagedObjectContext` to insert created entity into
     ///   - accuracy: Accuracy of the POI
     ///   - latitude: Latitude of the POI
     ///   - longitude: Longitude of the POI

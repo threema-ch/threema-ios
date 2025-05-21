@@ -151,7 +151,7 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
                 .hasPublicKey
             let sameVerificationLevel = (
                 sContact.hasVerificationLevel && sContact.verificationLevel.rawValue == contact
-                    .verificationLevel.intValue
+                    .contactVerificationLevel.rawValue
             ) || !sContact.hasVerificationLevel
             let sameWorkStatus = (
                 sContact.hasIdentityType && sContact
@@ -163,7 +163,7 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
             ) || !sContact.hasIdentityType
             let sameAcquaintanceLevel = (
                 sContact.hasAcquaintanceLevel && sContact
-                    .acquaintanceLevel == (contact.isContactHidden ? .groupOrDeleted : .direct)
+                    .acquaintanceLevel == (contact.isHidden ? .groupOrDeleted : .direct)
             ) || !sContact.hasAcquaintanceLevel
 
             let sameFirstname = (sContact.hasFirstName && sContact.firstName == contact.firstName ?? "") ||
@@ -220,7 +220,7 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
             }
 
             let sameImportStatus = (
-                sContact.hasSyncState && sContact.syncState.rawValue == contact.importedStatus.rawValue
+                sContact.hasSyncState && sContact.syncState.rawValue == contact.contactImportStatus.rawValue
             ) || !sContact.hasSyncState
             let sameConversationCategory = (
                 sContact.hasConversationCategory && sContact.conversationCategory

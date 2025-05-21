@@ -52,13 +52,4 @@ public final class Colors: NSObject {
             Colors.theme = UserSettings.shared().darkTheme ? .dark : .light
         }
     }
-        
-    class func color(for colorAsset: ColorAsset) -> UIColor {
-        switch theme {
-        case .light, .undefined:
-            colorAsset.color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
-        case .dark:
-            colorAsset.color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
-        }
-    }
 }

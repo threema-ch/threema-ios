@@ -60,7 +60,7 @@ struct MultiDeviceWizardCodeView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 130, height: 130)
-                        .foregroundColor(Color(.primary))
+                        .foregroundColor(.accentColor)
                         .rotationEffect(Angle(degrees: animate ? 360 : 0.0))
                         .animation(animation, value: animate)
                         .accessibilityHidden(true)
@@ -72,10 +72,13 @@ struct MultiDeviceWizardCodeView: View {
             Button {
                 dismiss()
             } label: {
-                Text(#localize("md_wizard_back_identity"))
+                Text(String.localizedStringWithFormat(
+                    #localize("md_wizard_back_identity"),
+                    TargetManager.localizedAppName
+                ))
             }
             .buttonStyle(.bordered)
-            .tint(Color(.primary))
+            .tint(.accentColor)
             
             NavigationLink(isActive: $advance) {
                 MultiDeviceWizardSuccessView(dismiss: $dismissModal)

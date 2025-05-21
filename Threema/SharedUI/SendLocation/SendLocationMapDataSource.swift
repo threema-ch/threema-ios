@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import MapKit
+import ThreemaFramework
 
 protocol SendLocationDataSourceMapDelegate: AnyObject {
     
@@ -41,7 +42,8 @@ final class SendLocationMapDataSource: UITableViewDiffableDataSource<SendLocatio
     private weak var mapTableView: UITableView?
     private weak var mapView: MKMapView?
     private let locationManager = CLLocationManager()
-    
+    private let mapsServerInfo: MapsServerInfo?
+       
     private var initialFetchCompleted = false
     private lazy var postalAddressFormatter: CNPostalAddressFormatter = {
         let postalAddressFormatter = CNPostalAddressFormatter()
@@ -54,11 +56,13 @@ final class SendLocationMapDataSource: UITableViewDiffableDataSource<SendLocatio
     init(
         sendLocationViewController: SendLocationViewController,
         tableView: UITableView,
-        mapView: MKMapView
+        mapView: MKMapView,
+        mapsServerInfo: MapsServerInfo?
     ) {
         self.sendLocationViewController = sendLocationViewController
         self.mapTableView = tableView
         self.mapView = mapView
+        self.mapsServerInfo = mapsServerInfo
         
         super.init(tableView: tableView, cellProvider: cellProvider)
         
@@ -100,11 +104,11 @@ final class SendLocationMapDataSource: UITableViewDiffableDataSource<SendLocatio
             [sendLocationVC.currentLocationPOI, sendLocationVC.markedLocationPOI]
         )
         
-        // Threema POI Section
-        if UserSettings.shared().enablePoi {
+        if UserSettings.shared().enablePoi,
+           !TargetManager.isOnPrem ||
+           (TargetManager.isOnPrem && mapsServerInfo != nil) {
             snapshot.appendSections([.threemaPOI])
         }
-        
         apply(snapshot, animatingDifferences: true)
     }
     
@@ -284,13 +288,16 @@ extension SendLocationMapDataSource {
     ///   - radius: max radius for POIs in meters
     ///   - completion: called after POIS are loaded
     func requestPOIsAround(location: CLLocation, radius: Int, completion: (() -> Void)? = nil) {
+        guard UserSettings.shared().enablePoi else {
+            return
+        }
         
-        // Don't fetch if POI are disabled in privacy settings or URL can not be divided into components
-        guard UserSettings.shared().enablePoi,
-              var components = URLComponents(
-                  string: BundleUtil
-                      .object(forInfoDictionaryKey: "ThreemaPOIAroundURL") as! String
-              ) else {
+        if TargetManager.isOnPrem,
+           mapsServerInfo?.poiAroundURL == nil {
+            return
+        }
+        guard let urlString = mapsServerInfo?.poiAroundURL,
+              var components = URLComponents(string: urlString) else {
             return
         }
         components.path = "/around/" + String(location.coordinate.latitude) + "/" +
@@ -331,7 +338,8 @@ extension SendLocationMapDataSource {
                     
                     // Change distances of ThreemaPOI relative to current location if available
                     if CLLocationManager.authorizationStatus() == .authorizedAlways || CLLocationManager
-                        .authorizationStatus() == .authorizedWhenInUse, let location = CLLocationManager().location {
+                        .authorizationStatus() == .authorizedWhenInUse,
+                        let location = CLLocationManager().location {
                         self.updateDistanceLabel(of: self.pointsOfInterest, from: location)
                     }
                     completion?()

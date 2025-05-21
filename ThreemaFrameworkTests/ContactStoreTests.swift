@@ -98,8 +98,13 @@ class ContactStoreTests: XCTestCase {
         XCTAssertEqual(error?.localizedDescription, "Message received from unknown contact and block contacts is on")
     }
     
-    func testAddTrustedContactWithIdentityBlockUnknown() throws {
-        let trustedContact: TrustedContacts = .threemaPush
+    func testAddSpecialContactWithIdentityBlockUnknown() throws {
+        let specialContact: PredefinedContacts = .threemaPush
+        
+        guard specialContact.isSpecialContact else {
+            XCTFail("This test requires a special contact")
+            return
+        }
 
         let userSettingsMock = UserSettingsMock(blockUnknown: true)
         let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
@@ -109,7 +114,7 @@ class ContactStoreTests: XCTestCase {
                 
         var receivedPublicKey: Data?
         contactStore.fetchPublicKey(
-            for: trustedContact.identity,
+            for: specialContact.identity?.string,
             acquaintanceLevel: .direct,
             entityManager: em,
             ignoreBlockUnknown: false
@@ -121,7 +126,43 @@ class ContactStoreTests: XCTestCase {
         }
         
         wait(for: [expect], timeout: 5)
-        XCTAssertTrue(try trustedContact.isSamePublicKey(XCTUnwrap(receivedPublicKey)))
+        XCTAssertTrue(try specialContact.isSamePublicKey(XCTUnwrap(receivedPublicKey)))
+    }
+    
+    func testAddPredefinedContactWithIdentityBlockUnknown() throws {
+        let predefinedContact: PredefinedContacts = .support
+        
+        guard !predefinedContact.isSpecialContact else {
+            XCTFail("This test requires a non special contact")
+            return
+        }
+        
+        guard let predefinedContactIdentity = predefinedContact.identity else {
+            XCTFail("Identity not found for predefined contact: \(predefinedContact)")
+            return
+        }
+
+        let userSettingsMock = UserSettingsMock(blockUnknown: true)
+        let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
+        let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
+        
+        let expect = expectation(description: "Give time to fetch public key")
+                
+        var receivedPublicKey: Data?
+        contactStore.fetchPublicKey(
+            for: predefinedContactIdentity.string,
+            acquaintanceLevel: .direct,
+            entityManager: em,
+            ignoreBlockUnknown: false
+        ) { publicKey in
+            receivedPublicKey = publicKey
+            expect.fulfill()
+        } onError: { _ in
+            expect.fulfill()
+        }
+        
+        wait(for: [expect], timeout: 5)
+        XCTAssertNil(receivedPublicKey)
     }
 
     func testUpdateContactWithIdentity() throws {
@@ -133,8 +174,7 @@ class ContactStoreTests: XCTestCase {
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: expectedPublicKey,
-                identity: expectedIdentity,
-                verificationLevel: 0
+                identity: expectedIdentity
             )
             contact.imageData = Data([0])
         }
@@ -163,7 +203,7 @@ class ContactStoreTests: XCTestCase {
     func testUpdateContactStatus() throws {
         let expectedIdentity = "TESTER01"
         let expectedPublicKey = MockData.generatePublicKey()
-        let expectedStatus = kStateActive
+        let expectedStatus = ContactEntity.ContactState.active
 
         let dbPreparer = DatabasePreparer(context: databaseMainCnx.current)
         var savedContact: ContactEntity?
@@ -171,8 +211,7 @@ class ContactStoreTests: XCTestCase {
             savedContact = dbPreparer.createContact(
                 publicKey: expectedPublicKey,
                 identity: expectedIdentity,
-                verificationLevel: 0,
-                state: NSNumber(value: kStateInactive)
+                state: .inactive
             )
         }
 
@@ -183,7 +222,7 @@ class ContactStoreTests: XCTestCase {
             entityManager: em
         )
         
-        XCTAssertEqual(kStateInactive, savedContact?.state?.intValue)
+        XCTAssertEqual(.inactive, savedContact?.contactState)
         
         contactStore.updateStateToActive(for: savedContact!, entityManager: em)
 
@@ -192,6 +231,6 @@ class ContactStoreTests: XCTestCase {
         XCTAssertEqual(expectedPublicKey, contactEntity.publicKey)
         XCTAssertNil(contactEntity.firstName)
         XCTAssertNil(contactEntity.lastName)
-        XCTAssertEqual(expectedStatus, contactEntity.state?.intValue)
+        XCTAssertEqual(expectedStatus, contactEntity.contactState)
     }
 }

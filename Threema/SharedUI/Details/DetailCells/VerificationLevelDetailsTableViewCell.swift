@@ -29,21 +29,23 @@ final class VerificationLevelDetailsTableViewCell: ThemedCodeStackTableViewCell 
         didSet {
             contactObserver?.invalidate()
 
-            contactObserver = contact?.observe(\.verificationLevel, options: .initial) { [weak self] contact, _ in
-                DispatchQueue.main.async {
-                    guard let strongSelf = self else {
-                        return
-                    }
+            contactObserver = contact?
+                .observe(\.contactVerificationLevel, options: .initial) { [weak self] contact, _ in
+                    DispatchQueue.main.async {
+                        guard let strongSelf = self else {
+                            return
+                        }
                     
-                    if strongSelf.traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
-                        // When all text is big, we make the image also bigger
-                        strongSelf.verificationLevelImageView.image = contact.verificationLevelImageBig()
-                    }
-                    else {
-                        strongSelf.verificationLevelImageView.image = contact.verificationLevelImage()
+                        let businessContact = Contact(contactEntity: contact)
+                        if strongSelf.traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
+                            // When all text is big, we make the image also bigger
+                            strongSelf.verificationLevelImageView.image = businessContact.verificationLevelImageBig
+                        }
+                        else {
+                            strongSelf.verificationLevelImageView.image = businessContact.verificationLevelImage
+                        }
                     }
                 }
-            }
         }
     }
     
@@ -99,7 +101,11 @@ final class VerificationLevelDetailsTableViewCell: ThemedCodeStackTableViewCell 
     
     override public var accessibilityValue: String? {
         get {
-            contact?.verificationLevelAccessibilityLabel()
+            guard let contact else {
+                return nil
+            }
+            let businessContact = Contact(contactEntity: contact)
+            return businessContact.verificationLevelAccessibilityLabel
         }
         set { }
     }

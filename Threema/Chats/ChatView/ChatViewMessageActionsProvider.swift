@@ -128,10 +128,10 @@ enum ChatViewMessageActionsProvider {
     ///   - didDelete: Called when full (not remote) delete is selected and after the delete happened
     /// - Returns: A set of default actions sections
     public static func defaultActions(
-        message: BaseMessage,
+        message: BaseMessageEntity,
         activityViewAnchor: UIView,
         popOverSource: UIView,
-        markStarHandler: @escaping (BaseMessage) -> Void?,
+        markStarHandler: @escaping (BaseMessageEntity) -> Void?,
         retryAndCancelHandler: DefaultHandler? = nil,
         downloadHandler: DefaultHandler? = nil,
         quoteHandler: @escaping DefaultHandler,
@@ -254,8 +254,8 @@ enum ChatViewMessageActionsProvider {
     ///   - markStarHandler: Called when add/remove star is tapped
     /// - Returns: Section of default primary actions
     public static func defaultPrimaryActionsSection(
-        message: BaseMessage,
-        markStarHandler: @escaping (BaseMessage) -> Void?
+        message: BaseMessageEntity,
+        markStarHandler: @escaping (BaseMessageEntity) -> Void?
     ) -> MessageActionsSection {
         var primaryActions = [MessageAction]()
         
@@ -274,7 +274,7 @@ enum ChatViewMessageActionsProvider {
     ///   - didDelete: Called when full (not remote) delete is selected and after the delete happened
     /// - Returns: Array of basic actions
     public static func defaultBasicActions(
-        message: BaseMessage,
+        message: BaseMessageEntity,
         popOverSource: UIView,
         detailsHandler: @escaping DefaultHandler,
         selectHandler: @escaping DefaultHandler,
@@ -299,8 +299,8 @@ enum ChatViewMessageActionsProvider {
     // MARK: - Actions (private helpers)
     
     private static func addStarMarkerAction(
-        message: BaseMessage,
-        handler: @escaping (BaseMessage) -> Void?
+        message: BaseMessageEntity,
+        handler: @escaping (BaseMessageEntity) -> Void?
     ) -> MessageAction {
         let isStarred = message.messageMarkers?.star.boolValue ?? false
         let title = isStarred ? #localize("marker_action_remove_star") : #localize("marker_action_star")
@@ -342,7 +342,7 @@ enum ChatViewMessageActionsProvider {
     /// Provides action that handles forwarding a message
     /// - Parameter message: Message to be forwarded
     /// - Returns: MessageAction
-    private static func forwardAction(message: BaseMessage) -> MessageAction {
+    private static func forwardAction(message: BaseMessageEntity) -> MessageAction {
         MessageAction(
             title: #localize("forward_menu"),
             image: UIImage(systemName: "arrowshape.turn.up.forward")
@@ -429,7 +429,7 @@ enum ChatViewMessageActionsProvider {
     /// Provides action that handles deleting a message, also presents confirmation alert
     /// - Parameter message: Message to be deleted
     private static func deleteAction(
-        message: BaseMessage,
+        message: BaseMessageEntity,
         popOverSource: UIView,
         willDelete: @escaping DefaultHandler,
         didDelete: @escaping DefaultHandler
@@ -536,12 +536,14 @@ enum ChatViewMessageActionsProvider {
             )
             firstFive.append(countString)
             if let totalSummary = listFormatter.string(from: Array(firstFive)) {
-                summary = "\(totalSummary)\n\(#localize("delete_message_requirement"))"
+                summary =
+                    "\(totalSummary)\n\(String.localizedStringWithFormat(#localize("delete_message_requirement"), TargetManager.appName))"
             }
         }
         else {
             if let shortsSummary = listFormatter.string(from: displayNames) {
-                summary = "\(shortsSummary)\n\(#localize("delete_message_requirement"))"
+                summary =
+                    "\(shortsSummary)\n\(String.localizedStringWithFormat(#localize("delete_message_requirement"), TargetManager.appName))"
             }
         }
 

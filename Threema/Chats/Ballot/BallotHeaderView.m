@@ -20,7 +20,6 @@
 
 #import "BallotHeaderView.h"
 #import "EntityFetcher.h"
-#import "ContactEntity.h"
 #import "BundleUtil.h"
 #import "UserSettings.h"
 #import "ThreemaFramework.h"
@@ -49,7 +48,7 @@
     _hairLineView.backgroundColor = UIColor.placeholderTextColor;
 }
 
--(void)setBallot:(Ballot *)ballot {
+-(void)setBallot:(BallotEntity *)ballot {
     _ballot = ballot;
     
     [_titleLabel setText: ballot.title];

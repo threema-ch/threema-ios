@@ -40,8 +40,11 @@ struct MultiDeviceWizardSuccessView: View {
                 .bold()
                 .multilineTextAlignment(.center)
             
-            Text(#localize("md_wizard_success_text"))
-                .multilineTextAlignment(.center)
+            Text(String.localizedStringWithFormat(
+                #localize("md_wizard_success_text"),
+                TargetManager.localizedAppName
+            ))
+            .multilineTextAlignment(.center)
 
             Spacer()
             Spacer()

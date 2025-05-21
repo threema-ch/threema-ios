@@ -20,7 +20,6 @@
 
 #import "ScreenshotJsonParser.h"
 #import "MyIdentityStore.h"
-#import "ContactEntity.h"
 #import "NSString+Hex.h"
 #import "MediaConverter.h"
 #import "ProtocolDefines.h"
@@ -28,8 +27,6 @@
 #import "LicenseStore.h"
 #import "NaClCrypto.h"
 #import <ThreemaFramework/ThreemaFramework-Swift.h>
-#import <ThreemaFramework/BaseMessage.h>
-#import <ThreemaFramework/BallotChoice.h>
 #import <ThreemaFramework/ServerConnector.h>
 #import <ThreemaFramework/EntityCreator.h>
 #import <ThreemaFramework/EntityFetcher.h>
@@ -184,15 +181,15 @@
 
 - (void)handleContact:(NSString *)identity data:(NSDictionary *)data {
     ContactEntity *contact = [_entityManager.entityCreator contact];
-    contact.identity = identity;
+    [contact setIdentityTo:identity];
     contact.imageData = [self localizedFileForKey:@"avatar" in:data];
     contact.verifiedEmail = [self localizedStringForKey:@"mail" in:data];
     
     NSNumber *verificationLevel = [data objectForKey:@"verification"];
-    contact.verificationLevel = [NSNumber numberWithInt: verificationLevel.intValue - 1];
+    contact.contactVerificationLevel = verificationLevel.intValue - 1;
     BOOL isWork = [[data objectForKey:@"isWork"] boolValue];
     if (isWork) {
-        contact.verificationLevel = [NSNumber numberWithInt:kVerificationLevelServerVerified];
+        contact.contactVerificationLevel = ContactVerificationLevelServerVerified;
         if (TargetManagerObjc.isBusinessApp) {
             contact.workContact = [NSNumber numberWithBool:YES];
         }
@@ -207,8 +204,8 @@
     
     NSArray *names = [self localizedArrayForKey:@"name" in:data];
     if (names.count == 2) {
-        contact.firstName = names[0];
-        contact.lastName = names[1];
+        [contact setFirstNameTo:names[0]];
+        [contact setLastNameTo:names[1]];
     }
     
     NSArray *conversationData = [data objectForKey:@"conversation"];
@@ -226,7 +223,7 @@
     for (NSDictionary *messageData in data) {
         NSString *type = [messageData objectForKey:@"type"];
         
-        BaseMessage *message;
+        BaseMessageEntity *message;
         if ([type isEqualToString:@"TEXT"]) {
             message = [self handleTextMessage:messageData inConversation:conversation];
         } else if ([type isEqualToString:@"IMAGE"]) {
@@ -340,8 +337,8 @@
 
 
 /// Handle text and parse QuoteV1 into QuoteV2
-- (BaseMessage *)handleTextMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
-    BaseMessage *lastMessage = conversation.lastMessage;
+- (BaseMessageEntity *)handleTextMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+    BaseMessageEntity *lastMessage = conversation.lastMessage;
     TextMessageEntity *message = [_entityManager.entityCreator textMessageEntityForConversationEntity:conversation setLastUpdate: YES];
     message.text = [self localizedStringForKey:@"content" in:messageData];
     if ([message.text containsString:@"> "]) {
@@ -355,7 +352,7 @@
     return message;
 }
 
-- (BaseMessage *)handleImageMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+- (BaseMessageEntity *)handleImageMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
     FileMessageEntity *message = [_entityManager.entityCreator fileMessageEntityForConversationEntity:conversation];
 
     NSDictionary *captions = messageData[@"caption"];
@@ -404,7 +401,7 @@
     return message;
 }
 
-- (BaseMessage *)handleAudioMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+- (BaseMessageEntity *)handleAudioMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
     AudioMessageEntity *message = [_entityManager.entityCreator audioMessageEntityForConversationEntity:conversation];
     
     unsigned char digest[CC_SHA256_DIGEST_LENGTH];
@@ -423,7 +420,7 @@
     return message;
 }
 
-- (BaseMessage *)handleLocationMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+- (BaseMessageEntity *)handleLocationMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
     LocationMessageEntity *message = [_entityManager.entityCreator locationMessageEntityForConversationEntity:conversation setLastUpdate:YES];
     NSArray *location = [self localizedArrayForKey:@"content" in:messageData];
     if (location.count == 4) {
@@ -436,7 +433,7 @@
     return message;
 }
 
-- (BaseMessage *)handleFileMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+- (BaseMessageEntity *)handleFileMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
     FileMessageEntity *message = [_entityManager.entityCreator fileMessageEntityForConversationEntity:conversation];
     message.fileName = [self localizedStringForKey:@"content" in:messageData];
     message.fileSize = [NSNumber numberWithInt:2308565];
@@ -450,7 +447,7 @@
     return message;
 }
 
-- (BaseMessage *)handleCallMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+- (BaseMessageEntity *)handleCallMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
     SystemMessageEntity *message = [_entityManager.entityCreator systemMessageEntityForConversationEntity:conversation];
     
     BOOL outgoing = ((NSNumber *)[messageData objectForKey:@"out"]).boolValue;
@@ -472,34 +469,34 @@
     return message;
 }
 
-- (BaseMessage *)handleBallotMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
-    BallotMessage *message = [_entityManager.entityCreator ballotMessageForConversationEntity:conversation];
+- (BaseMessageEntity *)handleBallotMessage:(NSDictionary *)messageData inConversation:(ConversationEntity *)conversation {
+    BallotMessageEntity *message = [_entityManager.entityCreator ballotMessageForConversationEntity:conversation];
     
     NSDictionary *ballotData = [messageData objectForKey:@"content"];
 
-    Ballot *ballot = [_entityManager.entityCreator ballot];
+    BallotEntity *ballot = [_entityManager.entityCreator ballot];
     NSData *idData = [NSData data];
     ballot.id = idData;
     ballot.title = [self localizedStringForKey:@"question" in:ballotData];
     ballot.conversation = conversation;
     
     if ([[ballotData objectForKey:@"state"] isEqualToString:@"closed"]) {
-        [ballot setClosed];
+        [ballot close];
     }
     
     NSArray *choices = [ballotData objectForKey:@"choices"];
     [self handleBallot:ballot choices:choices];
     
     
-    message.ballot = ballot;
+    [message updateBallot:ballot];
     
     return message;
 }
 
-- (void)handleBallot:(Ballot *)ballot choices:(NSArray *)choices {
+- (void)handleBallot:(BallotEntity *)ballot choices:(NSArray *)choices {
     NSInteger count = 0;
     for (NSDictionary *choiceData in choices) {
-        BallotChoice *ballotChoice = [_entityManager.entityCreator ballotChoice];
+        BallotChoiceEntity *ballotChoice = [_entityManager.entityCreator ballotChoice];
         ballotChoice.name = [self localizedStringForKey:@"choice" in:choiceData];
         ballotChoice.id = [NSNumber numberWithInteger:count];
         ballotChoice.orderPosition = [NSNumber numberWithInteger:count];
@@ -513,7 +510,7 @@
     }
 }
 
-- (void)handleBallotChoice:(BallotChoice *)choice voteData:(NSDictionary *)voteData {
+- (void)handleBallotChoice:(BallotChoiceEntity *)choice voteData:(NSDictionary *)voteData {
     NSEnumerator *enumerator = [voteData keyEnumerator];
     NSString *identity;
     

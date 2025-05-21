@@ -27,7 +27,7 @@ static const CGFloat defaultCustomViewHeight = 24.0;
 
 @interface CaptionView ()
 
-@property BaseMessage *message;
+@property BaseMessageEntity *message;
 @property UIView *customView;
 @property UILabel *timeLabel;
 

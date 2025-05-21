@@ -105,7 +105,7 @@ class VideoConversionHelper: NSObject {
     }
             
     @objc func getAVAssetExportSession(from asset: AVAsset, outputURL: URL) -> AVAssetExportSession? {
-        guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+        guard asset.tracks(withMediaType: .video).first != nil else {
             DDLogError("No video track found")
             return nil
         }

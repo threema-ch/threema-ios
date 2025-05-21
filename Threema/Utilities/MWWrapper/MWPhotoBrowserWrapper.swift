@@ -62,10 +62,10 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     
     private lazy var photoBrowser: MWPhotoBrowser? = createPhotoBrowser()
     
-    private var mediaMessages = [BaseMessage]()
+    private var mediaMessages = [BaseMessageEntity]()
     private var selectedMediaMessages = Set<UInt>()
     
-    func openPhotoBrowser(for message: BaseMessage?) {
+    func openPhotoBrowser(for message: BaseMessageEntity?) {
         guard let message else {
             return
         }
@@ -264,7 +264,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
             return nil
         }
         
-        let message: BaseMessage = mediaMessages[index]
+        let message: BaseMessageEntity = mediaMessages[index]
         
         switch message {
         case let imageMessageEntity as ImageMessageEntity:
@@ -296,7 +296,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
             return nil
         }
         
-        let message: BaseMessage = mediaMessages[index]
+        let message: BaseMessageEntity = mediaMessages[index]
         return message.objectID
     }
     
@@ -335,7 +335,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     }
     
     func prepareMedia() {
-        var finalMessages = [BaseMessage]()
+        var finalMessages = [BaseMessageEntity]()
         
         let imageMessages = entityManager.entityFetcher
             .imageMessages(for: conversation) as? [ImageMessage] ?? [ImageMessage]()
@@ -360,7 +360,6 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         
         entityManager.performAndWaitSave {
             for mediaEntity in mediaEntitiesToDelete {
-                mediaEntity.conversation = nil
                 self.entityManager.entityDestroyer.delete(baseMessage: mediaEntity)
             }
             completion()

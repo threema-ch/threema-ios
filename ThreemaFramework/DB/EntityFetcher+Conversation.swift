@@ -149,6 +149,52 @@ extension EntityFetcher {
         return sortedIDs.map(\.objectID)
     }
     
+    /// Fetches the object IDs of conversations matching the passed parameters
+    /// - Parameters:
+    ///   - text: String used in several predicates
+    /// - Returns: Ordered array of matching conversations object IDs
+    public func matchingConversationsForContactListSearch(
+        containing text: String
+    ) -> [NSManagedObjectID] {
+               
+        let finalPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            conversationGroupNamePredicate(text: text),
+            conversationNotPrivatePredicate(),
+        ])
+        
+        // We only fetch the managed object ID
+        let objectIDExpression = NSExpressionDescription()
+        objectIDExpression.name = "objectID"
+        objectIDExpression.expression = NSExpression.expressionForEvaluatedObject()
+        objectIDExpression.expressionResultType = .objectIDAttributeType
+        
+        let propertiesToFetch: [Any] = [objectIDExpression]
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Conversation")
+        fetchRequest.predicate = finalPredicate
+        fetchRequest.fetchLimit = 0
+        fetchRequest.resultType = .dictionaryResultType
+        fetchRequest.propertiesToFetch = propertiesToFetch
+        fetchRequest.returnsDistinctResults = true
+        
+        var matchingIDs: [NSManagedObjectID] = []
+        
+        managedObjectContext.performAndWait {
+            if let results = try? fetchRequest.execute() as? [[String: Any]], !results.isEmpty {
+                for result in results {
+
+                    guard let objectID = result["objectID"] as? NSManagedObjectID else {
+                        continue
+                    }
+                    matchingIDs.append(objectID)
+                }
+            }
+        }
+        
+        // TODO: (IOS-4536) Sort
+
+        return matchingIDs
+    }
+    
     // MARK: - Predicates
     
     func conversationFirstNamePredicate(text: String) -> NSPredicate {

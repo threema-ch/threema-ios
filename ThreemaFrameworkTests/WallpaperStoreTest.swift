@@ -37,9 +37,9 @@ class WallpaperStoreTest: XCTestCase {
     private var entityManager: EntityManager!
     
     private let testImageURL1 = Bundle(for: WallpaperStoreTest.self)
-        .url(forResource: "Bild-5-0", withExtension: "png")!
+        .url(forResource: "Bild-8", withExtension: "png")!
     private let testImageURL2 = Bundle(for: WallpaperStoreTest.self)
-        .url(forResource: "Bild-5-1", withExtension: "png")!
+        .url(forResource: "Bild-8", withExtension: "png")!
     private var testImage1: UIImage!
     private var testImage2: UIImage!
 
@@ -83,7 +83,7 @@ class WallpaperStoreTest: XCTestCase {
 
         let databasePreparer = DatabasePreparer(context: mainCnx)
         databasePreparer.save {
-            contact = databasePreparer.createContact(publicKey: Data([1]), identity: id, verificationLevel: 0)
+            contact = databasePreparer.createContact(publicKey: Data([1]), identity: id)
 
             conversation = databasePreparer.createConversation(
                 typing: false,

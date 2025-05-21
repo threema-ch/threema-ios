@@ -155,7 +155,7 @@ public final class ThreemaUtility: NSObject {
             return true
         }
         
-        if contact.isEchoEcho() || contact.isGatewayID() || TargetManager.isOnPrem {
+        if contact.isEchoEcho || contact.isGatewayID || TargetManager.isOnPrem {
             return true
         }
         

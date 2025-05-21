@@ -45,7 +45,7 @@ class BaseMessageDisplayTests: XCTestCase {
     // MARK: - messageDisplayState
     
     func testOwnDisplayState() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         databasePreparer.save {
             baseMessage = databasePreparer.createTextMessage(
@@ -82,7 +82,7 @@ class BaseMessageDisplayTests: XCTestCase {
     }
     
     func testOtherDisplayState() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         databasePreparer.save {
             baseMessage = databasePreparer.createTextMessage(
@@ -119,7 +119,7 @@ class BaseMessageDisplayTests: XCTestCase {
     }
     
     func testOwnGroupMessageDisplayState() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         databasePreparer.save {
             let groupConversation = databasePreparer.createConversation(
@@ -166,7 +166,7 @@ class BaseMessageDisplayTests: XCTestCase {
     }
     
     func testOtherGroupMessageDisplayState() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         databasePreparer.save {
             let groupConversation = databasePreparer.createConversation(
@@ -216,7 +216,7 @@ class BaseMessageDisplayTests: XCTestCase {
     // MARK: - displayDate
     
     func testOwnSingleMessageDisplayDate() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         let expectedDate = Date(timeIntervalSinceNow: -1000)
         let expectedSentDate = Date(timeIntervalSinceNow: -900)
@@ -258,7 +258,7 @@ class BaseMessageDisplayTests: XCTestCase {
     }
     
     func testOwnGatewayMessageDisplayDate() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         let expectedDate = Date(timeIntervalSinceNow: -1000)
         let expectedSentDate = Date(timeIntervalSinceNow: -900)
@@ -268,8 +268,7 @@ class BaseMessageDisplayTests: XCTestCase {
         databasePreparer.save {
             let gatewayContact = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "*TESTGWY",
-                verificationLevel: 0
+                identity: "*TESTGWY"
             )
             conversation.contact = gatewayContact
             
@@ -307,7 +306,7 @@ class BaseMessageDisplayTests: XCTestCase {
     }
     
     func testOwnGroupMessageDisplayDate() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         let expectedDate = Date(timeIntervalSinceNow: -1000)
         let expectedSentDate = Date(timeIntervalSinceNow: -900)
@@ -359,7 +358,7 @@ class BaseMessageDisplayTests: XCTestCase {
     }
     
     func testOtherSingleMessageDisplayDate() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         let expectedSentDate = Date(timeIntervalSinceNow: -1100)
         let expectedDate = Date(timeIntervalSinceNow: -1000)
@@ -400,7 +399,7 @@ class BaseMessageDisplayTests: XCTestCase {
     }
     
     func testOtherGroupMessageDisplayDate() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         let expectedSentDate = Date(timeIntervalSinceNow: -1100)
         let expectedDate = Date(timeIntervalSinceNow: -1000)
@@ -453,7 +452,7 @@ class BaseMessageDisplayTests: XCTestCase {
     // MARK: - Date for state
     
     func testDateForState() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         let expectedDate = Date(timeIntervalSinceNow: -1000)
         let expectedSentDate = Date(timeIntervalSinceNow: -900)

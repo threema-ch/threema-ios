@@ -24,20 +24,21 @@ import Foundation
 @objc(AudioDataEntity)
 public final class AudioDataEntity: NSManagedObject, Identifiable {
     
-    // Attributes
-    @NSManaged @objc(data) public var data: Data
+    // MARK: Attributes
+
+    @NSManaged public var data: Data
     
-    // Relationships
+    // MARK: Relationships
+
     @NSManaged public var message: AudioMessageEntity?
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
+    ///   - context: `NSManagedObjectContext` to insert created entity into
     ///   - data: Data for the entity
-    ///   - message: AudioMessageEntity the entity belongs to
+    ///   - message: `AudioMessageEntity` the entity belongs to
     public init(context: NSManagedObjectContext, data: Data, message: AudioMessageEntity? = nil) {
         let entity = NSEntityDescription.entity(forEntityName: "AudioData", in: context)!
         super.init(entity: entity, insertInto: context)

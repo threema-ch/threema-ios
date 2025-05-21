@@ -253,7 +253,13 @@ extension AppearanceSettingsViewController {
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         if section == 2 {
             return UserSettings.shared()
-                .hideStaleContacts ? #localize("show_stale_contacts_on") : #localize("show_stale_contacts_off")
+                .hideStaleContacts ? String.localizedStringWithFormat(
+                    #localize("show_stale_contacts_on"),
+                    TargetManager.localizedAppName
+                ) : String.localizedStringWithFormat(
+                    #localize("show_stale_contacts_off"),
+                    TargetManager.localizedAppName
+                )
         }
         return nil
     }

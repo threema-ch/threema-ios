@@ -85,7 +85,7 @@ class RestoreSafeForgotIDViewController: IDCreationPageViewController {
            let mobileNo = mobileNumberField.text,
            !email.isEmpty || !mobileNo.isEmpty {
             
-            ContactStore.shared().linkedIdentities(for: email, and: mobileNo, onCompletion: { [weak self] result in
+            ContactStore.shared().linkedIdentities(for: email, and: mobileNo) { [weak self] result in
                 defer { self?.isSearchingIdentity = false }
                 guard let strongSelf = self else {
                     return
@@ -104,10 +104,13 @@ class RestoreSafeForgotIDViewController: IDCreationPageViewController {
                     }
                     else {
                         let alert = IntroQuestionViewHelper(parent: strongSelf, onAnswer: nil)
-                        alert.showAlert(#localize("safe_no_id_found"))
+                        alert.showAlert(String.localizedStringWithFormat(
+                            #localize("safe_no_id_found"),
+                            TargetManager.localizedAppName
+                        ))
                     }
                 }
-            })
+            }
         }
     }
     

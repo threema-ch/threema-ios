@@ -80,8 +80,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
             
             case .turnOffDNDButton:
                 let turnOffDNDButtonCell: TurnOffDNDButtonCell = tableView.dequeueCell(for: indexPath)
-                turnOffDNDButtonCell.textLabel?.text = BundleUtil
-                    .localizedString(forKey: "doNotDisturb_turn_off_button")
+                turnOffDNDButtonCell.textLabel?.text = #localize("doNotDisturb_turn_off_button")
                 return turnOffDNDButtonCell
         
             case let .periodButton(duration: duration):
@@ -98,8 +97,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
                 let notifyWhenMentionedSettingCell: NotifyWhenMentionedSettingCell = tableView
                     .dequeueCell(for: indexPath)
             
-                notifyWhenMentionedSettingCell.textLabel?.text = BundleUtil
-                    .localizedString(forKey: "doNotDisturb_mention")
+                notifyWhenMentionedSettingCell.textLabel?.text = #localize("doNotDisturb_mention")
             
                 notifyWhenMentionedSettingCell.isOn = self?.pushSetting.mentioned ?? false
                 notifyWhenMentionedSettingCell.valueDidChange = { [weak self] isOn in
@@ -121,8 +119,7 @@ final class DoNotDisturbViewController: ThemedCodeModernGroupedTableViewControll
                 let notificationPlaySoundSettingCell: NotificationPlaySoundSettingCell = tableView
                     .dequeueCell(for: indexPath)
 
-                notificationPlaySoundSettingCell.textLabel?.text = BundleUtil
-                    .localizedString(forKey: "notification_sound_title")
+                notificationPlaySoundSettingCell.textLabel?.text = #localize("notification_sound_title")
 
                 notificationPlaySoundSettingCell.isOn = !(self?.pushSetting.muted ?? false)
                 notificationPlaySoundSettingCell.valueDidChange = { [weak self] isOn in

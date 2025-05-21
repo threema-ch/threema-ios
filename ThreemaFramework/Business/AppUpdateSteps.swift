@@ -110,7 +110,7 @@ public struct AppUpdateSteps {
             ) {
                 DDLogNotice("[ForwardSecurity] Terminate sessions with \(contactIdentity)")
                 
-                try terminator.terminateAllSessions(with: contactIdentity, cause: .reset)
+                _ = try terminator.terminateAllSessions(with: contactIdentity, cause: .reset)
                 
                 await postSystemMessage(for: contactIdentity)
             }

@@ -367,11 +367,11 @@ final class ChatProfileView: UIStackView {
         let businessContact = Contact(contactEntity: contact)
         profilePictureView.info = .contact(businessContact)
         
-        observe(contact, \.verificationLevel) { [weak self] in
-            self?.verificationLevelImageView.image = self?.conversation.contact?.verificationLevelImageSmall()
+        observe(contact, \.contactVerificationLevel) { [weak self] in
+            self?.verificationLevelImageView.image = businessContact.verificationLevelImageSmall
         }
         
-        observe(contact, \.state) { [weak self] in
+        observe(contact, \.contactState) { [weak self] in
             self?.nameLabel.attributedText = self?.conversation.contact?.attributedDisplayName
         }
         
@@ -552,9 +552,14 @@ final class ChatProfileView: UIStackView {
     override var accessibilityValue: String? {
         get {
             if !conversation.isGroup {
+                guard let contact = conversation.contact else {
+                    return nil
+                }
+                
+                let businessContact = Contact(contactEntity: contact)
                 var otherThreemaAccessibilityLabel: String?
                 let accessibilityValue = [
-                    conversation.contact?.verificationLevelAccessibilityLabel(),
+                    businessContact.verificationLevelAccessibilityLabel,
                     otherThreemaAccessibilityLabel,
                 ]
                 .compactMap { $0 }

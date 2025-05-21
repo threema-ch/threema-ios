@@ -23,23 +23,22 @@
 #import <ThreemaFramework/BoxBallotVoteMessage.h>
 #import <ThreemaFramework/GroupBallotCreateMessage.h>
 #import <ThreemaFramework/GroupBallotVoteMessage.h>
-#import <ThreemaFramework/Ballot.h>
 
-@class BallotResultEntity;
+@class BallotEntity, BallotChoiceEntity, BallotResultEntity;
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface BallotMessageEncoder : NSObject
 
-+ (BoxBallotCreateMessage *)encodeCreateMessageForBallot:(Ballot *)ballot;
++ (BoxBallotCreateMessage *)encodeCreateMessageForBallot:(BallotEntity *)ballot;
 
-+ (BoxBallotVoteMessage *)encodeVoteMessageForBallot:(Ballot *)ballot;
++ (BoxBallotVoteMessage *)encodeVoteMessageForBallot:(BallotEntity *)ballot;
 
 + (GroupBallotCreateMessage*)groupBallotCreateMessageFrom:(BoxBallotCreateMessage*)boxBallotMessage groupID:(NSData*)groupID groupCreatorIdentity:(NSString*)groupCreatorIdentity;
 
 + (GroupBallotVoteMessage*)groupBallotVoteMessageFrom:(BoxBallotVoteMessage*)boxBallotMessage groupID:(NSData*)groupID groupCreatorIdentity:(NSString*)groupCreatorIdentity;
 
-+ (BOOL)passesSanityCheck:(nullable Ballot *) ballot;
++ (BOOL)passesSanityCheck:(nullable BallotEntity *) ballot;
 
 @end
 

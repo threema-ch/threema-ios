@@ -86,7 +86,7 @@ struct NotificationTypeTitleView: View {
             if selectedType == notificationType {
                 Image(systemName: "checkmark.circle.fill")
                     .imageScale(.large)
-                    .foregroundColor(UIColor.primary.color)
+                    .foregroundColor(.accentColor)
             }
             else {
                 Image(systemName: "circle")

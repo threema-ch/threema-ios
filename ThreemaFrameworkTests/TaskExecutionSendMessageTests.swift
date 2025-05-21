@@ -63,8 +63,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: receiverIdentity,
-                verificationLevel: 0
+                identity: receiverIdentity
             )
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
             conversation.contact = contact
@@ -139,8 +138,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: receiverIdentity,
-                verificationLevel: 0
+                identity: receiverIdentity
             )
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
             conversation.contact = contact
@@ -207,10 +205,9 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: receiverIdentity,
-                verificationLevel: 0
+                identity: receiverIdentity
             )
-            contact.state = NSNumber(integerLiteral: kStateInvalid)
+            contact.contactState = .invalid
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
             conversation.contact = contact
@@ -269,7 +266,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     .message(with: messageID, conversation: conversation)
             )
             XCTAssertFalse(textMessage.sent.boolValue)
-            XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
         }
     }
 
@@ -328,8 +324,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: receiverIdentity,
-                verificationLevel: 0
+                identity: receiverIdentity
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
@@ -457,8 +452,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: member,
-                    verificationLevel: 0
+                    identity: member
                 )
                 members.insert(contact)
             }
@@ -607,13 +601,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: member,
-                    verificationLevel: 0
+                    identity: member
                 )
                 members.insert(contact)
 
                 if member == "MEMBER04" {
-                    contact.state = NSNumber(integerLiteral: kStateInvalid)
+                    contact.contactState = .invalid
                 }
             }
 
@@ -766,8 +759,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: member,
-                    verificationLevel: 0
+                    identity: member
                 )
                 members.insert(contact)
             }
@@ -869,8 +861,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let members = expectedMembers.map {
                 dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: $0,
-                    verificationLevel: 0
+                    identity: $0
                 )
             }
             let rejectedMembers = members.filter { contact in
@@ -966,8 +957,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let members = expectedMembers.map {
                 dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: $0,
-                    verificationLevel: 0
+                    identity: $0
                 )
             }
             let rejectedMembers = members.filter { contact in
@@ -1071,8 +1061,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let members = expectedMembers.map {
                 dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: $0,
-                    verificationLevel: 0
+                    identity: $0
                 )
             }
             let rejectedMembers = members.filter { contact in
@@ -1175,8 +1164,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: member,
-                    verificationLevel: 0
+                    identity: member
                 )
                 if myIdentityStoreMock.identity != member {
                     members.insert(contact)
@@ -1368,8 +1356,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
             let textMessage = try XCTUnwrap(baseMessage as? TextMessageEntity)
             XCTAssertTrue(textMessage.sent.boolValue)
-            // Local messages don't have a remote sent date
-            XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
         }
     }
 
@@ -1439,8 +1425,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 for member in expectedMembers {
                     let contact = dbPreparer.createContact(
                         publicKey: MockData.generatePublicKey(),
-                        identity: member,
-                        verificationLevel: 0
+                        identity: member
                     )
                     members.insert(contact)
                 }
@@ -1578,8 +1563,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: receiverIdentity,
-                verificationLevel: 0
+                identity: receiverIdentity
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
@@ -1639,7 +1623,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
                     .message(with: messageID, conversation: conversation)
             )
             XCTAssertEqual(textMessage.sent.boolValue, false)
-            XCTAssertEqual(textMessage.remoteSentDate, textMessage.date)
         }
     }
 }

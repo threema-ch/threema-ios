@@ -22,12 +22,12 @@ import Foundation
 
 class WebCreateTextMessageResponse: WebAbstractMessage {
     
-    var message: BaseMessage?
+    var message: BaseMessageEntity?
     var type: String
     var id: String
     var messageID: String?
     
-    init(message: BaseMessage, request: WebCreateTextMessageRequest) {
+    init(message: BaseMessageEntity, request: WebCreateTextMessageRequest) {
         self.message = message
         self.type = request.type
         if request.groupID != nil {

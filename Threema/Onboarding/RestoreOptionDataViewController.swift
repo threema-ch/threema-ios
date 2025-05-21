@@ -53,9 +53,17 @@ class RestoreOptionDataViewController: IDCreationPageViewController {
             TargetManager.appName
         )
         keepLocalButton.setTitle(#localize("restore_option_data_keep_data"), for: .normal)
-        keepLocalLabel.text = #localize("restore_option_data_keep_data_description")
+        keepLocalLabel.text = String.localizedStringWithFormat(
+            #localize("restore_option_data_keep_data_description"),
+            TargetManager.localizedAppName,
+            TargetManager.localizedAppName
+        )
         deleteLocalButton.setTitle(#localize("restore_option_data_delete_data"), for: .normal)
-        deleteLocalLabel.text = #localize("restore_option_data_delete_data_description")
+        deleteLocalLabel.text = String.localizedStringWithFormat(
+            #localize("restore_option_data_delete_data_description"),
+            TargetManager.localizedAppName,
+            TargetManager.localizedAppName
+        )
     
         cancelButton.setTitle(#localize("cancel"), for: .normal)
         
@@ -81,9 +89,16 @@ extension RestoreOptionDataViewController {
             let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
             let message = String.localizedStringWithFormat(
                 #localize("restore_option_data_delete_data_explain"),
+                TargetManager.localizedAppName,
                 TargetManager.appName
             )
-            alert.showAlert(message, title: #localize("safe_restore"))
+            alert.showAlert(
+                message,
+                title: String.localizedStringWithFormat(
+                    #localize("safe_restore"),
+                    TargetManager.localizedAppName
+                )
+            )
         }
         else if sender == cancelButton {
             delegate?.optionDataCancelled()

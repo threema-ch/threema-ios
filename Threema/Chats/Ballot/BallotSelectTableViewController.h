@@ -19,14 +19,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "Ballot.h"
 #import "ThemedTableViewController.h"
+
+@class BallotEntity;
 
 @interface BallotSelectTableViewController : ThemedTableViewController
 
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *cancelButton;
 
-@property Ballot *ballot;
+@property BallotEntity *ballot;
 @property (nonatomic, strong) EntityManager *entityManager;
 
 @end

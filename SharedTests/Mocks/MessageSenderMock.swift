@@ -44,7 +44,7 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         in conversation: ConversationEntity,
         quickReply: Bool,
         requestID: String?,
-        completion: ((BaseMessage?) -> Void)?
+        completion: ((BaseMessageEntity?) -> Void)?
     ) {
         // no-op
     }
@@ -59,11 +59,11 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         // no-op
     }
 
-    func sendBallotMessage(for ballot: Ballot) {
+    func sendBallotMessage(for ballot: BallotEntity) {
         // no-op
     }
 
-    func sendBallotVoteMessage(for ballot: Ballot) {
+    func sendBallotVoteMessage(for ballot: BallotEntity) {
         // no-op
     }
 
@@ -100,11 +100,11 @@ class MessageSenderMock: NSObject, MessageSenderProtocol {
         .success
     }
     
-    func sendReadReceipt(for messages: [BaseMessage], toIdentity: ThreemaEssentials.ThreemaIdentity) async {
+    func sendReadReceipt(for messages: [BaseMessageEntity], toIdentity: ThreemaEssentials.ThreemaIdentity) async {
         // no-op
     }
 
-    func sendReadReceipt(for messages: [BaseMessage], toGroupIdentity: ThreemaEssentials.GroupIdentity) async {
+    func sendReadReceipt(for messages: [BaseMessageEntity], toGroupIdentity: ThreemaEssentials.GroupIdentity) async {
         // no-op
     }
 

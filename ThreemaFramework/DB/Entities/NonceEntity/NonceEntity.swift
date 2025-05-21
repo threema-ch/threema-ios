@@ -24,16 +24,16 @@ import Foundation
 @objc(NonceEntity)
 public final class NonceEntity: TMAManagedObject {
     
-    // Attributes
-    @NSManaged @objc(nonce) public var nonce: Data
+    // MARK: Attributes
+
+    @NSManaged public var nonce: Data
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
-    ///   - nonce: Data of nonce to be saved
+    ///   - context: `NSManagedObjectContext` to insert created entity into
+    ///   - nonce: `Data` of nonce to be saved
     public init(context: NSManagedObjectContext, nonce: Data) {
         let entity = NSEntityDescription.entity(forEntityName: "Nonce", in: context)!
         super.init(entity: entity, insertInto: context)

@@ -33,7 +33,7 @@ import ThreemaFramework
     }
     
     override open func imagePickerControllerGlobalTitleColor() -> UIColor? {
-        .primary
+        .tintColor
     }
     
     override open func createDoneButtonIfNeeded() -> UIButton {

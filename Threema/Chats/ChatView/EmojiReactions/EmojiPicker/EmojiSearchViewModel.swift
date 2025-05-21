@@ -56,9 +56,6 @@ class EmojiSearchViewModel: ObservableObject {
     func prepareSearchIndex() {
         Task.detached(priority: .high) {
             self.searchIndex = Emoji.searchIndex
-            Task { @MainActor in
-                self.searchText = self.searchText
-            }
         }
     }
     

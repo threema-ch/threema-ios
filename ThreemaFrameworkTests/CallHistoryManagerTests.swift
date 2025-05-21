@@ -50,7 +50,7 @@ class CallHistoryManagerTests: XCTestCase {
         
         businessInjectorMock.entityManager.performSyncBlockAndSafe {
             let contact = businessInjectorMock.entityManager.entityCreator.contact()
-            contact?.identity = "ECHOECHO"
+            contact?.setIdentity(to: "ECHOECHO")
             contact?.publicKey = MockData.generatePublicKey()
         }
         
@@ -90,7 +90,7 @@ class CallHistoryManagerTests: XCTestCase {
         
         businessInjectorMock.entityManager.performSyncBlockAndSafe {
             let contact = businessInjectorMock.entityManager.entityCreator.contact()
-            contact?.identity = "ECHOECHO"
+            contact?.setIdentity(to: "ECHOECHO")
             contact?.publicKey = MockData.generatePublicKey()
         }
         

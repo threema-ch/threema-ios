@@ -93,7 +93,6 @@ struct LaunchModalResetView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             LaunchModalSettingsView()
-                .accentColor(UIColor.primary.color)
         }
     }
 }

@@ -32,7 +32,6 @@ struct NotificationSettingsView: View {
     @State var dndEnd = Date.now
     
     let disablePreviewToggle = MDMSetup(setup: false).existsMdmKey(MDM_KEY_DISABLE_MESSAGE_PREVIEW)
-    let faqURLString = BundleUtil.object(forInfoDictionaryKey: "ThreemaNotificationInfo") as! String
 
     typealias TimeOfDay = (hour: Int, minute: Int)
     
@@ -103,10 +102,12 @@ struct NotificationSettingsView: View {
                 Text(#localize("settings_notifications_push_section"))
             } footer: {
                 VStack {
-                    Text(LocalizedStringKey(String.localizedStringWithFormat(
-                        #localize("settings_notification_type_preview_description"),
-                        faqURLString
-                    )))
+                    Text(
+                        String.localizedStringWithFormat(
+                            #localize("settings_notification_type_preview_description"),
+                            TargetManager.appName
+                        )
+                    )
                     
                     if disablePreviewToggle {
                         Text(#localize("disabled_by_device_policy"))
@@ -123,7 +124,8 @@ struct NotificationSettingsView: View {
                 } label: {
                     SettingsListItemView(
                         cellTitle: #localize("settings_notifications_push_sound"),
-                        accessoryText: BundleUtil.localizedString(forKey: "sound_\(settingsVM.pushSound)")
+                        accessoryText: settingsVM.pushSound == "received_message" ? TargetManager.appName : BundleUtil
+                            .localizedString(forKey: "sound_\(settingsVM.pushSound)")
                     )
                 }
                 
@@ -135,7 +137,8 @@ struct NotificationSettingsView: View {
                 } label: {
                     SettingsListItemView(
                         cellTitle: #localize("settings_notifications_push_groupsound"),
-                        accessoryText: BundleUtil.localizedString(forKey: "sound_\(settingsVM.pushGroupSound)")
+                        accessoryText: settingsVM.pushGroupSound == "received_message" ? TargetManager
+                            .appName : BundleUtil.localizedString(forKey: "sound_\(settingsVM.pushGroupSound)")
                     )
                 }
             }
@@ -232,7 +235,7 @@ struct NotificationSettingsView: View {
             #localize("settings_list_notifications_title"),
             displayMode: .inline
         )
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
     }
     
     // MARK: - Functions
@@ -322,7 +325,7 @@ struct NotificationSettingsView_Previews: PreviewProvider {
                 SoundPickerView(selection: .constant("default"), title: "Group Push Sound")
             }
         }
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
     }
 }
 
@@ -338,7 +341,10 @@ private struct SoundPickerView: View {
         List {
             Picker("", selection: $selection) {
                 ForEach(sounds, id: \.self) { sound in
-                    Text(BundleUtil.localizedString(forKey: "sound_\(sound)"))
+                    Text(
+                        sound == "received_message" ? TargetManager.appName : BundleUtil
+                            .localizedString(forKey: "sound_\(sound)")
+                    )
                 }
             }
             .onChange(of: selection, perform: { _ in
@@ -392,7 +398,7 @@ private struct DayPickerView: View {
                     Spacer()
                     if showCheckmark(index: index) {
                         Image(systemName: "checkmark")
-                            .foregroundColor(UIColor.primary.color)
+                            .foregroundColor(.accentColor)
                     }
                 }
                 .contentShape(Rectangle())

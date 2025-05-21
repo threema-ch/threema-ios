@@ -75,4 +75,8 @@ class ServerInfoProviderMock: ServerInfoProvider {
     func domains(completionHandler: @escaping ([Domain]?, Error?) -> Void) {
         completionHandler(nil, nil)
     }
+    
+    func mapsServer(completionHandler: @escaping (MapsServerInfo?, Error?) -> Void) {
+        completionHandler(nil, nil)
+    }
 }

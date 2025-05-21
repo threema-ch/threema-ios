@@ -97,10 +97,11 @@ class MultiDeviceViewController: ThemedTableViewController {
                     self.activityIndicator.stopAnimating()
                 }
                 .catch { error in
-                    DDLogError(String.localizedStringWithFormat(
+                    let msg = String.localizedStringWithFormat(
                         #localize("multi_device_linked_devices_loading_failed"),
                         error as CVarArg
-                    ))
+                    )
+                    DDLogError("\(msg)")
 
                     UIAlertTemplate.showAlert(
                         owner: self,
@@ -125,8 +126,7 @@ class MultiDeviceViewController: ThemedTableViewController {
         UIAlertTemplate.showAlert(
             owner: self,
             title: #localize("multi_device_linked_devices_failed_remove_title"),
-            message: BundleUtil
-                .localizedString(forKey: "multi_device_linked_devices_failed_remove_message_2")
+            message: #localize("multi_device_linked_devices_failed_remove_message_2")
         )
     }
 
@@ -180,8 +180,7 @@ extension MultiDeviceViewController {
     }
 
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        section == 0 ? #localize("multi_device_linked_devices_this") : BundleUtil
-            .localizedString(forKey: "multi_device_linked_devices_others")
+        section == 0 ? #localize("multi_device_linked_devices_this") : #localize("multi_device_linked_devices_others")
     }
 
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {

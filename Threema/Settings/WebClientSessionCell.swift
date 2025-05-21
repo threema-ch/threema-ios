@@ -45,9 +45,8 @@ class WebClientSessionCell: UITableViewCell {
         
         infoLabel.textColor = .secondaryLabel
         let info: String
-        let localizedSavedString = webClientSession.permanent.boolValue ? BundleUtil
-            .localizedString(forKey: "webClientSession_saved") : BundleUtil
-            .localizedString(forKey: "webClientSession_notSaved")
+        let localizedSavedString = webClientSession.permanent
+            .boolValue ? #localize("webClientSession_saved") : #localize("webClientSession_notSaved")
         if let lastConnenction = webClientSession.lastConnection {
             info = """
                 \(#localize("webClientSession_lastUse")): \(DateFormatter
@@ -80,12 +79,12 @@ class WebClientSessionCell: UITableViewCell {
                 loadingIndicator.isHidden = false
             }
             else {
-                let config = UIImage.SymbolConfiguration(paletteColors: [Colors.white, Colors.red])
+                let config = UIImage.SymbolConfiguration(paletteColors: [.white, .systemRed])
                 browserIcon.image = UIImage(systemName: "exclamationmark.circle.fill")?.withConfiguration(config)
             }
         }
         
-        var cellAccessibility: String! = browserLabel.text
+        var cellAccessibility: String = browserLabel.text ?? ""
         var cellAccessibilityActions = [UIAccessibilityCustomAction]()
         cellAccessibility.append(". ")
         cellAccessibility.append(info)
@@ -96,7 +95,7 @@ class WebClientSessionCell: UITableViewCell {
                 image: UIImage(systemName: "antenna.radiowaves.left.and.right.circle.fill")?
                     .applying(textStyle: .title2, symbolScale: .large)
             )
-            accessoryView?.tintColor = .primary
+            accessoryView?.tintColor = .tintColor
             cellAccessibility.append(". ")
             cellAccessibility.append(#localize("status_loggedIn"))
             cellAccessibilityActions.append(UIAccessibilityCustomAction(

@@ -82,6 +82,12 @@
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
+      <TestPlans>
+         <TestPlanReference
+            reference = "container:ThreemaTests/Threema Work.xctestplan"
+            default = "YES">
+         </TestPlanReference>
+      </TestPlans>
       <Testables>
          <TestableReference
             skipped = "NO">

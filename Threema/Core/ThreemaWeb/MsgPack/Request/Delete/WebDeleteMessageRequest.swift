@@ -78,10 +78,10 @@ class WebDeleteMessageRequest: WebAbstractMessage {
                 acknowledgement.error = "invalidMessage"
                 DDLogError("Could not fetch conversation")
                 self.ack = acknowledgement
-                
+                  
                 return
             }
-            
+              
             guard let message = businessInjector.entityManager.entityFetcher.message(
                 with: self.messageID,
                 conversation: conv
@@ -90,14 +90,15 @@ class WebDeleteMessageRequest: WebAbstractMessage {
                 acknowledgement.success = false
                 acknowledgement.error = "invalidMessage"
                 self.ack = acknowledgement
-                
+                  
                 return
             }
-            
-            if message.isKind(of: BaseMessage.self) || message.isKind(of: SystemMessageEntity.self) {
+              
+            if message.isKind(of: BaseMessageEntity.self) || message.isKind(of: SystemMessageEntity.self) {
                 businessInjector.entityManager.entityDestroyer.delete(baseMessage: message)
 
-                conv.lastMessage = MessageFetcher(for: conv, with: businessInjector.entityManager).lastDisplayMessage()
+                conv.lastMessage = MessageFetcher(for: conv, with: businessInjector.entityManager)
+                    .lastDisplayMessage()
             }
         }
         

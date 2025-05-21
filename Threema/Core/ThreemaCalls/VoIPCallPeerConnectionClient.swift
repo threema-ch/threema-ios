@@ -292,7 +292,7 @@ extension VoIPCallPeerConnectionClient {
                     AVAudioSession.Category.playAndRecord,
                     with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
                 )
-                try rtcAudioSession.setMode(UserSettings.shared().disableProximityMonitoring ? .videoChat : .voiceChat)
+                try rtcAudioSession.setMode(.voiceChat)
                 try rtcAudioSession.overrideOutputAudioPort(speakerActive ? .speaker : .none)
                 try rtcAudioSession.setActive(true)
             }
@@ -318,9 +318,7 @@ extension VoIPCallPeerConnectionClient {
                     AVAudioSession.Category.playAndRecord,
                     with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
                 )
-                if !UserSettings.shared().disableProximityMonitoring {
-                    try rtcAudioSession.setMode(AVAudioSession.Mode.voiceChat)
-                }
+                try rtcAudioSession.setMode(.voiceChat)
                 try rtcAudioSession.overrideOutputAudioPort(.none)
                 try rtcAudioSession.setActive(true)
             }
@@ -626,7 +624,7 @@ extension VoIPCallPeerConnectionClient {
                 AVAudioSession.Category.playAndRecord,
                 with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
             )
-            try rtcAudioSession.setMode(UserSettings.shared().disableProximityMonitoring ? .videoChat : .voiceChat)
+            try rtcAudioSession.setMode(.voiceChat)
         }
         catch {
             debugPrint("Error changeing AVAudioSession category: \(error)")
@@ -768,14 +766,22 @@ extension VoIPCallPeerConnectionClient {
             .mediaConstrains(isVideoCallAvailable: peerConnectionParameters.isVideoCallAvailable)
         peerConnection.offer(for: constrains) { sdp, _ in
             guard let sdp else {
+                completion(nil, nil)
                 return
             }
             
             DispatchQueue.main.async {
-                let contact = BusinessInjector.ui.entityManager.entityFetcher.contact(for: self.contactIdentity)
+                guard let contact = BusinessInjector.ui.entityManager.entityFetcher.contact(for: self.contactIdentity)
+                else {
+                    completion(nil, nil)
+                    return
+                }
                 
-                let extensionConfig: VoIPCallSdpPatcher.RtpHeaderExtensionConfig = contact?
-                    .isVideoCallAvailable() ?? false ? .ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER : .DISABLE
+                let bContact = Contact(contactEntity: contact)
+                let extensionConfig: VoIPCallSdpPatcher.RtpHeaderExtensionConfig = FeatureMask.check(
+                    contact: bContact,
+                    for: .o2OVideoCallSupport
+                ) ? .ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER : .DISABLE
                 do {
                     let patchedSdpString = try VoIPCallSdpPatcher(extensionConfig)
                         .patch(type: .LOCAL_OFFER, sdp: sdp.sdp)

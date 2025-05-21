@@ -26,7 +26,7 @@ import UIKit
 final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
     
     /// Message to show in this cell
-    var message: BaseMessage? {
+    var message: BaseMessageEntity? {
         didSet {
             updateCell(for: message)
         }
@@ -209,7 +209,7 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
     
     // MARK: - Updates
         
-    private func updateCell(for message: BaseMessage?) {
+    private func updateCell(for message: BaseMessageEntity?) {
         guard let message else {
             nameLabel.text = nil
             dateLabel.text = nil

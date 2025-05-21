@@ -144,13 +144,13 @@ import Foundation
         }
         
         let err = "Unknown Media Type processed"
-        DDLogError(err)
+        DDLogError("\(err)")
         fatalError(err)
     }
     
     open func returnAction(mediaData: [MediaPreviewItem]) {
         let err = "Not implemented"
-        DDLogError(err)
+        DDLogError("\(err)")
         fatalError(err)
     }
     

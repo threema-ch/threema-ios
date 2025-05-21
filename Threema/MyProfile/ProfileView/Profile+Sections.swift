@@ -37,7 +37,10 @@ extension ProfileView {
                         .init(
                             action: shareID,
                             icon: "square.and.arrow.up.fill",
-                            title: #localize("profile_share_id"),
+                            title: String.localizedStringWithFormat(
+                                #localize("profile_share_id"),
+                                TargetManager.localizedAppName
+                            ),
                             buttonAccessibilityIdentifier: "share_id_button",
                             accessibilityIdentifier: "share_id"
                         )
@@ -142,7 +145,10 @@ extension ProfileView {
             Section {
                 LockedNavigationLink(shouldNavigate: $model.shouldNavigateToSafeSetup, label: {
                     ListItem(
-                        title: #localize("safe_setup_backup_title"),
+                        title: String.localizedStringWithFormat(
+                            #localize("safe_setup_backup_title"),
+                            TargetManager.localizedAppName
+                        ),
                         subTitle: #localize(model.isThreemaSafeActivated ? "On" : "Off")
                     )
                 }, destination: {
@@ -156,18 +162,22 @@ extension ProfileView {
         @ViewBuilder
         private var footer: some View {
             Text(
-                #localize(
-                    !(model.mdmSetup?.isSafeBackupDisable() ?? true)
-                        ? "safe_enable_explain_short"
-                        : "disabled_by_device_policy"
-                )
+                !(model.mdmSetup?.isSafeBackupDisable() ?? true)
+                    ? String.localizedStringWithFormat(
+                        #localize("safe_enable_explain_short"),
+                        TargetManager.localizedAppName
+                    )
+                    : #localize("disabled_by_device_policy")
             )
         }
         
         static var safe: some View {
             uiViewController(viewController("safeSetupViewController"))
                 .navigationBarTitleDisplayMode(.inline)
-                .navigationTitle(#localize("safe_setup_backup_title"))
+                .navigationTitle(String.localizedStringWithFormat(
+                    #localize("safe_setup_backup_title"),
+                    TargetManager.localizedAppName
+                ))
         }
     }
     
@@ -266,7 +276,7 @@ extension ProfileView {
             ListItem(
                 title: #localize("my_profile_delete_cell_title")
             )
-            .foregroundColor(Color.red)
+            .foregroundColor(.red)
         }
         
         var body: some View {

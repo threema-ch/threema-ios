@@ -196,8 +196,7 @@ extension SystemMessageEntity {
                 return #localize("forward_security_status_disabled_outgoing")
 
             case .fsNotSupportedAnymore:
-                return BundleUtil
-                    .localizedString(forKey: "forward_security_contact_has_downgraded_to_an_incompatible_version")
+                return #localize("forward_security_contact_has_downgraded_to_an_incompatible_version")
 
             case let .systemMessageGroupCallStartedBy(name: name):
                 if UserSettings.shared().enableThreemaGroupCalls {
@@ -297,8 +296,11 @@ extension SystemMessageEntity {
                 
             case .rejectedDisabledIncoming,
                  .rejectedDisabledOutgoing:
-                #localize("call_rejected_disabled")
-                
+                String.localizedStringWithFormat(
+                    #localize("call_rejected_disabled"),
+                    TargetManager.localizedAppName
+                )
+
             case .rejectedUnknownOutgoing,
                  .rejectedOffHoursOutgoing:
                 #localize("call_rejected_unknown")
@@ -360,10 +362,10 @@ extension SystemMessageEntity {
             switch self {
             // Incoming
             case .endedIncomingSuccessful:
-                Colors.green
+                .systemGreen
                 
             case .rejectedIncoming:
-                Colors.orange
+                .systemOrange
                 
             case .endedIncomingUnsuccessful,
                  .missedIncoming,
@@ -372,14 +374,14 @@ extension SystemMessageEntity {
                  .rejectedDisabledIncoming,
                  .rejectedUnknownIncoming,
                  .rejectedOffHoursIncoming:
-                Colors.red
+                .systemRed
                 
             // Outgoing
             case .endedOutgoingSuccessful:
-                Colors.green
+                .systemGreen
                 
             case .endedOutgoingUnsuccessful:
-                Colors.red
+                .systemRed
                 
             case .missedOutgoing,
                  .rejectedOutgoing,
@@ -388,7 +390,7 @@ extension SystemMessageEntity {
                  .rejectedDisabledOutgoing,
                  .rejectedUnknownOutgoing,
                  .rejectedOffHoursOutgoing:
-                Colors.red
+                .systemRed
             }
         }
     }
@@ -403,9 +405,15 @@ extension SystemMessageEntity {
         public var localizedMessage: String {
             switch self {
             case .work:
-                #localize("contact_threema_work_conversation_info")
+                String.localizedStringWithFormat(
+                    #localize("contact_threema_work_conversation_info"),
+                    TargetManager.localizedAppName
+                )
             case .consumer:
-                #localize("contact_threema_conversation_info")
+                String.localizedStringWithFormat(
+                    #localize("contact_threema_conversation_info"),
+                    TargetManager.appName
+                )
             }
         }
         
@@ -421,9 +429,9 @@ extension SystemMessageEntity {
         public var backgroundColor: UIColor {
             switch self {
             case .work:
-                .threemaWorkColor
+                UIColor(resource: .accentColorWork)
             case .consumer:
-                .threemaConsumerColor
+                UIColor(resource: .accentColorPrivate)
             }
         }
     }

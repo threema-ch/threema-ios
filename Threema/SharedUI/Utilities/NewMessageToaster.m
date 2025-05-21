@@ -19,9 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "NewMessageToaster.h"
-#import "BaseMessage.h"
 #import "UserSettings.h"
-#import "ContactEntity.h"
 #import "AppDelegate.h"
 #import "UIDefines.h"
 #import "TextStyleUtils.h"
@@ -61,7 +59,7 @@
     if (messageObjectID) {
         EntityManager *entityManager = [EntityManager new];
         [entityManager performBlock:^{
-            BaseMessage *message = [[entityManager entityFetcher] existingObjectWithID:messageObjectID];
+            BaseMessageEntity *message = [[entityManager entityFetcher] existingObjectWithID:messageObjectID];
 
             // don't show toast for suppressed group ids
             if (![PushSettingManagerObjc canSendPushFor:message entityManager:entityManager]) {

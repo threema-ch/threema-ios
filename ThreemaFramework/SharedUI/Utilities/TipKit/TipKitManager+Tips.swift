@@ -29,19 +29,29 @@ extension TipKitManager {
     public struct ThreemaTypeTip: Tip {
         public var title: Text {
             if TargetManager.isBusinessApp {
-                Text(#localize("contact_threema_title"))
+                Text(TargetManager.appName)
             }
             else {
-                Text(#localize("contact_threema_work_title"))
+                Text(String.localizedStringWithFormat(
+                    #localize("contact_threema_work_title"),
+                    TargetManager.localizedAppName
+                ))
             }
         }
 
         public var message: Text? {
             if TargetManager.isBusinessApp {
-                Text(#localize("contact_threema_info"))
+                Text(String.localizedStringWithFormat(
+                    #localize("contact_threema_info"),
+                    TargetManager.appName,
+                    TargetManager.localizedAppName
+                ))
             }
             else {
-                Text(#localize("contact_threema_work_info"))
+                Text(String.localizedStringWithFormat(
+                    #localize("contact_threema_work_info"),
+                    TargetManager.localizedAppName
+                ))
             }
         }
 

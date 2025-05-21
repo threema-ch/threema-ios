@@ -19,8 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "BallotResultMatrixView.h"
-#import "ContactEntity.h"
-#import "BallotChoice.h"
 #import "RectUtil.h"
 #import "MyIdentityStore.h"
 #import "BallotMatrixLabelView.h"
@@ -159,7 +157,7 @@
     [self adaptLayoutToSize:size];
 }
 
-- (void)setBallot:(Ballot *)ballot {
+- (void)setBallot:(BallotEntity *)ballot {
     _ballot = ballot;
     
     [self updateParticipants];
@@ -279,7 +277,7 @@
     _notVotedView.editable = false;
     
     // Only show non-voters if there are any and DisplayMode is not Summary
-    if (([_ballot.nonVoters count] != 0 || !_ballot.localIdentityDidVote) && _ballot.ballotDisplayMode != BallotDisplayModeSummary) {
+    if (([_ballot.nonVoters count] != 0 || !_ballot.localIdentityDidVote) && _ballot.displayMode.intValue != BallotDisplayModeSummary) {
      [self addSubview:_notVotedView];
     }
     
@@ -413,7 +411,7 @@
     CGFloat yOffset = 0.0;
     CGFloat maxWidth = 0.0;
     NSMutableArray *labelViews = [NSMutableArray array];
-    for (BallotChoice *choice in _ballot.choicesSortedByOrder) {
+    for (BallotChoiceEntity *choice in _ballot.choicesSortedByOrder) {
         CGRect contactRect = CGRectMake(0.0, yOffset, _minChoiceLabelLength, _gridHeight);
         BallotMatrixLabelView *choiceLabel = [BallotMatrixLabelView labelForString:choice.name at:contactRect];
         
@@ -453,10 +451,10 @@
     return choiceView;
 }
 
-- (NSString *)accessibilityValueForChoice:(BallotChoice *)choice {
+- (NSString *)accessibilityValueForChoice:(BallotChoiceEntity *)choice {
     NSMutableString *participants = [NSMutableString string];
     
-    for (NSString *identity in choice.participantIdsForResultsTrue) {
+    for (NSString *identity in choice.participantIDsForResultsTrue) {
         NSInteger index = [_participantIds indexOfObject:identity];
         if (index != NSNotFound) {
             if (participants.length > 0) {
@@ -468,7 +466,7 @@
     }
 
     NSString *votesCountFormat = [BundleUtil localizedStringForKey:@"ballot_votes_count"];
-    NSString *votesCount = [NSString stringWithFormat:votesCountFormat, [NSString stringWithFormat: @"%li", (long)[choice totalCountOfResultsTrue]]];
+    NSString *votesCount = [NSString stringWithFormat:votesCountFormat, [NSString stringWithFormat: @"%li", [choice countResultsTrue]]];
 
     // use commas to create a pause for voice over
     return [NSString stringWithFormat:@"%@, %@, %@", choice.name, votesCount, participants];
@@ -488,14 +486,14 @@
     
     NSInteger index = 0;
     NSInteger maxCount = 0;
-    for (BallotChoice *choice in _ballot.choicesSortedByOrder) {
+    for (BallotChoiceEntity *choice in _ballot.choicesSortedByOrder) {
         
         NSInteger count = 0;
         // If Ballot is in DisplayModeSummary, show totalVotes instead
-        if(_ballot.ballotDisplayMode == BallotDisplayModeSummary) {
+        if(_ballot.displayMode.intValue == BallotDisplayModeSummary) {
             count = [[choice totalVotes] intValue];
         } else {
-            count = [choice totalCountOfResultsTrue];
+            count = [choice countResultsTrue];
         }
         
         if (count > 0) {
@@ -538,7 +536,7 @@
     CGFloat xOffset = 0.0;
     CGFloat yOffset = 0.0;
     
-    for (BallotChoice *choice in _ballot.choicesSortedByOrder) {
+    for (BallotChoiceEntity *choice in _ballot.choicesSortedByOrder) {
         CGRect rowRect = CGRectMake(0.0, yOffset, rowWidth, _gridHeight);
         UIView *rowView = [[UIView alloc] initWithFrame: rowRect];
         

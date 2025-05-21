@@ -64,7 +64,7 @@ public class ShowConversationInformation: NSObject {
         }
         else if let identity = info[kKeyContactIdentity] as? String {
             let em = EntityManager()
-            em.performBlockAndWait {
+            em.performAndWait {
                 resolvedConversation = em.conversation(for: identity, createIfNotExisting: true)
             }
         }
@@ -81,7 +81,7 @@ public class ShowConversationInformation: NSObject {
         let forceCompose: Bool = info[kKeyForceCompose] as? Bool ?? true
         let text = info[kKeyText] as? String
         let image = info[kKeyImage] as? UIImage
-        let baseMessage = info[kKeyMessage] as? BaseMessage
+        let baseMessage = info[kKeyMessage] as? BaseMessageEntity
         
         return ShowConversationInformation(
             conversation: resolvedConversation,

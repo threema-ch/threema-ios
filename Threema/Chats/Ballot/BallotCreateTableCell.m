@@ -38,7 +38,7 @@
     _choiceTextField.delegate = self;
     
     [Colors updateKeyboardAppearanceFor:_choiceTextField];
-    UIImage *calendarImage = [[UIImage systemImageNamed:@"calendar"] imageWithTintColor:UIColor.primary renderingMode:UIImageRenderingModeAlwaysOriginal];
+    UIImage *calendarImage = [[UIImage systemImageNamed:@"calendar"] imageWithTintColor:UIColor.tintColor renderingMode:UIImageRenderingModeAlwaysOriginal];
     [_dateButton setImage:calendarImage forState:UIControlStateNormal];
     [_choiceTextField setTextColor:UIColor.labelColor];
     [_dateButton setAccessibilityLabel:[BundleUtil localizedStringForKey:@"ballot_date_button"]];
@@ -115,7 +115,7 @@
     _datePicker.minuteInterval = 1;
     _datePicker.preferredDatePickerStyle = UIDatePickerStyleInline;
 
-    [_datePicker setValue:UIColor.primary forKey:@"textColor"];
+    [_datePicker setValue:UIColor.tintColor forKey:@"textColor"];
     [_datePicker addTarget:self action:@selector(dateChanged) forControlEvents:UIControlEventValueChanged];
     _datePicker.alpha = 0.0;
     [self addSubview:_datePicker];

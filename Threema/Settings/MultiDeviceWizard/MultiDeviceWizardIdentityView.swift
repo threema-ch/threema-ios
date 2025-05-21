@@ -36,15 +36,22 @@ struct MultiDeviceWizardIdentityView: View {
                 VStack(spacing: 0) {
                     Spacer()
                     
-                    Text(#localize("md_wizard_start_desktop"))
-                        .font(.title3)
-                        .multilineTextAlignment(.center)
-                        .padding(.bottom, 30)
+                    Text(String.localizedStringWithFormat(
+                        #localize("md_wizard_start_desktop"),
+                        TargetManager.appName,
+                        TargetManager.localizedAppName
+                    ))
+                    .font(.title3)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 30)
                     
-                    Text(#localize("md_wizard_identity_text"))
-                        .bold()
-                        .font(.title2)
-                        .padding(.bottom)
+                    Text(String.localizedStringWithFormat(
+                        #localize("md_wizard_identity_text"),
+                        TargetManager.localizedAppName
+                    ))
+                    .bold()
+                    .font(.title2)
+                    .padding(.bottom)
                     
                     Text(identity)
                         .font(.system(.title, design: .monospaced))
@@ -71,7 +78,7 @@ struct MultiDeviceWizardIdentityView: View {
                     Text(#localize("md_wizard_cancel"))
                 }
                 .buttonStyle(.bordered)
-                .tint(Color(.primary))
+                .tint(.accentColor)
                 
                 Spacer()
                 

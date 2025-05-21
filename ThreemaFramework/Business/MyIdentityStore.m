@@ -765,7 +765,7 @@ static MyIdentityStore *instance;
     NSData *backupDecoded = [NSData dataWithBase32String:backup];
     if (backupDecoded.length != 50) {
         DDLogError(@"Invalid decoded backup length: %lu", (unsigned long)backupDecoded.length);
-        onError([ThreemaError threemaError:[BundleUtil localizedStringForKey:@"bad_identity_backup"]]);
+        onError([ThreemaError threemaError:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"bad_identity_backup"], TargetManagerObjc.localizedAppName]]);
         return;
     }
     
@@ -774,7 +774,7 @@ static MyIdentityStore *instance;
     NSData *keyData = [self deriveBackupKeyFromPassword:password salt:salt];
     if (keyData == nil) {
         DDLogError(@"Invalid password");
-        onError([ThreemaError threemaError:[BundleUtil localizedStringForKey:@"bad_identity_backup"]]);
+        onError([ThreemaError threemaError:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"bad_identity_backup"], TargetManagerObjc.localizedAppName]]);
         return;
     }
     
@@ -795,7 +795,7 @@ static MyIdentityStore *instance;
     
     if (memcmp(digest, backupDataDecrypted.bytes + 40, 2) != 0) {
         DDLogWarn(@"Digest mismatch in decrypted identity backup");
-        onError([ThreemaError threemaError:[BundleUtil localizedStringForKey:@"bad_identity_backup"]]);
+        onError([ThreemaError threemaError:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"bad_identity_backup"], TargetManagerObjc.localizedAppName]]);
         return;
     }
     

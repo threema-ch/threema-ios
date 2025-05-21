@@ -85,7 +85,7 @@ enum AudioSessionInputOutputAdapter {
             let msg =
                 "Cannot set audio session override output audio port due to an error with code \(errCode) description \(errDescription) and \(errReason)"
             
-            DDLogError(msg)
+            DDLogError("\(msg)")
             debugPrintInAndOutputs()
             
             onError?(err)

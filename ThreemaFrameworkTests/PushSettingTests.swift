@@ -85,7 +85,7 @@ final class PushSettingTests: XCTestCase {
     }
     
     func testMentionContents() {
-        var textMessage1: BaseMessage!
+        var textMessage1: BaseMessageEntity!
 
         databasePreparer.save {
             textMessage1 = databasePreparer.createTextMessage(
@@ -105,7 +105,7 @@ final class PushSettingTests: XCTestCase {
         
         XCTAssertTrue(TextStyleUtils.isMeOrAllMention(inText: textMessage1.contentToCheckForMentions()))
         
-        var textMessage2: BaseMessage!
+        var textMessage2: BaseMessageEntity!
 
         databasePreparer.save {
             textMessage2 = databasePreparer.createTextMessage(

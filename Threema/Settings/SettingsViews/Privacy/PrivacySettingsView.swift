@@ -26,8 +26,7 @@ struct PrivacySettingsView: View {
     
     @EnvironmentObject var settingsVM: SettingsStore
 
-    @State private var contactsFooterText = BundleUtil
-        .localizedString(forKey: "settings_privacy_block_unknown_footer_on")
+    @State private var contactsFooterText = #localize("settings_privacy_block_unknown_footer_on")
     
     @State private var lockScreenWrapper = LockScreen(isLockScreenController: true)
     @State private var intermediaryHidePrivate = false
@@ -40,7 +39,6 @@ struct PrivacySettingsView: View {
     @State var observeSendTypingIndicator: AnyCancellable?
 
     let mdmSetup = MDMSetup(setup: false)
-    let interactionFAQURLString = BundleUtil.object(forInfoDictionaryKey: "ThreemaInteractionInfo") as! String
 
     // MARK: - View
 
@@ -96,10 +94,13 @@ struct PrivacySettingsView: View {
                 Text(#localize("settings_privacy_os_header"))
             } footer: {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(#localize("settings_privacy_os_footer"))
+                    Text(String.localizedStringWithFormat(
+                        #localize("settings_privacy_os_footer"),
+                        TargetManager.appName
+                    ))
                     Link(
                         #localize("learn_more"),
-                        destination: URL(string: interactionFAQURLString)!
+                        destination: ThreemaURLProvider.interactionFaq
                     )
                     .font(.footnote)
                 }
@@ -159,6 +160,7 @@ struct PrivacySettingsView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .tint(.accentColor)
         .disabled(settingsVM.isSyncing)
         .onAppear {
             observeSendReadReceipt = settingsVM.$sendReadReceipts.sink { newValue in
@@ -183,15 +185,14 @@ struct PrivacySettingsView: View {
         })
         
         .navigationBarTitle(#localize("settings_list_privacy_title"), displayMode: .inline)
-        .tint(UIColor.primary.color)
     }
     
     // MARK: - Private functions
 
     private func updateContactsFooter() {
-        var footerText = settingsVM.blockUnknown ? BundleUtil
-            .localizedString(forKey: "settings_privacy_block_unknown_footer_on") : BundleUtil
-            .localizedString(forKey: "settings_privacy_block_unknown_foooter_off")
+        var footerText = settingsVM
+            .blockUnknown ? #localize("settings_privacy_block_unknown_footer_on") :
+            #localize("settings_privacy_block_unknown_foooter_off")
        
         if let mdmSetup, mdmSetup.existsMdmKey(MDM_KEY_BLOCK_UNKNOWN) || mdmSetup.existsMdmKey(MDM_KEY_CONTACT_SYNC) {
             footerText = footerText + "\n\n" + #localize("disabled_by_device_policy")
@@ -234,7 +235,7 @@ struct PrivacySettingsView_Previews: PreviewProvider {
         NavigationView {
             PrivacySettingsView()
         }
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
         .environmentObject(BusinessInjector.ui.settingsStore as! SettingsStore)
     }
 }
@@ -353,7 +354,7 @@ private struct PickerAndButtonView: View {
         guard let contacts = entityManager.entityFetcher.contactsWithCustomTypingIndicator() as? [ContactEntity] else {
             return
         }
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             for contact in contacts {
                 contact.typingIndicator = .default
             }

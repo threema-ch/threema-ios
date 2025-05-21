@@ -42,118 +42,104 @@ class CollectionContactTests: XCTestCase {
         databasePreparer.save {
             let contact1 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC01",
-                verificationLevel: 0
+                identity: "CONTAC01"
             )
-            contact1.firstName = "Yeung"
+            contact1.setFirstName(to: "Yeung")
             contacts.append(Contact(contactEntity: contact1))
 
             let contact2 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC02",
-                verificationLevel: 0
+                identity: "CONTAC02"
             )
             contact2.publicNickname = "Yeung"
             contacts.append(Contact(contactEntity: contact2))
 
             let contact3 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC03",
-                verificationLevel: 0
+                identity: "CONTAC03"
             )
-            contact3.firstName = "Ye"
-            contact3.lastName = "ung"
+            contact3.setFirstName(to: "Ye")
+            contact3.setLastName(to: "ung")
             contacts.append(Contact(contactEntity: contact3))
 
             let contact4 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC04",
-                verificationLevel: 0
+                identity: "CONTAC04"
             )
             contacts.append(Contact(contactEntity: contact4))
             
             let contact5 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC05",
-                verificationLevel: 0
+                identity: "CONTAC05"
             )
-            contact5.lastName = "Yeung"
+            contact5.setLastName(to: "Yeung")
             contacts.append(Contact(contactEntity: contact5))
 
             let contact6 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC06",
-                verificationLevel: 0
+                identity: "CONTAC06"
             )
             contacts.append(Contact(contactEntity: contact6))
             
             let contact7 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC07",
-                verificationLevel: 0
+                identity: "CONTAC07"
             )
-            contact7.firstName = "Ye"
-            contact7.lastName = "un"
+            contact7.setFirstName(to: "Ye")
+            contact7.setLastName(to: "un")
             contacts.append(Contact(contactEntity: contact7))
 
             let contact8 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC08",
-                verificationLevel: 0
+                identity: "CONTAC08"
             )
             contact8.publicNickname = "Yeung"
             contacts.append(Contact(contactEntity: contact8))
 
             let contact9 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC09",
-                verificationLevel: 0
+                identity: "CONTAC09"
             )
-            contact9.firstName = "Yeung"
-            contact9.lastName = "Yeung"
+            contact9.setFirstName(to: "Yeung")
+            contact9.setLastName(to: "Yeung")
             contacts.append(Contact(contactEntity: contact9))
 
             let contact10 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC10",
-                verificationLevel: 0
+                identity: "CONTAC10"
             )
-            contact10.lastName = "Yeung"
+            contact10.setLastName(to: "Yeung")
             contacts.append(Contact(contactEntity: contact10))
 
             let contact11 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC11",
-                verificationLevel: 0
+                identity: "CONTAC11"
             )
-            contact11.firstName = "Yeung"
+            contact11.setFirstName(to: "Yeung")
             contacts.append(Contact(contactEntity: contact11))
 
             let contact12 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC12",
-                verificationLevel: 0
+                identity: "CONTAC12"
             )
-            contact12.firstName = "Ye"
-            contact12.lastName = "un"
+            contact12.setFirstName(to: "Ye")
+            contact12.setLastName(to: "un")
             contacts.append(Contact(contactEntity: contact12))
 
             let contact13 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC13",
-                verificationLevel: 0
+                identity: "CONTAC13"
             )
-            contact13.firstName = "Yeung"
-            contact13.lastName = "Yeung"
+            contact13.setFirstName(to: "Yeung")
+            contact13.setLastName(to: "Yeung")
             contacts.append(Contact(contactEntity: contact13))
 
             let contact14 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC14",
-                verificationLevel: 0
+                identity: "CONTAC14"
             )
-            contact14.firstName = "Yeu"
-            contact14.lastName = "ng"
+            contact14.setFirstName(to: "Yeu")
+            contact14.setLastName(to: "ng")
             contacts.append(Contact(contactEntity: contact14))
         }
         
@@ -219,42 +205,37 @@ class CollectionContactTests: XCTestCase {
         databasePreparer.save {
             let contact1 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC01",
-                verificationLevel: 0
+                identity: "CONTAC01"
             )
-            contact1.lastName = "Müller"
+            contact1.setLastName(to: "Müller")
             contacts.append(Contact(contactEntity: contact1))
 
             let contact2 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC02",
-                verificationLevel: 0
+                identity: "CONTAC02"
             )
-            contact2.lastName = "Muller"
+            contact2.setLastName(to: "Muller")
             contacts.append(Contact(contactEntity: contact2))
 
             let contact3 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC03",
-                verificationLevel: 0
+                identity: "CONTAC03"
             )
-            contact3.lastName = "ábenā"
+            contact3.setLastName(to: "ábenā")
             contacts.append(Contact(contactEntity: contact3))
 
             let contact4 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC04",
-                verificationLevel: 0
+                identity: "CONTAC04"
             )
-            contact4.lastName = "Abena"
+            contact4.setLastName(to: "Abena")
             contacts.append(Contact(contactEntity: contact4))
 
             let contact5 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "CONTAC05",
-                verificationLevel: 0
+                identity: "CONTAC05"
             )
-            contact5.lastName = "Mueller"
+            contact5.setLastName(to: "Mueller")
             contacts.append(Contact(contactEntity: contact5))
         }
         

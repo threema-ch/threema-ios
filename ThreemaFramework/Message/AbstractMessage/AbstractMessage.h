@@ -20,11 +20,24 @@
 
 #import <Foundation/Foundation.h>
 #import <ThreemaFramework/BoxedMessage.h>
-#import <ThreemaFramework/ContactEntity.h>
 #import <ThreemaFramework/MyIdentityStore.h>
 #import <ThreemaFramework/LoggingDescriptionProtocol.h>
 #import <ThreemaFramework/ProtocolDefines.h>
 #import <ThreemaFramework/ObjcCspE2eFs_Version.h>
+
+/// Copied from BaseMessage.m, used in Obj-C code. For swift see `BaseMessageFlags`
+typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
+    BaseMessageFlagsSendPush = 1 << 0,
+    BaseMessageFlagsDontQueue = 1 << 1,
+    BaseMessageFlagsDontAck = 1 << 2,
+    BaseMessageFlagsAlreadyDelivered = 1 << 3,
+    BaseMessageFlagsGroup = 1 << 4,
+    BaseMessageFlagsImmediateDelivery = 1 << 5,
+    BaseMessageFlagsSilentPush = 1 << 6,
+    BaseMessageFlagsNoDeliveryReceipt = 1 << 7
+};
+
+@class ContactEntity;
 
 @protocol MyIdentityStoreProtocol;
 

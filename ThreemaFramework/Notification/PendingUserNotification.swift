@@ -32,7 +32,7 @@ public class PendingUserNotification: NSObject, NSSecureCoding {
     var contentKey: PendingUserNotificationKey
     var threemaPushNotification: ThreemaPushNotification?
     public internal(set) var abstractMessage: AbstractMessage?
-    public internal(set) var baseMessage: BaseMessage? {
+    public internal(set) var baseMessage: BaseMessageEntity? {
         didSet {
             baseMessageID = baseMessage?.id
         }

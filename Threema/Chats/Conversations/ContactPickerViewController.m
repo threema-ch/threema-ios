@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ContactPickerViewController.h"
-#import "ContactEntity.h"
 #import "ProtocolDefines.h"
 #import "AppDelegate.h"
 #import "ServerAPIConnector.h"
@@ -244,7 +243,7 @@ typedef enum : NSUInteger {
         if (indexPath.section == 0) {
             cell = [self.tableView dequeueReusableCellWithIdentifier:@"CreateGroupCell"];
             cell.textLabel.text = [BundleUtil localizedStringForKey:@"create_new_group"];
-            cell.textLabel.textColor = UIColor.primary;
+            cell.textLabel.textColor = UIColor.tintColor;
         } else {
             NSIndexPath *convertedIndex = [NSIndexPath indexPathForRow:indexPath.row inSection:indexPath.section - 1];
             cell = [self tableView:tableView groupCellForIndexPath:convertedIndex];

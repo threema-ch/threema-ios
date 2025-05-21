@@ -61,7 +61,7 @@ class SettingsViewModel: ObservableObject {
         else {
             BusinessInjector.ui.contactStore.addContact(
                 with: Constants.betaFeedbackIdentity,
-                verificationLevel: Int32(kVerificationLevelUnverified)
+                verificationLevel: Int32(ContactEntity.VerificationLevel.unverified.rawValue)
             ) { [self] contact, _ in
                 guard let contact else {
                     DDLogError("Can't add \(Constants.betaFeedbackIdentity) as contact")

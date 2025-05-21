@@ -19,13 +19,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "Ballot.h"
+
+@class BallotEntity;
 
 @interface BallotDispatcher : NSObject
 
-+ (UIViewController *)viewControllerForBallot:(Ballot *)ballot;
++ (UIViewController *)viewControllerForBallot:(BallotEntity *)ballot;
 
-+ (void)showViewControllerForBallot:(Ballot *)ballot onNavigationController:(UINavigationController*)navigationController;
++ (void)showViewControllerForBallot:(BallotEntity *)ballot onNavigationController:(UINavigationController*)navigationController;
 
 + (void)showBallotCreateViewControllerForConversation:(ConversationEntity *)conversation onNavigationController:(UINavigationController*)navigationController;
 

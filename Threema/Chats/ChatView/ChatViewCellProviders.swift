@@ -97,7 +97,7 @@ struct ChatViewCellProvider {
     ///   - indexPath: Index path of message
     /// - Returns: Reusable cell for the provided message
     func cell(
-        for message: BaseMessage,
+        for message: BaseMessageEntity,
         with neighbors: ChatViewDataSource.MessageNeighbors,
         in tableView: UITableView,
         at indexPath: IndexPath
@@ -205,7 +205,7 @@ struct ChatViewCellProvider {
             cell.chatViewTableViewCellDelegate = chatViewTableViewCellDelegate
             return cell
             
-        case let ballotMessage as BallotMessage:
+        case let ballotMessage as BallotMessageEntity:
             let cell: ChatViewBallotMessageTableViewCell = ChatViewCellProvider.dequeueIncomingOutgoingCell(
                 for: indexPath,
                 and: message,
@@ -248,7 +248,7 @@ struct ChatViewCellProvider {
     
     private static func dequeueIncomingOutgoingCell<CellType: UITableViewCell>(
         for indexPath: IndexPath,
-        and message: BaseMessage,
+        and message: BaseMessageEntity,
         in tableView: UITableView
     ) -> CellType where CellType: Reusable {
         let reuseIdentifierExtension: CellDirection = message.isOwnMessage ? .incoming : .outgoing
@@ -313,7 +313,7 @@ enum ChatViewCellSizeProvider {
     ///   - width: Width of table view this message cell is shown in
     /// - Returns: Estimated height
     static func estimatedCellHeight(
-        for message: BaseMessage,
+        for message: BaseMessageEntity,
         with neighbors: ChatViewDataSource.MessageNeighbors,
         and width: CGFloat
     ) -> CGFloat {
@@ -381,7 +381,7 @@ enum ChatViewCellSizeProvider {
                 )
                 measurableCell = ChatViewLocationMessageTableViewCell.sizingCell
 
-            case let ballotMessage as BallotMessage:
+            case let ballotMessage as BallotMessageEntity:
                 ChatViewBallotMessageTableViewCell.sizingCell.ballotMessageAndNeighbors = (ballotMessage, neighbors)
                 measurableCell = ChatViewBallotMessageTableViewCell.sizingCell
 

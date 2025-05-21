@@ -19,8 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "Ballot.h"
 #import "DetailDisclosureView.h"
+
+@class BallotEntity;
 
 @interface BallotHeaderView : DetailDisclosureView
 
@@ -35,6 +36,6 @@
 @property (weak, nonatomic) IBOutlet UILabel *createdByNameLabel;
 @property (weak, nonatomic) IBOutlet UILabel *dateLabel;
 
-@property (nonatomic) Ballot *ballot;
+@property (nonatomic) BallotEntity *ballot;
 
 @end

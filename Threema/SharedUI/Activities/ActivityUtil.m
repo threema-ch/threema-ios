@@ -24,7 +24,7 @@
 @implementation ActivityUtil
 
 
-+ (UIActivityViewController *)activityViewControllerForMessage:(BaseMessage *)message withView:(UIView *)view andBarButtonItem:(UIBarButtonItem *)barButtonItem {
++ (UIActivityViewController *)activityViewControllerForMessage:(BaseMessageEntity *)message withView:(UIView *)view andBarButtonItem:(UIBarButtonItem *)barButtonItem {
     MessageActivityItem *item = [MessageActivityItem activityItemFor: message];
     
     UIActivityViewController *activityViewController = [[UIActivityViewController alloc] initWithActivityItems:@[item] applicationActivities:nil];

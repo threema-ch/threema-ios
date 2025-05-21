@@ -24,22 +24,22 @@ import Foundation
 @objc(GroupEntity)
 public final class GroupEntity: TMAManagedObject {
     
-    // Attributes
-    @NSManaged @objc(groupCreator) public var groupCreator: String?
+    // MARK: Attributes
+
+    @NSManaged public var groupCreator: String?
     // swiftformat:disable:next acronyms
-    @NSManaged @objc(groupId) public var groupId: Data
-    @NSManaged @objc(lastPeriodicSync) public var lastPeriodicSync: Date?
-    @NSManaged @objc(state) public var state: NSNumber
+    @NSManaged public var groupId: Data
+    @NSManaged public var lastPeriodicSync: Date?
+    @NSManaged public var state: NSNumber
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
+    ///   - context: `NSManagedObjectContext` to insert created entity into
     ///   - groupCreator: Threema ID of the creator
     ///   - groupID: Group ID
-    ///   - lastPeriodicSync: Date of last periodic group sync
+    ///   - lastPeriodicSync: `Date` of last periodic group sync
     ///   - state: Our current state for the group
     public init(
         context: NSManagedObjectContext,

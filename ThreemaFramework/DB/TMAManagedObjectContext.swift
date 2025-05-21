@@ -34,7 +34,7 @@ import Foundation
         else if let contact = object as? ContactEntity {
             delete(contact)
         }
-        else if let message = object as? BaseMessage {
+        else if let message = object as? BaseMessageEntity {
             delete(message)
         }
         else {
@@ -53,19 +53,15 @@ import Foundation
     }
 
     private func delete(_ contact: ContactEntity) {
-        if let conversationsObjects = contact.conversations {
-            if let conversations = conversationsObjects as? Set<ConversationEntity> {
-                guard verifyNoLeftOverMessages(in: conversations) else {
-                    fatalError()
-                }
+        if let conversations = contact.conversations {
+            guard verifyNoLeftOverMessages(in: conversations) else {
+                fatalError()
             }
         }
 
-        if let conversationsObjects = contact.groupConversations {
-            if let conversations = conversationsObjects as? Set<ConversationEntity> {
-                guard verifyNoLeftOverMessages(in: conversations, from: contact) else {
-                    fatalError()
-                }
+        if let conversations = contact.groupConversations {
+            guard verifyNoLeftOverMessages(in: conversations, from: contact) else {
+                fatalError()
             }
         }
 
@@ -75,7 +71,7 @@ import Foundation
         super.delete(contact)
     }
 
-    private func delete(_ message: BaseMessage) {
+    private func delete(_ message: BaseMessageEntity) {
         let fetchConversations = NSFetchRequest<NSFetchRequestResult>(entityName: "Conversation")
         fetchConversations.predicate = NSPredicate(format: "lastMessage = %@", message)
 

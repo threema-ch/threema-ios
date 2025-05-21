@@ -36,7 +36,7 @@ extension LAContext {
         }
 
         switch biometryType {
-        case .none:
+        case .none, .opticID:
             return .none
         case .touchID:
             return .touchID

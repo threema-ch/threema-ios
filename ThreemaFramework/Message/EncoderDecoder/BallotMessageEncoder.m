@@ -19,8 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "BallotMessageEncoder.h"
-#import "BallotChoice.h"
-#import "BallotMessage.h"
 #import "BallotKeys.h"
 #import "MyIdentityStore.h"
 #import "JsonUtil.h"
@@ -33,7 +31,7 @@
 #endif
 @implementation BallotMessageEncoder
 
-+ (BoxBallotVoteMessage *)encodeVoteMessageForBallot:(Ballot *)ballot {
++ (BoxBallotVoteMessage *)encodeVoteMessageForBallot:(BallotEntity *)ballot {
     
     NSData *jsonData = [self jsonVoteDataFor:ballot];
 
@@ -47,7 +45,7 @@
     return voteMessage;
 }
 
-+ (BoxBallotCreateMessage *)encodeCreateMessageForBallot:(Ballot *)ballot {
++ (BoxBallotCreateMessage *)encodeCreateMessageForBallot:(BallotEntity *)ballot {
     NSData *jsonData = [self jsonCreateDataFor:ballot];
     
     BoxBallotCreateMessage *boxMessage = [[BoxBallotCreateMessage alloc] init];
@@ -59,7 +57,7 @@
     return boxMessage;
 }
 
-+ (NSData *)jsonCreateDataFor:(Ballot *)ballot {
++ (NSData *)jsonCreateDataFor:(BallotEntity *)ballot {
     NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
     
     [dictionary setObject:ballot.title forKey:JSON_KEY_TITLE];
@@ -68,10 +66,10 @@
     [dictionary setObject:ballot.assessmentType forKey:JSON_KEY_ASSESSMENT_TYPE];
     [dictionary setObject:ballot.choicesType forKey:JSON_KEY_CHOICES_TYPE];
     // Clients must no be able to set this other than 0, which is ListMode
-    [dictionary setObject:[[NSNumber alloc] initWithInteger: BallotDisplayModeList] forKey:JSON_KEY_DISPLAYMODE];
+    [dictionary setObject:[NSNumber numberWithInteger: BallotDisplayModeList] forKey:JSON_KEY_DISPLAYMODE];
 
     NSArray *participantArray = nil;
-    if ([ballot displayResult]) {
+    if ([ballot displayResults]) {
         NSSet *participants = [self participantsForBallot:ballot];
         participantArray = [participants allObjects];
         [dictionary setObject:participantArray forKey:JSON_KEY_PARTICIPANTS];
@@ -89,10 +87,10 @@
     return jsonData;
 }
 
-+ (NSArray *)choiceDataForBallot:(Ballot *)ballot participants:(NSArray *)participants {
++ (NSArray *)choiceDataForBallot:(BallotEntity *)ballot participants:(NSArray *)participants {
     NSMutableArray *choiceData = [NSMutableArray array];
     
-    for (BallotChoice *choice in ballot.choices) {
+    for (BallotChoiceEntity *choice in ballot.choices) {
         NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
         
         [dictionary setObject:choice.id forKey:JSON_CHOICE_KEY_ID];
@@ -101,7 +99,7 @@
         // This should always be 0, it is only be set by Broadcast
         [dictionary setObject:@0 forKey:JSON_CHOICE_KEY_TOTALVOTES];
         
-        if ([ballot displayResult]) {
+        if ([ballot displayResults]) {
             NSArray *result = [self resultForChoice:choice participants:participants];
             [dictionary setObject:result forKey:JSON_CHOICE_KEY_RESULT];
         }
@@ -112,11 +110,11 @@
     return choiceData;
 }
 
-+ (NSArray *)resultForChoice:(BallotChoice *)choice participants:(NSArray *)participants {
++ (NSArray *)resultForChoice:(BallotChoiceEntity *)choice participants:(NSArray *)participants {
     NSMutableArray *resultArray = [NSMutableArray array];
 
     for (NSString *participantId in participants) {
-        BallotResultEntity *result = [choice getResultForId:participantId];
+        BallotResultEntity *result = [choice getResultForIdentity:participantId];
         if (result) {
             [resultArray addObject: result.value];
         } else {
@@ -128,13 +126,13 @@
     return resultArray;
 }
 
-+ (NSData *)jsonVoteDataFor:(Ballot *)ballot {
++ (NSData *)jsonVoteDataFor:(BallotEntity *)ballot {
     NSMutableArray *choiceArray = [NSMutableArray array];
-    for (BallotChoice *choice in ballot.choices) {
+    for (BallotChoiceEntity *choice in ballot.choices) {
         
         NSMutableArray *resultArray = [NSMutableArray array];
         
-        BallotResultEntity *ownResult = [choice getOwnResult];
+        BallotResultEntity *ownResult = [choice getResultForLocalIdentity];
         if (ownResult) {
             [resultArray addObject: choice.id];
             [resultArray addObject: ownResult.value];
@@ -153,10 +151,10 @@
     return jsonData;
 }
 
-+ (NSSet *)participantsForBallot:(Ballot *)ballot {
++ (NSSet *)participantsForBallot:(BallotEntity *)ballot {
     NSMutableSet *participants = [NSMutableSet set];
     
-    for (BallotChoice *choice in ballot.choices) {
+    for (BallotChoiceEntity *choice in ballot.choices) {
         for (BallotResultEntity *result in choice.result) {
             [participants addObject: result.participantId];
         }
@@ -192,7 +190,7 @@
 
 /// Checks whether the given ballot passes a basic sanity check and can be encoded
 /// @param ballot The ballot that should be checked for sanity
-+ (BOOL)passesSanityCheck:(nullable Ballot *) ballot {
++ (BOOL)passesSanityCheck:(nullable BallotEntity *) ballot {
     if (ballot == nil) {
         DDLogError(@"Ballot is nil.");
         return false;

@@ -52,16 +52,16 @@
     _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], TargetManagerObjc.appName];
 
     if (TargetManagerObjc.isBusinessApp) {
-        _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_confirm_description_work"];
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_confirm_description_work"], TargetManagerObjc.localizedAppName];
     } else {
-        _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_confirm_description"];
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_confirm_description"], TargetManagerObjc.localizedAppName];
     }
-    _yourIdLabel.text = [BundleUtil localizedStringForKey:@"id_confirm_your_id"];
+    _yourIdLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_confirm_your_id"], TargetManagerObjc.localizedAppName];
 
     self.moreView.mainView = self.mainContentView;
     self.moreView.moreMessageText = [BundleUtil localizedStringForKey:@"more_information_confirm_id"];
     
-    _idLabel.textColor = UIColor.primary;
+    _idLabel.textColor = UIColor.tintColor;
 }
 
 - (BOOL)isInputValid {

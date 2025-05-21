@@ -29,82 +29,82 @@ extension UIColor {
     
         /// Please don't access this directly except for testing & debugging
         static var deepOrange = UIColor { _ in
-            Asset.SharedColors.idColorDeepOrange.color
+            UIColor(resource: .idColorDeepOrange)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var orange = UIColor { _ in
-            Asset.SharedColors.idColorOrange.color
+            UIColor(resource: .idColorOrange)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var amber = UIColor { _ in
-            Asset.SharedColors.idColorAmber.color
+            UIColor(resource: .idColorAmber)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var yellow = UIColor { _ in
-            Asset.SharedColors.idColorYellow.color
+            UIColor(resource: .idColorYellow)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var olive = UIColor { _ in
-            Asset.SharedColors.idColorOlive.color
+            UIColor(resource: .idColorOlive)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var lightGreen = UIColor { _ in
-            Asset.SharedColors.idColorLightGreen.color
+            UIColor(resource: .idColorLightGreen)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var green = UIColor { _ in
-            Asset.SharedColors.idColorGreen.color
+            UIColor(resource: .idColorGreen)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var teal = UIColor { _ in
-            Asset.SharedColors.idColorTeal.color
+            UIColor(resource: .idColorTeal)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var cyan = UIColor { _ in
-            Asset.SharedColors.idColorCyan.color
+            UIColor(resource: .idColorCyan)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var lightBlue = UIColor { _ in
-            Asset.SharedColors.idColorLightBlue.color
+            UIColor(resource: .idColorLightBlue)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var blue = UIColor { _ in
-            Asset.SharedColors.idColorBlue.color
+            UIColor(resource: .idColorBlue)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var indigo = UIColor { _ in
-            Asset.SharedColors.idColorIndigo.color
+            UIColor(resource: .idColorIndigo)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var deepPurple = UIColor { _ in
-            Asset.SharedColors.idColorDeepPurple.color
+            UIColor(resource: .idColorDeepOrange)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var purple = UIColor { _ in
-            Asset.SharedColors.idColorPurple.color
+            UIColor(resource: .idColorPurple)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var pink = UIColor { _ in
-            Asset.SharedColors.idColorPink.color
+            UIColor(resource: .idColorPink)
         }
     
         /// Please don't access this directly except for testing & debugging
         static var red = UIColor { _ in
-            Asset.SharedColors.idColorRed.color
+            UIColor(resource: .idColorRed)
         }
     
         /// Only use for debugging: All ID colors in defined order

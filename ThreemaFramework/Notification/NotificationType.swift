@@ -73,14 +73,13 @@ public enum NotificationType: Equatable, CaseIterable, Hashable {
     public var previewDescription: String {
         switch self {
         case .restrictive:
-            return #localize("settings_notification_type_preview_restrictive_description")
+            #localize("settings_notification_type_preview_restrictive_description")
         case .balanced:
-            return #localize("settings_notification_type_preview_balanced_description")
+            #localize("settings_notification_type_preview_balanced_description")
         case .complete:
-            let faqURLString = BundleUtil.object(forInfoDictionaryKey: "ThreemaNotificationInfo") as! String
-            return String.localizedStringWithFormat(
+            String.localizedStringWithFormat(
                 #localize("settings_notification_type_preview_complete_description"),
-                faqURLString
+                ThreemaURLProvider.notificationTypesFaq.absoluteString
             )
         }
     }

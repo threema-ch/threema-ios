@@ -83,8 +83,8 @@ class WebUpdateContactRequest: WebAbstractMessage {
         }
         
         entityManager.performAndWaitSave {
-            updatedContact?.firstName = self.firstName
-            updatedContact?.lastName = self.lastName
+            updatedContact?.setFirstName(to: self.firstName)
+            updatedContact?.setLastName(to: self.lastName)
             
             if self.avatar != nil || self.deleteAvatar == true {
                 updatedContact?.imageData = self.avatar

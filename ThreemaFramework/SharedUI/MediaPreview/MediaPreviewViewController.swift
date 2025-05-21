@@ -365,8 +365,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     func addAccessibilityLabels() {
         textField.accessibilityLabel = #localize("add_caption_to_image")
         trashButton.accessibilityLabel = #localize("delete")
-        previewButton.accessibilityLabel = BundleUtil
-            .localizedString(forKey: "media_preview_preview_button_accessibility_label")
+        previewButton.accessibilityLabel = #localize("media_preview_preview_button_accessibility_label")
     }
         
     deinit {
@@ -476,7 +475,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     }
     
     @objc func sendButtonPressed(_ sender: Any) {
-        guard let itemDelegate else {
+        guard itemDelegate != nil else {
             fatalError("ItemDelegate must be set")
         }
 

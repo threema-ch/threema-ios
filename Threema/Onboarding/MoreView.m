@@ -67,7 +67,7 @@
     UIImage *iconImage = [[UIImage systemImageNamed:@"info.circle.fill"] applyingWithSymbolWeight:UIImageSymbolWeightRegular symbolScale:UIImageSymbolScaleMedium paletteColors:nil];
     _iconView = [[UIImageView alloc] initWithImage:iconImage];
     _iconView.contentMode = UIViewContentModeScaleAspectFit;
-    _iconView.tintColor = Colors.white;
+    _iconView.tintColor = UIColor.whiteColor;
     _iconView.frame = CGRectMake(4.0, 2.0, 22.0, 22.0);
     [self addSubview:_iconView];
 #endif
@@ -76,7 +76,7 @@
     CGRect rect = CGRectMake(X_OFFSET, 2.0, labelWidth, HEIGHT_TITLE);
     _moreLabel = [[UILabel alloc] initWithFrame:rect];
     _moreLabel.font = FONT_SMALL;
-    _moreLabel.textColor = UIColor.primary;
+    _moreLabel.textColor = UIColor.tintColor;
     _moreLabel.lineBreakMode = NSLineBreakByClipping;
     _moreLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     _moreLabel.text = [BundleUtil localizedStringForKey:@"more_information"];
@@ -100,7 +100,7 @@
     CGRect buttonRect = CGRectMake(0.0, y, 120.0, 36.0);
     _okButton = [[UIButton alloc] initWithFrame:buttonRect];
     _okButton.layer.cornerRadius = 3;
-    _okButton.backgroundColor = UIColor.primary;
+    _okButton.backgroundColor = UIColor.tintColor;
     _okButton.titleLabel.font = FONT_SMALL;
     [_okButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
 

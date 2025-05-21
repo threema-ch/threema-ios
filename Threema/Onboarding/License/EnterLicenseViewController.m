@@ -76,11 +76,11 @@
     _logoImageView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     
     if (TargetManagerObjc.isOnPrem) {
-        _descriptionLabel.text = [BundleUtil localizedStringForKey:@"enter_license_onprem_description"];
-        _threemaAdminInfoLabel.text = [BundleUtil localizedStringForKey:@"enter_license_onprem_admin_description"];
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_onprem_description"], TargetManagerObjc.appName];
+        _threemaAdminInfoLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_onprem_admin_description"], TargetManagerObjc.appName];
     } else {
-        _descriptionLabel.text = [BundleUtil localizedStringForKey:@"enter_license_description"];
-        _threemaAdminInfoLabel.text = [BundleUtil localizedStringForKey:@"enter_license_work_admin_description"];
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_description"], TargetManagerObjc.appName];
+        _threemaAdminInfoLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_work_admin_description"], TargetManagerObjc.appName];
     }
     
     [_confirmButton setTitle:[BundleUtil localizedStringForKey:@"next"] forState:UIControlStateNormal];
@@ -112,7 +112,17 @@
         _licensePasswordTextField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder attributes:@{NSForegroundColorAttributeName: THREEMA_COLOR_PLACEHOLDER}];
         _licensePasswordTextField.enabled = NO;
     }
-    _serverTextField.text = _licenseStore.onPremConfigUrl;
+    
+    if (_licenseStore.onPremConfigUrl != nil) {
+        _serverTextField.text = _licenseStore.onPremConfigUrl;
+    }
+    else if (TargetManagerObjc.isCustomOnPrem) {
+        NSString *serverUrl = [BundleUtil objectForInfoDictionaryKey:@"PresetOppfUrl"];
+        if (serverUrl != nil) {
+            _serverTextField.text = serverUrl;
+            _serverTextField.userInteractionEnabled = false;
+        }
+    }
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateLicenseText) name:kNotificationLicenseMissing object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(confirmLicenseCheck) name:kNotificationLicenseCheckSuccess object:nil];
@@ -121,11 +131,11 @@
     mainTapGesture.cancelsTouchesInView = false;
     [self.view addGestureRecognizer:mainTapGesture];
        
-    _confirmButton.backgroundColor = UIColor.primary;
+    _confirmButton.backgroundColor = UIColor.tintColor;
     [_confirmButton setTitleColor:[UIColor labelColor] forState:UIControlStateNormal];
-    _licenseUsernameTextField.tintColor = UIColor.primary;
-    _licensePasswordTextField.tintColor = UIColor.primary;
-    _serverTextField.tintColor = UIColor.primary;
+    _licenseUsernameTextField.tintColor = UIColor.tintColor;
+    _licensePasswordTextField.tintColor = UIColor.tintColor;
+    _serverTextField.tintColor = UIColor.tintColor;
         
     // use other spacing for small screens
     if (self.view.frame.size.height < 500.0) {
@@ -194,9 +204,9 @@
 }
 
 - (void)updateColors {
-    _licenseUsernameTextField.textColor = Colors.white;
-    _licensePasswordTextField.textColor = Colors.white;
-    _serverTextField.textColor = Colors.white;
+    _licenseUsernameTextField.textColor = UIColor.whiteColor;
+    _licensePasswordTextField.textColor = UIColor.whiteColor;
+    _serverTextField.textColor = UIColor.whiteColor;
     
     _licenseUsernameTextField.keyboardAppearance = UIKeyboardAppearanceDark;
     _licensePasswordTextField.keyboardAppearance = UIKeyboardAppearanceDark;
@@ -232,7 +242,7 @@
 - (void)showErrorMessage:(NSString *)errorMessage {
     [self showActivityIndicatorView:false];
         
-    UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[Colors.white, Colors.red]];
+    UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[UIColor.whiteColor, UIColor.systemRedColor]];
     _feedbackImageView.image = [UIImage systemImageNamed:@"exclamationmark.circle.fill" withConfiguration:config];
     _feedbackImageView.hidden = false;
     
@@ -243,7 +253,7 @@
 - (void)showSuccessMessage:(NSString *)successMessage {
     [self showActivityIndicatorView:false];
         
-    UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[Colors.white, Colors.green]];
+    UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[UIColor.systemGreenColor]];
     _feedbackImageView.image = [UIImage systemImageNamed:@"checkmark.circle.fill" withConfiguration:config];
     _feedbackImageView.hidden = false;
     
@@ -288,7 +298,7 @@
                         [self confirmLicenseCheck];
                     } onError:^(NSError *error) {
                         dispatch_async(dispatch_get_main_queue(), ^{
-                            [self showErrorMessage:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"]];
+                            [self showErrorMessage:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjc.appName]];
                             _confirmButton.hidden = false;
                         });
                     }];

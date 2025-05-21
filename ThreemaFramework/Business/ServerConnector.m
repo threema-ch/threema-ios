@@ -892,7 +892,7 @@ struct pktExtension {
                 
                 if (anotherConnectionError) {
                     NSBundle *bundle = [BundleUtil mainBundle];
-                    errorMessage = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"error_other_connection_for_same_identity_message"], [bundle objectForInfoDictionaryKey:@"CFBundleDisplayName"]];
+                    errorMessage = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"error_other_connection_for_same_identity_message"], TargetManagerObjc.localizedAppName, TargetManagerObjc.appName, TargetManagerObjc.appName];
                     info = [NSDictionary dictionaryWithObjectsAndKeys: [BundleUtil localizedStringForKey:@"error_other_connection_for_same_identity_title"], kKeyTitle, errorMessage, kKeyMessage, nil];
                 } else {
                     info = [NSDictionary dictionaryWithObjectsAndKeys: errorMessage, kKeyMessage, nil];
@@ -1424,7 +1424,7 @@ struct pktExtension {
     }
 
     if (code == ServerConnectionCloseCodeUnsupportedProtocolVersion) {
-        [self displayServerAlert:[BundleUtil localizedStringForKey:@"multi_device_unsupported_protocol_version_alert"]];
+        [self displayServerAlert:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_unsupported_protocol_version_alert"], TargetManagerObjc.appName, TargetManagerObjc.appName]];
     }
     else if (code == ServerConnectionCloseCodeDeviceSlotStateMismatch) {
         [self displayServerAlert:[BundleUtil localizedStringForKey:@"multi_device_slot_state_mismatch_alert"]];
@@ -1726,6 +1726,7 @@ struct pktExtension {
     });
 }
 
+
 #pragma mark - MessageProcessorDelegate
 
 - (void)beforeDecode {
@@ -1746,7 +1747,7 @@ struct pktExtension {
     });
 }
 
-- (void)incomingMessageChanged:(AbstractMessage * _Nonnull)message baseMessage:(BaseMessage * _Nonnull)baseMessage {
+- (void)incomingMessageChanged:(AbstractMessage * _Nonnull)message baseMessage:(BaseMessageEntity * _Nonnull)baseMessage {
     dispatch_sync(queueMessageProcessorDelegate, ^{
         [clientMessageProcessorDelegate incomingMessageChanged:message baseMessage:baseMessage];
     });

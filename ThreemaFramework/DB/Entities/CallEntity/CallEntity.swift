@@ -24,16 +24,17 @@ import Foundation
 @objc(CallEntity)
 public final class CallEntity: TMAManagedObject {
     
-    // Attributes
-    @NSManaged @objc(callID) public var callID: NSNumber?
-    @NSManaged @objc(date) public var date: NSDate?
+    // MARK: Attributes
+
+    @NSManaged public var callID: NSNumber?
+    @NSManaged public var date: Date?
    
-    // Relationships
+    // MARK: Relationships
+
     @NSManaged public var contact: ContactEntity?
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
     ///   - context: NSManagedObjectContext to insert created entity into
@@ -53,7 +54,7 @@ public final class CallEntity: TMAManagedObject {
             self.callID = callID as NSNumber
         }
         if let date {
-            self.date = date as NSDate
+            self.date = date
         }
         
         self.contact = contactEntity

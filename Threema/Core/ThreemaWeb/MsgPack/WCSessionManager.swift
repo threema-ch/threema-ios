@@ -174,7 +174,7 @@ extension WCSessionManager {
     
     /// Connect a old or new session. Search for correct session or create a new one
     @objc public func connect(authToken: Data?, wca: String?, publicKeyHash: String) {
-        canConnectToWebClient(completionHandler: { isValid in
+        canConnectToWebClient { isValid in
             if isValid == true {
                 if let webClientSession = WebClientSessionStore.shared.webClientSessionForHash(publicKeyHash) {
                     if webClientSession.isConnecting {
@@ -195,18 +195,15 @@ extension WCSessionManager {
                                 if AppDelegate.shared().isAppInBackground() {
                                     ThreemaUtilityObjC.sendErrorLocalNotification(
                                         #localize("webClient_scan_error_mdm_host_title"),
-                                        body: BundleUtil
-                                            .localizedString(forKey: "webClient_scan_error_mdm_host_message"),
+                                        body: #localize("webClient_scan_error_mdm_host_message"),
                                         userInfo: nil
                                     )
                                 }
                                 else if let rootVC = AppDelegate.keyWindow?.rootViewController {
                                     UIAlertTemplate.showAlert(
                                         owner: rootVC,
-                                        title: BundleUtil
-                                            .localizedString(forKey: "webClient_scan_error_mdm_host_title"),
-                                        message: BundleUtil
-                                            .localizedString(forKey: "webClient_scan_error_mdm_host_message")
+                                        title: #localize("webClient_scan_error_mdm_host_title"),
+                                        message: #localize("webClient_scan_error_mdm_host_message")
                                     )
                                 }
                                 webClientSession.isConnecting = false
@@ -239,7 +236,7 @@ extension WCSessionManager {
                     // session not found
                 }
             }
-        })
+        }
     }
     
     @objc public func connect(authToken: Data?, wca: String?, webClientSession: WebClientSessionEntity) {
@@ -542,7 +539,7 @@ extension WCSessionManager {
     
     private func responseUpdateMessage(
         with requestedConversationID: String,
-        message: BaseMessage,
+        message: BaseMessageEntity,
         conversation: ConversationEntity,
         objectMode: WebMessagesUpdate.ObjectMode,
         exclude requestID: String
@@ -565,7 +562,7 @@ extension WCSessionManager {
     
     private func responseUpdateMessage(
         with requestedConversationID: String,
-        message: BaseMessage,
+        message: BaseMessageEntity,
         conversation: ConversationEntity,
         objectMode: WebMessagesUpdate.ObjectMode
     ) {
@@ -584,7 +581,7 @@ extension WCSessionManager {
     }
     
     private func sendResponseUpdateMessage(
-        message: BaseMessage,
+        message: BaseMessageEntity,
         conversation: ConversationEntity,
         objectMode: WebMessagesUpdate.ObjectMode,
         session: WCSession
@@ -687,22 +684,19 @@ extension WCSessionManager {
             if let managedObjectContext = notification.object as? NSManagedObjectContext {
                 for managedObject in managedObjectContext.insertedObjects {
                     switch managedObject {
-                    case is ContactEntity:
-                        let contact = managedObject as! ContactEntity
-                        DDLogNotice("New contact added on wrong context \(contact.identity)")
-                    case is BaseMessage:
-                        let baseMessage = managedObject as! BaseMessage
-                        DDLogNotice("New message added on wrong context \(baseMessage.id.hexString)")
-                    case is ConversationEntity:
-                        let conversation = managedObject as! ConversationEntity
-                        if conversation.isGroup {
+                    case let managedObject as ContactEntity:
+                        DDLogNotice("New contact added on wrong context \(managedObject.identity)")
+                    case let managedObject as BaseMessageEntity:
+                        DDLogNotice("New message added on wrong context \(managedObject.id.hexString)")
+                    case let managedObject as ConversationEntity:
+                        if managedObject.isGroup {
                             DDLogNotice(
-                                "New conversation added on wrong context \(conversation.groupID?.hexString ?? "?")"
+                                "New conversation added on wrong context \(managedObject.groupID?.hexString ?? "?")"
                             )
                         }
                         else {
                             DDLogNotice(
-                                "New conversation added on wrong context \(conversation.contact?.identity ?? "?")"
+                                "New conversation added on wrong context \(managedObject.contact?.identity ?? "?")"
                             )
                         }
                     default:
@@ -711,22 +705,19 @@ extension WCSessionManager {
                 }
                 for managedObject in managedObjectContext.updatedObjects {
                     switch managedObject {
-                    case is ContactEntity:
-                        let contact = managedObject as! ContactEntity
-                        DDLogNotice("Updated contact on wrong context \(contact.identity)")
-                    case is BaseMessage:
-                        let baseMessage = managedObject as! BaseMessage
-                        DDLogNotice("Updated message on wrong context \(baseMessage.id.hexString)")
-                    case is ConversationEntity:
-                        let conversation = managedObject as! ConversationEntity
-                        if conversation.isGroup {
+                    case let managedObject as ContactEntity:
+                        DDLogNotice("Updated contact on wrong context \(managedObject.identity)")
+                    case let managedObject as BaseMessageEntity:
+                        DDLogNotice("Updated message on wrong context \(managedObject.id.hexString)")
+                    case let managedObject as ConversationEntity:
+                        if managedObject.isGroup {
                             DDLogNotice(
-                                "Updated conversation on wrong context \(conversation.groupID?.hexString ?? "?")"
+                                "Updated conversation on wrong context \(managedObject.groupID?.hexString ?? "?")"
                             )
                         }
                         else {
                             DDLogNotice(
-                                "Updated conversation on wrong context \(conversation.contact?.identity ?? "?")"
+                                "Updated conversation on wrong context \(managedObject.contact?.identity ?? "?")"
                             )
                         }
                     default:
@@ -740,9 +731,9 @@ extension WCSessionManager {
     private func handleUpdatedObjects(updatedObjects: Set<NSManagedObject>, _ dirtyObjects: Bool = false) {
         for managedObject in updatedObjects {
             switch managedObject {
-            case is ContactEntity:
-                updateContact(managedObject as! ContactEntity, dirtyObjects: dirtyObjects)
-            case is BaseMessage:
+            case let managedObject as ContactEntity:
+                updateContact(managedObject, dirtyObjects: dirtyObjects)
+            case let managedObject as BaseMessageEntity:
                 // This is a workaround for an issue that was introduced with IOS-3233 / IOS-3212
                 // With the new changes we do not insert new file messages immediately but wait until they are properly
                 // decoded (we check if the mimeType has changed/been set) and only then insert them into the web
@@ -753,12 +744,12 @@ extension WCSessionManager {
                 // so the user impact is low) instead of fixing it properly.
                 if let fileMessageEntity = managedObject as? FileMessageEntity,
                    fileMessageEntity.changedValues().keys.contains("mimeType") {
-                    insertBaseMessage(managedObject as! BaseMessage)
+                    insertBaseMessage(managedObject)
                     continue
                 }
-                updateBaseMessage(managedObject as! BaseMessage, dirtyObjects: dirtyObjects)
-            case is ConversationEntity:
-                updateConversation(managedObject as! ConversationEntity, dirtyObjects: dirtyObjects)
+                updateBaseMessage(managedObject, dirtyObjects: dirtyObjects)
+            case let managedObject as ConversationEntity:
+                updateConversation(managedObject, dirtyObjects: dirtyObjects)
             default:
                 break
             }
@@ -768,9 +759,9 @@ extension WCSessionManager {
     private func handleInsertedObjects(insertedObjects: Set<NSManagedObject>) {
         for managedObject in insertedObjects {
             switch managedObject {
-            case is ContactEntity:
-                insertContact(managedObject as! ContactEntity)
-            case is BaseMessage:
+            case let managedObject as ContactEntity:
+                insertContact(managedObject)
+            case let managedObject as BaseMessageEntity:
                 if let fileMessageEntity = managedObject as? FileMessageEntity {
                     guard fileMessageEntity.fileName != nil, fileMessageEntity.fileSize != nil,
                           fileMessageEntity.mimeType != nil else {
@@ -778,9 +769,9 @@ extension WCSessionManager {
                     }
                 }
                 
-                insertBaseMessage(managedObject as! BaseMessage)
-            case is ConversationEntity:
-                insertConversation(managedObject as! ConversationEntity)
+                insertBaseMessage(managedObject)
+            case let managedObject as ConversationEntity:
+                insertConversation(managedObject)
             default:
                 break
             }
@@ -790,12 +781,12 @@ extension WCSessionManager {
     private func handleDeletedObjects(deletedObjects: Set<NSManagedObject>) {
         for managedObject in deletedObjects {
             switch managedObject {
-            case is ContactEntity:
-                deleteContact(managedObject as! ContactEntity)
-            case is BaseMessage:
-                deleteBaseMessage(managedObject as! BaseMessage)
-            case is ConversationEntity:
-                deleteConversation(managedObject as! ConversationEntity)
+            case let managedObject as ContactEntity:
+                deleteContact(managedObject)
+            case let managedObject as BaseMessageEntity:
+                deleteBaseMessage(managedObject)
+            case let managedObject as ConversationEntity:
+                deleteConversation(managedObject)
             default:
                 break
             }
@@ -839,7 +830,7 @@ extension WCSessionManager {
         }
     }
     
-    private func updateBaseMessage(_ baseMessage: BaseMessage, dirtyObjects: Bool = false) {
+    private func updateBaseMessage(_ baseMessage: BaseMessageEntity, dirtyObjects: Bool = false) {
         let changedValues = baseMessage.changedValuesForCurrentEvent()
         
         let backgroundKey = kAppAckBackgroundTask + SwiftUtils.pseudoRandomString(length: 10)
@@ -848,14 +839,13 @@ extension WCSessionManager {
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
             guard let currentMessage = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: baseMessage.objectID) as? BaseMessage,
-                let conversation = currentMessage.conversation else {
+                .getManagedObject(by: baseMessage.objectID) as? BaseMessageEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
             
             DDLogNotice("Updated message on main context \(currentMessage.id.hexString)")
-                        
+            let conversation = currentMessage.conversation
             let identity = conversation.isGroup ? conversation.groupID!.hexEncodedString() : self
                 .baseMessageIdentity(baseMessage)
             self.processBaseMessageUpdate(baseMessage: currentMessage, changedValues: changedValues, identity: identity)
@@ -877,7 +867,11 @@ extension WCSessionManager {
         }
     }
     
-    private func processBaseMessageUpdate(baseMessage: BaseMessage, changedValues: [String: Any], identity: String) {
+    private func processBaseMessageUpdate(
+        baseMessage: BaseMessageEntity,
+        changedValues: [String: Any],
+        identity: String
+    ) {
         if shouldSendUpdate(changedValues: changedValues) {
             let objectMode: WebMessagesUpdate.ObjectMode = .modified
             responseUpdateMessage(
@@ -1015,21 +1009,20 @@ extension WCSessionManager {
         }
     }
     
-    private func insertBaseMessage(_ baseMessage: BaseMessage) {
+    private func insertBaseMessage(_ baseMessage: BaseMessageEntity) {
         let backgroundKey = kAppAckBackgroundTask + SwiftUtils.pseudoRandomString(length: 10)
         BackgroundTaskManager.shared.newBackgroundTask(
             key: backgroundKey,
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
             guard let currentMessage = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: baseMessage.objectID) as? BaseMessage,
-                let conversation = currentMessage.conversation else {
+                .getManagedObject(by: baseMessage.objectID) as? BaseMessageEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
             
             DDLogNotice("New message added on main context \(currentMessage.id.hexString)")
-            
+            let conversation = currentMessage.conversation
             let id: String =
                 if conversation.isGroup,
                 let groupID = conversation.groupID {
@@ -1066,17 +1059,14 @@ extension WCSessionManager {
         responseUpdateContact(contact: contact, objectMode: objectMode)
     }
     
-    private func deleteBaseMessage(_ baseMessage: BaseMessage) {
+    private func deleteBaseMessage(_ baseMessage: BaseMessageEntity) {
         let changedValues = baseMessage.changedValues()
         let changedValuesForCurrentEvent = baseMessage.changedValuesForCurrentEvent()
         let identity: String?
-        var conversation: ConversationEntity?
+        var conversation: ConversationEntity? = baseMessage.conversation
         
         if changedValues.keys.contains("conversation"), changedValuesForCurrentEvent["conversation"] != nil {
             conversation = changedValuesForCurrentEvent["conversation"] as? ConversationEntity
-        }
-        if let conv = baseMessage.conversation {
-            conversation = conv
         }
         
         if let conv = conversation {
@@ -1120,25 +1110,25 @@ extension WCSessionManager {
         responseUpdateDeletedConversation(conversation: conversation, contact: contact, objectMode: objectMode)
     }
     
-    private func processTextMessageResponse(_ baseMessage: BaseMessage, _ id: String) {
+    private func processTextMessageResponse(_ baseMessage: BaseMessageEntity, _ id: String) {
         var createTextMessageResponse: WebCreateTextMessageResponse?
-        if baseMessage.webRequestID != nil {
-            if let createTextMessageRequest = webRequestMessage(
-                for: baseMessage
-                    .webRequestID
-            ) as? WebCreateTextMessageRequest {
-                createTextMessageResponse = WebCreateTextMessageResponse(
-                    message: baseMessage,
-                    request: createTextMessageRequest
-                )
-            }
+        // swiftformat:disable:next acronyms
+        if let webRequestID = baseMessage.webRequestId, let createTextMessageRequest = webRequestMessage(
+            for: webRequestID
+        ) as? WebCreateTextMessageRequest {
+            createTextMessageResponse = WebCreateTextMessageResponse(
+                message: baseMessage,
+                request: createTextMessageRequest
+            )
         }
         
         let objectMode: WebMessagesUpdate.ObjectMode = .new
-        if createTextMessageResponse != nil, baseMessage.webRequestID != nil {
+        
+        // swiftformat:disable:next acronyms
+        if createTextMessageResponse != nil, let webRequestID = baseMessage.webRequestId {
             DDLogVerbose("[Threema Web] MessagePack -> Send create/textMessage")
             sendMessagePackToRequestedSession(
-                with: baseMessage.webRequestID!,
+                with: webRequestID,
                 messagePack: createTextMessageResponse!.messagePack(),
                 blackListed: false
             )
@@ -1147,9 +1137,9 @@ extension WCSessionManager {
                 message: baseMessage,
                 conversation: baseMessage.conversation,
                 objectMode: objectMode,
-                exclude: baseMessage.webRequestID!
+                exclude: webRequestID
             )
-            removeWebRequestMessage(with: baseMessage.webRequestID!)
+            removeWebRequestMessage(with: webRequestID)
         }
         else {
             responseUpdateMessage(
@@ -1169,7 +1159,7 @@ extension WCSessionManager {
         )
     }
     
-    private func processBaseMessageResponse(_ baseMessage: BaseMessage, _ id: String) {
+    private func processBaseMessageResponse(_ baseMessage: BaseMessageEntity, _ id: String) {
         let objectMode: WebMessagesUpdate.ObjectMode = .new
         responseUpdateMessage(
             with: id,
@@ -1186,31 +1176,30 @@ extension WCSessionManager {
         )
     }
     
-    private func processFileMessageResponse(_ baseMessage: BaseMessage, _ id: String) {
+    private func processFileMessageResponse(_ baseMessage: BaseMessageEntity, _ id: String) {
         var createFileMessageResponse: WebCreateFileMessageResponse?
         var backgroundIdentifier: String?
         
-        if baseMessage.webRequestID != nil {
-            if let createFileMessageRequest = webRequestMessage(
-                for: baseMessage
-                    .webRequestID
-            ) as? WebCreateFileMessageRequest {
-                createFileMessageRequest.ack = WebAbstractMessageAcknowledgement(baseMessage.webRequestID, true, nil)
-                createFileMessageResponse = WebCreateFileMessageResponse(
-                    message: baseMessage,
-                    request: createFileMessageRequest
-                )
-                if let bgIdentifier = createFileMessageRequest.backgroundIdentifier {
-                    backgroundIdentifier = bgIdentifier
-                }
+        // swiftformat:disable:next acronyms
+        if let webRequestID = baseMessage.webRequestId, let createFileMessageRequest = webRequestMessage(
+            for: webRequestID
+        ) as? WebCreateFileMessageRequest {
+            createFileMessageRequest.ack = WebAbstractMessageAcknowledgement(webRequestID, true, nil)
+            createFileMessageResponse = WebCreateFileMessageResponse(
+                message: baseMessage,
+                request: createFileMessageRequest
+            )
+            if let bgIdentifier = createFileMessageRequest.backgroundIdentifier {
+                backgroundIdentifier = bgIdentifier
             }
         }
         
         let objectMode: WebMessagesUpdate.ObjectMode = .new
-        if createFileMessageResponse != nil, baseMessage.webRequestID != nil {
+        // swiftformat:disable:next acronyms
+        if createFileMessageResponse != nil, let webRequestID = baseMessage.webRequestId {
             DDLogVerbose("[Threema Web] MessagePack -> Send create/fileMessage")
             sendMessagePackToRequestedSession(
-                with: baseMessage.webRequestID!,
+                with: webRequestID,
                 messagePack: createFileMessageResponse!.messagePack(),
                 blackListed: false
             )
@@ -1219,9 +1208,9 @@ extension WCSessionManager {
                 message: baseMessage,
                 conversation: baseMessage.conversation,
                 objectMode: objectMode,
-                exclude: baseMessage.webRequestID!
+                exclude: webRequestID
             )
-            removeWebRequestMessage(with: baseMessage.webRequestID!)
+            removeWebRequestMessage(with: webRequestID)
         }
         else {
             responseUpdateMessage(
@@ -1245,12 +1234,12 @@ extension WCSessionManager {
         }
     }
         
-    private func baseMessageIdentity(_ baseMessage: BaseMessage) -> String {
+    private func baseMessageIdentity(_ baseMessage: BaseMessageEntity) -> String {
         if let sender = baseMessage.sender {
             return sender.identity
         }
         
-        if let contact = baseMessage.conversation?.contact {
+        if let contact = baseMessage.conversation.contact {
             return contact.identity
         }
         

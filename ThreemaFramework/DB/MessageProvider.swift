@@ -85,7 +85,7 @@ public final class MessageProvider: NSObject {
     
     // MARK: - Private properties
     
-    private let fetchedResultsController: NSFetchedResultsController<BaseMessage>
+    private let fetchedResultsController: NSFetchedResultsController<BaseMessageEntity>
     
     private static let configuration = TestConfiguration()
     
@@ -194,7 +194,7 @@ public final class MessageProvider: NSObject {
         self.fetchedResultsController = NSFetchedResultsController(
             fetchRequest: localMessageFetcher.messagesFetchRequest,
             managedObjectContext: context,
-            sectionNameKeyPath: #keyPath(BaseMessage.sectionDateString),
+            sectionNameKeyPath: #keyPath(BaseMessageEntity.sectionDateString),
             cacheName: nil
         )
         
@@ -290,8 +290,8 @@ public final class MessageProvider: NSObject {
     }
     
     private func configureInitialFetchRequest(around date: Date?) {
-        // Needed for sectioning (BaseMessage.sectionDateString)
-        fetchedResultsController.fetchRequest.propertiesToFetch = BaseMessage.sectioningKeyPaths
+        // Needed for sectioning (BaseMessageEntity.sectionDateString)
+        fetchedResultsController.fetchRequest.propertiesToFetch = BaseMessageEntity.sectioningKeyPaths
         
         if let date {
             configureLoadingMessages(around: date)
@@ -346,16 +346,16 @@ public final class MessageProvider: NSObject {
                         guard let fetchedObjs = self.fetchedResultsController.fetchedObjects,
                               !fetchedObjs.isEmpty,
                               let arr = fetchedObjs as NSArray?,
-                              let lastObj = arr[max(0, arr.count - 1)] as? BaseMessage,
-                              let firstObj = arr[0] as? BaseMessage else {
+                              let lastObj = arr[max(0, arr.count - 1)] as? BaseMessageEntity,
+                              let firstObj = arr[0] as? BaseMessageEntity else {
                             return seal(nil)
                         }
                         
                         if let prevFetchedObjs {
                             guard !prevFetchedObjs.isEmpty,
                                   let prevArr = prevFetchedObjs as NSArray?,
-                                  let prevLastObj = prevArr[max(0, prevArr.count - 1)] as? BaseMessage,
-                                  let prevFirstObj = prevArr[0] as? BaseMessage else {
+                                  let prevLastObj = prevArr[max(0, prevArr.count - 1)] as? BaseMessageEntity,
+                                  let prevFirstObj = prevArr[0] as? BaseMessageEntity else {
                                 DDLogError("Couldn't access previous state")
                                 return seal(nil)
                             }
@@ -386,7 +386,7 @@ public final class MessageProvider: NSObject {
             guard let fetchedObjs = fetchedResultsController.fetchedObjects,
                   !fetchedObjs.isEmpty,
                   let arr = fetchedObjs as NSArray?,
-                  let lastObj = arr[max(0, arr.count - 1)] as? BaseMessage else {
+                  let lastObj = arr[max(0, arr.count - 1)] as? BaseMessageEntity else {
                 return Guarantee { $0(nil) }
             }
             
@@ -570,9 +570,9 @@ public final class MessageProvider: NSObject {
     /// Get `BaseMessage` for id on main queue
     /// - Parameter objectID: Object to load
     /// - Returns: `BaseMessage` if one is found
-    public func message(for objectID: NSManagedObjectID) -> BaseMessage? {
+    public func message(for objectID: NSManagedObjectID) -> BaseMessageEntity? {
         // TODO: (IOS-2014) Is there a way to optimize this by using a fetch request with batch sizes?
-        guard let message = entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage else {
+        guard let message = entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessageEntity else {
             DDLogVerbose("Object not found or unable to cast to BaseMessage")
             return nil
         }

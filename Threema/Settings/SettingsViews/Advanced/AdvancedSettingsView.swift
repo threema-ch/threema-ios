@@ -51,25 +51,6 @@ struct AdvancedSettingsView: View {
                 Text(#localize("settings_advanced_networking_section_header"))
             }
             
-            // MARK: Sensor
-
-            Section {
-                Toggle(isOn: $settingsVM.enableProximityMonitoring) {
-                    Text(#localize("settings_advanced_proximity_monitoring_title"))
-                }
-            } header: {
-                Text(#localize("settings_advanced_proximity_monitoring_section_header"))
-            } footer: {
-                if settingsVM.enableProximityMonitoring {
-                    Text(#localize("settings_advanced_proximity_monitoring_section_footer_on"))
-                }
-                else {
-                    Text(
-                        #localize("settings_advanced_proximity_monitoring_section_footer_off")
-                    )
-                }
-            }
-            
             // MARK: DebugLog
 
             Section {
@@ -281,12 +262,15 @@ struct AdvancedSettingsView: View {
                 } header: {
                     Text(#localize("settings_advanced_support_settings_header_title"))
                 } footer: {
-                    Text(#localize("settings_advanced_support_settings_footer_title"))
+                    Text(String.localizedStringWithFormat(
+                        #localize("settings_advanced_support_settings_footer_title"),
+                        TargetManager.localizedAppName
+                    ))
                 }
             }
         }
         .navigationBarTitle(#localize("settings_advanced"), displayMode: .inline)
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
         .onAppear {
             logMIME()
         }

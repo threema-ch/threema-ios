@@ -23,6 +23,7 @@ import Foundation
 protocol QuickActionUpdate {
     func reload()
     func hide()
+    func popOverSourceView() -> UIView?
 }
 
 /// Description of a quick action

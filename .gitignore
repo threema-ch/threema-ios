@@ -39,3 +39,6 @@ fastlane/test_output
 fastlane/report.xml
 fastlane/symbolicate-crash
 export/
+
+## We don't want to commit binaries
+*.xcframework

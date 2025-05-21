@@ -102,8 +102,7 @@ class UserNotificationContentTests: XCTestCase {
         databasePreparer.save {
             let contact = databasePreparer.createContact(
                 publicKey: expectedMessageID,
-                identity: expectedIdendity,
-                verificationLevel: 0
+                identity: expectedIdendity
             )
             databasePreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
@@ -141,8 +140,7 @@ class UserNotificationContentTests: XCTestCase {
         databasePreparer.save {
             let contact = databasePreparer.createContact(
                 publicKey: expectedMessageID,
-                identity: expectedIdendity,
-                verificationLevel: 0
+                identity: expectedIdendity
             )
             let group = databasePreparer.createGroupEntity(
                 groupID: BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!,

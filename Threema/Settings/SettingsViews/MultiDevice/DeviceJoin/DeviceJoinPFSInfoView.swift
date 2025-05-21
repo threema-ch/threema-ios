@@ -33,7 +33,10 @@ struct DeviceJoinPFSInfoView: View {
         VStack {
             ScrollView {
                 DeviceJoinHeaderView(
-                    title: #localize("settings_list_threema_desktop_title"),
+                    title: String.localizedStringWithFormat(
+                        #localize("settings_list_threema_desktop_title"),
+                        TargetManager.appName
+                    ),
                     description: String.localizedStringWithFormat(
                         #localize("multi_device_join_perfect_forward_secrecy_info"),
                         ThreemaURLProvider.multiDeviceLimit.absoluteString

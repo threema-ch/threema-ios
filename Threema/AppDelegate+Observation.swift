@@ -79,7 +79,10 @@ extension AppDelegate {
                     
                     UIAlertTemplate.showTimedAlert(
                         owner: AppDelegate.shared().currentTopViewController(),
-                        title: #localize("threema_safe_company_mdm_password_changed_title"),
+                        title: String.localizedStringWithFormat(
+                            #localize("threema_safe_company_mdm_password_changed_title"),
+                            TargetManager.localizedAppName
+                        ),
                         message: #localize("threema_safe_company_mdm_password_changed_message"),
                         action1: UIAlertAction(title: #localize("cancel"), style: .cancel),
                         action2: actionConfirm,

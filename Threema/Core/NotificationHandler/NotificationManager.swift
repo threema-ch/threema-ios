@@ -25,7 +25,7 @@ import ThreemaMacros
 
 public protocol NotificationManagerProtocol {
     func updateUnreadMessagesCount()
-    func updateUnreadMessagesCount(baseMessage: BaseMessage?)
+    func updateUnreadMessagesCount(baseMessage: BaseMessageEntity?)
 }
 
 @objc class NotificationManager: NSObject, NotificationManagerProtocol {
@@ -78,7 +78,7 @@ public protocol NotificationManagerProtocol {
 
     /// Update badge with unread messages count.
     /// - Parameter baseMessage: Recalculate unread messages count for underlying conversation
-    @objc final func updateUnreadMessagesCount(baseMessage: BaseMessage?) {
+    @objc final func updateUnreadMessagesCount(baseMessage: BaseMessageEntity?) {
         // Calc and update unread messages badge in background
         Task {
             await businessInjector.runInBackground { backgroundBusinessInjector in
@@ -88,9 +88,9 @@ public protocol NotificationManagerProtocol {
 
                     if let baseMessageObjectID = baseMessage?.objectID,
                        let localBaseMessage = backgroundBusinessInjector.entityManager.entityFetcher
-                       .existingObject(with: baseMessageObjectID) as? BaseMessage,
-                       let conversation = localBaseMessage.conversation {
-                        totalCount = unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [conversation])
+                       .existingObject(with: baseMessageObjectID) as? BaseMessageEntity {
+                        totalCount = unreadMessages
+                            .totalCount(doCalcUnreadMessagesCountOf: [localBaseMessage.conversation])
                     }
                     else {
                         totalCount = unreadMessages.totalCount()
@@ -319,7 +319,10 @@ extension NotificationManager {
     }
     
     final class func showNoMicrophonePermissionNotification() {
-        let title = #localize("call_voip_not_supported_title")
+        let title = String.localizedStringWithFormat(
+            #localize("call_voip_not_supported_title"),
+            TargetManager.localizedAppName
+        )
         let message = String.localizedStringWithFormat(
             #localize("alert_no_access_message_microphone"),
             TargetManager.appName

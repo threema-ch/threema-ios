@@ -25,9 +25,15 @@
 PRODUCT_NAME = $(APP_NAME)
 PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_IDENTIFIER)
 
+/// URL Scheme
+APP_URL_TYPE_IDENTIFIER = $(BUNDLE_BASE_IDENTIFIER).urlscheme
+
 /// App Icons
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
 ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO
 
 /// Launch Story Board Name
 INFOPLIST_KEY_UILaunchStoryboardName = ThreemaOnPremLaunchScreen
+
+
+PRIVACY_DESCRIPTION_CONTACTS = The address book is used to find other users when contact synchronization is on.

@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "LocationViewController.h"
-#import "ContactEntity.h"
 #import "MyIdentityStore.h"
 #import "UIImage+ColoredImage.h"
 #import "BundleUtil.h"
@@ -192,7 +191,7 @@
         if (markerAnnotation == nil) {
             markerAnnotation = [[MKMarkerAnnotationView alloc] initWithAnnotation:self reuseIdentifier:markerAnnotationIdentifier];
             markerAnnotation.canShowCallout = true;
-            markerAnnotation.markerTintColor = UIColor.primary;
+            markerAnnotation.markerTintColor = UIColor.tintColor;
             markerAnnotation.animatesWhenAdded = true;
         }
         return markerAnnotation;

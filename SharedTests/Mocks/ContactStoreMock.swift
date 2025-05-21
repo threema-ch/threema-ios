@@ -159,6 +159,21 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
     ) {
         // no-op
     }
+    
+    func addWorkContact(
+        with identity: String,
+        publicKey: Data,
+        firstname: String?,
+        lastname: String?,
+        csi: String?,
+        jobTitle: String?,
+        department: String?,
+        acquaintanceLevel: ContactAcquaintanceLevel,
+        onCompletion: @escaping (ContactEntity) -> Void,
+        onError: @escaping (any Error) -> Void
+    ) {
+        // nop-op
+    }
 
     func addAsWork(identities: NSOrderedSet, contactSyncer mediatorSyncableContacts: MediatorSyncableContacts?) {
         // no-op

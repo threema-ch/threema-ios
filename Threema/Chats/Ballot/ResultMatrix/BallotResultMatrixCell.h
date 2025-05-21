@@ -19,13 +19,13 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "BallotChoice.h"
 
+@class BallotChoiceEntity;
 @interface BallotResultMatrixCell : UIView
 
 - (void)setBorderColor: (UIColor *)color;
 - (void)setBorderWidth: (CGFloat)width;
 - (void)setColorForChoice:(UIColor *)color;
-- (void)updateResultForChoice:(BallotChoice *)choice andParticipant:(NSString *)participant;
+- (void)updateResultForChoice:(BallotChoiceEntity *)choice andParticipant:(NSString *)participant;
 
 @end

@@ -22,21 +22,21 @@ import CoreData
 import Foundation
 
 @objc(TextMessageEntity)
-public final class TextMessageEntity: BaseMessage {
+public final class TextMessageEntity: BaseMessageEntity {
     
-    // Attributes
+    // MARK: Attributes
+
     // swiftformat:disable:next acronyms
-    @NSManaged @objc(quotedMessageId) public var quotedMessageId: Data?
-    @NSManaged @objc(text) public var text: String
+    @NSManaged public var quotedMessageId: Data?
+    @NSManaged public var text: String
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
-    ///   - data: Data for the entity
-    ///   - message: AudioMessageEntity the entity belongs to
+    ///   - context: `NSManagedObjectContext` to insert created entity into
+    ///   - data: `Data` for the entity
+    ///   - message: `AudioMessageEntity` the entity belongs to
     public init(context: NSManagedObjectContext, text: String, quotedMessageID: Data? = nil) {
         let entity = NSEntityDescription.entity(forEntityName: "TextMessage", in: context)!
         super.init(entity: entity, insertInto: context)

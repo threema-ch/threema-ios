@@ -71,12 +71,12 @@ class MediatorReflectedContactSyncProcessor {
                 }
 
                 // Mandatory fields
-                contact.identity = syncContact.identity
+                contact.setIdentity(to: syncContact.identity)
                 contact.publicKey = syncContact.publicKey
                 if syncContact.hasCreatedAt {
                     contact.createdAt = syncContact.createdAtNullable?.date
                 }
-                contact.verificationLevel = NSNumber(integerLiteral: Int(kVerificationLevelUnverified))
+                contact.contactVerificationLevel = .unverified
             }
 
             self.update(with: syncContact)
@@ -176,7 +176,7 @@ class MediatorReflectedContactSyncProcessor {
                                     contactStore: frameworkInjector.contactStore
                                 )
 
-                                if contactEntity.isContactHidden {
+                                if contactEntity.isHidden {
                                     frameworkInjector.entityManager.entityDestroyer
                                         .deleteOneToOneConversation(for: contactEntity)
                                 }

@@ -30,6 +30,9 @@ public struct AppEnvironment {
     @NotificationPublisher(.showDesktopSettings)
     var showDesktopSettings
     
+    @NotificationPublisher(Notification.Name(kNotificationSettingStoreSynchronization))
+    var mdmChanged
+    
     @NotificationPublisher(.navigateSafeSetup)
     var showSafeSetup
     

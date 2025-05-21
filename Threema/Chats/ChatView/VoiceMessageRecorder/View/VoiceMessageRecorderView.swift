@@ -30,14 +30,38 @@ protocol VoiceMessageRecorderViewDelegate: AnyObject {
 }
 
 struct VoiceMessageRecorderView: View {
-    @ObservedObject var model: Model
     @Environment(\.sizeCategory) var sizeCategory
+    @ObservedObject var model: VoiceMessageRecorderViewModel
     @State var renderer = LinearWaveformRenderer()
     
-    private weak var delegate: VoiceMessageRecorderViewDelegate?
     @AccessibilityFocusState(for: .voiceOver) private var isStopFocused: Bool
     
-    var container: some View {
+    // MARK: - Private properties
+    
+    private weak var delegate: VoiceMessageRecorderViewDelegate?
+    
+    private var shouldShowFullWaveform: Bool {
+        !(model.recordingState == .recording)
+    }
+    
+    private var minBarHeight: CGFloat {
+        if sizeCategory < .large {
+            ChatViewConfiguration.ChatTextView.smallerContentSizeConfigurationCornerRadius * 2
+        }
+        else {
+            ChatViewConfiguration.ChatTextView.cornerRadius * 2
+        }
+    }
+    
+    private var leftInset: CGFloat {
+        model.recordingState.recordingStopped
+            ? minBarHeight
+            : ChatViewConfiguration.ChatBar.textInputButtonSpacing
+    }
+    
+    // MARK: - Subviews
+    
+    private var container: some View {
         HStack(
             spacing: ChatViewConfiguration.ChatBar.textInputButtonSpacing
         ) {
@@ -49,28 +73,15 @@ struct VoiceMessageRecorderView: View {
         .frame(height: minBarHeight)
     }
     
-    var body: some View {
-        container
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    isStopFocused = true
-                }
-            }
-            .accessibilityAction(.magicTap) {
-                model.voiceMessageManager.handleMagicTap()
-            }
-    }
-    
-    private var shouldShowFullWaveform: Bool {
-        !model.recordingState.isRecording
-    }
+    // MARK: WaveForm
     
     private var waveFormContainer: some View {
         HStack {
             Spacer(minLength: leftInset)
             Group {
                 waveform
-                    .horizontalFadeOut(fadeLength: 30)
+                    .horizontalFadeOut(fadeLength: model.recordingState == .recording ? 5 : 0)
+                    .padding(.vertical, 5)
                 durationView
             }.applyIf(sizeCategory.isAccessibilityCategory) { _ in
                 HStack {
@@ -80,21 +91,18 @@ struct VoiceMessageRecorderView: View {
             }
             Spacer(minLength: minBarHeight)
         }
-        .animation(.easeIn.speed(2.0), value: leftInset)
         .foregroundColor(.gray)
         .overlay(alignment: .trailing) {
-            if model.recordingState.isRecording {
+            if model.recordingState == .recording {
                 stopButton
-                    .disabled(model.recordingState == .recordingStarting)
             }
 
-            if model.recordingState.isStopped {
+            if model.recordingState.recordingStopped {
                 addButton
-                    .disabled(model.recordingState == .recordingStopping)
             }
         }
         .overlay(alignment: .leading) {
-            if model.recordingState.isStopped {
+            if model.recordingState.recordingStopped {
                 playPauseButton
             }
         }
@@ -113,29 +121,30 @@ struct VoiceMessageRecorderView: View {
     private var waveform: some View {
         WaveformLiveCanvas(
             samples: model.samples,
-            configuration: model.configuration,
-            renderer: renderer,
-            shouldDrawSilencePadding: model.shouldDrawSilence
+            configuration: model.waveFormConfiguration,
+            renderer: renderer
         )
         .opacity(shouldShowFullWaveform ? 0.0 : 1.0)
-        .animation(.easeInOut, value: shouldShowFullWaveform)
+        .animation(.none, value: shouldShowFullWaveform)
         .foregroundColor(.clear)
         .overlay {
             if shouldShowFullWaveform {
                 ProgressViewWaveform()
                     .environmentObject(model)
-                    .animation(.easeInOut, value: shouldShowFullWaveform)
+                    .animation(.none, value: shouldShowFullWaveform)
             }
         }
         .background {
             GeometryReader { geometry in
-                let modified = model.configuration.with(size: geometry.size)
+                let modified = model.waveFormConfiguration.with(size: geometry.size)
                 VStack { }.onAppear {
                     model.loadSamples(count: Int(modified.size.width * modified.scale))
                 }
             }
         }
     }
+    
+    // MARK: Duration
     
     private var durationView: some View {
         Text(DateFormatter.timeFormatted(model.duration) ?? "00:00")
@@ -145,51 +154,18 @@ struct VoiceMessageRecorderView: View {
             .accessibilityLabel(ThreemaUtility.accessibilityString(atTime: model.duration, with: #localize("duration")))
     }
     
-    private var minBarHeight: CGFloat {
-        if sizeCategory < .large {
-            ChatViewConfiguration.ChatTextView.smallerContentSizeConfigurationCornerRadius * 2
-        }
-        else {
-            ChatViewConfiguration.ChatTextView.cornerRadius * 2
-        }
-    }
+    // MARK: Buttons
     
-    private var leftInset: CGFloat {
-        model.recordingState.isStopped
-            ? minBarHeight
-            : ChatViewConfiguration.ChatBar.textInputButtonSpacing
-    }
-    
-    private func willDismiss() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: DispatchWorkItem(block: {
-            if model.recordingState.isRecording {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-            }
-        }))
-        model.recordingState = .none
-        model.willDismissView()
-        delegate?.willDismissRecorder()
-    }
-    
-    private func willSend() {
-        model.send()
-        delegate?.willDismissRecorder()
-    }
-}
-
-// MARK: - Buttons
-
-extension VoiceMessageRecorderView {
     private var stopButton: some View {
         buildButton(
             "stop.circle.fill",
             .tint,
-            .tint.opacity(0.2),
-            {
-                model.stop()
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            }
-        )
+            .tint.opacity(0.2)
+        ) {
+            model.stopRecording()
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        }
+        
         .accessibilityLabel(#localize("stop"))
         .accessibilityFocused($isStopFocused)
     }
@@ -197,18 +173,22 @@ extension VoiceMessageRecorderView {
     private var playPauseButton: some View {
         buildButton(
             model.recordingState == .paused || model
-                .recordingState == .stopped || model
-                .recordingState == .recordingStopping ? "play.circle.fill" : "pause.circle.fill",
+                .recordingState == .stopped ? "play.circle.fill" : "pause.circle.fill",
             .gray,
-            .gray.opacity(0.2),
-            {
-                model.play()
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            .gray.opacity(0.2)
+        ) {
+            if model.recordingState == .playing {
+                model.pause()
             }
-        )
+            else {
+                model.play()
+            }
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        }
+        
         .accessibilityLabel(#localize(
             model.recordingState == .paused || model
-                .recordingState == .stopped || model.recordingState == .recordingStopping ? "play" : "pause"
+                .recordingState == .stopped ? "play" : "pause"
         ))
     }
     
@@ -216,19 +196,18 @@ extension VoiceMessageRecorderView {
         buildButton(
             "plus",
             .tint,
-            .tint,
-            {
-                model.record()
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            }
-        )
+            .tint
+        ) {
+            model.continueRecording()
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        }
         .scaleEffect(0.6)
         .accessibilityLabel(#localize("record_continue"))
     }
     
     private var sendButton: some View {
         Button {
-            willSend()
+            send()
         } label: {
             Image(systemName: "arrow.up.circle.fill")
                 .renderingMode(.template)
@@ -244,16 +223,15 @@ extension VoiceMessageRecorderView {
                         weight: .regular
                     )
                 )
-                .foregroundColor(model.recordingState == .recordingStopping ? .secondary : UIColor.primary.color)
+                .foregroundColor(.accentColor)
         }
-        .disabled(model.recordingState == .recordingStopping)
         .accessibilityLabel(#localize("send"))
     }
     
     private var discardButton: some View {
-        Button(action: {
-            willDismiss()
-        }) {
+        Button {
+            dismiss()
+        } label: {
             Image(systemName: "xmark.circle.fill")
                 .renderingMode(.template)
                 .imageScale(.large)
@@ -273,6 +251,22 @@ extension VoiceMessageRecorderView {
         .accessibilityLabel(#localize("quit"))
     }
     
+    // MARK: - Body
+    
+    var body: some View {
+        container
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    isStopFocused = true
+                }
+            }
+            .accessibilityAction(.magicTap) {
+                model.handleMagicTap()
+            }
+    }
+    
+    // MARK: - Private functions
+    
     private func buildButton(
         _ systemImageName: String,
         _ primary: some ShapeStyle,
@@ -290,6 +284,23 @@ extension VoiceMessageRecorderView {
                 .foregroundColor(.primary)
         }
     }
+    
+    private func dismiss() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: DispatchWorkItem(block: {
+            if model.recordingState == .recording {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            }
+        }))
+        model.recordingState = .ready
+        model.willDismissView()
+        delegate?.willDismissRecorder()
+    }
+    
+    private func send() {
+        model.sendRecording {
+            delegate?.willDismissRecorder()
+        }
+    }
 }
 
 // MARK: - VoiceMessageRecorderViewController
@@ -300,7 +311,7 @@ extension VoiceMessageRecorderView {
     static func make(
         to view: UIView,
         with delegate: VoiceMessageRecorderViewDelegate?,
-        model: Model
+        model: VoiceMessageRecorderViewModel
     ) -> VoiceMessageRecorderViewController {
         let hostingController = UIHostingController(
             rootView: VoiceMessageRecorderView(
@@ -317,8 +328,8 @@ extension VoiceMessageRecorderView {
 }
 
 extension VoiceMessageRecorderViewController {
-    func audioFileURL(shouldMove: Bool) async throws -> SessionState {
-        try await rootView.model.voiceMessageManager.savedSession(shouldMove)
+    func saveVoiceMessageRecordingAsDraft() {
+        rootView.model.saveVoiceMessageRecordingAsDraft()
     }
     
     var recordingState: RecordingState {

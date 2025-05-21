@@ -59,9 +59,7 @@ final class VoIPCallKitManager: NSObject {
                 providerConfiguration.ringtoneSound = "silent.mp3"
             }
         }
-        
-        let image = BundleUtil.imageNamed("VoipThreema")
-        providerConfiguration.iconTemplateImageData = image?.pngData()
+        providerConfiguration.iconTemplateImageData = Colors.callKitLogo.pngData()
         return providerConfiguration
     }
 }
@@ -245,7 +243,7 @@ extension VoIPCallKitManager {
         do {
             try audioSession.setCategory(
                 .playAndRecord,
-                mode: UserSettings.shared().disableProximityMonitoring ? .videoChat : .voiceChat,
+                mode: .voiceChat,
                 options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
             )
             try audioSession.setActive(true)

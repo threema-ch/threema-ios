@@ -20,11 +20,12 @@
 
 #import <Foundation/Foundation.h>
 #import <ThreemaFramework/EntityFetcher.h>
-#import <ThreemaFramework/BallotMessage.h>
 #import <ThreemaFramework/BoxBallotCreateMessage.h>
 #import <ThreemaFramework/BoxBallotVoteMessage.h>
 #import <ThreemaFramework/GroupBallotCreateMessage.h>
 #import <ThreemaFramework/GroupBallotVoteMessage.h>
+
+@class BallotEntity, BallotMessageEntity, BaseMessageEntity;
 
 @interface BallotMessageDecoder : NSObject
 
@@ -37,8 +38,8 @@
  */
 - (instancetype)initWith:(NSObject *)entityManagerObject;
 
-- (void)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError;
-- (void)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessage * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError;
+- (void)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessageEntity * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError;
+- (void)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessageEntity * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError;
 
 + (NSString *)decodeCreateBallotTitleFromBox:(BoxBallotCreateMessage *)boxMessage;
 + (NSNumber *)decodeNotificationCreateBallotStateFromBox:(BoxBallotCreateMessage *)boxMessage;

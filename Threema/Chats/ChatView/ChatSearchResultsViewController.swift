@@ -81,9 +81,10 @@ final class ChatSearchResultsViewController: ThemedViewController {
             
             let searchResultsCell: ChatSearchResultsTableViewCell = tableView.dequeueCell(for: indexPath)
             
-            var baseMessage: BaseMessage?
-            self?.entityManager.performBlockAndWait {
-                baseMessage = self?.entityManager.entityFetcher.existingObject(with: messageObjectID) as? BaseMessage
+            var baseMessage: BaseMessageEntity?
+            self?.entityManager.performAndWait {
+                baseMessage = self?.entityManager.entityFetcher
+                    .existingObject(with: messageObjectID) as? BaseMessageEntity
                 
                 searchResultsCell.message = baseMessage
             }

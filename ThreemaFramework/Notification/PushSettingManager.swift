@@ -28,7 +28,7 @@ public protocol PushSettingManagerProtocol {
     func pushSetting(for pendingUserNotification: PendingUserNotification) -> PushSetting?
     func save(pushSetting: PushSetting, sync: Bool) async
     func delete(forContact identity: ThreemaIdentity) async
-    func canSendPush(for message: BaseMessage) -> Bool
+    func canSendPush(for message: BaseMessageEntity) -> Bool
     func canMasterDndSendPush() -> Bool
 }
 
@@ -231,7 +231,7 @@ public actor PushSettingManager: PushSettingManagerProtocol {
     }
 
     /// Should we show a notification for this base message?
-    public nonisolated func canSendPush(for message: BaseMessage) -> Bool {
+    public nonisolated func canSendPush(for message: BaseMessageEntity) -> Bool {
         entityManager.performAndWait {
             guard !message.isOwnMessage else {
                 return false
@@ -324,7 +324,7 @@ public actor PushSettingManager: PushSettingManagerProtocol {
 
 @objc public class PushSettingManagerObjc: NSObject {
     @available(*, deprecated, message: "Use PushSettingManager instead")
-    @objc public static func canSendPush(for message: BaseMessage, entityManager: EntityManager) -> Bool {
+    @objc public static func canSendPush(for message: BaseMessageEntity, entityManager: EntityManager) -> Bool {
         BusinessInjector(entityManager: entityManager)
             .pushSettingManager.canSendPush(for: message)
     }

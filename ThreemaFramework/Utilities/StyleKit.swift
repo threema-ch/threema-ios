@@ -534,11 +534,11 @@ open class StyleKit: NSObject {
             width = height
         }
         
-        let red: UIColor = Colors.red
-        let orange: UIColor = Colors.orange
-        let green: UIColor = Colors.green
-        let gray: UIColor = Colors.gray
-        let blue: UIColor = Colors.blue
+        let red: UIColor = .systemRed
+        let orange: UIColor = .systemOrange
+        let green: UIColor = .systemGreen
+        let gray: UIColor = .systemGray
+        let blue: UIColor = .systemBlue
         //// Group
         //// Oval Drawing
         let ovalPath = UIBezierPath(ovalIn: CGRect(
@@ -604,7 +604,7 @@ open class StyleKit: NSObject {
         func fastFloor(_ x: CGFloat) -> CGFloat { floor(x) }
         
         //// Color Declarations
-        let color2 = Colors.gray as UIColor
+        let color2 = .systemGray as UIColor
         let color3 = UIColor.white
         let color4 = .primary as UIColor
         
@@ -682,7 +682,7 @@ open class StyleKit: NSObject {
 
     @objc public dynamic class func drawUncheck(frame: CGRect = CGRect(x: 0, y: 0, width: 22, height: 22)) {
         //// Color Declarations
-        let color = Colors.gray as UIColor
+        let color = UIColor.systemGray
         
         //// Oval Drawing
         let ovalPath =
@@ -712,7 +712,7 @@ open class StyleKit: NSObject {
         
         //// Color Declarations
         let fillColor = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000)
-        let fillColor2 = Colors.blue
+        let fillColor2 = UIColor.systemBlue
         
         //// work_app_icon_mit_rand Group
         //// Path Drawing
@@ -930,7 +930,7 @@ open class StyleKit: NSObject {
         
         //// Color Declarations
         let fillColor = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000)
-        let fillColor2 = Colors.green as UIColor
+        let fillColor2 = UIColor.systemGreen
         
         //// consumer_app_icon_mit_rand Group
         //// Path Drawing

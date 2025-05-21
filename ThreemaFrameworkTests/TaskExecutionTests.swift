@@ -196,7 +196,7 @@ class TaskExecutionTests: XCTestCase {
         dbPreparer.save {
             dbPreparer.createContact(identity: expectedToIdentity1)
             let contactEntity = dbPreparer.createContact(identity: expectedToIdentity2)
-            contactEntity.state = NSNumber(integerLiteral: kStateInvalid)
+            contactEntity.contactState = .invalid
 
             dbPreparer.createConversation(groupID: groupID)
         }

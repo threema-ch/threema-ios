@@ -72,14 +72,13 @@ struct MediaSettingsView: View {
             updateFooter()
         }
         .navigationBarTitle(#localize("settings_media_title"), displayMode: .inline)
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
     }
 
     // MARK: - Private Functions
     
     private func updateFooter() {
-        var text = settingsStore.autoSaveMedia ? BundleUtil
-            .localizedString(forKey: "settings_media_autosave_private_footer") : ""
+        var text = settingsStore.autoSaveMedia ? #localize("settings_media_autosave_private_footer") : ""
 
         if let mdmSetup, mdmSetup.existsMdmKey(MDM_KEY_DISABLE_SAVE_TO_GALLERY) {
             if !text.isEmpty {

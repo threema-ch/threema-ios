@@ -271,7 +271,6 @@ class UserNotificationManagerTests: XCTestCase {
         databasePreparer.createContact(
             publicKey: Data([1]),
             identity: expectedSenderID.string,
-            verificationLevel: 0,
             nickname: expectedFromName
         )
         let contact = entityManager.entityFetcher.contact(for: expectedSenderID.string)
@@ -322,12 +321,15 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertEqual(pushSetting?.type, .on)
     }
     
-    func testUserNotificationContentBlockUnknownWithTrustedContact() throws {
-        let trustedContact: TrustedContacts = .threemaPush
+    func testUserNotificationContentBlockUnknownWithSpecialContact() throws {
+        let specialContact: PredefinedContacts = .threemaPush
         let expectedMessageID = "94c605d0e3150619"
-        let expectedSenderID = ThreemaIdentity(trustedContact.identity!)
-        let expectedFromName = "*3MAPUSH"
-        let expectedTitle: String? = "*3MAPUSH"
+        guard let expectedSenderID = specialContact.identity else {
+            XCTFail("Expected sender identity not found for predefined contact: \(specialContact)")
+            return
+        }
+        let expectedFromName = specialContact.identity?.string
+        let expectedTitle: String? = specialContact.identity?.string
         let expectedBody = "new_message"
         let expectedAttachmentName: String? = nil
         let expectedAttachmentURL: URL? = nil
@@ -390,6 +392,60 @@ class UserNotificationManagerTests: XCTestCase {
         XCTAssertEqual(pushSetting?.identity, expectedSenderID)
         XCTAssertEqual(pushSetting?.type, .on)
     }
+    
+    func testUserNotificationContentBlockUnknownWithPredefiendContact() throws {
+        let predefinedContact: PredefinedContacts = .support
+        let expectedMessageID = "94c605d0e3150619"
+        guard let expectedSenderID = predefinedContact.identity else {
+            XCTFail("Expected sender identity not found for predefined contact: \(predefinedContact)")
+            return
+        }
+        let expectedCmd = "newmsg"
+
+        let userSettingsMock = UserSettingsMock()
+        userSettingsMock.blockUnknown = true
+        
+        let settingsStoreMock = SettingsStoreMock()
+        settingsStoreMock.notificationType = .restrictive
+        settingsStoreMock.pushShowPreview = true
+
+        let entityManager = EntityManager(databaseContext: databaseCnx)
+        let contactStoreMock = ContactStoreMock(callOnCompletion: false)
+        
+        let pendingUserNotification = PendingUserNotification(key: "\(expectedSenderID.string)\(expectedMessageID)")
+        pendingUserNotification.threemaPushNotification = try ThreemaPushNotification(from: [
+            "from": expectedSenderID.string,
+            "messageId": expectedMessageID,
+            "voip": false,
+            "cmd": expectedCmd,
+        ])
+        
+        let pushSettingManager = PushSettingManager(
+            userSettingsMock,
+            GroupManagerMock(),
+            entityManager,
+            TaskManagerMock(),
+            false
+        )
+
+        let userNotificationManager = UserNotificationManager(
+            settingsStoreMock,
+            userSettingsMock,
+            MyIdentityStoreMock(),
+            pushSettingManager,
+            contactStoreMock,
+            GroupManagerMock(),
+            entityManager,
+            false
+        )
+        let result = userNotificationManager.userNotificationContent(pendingUserNotification)
+
+        XCTAssertNil(result)
+                
+        var pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification)
+        XCTAssertEqual(pushSetting?.identity, expectedSenderID)
+        XCTAssertEqual(pushSetting?.type, .on)
+    }
 
     func testUserNotificationContentBaseMessageFlags() throws {
         let testsFlags: [Int: Bool] = [
@@ -407,7 +463,6 @@ class UserNotificationManagerTests: XCTestCase {
                 let contact = databasePreparer.createContact(
                     publicKey: Data([1]),
                     identity: "ECHOECHO",
-                    verificationLevel: 0,
                     nickname: "red99"
                 )
                 databasePreparer
@@ -569,13 +624,11 @@ class UserNotificationManagerTests: XCTestCase {
             let contactGroupCreator = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: groupCreator.string,
-                verificationLevel: 0,
                 nickname: groupCreator.string
             )
             let contact = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: expectedSenderID.string,
-                verificationLevel: 0,
                 nickname: expectedFromName
             )
             let group = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator.string)
@@ -762,11 +815,10 @@ class UserNotificationManagerTests: XCTestCase {
                 contact = databasePreparer.createContact(
                     publicKey: Data([1]),
                     identity: expectedSenderID.string,
-                    verificationLevel: 0,
                     nickname: "red99"
                 )
-                contact.firstName = "Hans"
-                contact.lastName = "Muster"
+                contact.setFirstName(to: "Hans")
+                contact.setLastName(to: "Muster")
             }
             
             let settingsStoreMock = SettingsStoreMock()
@@ -913,16 +965,14 @@ class UserNotificationManagerTests: XCTestCase {
                 contact = databasePreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: 32)!,
                     identity: expectedSenderID,
-                    verificationLevel: 0,
                     nickname: "red99"
                 )
-                contact.firstName = "Hans"
-                contact.lastName = "Muster"
+                contact.setFirstName(to: "Hans")
+                contact.setLastName(to: "Muster")
 
                 creatorContact = databasePreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: 32)!,
                     identity: groupCreator,
-                    verificationLevel: 0,
                     nickname: "red99"
                 )
 
@@ -1031,16 +1081,14 @@ class UserNotificationManagerTests: XCTestCase {
             contact = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
                 identity: expectedSenderID,
-                verificationLevel: 0,
                 nickname: "red99"
             )
-            contact.firstName = "Hans"
-            contact.lastName = "Muster"
+            contact.setFirstName(to: "Hans")
+            contact.setLastName(to: "Muster")
 
             creatorContact = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
                 identity: groupCreator,
-                verificationLevel: 0,
                 nickname: "red99"
             )
 
@@ -1152,11 +1200,10 @@ class UserNotificationManagerTests: XCTestCase {
                 contact = databasePreparer.createContact(
                     publicKey: Data([1]),
                     identity: expectedSenderID.string,
-                    verificationLevel: 0,
                     nickname: "red99"
                 )
-                contact.firstName = "Hans"
-                contact.lastName = "Muster"
+                contact.setFirstName(to: "Hans")
+                contact.setLastName(to: "Muster")
                 databasePreparer
                     .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                         conversation.contact = contact
@@ -1298,17 +1345,15 @@ class UserNotificationManagerTests: XCTestCase {
                 let contactGroupCreator = databasePreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
                     identity: groupCreator.string,
-                    verificationLevel: 0,
                     nickname: groupCreator.string
                 )
                 contact = databasePreparer.createContact(
                     publicKey: Data([1]),
                     identity: expectedSenderID,
-                    verificationLevel: 0,
                     nickname: "red99"
                 )
-                contact.firstName = "Hans"
-                contact.lastName = "Muster"
+                contact.setFirstName(to: "Hans")
+                contact.setLastName(to: "Muster")
 
                 let group = databasePreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreator.string)
                 databasePreparer
@@ -1408,7 +1453,6 @@ class UserNotificationManagerTests: XCTestCase {
         // Create abstract message for mocking
         let expectedSenderID = "ECHOECHO"
         let expectedMessageID = MockData.generateMessageID()
-        let expectedCmd = "newmsg"
         let expectedGroupID = MockData.generateGroupID()
 
         let expectedGroup = databasePreparer.save {

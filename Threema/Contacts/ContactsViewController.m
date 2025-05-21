@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ContactsViewController.h"
-#import "ContactEntity.h"
 #import "ContactStore.h"
 #import "UserSettings.h"
 #import "DatabaseManager.h"
@@ -347,7 +346,9 @@ typedef enum : NSUInteger {
         if (TargetManagerObjc.isOnPrem) {
             _noContactsMessageLabel.text = @"";
         } else {
-            _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:([UserSettings sharedUserSettings].syncContacts ? @"no_contacts_syncon" : @"no_contacts_syncoff")];
+            NSString *stringSyncON = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"alert_biometrics_changed_message"], TargetManagerObjc.appName, TargetManagerObjc.appName];
+            NSString *stringSyncOFF = [BundleUtil localizedStringForKey:@"no_contacts_syncoff"];
+            _noContactsMessageLabel.text = [UserSettings sharedUserSettings].syncContacts ? stringSyncON : stringSyncOFF;
         }
         [self shouldShowNoContactIndicatorView:NO];
     }
@@ -1288,6 +1289,7 @@ typedef enum : NSUInteger {
         _segmentedControl.userInteractionEnabled = NO;
         
         [[GatewayAvatarMaker gatewayAvatarMaker] refreshForced];
+        
         if ([UserSettings sharedUserSettings].syncContacts) {
             [[ContactStore sharedContactStore] synchronizeAddressBookForceFullSync:YES ignoreMinimumInterval:YES onCompletion:^(BOOL addressBookAccessGranted) {
                 [self updateWorkDataAndEndRefreshing:sender];
@@ -1327,7 +1329,8 @@ typedef enum : NSUInteger {
         }];
     }
     else {
-        [UIAlertTemplate showAlertWithOwner:self title:nil message:[BundleUtil localizedStringForKey:@"pull_to_sync_429_message"] actionOk:^(UIAlertAction * _Nonnull okAction) {
+        NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"pull_to_sync_429_message"], TargetManagerObjc.appName];
+        [UIAlertTemplate showAlertWithOwner:self title:nil message:message actionOk:^(UIAlertAction * _Nonnull okAction) {
             [self updateWorkDataAndEndRefreshing:sender];
         }];
     }

@@ -47,7 +47,10 @@ struct SyncExclusionListView: View {
                         .foregroundStyle(.secondary)
                 }
             } footer: {
-                Text(#localize("settings_privacy_syncexclusionlist_footer"))
+                Text(String.localizedStringWithFormat(
+                    #localize("settings_privacy_syncexclusionlist_footer"),
+                    TargetManager.localizedAppName
+                ))
             }
         }
         .onReceive(pubIncomingUpdate) { _ in
@@ -61,9 +64,23 @@ struct SyncExclusionListView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
-                .tint(Color(.primary))
-                .alert(#localize("enter_id_to_exclude"), isPresented: $showingAlert) {
-                    TextField(#localize("settings_privacy_syncexclusionlist_alert_threema_id"), text: $excludeThreemaID)
+                .tint(.accentColor)
+                .alert(
+                    String
+                        .localizedStringWithFormat(
+                            #localize("enter_id_to_exclude"),
+                            TargetManager.localizedAppName
+                        ),
+                    isPresented: $showingAlert
+                ) {
+                    TextField(
+                        String
+                            .localizedStringWithFormat(
+                                #localize("settings_privacy_syncexclusionlist_alert_threema_id"),
+                                TargetManager.localizedAppName
+                            ),
+                        text: $excludeThreemaID
+                    )
                     Button(#localize("add_button")) {
                         let excludeID = excludeThreemaID.uppercased()
                         excludeThreemaID = ""
@@ -92,7 +109,7 @@ struct ExclusionListView_Previews: PreviewProvider {
         NavigationView {
             SyncExclusionListView()
         }
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
         .environmentObject(BusinessInjector.ui.settingsStore as! SettingsStore)
     }
 }

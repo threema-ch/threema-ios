@@ -881,7 +881,7 @@ public class DateFormatter: NSObject {
     /// - Parameter date: Date to check
     /// - Returns: `false` if the date is in last 6 days, or not determinable in the current calendar, otherwise `true`
     private static func isDateInLastSixDays(_ date: Date) -> Bool {
-        var currentDayComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        let currentDayComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
         var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
         
         guard let dayComponent = dateComponents.day else {

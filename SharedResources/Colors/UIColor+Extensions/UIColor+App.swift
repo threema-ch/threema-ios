@@ -27,73 +27,49 @@ extension UIColor {
         let highContrast = UIAccessibility.isDarkerSystemColorsEnabled
         
         if traitCollection.userInterfaceStyle == .dark {
-            return highContrast ? .red : .blue
+            return highContrast ? .systemRed : .systemBlue
         }
         else {
-            return highContrast ? .green : .yellow
+            return highContrast ? .systemGreen : .systemYellow
         }
     }
     
-    @objc public static let primary = UIColor { _ in
+    @objc static var primary = UIColor { _ in
         switch TargetManager.current {
         case .threema, .green:
-            Threema.primary
+            UIColor(resource: .accentColorPrivate)
         case .work, .blue:
-            ThreemaWork.primary
+            UIColor(resource: .accentColorWork)
         case .onPrem:
-            ThreemaOnPrem.primary
+            UIColor(resource: .accentColorOnPrem)
+        case .customOnPrem:
+            UIColor(resource: .accentColorCustomOnPrem)
         }
     }
     
     @objc public static var secondary = UIColor { _ in
         switch TargetManager.current {
         case .threema, .green:
-            Threema.secondary
+            UIColor(resource: .secondaryPrivate)
         case .work, .blue:
-            ThreemaWork.secondary
+            UIColor(resource: .secondaryWork)
         case .onPrem:
-            ThreemaOnPrem.secondary
-        }
-    }
-    
-    @objc public static let chatBubbleSent = UIColor { _ in
-        switch TargetManager.current {
-        case .threema, .green:
-            Threema.chatBubbleSent
-        case .work, .blue:
-            ThreemaWork.chatBubbleSent
-        case .onPrem:
-            ThreemaOnPrem.chatBubbleSent
-        }
-    }
-    
-    @objc public static let chatBubbleSentSelected = UIColor { _ in
-        switch TargetManager.current {
-        case .threema, .green:
-            Threema.chatBubbleSentSelected
-        case .work, .blue:
-            ThreemaWork.chatBubbleSentSelected
-        case .onPrem:
-            ThreemaOnPrem.chatBubbleSentSelected
+            UIColor(resource: .secondaryOnPrem)
+        case .customOnPrem:
+            UIColor(resource: .secondaryCustomOnPrem)
         }
     }
     
     @objc public static let backgroundCircleButton = UIColor { _ in
         switch TargetManager.current {
         case .threema, .green:
-            Threema.circleButton
+            .circleButtonPrivate
         case .work, .blue:
-            ThreemaWork.circleButton
+            .circleButtonWork
         case .onPrem:
-            ThreemaOnPrem.circleButton
+            .circleButtonOnPrem
+        case .customOnPrem:
+            .circleButtonCustomOnPrem
         }
-    }
-    
-    @objc public static let threemaConsumerColor = UIColor { _ in
-        Threema.primary
-    }
-    
-    @objc public static let threemaWorkColor = UIColor { _ in
-        ThreemaWork.primary
     }
 }

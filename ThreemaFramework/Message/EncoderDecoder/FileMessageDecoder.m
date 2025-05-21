@@ -35,7 +35,7 @@
 #else
   static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #endif
-typedef void (^CompletionBlock)(BaseMessage *message);
+typedef void (^CompletionBlock)(BaseMessageEntity *message);
 typedef void (^ErrorBlock)(NSError * _Nonnull);
 
 @interface FileMessageDecoder ()
@@ -57,7 +57,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
     EntityManager *entityManager;
 }
 
-+ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
++ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessageEntity *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
 
     FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError sender:sender conversation:conversation timeoutDownloadThumbnail:timeout];
@@ -67,7 +67,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
     [decoder decodeMessageFromBox:message];
 }
 
-+ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessage *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
++ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessageEntity *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
 
     FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError sender:sender conversation:conversation timeoutDownloadThumbnail:timeout];
@@ -115,7 +115,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
 
 #pragma mark - private
 
-+ (instancetype)fileMessageDecoderOnCompletion:(void(^)(BaseMessage *message))onCompletion onError:(void(^)(NSError * _Nonnull))onError sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail {
++ (instancetype)fileMessageDecoderOnCompletion:(void(^)(BaseMessageEntity *message))onCompletion onError:(void(^)(NSError * _Nonnull))onError sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation timeoutDownloadThumbnail:(int)timeoutDownloadThumbnail {
     FileMessageDecoder *decoder = [[FileMessageDecoder alloc] init];
     decoder.onCompletion = onCompletion;
     decoder.onError = onError;
@@ -233,7 +233,8 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
 }
 
 - (void)createDBMessageWithCompletionInternal:(void(^ _Nonnull)(FileMessageEntity * _Nonnull))onCompletionInternal onErrorInternal:(void(^ _Nonnull)(NSError * _Nonnull))onErrorInternal{
-    [entityManager getOrCreateMessageFor:_boxMessage sender:_sender conversation:_conversation thumbnail:nil onCompletion:^(BaseMessage *message) {
+
+    [entityManager getOrCreateMessageFor:_boxMessage sender:_sender conversation:_conversation thumbnail:nil onCompletion:^(BaseMessageEntity * _Nonnull message) {
         __block FileMessageEntity *fileMessageEntity;
 
         [entityManager performSyncBlockAndSafe:^{

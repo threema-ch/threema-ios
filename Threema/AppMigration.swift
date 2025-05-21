@@ -262,13 +262,13 @@ import ThreemaMacros
                     continue
                 }
 
-                // Get remote date from latest readed message or max 2 week old
+                // Get remote date from latest read message or max 2 week old
                 var firstRemoteSentDate: Date? = calendar.date(byAdding: .day, value: -14, to: Date())
 
                 for msg in messageFetcher.messages(at: 0, count: messageFetcher.count()).reversed() {
                     if !msg.isOwnMessage,
-                       msg.read?.boolValue ?? false,
-                       let remoteSendDate = msg.remoteSentDate {
+                       msg.read.boolValue {
+                        let remoteSendDate = msg.remoteSentDate ?? msg.date
                         if firstRemoteSentDate == nil {
                             firstRemoteSentDate = remoteSendDate
                         }
@@ -727,7 +727,7 @@ import ThreemaMacros
         DDLogNotice("[AppMigration] App migration to version 6.6 started")
         os_signpost(.begin, log: osPOILog, name: "6.6 migration")
 
-        func addReaction(to message: BaseMessage, from contact: ContactEntity?, thumbUp: Bool, at date: Date) {
+        func addReaction(to message: BaseMessageEntity, from contact: ContactEntity?, thumbUp: Bool, at date: Date) {
             guard let reaction = businessInjector.entityManager.entityCreator.messageReactionEntity()
             else {
                 DDLogError("Create reaction entity failed")
@@ -752,12 +752,15 @@ import ThreemaMacros
             )
 
             for message in messages {
-                guard let userackDate = message.userackDate else {
+                guard !message.willBeDeleted,
+                      let userackDate = message.userackDate else {
                     continue
                 }
 
                 if message.isOwnMessage {
-                    guard let contact = message.conversation.contact else {
+                    guard !message.conversation.willBeDeleted,
+                          let contact = message.conversation.contact,
+                          !contact.willBeDeleted else {
                         continue
                     }
 
@@ -786,7 +789,7 @@ import ThreemaMacros
             
             for message in messages {
                 
-                guard let receipts = message.groupDeliveryReceipts as? [GroupDeliveryReceipt], !receipts.isEmpty else {
+                guard let receipts = message.groupDeliveryReceipts, !receipts.isEmpty else {
                     continue
                 }
                 

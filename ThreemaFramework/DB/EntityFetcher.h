@@ -19,12 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import <ThreemaFramework/Ballot.h>
+#import <CoreData/CoreData.h>
 #import <ThreemaFramework/AbstractMessage.h>
 #import <ThreemaFramework/AbstractGroupMessage.h>
 #import <ThreemaFramework/MyIdentityStore.h>
 
-@class ConversationEntity, DistributionListEntity, GroupCallEntity, NonceEntity, GroupEntity, LastGroupSyncRequestEntity, WebClientSessionEntity,MessageReactionEntity;
+@class ConversationEntity, ContactEntity, BallotEntity, BallotChoiceEntity, BaseMessageEntity, DistributionListEntity, GroupCallEntity, NonceEntity, GroupEntity, LastGroupSyncRequestEntity, WebClientSessionEntity,MessageReactionEntity;
 
 typedef enum : NSUInteger {
     ContactsAll,
@@ -54,11 +54,11 @@ typedef enum : NSUInteger {
 
 - (__kindof NSManagedObject *)existingObjectWithIDString:(NSString *)objectIDString;
 
-- (nullable BaseMessage *)ownMessageWithId:(nonnull NSData *)messageId conversationEntity:(nonnull ConversationEntity *)conversation NS_SWIFT_NAME(ownMessage(with:conversation:));
+- (nullable BaseMessageEntity *)ownMessageWithId:(nonnull NSData *)messageId conversationEntity:(nonnull ConversationEntity *)conversation NS_SWIFT_NAME(ownMessage(with:conversation:));
 
-- (nullable BaseMessage *)messageWithId:(nonnull NSData *)messageId conversationEntity:(nonnull ConversationEntity *)conversation NS_SWIFT_NAME(message(with:conversation:));
+- (nullable BaseMessageEntity *)messageWithId:(nonnull NSData *)messageId conversationEntity:(nonnull ConversationEntity *)conversation NS_SWIFT_NAME(message(with:conversation:));
 
-- (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessage *)message inConversationEntity:(ConversationEntity *)conversation;
+- (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessageEntity *)message inConversationEntity:(ConversationEntity *)conversation;
 
 - (NSArray *)messagesContaining:(NSString *)searchText inConversationEntity:(ConversationEntity *)conversation filterPredicate:(NSPredicate *)filterPredicate fetchLimit:(NSInteger)fetchLimit;
 
@@ -162,9 +162,9 @@ typedef enum : NSUInteger {
 - (nullable ConversationEntity *)conversationEntityForDistributionListID:(nonnull NSNumber *)distributionListId
     NS_SWIFT_NAME(conversation(for:));
 
-- (Ballot *)ballotForBallotId:(NSData *)ballotId NS_SWIFT_NAME(ballot(for:));
+- (BallotEntity *)ballotEntityForBallotId:(NSData *)ballotId NS_SWIFT_NAME(ballotEntity(for:));
 
-- (BallotChoice *)ballotChoiceForBallotId:(NSData *)ballotId choiceId:(NSNumber *)choiceId NS_SWIFT_NAME(ballotChoice(for:with:));
+- (BallotChoiceEntity *)ballotChoiceForBallotId:(NSData *)ballotId choiceId:(NSNumber *)choiceId NS_SWIFT_NAME(ballotChoice(for:with:));
 
 - (BOOL)isMessageAlreadyInDb:(AbstractMessage *)message;
 
@@ -185,9 +185,9 @@ typedef enum : NSUInteger {
 
 - (nullable DistributionListEntity *) distributionListEntityForDistributionListID:(nonnull NSNumber *)distributionListID;
 
-- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessage *)message creator:(nullable ContactEntity *)creator;
+- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessageEntity *)message creator:(nullable ContactEntity *)creator;
 
-- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessage *)message;
+- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessageEntity *)message;
 
 - (nullable MessageReactionEntity *) messageReactionEntityForMessageID:(nonnull NSData *)messageID creator:(nullable ContactEntity *)creator reaction:(nullable NSString *)reaction;
 

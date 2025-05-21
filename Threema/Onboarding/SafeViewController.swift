@@ -54,8 +54,14 @@ import UIKit
         
         hideKeyboardWhenTappedAround()
 
-        titleLabel.text = #localize("safe_setup_backup_title")
-        descriptionLabel.text = #localize("safe_setup_backup_description")
+        titleLabel.text = String.localizedStringWithFormat(
+            #localize("safe_setup_backup_title"),
+            TargetManager.localizedAppName
+        )
+        descriptionLabel.text = String.localizedStringWithFormat(
+            #localize("safe_setup_backup_description"),
+            TargetManager.localizedAppName
+        )
         
         passwordField.delegate = self
         passwordField.placeholder = #localize("Password")
@@ -66,7 +72,10 @@ import UIKit
         
         moreView.mainView = mainContentView
         moreView.moreButtonTitle = #localize("more_information")
-        moreView.moreMessageText = #localize("safe_enable_explain")
+        moreView.moreMessageText = String.localizedStringWithFormat(
+            #localize("safe_enable_explain"),
+            TargetManager.localizedAppName
+        )
         
         passwordAgainOffset = passwordAgainField.frame.origin.y
     }
@@ -220,7 +229,10 @@ import UIKit
                         }
                     }
                     alert.showConfirm(
-                        #localize("password_bad_explain"),
+                        String.localizedStringWithFormat(
+                            #localize("password_bad_explain"),
+                            TargetManager.localizedAppName
+                        ),
                         noButtonLabel: #localize("try_again"),
                         yesButtonLabel: #localize("continue_anyway")
                     )
@@ -246,7 +258,12 @@ import UIKit
                 }
             }
             alert.showConfirm(
-                #localize("safe_disable_confirm"),
+                String.localizedStringWithFormat(
+                    #localize("safe_disable_confirm"),
+                    TargetManager.localizedAppName,
+                    TargetManager.localizedAppName,
+                    TargetManager.localizedAppName
+                ),
                 noButtonLabel: #localize("yes"),
                 yesButtonLabel: #localize("no")
             )

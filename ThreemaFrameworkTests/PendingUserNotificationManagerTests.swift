@@ -252,8 +252,17 @@ class PendingUserNotificationManagerTests: XCTestCase {
             rawProtobufMessage: e2eEditMessage.serializedData() as NSData
         )
 
-        let sender = ContactEntity(context: dbMainCnx.current)
-        sender.identity = expectedFromIdentity
+        let sender = ContactEntity(
+            context: dbMainCnx.current,
+            featureMask: 1,
+            forwardSecurityState: 1,
+            identity: expectedFromIdentity,
+            publicKey: MockData.generatePublicKey(),
+            readReceipts: 0,
+            typingIndicators: 0,
+            verificationLevel: 0
+        )
+        sender.setIdentity(to: expectedFromIdentity)
         let baseMessage = TextMessageEntity(context: dbMainCnx.current, text: "")
         baseMessage.conversation = ConversationEntity(context: dbMainCnx.current)
         baseMessage.sender = sender
@@ -324,8 +333,18 @@ class PendingUserNotificationManagerTests: XCTestCase {
             rawProtobufMessage: e2eEditMessage.serializedData() as NSData
         )
 
-        let sender = ContactEntity(context: dbMainCnx.current)
-        sender.identity = expectedFromIdentity
+        let sender = ContactEntity(
+            context: dbMainCnx.current,
+            featureMask: 1,
+            forwardSecurityState: 1,
+            identity: expectedFromIdentity,
+            publicKey: MockData.generatePublicKey(),
+            readReceipts: 0,
+            typingIndicators: 0,
+            verificationLevel: 0
+        )
+
+        sender.setIdentity(to: expectedFromIdentity)
         let baseMessage = TextMessageEntity(context: dbMainCnx.current, text: "")
         baseMessage.conversation = ConversationEntity(context: dbMainCnx.current)
         baseMessage.sender = sender
@@ -412,8 +431,17 @@ class PendingUserNotificationManagerTests: XCTestCase {
                 rawProtobufMessage: e2eDeleteMessage.serializedData() as NSData
             )
 
-            let sender = ContactEntity(context: dbMainCnx.current)
-            sender.identity = expectedFromIdentity
+            let sender = ContactEntity(
+                context: dbMainCnx.current,
+                featureMask: 1,
+                forwardSecurityState: 1,
+                identity: expectedFromIdentity,
+                publicKey: MockData.generatePublicKey(),
+                readReceipts: 0,
+                typingIndicators: 0,
+                verificationLevel: 0
+            )
+            sender.setIdentity(to: expectedFromIdentity)
             let baseMessage = TextMessageEntity(context: dbMainCnx.current, text: "")
             baseMessage.conversation = ConversationEntity(context: dbMainCnx.current)
             baseMessage.sender = sender

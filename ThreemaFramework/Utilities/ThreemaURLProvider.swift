@@ -23,27 +23,41 @@ import Foundation
 /// Use this class to get your URL to threema.ch or threema.ch/work
 public enum ThreemaURLProvider {
     
-    private static let defaultConsumerURLString = "https://threema.ch/"
-    private static let defaultWorkURLString = "https://threema.ch/work/"
+    private static let defaultURLString = "https://threema.ch/"
     
     // Consumer
-    public static let consumerWebsite = URL(string: defaultConsumerURLString)!
     public static let rogueDeviceInfo =
-        URL(string: defaultConsumerURLString + "/faq/another_connection")!
-    public static let resetSafePassword = URL(string: defaultConsumerURLString + "faq/safepw")!
-    public static let consumerDownload = URL(string: defaultConsumerURLString + "download")!
-    public static let privacyPolicy = URL(string: defaultConsumerURLString + "privacy_policy")!
-    public static let termsOfService = URL(string: defaultConsumerURLString + "tos")!
-    public static let multiDeviceReset = URL(string: defaultConsumerURLString + "faq/md_reset")!
-    public static let multiDeviceLimit = URL(string: defaultConsumerURLString + "faq/md_limit")!
+        URL(string: defaultURLString + "/faq/another_connection")!
+    public static let resetSafePassword = URL(string: defaultURLString + "faq/safepw")!
+    public static let consumerDownload = URL(string: defaultURLString + "download")!
+    public static let privacyPolicy = URL(string: defaultURLString + "privacy_policy")!
+    public static let termsOfService = URL(string: defaultURLString + "tos")!
+    public static let multiDeviceReset = URL(string: defaultURLString + "faq/md_reset")!
+    public static let multiDeviceLimit = URL(string: defaultURLString + "faq/md_limit")!
     public static let iOSBackupManualEN =
-        URL(string: defaultConsumerURLString + "docs/threema/ios_backup_manual_en.pdf")!
-    public static let safeWebdav = URL(string: defaultConsumerURLString + "faq/threema_safe_webdav")!
-    public static let enterLicenseWorkInfo = URL(string: defaultConsumerURLString + "work?li=in-app-work")!
+        URL(string: defaultURLString + "docs/threema/ios_backup_manual_en.pdf")!
+    public static let safeWebdav = URL(string: defaultURLString + "faq/threema_safe_webdav")!
+    public static let enterLicenseWorkInfo = URL(string: defaultURLString + "work?li=in-app-work")!
+    public static let backupFaq = URL(string: defaultURLString + "faq/backup-options")!
+    public static let notificationTypesFaq = URL(string: defaultURLString + "faq/ios-notification-types")!
+    public static let interactionFaq = URL(string: defaultURLString + "faq/ios-interactions")!
+    
+    private static let supportFaqURL = URL(string: defaultURLString + "ios/support")!
     
     // Work
-    public static let workDownload = URL(string: defaultWorkURLString + "download")!
-    public static let workInfo = URL(string: defaultConsumerURLString + "work_info")!
+    public static let workDownload = URL(string: defaultURLString + "/work/download")!
+    public static let workInfo = URL(string: defaultURLString + "work_info")!
+    
+    public static let supportFaq = {
+        if let licenseURL = BusinessInjector.ui.myIdentityStore.licenseSupportURL, let url = URL(string: licenseURL),
+           !licenseURL.isEmpty {
+            let supportURL = url
+            return supportURL
+        }
+        else {
+            return supportFaqURL
+        }
+    }
 }
 
 /// Use this class to get your URL to threema.ch or threema.ch/work
@@ -52,19 +66,19 @@ public enum ThreemaURLProvider {
 @available(*, deprecated, message: "Only use from Objective-C", renamed: "conversationStore")
 @objc public class ThreemaURLProviderObjc: NSObject {
     @objc public enum ThreemaURLProviderType: Int, RawRepresentable {
-        case consumerWebsite
         case rogueDeviceInfo
         case multiDeviceReset
+        case privacyPolicy
     }
     
     @objc public class func getURL(_ threemaURLProvider: ThreemaURLProviderType) -> URL {
         switch threemaURLProvider {
-        case .consumerWebsite:
-            ThreemaURLProvider.consumerWebsite
         case .rogueDeviceInfo:
             ThreemaURLProvider.rogueDeviceInfo
         case .multiDeviceReset:
             ThreemaURLProvider.multiDeviceReset
+        case .privacyPolicy:
+            ThreemaURLProvider.privacyPolicy
         }
     }
 }

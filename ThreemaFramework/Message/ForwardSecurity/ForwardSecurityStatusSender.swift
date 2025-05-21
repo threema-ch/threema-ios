@@ -147,7 +147,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             //    add `sender` to the list of group members requesting a re-send for
             //    `message`.
             switch message {
-            case is TextMessageEntity, is LocationMessageEntity, is FileMessageEntity, is BallotMessage:
+            case is TextMessageEntity, is LocationMessageEntity, is FileMessageEntity, is BallotMessageEntity:
                 guard let contactEntity = self.entityManager.entityFetcher.contact(for: sender.string) else {
                     DDLogError("[ForwardSecurity] Unable to find contact entity for \(sender.string)")
                     return true
@@ -155,7 +155,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
                 
                 message.sendFailed = NSNumber(booleanLiteral: true)
                 // Add contact to rejected by list
-                message.addRejectedBy(contactEntity)
+                message.addToRejectedBy(contactEntity)
                 
             default:
                 DDLogError(
@@ -218,7 +218,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             // 3. If the _when rejected_ property associated to `message` allows to
             //    re-send after confirmation, mark `message` with _re-send requested_.
             switch message {
-            case is TextMessageEntity, is LocationMessageEntity, is FileMessageEntity, is BallotMessage:
+            case is TextMessageEntity, is LocationMessageEntity, is FileMessageEntity, is BallotMessageEntity:
                 message.sendFailed = NSNumber(booleanLiteral: true)
             // TODO: (IOS-4253) Handle call offer, call answer & call ringing and abort call.
             default:
@@ -511,18 +511,18 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
                 return false
             }
             
-            return contactEntity.isForwardSecurityAvailable()
+            return contactEntity.isForwardSecurityAvailable
         }
     }
     
     func hasForwardSecuritySupport(_ contact: ForwardSecurityContact) async -> Bool {
         await entityManager.perform {
-            guard let contactEntity = self.entityManager.entityFetcher.contact(for: contact.identity) as? ContactEntity
+            guard let contactEntity = self.entityManager.entityFetcher.contact(for: contact.identity)
             else {
                 return false
             }
             
-            return contactEntity.isForwardSecurityAvailable()
+            return contactEntity.isForwardSecurityAvailable
         }
     }
 }

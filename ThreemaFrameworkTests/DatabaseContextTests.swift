@@ -48,8 +48,8 @@ final class DatabaseContextTests: XCTestCase {
         await entityManager.performSave {
             let contact = entityManager.entityCreator.contact()!
             contact.publicKey = MockData.generatePublicKey()
-            contact.verificationLevel = 1
-            contact.identity = "ECHOECHO"
+            contact.contactVerificationLevel = .serverVerified
+            contact.setIdentity(to: "ECHOECHO")
         }
 
         // 2. Load Contact on BG
@@ -75,7 +75,7 @@ final class DatabaseContextTests: XCTestCase {
                     .contact(for: "ECHOECHO")
             )
             XCTAssertNotNil(contact)
-            contact.firstName = "echo"
+            contact.setFirstName(to: "echo")
         }
         
         await fulfillment(of: [expectation])

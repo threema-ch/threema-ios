@@ -24,11 +24,7 @@ import Foundation
 
 extension TextMessageEntity: EditedMessageProvider {
     public var editedMessage: EditedMessage? {
-        guard let id else {
-            return nil
-        }
-
-        return EntityManager().entityFetcher.message(with: id, conversation: conversation) as? EditedMessage
+        EntityManager().entityFetcher.message(with: id, conversation: conversation) as? EditedMessage
     }
 }
 

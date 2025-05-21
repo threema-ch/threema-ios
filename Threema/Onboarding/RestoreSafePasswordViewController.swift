@@ -39,7 +39,10 @@ class RestoreSafePasswordViewController: IDCreationPageViewController {
         hideKeyboardWhenTappedAround()
         keyboardResize = KeyboardResizeCenterY(parent: view, resize: mainContentView)
 
-        descriptionLabel.text = #localize("safe_enter_password")
+        descriptionLabel.text = String.localizedStringWithFormat(
+            #localize("safe_enter_password"),
+            TargetManager.localizedAppName
+        )
         passwordField.delegate = self
         passwordField.placeholder = #localize("Password")
         passwordField.accessibilityIdentifier = "RestoreSafePasswordViewControllerPasswordTextfield"

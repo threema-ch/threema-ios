@@ -28,8 +28,12 @@ enum IDColor {
     /// - Parameter data: Data to get ID color for. We assume that is quite small.
     /// - Returns: Dynamic ID Color for `data`
     static func forData(_ data: Data) -> UIColor {
-        guard let firstByte = firstSHA256Byte(for: data),
-              !UIAccessibility.isDarkerSystemColorsEnabled else {
+        guard !UIAccessibility.isDarkerSystemColorsEnabled else {
+            // Use primary color when increase contrast is activated
+            return .primary
+        }
+        
+        guard let firstByte = firstSHA256Byte(for: data) else {
             // We don't expect this to ever happen
             DDLogWarn("Unable to get first byte for ID Color")
             return .primary

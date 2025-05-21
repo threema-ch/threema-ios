@@ -46,8 +46,8 @@
     [Colors updateKeyboardAppearanceFor:self.codeTextField];
     
     self.enterCodeLabel.textColor = UIColor.labelColor;
-    self.abortVerificationLabel.textColor = UIColor.primary;
-    self.requestCallLabel.textColor = UIColor.primary;
+    self.abortVerificationLabel.textColor = UIColor.tintColor;
+    self.requestCallLabel.textColor = UIColor.tintColor;
 }
 
 - (void)viewWillAppear:(BOOL)animated {

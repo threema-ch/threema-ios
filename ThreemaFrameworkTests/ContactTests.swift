@@ -59,12 +59,12 @@ class ContactTests: XCTestCase {
             contactEntity = dbPreparer.createContact(
                 publicKey: expectedPublicKey,
                 identity: expectedIdentity.string,
-                verificationLevel: kVerificationLevelUnverified
+                verificationLevel: .unverified
             )
             contactEntity.publicNickname = "fritzberg"
-            contactEntity.firstName = "Fritz"
-            contactEntity.lastName = "Berg"
-            contactEntity.state = NSNumber(integerLiteral: kStateInactive)
+            contactEntity.setFirstName(to: "Fritz")
+            contactEntity.setLastName(to: "Berg")
+            contactEntity.contactState = .inactive
             contactEntity.workContact = NSNumber(booleanLiteral: true)
         }
 
@@ -77,18 +77,18 @@ class ContactTests: XCTestCase {
         XCTAssertEqual("fritzberg", contact.publicNickname)
         XCTAssertEqual("Fritz", contact.firstName)
         XCTAssertEqual("Berg", contact.lastName)
-        XCTAssertEqual(kStateInactive, contact.state)
+        XCTAssertEqual(ContactEntity.ContactState.inactive, contact.state)
         XCTAssertTrue(contact.isWorkContact)
 
         // Change contact entity properties in DB
 
         let entityManager = EntityManager(databaseContext: dbMainCnx, myIdentityStore: MyIdentityStoreMock())
-        entityManager.performSyncBlockAndSafe {
-            contactEntity.firstName = "Fritzli"
-            contactEntity.lastName = "Bergli"
+        entityManager.performAndWaitSave {
+            contactEntity.setFirstName(to: "Fritzli")
+            contactEntity.setLastName(to: "Bergli")
             contactEntity.publicNickname = "fritzlibergli"
-            contactEntity.verificationLevel = NSNumber(integerLiteral: kVerificationLevelServerVerified)
-            contactEntity.state = NSNumber(integerLiteral: kStateActive)
+            contactEntity.contactVerificationLevel = .serverVerified
+            contactEntity.contactState = .active
             contactEntity.workContact = NSNumber(booleanLiteral: false)
         }
 
@@ -99,7 +99,7 @@ class ContactTests: XCTestCase {
         XCTAssertEqual("fritzlibergli", contact.publicNickname)
         XCTAssertEqual("Fritzli", contact.firstName)
         XCTAssertEqual("Bergli", contact.lastName)
-        XCTAssertEqual(kStateActive, contact.state)
+        XCTAssertEqual(ContactEntity.ContactState.active, contact.state)
         XCTAssertFalse(contact.isWorkContact)
     }
 
@@ -114,7 +114,7 @@ class ContactTests: XCTestCase {
             contactEntity = dbPreparer.createContact(
                 publicKey: expectedPublicKey,
                 identity: expectedIdentity.string,
-                verificationLevel: kVerificationLevelUnverified
+                verificationLevel: .unverified
             )
         }
 
@@ -128,8 +128,8 @@ class ContactTests: XCTestCase {
         // Change contact entity properties in DB
 
         let entityManager = EntityManager(databaseContext: dbMainCnx, myIdentityStore: MyIdentityStoreMock())
-        entityManager.performSyncBlockAndSafe {
-            contactEntity.identity = "CONTACT1"
+        entityManager.performAndWaitSave {
+            contactEntity.setIdentity(to: "CONTACT1")
         }
 
         // Check changed contact properties
@@ -148,34 +148,32 @@ class ContactTests: XCTestCase {
             contact1 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "CONTACT1",
-                verificationLevel: kVerificationLevelFullyVerified
+                verificationLevel: .fullyVerified
             )
             contact1.publicNickname = "#1"
-            contact1.firstName = "first name one"
-            contact1.lastName = "last name one"
-            contact1.state = NSNumber(integerLiteral: kStateInactive)
+            contact1.setFirstName(to: "first name one")
+            contact1.setLastName(to: "last name one")
+            contact1.contactState = .inactive
             contact1.workContact = NSNumber(booleanLiteral: true)
 
             contact2 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "CONTACT2",
-                verificationLevel: kVerificationLevelUnverified
+                identity: "CONTACT2"
             )
             contact2.publicNickname = "#2"
-            contact2.firstName = "first name second"
-            contact2.lastName = "last name second"
-            contact2.state = NSNumber(integerLiteral: kStateInactive)
+            contact2.setFirstName(to: "first name second")
+            contact2.setLastName(to: "last name second")
+            contact2.contactState = .inactive
             contact2.workContact = NSNumber(booleanLiteral: false)
 
             contact3 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "CONTACT3",
-                verificationLevel: kVerificationLevelUnverified
+                identity: "CONTACT3"
             )
             contact3.publicNickname = "#3"
-            contact3.firstName = "first name third"
-            contact3.lastName = "last name third"
-            contact3.state = NSNumber(integerLiteral: kStateInactive)
+            contact3.setFirstName(to: "first name third")
+            contact3.setLastName(to: "last name third")
+            contact3.contactState = .inactive
             contact3.workContact = NSNumber(booleanLiteral: false)
         }
 
@@ -200,12 +198,9 @@ class ContactTests: XCTestCase {
     }
 
     func testDeleteContactEntity() throws {
-        let myIdentityStoreMock = MyIdentityStoreMock()
-
         let contactEntity = dbPreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: "ECHOECHO",
-            verificationLevel: kVerificationLevelUnverified
+            identity: "ECHOECHO"
         )
 
         let contact = Contact(contactEntity: contactEntity)
@@ -230,23 +225,23 @@ class ContactTests: XCTestCase {
             let contactEntity = self.dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "CONTACT1",
-                verificationLevel: kVerificationLevelFullyVerified
+                verificationLevel: .fullyVerified
             )
 
             let assertDisplayNameEquals = { (s: String) in
                 var c: Contact
 
-                contactEntity.state = NSNumber(integerLiteral: kStateActive)
+                contactEntity.contactState = .active
                 c = Contact(contactEntity: contactEntity)
                 XCTAssertEqual(c.displayName, s)
                 XCTAssertEqual(contactEntity.displayName, c.displayName)
                 
-                contactEntity.state = NSNumber(integerLiteral: kStateInactive)
+                contactEntity.contactState = .inactive
                 c = Contact(contactEntity: contactEntity)
                 XCTAssertEqual(c.displayName, "\(s) (\(#localize("inactive")))")
                 XCTAssertEqual(contactEntity.displayName, c.displayName)
 
-                contactEntity.state = NSNumber(integerLiteral: kStateInvalid)
+                contactEntity.contactState = .invalid
                 c = Contact(contactEntity: contactEntity)
                 XCTAssertEqual(c.displayName, "\(s) (\(#localize("invalid")))")
                 XCTAssertEqual(contactEntity.displayName, c.displayName)
@@ -263,19 +258,19 @@ class ContactTests: XCTestCase {
             contactEntity.publicNickname = "🙂"
             assertDisplayNameEquals("~🙂")
 
-            contactEntity.firstName = "First"
+            contactEntity.setFirstName(to: "First")
             assertDisplayNameEquals("First")
 
-            contactEntity.lastName = "Last Name"
+            contactEntity.setLastName(to: "Last Name")
             assertDisplayNameEquals("First Last Name")
 
-            contactEntity.firstName = nil
+            contactEntity.setFirstName(to: nil)
             assertDisplayNameEquals("Last Name")
 
             UserSettings.shared().setSortOrderFirstName(false, displayOrderFirstName: false)
 
-            contactEntity.firstName = "First"
-            contactEntity.lastName = "Last Name"
+            contactEntity.setFirstName(to: "First")
+            contactEntity.setLastName(to: "Last Name")
             assertDisplayNameEquals("Last Name First")
             
             // reset to default in case of further tests depending on the default
@@ -293,7 +288,7 @@ class ContactTests: XCTestCase {
         for flag in ThreemaProtocols.Common_CspFeatureMaskFlag.allCases {
             let contactEntity = await em.performSave {
                 let contactEntity = em.entityFetcher.contact(for: "ECHOECHO")
-                contactEntity?.featureMask = NSNumber(integerLiteral: flag.rawValue)
+                contactEntity?.setFeatureMask(to: flag.rawValue)
                 return contactEntity
             }
 

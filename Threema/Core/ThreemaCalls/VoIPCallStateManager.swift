@@ -221,7 +221,7 @@ import UserNotifications
               let callerIdentity = dictionaryPayload["NotificationExtensionOffer"] as? String else {
             DDLogError("Received invalid push payload with dictionary \(dictionaryPayload)")
             startAndCancelCall(
-                from: BundleUtil.localizedString(forKey: TargetManager.appName),
+                from: TargetManager.appName,
                 showWebNotification: true
             ) {
                 completion(false)

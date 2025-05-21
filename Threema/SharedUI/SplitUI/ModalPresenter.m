@@ -35,7 +35,7 @@ static UIViewController *pickerPopover;
 + (void) present:(UIViewController *)controllerToPresent on:(UIViewController *)controller fromRect:(CGRect)fromRect inView:(UIView *)inView completion:(void(^)(void))completion {
     if ([self shouldPresentInPopover:controllerToPresent]) {
         pickerPopover = controllerToPresent;
-        pickerPopover.modalPresentationStyle = UIModalPresentationPopover;
+        pickerPopover.modalPresentationStyle = UIModalPresentationAutomatic;
         pickerPopover.popoverPresentationController.sourceView = inView;
         pickerPopover.popoverPresentationController.sourceRect = fromRect;
         
@@ -48,7 +48,7 @@ static UIViewController *pickerPopover;
 + (void) present:(UIViewController *)controllerToPresent on:(UIViewController *)controller fromBarButton:(UIBarButtonItem *)barButtonItem {
     if ([self shouldPresentInPopover:controllerToPresent]) {
         pickerPopover = controllerToPresent;
-        pickerPopover.modalPresentationStyle = UIModalPresentationPopover;
+        pickerPopover.modalPresentationStyle = UIModalPresentationAutomatic;
         pickerPopover.popoverPresentationController.barButtonItem = barButtonItem;
         dispatch_async(dispatch_get_main_queue(), ^{
             [controller presentViewController:controllerToPresent animated:YES completion:nil];

@@ -48,10 +48,13 @@ struct NotificationTypeSelectionView: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                 
-                Text(#localize("settings_notification_type_preview_description"))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .multilineTextAlignment(.center)
-                    .padding(.bottom, 4)
+                Text(String.localizedStringWithFormat(
+                    #localize("settings_notification_type_preview_description"),
+                    TargetManager.appName
+                ))
+                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.center)
+                .padding(.bottom, 4)
                 
                 ForEach(NotificationType.allCases, id: \.self) { notificationType in
                     NotificationTypeView(
@@ -66,7 +69,7 @@ struct NotificationTypeSelectionView: View {
                     .overlay {
                         if selectedType == notificationType {
                             RoundedRectangle(cornerRadius: cornerRadius)
-                                .stroke(Color(uiColor: UIColor.primary), lineWidth: 2.5)
+                                .stroke(Color.accentColor, lineWidth: 2.5)
                         }
                     }
                 }
@@ -75,7 +78,6 @@ struct NotificationTypeSelectionView: View {
                     Text(#localize("settings_notifications_push_preview"))
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .tint(UIColor.primary.color)
                 .padding(.horizontal)
                 .padding(.vertical, 10)
                 .background(UIColor.secondarySystemGroupedBackground.color)
@@ -103,7 +105,7 @@ struct NotificationTypeSelectionView: View {
                             .foregroundColor(.white)
                             .padding()
                             .frame(maxWidth: .infinity)
-                            .background(UIColor.primary.color)
+                            .background(Color.accentColor)
                             .cornerRadius(16)
                     }
                 }
@@ -112,6 +114,7 @@ struct NotificationTypeSelectionView: View {
             .padding()
             .padding(.vertical)
         }
+        .tint(.accentColor)
         .background(UIColor.systemGroupedBackground.color)
         .interactiveDismissDisabled()
         .onDisappear {
@@ -134,6 +137,6 @@ struct NotificationTypeSelectionView: View {
 struct NotificationTypeSelectionView_Previews: PreviewProvider {
     static var previews: some View {
         NotificationTypeSelectionView()
-            .tint(UIColor.primary.color)
+            .tint(.accentColor)
     }
 }

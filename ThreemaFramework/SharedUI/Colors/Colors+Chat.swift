@@ -26,36 +26,36 @@ extension Colors {
     public class var backgroundChatLines: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray500.color
+            UIColor(resource: .gray500)
         case .dark:
-            Asset.SharedColors.gray450.color
+            UIColor(resource: .gray450)
         }
     }
     
     public class func backgroundChatLines(colorTheme: Theme) -> UIColor {
         switch colorTheme {
         case .light, .undefined:
-            Asset.SharedColors.gray500.color
+            UIColor(resource: .gray500)
         case .dark:
-            Asset.SharedColors.gray450.color
+            UIColor(resource: .gray450)
         }
     }
             
     public class var backgroundChatBar: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray100.color
+            UIColor(resource: .gray100)
         case .dark:
-            Asset.SharedColors.gray900.color
+            UIColor(resource: .gray900)
         }
     }
     
     public class var chatBarInput: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.white.color
+            .white
         case .dark:
-            Asset.SharedColors.gray1000.color
+            UIColor(resource: .gray1000)
         }
     }
     
@@ -66,9 +66,9 @@ extension Colors {
     @objc public class var fillMicrophoneButton: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray600.color
+            UIColor(resource: .gray600)
         case .dark:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         }
     }
     
@@ -79,81 +79,81 @@ extension Colors {
     @objc public class var ballotRowLight: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray200.color
+            UIColor(resource: .gray200)
         case .dark:
-            Asset.SharedColors.gray700.color
+            UIColor(resource: .gray700)
         }
     }
     
     @objc public class var ballotRowDark: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray300.color
+            UIColor(resource: .gray300)
         case .dark:
-            Asset.SharedColors.gray800.color
+            UIColor(resource: .gray800)
         }
     }
         
     public class var backgroundThumbnailCollectionView: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.white.color
+            .white
         case .dark:
-            Asset.SharedColors.gray900.color
+            UIColor(resource: .gray900)
         }
     }
     
     public class var backgroundPreviewCollectionViewCell: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray200.color
+            UIColor(resource: .gray200)
         case .dark:
-            Asset.SharedColors.black.color
+            .black
         }
     }
 
     public class var thumbnailProgressViewColor: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray30.color
+            UIColor(resource: .gray30)
         case .dark:
-            Asset.SharedColors.gray850.color
+            UIColor(resource: .gray850)
         }
     }
     
     public class var chatReactionBubble: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray300.color
+            UIColor(resource: .gray300)
         case .dark:
-            Asset.SharedColors.gray800.color
+            UIColor(resource: .gray800)
         }
     }
     
     public class var chatReactionBubbleSelected: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         case .dark:
-            Asset.SharedColors.gray550.color
+            UIColor(resource: .gray550)
         }
     }
 
     public class var chatReactionBubbleHighlighted: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray350.color
+            UIColor(resource: .gray350)
         case .dark:
-            Asset.SharedColors.gray500.color
+            UIColor(resource: .gray500)
         }
     }
     
     public class var chatReactionBubbleTextColor: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray750.color
+            UIColor(resource: .gray750)
         case .dark:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         }
     }
     

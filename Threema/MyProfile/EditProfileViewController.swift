@@ -37,7 +37,7 @@ import ThreemaMacros
     @IBOutlet var profilePictureSettingCell: UITableViewCell!
     @IBOutlet var releaseProfileTo: UILabel!
     
-    private let mdmSetup: MDMSetup! = MDMSetup(setup: false)
+    private let mdmSetup = MDMSetup(setup: false)
     private let profileStore: ProfileStore
     private var profile: ProfileStore.Profile
     private var newImage: Data?
@@ -59,7 +59,7 @@ import ThreemaMacros
         self.profile = profileStore.profile()
         self.sendProfilePicture = profile.sendProfilePicture
         self.newImage = profile.profileImage
-        self.shareWith = profile.profilePictureContactList ?? []
+        self.shareWith = profile.profilePictureContactList
         super.init(coder: coder)
     }
     
@@ -69,8 +69,8 @@ import ThreemaMacros
         releaseProfileTo.text = #localize("release_profilepicture_to")
         avatarView?.presentingViewController = self
         avatarView?.delegate = self
-        avatarView?.canDeleteImage = !mdmSetup.readonlyProfile()
-        avatarView?.canChooseImage = !mdmSetup.readonlyProfile()
+        avatarView?.canDeleteImage = !(mdmSetup?.readonlyProfile() ?? false)
+        avatarView?.canChooseImage = !(mdmSetup?.readonlyProfile() ?? false)
         
         profileCell?.contentView.isAccessibilityElement = false
         profileCell?.contentView.accessibilityLabel = nil
@@ -80,9 +80,9 @@ import ThreemaMacros
         
         setupColors()
         
-        profilePictureSettingCell?.isUserInteractionEnabled = !mdmSetup.disableSendProfilePicture()
+        profilePictureSettingCell?.isUserInteractionEnabled = !(mdmSetup?.disableSendProfilePicture() ?? false)
         
-        if mdmSetup.readonlyProfile() {
+        if mdmSetup?.readonlyProfile() ?? false {
             nickNameTextField?.isEnabled = false
         }
         else {
@@ -192,7 +192,7 @@ import ThreemaMacros
     private func updateView() {
         if newImage != nil {
             avatarView?.imageData = newImage
-            avatarView?.canDeleteImage = !mdmSetup.readonlyProfile()
+            avatarView?.canDeleteImage = !(mdmSetup?.readonlyProfile() ?? false)
         }
         else {
             avatarView?.imageData = nil
@@ -226,8 +226,8 @@ import ThreemaMacros
     }
     
     func disabledCellsForMDM() {
-        profilePictureSettingCell?.isUserInteractionEnabled = !mdmSetup.disableSendProfilePicture()
-        profilePictureSettingCell?.textLabel?.isEnabled = !mdmSetup.disableSendProfilePicture()
+        profilePictureSettingCell?.isUserInteractionEnabled = !(mdmSetup?.disableSendProfilePicture() ?? false)
+        profilePictureSettingCell?.textLabel?.isEnabled = !(mdmSetup?.disableSendProfilePicture() ?? false)
     }
 }
 
@@ -235,7 +235,7 @@ extension EditProfileViewController {
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         var footer = #localize("edit_profile_footer")
         
-        if mdmSetup.readonlyProfile() || mdmSetup.disableSendProfilePicture() {
+        if (mdmSetup?.readonlyProfile() ?? false) || (mdmSetup?.disableSendProfilePicture() ?? false) {
             footer.append("\n\n")
             footer.append(#localize("disabled_by_device_policy"))
         }

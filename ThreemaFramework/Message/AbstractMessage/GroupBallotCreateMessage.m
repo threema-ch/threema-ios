@@ -20,6 +20,7 @@
 
 #import "GroupBallotCreateMessage.h"
 #import "ProtocolDefines.h"
+#import "NSString+Hex.h"
 
 @implementation GroupBallotCreateMessage
 
@@ -50,6 +51,14 @@
 
 - (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
     return kV12;
+}
+
+#pragma mark - LoggingDescriptionProtocol
+
+- (NSString * _Nonnull)loggingDescription {
+    return [NSString stringWithFormat:@"(%@ ballotID: %@)",
+            [super loggingDescription],
+            [NSString stringWithHexData:self.ballotId]];
 }
 
 #pragma mark - NSSecureCoding

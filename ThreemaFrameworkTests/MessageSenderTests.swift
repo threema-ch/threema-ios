@@ -292,8 +292,7 @@ class MessageSenderTests: XCTestCase {
             let members = membersWithoutCreator.map { identityString in
                 dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: identityString,
-                    verificationLevel: 0
+                    identity: identityString
                 )
             }
             
@@ -381,8 +380,7 @@ class MessageSenderTests: XCTestCase {
             let members = membersWithoutCreator.map { identityString in
                 dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: identityString,
-                    verificationLevel: 0
+                    identity: identityString
                 )
             }
             let rejectedByContacts = members.filter { contact in
@@ -478,8 +476,7 @@ class MessageSenderTests: XCTestCase {
             let members = membersWithoutCreator.map { identityString in
                 dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: identityString,
-                    verificationLevel: 0
+                    identity: identityString
                 )
             }
             let rejectedByContacts = members.filter { contact in
@@ -568,8 +565,7 @@ class MessageSenderTests: XCTestCase {
             let recipients = recipients.map { identityString in
                 dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: identityString,
-                    verificationLevel: 0
+                    identity: identityString
                 )
             }
             
@@ -1168,8 +1164,8 @@ class MessageSenderTests: XCTestCase {
         
         let message = dbPreparer.save {
             let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 1
-            
+            contactEntity.setFeatureMask(to: 1)
+
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             return dbPreparer.createTextMessage(
                 conversation: conversation,
@@ -1214,8 +1210,8 @@ class MessageSenderTests: XCTestCase {
         
         let message = dbPreparer.save {
             let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 1
-            
+            contactEntity.setFeatureMask(to: 1)
+
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             return dbPreparer.createTextMessage(
                 conversation: conversation,
@@ -1273,7 +1269,7 @@ class MessageSenderTests: XCTestCase {
         
         let message = dbPreparer.save {
             let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 1
+            contactEntity.setFeatureMask(to: 1)
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             
@@ -1327,8 +1323,8 @@ class MessageSenderTests: XCTestCase {
         
         let message = dbPreparer.save {
             let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 2024
-            
+            contactEntity.setFeatureMask(to: 2024)
+
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             return dbPreparer.createTextMessage(
                 conversation: conversation,
@@ -1385,7 +1381,7 @@ class MessageSenderTests: XCTestCase {
         
         let message = dbPreparer.save {
             let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
-            contactEntity.featureMask = 2024
+            contactEntity.setFeatureMask(to: 2024)
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             
@@ -1460,7 +1456,7 @@ class MessageSenderTests: XCTestCase {
         let (message, group) = dbPreparer.save {
             let members = membersWithoutCreator.map { identityString in
                 let contactEntity = dbPreparer.createContact(identity: identityString)
-                contactEntity.featureMask = 1
+                contactEntity.setFeatureMask(to: 1)
                 return contactEntity
             }
             
@@ -1533,7 +1529,7 @@ class MessageSenderTests: XCTestCase {
         let (message, group) = dbPreparer.save {
             let members = membersWithoutCreator.map { identityString in
                 let contactEntity = dbPreparer.createContact(identity: identityString)
-                contactEntity.featureMask = 1
+                contactEntity.setFeatureMask(to: 1)
                 return contactEntity
             }
             
@@ -1616,11 +1612,11 @@ class MessageSenderTests: XCTestCase {
         
         let (message, _) = dbPreparer.save {
             let contactEntity1 = dbPreparer.createContact(identity: notSupportingMemberID)
-            contactEntity1.featureMask = 1
-            
+            contactEntity1.setFeatureMask(to: 1)
+
             let contactEntity2 = dbPreparer.createContact(identity: supportingMemberID)
-            contactEntity2.featureMask = 2024
-            
+            contactEntity2.setFeatureMask(to: 2024)
+
             let members = [contactEntity1, contactEntity2]
             
             let groupEntity = dbPreparer.createGroupEntity(
@@ -1710,11 +1706,11 @@ class MessageSenderTests: XCTestCase {
         
         let (message, group) = dbPreparer.save {
             let contactEntity1 = dbPreparer.createContact(identity: notSupportingMemberID)
-            contactEntity1.featureMask = 1
-            
+            contactEntity1.setFeatureMask(to: 1)
+
             let contactEntity2 = dbPreparer.createContact(identity: supportingMemberID)
-            contactEntity2.featureMask = 2024
-            
+            contactEntity2.setFeatureMask(to: 2024)
+
             let members = [contactEntity1, contactEntity2]
             
             let groupEntity = dbPreparer.createGroupEntity(
@@ -1812,7 +1808,7 @@ class MessageSenderTests: XCTestCase {
         let (message, group) = dbPreparer.save {
             let members = membersWithoutCreator.map { identityString in
                 let contactEntity = dbPreparer.createContact(identity: identityString)
-                contactEntity.featureMask = 2024
+                contactEntity.setFeatureMask(to: 2024)
                 return contactEntity
             }
             
@@ -1894,7 +1890,7 @@ class MessageSenderTests: XCTestCase {
         let (message, group) = dbPreparer.save {
             let members = membersWithoutCreator.map { identityString in
                 let contactEntity = dbPreparer.createContact(identity: identityString)
-                contactEntity.featureMask = 2024
+                contactEntity.setFeatureMask(to: 2024)
                 return contactEntity
             }
             
@@ -1964,8 +1960,7 @@ class MessageSenderTests: XCTestCase {
     func testApplyReactionMappingYesLocalNoteGroup() async throws {
         let expectedGroupID = MockData.generateGroupID()
         let expectedMessageID = MockData.generateMessageID()
-               
-        let reaction = Emoji.abacus
+        let reaction = Emoji.ant
         
         let myIdentityStoreMock = MyIdentityStoreMock()
         let userSettingMock = UserSettingsMock()

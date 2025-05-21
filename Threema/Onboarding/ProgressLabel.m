@@ -120,11 +120,11 @@
         image = [BundleUtil imageNamed:imageName];
     }
     if ([imageName isEqualToString:@"checkmark.circle.fill"]) {
-        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[Colors.white, Colors.green]];
+        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[UIColor.whiteColor, UIColor.systemGreenColor]];
         image = [UIImage systemImageNamed:imageName withConfiguration:config];
     }
     else if ([imageName isEqualToString:@"exclamationmark.circle.fill"]) {
-        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[Colors.white, Colors.red]];
+        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPaletteColors:@[UIColor.whiteColor, UIColor.systemRedColor]];
         image = [UIImage systemImageNamed:imageName withConfiguration:config];
     }
     if (_statusView == nil) {

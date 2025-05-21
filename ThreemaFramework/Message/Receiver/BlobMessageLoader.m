@@ -51,7 +51,7 @@
     return self;
 }
 
-- (void)startWithMessage:(BaseMessage<BlobData> *)message onCompletion:(void (^)(BaseMessage<BlobData> *loadedMessage))onCompletion onError:(void (^)(NSError *error))onError {
+- (void)startWithMessage:(BaseMessageEntity<BlobData> *)message onCompletion:(void (^)(BaseMessageEntity<BlobData> *loadedMessage))onCompletion onError:(void (^)(NSError *error))onError {
     self->messageObjectID = message.objectID;
 
     NSData *blobData = [message blobData];
@@ -93,13 +93,13 @@
     
     // Set progress to 0 before starting the request to be sure this request will not called multiple times
     [_entityManager performSyncBlockAndSafe:^{
-        BaseMessage<BlobData> *bmsg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
+        BaseMessageEntity<BlobData> *bmsg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
         bmsg.blobProgress = [NSNumber numberWithFloat:0];
     }];
     
     [loader startWithBlobId:blobId origin:message.blobOrigin onCompletion:^(NSData *data) {
         [_entityManager performSyncBlockAndSafe:^{
-            BaseMessage<BlobData> *msg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
+            BaseMessageEntity<BlobData> *msg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
 
             if ([msg wasDeleted]) {
                 return;
@@ -135,7 +135,7 @@
         [[ValidationLogger sharedValidationLogger] logString:error.description];
 
         [_entityManager performSyncBlockAndSafe:^{
-            BaseMessage<BlobData> *msg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
+            BaseMessageEntity<BlobData> *msg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
             if ([msg wasDeleted] == NO) {
                 // Only set failed state if blobData is nil
                 if (msg.blobData == nil) {
@@ -150,7 +150,7 @@
 }
 
 
-- (NSData *)decryptData:(NSData *)data forMessage:(BaseMessage<BlobData> *)message {
+- (NSData *)decryptData:(NSData *)data forMessage:(BaseMessageEntity<BlobData> *)message {
     NSData *decryptedData = nil;
     
     @try {
@@ -162,7 +162,7 @@
     return decryptedData;
 }
 
-- (void)updateDBObject:(BaseMessage<BlobData> *)message with:(NSData *)data {
+- (void)updateDBObject:(BaseMessageEntity<BlobData> *)message with:(NSData *)data {
     message.blobData = data;
     message.blobProgress = nil;
     message.sendFailed = [NSNumber numberWithBool:NO];
@@ -198,7 +198,7 @@
     __block BOOL wasDeleted = NO;
 
     [_entityManager performBlockAndWait:^{
-        BaseMessage<BlobData> *msg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
+        BaseMessageEntity<BlobData> *msg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
         if ([msg wasDeleted]) {
             wasDeleted = YES;
         }
@@ -209,7 +209,7 @@
 
 - (void)httpsLoaderReceivedData:(NSData *)totalData {
     [_entityManager performSyncBlockAndSafe:^{
-        BaseMessage<BlobData> *msg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
+        BaseMessageEntity<BlobData> *msg = [_entityManager.entityFetcher getManagedObjectById:messageObjectID];
         if ([msg wasDeleted]) {
             return;
         }

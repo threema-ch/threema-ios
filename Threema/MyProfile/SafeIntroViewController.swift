@@ -38,16 +38,26 @@ class SafeIntroViewController: ThemedViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        titleLabel.text = #localize("safe_intro_title")
-        descriptionLabel.text = #localize("safe_intro_description")
+        titleLabel.text = String.localizedStringWithFormat(
+            #localize("safe_intro_title"),
+            TargetManager.localizedAppName
+        )
+        descriptionLabel.text = String.localizedStringWithFormat(
+            #localize("safe_intro_description"),
+            TargetManager.localizedAppName
+        )
         introCircle.layer.cornerRadius = introCircle.frame.height / 2
-        explainLabel.text = #localize("safe_intro_explain")
+        explainLabel.text = String.localizedStringWithFormat(
+            #localize("safe_intro_explain"),
+            TargetManager.localizedAppName,
+            TargetManager.appName
+        )
         cancelButton.setTitle(#localize("safe_intro_cancel"), for: .normal)
         okButton.setTitle(#localize("safe_intro_enable"), for: .normal)
         
-        cancelButton.accentColor = .primary
+        cancelButton.accentColor = .tintColor
         cancelButton.textColor = .label
-        okButton.accentColor = .primary
+        okButton.accentColor = .tintColor
         okButton.textColor = .white
 
         introCircle.backgroundColor = .tertiarySystemGroupedBackground

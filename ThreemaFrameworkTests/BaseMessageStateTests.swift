@@ -42,98 +42,10 @@ class BaseMessageStateTests: XCTestCase {
         }
     }
     
-    // MARK: - old_messageState (deprecated)
-    
-    func testOldOwnMessageState() {
-        var baseMessage: BaseMessage!
-        
-        databasePreparer.save {
-            baseMessage = databasePreparer.createTextMessage(
-                conversation: conversation,
-                text: "Hello World",
-                date: Date(),
-                delivered: false,
-                id: BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
-                isOwn: true,
-                read: false,
-                sent: false,
-                userack: false,
-                sender: nil,
-                remoteSentDate: nil
-            )
-        }
-        
-        XCTAssertEqual(MESSAGE_STATE_SENDING, baseMessage.old_messageState)
-        
-        baseMessage.sent = true
-        XCTAssertEqual(MESSAGE_STATE_SENT, baseMessage.old_messageState)
-        
-        baseMessage.delivered = true
-        XCTAssertEqual(MESSAGE_STATE_DELIVERED, baseMessage.old_messageState)
-
-        baseMessage.read = true
-        XCTAssertEqual(MESSAGE_STATE_READ, baseMessage.old_messageState)
-        
-        baseMessage.sendFailed = true
-        XCTAssertEqual(MESSAGE_STATE_FAILED, baseMessage.old_messageState)
-        
-        baseMessage.userack = true
-        XCTAssertEqual(MESSAGE_STATE_FAILED, baseMessage.old_messageState)
-        
-        baseMessage.userackDate = Date()
-        XCTAssertEqual(MESSAGE_STATE_USER_ACK, baseMessage.old_messageState)
-
-        baseMessage.userack = false
-        XCTAssertEqual(MESSAGE_STATE_USER_DECLINED, baseMessage.old_messageState)
-    }
-    
-    func testOldOtherMessageState() {
-        var baseMessage: BaseMessage!
-        
-        databasePreparer.save {
-            baseMessage = databasePreparer.createTextMessage(
-                conversation: conversation,
-                text: "Hello World",
-                date: Date(),
-                delivered: false,
-                id: BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!,
-                isOwn: false,
-                read: false,
-                sent: false,
-                userack: false,
-                sender: nil,
-                remoteSentDate: Date(timeIntervalSinceNow: -100)
-            )
-        }
-        
-        XCTAssertEqual(MESSAGE_STATE_SENT, baseMessage.old_messageState)
-        
-        baseMessage.sent = true
-        XCTAssertEqual(MESSAGE_STATE_SENT, baseMessage.old_messageState)
-        
-        baseMessage.delivered = true
-        XCTAssertEqual(MESSAGE_STATE_SENT, baseMessage.old_messageState)
-
-        baseMessage.read = true
-        XCTAssertEqual(MESSAGE_STATE_SENT, baseMessage.old_messageState)
-        
-        baseMessage.sendFailed = true
-        XCTAssertEqual(MESSAGE_STATE_SENT, baseMessage.old_messageState)
-        
-        baseMessage.userack = true
-        XCTAssertEqual(MESSAGE_STATE_SENT, baseMessage.old_messageState)
-        
-        baseMessage.userackDate = Date()
-        XCTAssertEqual(MESSAGE_STATE_USER_ACK, baseMessage.old_messageState)
-
-        baseMessage.userack = false
-        XCTAssertEqual(MESSAGE_STATE_USER_DECLINED, baseMessage.old_messageState)
-    }
-    
     // MARK: - messageState
     
     func testOwnState() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         databasePreparer.save {
             baseMessage = databasePreparer.createTextMessage(
@@ -170,7 +82,7 @@ class BaseMessageStateTests: XCTestCase {
     }
     
     func testOtherState() {
-        var baseMessage: BaseMessage!
+        var baseMessage: BaseMessageEntity!
         
         databasePreparer.save {
             baseMessage = databasePreparer.createTextMessage(

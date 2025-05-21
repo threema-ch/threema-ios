@@ -212,6 +212,7 @@ class EntityCreatorTests: XCTestCase {
         XCTAssertEqual(fileMessageEntity.fileSize, NSNumber(integerLiteral: senderItem.getData().count))
         XCTAssertEqual(fileMessageEntity.type, senderItem.renderType)
         XCTAssertEqual(fileMessageEntity.correlationID, correlationID)
-        XCTAssertEqual(fileMessageEntity.webRequestID, webRequestID)
+        // swiftformat:disable:next acronyms
+        XCTAssertEqual(fileMessageEntity.webRequestId, webRequestID)
     }
 }

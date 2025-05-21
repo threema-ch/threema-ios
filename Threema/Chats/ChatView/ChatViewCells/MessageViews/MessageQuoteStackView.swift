@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 /// Quote content stack
@@ -35,6 +36,7 @@ final class MessageQuoteStackView: UIStackView {
     var quoteMessage: QuoteMessage? {
         didSet {
             guard let quoteMessage else {
+                updateMissingQuote()
                 return
             }
             
@@ -192,6 +194,18 @@ final class MessageQuoteStackView: UIStackView {
         updateLayout()
     }
     
+    private func updateMissingQuote() {
+        // Assign Values & configure layout
+        nameLabel.text = nil
+        updateQuoteBarColor()
+
+        nameAndQuoteStackView.spacing = 0
+        quoteLabel.text = #localize("quote_not_found")
+        quoteLabel.font = PreviewableMessageConfiguration.quote.font.italic()
+        
+        updateLayout()
+    }
+    
     func updateColors() {
         updateQuoteBarColor()
         
@@ -200,7 +214,7 @@ final class MessageQuoteStackView: UIStackView {
     }
     
     private func updateQuoteBarColor() {
-        quoteBar.backgroundColor = quoteMessage?.senderIDColor ?? .primary
+        quoteBar.backgroundColor = quoteMessage?.senderIDColor ?? .tintColor
     }
     
     private func updateContent() {

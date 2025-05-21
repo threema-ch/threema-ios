@@ -46,7 +46,6 @@
   "testTargets" : [
     {
       "skippedTests" : [
-        "(null)",
         "AddressBoolLoadTests",
         "AutomaticDeleteTests",
         "ChatProfileViewTests\/testBasicInitialization()",

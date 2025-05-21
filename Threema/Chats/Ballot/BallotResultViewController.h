@@ -19,8 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "Ballot.h"
 #import "Old_ThemedViewController.h"
+
+@class BallotEntity;
 
 @interface BallotResultViewController : Old_ThemedViewController
 
@@ -31,8 +32,8 @@
 
 
 
-@property Ballot *ballot;
+@property BallotEntity *ballot;
 
-+ (instancetype) ballotResultViewControllerForBallot:(Ballot *)ballot;
++ (instancetype) ballotResultViewControllerForBallot:(BallotEntity *)ballot;
 
 @end

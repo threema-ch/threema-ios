@@ -25,12 +25,8 @@
 #import <ThreemaFramework/AbstractMessage.h>
 #import <ThreemaFramework/AbstractGroupMessage.h>
 #import <ThreemaFramework/AppGroup.h>
-#import <ThreemaFramework/Ballot.h>
-#import <ThreemaFramework/BallotChoice.h>
-#import <ThreemaFramework/BallotMessage.h>
 #import <ThreemaFramework/BallotMessageDecoder.h>
 #import <ThreemaFramework/BallotMessageEncoder.h>
-#import <ThreemaFramework/BaseMessage.h>
 #import <ThreemaFramework/Old_BlobMessageSender.h>
 #import <ThreemaFramework/Old_BlobUploadDelegate.h>
 #import <ThreemaFramework/BoxAudioMessage.h>
@@ -49,7 +45,6 @@
 #import <ThreemaFramework/BoxVoIPCallRingingMessage.h>
 #import <ThreemaFramework/BundleUtil.h>
 #import <ThreemaFramework/Constants.h>
-#import <ThreemaFramework/ContactEntity.h>
 #import <ThreemaFramework/ContactDeletePhotoMessage.h>
 #import <ThreemaFramework/ContactNameLabel.h>
 #import <ThreemaFramework/ContactPhotoSender.h>

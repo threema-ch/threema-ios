@@ -265,7 +265,7 @@ class OrphanedFilesCleanupViewController: ThemedTableViewController {
         
         orphanedFilesMoveToBin.textColor = Colors.textLink
         orphanedFilesRestore.textColor = Colors.textLink
-        orphanedFilesDelete.textColor = Colors.red
+        orphanedFilesDelete.textColor = .systemRed
         logAllFiles.textColor = Colors.textLink
     }
     

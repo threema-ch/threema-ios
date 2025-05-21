@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23H222" minimumToolsVersion="Xcode 11.0" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23605" systemVersion="24D60" minimumToolsVersion="Xcode 15.0" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="AudioData" representedClassName="AudioDataEntity" syncable="YES">
         <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <relationship name="message" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="AudioMessage" inverseName="audio" inverseEntity="AudioMessage"/>
@@ -12,7 +12,7 @@
         <attribute name="progress" optional="YES" transient="YES" attributeType="Float" usesScalarValueType="NO"/>
         <relationship name="audio" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="AudioData" inverseName="message" inverseEntity="AudioData"/>
     </entity>
-    <entity name="Ballot" representedClassName="Ballot" syncable="YES">
+    <entity name="Ballot" representedClassName="BallotEntity" syncable="YES">
         <attribute name="assessmentType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
         <attribute name="choicesType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
         <attribute name="createDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -40,7 +40,7 @@
             <fetchIndexElement property="state" type="Binary" order="ascending"/>
         </fetchIndex>
     </entity>
-    <entity name="BallotChoice" representedClassName="BallotChoice" syncable="YES">
+    <entity name="BallotChoice" representedClassName="BallotChoiceEntity" syncable="YES">
         <attribute name="createDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO"/>
         <attribute name="modifyDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -53,7 +53,7 @@
             <fetchIndexElement property="id" type="Binary" order="ascending"/>
         </fetchIndex>
     </entity>
-    <entity name="BallotMessage" representedClassName="BallotMessage" parentEntity="Message" syncable="YES">
+    <entity name="BallotMessage" representedClassName="BallotMessageEntity" parentEntity="Message" syncable="YES">
         <attribute name="ballotState" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="NO"/>
         <relationship name="ballot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Ballot" inverseName="message" inverseEntity="Ballot"/>
     </entity>
@@ -212,7 +212,7 @@
         <attribute name="poiAddress" optional="YES" attributeType="String"/>
         <attribute name="poiName" optional="YES" attributeType="String"/>
     </entity>
-    <entity name="Message" representedClassName="BaseMessage" isAbstract="YES" versionHashModifier="chatViewIndexAdded" syncable="YES">
+    <entity name="Message" representedClassName="BaseMessageEntity" isAbstract="YES" versionHashModifier="chatViewIndexAdded" syncable="YES">
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="deletedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="delivered" attributeType="Boolean" usesScalarValueType="NO"/>

@@ -40,7 +40,7 @@ public final class MessageForwarder {
     ///   - additionalText: Additional text to be send as caption for file messages, or as normal text message for other
     ///                     types.
     public func forward(
-        _ message: BaseMessage,
+        _ message: BaseMessageEntity,
         to conversation: ConversationEntity,
         sendAsFile: Bool,
         additionalText: String?

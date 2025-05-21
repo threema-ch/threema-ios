@@ -24,9 +24,9 @@ extension Colors {
     public class var pillBackground: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.white.color
+            .white
         case .dark:
-            Asset.SharedColors.gray900.color
+            UIColor(resource: .gray900)
         }
     }
     
@@ -42,13 +42,13 @@ extension Colors {
     public class var pillShadow: UIColor {
         switch theme {
         case .light, .undefined:
-            Colors.black.withAlphaComponent(0.3)
+            .black.withAlphaComponent(0.3)
         case .dark:
             .clear
         }
     }
     
     public class var successGreen: UIColor {
-        color(for: Asset.TargetColors.Threema.primary)
+        .green
     }
 }

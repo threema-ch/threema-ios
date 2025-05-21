@@ -20,7 +20,6 @@
 
 #import "TextStyleUtils.h"
 #import "ContactStore.h"
-#import "ContactEntity.h"
 #import "MyIdentityStore.h"
 #import "UILabel+Markup.h"
 #import "BundleUtil.h"

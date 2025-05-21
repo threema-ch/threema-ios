@@ -148,6 +148,16 @@ public enum DomainMatchMode: String {
     }
 }
 
+@objcMembers public class MapsServerInfo: NSObject {
+    public let poiNamesURL: String
+    public let poiAroundURL: String
+    
+    init(poiNamesURL: String, poiAroundURL: String) {
+        self.poiNamesURL = poiNamesURL
+        self.poiAroundURL = poiAroundURL
+    }
+}
+
 public enum DomainSpkisAlgorithm {
     case unsupported, sha256
 
@@ -222,4 +232,5 @@ extension Domain {
     func webServer(ipv6: Bool, completionHandler: @escaping (WebServerInfo?, Error?) -> Void)
     func rendezvousServer(completionHandler: @escaping (RendezvousServerInfo?, Error?) -> Void)
     func domains(completionHandler: @escaping ([Domain]?, Error?) -> Void)
+    func mapsServer(completionHandler: @escaping (MapsServerInfo?, Error?) -> Void)
 }

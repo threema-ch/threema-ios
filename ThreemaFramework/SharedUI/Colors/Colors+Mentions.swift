@@ -24,54 +24,54 @@ extension Colors {
     private class var backgroundMention: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         case .dark:
-            Asset.SharedColors.gray500.color
+            UIColor(resource: .gray500)
         }
     }
     
     private class var backgroundMentionOwnMessage: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         case .dark:
-            Asset.SharedColors.gray600.color
+            UIColor(resource: .gray600)
         }
     }
     
     private class var backgroundMentionOverviewMessage: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         case .dark:
-            Asset.SharedColors.gray500.color
+            UIColor(resource: .gray500)
         }
     }
     
     @objc public class var backgroundMentionMe: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray600.color
+            UIColor(resource: .gray600)
         case .dark:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         }
     }
     
     @objc public class var backgroundMentionMeOwnMessage: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray600.color
+            UIColor(resource: .gray600)
         case .dark:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         }
     }
     
     @objc public class var backgroundMentionMeOverviewMessage: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray600.color
+            UIColor(resource: .gray600)
         case .dark:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         }
     }
     

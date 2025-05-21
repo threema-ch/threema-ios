@@ -22,7 +22,6 @@
 #import "EntityCreator.h"
 #import "EntityFetcher.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
-#import "ContactEntity.h"
 #import "AppGroup.h"
 #import "HTTPSURLLoader.h"
 #import "BundleUtil.h"

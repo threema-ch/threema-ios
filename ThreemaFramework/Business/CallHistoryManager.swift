@@ -52,7 +52,7 @@ import Foundation
                     fatalError()
                 }
                 call.callID = NSNumber(value: callID)
-                call.date = date as NSDate
+                call.date = date
                 call.contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.identity)
                 
                 DDLogNotice(

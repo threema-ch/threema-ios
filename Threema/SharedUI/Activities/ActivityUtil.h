@@ -19,11 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
-#import "BaseMessage.h"
+
+@class BaseMessageEntity;
 
 @interface ActivityUtil : NSObject
 
-+ (UIActivityViewController *)activityViewControllerForMessage:(BaseMessage *)message withView:(UIView *)view andBarButtonItem:(UIBarButtonItem *)barButtonItem;
++ (UIActivityViewController *)activityViewControllerForMessage:(BaseMessageEntity *)message withView:(UIView *)view andBarButtonItem:(UIBarButtonItem *)barButtonItem;
 
 + (UIActivityViewController *)activityViewControllerWithActivityItems:(NSArray *)activityItems applicationActivities:(NSArray *)applicationActivities;
 @end

@@ -258,11 +258,9 @@ public class Group: NSObject {
     ///
     /// This is useful to get all members that should receive a group message
     var allActiveMemberIdentitiesWithoutCreator: [String] {
-        var identities: [String]!
-        identities = members
-            .filter { $0.state != kStateInvalid }
+        members
+            .filter { $0.state != .invalid }
             .map(\.identity.string)
-        return identities
     }
     
     public private(set) var usesNonGeneratedProfilePicture = false

@@ -31,6 +31,7 @@ final class SendLocationSearchDataSource: UITableViewDiffableDataSource<SendLoca
 
     private weak var sendLocationViewController: SendLocationViewController?
     private weak var searchTableView: UITableView?
+    private let mapsServerInfo: MapsServerInfo?
         
     private static var locationGranted: Bool {
         CLLocationManager.authorizationStatus() == .authorizedAlways || CLLocationManager
@@ -61,10 +62,12 @@ final class SendLocationSearchDataSource: UITableViewDiffableDataSource<SendLoca
     
     init(
         sendLocationViewController: SendLocationViewController,
-        tableView: UITableView
+        tableView: UITableView,
+        mapsServerInfo: MapsServerInfo?
     ) {
         self.sendLocationViewController = sendLocationViewController
         self.searchTableView = tableView
+        self.mapsServerInfo = mapsServerInfo
         super.init(tableView: tableView, cellProvider: cellProvider)
         configureDataSource(with: tableView)
     }
@@ -153,12 +156,16 @@ extension SendLocationSearchDataSource {
     /// - Parameter term: Search-Term
     func requestPOIsFor(term: String) {
         
-        // Don't fetch if POI are disabled in privacy settings
-        guard UserSettings.shared().enablePoi else {
+        if TargetManager.isOnPrem, mapsServerInfo == nil {
             return
         }
         
-        let baseString = BundleUtil.object(forInfoDictionaryKey: "ThreemaPOINamesURL") as! String
+        // Don't fetch if POI are disabled in privacy settings
+        guard UserSettings.shared().enablePoi,
+              let baseString = mapsServerInfo?.poiNamesURL else {
+            return
+        }
+        
         var urlString = ""
         
         if SendLocationSearchDataSource.locationGranted {

@@ -102,7 +102,7 @@ extension ChatViewMessageRightToLeftTransitionProxy: UINavigationControllerDeleg
         @unknown default:
             let message =
                 "Unknown switch case when handling animationControllerFor in ChatViewMessageRightToLeftTransitionProxy"
-            DDLogError(message)
+            DDLogError("\(message)")
             assertionFailure(message)
             return nil
         }

@@ -220,7 +220,7 @@ public class WebAbstractMessage: NSObject {
                         return
                     }
                     else {
-                        if let image = imageMessageEntity.image {
+                        if imageMessageEntity.image != nil {
                             let confirmResponse = WebConfirmResponse(
                                 message: requestThumbnail,
                                 success: false,
@@ -230,7 +230,7 @@ public class WebAbstractMessage: NSObject {
                             completionHandler(confirmResponse.messagePack(), false)
                             return
                         }
-                        else if let thumbnail = imageMessageEntity.thumbnail {
+                        else if imageMessageEntity.thumbnail != nil {
                             let confirmResponse = WebConfirmResponse(
                                 message: requestThumbnail,
                                 success: false,
@@ -698,13 +698,13 @@ public class WebAbstractMessage: NSObject {
         let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
         var foundMessageID = false
         
-        var readReceiptQueue: [BaseMessage] = []
+        var readReceiptQueue: [BaseMessageEntity] = []
         var readNotificationsKeys: [String] = []
         let unreadMessages = messageFetcher.unreadMessages()
         
         for message in unreadMessages {
-            if let conversation = message.conversation,
-               message.id == requestMessage.messageID || foundMessageID {
+            if message.id == requestMessage.messageID || foundMessageID {
+                let conversation = message.conversation
                 readReceiptQueue.append(message)
                 if conversation.isGroup {
                     // Quickfix: Sender should never be `nil` for incoming group messages
@@ -756,37 +756,31 @@ public class WebAbstractMessage: NSObject {
     private func updateAckForMessage(
         businessInjector: BusinessInjectorProtocol,
         requestMessage: WebAckRequest,
-        baseMessage: BaseMessage!
+        baseMessage: BaseMessageEntity
     ) {
-        if baseMessage != nil {
-                        
-            guard baseMessage.conversation != nil else {
-                return
-            }
 
-            ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
-                Task {
-                    do {
-                        if requestMessage.acknowledged {
-                            try await businessInjector.messageSender.sendReaction(
-                                to: baseMessage.objectID,
-                                reaction: EmojiVariant(base: .thumbsUp, skintone: nil)
-                            )
-                        }
-                        else {
-                            try await businessInjector.messageSender.sendReaction(
-                                to: baseMessage.objectID,
-                                reaction: EmojiVariant(base: .thumbsDown, skintone: nil)
-                            )
-                        }
+        ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
+            Task {
+                do {
+                    if requestMessage.acknowledged {
+                        try await businessInjector.messageSender.sendReaction(
+                            to: baseMessage.objectID,
+                            reaction: EmojiVariant(base: .thumbsUp, skintone: nil)
+                        )
                     }
-                    catch {
-                        DDLogError("[Threema Web] Sending reactions from web failed.")
+                    else {
+                        try await businessInjector.messageSender.sendReaction(
+                            to: baseMessage.objectID,
+                            reaction: EmojiVariant(base: .thumbsDown, skintone: nil)
+                        )
                     }
                 }
-            } onTimeout: {
-                DDLogError("[Threema Web] Sending user ack/decline message timed out")
+                catch {
+                    DDLogError("[Threema Web] Sending reactions from web failed.")
+                }
             }
+        } onTimeout: {
+            DDLogError("[Threema Web] Sending user ack/decline message timed out")
         }
     }
     

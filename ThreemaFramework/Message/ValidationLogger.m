@@ -152,6 +152,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             break;
         case MSGTYPE_GROUP_BALLOT_VOTE:
             typeText = @"GROUP_BALLOT_VOTE";
+            logmsg = message.loggingDescription;
             break;
         case MSGTYPE_VOIP_CALL_OFFER:
             typeText = @"CALL_OFFER";

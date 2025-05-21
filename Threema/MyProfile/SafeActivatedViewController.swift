@@ -87,8 +87,8 @@ class SafeActivatedViewController: ThemedTableViewController {
         backupSizeValueLabel.textColor = .secondaryLabel
         lastResultValueLabel.textColor = .secondaryLabel
         
-        backupNowButtonLabel.textColor = .primary
-        changePasswordButtonLabel.textColor = .primary
+        backupNowButtonLabel.textColor = .tintColor
+        changePasswordButtonLabel.textColor = .tintColor
         
         NotificationCenter.default.addObserver(
             self,
@@ -185,7 +185,7 @@ class SafeActivatedViewController: ThemedTableViewController {
             .getLastResult()! : hyphen
         
         if lastResultValueLabel.text == #localize("safe_successful") {
-            lastResultValueLabel.textColor = Colors.green
+            lastResultValueLabel.textColor = .systemGreen
         }
         else if lastResultValueLabel.text != "-" {
             lastResultValueLabel.textColor = .systemRed
@@ -232,8 +232,14 @@ class SafeActivatedViewController: ThemedTableViewController {
             case 0:
                 UIAlertTemplate.showAlert(
                     owner: self,
-                    title: "Threema Safe",
-                    message: #localize("safe_enable_explain")
+                    title: String.localizedStringWithFormat(
+                        #localize("safe_setup_backup_title"),
+                        TargetManager.localizedAppName
+                    ),
+                    message: String.localizedStringWithFormat(
+                        #localize("safe_enable_explain"),
+                        TargetManager.localizedAppName
+                    )
                 )
             case 1:
                 backupNow()
@@ -270,8 +276,14 @@ extension SafeActivatedViewController {
     @IBAction func touchDownExplainButton(_ sender: UIButton, forEvent event: UIEvent) {
         UIAlertTemplate.showAlert(
             owner: self,
-            title: "Threema Safe",
-            message: #localize("safe_enable_explain")
+            title: String.localizedStringWithFormat(
+                #localize("safe_setup_backup_title"),
+                TargetManager.localizedAppName
+            ),
+            message: String.localizedStringWithFormat(
+                #localize("safe_enable_explain"),
+                TargetManager.localizedAppName
+            )
         )
     }
 }

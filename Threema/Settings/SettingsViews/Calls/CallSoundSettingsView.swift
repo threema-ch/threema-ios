@@ -39,7 +39,10 @@ struct CallSoundSettingsView: View {
         List {
             Picker("", selection: $settingsVM.voIPSound) {
                 ForEach(soundList, id: \.self) { soundName in
-                    Text(BundleUtil.localizedString(forKey: "sound_\(soundName)"))
+                    Text(
+                        soundName == "threema_best" ? TargetManager.appName : BundleUtil
+                            .localizedString(forKey: "sound_\(soundName)")
+                    )
                 }
             }
         }
@@ -50,7 +53,7 @@ struct CallSoundSettingsView: View {
             CallSoundSettingsView.soundPreviewPlayer.stopPlaying()
         }
         .pickerStyle(.inline)
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
         .navigationTitle(#localize("settings_threema_calls_call_sound"))
     }
 }
@@ -58,7 +61,7 @@ struct CallSoundSettingsView: View {
 struct CallSoundSettingsView_Previews: PreviewProvider {
     static var previews: some View {
         CallSoundSettingsView()
-            .tint(UIColor.primary.color)
+            .tint(.accentColor)
             .environmentObject(BusinessInjector.ui.settingsStore as! SettingsStore)
     }
 }

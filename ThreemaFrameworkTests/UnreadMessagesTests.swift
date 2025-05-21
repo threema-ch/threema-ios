@@ -41,8 +41,7 @@ class UnreadMessagesTests: XCTestCase {
         dp.save {
             let contact1 = dp.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: "TESTER01",
-                verificationLevel: 0
+                identity: "TESTER01"
             )
             self.testDataConversation1 = dp
                 .createConversation(typing: false, unreadMessageCount: 2, visibility: .default) { conversation in
@@ -63,8 +62,7 @@ class UnreadMessagesTests: XCTestCase {
 
             let contact2 = dp.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: "TESTER02",
-                verificationLevel: 0
+                identity: "TESTER02"
             )
             self.testDataConversation2 = dp
                 .createConversation(typing: false, unreadMessageCount: 3, visibility: .default) { conversation in
@@ -111,8 +109,7 @@ class UnreadMessagesTests: XCTestCase {
 
             let contact3 = dp.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: "TESTER03",
-                verificationLevel: 0
+                identity: "TESTER03"
             )
             self.testDataConversation3 = dp
                 .createConversation(typing: false, unreadMessageCount: -1, visibility: .default) { conversation in

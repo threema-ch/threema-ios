@@ -22,7 +22,7 @@ import DSWaveformImage
 import SwiftUI
 
 struct ProgressViewWaveform: View {
-    @EnvironmentObject var model: VoiceMessageRecorderView.Model
+    @EnvironmentObject var model: VoiceMessageRecorderViewModel
     @State private var progress = 0.0
     
     private var drawer = WaveformImageDrawer()
@@ -31,15 +31,13 @@ struct ProgressViewWaveform: View {
     var body: some View {
         waveformView
             .onChange(of: model.duration) { duration in
-                Task(priority: .userInitiated) {
-                    progress = await duration / (model.voiceMessageManager.tmpAudioDuration)
-                }
+                progress = duration / model.assetDuration
             }
     }
     
     private var waveformView: some View {
         GeometryReader { geometry in
-            let modified = model.configuration.with(size: geometry.size)
+            let modified = model.waveFormConfiguration.with(size: geometry.size)
             let length = Int(modified.size.width * modified.scale)
             let waveform = drawer.waveformImage(
                 from: interpolatedSamples(
@@ -64,6 +62,7 @@ struct ProgressViewWaveform: View {
 }
 
 extension ProgressViewWaveform {
+    
     /// Interpolates the given samples to a new length.
     /// - Parameters:
     ///   - samples: An array of `Float` representing the original samples.

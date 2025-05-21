@@ -28,7 +28,7 @@
 #endif
 @interface MessageActivityItem ()
 
-@property BaseMessage *message;
+@property BaseMessageEntity *message;
 @property NSURL *url;
 @property BOOL didExportData;
 
@@ -36,11 +36,11 @@
 
 @implementation MessageActivityItem
 
-+ (instancetype)activityItemFor:(BaseMessage *)message {
++ (instancetype)activityItemFor:(BaseMessageEntity *)message {
     return [[MessageActivityItem alloc] initWith: message];
 }
 
-- (instancetype)initWith:(BaseMessage *)message
+- (instancetype)initWith:(BaseMessageEntity *)message
 {
     self = [super init];
     if (self) {

@@ -102,7 +102,7 @@ struct MultiDeviceWizardTermsView: View {
                         Text(#localize("md_wizard_terms_accept"))
                             .font(.headline)
                     }
-                    .tint(Color(.primary))
+                    .tint(.accentColor)
                     .padding(.trailing)
                     .onChange(of: didAcceptTerms) { newValue in
                         if hasPFSEnabledContacts {
@@ -122,7 +122,7 @@ struct MultiDeviceWizardTermsView: View {
                         Text(#localize("md_wizard_cancel"))
                     }
                     .buttonStyle(.bordered)
-                    .tint(Color(.primary))
+                    .tint(.accentColor)
                 
                     Spacer()
                 

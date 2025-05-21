@@ -44,6 +44,9 @@
 @property (strong, nonatomic, readonly) UIImage *resolvedProfilePicture;
 @property (strong, nonatomic, readonly) UIImage *resolvedGroupCallProfilePicture;
 
+@property (nullable, strong, nonatomic, readwrite) NSString *companyName;
+@property (strong, nonatomic, readwrite) NSMutableDictionary *directoryCategories;
+
 - (NSData*)encryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)publicKey;
 - (NSData*)decryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)_publicKey;
 - (NSData*)sharedSecretWithPublicKey:(NSData*)publicKey;
@@ -92,9 +95,6 @@
 
 @property (strong, nonatomic, readwrite) NSString *createIDEmail;
 @property (strong, nonatomic, readwrite) NSString *createIDPhone;
-
-@property (strong, nonatomic, readwrite) NSString *companyName;
-@property (strong, nonatomic, readwrite) NSMutableDictionary *directoryCategories;
 
 @property (strong, nonatomic, readwrite) NSString *tempSafePassword;
 

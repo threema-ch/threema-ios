@@ -22,7 +22,6 @@
 #import "ScanIdentityController.h"
 #import "ProtocolDefines.h"
 #import "ContactStore.h"
-#import "ContactEntity.h"
 #import "InviteController.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 #import "AppDelegate.h"
@@ -60,7 +59,7 @@
     
     // Tint icon appropriately
     self.scanIDLabel.text = [BundleUtil localizedStringForKey:@"add_contact_scan"];
-    self.scanIdentityCell.imageView.image = [self.scanIdentityCell.imageView.image imageWithTint:UIColor.primary];
+    self.scanIdentityCell.imageView.image = [self.scanIdentityCell.imageView.image imageWithTint:UIColor.tintColor];
     
     self.inviteFriendLabel.text = [BundleUtil localizedStringForKey:@"add_contact_invite_friend"];
 
@@ -71,8 +70,8 @@
     [self configureNavigationBar];
     
     self.enterManuallyLabel.textColor = UIColor.labelColor;
-    self.scanIDLabel.textColor = UIColor.primary;
-    self.inviteFriendLabel.textColor = UIColor.primary;
+    self.scanIDLabel.textColor = UIColor.tintColor;
+    self.inviteFriendLabel.textColor = UIColor.tintColor;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -212,7 +211,7 @@
         [MBProgressHUD showHUDAddedTo:self.view animated:YES];
     }
     
-    [[ContactStore sharedContactStore] addContactWithIdentity:enteredId verificationLevel:kVerificationLevelUnverified onCompletion:^(ContactEntity * _Nullable contact, __unused BOOL alreadyExists) {
+    [[ContactStore sharedContactStore] addContactWithIdentity:enteredId verificationLevel:ContactVerificationLevelUnverified onCompletion:^(ContactEntity * _Nullable contact, __unused BOOL alreadyExists) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [MBProgressHUD hideHUDForView:self.view animated:YES];
 

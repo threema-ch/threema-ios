@@ -52,7 +52,7 @@ struct VideoCallQualitySelectionView: View {
             }
         }
         .pickerStyle(.inline)
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
         .navigationTitle(#localize("settings_threema_calls_video_quality_profile"))
     }
 }

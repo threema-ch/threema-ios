@@ -80,7 +80,7 @@ class WebMessagesResponse: WebAbstractMessage {
                 }
             }
             
-            var toSaveBaseMessage: BaseMessage?
+            var toSaveBaseMessage: BaseMessageEntity?
             for message in messageFetcher.messages(at: Int(index), count: maxMessageCount).reversed() {
                 
                 // We ignore messages that were deleted

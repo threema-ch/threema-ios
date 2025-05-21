@@ -241,7 +241,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         body = [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"file_message_voice"], [ThreemaUtilityObjC timeStringForSeconds:((BoxAudioMessage *)self).duration]];
     }
     else if ([self isKindOfClass:[BoxBallotCreateMessage class]]) {
-        BOOL closed = [BallotMessageDecoder decodeNotificationCreateBallotStateFromBox:(BoxBallotCreateMessage *)self].integerValue == kBallotStateClosed;
+        BOOL closed = [BallotMessageDecoder decodeNotificationCreateBallotStateFromBox:(BoxBallotCreateMessage *)self].intValue == BallotStateClosed;
         NSString *ballotTitle = [BallotMessageDecoder decodeCreateBallotTitleFromBox:(BoxBallotCreateMessage *)self];
         if (closed) {
             body = [BundleUtil localizedStringForKey:@"new_ballot_closed_message"];
@@ -281,7 +281,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #pragma mark - LoggingDescriptionProtocol
 
 - (NSString * _Nonnull)loggingDescription {
-    return [NSString stringWithFormat:@"(type: %@; id: %@)", [MediatorMessageProtocol getTypeDescriptionWithType:self.type], [NSString stringWithHexData:self.messageId]];
+    return [NSString stringWithFormat:@"(type: %@; id: %@)",
+            [MediatorMessageProtocol getTypeDescriptionWithType:self.type],
+            [NSString stringWithHexData:self.messageId]];
 }
 
 #pragma mark - NSSecureCoding

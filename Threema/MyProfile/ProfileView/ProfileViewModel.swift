@@ -81,7 +81,7 @@ final class ProfileViewModel: ObservableObject {
     }
     
     public var shareThreemaID: String {
-        "\(#localize("profile_share_id_text")):\(THREEMA_ID_SHARE_LINK)\(publicKey.identity)"
+        "\(String.localizedStringWithFormat(#localize("profile_share_id_text"), TargetManager.localizedAppName)):\(THREEMA_ID_SHARE_LINK)\(publicKey.identity)"
     }
    
     convenience init() {
@@ -275,7 +275,10 @@ extension ProfileViewModel {
         
         lazy var revocationKey: PasswordNavigationDelegate = .init(
             title: #localize("revocation_password"),
-            additionalText: #localize("revocation_password_description"),
+            additionalText: String.localizedStringWithFormat(
+                #localize("revocation_password_description"),
+                TargetManager.localizedAppName
+            ),
             callback: revocationHandler
         )
         
@@ -340,7 +343,7 @@ extension ProfileViewModel.DelegateHandler: RevocationKeyDelegate {
 // MARK: - ProfileViewModel.DelegateHandler + PasswordCallback
 
 extension ProfileViewModel.DelegateHandler: PasswordCallback {
-    func passwordResult(_ password: String!, from viewController: UIViewController!) {
+    func passwordResult(_ password: String, from viewController: UIViewController) {
         MBProgressHUD.showAdded(to: viewController.view, animated: true)
         DispatchQueue.global(qos: .default).async {
             let backupData = self.backupIdentity(password)

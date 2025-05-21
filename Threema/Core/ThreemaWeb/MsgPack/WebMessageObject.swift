@@ -23,7 +23,7 @@ import ThreemaMacros
 import UIKit
 
 class WebMessageObject: NSObject {
-    var baseMessage: BaseMessage
+    var baseMessage: BaseMessageEntity
     var type: String
     var id: String
     var body: String?
@@ -48,7 +48,12 @@ class WebMessageObject: NSObject {
     var reactions: [AnyHashable: [String]]?
     var lastEditedAt: UInt64?
 
-    init(message: BaseMessage, conversation: ConversationEntity, forConversationsRequest: Bool, session: WCSession) {
+    init(
+        message: BaseMessageEntity,
+        conversation: ConversationEntity,
+        forConversationsRequest: Bool,
+        session: WCSession
+    ) {
         self.baseMessage = message
         self.type = conversation.isGroup ? "group" : "contact"
         
@@ -95,8 +100,6 @@ class WebMessageObject: NSObject {
         }
         
         if let reactions = message.reactions {
-            var ackedIdentities = [String]()
-            var decedIdentities = [String]()
             var info = [[String: Any]]()
                 
             for reaction in reactions {
@@ -156,14 +159,14 @@ class WebMessageObject: NSObject {
             addFileMessage(message, forConversationsRequest: forConversationsRequest, session: session)
         case is SystemMessageEntity:
             addSystemMessage(message)
-        case is BallotMessage:
+        case is BallotMessageEntity:
             addBallotMessage(message)
         default:
             break
         }
     }
     
-    init(message: BaseMessage, conversation: ConversationEntity) {
+    init(message: BaseMessageEntity, conversation: ConversationEntity) {
         self.baseMessage = message
         if conversation.isGroup {
             self.type = "group"
@@ -275,7 +278,7 @@ class WebMessageObject: NSObject {
         ["type": type, "id": id, "date": date, "isOutbox": isOutbox, "isStatus": isStatus, "sortKey": sortKey]
     }
     
-    private func addTextMessage(_ message: BaseMessage) {
+    private func addTextMessage(_ message: BaseMessageEntity) {
         let textMessage = message as! TextMessageEntity
         type = "text"
         body = textMessage.text
@@ -294,7 +297,7 @@ class WebMessageObject: NSObject {
                 if let sender = quotedMessage.sender, !quotedMessage.isOwnMessage {
                     quotedIdentity = sender.identity
                 }
-                else if let contact = quotedMessage.conversation?.contact, !quotedMessage.isOwnMessage {
+                else if let contact = quotedMessage.conversation.contact, !quotedMessage.isOwnMessage {
                     quotedIdentity = contact.identity
                 }
                 
@@ -330,7 +333,7 @@ class WebMessageObject: NSObject {
         }
     }
     
-    private func addImageMessage(_ message: BaseMessage, forConversationsRequest: Bool, session: WCSession) {
+    private func addImageMessage(_ message: BaseMessageEntity, forConversationsRequest: Bool, session: WCSession) {
         let imageMessageEntity = message as! ImageMessageEntity
         type = "image"
         body = nil
@@ -368,7 +371,7 @@ class WebMessageObject: NSObject {
         }
     }
         
-    private func addVideoMessage(_ message: BaseMessage, forConversationsRequest: Bool, session: WCSession) {
+    private func addVideoMessage(_ message: BaseMessageEntity, forConversationsRequest: Bool, session: WCSession) {
         let videoMessageEntity = message as! VideoMessageEntity
         type = "video"
         body = nil
@@ -386,7 +389,7 @@ class WebMessageObject: NSObject {
         video = webVideo.objectDict()
     }
     
-    private func addAudioMessage(_ message: BaseMessage) {
+    private func addAudioMessage(_ message: BaseMessageEntity) {
         let audioMessageEntity = message as! AudioMessageEntity
         type = "audio"
         body = nil
@@ -397,7 +400,7 @@ class WebMessageObject: NSObject {
         audio = webAudio.objectDict()
     }
     
-    private func addLocationMessage(_ message: BaseMessage) {
+    private func addLocationMessage(_ message: BaseMessageEntity) {
         let locationMessage = message as! LocationMessageEntity
         type = "location"
         body = nil
@@ -408,7 +411,7 @@ class WebMessageObject: NSObject {
         location = webLocation.objectDict()
     }
     
-    private func addFileMessage(_ message: BaseMessage, forConversationsRequest: Bool, session: WCSession) {
+    private func addFileMessage(_ message: BaseMessageEntity, forConversationsRequest: Bool, session: WCSession) {
         let fileMessageEntity = message as! FileMessageEntity
         body = nil
         thumbnail = nil
@@ -460,7 +463,7 @@ class WebMessageObject: NSObject {
         }
     }
     
-    private func addSystemMessage(_ message: BaseMessage) {
+    private func addSystemMessage(_ message: BaseMessageEntity) {
         let systemMessage = message as! SystemMessageEntity
         if case .callMessage = systemMessage.systemMessageType {
             // voip
@@ -509,7 +512,7 @@ class WebMessageObject: NSObject {
         }
     }
     
-    private func addBallotMessage(_ message: BaseMessage) {
+    private func addBallotMessage(_ message: BaseMessageEntity) {
         type = "ballot"
         isStatus = false
         statusType = "text"
@@ -520,14 +523,15 @@ struct MessageEvents {
     
     var events = [[String: Any]]()
     
-    init(baseMessage: BaseMessage) {
+    init(baseMessage: BaseMessageEntity) {
         if baseMessage.isOwnMessage {
-            if baseMessage.remoteSentDate != nil {
+            if let remoteSentDate = baseMessage.remoteSentDate {
                 var event = [String: Any]()
                 event.updateValue("sent", forKey: "type")
-                event.updateValue(Int(baseMessage.remoteSentDate.timeIntervalSince1970), forKey: "date")
+                event.updateValue(Int(remoteSentDate.timeIntervalSince1970), forKey: "date")
                 events.append(event)
             }
+            
             if let deliveryDate = baseMessage.deliveryDate {
                 var event = [String: Any]()
                 event.updateValue("delivered", forKey: "type")
@@ -542,12 +546,12 @@ struct MessageEvents {
             }
         }
         else {
-            if baseMessage.date != nil {
-                var event = [String: Any]()
-                event.updateValue("sent", forKey: "type")
-                event.updateValue(Int(baseMessage.remoteSentDate.timeIntervalSince1970), forKey: "date")
-                events.append(event)
-            }
+            let date = baseMessage.remoteSentDate ?? baseMessage.date
+            var event = [String: Any]()
+            event.updateValue("sent", forKey: "type")
+            event.updateValue(Int(date.timeIntervalSince1970), forKey: "date")
+            events.append(event)
+            
             if let deliveryDate = baseMessage.deliveryDate {
                 var event = [String: Any]()
                 event.updateValue("delivered", forKey: "type")

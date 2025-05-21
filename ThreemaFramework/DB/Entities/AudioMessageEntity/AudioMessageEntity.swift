@@ -22,31 +22,32 @@ import CoreData
 import Foundation
 
 @objc(AudioMessageEntity)
-public final class AudioMessageEntity: BaseMessage {
+public final class AudioMessageEntity: BaseMessageEntity {
     
-    // Attributes
-    // swiftformat:disable:next acronyms
-    @NSManaged @objc(audioBlobId) public var audioBlobId: Data?
-    @NSManaged @objc(audioSize) public var audioSize: NSNumber?
-    @NSManaged @objc(duration) public var duration: NSNumber
-    @NSManaged @objc(encryptionKey) public var encryptionKey: Data?
-    @NSManaged @objc(progress) public var progress: NSNumber?
+    // MARK: Attributes
 
-    // Relationships
+    // swiftformat:disable:next acronyms
+    @NSManaged public var audioBlobId: Data?
+    @NSManaged public var audioSize: NSNumber?
+    @NSManaged public var duration: NSNumber
+    @NSManaged public var encryptionKey: Data?
+    @NSManaged public var progress: NSNumber?
+
+    // MARK: Relationships
+
     @NSManaged public var audio: AudioDataEntity?
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
-    ///   - audioBlobID: Blob id of the audio data
+    ///   - context: `NSManagedObjectContext` to insert created entity into
+    ///   - audioBlobID: BlobID of the audio data
     ///   - audioSize: Size of the audio data
     ///   - duration: Duration of the audio
     ///   - encryptionKey: Key the audio data is encrypted with
     ///   - progress: Progress
-    ///   - audio: AudioDataEntity in which the audio is saved
+    ///   - audio: `AudioDataEntity` to which the audio is saved
     public init(
         context: NSManagedObjectContext,
         audioBlobID: Data? = nil,

@@ -83,8 +83,8 @@ public enum BytesUtility {
     
     /// Convert hex string to bytes.
     /// - Parameter data: Hex string
-    /// - Returns: Bytes or nil if Hex string not valid
-    public static func toBytes(hexString: String) -> [UInt8]? {
+    /// - Returns: Data or nil if Hex string not valid
+    public static func toData(hexString: String) -> Data? {
         var hex = hexString
         var bytes = Data()
 
@@ -101,7 +101,17 @@ public enum BytesUtility {
             bytes.append(&char, count: 1)
         }
 
-        return Array(bytes)
+        return bytes
+    }
+
+    /// Convert hex string to bytes.
+    /// - Parameter data: Hex string
+    /// - Returns: Bytes or nil if Hex string not valid
+    public static func toBytes(hexString: String) -> [UInt8]? {
+        guard let data = toData(hexString: hexString) else {
+            return nil
+        }
+        return Array(data)
     }
     
     /// Generate SHA1 hash, uses Apple's CommonCrypto module.

@@ -85,15 +85,15 @@
     [fetchRequest setSortDescriptors:sortDescriptors];
     fetchRequest.fetchLimit = MAX_BALLOTS;
 
-    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"conversation == %@ && state == %d", _conversation, kBallotStateOpen];
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"conversation == %@ && state == %d", _conversation, BallotStateOpen];
     _openBallots = [_entityManager.entityFetcher executeFetchRequest:fetchRequest];
 
-    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"conversation == %@ && state == %d", _conversation, kBallotStateClosed];
+    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"conversation == %@ && state == %d", _conversation, BallotStateClosed];
     _closedBallots = [_entityManager.entityFetcher executeFetchRequest:fetchRequest];
 }
 
-- (Ballot *)ballotForIndexPath:(NSIndexPath *)indexPath {
-    Ballot *ballot = nil;
+- (BallotEntity *)ballotForIndexPath:(NSIndexPath *)indexPath {
+    BallotEntity *ballot = nil;
     if (indexPath.section == 0) {
         if (indexPath.row < [_openBallots count]) {
             ballot = [_openBallots objectAtIndex: indexPath.row];
@@ -132,7 +132,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     BallotListTableCell *cell = (BallotListTableCell *)[tableView dequeueReusableCellWithIdentifier:BALLOT_LIST_TABLE_CELL_ID];
     
-    Ballot *ballot = [self ballotForIndexPath:indexPath];
+    BallotEntity *ballot = [self ballotForIndexPath:indexPath];
     
     [cell.nameLabel setText: ballot.title];
     
@@ -154,7 +154,7 @@
 }
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    Ballot *ballot = [self ballotForIndexPath:indexPath];
+    BallotEntity *ballot = [self ballotForIndexPath:indexPath];
     if (ballot) {
         [BallotDispatcher showViewControllerForBallot:ballot onNavigationController:self.navigationController];
     }
@@ -172,8 +172,8 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         [_entityManager performSyncBlockAndSafe:^{
-            Ballot *ballot = [self ballotForIndexPath:indexPath];
-            for (BaseMessage *message in ballot.message) {
+            BallotEntity *ballot = [self ballotForIndexPath:indexPath];
+            for (BaseMessageEntity *message in ballot.message) {
                 [[_entityManager entityDestroyer] deleteWithBaseMessage:message];
             }
             [[_entityManager entityDestroyer] deleteWithBallot:ballot];

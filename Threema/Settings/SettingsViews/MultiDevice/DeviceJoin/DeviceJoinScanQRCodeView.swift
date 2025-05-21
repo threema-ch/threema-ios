@@ -337,16 +337,14 @@ struct DeviceJoinScanQRCodeView: View {
                     }
                 
                 case let urlError as URLError where urlError.code == .notConnectedToInternet:
-                    fatalErrorTitle = BundleUtil
-                        .localizedString(forKey: "multi_device_join_fatal_no_internet_connection_title")
+                    fatalErrorTitle = #localize("multi_device_join_fatal_no_internet_connection_title")
                     Task { @MainActor in
                         showFatalError = true
                     }
                     
                 default:
                     retryErrorTitle = #localize("multi_device_join_new_device_not_found_title")
-                    retryErrorMessage = BundleUtil
-                        .localizedString(forKey: "multi_device_join_new_device_not_found_message")
+                    retryErrorMessage = #localize("multi_device_join_new_device_not_found_message")
                     Task { @MainActor in
                         showRetryError = true
                     }

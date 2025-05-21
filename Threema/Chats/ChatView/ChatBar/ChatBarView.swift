@@ -157,7 +157,7 @@ final class ChatBarView: UIView {
         let imageButton = ChatBarButton(
             sfSymbolName: "arrow.up.circle.fill",
             accessibilityLabel: #localize("compose_bar_send_message_button_accessibility_label"),
-            defaultColor: { .primary },
+            defaultColor: { .tintColor },
             customScalableSize: Config.sendButtonSize
         ) { [weak self] _ in
             
@@ -533,12 +533,12 @@ final class ChatBarView: UIView {
         chatTextViewDidChange(chatTextView, changeTyping: false)
     }
 
-    public func getCurrentSessionState(shouldMove: Bool) async -> SessionState? {
-        try? await voiceMessageController?.audioFileURL(shouldMove: shouldMove)
+    public func saveVoiceMessageRecordingAsDraft() {
+        voiceMessageController?.saveVoiceMessageRecordingAsDraft()
     }
     
     public var recordingState: RecordingState {
-        voiceMessageController?.recordingState ?? .none
+        voiceMessageController?.recordingState ?? .ready
     }
 
     /// Resets the keyboard to the default keyboard
@@ -715,18 +715,27 @@ extension ChatBarView: ChatTextViewDelegate {
 extension ChatBarView {
     func presentVoiceMessageRecorderView(
         with delegate: VoiceMessageRecorderViewDelegate?,
-        with audioFileURL: URL? = nil
+        with draftAudioURL: URL? = nil
     ) {
+        let model: VoiceMessageRecorderViewModel
+        do {
+            model = try VoiceMessageRecorderViewModel(conversation: conversation, draftAudioURL: draftAudioURL)
+        }
+        catch {
+            return
+        }
+        
         let recorderViewController = VoiceMessageRecorderView.make(
             to: self,
             with: delegate,
-            model: .init(conversation: conversation, audioFile: audioFileURL)
+            model: model
         )
         recorderViewController.view.alpha = 0
-        showSendButton()
         sendButton.alpha = 0
         plusButton.alpha = 0
+        
         addSubview(recorderViewController.view)
+        
         NSLayoutConstraint.activate([
             recorderViewController.view.leadingAnchor.constraint(equalTo: leadingAnchor),
             recorderViewController.view.trailingAnchor.constraint(equalTo: trailingAnchor),
@@ -736,7 +745,7 @@ extension ChatBarView {
         ])
         chatTextView.isEditable = false
         voiceMessageController = recorderViewController
-        showRecorder(animated: audioFileURL == nil)
+        showRecorder(animated: draftAudioURL == nil)
     }
     
     func dismissVoiceMessageRecorderView() {
@@ -755,6 +764,7 @@ extension ChatBarView {
         let show = { [weak self] in
             self?.voiceMessageController?.view.alpha = 1
             self?.chatTextView.alpha = 0
+            self?.showSendButton()
         }
         
         guard animated else {

@@ -32,7 +32,7 @@ struct MultiDeviceWizardBulletPointView: View {
         } icon: {
             Image(systemName: imageName)
                 .symbolRenderingMode(.palette)
-                .foregroundStyle(.white, .clear, Color(.primary))
+                .foregroundStyle(.white, .clear, Color.accentColor)
         }
     }
 }

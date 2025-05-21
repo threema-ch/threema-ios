@@ -29,7 +29,7 @@ final class MessageDateAndStateView: UIView {
     /// Message to show date and state for
     ///
     /// Reset to update with current message information.
-    var message: BaseMessage? {
+    var message: BaseMessageEntity? {
         didSet {
             guard let message, !message.willBeDeleted else {
                 return
@@ -179,13 +179,13 @@ final class MessageDateAndStateView: UIView {
     
     // MARK: - Updates
     
-    private func updateSubviews(for message: BaseMessage) {
+    private func updateSubviews(for message: BaseMessageEntity) {
         updateDateLabel(for: message)
         updateStatusImageView(for: message)
         updateMarkersView(for: message)
     }
     
-    private func updateDateLabel(for message: BaseMessage) {
+    private func updateDateLabel(for message: BaseMessageEntity) {
         // Show date and time if the `displayDate` is on another day than the date used for sectioning
         if !Calendar.current.isDate(message.displayDate, inSameDayAs: message.sectionDate) {
             dateLabel.text = DateFormatter.relativeMediumDateAndShortTime(for: message.displayDate)
@@ -221,7 +221,7 @@ final class MessageDateAndStateView: UIView {
         }
     }
     
-    private func updateStatusImageView(for message: BaseMessage) {
+    private func updateStatusImageView(for message: BaseMessageEntity) {
         
         guard showStatus else {
             statusImageView.isHidden = true
@@ -254,7 +254,7 @@ final class MessageDateAndStateView: UIView {
         }
     }
     
-    private func updateMarkersView(for message: BaseMessage) {
+    private func updateMarkersView(for message: BaseMessageEntity) {
         markersView.message = message
         
         guard showMarkers else {

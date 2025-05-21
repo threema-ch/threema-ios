@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 protocol ChatViewTypingIndicatorInformationProviderProtocol {
     var currentlyTypingPublisher: Published<Bool>.Publisher { get }
@@ -63,18 +64,18 @@ class ChatViewTypingIndicatorInformationProvider: ChatViewTypingIndicatorInforma
         // Inform with accessibility notification post when user is typing or stops typing
         guard let displayName = conversation.contact?.displayName else {
             // If there is no display name, it will use the string 'Contact'
-            let messageKey = currentlyTyping ? "accessibility_senderDescription_typing" :
-                "accessibility_senderDescription_stopped_typing"
+            let messageKey = currentlyTyping ? #localize("accessibility_senderDescription_typing") :
+                #localize("accessibility_senderDescription_stopped_typing")
             UIAccessibility.post(
                 notification: UIAccessibility.Notification.announcement,
-                argument: BundleUtil.localizedString(forKey: messageKey)
+                argument: messageKey
             )
             return
         }
         
-        let messageKey = currentlyTyping ? "accessibility_senderDescription_contact_typing" :
-            "accessibility_senderDescription_contact_stopped_typing"
-        let message = String(format: BundleUtil.localizedString(forKey: messageKey), displayName)
+        let messageKey = currentlyTyping ? #localize("accessibility_senderDescription_contact_typing") :
+            #localize("accessibility_senderDescription_contact_stopped_typing")
+        let message = String(format: messageKey, displayName)
         DispatchQueue.main.async {
             UIAccessibility.post(
                 notification: UIAccessibility.Notification.announcement,

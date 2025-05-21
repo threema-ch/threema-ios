@@ -53,4 +53,9 @@ extension UIAction: QuickActionUpdate {
     func hide() {
         // no-op: Because the menu will anyway disappear when the action is called
     }
+    
+    func popOverSourceView() -> UIView? {
+        // `nil` Because the menu will anyway disappear when the action is called
+        nil
+    }
 }

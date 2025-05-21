@@ -22,7 +22,7 @@ import Foundation
 
 extension Colors {
                 
-    @objc public class var threemaLogo: UIImage! {
+    @objc public class var threemaLogo: UIImage {
         switch TargetManager.current {
         case .threema:
             UIImage(resource: .threema)
@@ -30,6 +30,8 @@ extension Colors {
             UIImage(resource: .threemaWork)
         case .onPrem:
             UIImage(resource: .threemaOnPrem)
+        case .customOnPrem:
+            UIImage(resource: .customOnPrem)
         case .green:
             UIImage(resource: .threemaGreen)
         case .blue:
@@ -37,11 +39,11 @@ extension Colors {
         }
     }
     
-    @objc public class var darkConsumerLogo: UIImage! {
+    @objc public class var darkConsumerLogo: UIImage {
         UIImage(resource: .threemaBlackLogo)
     }
         
-    @objc public class var threemaLogoForPasscode: UIImage! {
+    @objc public class var threemaLogoForPasscode: UIImage {
         switch TargetManager.current {
         case .threema:
             UIImage(resource: .passcodeLogo)
@@ -49,6 +51,8 @@ extension Colors {
             UIImage(resource: .passcodeLogoWork)
         case .onPrem:
             UIImage(resource: .passcodeLogoOnprem)
+        case .customOnPrem:
+            UIImage(resource: .passcodeLogoCustomOnprem)
         case .green:
             UIImage(resource: .passcodeLogoGreen)
         case .blue:
@@ -56,12 +60,21 @@ extension Colors {
         }
     }
     
-    @objc public class var consumerLogoRoundCorners: UIImage! {
+    @objc public class var consumerLogoRoundCorners: UIImage {
         switch TargetManager.current {
         case .blue:
             UIImage(resource: .passcodeLogoGreen)
-        case .threema, .work, .onPrem, .green:
+        case .threema, .work, .onPrem, .customOnPrem, .green:
             UIImage(resource: .passcodeLogo)
+        }
+    }
+    
+    @objc public class var callKitLogo: UIImage {
+        switch TargetManager.current {
+        case .threema, .work, .onPrem, .green, .blue:
+            UIImage(resource: .voipThreema)
+        case .customOnPrem:
+            UIImage(resource: .voipCustom)
         }
     }
 }

@@ -24,9 +24,9 @@ extension Colors {
     @objc public class var hairLine: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         case .dark:
-            Asset.SharedColors.gray800.color
+            UIColor(resource: .gray800)
         }
     }
     
@@ -37,9 +37,9 @@ extension Colors {
     @objc public class var qrCodeTint: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.black.color
+            .black
         case .dark:
-            Asset.SharedColors.white.color
+            .white
         }
     }
 }
@@ -50,9 +50,9 @@ extension Colors {
     @objc public class var shadowNotification: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.black.color
+            .black
         case .dark:
-            Asset.SharedColors.white.color
+            .white
         }
     }
 }

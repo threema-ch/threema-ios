@@ -51,7 +51,7 @@ final class TaskExecutionSendAbstractMessage: TaskExecution, TaskExecutionProtoc
         .then { _ -> Promise<Void> in
             // Send CSP message
             Promise { seal in
-                self.frameworkInjector.entityManager.performBlockAndWait {
+                self.frameworkInjector.entityManager.performAndWait {
                     if let toIdentity = task.message.toIdentity,
                        toIdentity != self.frameworkInjector.myIdentityStore.identity,
                        !self.frameworkInjector.userSettings.blacklist.contains(toIdentity) {

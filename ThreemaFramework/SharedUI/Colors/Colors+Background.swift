@@ -36,9 +36,9 @@ extension Colors {
     @objc public class var backgroundToolbar: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.white.color
+            .white
         case .dark:
-            Asset.SharedColors.black.color
+            .black
         }
     }
     
@@ -53,9 +53,9 @@ extension Colors {
     @objc public class var backgroundButton: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray450.color
+            UIColor(resource: .gray450)
         case .dark:
-            Asset.SharedColors.gray700.color
+            UIColor(resource: .gray700)
         }
     }
     
@@ -66,44 +66,44 @@ extension Colors {
     @objc public class var backgroundChevronCircleButton: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray250.color
+            UIColor(resource: .gray250)
         case .dark:
-            Asset.SharedColors.gray800.color
+            UIColor(resource: .gray800)
         }
     }
     
     @objc public class var backgroundTintChevronCircleButton: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray550.color
+            UIColor(resource: .gray550)
         case .dark:
-            Asset.SharedColors.gray400.color
+            UIColor(resource: .gray400)
         }
     }
     
     @objc public class var backgroundSafeImageCircle: UIColor {
-        Asset.SharedColors.gray250.color
+        UIColor(resource: .gray250)
     }
     
     @objc public class var backgroundWizard: UIColor {
-        Asset.SharedColors.black.color
+        .black
     }
     
     @objc public class var backgroundNotification: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.white.color
+            .white
         case .dark:
-            Asset.SharedColors.black.color
+            .black
         }
     }
     
     public class var backgroundWizardBox: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.gray500.color
+            UIColor(resource: .gray500)
         case .dark:
-            Asset.SharedColors.gray700.color
+            UIColor(resource: .gray700)
         }
     }
 }

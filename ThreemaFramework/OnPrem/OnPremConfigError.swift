@@ -37,6 +37,7 @@ enum OnPremConfigError: Int, Error {
     case missingMediatorConfig
     case missingRendezvousConfig
     case missingDomainsConfig
+    case missingMapsConfig
     case noDomainSpkis
     case unsupportedDomainMatchMode
     case unsupportedDomainSpkisAlgorithm
@@ -48,17 +49,30 @@ enum OnPremConfigError: Int, Error {
 extension OnPremConfigError: LocalizedError {
     public var errorDescription: String? {
         switch self {
-        case .badInputOppfData, .missingRendezvousConfig, .missingMediatorConfig, .missingSafeConfig,
+        case .badInputOppfData, .missingRendezvousConfig, .missingMapsConfig, .missingMediatorConfig,
+             .missingSafeConfig,
              .missingAvatarConfig, .missingWorkConfig, .invalidConfigUrl, .configurationMissing, .signatureKeyMismatch,
              .badSignature, .missingDomainsConfig, .noDomainSpkis, .unsupportedDomainMatchMode,
              .unsupportedDomainSpkisAlgorithm:
-            String.localizedStringWithFormat(#localize("enter_license_onprem_error_config"), rawValue)
+            String.localizedStringWithFormat(
+                #localize("enter_license_onprem_error_config"),
+                TargetManager.appName,
+                rawValue
+            )
        
         case .unsupportedVersion:
-            String.localizedStringWithFormat(#localize("enter_license_onprem_error_version"), rawValue)
+            String.localizedStringWithFormat(
+                #localize("enter_license_onprem_error_version"),
+                TargetManager.appName,
+                rawValue
+            )
 
         case .unauthorized, .licenseExpired:
-            String.localizedStringWithFormat(#localize("enter_license_onprem_error_credentials"), rawValue)
+            String.localizedStringWithFormat(
+                #localize("enter_license_onprem_error_credentials"),
+                TargetManager.appName,
+                rawValue
+            )
         }
     }
 }

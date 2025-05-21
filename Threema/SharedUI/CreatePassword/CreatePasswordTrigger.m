@@ -24,7 +24,7 @@
 
 @interface CreatePasswordTrigger () <PasswordCallback, UINavigationControllerDelegate>
 
-@property UIViewController *viewController;
+@property (weak) UIViewController *viewController;
 
 @end
 

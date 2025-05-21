@@ -104,7 +104,7 @@ class DeleteContactAction: NSObject {
         let isGroupMember = businessInjector.entityManager.entityFetcher.groupConversations(for: contact) != nil
 
         // Does contact have an existing 1:1 chat conversation?
-        if let conversations = contact.conversations as? Set<ConversationEntity>,
+        if let conversations = contact.conversations,
            !conversations.filter({ !$0.isGroup }).isEmpty {
             // Existing conversation. Can it also be deleted?
             showDeleteWithConversationSheet(
@@ -185,10 +185,7 @@ extension DeleteContactAction {
         let localizedMessage =
             if isGroupMember {
                 String.localizedStringWithFormat(
-                    BundleUtil
-                        .localizedString(
-                            forKey: "delete_contact_is_group_member_title_confirmation_with_exclusion_message"
-                        ),
+                    #localize("delete_contact_is_group_member_title_confirmation_with_exclusion_message"),
                     contact.displayName,
                     contact.displayName
                 )
@@ -273,10 +270,7 @@ extension DeleteContactAction {
         
         // Remove left drafts
         if let conversations = contact.conversations {
-            for genericConversation in conversations {
-                guard let conversation = genericConversation as? ConversationEntity else {
-                    continue
-                }
+            for conversation in conversations {
                 MessageDraftStore.shared.deleteDraft(for: conversation)
                 WallpaperStore.shared.deleteWallpaper(for: conversation.objectID)
             }
@@ -357,6 +351,7 @@ extension DeleteContactAction {
             // Should person be added to exclusion list?
             let localizedTitle = String.localizedStringWithFormat(
                 #localize("exclude_deleted_id_title"),
+                TargetManager.localizedAppName,
                 tempContactDisplayName
             )
             
@@ -376,7 +371,8 @@ extension DeleteContactAction {
     }
     
     private var contactCouldBeExcluded: Bool {
-        let isLinked = contact.cnContactID != nil
+        // swiftformat:disable:next acronyms
+        let isLinked = contact.cnContactId != nil
         
         let contactIdentity = contact.identity
         let isAlreadyOnExclusionList = UserSettings.shared()?.syncExclusionList.contains(where: { anyID in

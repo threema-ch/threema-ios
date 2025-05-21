@@ -103,8 +103,9 @@
         [self handleThreemaDotIdUrl:url hideAppChooser:false];
         return YES;
     }
+    // This is necessary for forwarding links from the app store during In-App events.
     if (([url.scheme isEqualToString:@"http"] || [url.scheme isEqualToString:@"https"]) &&
-        [[url.host lowercaseString] isEqualToString:@"threema.ch"]) {
+        ([[url.host lowercaseString] isEqualToString:@"threema.ch"] || [[url.host lowercaseString] isEqualToString:@"threema.com"])) {
         if ([[UIApplication sharedApplication] canOpenURL:url]) {
             [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
             return YES;
@@ -295,7 +296,7 @@
     }
     
     /* add this ID to the contacts */
-    [[ContactStore sharedContactStore] addContactWithIdentity:targetId verificationLevel:kVerificationLevelUnverified onCompletion:^(ContactEntity *contact, BOOL alreadyExists) {
+    [[ContactStore sharedContactStore] addContactWithIdentity:targetId verificationLevel:ContactVerificationLevelUnverified onCompletion:^(ContactEntity *contact, BOOL alreadyExists) {
         
         if (compose && [query objectForKey:@"text"][0] != nil) {
             ShareController *shareController = [[ShareController alloc] init];

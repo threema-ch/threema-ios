@@ -151,7 +151,8 @@ public class ReactionsManager: ObservableObject {
         
         let entityManager = businessInjector.entityManager
         entityManager.performAndWait { [self] in
-            guard let message = entityManager.entityFetcher.existingObject(with: self.messageObjectID) as? BaseMessage
+            guard let message = entityManager.entityFetcher
+                .existingObject(with: self.messageObjectID) as? BaseMessageEntity
             else {
                 return
             }
@@ -167,7 +168,8 @@ public class ReactionsManager: ObservableObject {
         let entityManager = businessInjector.entityManager
 
         entityManager.performAndWait {
-            guard let message = entityManager.entityFetcher.existingObject(with: self.messageObjectID) as? BaseMessage
+            guard let message = entityManager.entityFetcher
+                .existingObject(with: self.messageObjectID) as? BaseMessageEntity
             else {
                 return
             }
@@ -226,9 +228,9 @@ public class ReactionsManager: ObservableObject {
         return entityManager.performAndWait {
                 
             guard let message = entityManager.entityFetcher
-                .existingObject(with: self.messageObjectID) as? BaseMessage,
+                .existingObject(with: self.messageObjectID) as? BaseMessageEntity,
                 let reactions = entityManager.entityFetcher.messageReactionEntities(
-                    for: message,
+                    forMessage: message,
                     creator: nil
                 ) else {
                 return false
@@ -251,14 +253,14 @@ public class ReactionsManager: ObservableObject {
         let entityManager = businessInjector.entityManager
         return entityManager.performAndWait {
             guard let message = entityManager.entityFetcher
-                .existingObject(with: self.messageObjectID) as? BaseMessage,
+                .existingObject(with: self.messageObjectID) as? BaseMessageEntity,
                 !message.willBeDeleted,
                 !message.conversation.isGroup,
                 let contact = message.conversation.contact else {
                 return false
             }
             
-            return contact.isGatewayID()
+            return contact.isGatewayID
         }
     }
 
@@ -337,7 +339,7 @@ public class ReactionsManager: ObservableObject {
         let entityManager = businessInjector.entityManager
         return entityManager.performAndWait {
             guard let message = entityManager.entityFetcher
-                .existingObject(with: self.messageObjectID) as? BaseMessage
+                .existingObject(with: self.messageObjectID) as? BaseMessageEntity
             else {
                 return false
             }
@@ -355,10 +357,10 @@ public class ReactionsManager: ObservableObject {
         }
     }
     
-    private func updateCurrentReactions(for message: BaseMessage) {
+    private func updateCurrentReactions(for message: BaseMessageEntity) {
         let entityManager = businessInjector.entityManager
         
-        guard let reactions = entityManager.entityFetcher.messageReactionEntities(for: message) else {
+        guard let reactions = entityManager.entityFetcher.messageReactionEntities(forMessage: message) else {
             currentReactions.removeAll()
             return
         }
@@ -413,7 +415,7 @@ public class ReactionsManager: ObservableObject {
         let entityManager = businessInjector.entityManager
         return entityManager.performAndWait {
             guard let message = entityManager.entityFetcher
-                .existingObject(with: self.messageObjectID) as? BaseMessage,
+                .existingObject(with: self.messageObjectID) as? BaseMessageEntity,
                 !message.willBeDeleted
             else {
                 return .none

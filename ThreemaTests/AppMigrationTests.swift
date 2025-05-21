@@ -271,7 +271,7 @@ class AppMigrationTests: XCTestCase {
             )?.first
         )
         
-        XCTAssertEqual(reactionGroupMessage.groupDeliveryReceipts.count, 0)
+        XCTAssertEqual(reactionGroupMessage.groupDeliveryReceipts!.count, 0)
         
         let reactions = try XCTUnwrap(reactionGroupMessage.reactions)
         for reaction in reactions {
@@ -311,8 +311,7 @@ class AppMigrationTests: XCTestCase {
             dbPreparer.save {
                 let contact = dbPreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                    identity: sender,
-                    verificationLevel: 0
+                    identity: sender
                 )
                 dbPreparer
                     .createConversation(typing: false, unreadMessageCount: 1, visibility: .default) { conversation in
@@ -330,8 +329,7 @@ class AppMigrationTests: XCTestCase {
         dbPreparer.save {
             let ownContactIdentity = dbPreparer.createContact(
                 publicKey: myIdentityStoreMock.publicKey,
-                identity: myIdentityStoreMock.identity,
-                verificationLevel: 0
+                identity: myIdentityStoreMock.identity
             )
 
             let groupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
@@ -347,13 +345,11 @@ class AppMigrationTests: XCTestCase {
 
                 let member01 = dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: expectedMember01,
-                    verificationLevel: 0
+                    identity: expectedMember01
                 )
                 let member02 = dbPreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: expectedMember02,
-                    verificationLevel: 0
+                    identity: expectedMember02
                 )
 
                 let conversation = dbPreparer
@@ -530,8 +526,7 @@ class AppMigrationTests: XCTestCase {
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: "FILEID01",
-                verificationLevel: 0
+                identity: "FILEID01"
             )
             dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
@@ -579,8 +574,7 @@ class AppMigrationTests: XCTestCase {
         let contact = dbPreparer.save {
             dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "REACTION",
-                verificationLevel: 0
+                identity: "REACTION"
             )
         }
 

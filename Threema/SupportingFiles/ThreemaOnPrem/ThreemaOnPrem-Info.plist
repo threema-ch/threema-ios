@@ -58,10 +58,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>ch.threema.onprem.urlscheme</string>
+			<string>$(APP_URL_TYPE_IDENTIFIER)</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>threemaonprem</string>
+				<string>$(APP_URL_SCHEME)</string>
 			</array>
 		</dict>
 	</array>
@@ -80,21 +80,31 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<false/>
+	<key>LocalizedAppName</key>
+	<string>$(LOCALIZED_APP_NAME)</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Your camera is used when you take a photo or video and send it in a chat, and to scan QR codes.</string>
+	<string>$(PRIVACY_DESCRIPTION_CAMERA)</string>
 	<key>NSContactsUsageDescription</key>
-	<string>Contacts are used to find other Threema users when synchronization is on.</string>
+	<string>$(PRIVACY_DESCRIPTION_CONTACTS)</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>$(PRIVACY_DESCRIPTION_FACEID)</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>$(PRIVACY_DESCRIPTION_NETWORK)</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Your location is used when you send it in a chat, and to display your own location on a map.</string>
+	<string>$(PRIVACY_DESCRIPTION_LOCATIONS)</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>The microphone is used to record audio messages.</string>
+	<string>$(PRIVACY_DESCRIPTION_MICROPHONE)</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>$(PRIVACY_DESCRIPTION_PHOTO_ADD)</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Your photo library is used when you pick an image from it and send it in a chat.</string>
+	<string>$(PRIVACY_DESCRIPTION_PHOTO_USE)</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>INStartAudioCallIntent</string>
 		<string>INSendMessageIntent</string>
 	</array>
+	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+	<true/>
 	<key>SentryClientDsn</key>
 	<string>$(SENTRY_CLIENT_DSN)</string>
 	<key>TargetManagerKey</key>

@@ -56,6 +56,7 @@ extern NSString * _Nonnull const MDM_KEY_DISABLE_GROUP_CALLS;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_CREATE_GROUP;
 extern NSString * _Nonnull const MDM_KEY_SKIP_WIZARD;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_WEB;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_MULTIDEVICE;
 extern NSString * _Nonnull const MDM_KEY_WEB_HOSTS;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_SHARE_MEDIA;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_WORK_DIRECTORY;
@@ -120,6 +121,8 @@ typedef enum : int {
 - (BOOL)disableGroupCalls;
 
 - (BOOL)disableWeb;
+
+- (BOOL)disableMultiDevice;
 
 - (NSString *)webHosts;
 

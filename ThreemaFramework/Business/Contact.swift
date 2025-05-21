@@ -58,14 +58,14 @@ public class Contact: NSObject {
         ]
     }
     
-    @objc public private(set) dynamic var state = 0
+    @objc public private(set) dynamic var state: ContactEntity.ContactState = .active
     @objc public private(set) dynamic var firstName: String?
     @objc public private(set) dynamic var lastName: String?
     @objc public private(set) dynamic var csi: String?
     @objc public private(set) dynamic var jobTitle: String?
     @objc public private(set) dynamic var department: String?
     @objc public private(set) dynamic var publicNickname: String?
-    @objc public private(set) dynamic var verificationLevel = 0
+    @objc public private(set) dynamic var verificationLevel: ContactEntity.VerificationLevel = .unverified
     @objc public private(set) dynamic var featureMask: Int
     @objc public private(set) dynamic lazy var profilePicture: UIImage = resolveProfilePicture()
 
@@ -78,8 +78,8 @@ public class Contact: NSObject {
         }
     }
     
-    @objc public private(set) dynamic var readReceipt: ReadReceipt
-    @objc public private(set) dynamic var typingIndicator: TypingIndicator
+    @objc public private(set) dynamic var readReceipt: ContactEntity.ReadReceipt
+    @objc public private(set) dynamic var typingIndicator: ContactEntity.TypingIndicator
 
     // MARK: - Public properties
 
@@ -89,7 +89,7 @@ public class Contact: NSObject {
     let publicKey: Data
     
     public var isActive: Bool {
-        state == kStateActive
+        state == .active
     }
     
     // If true when acquaintance level is group or deleted
@@ -107,7 +107,7 @@ public class Contact: NSObject {
         var attributedNameString = NSMutableAttributedString(string: displayName)
         
         // Check style for the title
-        if state == kStateInvalid {
+        if state == .invalid {
             // Contact is invalid
             attributedNameString.addAttribute(
                 .strikethroughStyle,
@@ -120,7 +120,7 @@ public class Contact: NSObject {
                 range: NSMakeRange(0, attributedNameString.length)
             )
         }
-        else if state == kStateInactive {
+        else if state == .inactive {
             // Contact is inactive
             attributedNameString.addAttribute(
                 .foregroundColor,
@@ -201,6 +201,12 @@ public class Contact: NSObject {
     }
     
     public private(set) var usesNonGeneratedProfilePicture = false
+    
+    public var supportsCalls: Bool {
+        FeatureMask.check(contact: self, for: .o2OAudioCallSupport) &&
+            !hasGatewayID &&
+            !isEchoEcho
+    }
 
     // MARK: - Private properties
     
@@ -278,13 +284,13 @@ public class Contact: NSObject {
         self.csi = contactEntity.csi
         self.jobTitle = contactEntity.jobTitle
         self.department = contactEntity.department
-        self.verificationLevel = contactEntity.verificationLevel.intValue
-        self.state = contactEntity.state?.intValue ?? kStateInactive
-        self.isHidden = contactEntity.isContactHidden
-        self.isWorkContact = contactEntity.isWorkContact()
+        self.verificationLevel = contactEntity.contactVerificationLevel
+        self.state = contactEntity.contactState
+        self.isHidden = contactEntity.isHidden
+        self.isWorkContact = contactEntity.isWorkContact
         self.showOtherTypeIcon = contactEntity.showOtherThreemaTypeIcon
-        self.isForwardSecurityAvailable = contactEntity.isForwardSecurityAvailable()
-        self.featureMask = contactEntity.featureMask.intValue
+        self.isForwardSecurityAvailable = contactEntity.isForwardSecurityAvailable
+        self.featureMask = Int(truncating: contactEntity.featureMask)
         self.threemaImageData = contactEntity.contactImage?.data
         self.contactImageData = contactEntity.imageData
         self.readReceipt = contactEntity.readReceipt
@@ -363,25 +369,25 @@ public class Contact: NSObject {
                 if department != contactEntity.department {
                     department = contactEntity.department
                 }
-                if verificationLevel != contactEntity.verificationLevel.intValue {
-                    verificationLevel = contactEntity.verificationLevel.intValue
+                if verificationLevel != contactEntity.contactVerificationLevel {
+                    verificationLevel = contactEntity.contactVerificationLevel
                 }
-                let newState = contactEntity.state?.intValue ?? kStateInactive
+                let newState = contactEntity.contactState
                 if state != newState {
                     state = newState
                 }
-                if isHidden != contactEntity.isContactHidden {
-                    isHidden = contactEntity.isContactHidden
+                if isHidden != contactEntity.isHidden {
+                    isHidden = contactEntity.isHidden
                 }
-                if isWorkContact != contactEntity.isWorkContact() {
-                    isWorkContact = contactEntity.isWorkContact()
+                if isWorkContact != contactEntity.isWorkContact {
+                    isWorkContact = contactEntity.isWorkContact
                 }
-                if featureMask != contactEntity.featureMask.intValue {
-                    featureMask = contactEntity.featureMask.intValue
-                    isForwardSecurityAvailable = contactEntity.isForwardSecurityAvailable()
+                if featureMask != Int(truncating: contactEntity.featureMask) {
+                    featureMask = Int(truncating: contactEntity.featureMask)
+                    isForwardSecurityAvailable = contactEntity.isForwardSecurityAvailable
                 }
-                if isWorkContact != contactEntity.isWorkContact() {
-                    isWorkContact = contactEntity.isWorkContact()
+                if isWorkContact != contactEntity.isWorkContact {
+                    isWorkContact = contactEntity.isWorkContact
                 }
                 if threemaImageData != contactEntity.contactImage?.data {
                     threemaImageData = contactEntity.contactImage?.data
@@ -411,9 +417,9 @@ public class Contact: NSObject {
         }
 
         switch state {
-        case kStateInactive:
+        case .inactive:
             value = "\(value) (\(Contact.inactiveString))"
-        case kStateInvalid:
+        case .invalid:
             value = "\(value) (\(Contact.invalidString))"
         default:
             break
@@ -462,69 +468,88 @@ public class Contact: NSObject {
 
     // MARK: - Verification level
 
-    private var workAdjustedVerificationLevel: Int {
-        var myVerificationLevel = verificationLevel
-        if isWorkContact {
-            if myVerificationLevel == kVerificationLevelServerVerified || myVerificationLevel ==
-                kVerificationLevelFullyVerified {
-                myVerificationLevel += 2
+    @objc public var verificationLevelImageSmall: UIImage {
+        switch verificationLevel {
+        case .unverified:
+            StyleKit.verificationSmall0
+        case .serverVerified:
+            if isWorkContact {
+                StyleKit.verificationSmall3
             }
             else {
-                myVerificationLevel = kVerificationLevelWorkVerified
+                StyleKit.verificationSmall1
+            }
+        case .fullyVerified:
+            if isWorkContact {
+                StyleKit.verificationSmall4
+            }
+            else {
+                StyleKit.verificationSmall2
             }
         }
-
-        return myVerificationLevel
     }
 
-    var verificationLevelImageSmall: UIImage {
-        switch workAdjustedVerificationLevel {
-        case 0: StyleKit.verificationSmall0
-        case 1: StyleKit.verificationSmall1
-        case 2: StyleKit.verificationSmall2
-        case 3: StyleKit.verificationSmall3
-        case 4: StyleKit.verificationSmall4
-        default: StyleKit.verificationSmall0
+    public var verificationLevelImage: UIImage {
+        switch verificationLevel {
+        case .unverified:
+            StyleKit.verification0
+        case .serverVerified:
+            if isWorkContact {
+                StyleKit.verification3
+            }
+            else {
+                StyleKit.verification1
+            }
+        case .fullyVerified:
+            if isWorkContact {
+                StyleKit.verification4
+            }
+            else {
+                StyleKit.verification2
+            }
         }
     }
 
-    var verificationLevelImage: UIImage {
-        switch workAdjustedVerificationLevel {
-        case 0: StyleKit.verification0
-        case 1: StyleKit.verification1
-        case 2: StyleKit.verification2
-        case 3: StyleKit.verification3
-        case 4: StyleKit.verification4
-        default: StyleKit.verification0
-        }
-    }
-
-    var verificationLevelImageBig: UIImage {
-        switch workAdjustedVerificationLevel {
-        case 0: StyleKit.verificationBig0
-        case 1: StyleKit.verificationBig1
-        case 2: StyleKit.verificationBig2
-        case 3: StyleKit.verificationBig3
-        case 4: StyleKit.verificationBig4
-        default: StyleKit.verificationBig0
+    public var verificationLevelImageBig: UIImage {
+        switch verificationLevel {
+        case .unverified:
+            StyleKit.verificationBig0
+        case .serverVerified:
+            if isWorkContact {
+                StyleKit.verificationBig3
+            }
+            else {
+                StyleKit.verificationBig1
+            }
+        case .fullyVerified:
+            if isWorkContact {
+                StyleKit.verificationBig4
+            }
+            else {
+                StyleKit.verificationBig2
+            }
         }
     }
 
     /// Localized string of verification level usable for accessibility
-    var verificationLevelAccessibilityLabel: String {
-        switch workAdjustedVerificationLevel {
-        case 0:
+    @objc public var verificationLevelAccessibilityLabel: String {
+        switch verificationLevel {
+        case .unverified:
             Contact.workAdjustedVerificationLevelString0
-        case 1:
-            Contact.workAdjustedVerificationLevelString1
-        case 2:
-            Contact.workAdjustedVerificationLevelString2
-        case 3:
-            Contact.workAdjustedVerificationLevelString3
-        case 4:
-            Contact.workAdjustedVerificationLevelString4
-        default:
-            Contact.workAdjustedVerificationLevelString0
+        case .serverVerified:
+            if isWorkContact {
+                Contact.workAdjustedVerificationLevelString3
+            }
+            else {
+                Contact.workAdjustedVerificationLevelString1
+            }
+        case .fullyVerified:
+            if isWorkContact {
+                Contact.workAdjustedVerificationLevelString4
+            }
+            else {
+                Contact.workAdjustedVerificationLevelString2
+            }
         }
     }
     

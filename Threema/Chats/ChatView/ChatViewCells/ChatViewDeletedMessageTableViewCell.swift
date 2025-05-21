@@ -30,7 +30,7 @@ final class ChatViewDeletedMessageTableViewCell: ChatViewBaseTableViewCell, Meas
     /// Deleted message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
-    var deletedMessageAndNeighbors: (message: BaseMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
+    var deletedMessageAndNeighbors: (message: BaseMessageEntity, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
             let block = {
                 NSLayoutConstraint.activate(self.contentStackViewConstraints)
@@ -173,7 +173,7 @@ extension ChatViewDeletedMessageTableViewCell: ChatViewMessageActions {
         let primaryActions: Provider.MessageActionsSection?
         if message.messageMarkers?.star.boolValue ?? false {
             // MessageMarkers
-            let markStarHandler = { (message: BaseMessage) in
+            let markStarHandler = { (message: BaseMessageEntity) in
                 self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
             }
             

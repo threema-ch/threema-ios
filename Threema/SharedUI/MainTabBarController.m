@@ -802,7 +802,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     vc.delegate = self;
     vc.lockScreenMode = LockScreenModeNew;
 
-    [UIAlertTemplate showAlertWithOwner:self.viewControllers[kChatTabBarIndex] title:[BundleUtil localizedStringForKey:@"privateChat_alert_title"] message:[BundleUtil localizedStringForKey:@"privateChat_setup_alert_message"] titleOk:[BundleUtil localizedStringForKey:@"privateChat_code_alert_confirm"] actionOk:^(UIAlertAction * _Nonnull action) {
+    [UIAlertTemplate showAlertWithOwner:self.viewControllers[kChatTabBarIndex] title:[BundleUtil localizedStringForKey:@"privateChat_alert_title"] message:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privateChat_setup_alert_message"], TargetManagerObjc.localizedAppName] titleOk:[BundleUtil localizedStringForKey:@"privateChat_code_alert_confirm"] actionOk:^(UIAlertAction * _Nonnull action) {
         
         [self.viewControllers[kChatTabBarIndex].view addSubview: _coverView];
         

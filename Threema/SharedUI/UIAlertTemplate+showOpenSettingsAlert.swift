@@ -116,7 +116,6 @@ extension UIAlertTemplate {
     /// - Parameters:
     ///   - owner: UIViewController to present the alert on
     ///   - noAccessAlertType: Type of missing access
-    @available(*, deprecated, message: "Only use this from obj-c.")
     @objc public static func showOpenSettingsAlert(
         owner: UIViewController,
         noAccessAlertType: NoAccessAlertType

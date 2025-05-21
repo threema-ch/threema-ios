@@ -22,24 +22,25 @@ import CoreData
 import Foundation
 
 @objc(DistributionListEntity)
-public class DistributionListEntity: NSManagedObject, Identifiable {
+public final class DistributionListEntity: NSManagedObject, Identifiable {
     
-    // Attributes
+    // MARK: Attributes
+
     @NSManaged public var distributionListID: Int64
     @NSManaged public var name: String?
     
-    // Relationships
+    // MARK: Relationships
+
     @NSManaged public var conversation: ConversationEntity
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
+    ///   - context: `NSManagedObjectContext` to insert created entity into
     ///   - distributionListID: ID of the list
     ///   - name: Name of the list
-    ///   - conversation: ConversationEntity of the list
+    ///   - conversation: `ConversationEntity` of the list
     public init(
         context: NSManagedObjectContext,
         distributionListID: Int64,

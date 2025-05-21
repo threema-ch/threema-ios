@@ -53,8 +53,8 @@ final class ConversationEntityTests: XCTestCase {
         let visibility: ConversationEntity.Visibility = .pinned
         
         let groupImage: ImageDataEntity? = nil
-        let lastMessage: BaseMessage? = nil
-        let ballots: Set<Ballot>? = nil
+        let lastMessage: BaseMessageEntity? = nil
+        let ballots: Set<BallotEntity>? = nil
         let distributionList: DistributionListEntity? = nil
         let contact: ContactEntity? = nil
         let members: Set<ContactEntity>? = nil

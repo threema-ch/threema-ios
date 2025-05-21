@@ -143,4 +143,6 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var ipcCommunicationEnabled = true
 
     var ipcSecretPrefix: Data!
+    
+    var companyDirectory = false
 }

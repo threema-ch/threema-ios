@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "ThreemaGreenBlack.pdf",
+      "filename" : "ThreemaGreenBlack.svg",
       "idiom" : "universal"
     },
     {
@@ -11,12 +11,15 @@
           "value" : "dark"
         }
       ],
-      "filename" : "ThreemaGreenWhite.pdf",
+      "filename" : "ThreemaGreenWhite.svg",
       "idiom" : "universal"
     }
   ],
   "info" : {
     "author" : "xcode",
     "version" : 1
+  },
+  "properties" : {
+    "preserves-vector-representation" : true
   }
 }

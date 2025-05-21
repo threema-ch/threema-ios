@@ -19,8 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "AbstractMessage.h"
-#import "BaseMessage.h"
 #import "TypingIndicatorMessage.h"
+#import <CoreData/CoreData.h>
+
+@class BaseMessageEntity, ConversationEntity;
 
 @protocol MessageProcessorDelegate <NSObject>
 
@@ -46,7 +48,7 @@
  @param message Incoming message
  @param baseMessage Created or edited DB message
  */
-- (void)incomingMessageChanged:(AbstractMessage * _Nonnull)message baseMessage:(BaseMessage * _Nonnull)baseMessage;
+- (void)incomingMessageChanged:(AbstractMessage * _Nonnull)message baseMessage:(BaseMessageEntity * _Nonnull)baseMessage;
 
 /**
  Processing of incoming (reflected) message is finished.

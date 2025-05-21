@@ -272,17 +272,17 @@ extension ItemSender: UploadProgressDelegate {
     public func blobMessageSender(
         _ blobMessageSender: Old_BlobMessageSender!,
         uploadProgress progress: NSNumber!,
-        for message: BaseMessage!
+        forMessage message: BaseMessageEntity!
     ) {
-        delegate?.setProgress(progress: progress, forItem: message.id!)
+        delegate?.setProgress(progress: progress, forItem: message.id)
     }
     
     public func blobMessageSender(
         _ blobMessageSender: Old_BlobMessageSender!,
-        uploadSucceededFor message: BaseMessage
+        uploadSucceededForMessage message: BaseMessageEntity
     ) {
         sentItemCount! += 1
-        delegate?.finishedItem(item: message.id!)
+        delegate?.finishedItem(item: message.id)
 
         markDirty(for: message)
 
@@ -295,7 +295,7 @@ extension ItemSender: UploadProgressDelegate {
     
     public func blobMessageSender(
         _ blobMessageSender: Old_BlobMessageSender!,
-        uploadFailedFor message: BaseMessage!,
+        uploadFailedForMessage message: BaseMessageEntity!,
         error: UploadError
     ) {
         DispatchQueue.global(qos: .userInteractive).async {
@@ -313,7 +313,7 @@ extension ItemSender: UploadProgressDelegate {
         }
     }
     
-    private func markDirty(for message: BaseMessage) {
+    private func markDirty(for message: BaseMessageEntity) {
         DatabaseManager.db()?.addDirtyObject(message.conversation)
         DatabaseManager.db()?.addDirtyObject(message)
         

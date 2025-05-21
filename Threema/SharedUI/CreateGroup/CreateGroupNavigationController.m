@@ -30,7 +30,6 @@
 #import "ModalPresenter.h"
 #import "UserSettings.h"
 #import "ContactStore.h"
-#import "ContactEntity.h"
 #import "BundleUtil.h"
 #import "AppGroup.h"
 #import "ContactsNavigationController.h"
@@ -120,7 +119,7 @@
 
             dispatch_async(dispatch_get_main_queue(), ^{
                 UITabBarController *mainTabBar = [AppDelegate getMainTabBarController];
-                if ([[mainTabBar selectedViewController] isKindOfClass:[ContactsNavigationController class]]) {
+                if ([[mainTabBar selectedViewController] isKindOfClass:[ContactsNavigationController class]] || [[mainTabBar selectedViewController] isKindOfClass:[ContactListNavigationViewController class]] ) {
                     NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
                                           grp, kKeyGroup,
                                           nil

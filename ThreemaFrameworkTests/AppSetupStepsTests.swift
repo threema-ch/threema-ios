@@ -204,7 +204,7 @@ final class AppSetupStepsTests: XCTestCase {
                 publicKey: MockData.generatePublicKey(),
                 identity: identity.string
             )
-            contact.featureMask = NSNumber(value: 255)
+            contact.setFeatureMask(to: 255)
             return contact
         }
     }

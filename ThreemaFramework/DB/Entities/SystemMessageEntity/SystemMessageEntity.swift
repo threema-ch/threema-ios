@@ -22,18 +22,18 @@ import CoreData
 import Foundation
 
 @objc(SystemMessageEntity)
-public final class SystemMessageEntity: BaseMessage {
+public final class SystemMessageEntity: BaseMessageEntity {
     
-    // Attributes
-    @NSManaged @objc(arg) public var arg: Data?
-    @NSManaged @objc(type) public var type: NSNumber
+    // MARK: Attributes
+
+    @NSManaged public var arg: Data?
+    @NSManaged public var type: NSNumber
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
+    ///   - context: `NSManagedObjectContext` to insert created entity into
     ///   - arg: Data belonging to the system message
     ///   - type: Type of system message
     public init(context: NSManagedObjectContext, arg: Data?, type: Int16) {

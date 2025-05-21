@@ -29,7 +29,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
     var text: String
     var quote: WebTextMessageQuote?
     
-    var baseMessage: BaseMessage?
+    var baseMessage: BaseMessageEntity?
     
     var tmpError: String?
     
@@ -72,7 +72,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
             entityManager: entityManager
         )
 
-        var conversation: ConversationEntity!
+        var conversation: ConversationEntity?
         if type == "contact" {
             guard let contact = entityManager.entityFetcher.contact(for: id) else {
                 baseMessage = nil
@@ -106,7 +106,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
         else {
             conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
 
-            guard conversation != nil,
+            guard let conversation,
                   let group = groupManager.getGroup(conversation: conversation)
             else {
                 baseMessage = nil
@@ -122,6 +122,13 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
                 completion()
                 return
             }
+        }
+        
+        guard let conversation else {
+            baseMessage = nil
+            tmpError = "internalError"
+            completion()
+            return
         }
 
         sendMessage(conversation: conversation, completion: completion)

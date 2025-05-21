@@ -224,8 +224,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         dbPreparer.save {
             dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "ECHOECHO",
-                verificationLevel: 0
+                identity: "ECHOECHO"
             )
         }
         let (frameworkInjectorMock, messageStoreMock) = setUpMocks(group: nil)
@@ -310,8 +309,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         dbPreparer.save {
             let groupCreator = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: "MEMBER01",
-                verificationLevel: 0
+                identity: "MEMBER01"
             )
             let conversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in

@@ -85,11 +85,11 @@ class GlobalSearchDataSource: UITableViewDiffableDataSource<GlobalSearch.Section
                 
             case let .messageToken(token):
                 let cell = tableView.dequeueReusableCell(
-                    withIdentifier: GlobalSearchContentConfigurations.contentConfigurationTokenCellIdentifier,
+                    withIdentifier: SearchContentConfigurations.contentConfigurationTokenCellIdentifier,
                     for: indexPath
                 )
                 
-                cell.contentConfiguration = GlobalSearchContentConfigurations.contentConfiguration(for: token)
+                cell.contentConfiguration = SearchContentConfigurations.contentConfiguration(for: token)
                 
                 // For these tokens it looks better if there is no inset for the icons
                 // (as in Mail.app & Photos.app in iOS 17)
@@ -115,9 +115,9 @@ class GlobalSearchDataSource: UITableViewDiffableDataSource<GlobalSearch.Section
                 return conversationCell
                 
             case let .message(id):
-                var message: BaseMessage?
+                var message: BaseMessageEntity?
                 entityManager.performAndWait {
-                    message = entityManager.entityFetcher.existingObject(with: id) as? BaseMessage
+                    message = entityManager.entityFetcher.existingObject(with: id) as? BaseMessageEntity
                 }
                 
                 guard let message else {
@@ -145,13 +145,13 @@ class GlobalSearchDataSource: UITableViewDiffableDataSource<GlobalSearch.Section
         // logic over there
         tableView?.register(
             UITableViewHeaderFooterView.self,
-            forHeaderFooterViewReuseIdentifier: GlobalSearchContentConfigurations
+            forHeaderFooterViewReuseIdentifier: SearchContentConfigurations
                 .contentConfigurationSectionHeaderIdentifier
         )
         
         tableView?.register(
             UITableViewCell.self,
-            forCellReuseIdentifier: GlobalSearchContentConfigurations.contentConfigurationTokenCellIdentifier
+            forCellReuseIdentifier: SearchContentConfigurations.contentConfigurationTokenCellIdentifier
         )
         tableView?.registerCell(GlobalSearchResultsTableViewCell.self)
         tableView?.registerCell(ConversationTableViewCell.self)

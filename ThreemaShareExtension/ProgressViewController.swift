@@ -50,7 +50,7 @@ class ProgressViewController: UIViewController {
                 
         view.backgroundColor = .systemGroupedBackground
         
-        view.tintColor = .primary
+        view.tintColor = .tintColor
         contentView!.backgroundColor = .secondarySystemGroupedBackground
         contentView?.layer.cornerRadius = 15.0
         label.textColor = .label

@@ -112,13 +112,14 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     /// Create a new edit contact view controller to present modally embedded in a navigation controller
     /// - Parameter contact: Contact to be edited
     init(for contact: ContactEntity) {
-        assert(contact.cnContactID == nil, "Only use with a contact that is not linked to a system contact")
+        // swiftformat:disable:next acronyms
+        assert(contact.cnContactId == nil, "Only use with a contact that is not linked to a system contact")
         
         self.contact = contact
         
         // Prevent editing of profile picture if received profile pictures are shown and we actually received one
         let showProfilePictures = UserSettings.shared()?.showProfilePictures ?? false
-        if contact.isGatewayID() {
+        if contact.isGatewayID {
             // Special case for gateway ids as profile picture is not editable
             self.profilePictureIsEditable = false
         }

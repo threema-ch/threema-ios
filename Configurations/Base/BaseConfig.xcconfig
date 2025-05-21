@@ -18,11 +18,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-VERSION_NUMBER=6.7.1
-BUILD_NUMBER=6751
+VERSION_NUMBER=6.8
+BUILD_NUMBER=6847
 
 SLASH = /
 
 ONLY_ACTIVE_ARCH = YES
 TARGETED_DEVICE_FAMILY = 1,2
 SWIFT_EMIT_LOC_STRINGS = YES
+IPHONEOS_DEPLOYMENT_TARGET = 15.8

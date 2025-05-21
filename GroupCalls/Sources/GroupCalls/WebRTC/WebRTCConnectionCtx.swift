@@ -28,7 +28,7 @@ final class WebRTCConnectionContext<PeerConnectionCtxImpl: PeerConnectionContext
     
     // MARK: - Private properties
 
-    fileprivate let sessionDescription: GroupCallSessionDescription!
+    fileprivate let sessionDescription: GroupCallSessionDescription
     fileprivate let peerConnectionCtx: PeerConnectionContextProtocol
     
     fileprivate let webrtcLogger = RTCCallbackLogger()

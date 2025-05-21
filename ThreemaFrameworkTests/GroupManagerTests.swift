@@ -208,7 +208,7 @@ class GroupManagerTests: XCTestCase {
         for member in expectedMembers {
             databasePreparer.save {
                 let contact = databasePreparer.createContact(identity: member)
-                contact.isContactHidden = member == "MEMBER02"
+                contact.isHidden = member == "MEMBER02"
             }
         }
         
@@ -273,7 +273,7 @@ class GroupManagerTests: XCTestCase {
         for member in expectedMembers {
             databasePreparer.save {
                 let contact = databasePreparer.createContact(identity: member)
-                contact.isContactHidden = (member == "MEMBER02")
+                contact.isHidden = (member == "MEMBER02")
             }
         }
         
@@ -310,8 +310,8 @@ class GroupManagerTests: XCTestCase {
                 remoteSentDate: nil
             )
             textMessage.sendFailed = NSNumber(booleanLiteral: true)
-            textMessage.addRejectedBy(stayingContactEntity)
-            textMessage.addRejectedBy(leavingContactEntity)
+            textMessage.addToRejectedBy(stayingContactEntity)
+            textMessage.addToRejectedBy(leavingContactEntity)
 
             return textMessage.id
         }
@@ -591,8 +591,8 @@ class GroupManagerTests: XCTestCase {
                 remoteSentDate: nil
             )
             textMessage.sendFailed = NSNumber(booleanLiteral: true)
-            textMessage.addRejectedBy(member02)
-            textMessage.addRejectedBy(member03)
+            textMessage.addToRejectedBy(member02)
+            textMessage.addToRejectedBy(member03)
 
             return textMessage.id
         }
@@ -1032,7 +1032,7 @@ class GroupManagerTests: XCTestCase {
         for member in expectedMembers {
             databasePreparer.save {
                 let contact = databasePreparer.createContact(identity: member)
-                contact.isContactHidden = member == "MEMBER02" || member == "MEMBER04"
+                contact.isHidden = member == "MEMBER02" || member == "MEMBER04"
             }
         }
 
@@ -1317,7 +1317,7 @@ class GroupManagerTests: XCTestCase {
                 remoteSentDate: nil
             )
             textMessage.sendFailed = NSNumber(booleanLiteral: true)
-            textMessage.addRejectedBy(leavingContactEntity)
+            textMessage.addToRejectedBy(leavingContactEntity)
 
             return textMessage.id
         }
@@ -1427,7 +1427,7 @@ class GroupManagerTests: XCTestCase {
         for member in expectedMembers {
             databasePreparer.save {
                 let contactEntity = databasePreparer.createContact(identity: member)
-                contactEntity.state = NSNumber(integerLiteral: member == "MEMBER02" ? kStateInvalid : kStateActive)
+                contactEntity.contactState = member == "MEMBER02" ? .invalid : .active
             }
         }
 
@@ -1482,7 +1482,7 @@ class GroupManagerTests: XCTestCase {
         for member in expectedMembers {
             databasePreparer.save {
                 let contactEntity = databasePreparer.createContact(identity: member)
-                contactEntity.state = NSNumber(integerLiteral: member == "MEMBER02" ? kStateInvalid : kStateActive)
+                contactEntity.contactState = member == "MEMBER02" ? .invalid : .active
             }
         }
 
@@ -1520,7 +1520,7 @@ class GroupManagerTests: XCTestCase {
                 remoteSentDate: nil
             )
             textMessage.sendFailed = NSNumber(booleanLiteral: true)
-            textMessage.addRejectedBy(someContactEntity)
+            textMessage.addToRejectedBy(someContactEntity)
 
             return textMessage.id
         }
@@ -1537,7 +1537,7 @@ class GroupManagerTests: XCTestCase {
                 remoteSentDate: nil
             )
             textMessage.sendFailed = NSNumber(booleanLiteral: true)
-            textMessage.addRejectedBy(someContactEntity)
+            textMessage.addToRejectedBy(someContactEntity)
 
             return textMessage.id
         }
@@ -2566,11 +2566,12 @@ class GroupManagerTests: XCTestCase {
 
         // Add open ballot
         
-        var ballot: Ballot!
+        var ballot: BallotEntity!
         databasePreparer.save {
             ballot = databasePreparer.createBallot(conversation: group.conversation)
-            ballot.creatorID = myIdentityStoreMock.identity
-            ballot.state = NSNumber(integerLiteral: kBallotStateOpen)
+            // swiftformat:disable:next acronyms
+            ballot.creatorId = myIdentityStoreMock.identity
+            ballot.state = NSNumber(integerLiteral: BallotState.open.rawValue)
         }
         
         // Test

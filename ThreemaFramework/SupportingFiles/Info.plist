@@ -14,8 +14,8 @@
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
-    <key>CFBundleShortVersionString</key>
-    <string>$(VERSION_NUMBER)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(VERSION_NUMBER)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
@@ -34,8 +34,6 @@
 	<string>https://ds-apip.threema.ch</string>
 	<key>ThreemaAvatarURL</key>
 	<string>https://avatar.threema.ch</string>
-	<key>ThreemaBackupInfo</key>
-	<string>https://threema.ch/faq/backup-options</string>
 	<key>ThreemaBlobDoneURL</key>
 	<string>https://blobp-{blobIdPrefix}.threema.ch/{blobId}/done</string>
 	<key>ThreemaBlobDoneURLv6</key>
@@ -50,8 +48,8 @@
 	<string>https://ds-blobp-upload.threema.ch/upload?persist={persistBlob}</string>
 	<key>ThreemaCoreDataVersion</key>
 	<string>$(COREDATA_VERSION)</string>
-	<key>ThreemaInteractionInfo</key>
-	<string>https://threema.ch/faq/ios-interactions</string>
+	<key>ThreemaRendezvousServerURL</key>
+	<string>wss://rendezvous-{rendezvousPathPrefix4}.threema.ch/{rendezvousPathPrefix8}</string>
 	<key>ThreemaMediatorBlobDoneURL</key>
 	<string>https://blob-mirror-{deviceGroupIdPrefix4}.threema.ch/{deviceGroupIdPrefix8}/{blobId}/done?deviceId={deviceId}&amp;deviceGroupId={deviceGroupId}&amp;scope={origin}</string>
 	<key>ThreemaMediatorBlobURL</key>
@@ -60,8 +58,6 @@
 	<string>https://blob-mirror-{deviceGroupIdPrefix4}.threema.ch/{deviceGroupIdPrefix8}/upload?persist={persistBlob}&amp;deviceId={deviceId}&amp;deviceGroupId={deviceGroupId}&amp;scope={origin}</string>
 	<key>ThreemaMediatorServerURL</key>
 	<string>wss://mediator-{deviceGroupIdPrefix4}.threema.ch/{deviceGroupIdPrefix8}</string>
-	<key>ThreemaNotificationInfo</key>
-	<string>https://threema.ch/faq/ios-notification-types</string>
 	<key>ThreemaOnPremPublicKeys</key>
 	<array>
 		<string>ek1qBp4DyRmLL9J5sCmsKSfwbsiGNB4veDAODjkwe/k=</string>
@@ -72,8 +68,6 @@
 	<string>https://poi.threema.ch/around/</string>
 	<key>ThreemaPOINamesURL</key>
 	<string>https://poi.threema.ch/names/</string>
-	<key>ThreemaRendezvousServerURL</key>
-	<string>wss://rendezvous-{rendezvousPathPrefix4}.threema.ch/{rendezvousPathPrefix8}</string>
 	<key>ThreemaSafeURL</key>
 	<string>https://safe-{backupIdPrefix8}.threema.ch</string>
 	<key>ThreemaServerAltPublicKey</key>
@@ -91,8 +85,6 @@
 	</array>
 	<key>ThreemaServerPublicKey</key>
 	<data>RQuXVzUnn97LMxNkj1/G7p/0Ng6pKowXUcZh5MDYyQk=</data>
-	<key>ThreemaSupportURL</key>
-	<string>https://threema.ch/ios/support</string>
 	<key>ThreemaWebURL</key>
 	<string>https://web.threema.ch/</string>
 	<key>ThreemaWorkAPIURL</key>

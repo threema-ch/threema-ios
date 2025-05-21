@@ -70,6 +70,9 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
 
     var isAppInBackground = false
 
+    var isIPv6Connection = false
+    var isProxyConnection = false
+    
     func connect(initiator: ConnectionInitiator, completionHandler: ((Bool) -> Void)? = nil) {
         // no-op
     }
@@ -200,7 +203,7 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
     
     func incomingMessageStarted(_ message: AbstractMessage) { }
     
-    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessage) { }
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessageEntity) { }
 
     func incomingMessageFinished(_ message: AbstractMessage) { }
 

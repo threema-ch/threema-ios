@@ -405,7 +405,7 @@ enum MediatorMessageProtocolError: Error {
             }
         }
         else {
-            DDLogError(MediatorMessageProtocol.generate_nonce_failed)
+            DDLogError("\(MediatorMessageProtocol.generate_nonce_failed)")
         }
         return nil
     }
@@ -680,7 +680,7 @@ enum MediatorMessageProtocolError: Error {
     /// - Returns: Decrypted and decoded envelope
     func decryptEnvelope(data: Data) -> D2d_Envelope? {
         guard let dgrk = deviceGroupKeys?.dgrk else {
-            DDLogError(MediatorMessageProtocol.device_group_keys_missing)
+            DDLogError("\(MediatorMessageProtocol.device_group_keys_missing)")
             return nil
         }
 
@@ -717,7 +717,7 @@ enum MediatorMessageProtocolError: Error {
     /// - Returns: Encoded and encrypted data
     func encryptEnvelope(envelope: D2d_Envelope) -> Data? {
         guard let dgrk = deviceGroupKeys?.dgrk else {
-            DDLogError(MediatorMessageProtocol.device_group_keys_missing)
+            DDLogError("\(MediatorMessageProtocol.device_group_keys_missing)")
             return nil
         }
 
@@ -736,7 +736,7 @@ enum MediatorMessageProtocolError: Error {
                 }
             }
             else {
-                DDLogError(MediatorMessageProtocol.generate_nonce_failed)
+                DDLogError("\(MediatorMessageProtocol.generate_nonce_failed)")
             }
         }
         catch {

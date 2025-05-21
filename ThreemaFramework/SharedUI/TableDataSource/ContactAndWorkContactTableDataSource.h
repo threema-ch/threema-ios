@@ -19,8 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <Foundation/Foundation.h>
+#import <CoreData/CoreData.h>
 #import "ContactGroupDataSource.h"
-#import "ContactEntity.h"
+
+@class ContactEntity;
 
 @interface ContactAndWorkContactTableDataSource : NSObject <ContactGroupDataSource>
 

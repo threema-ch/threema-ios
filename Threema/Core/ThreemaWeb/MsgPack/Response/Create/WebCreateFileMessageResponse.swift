@@ -22,12 +22,12 @@ import Foundation
 
 class WebCreateFileMessageResponse: WebAbstractMessage {
     
-    var message: BaseMessage?
+    var message: BaseMessageEntity?
     var type: String
     var id: String
     var messageID: String?
     
-    init(message: BaseMessage, request: WebCreateFileMessageRequest) {
+    init(message: BaseMessageEntity, request: WebCreateFileMessageRequest) {
         self.message = message
         self.type = request.type
         if request.groupID != nil {

@@ -71,7 +71,7 @@
             UIImage *thumbnail = [FileMessagePreview thumbnailForFileMessageEntity:fileMessageEntity];
             _isUtiPreview = !fileMessageEntity.thumbnail;
             if (fileMessageEntity.thumbnail == nil) {
-                UIImage *colorizedThumbnail = [thumbnail imageWithTint:Colors.white];
+                UIImage *colorizedThumbnail = [thumbnail imageWithTint:UIColor.whiteColor];
                 _underlyingImage = colorizedThumbnail;
             } else {
                 if ([UTIConverter isGifMimeType:fileMessageEntity.mimeType]) {
@@ -179,7 +179,7 @@
         UIImage *thumbnail = [FileMessagePreview thumbnailForFileMessageEntity:_fileMessageEntity];
         _isUtiPreview = !_fileMessageEntity.thumbnail;
         if (_fileMessageEntity.thumbnail == nil) {
-            UIImage *colorizedThumbnail = [thumbnail imageWithTint:Colors.white];
+            UIImage *colorizedThumbnail = [thumbnail imageWithTint:UIColor.whiteColor];
             _underlyingImage = colorizedThumbnail;
         } else {
             if ([UTIConverter isGifMimeType:_fileMessageEntity.mimeType]) {

@@ -193,11 +193,10 @@ public class MarkupParser {
     
     private lazy var businessInjector = BusinessInjector()
     
-    var isURLIndex: [Bool]!
-    var isURLStartIndex: [Bool]!
-    var isURLBoundaryIndex: [Bool]!
-    var isBoundaryIndex: [Bool]!
-    var isMentionIndex: [Bool]!
+    private var isURLIndex: [Bool] = []
+    private var isURLBoundaryIndex: [Bool] = []
+    private var isBoundaryIndex: [Bool] = []
+    private var isMentionIndex: [Bool] = []
     
     public init() { }
 }
@@ -240,7 +239,7 @@ extension MarkupParser {
             return parsedMarkupsAndMentions
         }
         catch {
-            DDLogVerbose(error.localizedDescription)
+            DDLogVerbose("\(error.localizedDescription)")
             return parsedMarkups
         }
     }
@@ -318,7 +317,7 @@ extension MarkupParser {
             )
         }
         catch {
-            DDLogVerbose(error.localizedDescription)
+            DDLogVerbose("\(error.localizedDescription)")
             return parsedMarkups
         }
         

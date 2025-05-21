@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "Old_ContactCell.h"
-#import "ContactEntity.h"
 #import "ContactNameLabel.h"
 #import "BundleUtil.h"
 #import "UserSettings.h"
@@ -45,7 +44,8 @@
     self.nameLabel.contact = contact;
     
     self.identityLabel.text = contact.identity;
-    self.verificationLevel.image = [contact verificationLevelImageSmall];
+    Contact * businessContact = [[Contact alloc]initWithContactEntity:contact];
+    self.verificationLevel.image = [businessContact verificationLevelImageSmall];
     
     [self updateState];
     
@@ -71,8 +71,9 @@
     NSMutableString *text = [NSMutableString stringWithString:_nameLabel.accessibilityLabel];
     
     [text appendFormat:@". %@.", _contact.identity];
-
-    [text appendFormat:@". %@", [_contact verificationLevelAccessibilityLabel]];
+    
+    Contact * businessContact = [[Contact alloc]initWithContactEntity:_contact];
+    [text appendFormat:@". %@", [businessContact verificationLevelAccessibilityLabel]];
     
     return text;
 }

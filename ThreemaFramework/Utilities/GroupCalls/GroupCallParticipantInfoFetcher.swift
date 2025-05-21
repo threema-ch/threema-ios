@@ -84,7 +84,7 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
             else {
                 entityManager.performAndWait {
                     guard let contact = entityManager.entityFetcher.contact(for: id.string) else {
-                        return .primary
+                        return .tintColor
                     }
                 
                     return contact.idColor

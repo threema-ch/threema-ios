@@ -27,16 +27,16 @@ typedef enum UploadError {
     UploadErrorCancelled
 } UploadError;
 
-@class Old_BlobMessageSender;
+@class Old_BlobMessageSender, BaseMessageEntity;
 
 @protocol UploadProgressDelegate <NSObject>
 
 - (BOOL)blobMessageSenderUploadShouldCancel:(Old_BlobMessageSender*)blobMessageSender;
 
-- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessage *)message;
+- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessageEntity *)message;
 
-- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadFailedForMessage:(BaseMessage *)message error:(UploadError)error;
+- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadFailedForMessage:(BaseMessageEntity *)message error:(UploadError)error;
 
-- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadSucceededForMessage:(BaseMessage *)message;
+- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadSucceededForMessage:(BaseMessageEntity *)message;
 
 @end

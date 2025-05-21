@@ -165,7 +165,7 @@ final class MessageEditedMessageStackView: UIStackView {
     
     // MARK: - Updates
 
-    private func updateEditMessage(editMessage: BaseMessage) {
+    private func updateEditMessage(editMessage: BaseMessageEntity) {
         // Assign Values & configure layout
         titleLabel.text = #localize("edit")
 

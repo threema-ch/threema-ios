@@ -190,7 +190,7 @@ class MultiDeviceWizardViewModel: ObservableObject {
                 return
             }
             
-            pfsEnabledContacts.append(contentsOf: allContacts.filter { $0.isForwardSecurityAvailable() })
+            pfsEnabledContacts.append(contentsOf: allContacts.filter(\.isForwardSecurityAvailable))
         }
         return pfsEnabledContacts
     }
@@ -205,7 +205,7 @@ class MultiDeviceWizardViewModel: ObservableObject {
                 
                 // Terminate existing session
                 do {
-                    try sessionTerminator.terminateAllSessions(with: contact, cause: .disabledByLocal)
+                    _ = try sessionTerminator.terminateAllSessions(with: contact, cause: .disabledByLocal)
                 }
                 catch {
                     DDLogError("An error occurred while terminating session with \(contact.identity): \(error)")

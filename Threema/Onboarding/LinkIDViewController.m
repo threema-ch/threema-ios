@@ -237,9 +237,9 @@
     _phoneTextField.accessibilityHint = [BundleUtil localizedStringForKey:@"phone number"];
     
     if (TargetManagerObjc.isBusinessApp) {
-        _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_link_description_work"];
+        _descriptionLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_description_work"], TargetManagerObjc.localizedAppName];
     } else {
-        _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_link_description"];
+        _descriptionLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_description"], TargetManagerObjc.localizedAppName];
     }
     
     self.moreView.mainView = self.mainContentView;
@@ -248,7 +248,7 @@
         self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_link_id_work"], TargetManagerObjc.appName, TargetManagerObjc.appName];
     } else {
         _titleLabel.text = [BundleUtil localizedStringForKey:@"id_link_title"];
-        self.moreView.moreMessageText = [BundleUtil localizedStringForKey:@"more_information_link_id"];
+        self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_link_id"], TargetManagerObjc.appName, TargetManagerObjc.appName];
     }
     _titleLabel.accessibilityIdentifier = @"id_link_title";
     
@@ -258,13 +258,13 @@
         _phoneTextField.enabled = NO;
     }
     
-    _emailTextField.tintColor = UIColor.primary;
-    _phoneTextField.tintColor = UIColor.primary;
-    _selectedCountryButton.backgroundColor = UIColor.primary;
+    _emailTextField.tintColor = UIColor.tintColor;
+    _phoneTextField.tintColor = UIColor.tintColor;
+    _selectedCountryButton.backgroundColor = UIColor.tintColor;
     [_selectedCountryButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     
-    _phoneImageView.image = [[UIImage systemImageNamed:@"phone.fill"] imageWithTintColor:Colors.white];
-    _mailImageView.image = [[UIImage systemImageNamed:@"envelope.fill"] imageWithTintColor:Colors.white];
+    _phoneImageView.image = [[UIImage systemImageNamed:@"phone.fill"] imageWithTintColor:UIColor.whiteColor];
+    _mailImageView.image = [[UIImage systemImageNamed:@"envelope.fill"] imageWithTintColor:UIColor.whiteColor];
 }
 
 - (void)updatePhonePlaceholder {
@@ -461,9 +461,9 @@
     if (_questionView == nil) {
         _questionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
         if (TargetManagerObjc.isBusinessApp) {
-            _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input_work"], TargetManagerObjc.appName];
+            _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input_work"], TargetManagerObjc.localizedAppName, TargetManagerObjc.appName];
         } else {
-            _questionView.questionLabel.text = [BundleUtil localizedStringForKey:@"id_link_no_input"];            
+            _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input"], TargetManagerObjc.localizedAppName, TargetManagerObjc.appName];
         }
         
         [_questionView.noButton setTitle:[BundleUtil localizedStringForKey:@"yes"] forState:UIControlStateNormal];

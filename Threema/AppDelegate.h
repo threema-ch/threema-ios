@@ -32,7 +32,7 @@
 - (BOOL)handleMagicTap;
 @end
 
-@class AbstractMessage, BaseMessage;
+@class AbstractMessage, BaseMessageEntity;
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate, JKLLockScreenViewControllerDelegate, UNUserNotificationCenterDelegate>
 

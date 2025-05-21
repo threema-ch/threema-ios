@@ -100,7 +100,7 @@
     BallotListTableCell *cell = (BallotListTableCell *)[tableView dequeueReusableCellWithIdentifier:BALLOT_LIST_TABLE_CELL_ID forIndexPath:indexPath];
     
     [entityManager performBlockAndWait:^{
-        Ballot *ballot = [_ballots objectAtIndex: indexPath.row];
+        BallotEntity *ballot = [_ballots objectAtIndex: indexPath.row];
         [cell.nameLabel setText:ballot.title];
         [cell.creatorNameLabel setText: [entityManager.entityFetcher displayNameForContactId:ballot.creatorId]];
 
@@ -118,7 +118,7 @@
 
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [entityManager performBlockAndWait:^{
-        Ballot *ballot = [_ballots objectAtIndex:indexPath.row];
+        BallotEntity *ballot = [_ballots objectAtIndex:indexPath.row];
         
         _ballot.title = ballot.title;
         _ballot.assessmentType = ballot.assessmentType;
@@ -127,8 +127,8 @@
             
         [self clearBallotChoices:_ballot];
 
-        for (BallotChoice *choice in ballot.choices) {
-            BallotChoice *ballotChoice = [[entityManager entityCreator] ballotChoice];
+        for (BallotChoiceEntity *choice in ballot.choices) {
+            BallotChoiceEntity *ballotChoice = [[entityManager entityCreator] ballotChoice];
             ballotChoice.name = choice.name;
             ballotChoice.orderPosition = choice.orderPosition;
             ballotChoice.ballot = _ballot;
@@ -139,8 +139,8 @@
     [self.navigationController popViewControllerAnimated:YES];
 }
 
-- (void)clearBallotChoices:(Ballot *)ballot {
-    for (BallotChoice *choice in ballot.choices) {
+- (void)clearBallotChoices:(BallotEntity *)ballot {
+    for (BallotChoiceEntity *choice in ballot.choices) {
         [ballot.managedObjectContext deleteObject: choice];
     }
     

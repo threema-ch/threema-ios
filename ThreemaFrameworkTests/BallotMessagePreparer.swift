@@ -34,8 +34,7 @@ import XCTest
         databasePreparer.save {
             let contact = databasePreparer.createContact(
                 publicKey: Data([1]),
-                identity: "ECHOECHO",
-                verificationLevel: 0
+                identity: "ECHOECHO"
             )
 
             _ = databasePreparer

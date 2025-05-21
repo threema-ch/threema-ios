@@ -133,7 +133,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 #pragma mark - UploadProgressDelegate
 
-- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadFailedForMessage:(BaseMessage *)message error:(UploadError)error {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadFailedForMessage:(BaseMessageEntity *)message error:(UploadError)error {
     NSString *errorTitle = [BundleUtil localizedStringForKey:@"error_sending_failed"];
     NSString *errorMessage = [Old_FileMessageSender messageForError:error];
     
@@ -141,7 +141,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self deleteInboxFile];
 }
 
-- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(BaseMessage *)message {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(BaseMessageEntity *)message {
     [self deleteInboxFile];
 }
 
@@ -149,7 +149,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return NO;
 }
 
-- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessage *)message {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessageEntity *)message {
     ;//nop
 }
 

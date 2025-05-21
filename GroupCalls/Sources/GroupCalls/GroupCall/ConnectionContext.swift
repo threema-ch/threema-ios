@@ -135,9 +135,9 @@ final class ConnectionContext<
         )
         
         // Initialize WebRTC Logger
+        webrtcLogger.severity = .warning
         Task.detached { [weak self] in
-            self?.webrtcLogger.severity = .warning
-            self?.webrtcLogger.start { message in
+            await self?.webrtcLogger.start { message in
                 if let trimmed = RTCCallbackLogger.trimMessage(message: message) {
                     DDLogNotice("[GroupCall] [libwebrtc] \(trimmed)")
                 }

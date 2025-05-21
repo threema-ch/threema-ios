@@ -21,29 +21,30 @@
 import Foundation
 
 @objc(MessageHistoryEntryEntity)
-public class MessageHistoryEntryEntity: NSManagedObject, Identifiable {
+public final class MessageHistoryEntryEntity: NSManagedObject, Identifiable {
 
-    // Attributes
+    // MARK: Attributes
+
     @NSManaged public var editDate: Date
     @NSManaged public var text: String?
     
-    // Relationships
-    @NSManaged @objc(message) public var message: BaseMessage
+    // MARK: Relationships
+
+    @NSManaged public var message: BaseMessageEntity
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
+    ///   - context: `NSManagedObjectContext` to insert created entity into
     ///   - editDate: Date entry was created
     ///   - text: Text of the entry
-    ///   - message: Message the entity belongs to
+    ///   - message: `BaseMessageEntity` the entity belongs to
     public init(
         context: NSManagedObjectContext,
         editDate: Date,
         text: String? = nil,
-        message: BaseMessage
+        message: BaseMessageEntity
     ) {
         let entity = NSEntityDescription.entity(forEntityName: "MessageHistoryEntry", in: context)!
         super.init(entity: entity, insertInto: context)

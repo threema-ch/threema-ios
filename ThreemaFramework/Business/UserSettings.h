@@ -85,7 +85,6 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, strong) NSArray *profilePictureRequestList;
 
 @property (nonatomic, readwrite) BOOL enableIPv6;
-@property (nonatomic, readwrite) BOOL disableProximityMonitoring;
 @property (nonatomic, readwrite) BOOL validationLogging;
 @property (nonatomic, strong) NSString *sentryAppDevice;
 
@@ -99,6 +98,8 @@ enum ThreemaVideoCallQualitySetting {
 
 @property (nonatomic, readwrite) BOOL ipcCommunicationEnabled;
 @property (nonatomic, readwrite) NSData *ipcSecretPrefix;
+
+@property (nonatomic, readwrite) BOOL companyDirectory;
 
 @end
 
@@ -118,8 +119,6 @@ enum AcceptPrivacyPolicyVariant {
 @property (nonatomic, readwrite) BOOL showProfilePictures;
 
 @property (nonatomic, readwrite) BOOL displayOrderFirstName;
-
-@property (nonatomic, readwrite) BOOL companyDirectory;
 
 @property (nonatomic, readwrite) BOOL askedForPushDecryption;
 
@@ -149,6 +148,7 @@ enum AcceptPrivacyPolicyVariant {
 @property (nonatomic, readwrite) BOOL partialReactionSupportAlertShown;
 
 @property (nonatomic, readwrite) BOOL contactList2;
+@property (nonatomic, readwrite) BOOL newNavigationEnabled;
 
 + (UserSettings*)sharedUserSettings;
 - (instancetype) __unavailable init;

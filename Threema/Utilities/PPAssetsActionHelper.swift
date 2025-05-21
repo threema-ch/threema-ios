@@ -114,7 +114,7 @@ public class PPAssetsActionHelper: NSObject {
             systemName: "mappin.and.ellipse",
             withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
         )?
-            .withTintColor(.primary, renderingMode: .alwaysOriginal)
+            .withTintColor(.tintColor, renderingMode: .alwaysOriginal)
         let shareLocation = PPOption(
             withTitle: #localize("send_location"),
             withIcon: shareLocationImage
@@ -127,7 +127,7 @@ public class PPAssetsActionHelper: NSObject {
             systemName: "chart.pie.fill",
             withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
         )?
-            .withTintColor(.primary, renderingMode: .alwaysOriginal)
+            .withTintColor(.tintColor, renderingMode: .alwaysOriginal)
         let ballotCreate = PPOption(
             withTitle: #localize("ballot_create"),
             withIcon: ballotImage
@@ -143,7 +143,7 @@ public class PPAssetsActionHelper: NSObject {
             systemName: "doc.fill",
             withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
         )?
-            .withTintColor(.primary, renderingMode: .alwaysOriginal)
+            .withTintColor(.tintColor, renderingMode: .alwaysOriginal)
         let shareFile = PPOption(
             withTitle: #localize("share_file"),
             withIcon: shareImage
@@ -193,16 +193,16 @@ public class PPAssetsActionHelper: NSObject {
             systemName: "photo.fill",
             withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
         )?
-            .withTintColor(.primary, renderingMode: .alwaysOriginal)
+            .withTintColor(.tintColor, renderingMode: .alwaysOriginal)
 
         config.previewReplacementText = #localize("take_photo_or_video")
         config.previewReplacementIcon = UIImage(
             systemName: "camera.fill",
             withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
         )?
-            .withTintColor(.primary, renderingMode: .alwaysOriginal)
+            .withTintColor(.tintColor, renderingMode: .alwaysOriginal)
         
-        config.tintColor = .primary
+        config.tintColor = .tintColor
         config.tableBackground = Colors.backgroundNavigationController
         
         config.showAdditionalOptionWhenAssetIsSelected = true

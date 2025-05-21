@@ -33,7 +33,10 @@ class RestoreSafeForgotIDChooseViewController: IDCreationPageViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        descriptionLabel.text = #localize("safe_select_id")
+        descriptionLabel.text = String.localizedStringWithFormat(
+            #localize("safe_select_id"),
+            TargetManager.localizedAppName
+        )
         
         cancelButton.setTitle(#localize("cancel"), for: .normal)
         

@@ -31,7 +31,10 @@ class SafeDeactivatedViewController: ThemedViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        descriptionLabel.text = #localize("safe_enable_explain_short")
+        descriptionLabel.text = String.localizedStringWithFormat(
+            #localize("safe_enable_explain_short"),
+            TargetManager.localizedAppName
+        )
         introCircle.layer.cornerRadius = introCircle.frame.height / 2
         
         setupColors()
@@ -48,11 +51,9 @@ class SafeDeactivatedViewController: ThemedViewController {
     
     override func updateColors() {
         super.updateColors()
-        
-        view.backgroundColor = Colors.backgroundGroupedViewController
-        
+                
         introCircle.backgroundColor = UIColor(red: 235.0 / 255.0, green: 235.0 / 255.0, blue: 235.0 / 255.0, alpha: 1.0)
-        let explainImage = explainButton.imageView?.image!.withTint(.primary)
+        let explainImage = UIImage(systemName: "info.circle")?.withTint(.tintColor)
         explainButton.setImage(explainImage, for: .normal)
     }
 }
@@ -61,8 +62,14 @@ extension SafeDeactivatedViewController {
     @IBAction func touchDownExplainButton(_ sender: UIButton, forEvent event: UIEvent) {
         UIAlertTemplate.showAlert(
             owner: self,
-            title: "Threema Safe",
-            message: #localize("safe_enable_explain")
+            title: String.localizedStringWithFormat(
+                #localize("safe_setup_backup_title"),
+                TargetManager.localizedAppName
+            ),
+            message: String.localizedStringWithFormat(
+                #localize("safe_enable_explain"),
+                TargetManager.localizedAppName
+            )
         )
     }
 }

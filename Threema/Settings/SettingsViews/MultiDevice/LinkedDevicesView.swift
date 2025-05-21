@@ -42,7 +42,10 @@ struct LinkedDevicesView: View {
         }
         .environmentObject(linkedDevicesViewModel)
         .navigationBarTitle(
-            Text(#localize("settings_list_threema_desktop_title")),
+            Text(String.localizedStringWithFormat(
+                #localize("settings_list_threema_desktop_title"),
+                TargetManager.appName
+            )),
             displayMode: .inline
         )
         .sheet(isPresented: $showWizard) {
@@ -391,7 +394,8 @@ private struct AddDeviceSection: View {
             }
             .disabled(
                 !duplicateContactIdentities.isEmpty ||
-                    (linkedDevicesViewModel.deviceLimitReached && ThreemaEnvironment.allowMultipleLinkedDevices)
+                    (linkedDevicesViewModel.deviceLimitReached && ThreemaEnvironment.allowMultipleLinkedDevices) ||
+                    MDMSetup(setup: false).disableMultiDevice()
             )
         } footer: {
             if !duplicateContactIdentities.isEmpty {
@@ -432,7 +436,10 @@ private struct AddDeviceSection: View {
             loadDuplicateContacts()
         }
         .alert(
-            #localize("multi_device_new_linked_own_identity_in_contacts_title"),
+            String.localizedStringWithFormat(
+                #localize("multi_device_new_linked_own_identity_in_contacts_title"),
+                TargetManager.localizedAppName
+            ),
             isPresented: $showOwnIdentityInContactsAlert
         ) {
             Button(#localize("multi_device_new_linked_show_contact_button")) {
@@ -455,7 +462,10 @@ private struct AddDeviceSection: View {
                 // no-op
             }
         } message: {
-            Text(#localize("multi_device_new_linked_own_identity_in_contacts_message"))
+            Text(String.localizedStringWithFormat(
+                #localize("multi_device_new_linked_own_identity_in_contacts_message"),
+                TargetManager.localizedAppName
+            ))
         }
         .sheet(isPresented: $showPasscodeView) {
             LockScreenView(codeEnteredCorrectly: {
@@ -486,7 +496,7 @@ private struct AddDeviceSection: View {
                 .environmentObject(LinkedDevicesViewModel())
         }
     }
-    .tint(UIColor.primary.color)
+    .tint(.accentColor)
 }
 
 // MARK: RemoveAllDevicesSection
@@ -560,14 +570,17 @@ private struct RemoveAllDevicesSection: View {
 private struct LinkedDeviceListView: View {
     
     @Environment(\.sizeCategory) private var sizeCategory: ContentSizeCategory
-    
+    @Environment(\.dismiss) var dismiss
+
+    private let mdm = MDMSetup(setup: false)
+
     let device: DeviceInfo
     
     var body: some View {
         HStack(spacing: 12) {
             if !sizeCategory.isAccessibilityCategory {
                 Image(systemName: device.platform.systemSymbolName)
-                    .foregroundColor(UIColor.primary.color)
+                    .foregroundColor(.accentColor)
                     .imageScale(.large)
                     .font(.title)
                     .frame(width: 50, alignment: .center)
@@ -608,6 +621,20 @@ private struct LinkedDeviceListView: View {
             }
         }
         .accessibilityElement(children: .combine)
+        .onAppear {
+            checkDesktopStillEnabled()
+        }
+        .onReceive(\.mdmChanged) { _ in
+            checkDesktopStillEnabled()
+        }
+    }
+
+    private func checkDesktopStillEnabled() {
+        guard mdm?.disableMultiDevice() ?? false else {
+            return
+        }
+        
+        dismiss()
     }
 }
 

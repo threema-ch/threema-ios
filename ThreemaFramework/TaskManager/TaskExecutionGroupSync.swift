@@ -50,7 +50,7 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
                     break
                 }
 
-                var syncAction: D2d_GroupSync.OneOf_Action!
+                let syncAction: D2d_GroupSync.OneOf_Action
                 switch task.syncAction {
                 case .create:
                     var create = D2d_GroupSync.Create()

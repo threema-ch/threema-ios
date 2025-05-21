@@ -14,8 +14,8 @@
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
-    <key>CFBundleShortVersionString</key>
-    <string>$(VERSION_NUMBER)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(VERSION_NUMBER)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
@@ -50,14 +50,18 @@
 	<string>$(COREDATA_VERSION)</string>
 	<key>ThreemaRendezvousServerURL</key>
 	<string></string>
-	<key>ThreemaMediatorServerURL</key>
-	<string></string>
 	<key>ThreemaMediatorBlobDoneURL</key>
-	<string></string>
-	<key>ThreemaMediatorBlobUploadURL</key>
 	<string></string>
 	<key>ThreemaMediatorBlobURL</key>
 	<string></string>
+	<key>ThreemaMediatorBlobUploadURL</key>
+	<string></string>
+	<key>ThreemaMediatorServerURL</key>
+	<string></string>
+	<key>ThreemaPOIAroundURL</key>
+	<string>around/</string>
+	<key>ThreemaPOINamesURL</key>
+	<string>names/</string>
 	<key>ThreemaSafeURL</key>
 	<string>https://safe-{backupIdPrefix8}.threema.ch</string>
 	<key>ThreemaServerAltPublicKey</key>
@@ -75,8 +79,8 @@
 	</array>
 	<key>ThreemaServerPublicKey</key>
 	<data>WpjyPeZWBdBQ3ABkvgfd3YEdoRalQ85DqiaH0Z8grzw=</data>
-	<key>ThreemaSupportURL</key>
-	<string>https://threema.ch/ios/support</string>
+	<key>ThreemaWebURL</key>
+	<string>https://web.threema.ch/</string>
 	<key>ThreemaWorkAPIURL</key>
 	<string></string>
 	<key>ThreemaWorkAPIURLv6</key>
@@ -85,17 +89,5 @@
 	<string>w-</string>
 	<key>ThreemaWorkServerNamePrefixv6</key>
 	<string>ds.w-</string>
-	<key>ThreemaWebURL</key>
-	<string>https://web.threema.ch/</string>
-	<key>ThreemaPOIAroundURL</key>
-	<string>around/</string>
-	<key>ThreemaPOINamesURL</key>
-	<string>names/</string>
-	<key>ThreemaBackupInfo</key>
-	<string>https://threema.ch/faq/backup-options</string>
-	<key>ThreemaNotificationInfo</key>
-	<string>https://threema.ch/faq/ios-notification-types</string>
-	<key>ThreemaInteractionInfo</key>
-	<string>https://threema.ch/faq/ios-interactions</string>
 </dict>
 </plist>

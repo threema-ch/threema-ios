@@ -81,3 +81,5 @@
 #import "BackupPasswordViewController.h"
 #import "BackupPasswordVerifyViewController.h"
 #import "NewMessageToaster.h"
+#import "GatewayAvatarMaker.h"
+#import "WorkDataFetcher.h"

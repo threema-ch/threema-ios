@@ -35,7 +35,7 @@ struct NotificationReminderView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 100, height: 100)
-                .foregroundColor(Color(uiColor: Colors.red))
+                .foregroundColor(.red)
                 .padding(25)
             
             Text(
@@ -100,6 +100,5 @@ struct NotificationReminderView: View {
 struct NotificationReminderView_Previews: PreviewProvider {
     static var previews: some View {
         NotificationReminderView()
-            .tint(UIColor.primary.color)
     }
 }

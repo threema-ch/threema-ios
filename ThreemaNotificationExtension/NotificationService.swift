@@ -144,7 +144,24 @@ class NotificationService: UNNotificationServiceExtension {
         }
         
         if threemaPushNotification != nil || isAliveCheck {
-            
+            // Refresh all DB objects before access it
+            DatabaseManager.db()?.refreshAllObjects()
+            backgroundBusinessInjector.entityManager.refreshAll()
+
+            backgroundBusinessInjector.contactStore.resetEntityManager()
+
+            if let senderIdentity = threemaPushNotification?.from,
+               let hexStringOfmessageID = threemaPushNotification?.messageID,
+               let messageID = BytesUtility.toData(hexString: hexStringOfmessageID) {
+
+                guard !backgroundBusinessInjector.entityManager.entityFetcher
+                    .isMessageDelivered(from: senderIdentity, with: messageID) else {
+                    DDLogWarn("[Push] Suppressing push because message is already processed")
+                    applyContent()
+                    return
+                }
+            }
+
             // Exit if connected already
             if backgroundBusinessInjector.serverConnector.connectionState == .connecting ||
                 backgroundBusinessInjector.serverConnector.connectionState == .connected ||
@@ -154,6 +171,14 @@ class NotificationService: UNNotificationServiceExtension {
                 return
             }
             
+            // For some users sometimes an invalid Core Data entity was created and prevented saving of any new changes
+            // even after the notification extension was exited in the meantime. Only a device restart would resolve
+            // this. Because saving errors in Core Data are not propagated (IOS-5256) this could lead to lost messages.
+            // To prevent this we roll back the Core Data contexts on each notification extension execution which
+            // removes any invalid & unsaved entity. See IOS-5204 for details.
+            // TODO: (IOS-5256) Remove this again
+            backgroundBusinessInjector.entityManager.fullRollback()
+            
             backgroundBusinessInjector.serverConnector
                 .backgroundEntityManagerForMessageProcessing = backgroundBusinessInjector.entityManager
             
@@ -161,12 +186,6 @@ class NotificationService: UNNotificationServiceExtension {
             if backgroundBusinessInjector.settingsStore.enableThreemaGroupCalls {
                 GlobalGroupCallManagerSingleton.injectedBackgroundBusinessInjector = backgroundBusinessInjector
             }
-            
-            // Refresh all DB objects before access it
-            DatabaseManager.db()?.refreshAllObjects()
-            backgroundBusinessInjector.entityManager.refreshAll()
-            
-            backgroundBusinessInjector.contactStore.resetEntityManager()
             
             pendingUserNotificationManager = PendingUserNotificationManager(
                 UserNotificationManager(
@@ -637,44 +656,43 @@ extension NotificationService: MessageProcessorDelegate {
         }
     }
     
-    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessage) {
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessageEntity) {
         backgroundBusinessInjector.entityManager.performAndWait {
             if let msg = self.backgroundBusinessInjector.entityManager.entityFetcher
-                .getManagedObject(by: baseMessage.objectID) as? BaseMessage {
-                let msgID = msg.id?.hexString
-                DDLogNotice("[Push] Message processor changed for message id: \(msgID ?? "nil")")
+                .getManagedObject(by: baseMessage.objectID) as? BaseMessageEntity {
+                let msgID = msg.id.hexString
+                DDLogNotice("[Push] Message processor changed for message id: \(msgID)")
 
                 // Set dirty DB objects for refreshing in the app process
                 let databaseManager = DatabaseManager()
                 databaseManager.addDirtyObject(msg)
                                                 
-                if let conversation = msg.conversation {
-                    databaseManager.addDirtyObject(conversation)
-                    
-                    if let contact = conversation.contact {
-                        databaseManager.addDirtyObject(contact)
+                let conversation = msg.conversation
+                databaseManager.addDirtyObject(conversation)
+                
+                if let contact = conversation.contact {
+                    databaseManager.addDirtyObject(contact)
+                }
+                
+                if message is ReactionMessage || message is GroupReactionMessage,
+                   let reactions = baseMessage.reactions {
+                    for reaction in reactions {
+                        databaseManager.addDirtyObject(reaction)
                     }
-                    
-                    if message is ReactionMessage || message is GroupReactionMessage,
-                       let reactions = baseMessage.reactions {
-                        for reaction in reactions {
-                            databaseManager.addDirtyObject(reaction)
-                        }
+                }
+                else if message is EditMessage || message is EditGroupMessage,
+                        let editHistoryEntries = baseMessage.historyEntries {
+                    for entry in editHistoryEntries {
+                        databaseManager.addDirtyObject(entry)
                     }
-                    else if message is EditMessage || message is EditGroupMessage,
-                            let editHistoryEntries = baseMessage.historyEntries {
-                        for entry in editHistoryEntries {
-                            databaseManager.addDirtyObject(entry)
-                        }
-                    }
+                }
 
-                    self.backgroundBusinessInjector.unreadMessages
-                        .totalCount(doCalcUnreadMessagesCountOf: [conversation])
+                self.backgroundBusinessInjector.unreadMessages
+                    .totalCount(doCalcUnreadMessagesCountOf: [conversation])
 
-                    // Add conversation as change to recalculate unread messages
-                    self.conversationsChangedQueue.async {
-                        self.conversationsChanged?.insert(conversation.objectID)
-                    }
+                // Add conversation as change to recalculate unread messages
+                self.conversationsChangedQueue.async {
+                    self.conversationsChanged?.insert(conversation.objectID)
                 }
                 
                 if let pendingUserNotification = self.pendingUserNotificationManager?.pendingUserNotification(

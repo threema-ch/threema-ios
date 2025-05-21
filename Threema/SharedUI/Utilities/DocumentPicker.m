@@ -196,13 +196,13 @@ static DocumentPicker *pickerStrongReference;
     return NO;
 }
 
-- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessage *)message {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessageEntity *)message {
     // hide as soon as progress starts which is visible in message bubble
-    /// Progress might not be reported in note to self groups. To make sure the HUD is actually dimissed it will be dismissed again in `- (void)blobMessageSender:(BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(BaseMessage *)message`
+    /// Progress might not be reported in note to self groups. To make sure the HUD is actually dimissed it will be dismissed again in `- (void)blobMessageSender:(BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(BaseMessageEntity *)message`
     [MBProgressHUD hideHUDForView:_presentingViewController.view animated:YES];
 }
 
-- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadFailedForMessage:(BaseMessage *)message error:(UploadError)error {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadFailedForMessage:(BaseMessageEntity *)message error:(UploadError)error {
     [MBProgressHUD hideHUDForView:_presentingViewController.view animated:YES];
     
     NSString *errorTitle = [BundleUtil localizedStringForKey:@"error_sending_failed"];
@@ -210,7 +210,7 @@ static DocumentPicker *pickerStrongReference;
     [self showAlertWithTitle:errorTitle message:errorMessage closeOnOk:NO];
 }
 
-- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(BaseMessage *)message {
+- (void)blobMessageSender:(Old_BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(BaseMessageEntity *)message {
     // Upload succeeds immediately when sending files in note groups without ever reporting upload progress
     [MBProgressHUD hideHUDForView:_presentingViewController.view animated:YES];
     pickerStrongReference = nil;

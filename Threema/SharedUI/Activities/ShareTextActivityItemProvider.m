@@ -26,24 +26,24 @@
 
 - (id)activityViewController:(UIActivityViewController *)activityViewController itemForActivityType:(NSString *)activityType {
     if ([activityType isEqualToString:UIActivityTypePostToFacebook]) {
-        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_facebook_text"], [[MyIdentityStore sharedMyIdentityStore] identity]];
+        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_facebook_text"], TargetManagerObjc.appName, TargetManagerObjc.localizedAppName,  [[MyIdentityStore sharedMyIdentityStore] identity]];
     }
     else if ([activityType isEqualToString:UIActivityTypePostToTwitter]) {
-        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_twitter_text"], [[MyIdentityStore sharedMyIdentityStore] identity]];
+        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_twitter_text"], TargetManagerObjc.appName, TargetManagerObjc.localizedAppName,  [[MyIdentityStore sharedMyIdentityStore] identity]];
     }
     else if ([activityType isEqualToString:UIActivityTypeMail]) {
-        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_email_body"], [[MyIdentityStore sharedMyIdentityStore] identity]];
+        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_email_body"], TargetManagerObjc.appName, TargetManagerObjc.localizedAppName, [[MyIdentityStore sharedMyIdentityStore] identity], TargetManagerObjc.appName];
     }
     else if ([activityType isEqualToString:UIActivityTypeMessage]) {
-        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_sms_body"], [[MyIdentityStore sharedMyIdentityStore] identity]];
+        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_sms_body"],TargetManagerObjc.appName, TargetManagerObjc.localizedAppName,  [[MyIdentityStore sharedMyIdentityStore] identity]];
     }
     
-    return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_facebook_text"], [[MyIdentityStore sharedMyIdentityStore] identity]];
+    return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_facebook_text"], TargetManagerObjc.appName, TargetManagerObjc.localizedAppName,  [[MyIdentityStore sharedMyIdentityStore] identity]];
 }
 
 - (NSString *)activityViewController:(UIActivityViewController *)activityViewController subjectForActivityType:(UIActivityType)activityType {
     if ([activityType isEqualToString:UIActivityTypeMail]) {
-        return [BundleUtil localizedStringForKey:@"invite_email_subject"];
+        return [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_email_subject"], TargetManagerObjc.appName];
     }
     return nil;
 }

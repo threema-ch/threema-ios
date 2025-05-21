@@ -39,7 +39,7 @@ protocol ChatViewTableViewVoiceMessageCellDelegateProtocol: NSObject {
     
     func getProgress(for voiceMessage: VoiceMessage) -> CGFloat
     
-    func isMessageCurrentlyPlaying(_ message: BaseMessage?) -> Bool
+    func isMessageCurrentlyPlaying(_ message: BaseMessageEntity?) -> Bool
     func reregisterCallbacks(
         message: VoiceMessage,
         progressCallback: @escaping (TimeInterval, CGFloat) -> Void,
@@ -92,19 +92,13 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         NotificationCenter.default.removeObserver(self)
     }
     
-    // MARK: - Private functions
-    
-    // MARK: - Configuration
-    
     private func configure() {
-        setupProximityMonitoringIfEnabled()
+        setupProximityMonitoring()
     }
     
-    private func setupProximityMonitoringIfEnabled() {
-        guard !UserSettings.shared().disableProximityMonitoring else {
-            return
-        }
-        
+    // MARK: - Private functions
+    
+    private func setupProximityMonitoring() {
         NotificationCenter.default.addObserver(
             forName: UIDevice.proximityStateDidChangeNotification,
             object: nil,
@@ -162,14 +156,14 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         guard let audioPlayer else {
             let msg = "AudioPlayer is unexpectedly nil"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             return
         }
         
         guard let progressCallback else {
             let msg = "ProgressCallback is unexpectedly nil"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             return
         }
         
@@ -216,7 +210,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         guard let audioPlayer else {
             let msg = "Couldn't create audioPlayer from audio message"
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
             return
         }
 
@@ -236,7 +230,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
             audioPlayer.currentTime = audioPlayer.duration * progress
         }
         
-        UIDevice.current.isProximityMonitoringEnabled = !UserSettings.shared().disableProximityMonitoring
+        UIDevice.current.isProximityMonitoringEnabled = true
         
         audioPlayer.play()
         audioPlayer.rate = Float(rate)
@@ -253,7 +247,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         guard let currentlyPlaying, currentlyPlaying.objectID == message.objectID else {
             let msg =
                 "Currently playing message and message passed in for reregistering are different. This may happen if you're very unlucky with timing and we have just switched to the next message"
-            DDLogWarn(msg)
+            DDLogError("\(msg)")
             return
         }
             
@@ -331,7 +325,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
     /// Check is message current playing. If the parameter is nil, it will check if there some audio message is playing
     /// - Parameter message: Message to check (optional)
     /// - Returns: Is the parameter message (or some message) currently playing
-    func isMessageCurrentlyPlaying(_ message: BaseMessage?) -> Bool {
+    func isMessageCurrentlyPlaying(_ message: BaseMessageEntity?) -> Bool {
         guard let currentlyPlaying else {
             return false
         }

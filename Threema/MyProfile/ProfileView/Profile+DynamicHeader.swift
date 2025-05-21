@@ -148,7 +148,7 @@ extension ProfileView {
                                 .padding(.leading, inset)
                                 .foregroundColor(foregroundLabelColor)
                                 .accessibilityLabel(
-                                    "\(#localize("my_threema_id")): \(model.publicKey.identity)"
+                                    "\(String.localizedStringWithFormat(#localize("my_threema_id"), TargetManager.localizedAppName)): \(model.publicKey.identity)"
                                 )
                             Spacer()
                         }

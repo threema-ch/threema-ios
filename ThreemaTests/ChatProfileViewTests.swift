@@ -50,7 +50,7 @@ class ChatProfileViewTests: XCTestCase {
         
         let databasePreparer = DatabasePreparer(context: managedObjectContext)
         databasePreparer.save {
-            contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)
+            contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO")
             
             conversation = databasePreparer.createConversation(
                 typing: false,
@@ -66,11 +66,11 @@ class ChatProfileViewTests: XCTestCase {
 
     func testBasicInitialization() throws {
         let (contact, conversation) = createConversation()
-        
-        contact.firstName = "Emily"
+        let businessContact = Contact(contactEntity: contact)
+        contact.setFirstName(to: "Emily")
         
         let expectedAccessibilityLabel =
-            "\(contact.displayName). \(contact.verificationLevelAccessibilityLabel())"
+            "\(contact.displayName). \(businessContact.verificationLevelAccessibilityLabel)"
 
         let chatProfileView = ChatProfileView(for: conversation, entityManager: EntityManager()) {
             // no-op
@@ -83,14 +83,15 @@ class ChatProfileViewTests: XCTestCase {
     
     func testObserveNameChange() throws {
         let (contact, conversation) = createConversation()
+        let businessContact = Contact(contactEntity: contact)
 
         let chatProfileView = ChatProfileView(for: conversation, entityManager: EntityManager()) {
             // no-op
         }
         
-        conversation.contact!.firstName = "Emily"
+        conversation.contact!.setFirstName(to: "Emily")
         let expectedAccessibilityLabel =
-            "\(contact.displayName). \(contact.verificationLevelAccessibilityLabel())"
+            "\(contact.displayName). \(businessContact.verificationLevelAccessibilityLabel)"
         
         waitForMainThread()
         
@@ -99,14 +100,15 @@ class ChatProfileViewTests: XCTestCase {
     
     func testObserveVerificationLevelChange() throws {
         let (contact, conversation) = createConversation()
+        let businessContact = Contact(contactEntity: contact)
 
         let chatProfileView = ChatProfileView(for: conversation, entityManager: EntityManager()) {
             // no-op
         }
         
-        contact.verificationLevel = 3
+        contact.contactVerificationLevel = .fullyVerified
         let expectedAccessibilityLabel =
-            "\(contact.displayName). \(contact.verificationLevelAccessibilityLabel())"
+            "\(contact.displayName). \(businessContact.verificationLevelAccessibilityLabel)"
         
         waitForMainThread()
         
@@ -124,7 +126,7 @@ class ChatProfileViewTests: XCTestCase {
         let databasePreparer = DatabasePreparer(context: managedObjectContext)
 
         let members = memberNames.map { name -> ContactEntity in
-            databasePreparer.createContact(publicKey: Data([1]), identity: name, verificationLevel: 1)
+            databasePreparer.createContact(publicKey: Data([1]), identity: name, verificationLevel: .serverVerified)
         }
         
         databasePreparer.save {
@@ -179,7 +181,7 @@ class ChatProfileViewTests: XCTestCase {
         }
         
         let contact = try XCTUnwrap(conversation.members?.first)
-        contact.lastName = "1stMember"
+        contact.setLastName(to: "1stMember")
         
         // As the members list label is private we cannot assert anything.
         // This test just checks if there are any crashes due to the observers.
@@ -192,7 +194,7 @@ class ChatProfileViewTests: XCTestCase {
         }
         
         let contact = try XCTUnwrap(conversation.members?.removeFirst())
-        contact.lastName = "1stRemovedMember"
+        contact.setLastName(to: "1stRemovedMember")
         
         // As the members list label is private we cannot assert anything.
         // This test just checks if there are any crashes due to the observers.

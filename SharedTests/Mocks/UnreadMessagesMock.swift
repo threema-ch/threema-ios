@@ -26,7 +26,7 @@ class UnreadMessagesMock: UnreadMessagesProtocol {
         0
     }
     
-    func read(for messages: [BaseMessage], in conversation: ConversationEntity, isAppInBackground: Bool) -> Int {
+    func read(for messages: [BaseMessageEntity], in conversation: ConversationEntity, isAppInBackground: Bool) -> Int {
         0
     }
     

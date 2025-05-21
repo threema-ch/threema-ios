@@ -20,7 +20,7 @@
 
 import Foundation
 
-class CompanyDirectoryCell: UITableViewCell {
+class CompanyDirectoryCell: UITableViewCell, Reusable {
     
     private lazy var companyDirectoryView = CompanyDirectoryCellView()
     

@@ -50,7 +50,9 @@ class GroupCallParticipantCell: UICollectionViewCell {
     
     override public var bounds: CGRect {
         didSet {
-            clip()
+            Task { @MainActor in
+                clip()
+            }
         }
     }
     

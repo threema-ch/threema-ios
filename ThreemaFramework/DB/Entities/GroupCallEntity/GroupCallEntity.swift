@@ -22,29 +22,29 @@ import CoreData
 import Foundation
 
 @objc(GroupCallEntity)
-public class GroupCallEntity: NSManagedObject, Identifiable {
+public final class GroupCallEntity: NSManagedObject, Identifiable {
     
-    // Attributes
-    @NSManaged @objc(gck) public var gck: Data?
-    // TODO: (IOS-4752) Change to Int32 once all uses are written in swift.
-    @NSManaged @objc(protocolVersion) public var protocolVersion: NSNumber?
-    @NSManaged @objc(sfuBaseURL) public var sfuBaseURL: String?
-    @NSManaged @objc(startMessageReceiveDate) public var startMessageReceiveDate: Date?
+    // MARK: Attributes
+
+    @NSManaged public var gck: Data?
+    @NSManaged public var protocolVersion: NSNumber?
+    @NSManaged public var sfuBaseURL: String?
+    @NSManaged public var startMessageReceiveDate: Date?
     
-    // Relationships
+    // MARK: Relationships
+
     @NSManaged public var group: GroupEntity?
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
-    ///   - gck: GroupCallKey
+    ///   - context: `NSManagedObjectContext` to insert created entity into
+    ///   - gck: Groupcall key
     ///   - protocolVersion: Version of the protocol
     ///   - sfuBaseURL: String of group call base URL
-    ///   - startMessageReceiveDate: Date the start message was received
-    ///   - group: GroupEntity of the group the start message was received in
+    ///   - startMessageReceiveDate: `Date` the start message was received
+    ///   - group: `GroupEntity` of the group the start message was received in
     public init(
         context: NSManagedObjectContext,
         gck: Data? = nil,

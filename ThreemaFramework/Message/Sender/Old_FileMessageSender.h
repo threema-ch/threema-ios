@@ -22,7 +22,7 @@
 #import <ThreemaFramework/Old_BlobMessageSender.h>
 #import <ThreemaFramework/URLSenderItem.h>
 
-@class FileMessageEntity;
+@class FileMessageEntity, ConversationEntity;
 
 @interface Old_FileMessageSender : Old_BlobMessageSender
 

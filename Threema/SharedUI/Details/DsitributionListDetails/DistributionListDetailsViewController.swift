@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import ThreemaMacros
 import UIKit
 
 final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableViewController {
@@ -414,8 +415,7 @@ extension DistributionListDetailsViewController: UITableViewDelegate {
         switch section {
 
         case .recipients:
-            let localizedFormatString = BundleUtil
-                .localizedString(forKey: "distribution_list_recipients_section_header")
+            let localizedFormatString = #localize("distribution_list_recipients_section_header")
             title = String.localizedStringWithFormat(localizedFormatString, dataSource.numberOfRecipients)
             
         default:

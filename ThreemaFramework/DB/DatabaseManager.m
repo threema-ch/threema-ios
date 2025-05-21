@@ -47,6 +47,7 @@
 BOOL doMigrateInProgress = false;
 #endif
 
+@class BallotMessageEntity;
 @implementation DatabaseManager {
     dispatch_queue_t dirtyObjectsQueue;
 }
@@ -79,6 +80,12 @@ BOOL doMigrateInProgress = false;
     DatabaseContext *context;
     
     NSPersistentStoreCoordinator *coordinator = [self persistentStoreCoordinator];
+
+    if (_storeError) {
+        DDLogError(@"Create persistent store coordinator failed: %@, %@", _storeError, [_storeError userInfo]);
+        [DDLog flushLog];
+    }
+
     if (coordinator != nil) {
         context = [[DatabaseContext alloc] initWithPersistentCoordinator:coordinator];
     }
@@ -93,6 +100,12 @@ BOOL doMigrateInProgress = false;
     DatabaseContext *context;
 
     NSPersistentStoreCoordinator *coordinator = [self persistentStoreCoordinator];
+
+    if (_storeError) {
+        DDLogError(@"Create persistent store coordinator failed: %@, %@", _storeError, [_storeError userInfo]);
+        [DDLog flushLog];
+    }
+
     if (coordinator != nil) {
         context = [[DatabaseContext alloc] initWithPersistentCoordinator:coordinator withCildContextforBackgroundProcess:withChildContextforBackgroundProcess];
     }
@@ -240,81 +253,96 @@ BOOL doMigrateInProgress = false;
             NSURL *tmpUrlToBackupStorage = [NSURL URLWithString:[NSString stringWithFormat:@"%@.bak.%@.%.0f", storeURL.absoluteString, coreDataModelVersion, [[NSDate date] timeIntervalSince1970]]];
             
             //Check if the new model is compatible with any previously stored model
-            BOOL requiresMigration = [self storeRequiresMigration];
-            
-            if (requiresMigration) {
-                
-            // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the database before the proper migration was initialized.
-            #ifdef DEBUG
-              // assert(doMigrateInProgress);
-            #endif
-                
-                // Migration is required - check if a store backup file (.bak) exists. If so, the last migration attempt has
-                // failed, and before trying again, we copy the backup back to the store URL so Core Data can make another try.
-                // Also, during migration, we move away the external data storage folder to keep Core Data from copying every
-                // single external data item (media etc.), which is useless, and takes a long time and a lot of disk space.
-                if ([fileManager fileExistsAtPath:[urlToBackupStorage path]]) {
-                    // Delete the broken, half-migrated store and copy the backup
-                    NSError *copyBackupError = nil;
-                    [fileManager removeItemAtURL:storeURL error:nil];
-                    [fileManager copyItemAtURL:urlToBackupStorage toURL:storeURL error:&copyBackupError];
-                    if (copyBackupError != nil) {
-                        _storeError = copyBackupError;
-                    }
-                    else {
-                        // Remove wal and shm temporary files to prevent problems with the SQLite store
-                        NSURL *walFile = [NSURL URLWithString:[NSString stringWithFormat:@"%@-wal", storeURL.absoluteString]];
-                        [fileManager removeItemAtURL:walFile error:nil];
-                        NSURL *shmFile = [NSURL URLWithString:[NSString stringWithFormat:@"%@-shm", storeURL.absoluteString]];
-                        [fileManager removeItemAtURL:shmFile error:nil];
+            StoreRequiresMigration requiresMigration = [self storeRequiresMigration];
 
-                        // Remove external storage folder; the original will be at tmpUrlToExternalStorage at this point
-                        [fileManager removeItemAtURL:urlToExternalStorage error:nil];
-                    }
-                } else {
-                    // Before migration begins, copy the store to a backup file (.bak). We do this in two steps:
-                    // first we copy the store to a .bak2 file, and then we rename the .bak2 to .bak. This is
-                    // so that if the copy operation is interrupted (which is possible as it can take some time for
-                    // large stores), we don't end up using a broken .bak when we start again.
-                    NSError *copyBackupError = nil;
-                    [fileManager removeItemAtURL:tmpUrlToBackupStorage error:nil];
-                    [fileManager copyItemAtURL:storeURL toURL:tmpUrlToBackupStorage error:&copyBackupError];
-                    if (copyBackupError != nil) {
-                        _storeError = copyBackupError;
-                    }
-                    else {
-                        // Rename .bak2 to .bak
-                        [fileManager removeItemAtURL:urlToBackupStorage error:nil];
-                        [fileManager moveItemAtURL:tmpUrlToBackupStorage toURL:urlToBackupStorage error:nil];
-                        
-                        // Move away external storage directory during migration
-                        [fileManager removeItemAtURL:tmpUrlToExternalStorage error:nil];
-                        if ([fileManager fileExistsAtPath:[urlToExternalStorage path]]) {
-                            [fileManager moveItemAtURL:urlToExternalStorage toURL:tmpUrlToExternalStorage error:nil];
+            switch (requiresMigration) {
+                case RequiresMigration:
+                    // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the database before the proper migration was initialized.
+                    //#ifdef DEBUG
+                    //    assert(doMigrateInProgress);
+                    //#endif
+
+                    // Migration is required - check if a store backup file (.bak) exists. If so, the last migration attempt has
+                    // failed, and before trying again, we copy the backup back to the store URL so Core Data can make another try.
+                    // Also, during migration, we move away the external data storage folder to keep Core Data from copying every
+                    // single external data item (media etc.), which is useless, and takes a long time and a lot of disk space.
+                    if ([fileManager fileExistsAtPath:[urlToBackupStorage path]]) {
+                        // Delete the broken, half-migrated store and copy the backup
+                        NSError *copyBackupError = nil;
+                        [fileManager removeItemAtURL:storeURL error:nil];
+                        [fileManager copyItemAtURL:urlToBackupStorage toURL:storeURL error:&copyBackupError];
+                        if (copyBackupError != nil) {
+                            _storeError = copyBackupError;
                         }
-                    }
-                }
-            } else {
-                // Migration is currently not required, but if a previous migration completed without
-                // us having a chance to put the external data storage folder back in place, we will
-                // end up with the media in tmpUrlToExternalStorage where it is inaccessible to Core Data.
-                // Attempt to move the media back in such a case, if necessary
-                if ([fileManager fileExistsAtPath:[tmpUrlToExternalStorage path]]) {
-                    if ([fileManager fileExistsAtPath:[urlToExternalStorage path]]) {
-                        // Ooops, the external storage directory already exists, so we should not delete it or
-                        // we will risk losing some (new) media. Instead, merge the contents of the two directories
-                        NSError *mergeError = nil;
-                        [self mergeContentsOfPath:[tmpUrlToExternalStorage path] intoPath:[urlToExternalStorage path] error:&mergeError];
-                        if (!mergeError) {
-                            [fileManager removeItemAtURL:tmpUrlToExternalStorage error:nil];
+                        else {
+                            // Remove wal and shm temporary files to prevent problems with the SQLite store
+                            NSURL *walFile = [NSURL URLWithString:[NSString stringWithFormat:@"%@-wal", storeURL.absoluteString]];
+                            [fileManager removeItemAtURL:walFile error:nil];
+                            NSURL *shmFile = [NSURL URLWithString:[NSString stringWithFormat:@"%@-shm", storeURL.absoluteString]];
+                            [fileManager removeItemAtURL:shmFile error:nil];
+
+                            // Remove external storage folder; the original will be at tmpUrlToExternalStorage at this point
+                            [fileManager removeItemAtURL:urlToExternalStorage error:nil];
                         }
                     } else {
-                        [fileManager moveItemAtURL:tmpUrlToExternalStorage toURL:urlToExternalStorage error:nil];
+                        // Before migration begins, copy the store to a backup file (.bak). We do this in two steps:
+                        // first we copy the store to a .bak2 file, and then we rename the .bak2 to .bak. This is
+                        // so that if the copy operation is interrupted (which is possible as it can take some time for
+                        // large stores), we don't end up using a broken .bak when we start again.
+                        NSError *copyBackupError = nil;
+                        [fileManager removeItemAtURL:tmpUrlToBackupStorage error:nil];
+                        [fileManager copyItemAtURL:storeURL toURL:tmpUrlToBackupStorage error:&copyBackupError];
+                        if (copyBackupError != nil) {
+                            _storeError = copyBackupError;
+                        }
+                        else {
+                            // Rename .bak2 to .bak
+                            [fileManager removeItemAtURL:urlToBackupStorage error:nil];
+                            [fileManager moveItemAtURL:tmpUrlToBackupStorage toURL:urlToBackupStorage error:nil];
+
+                            // Move away external storage directory during migration
+                            [fileManager removeItemAtURL:tmpUrlToExternalStorage error:nil];
+                            if ([fileManager fileExistsAtPath:[urlToExternalStorage path]]) {
+                                [fileManager moveItemAtURL:urlToExternalStorage toURL:tmpUrlToExternalStorage error:nil];
+                            }
+                        }
                     }
-                    [self removeMigrationLeftover];
-                }
+
+                    break;
+
+                case RequiresMigrationError:
+                    _storeError = [ThreemaError threemaError:@"Could not load the managed object model"];
+
+                    break;
+
+                case RequiresMigrationNone:
+                    // Migration is currently not required, but if a previous migration completed without
+                    // us having a chance to put the external data storage folder back in place, we will
+                    // end up with the media in tmpUrlToExternalStorage where it is inaccessible to Core Data.
+                    // Attempt to move the media back in such a case, if necessary
+                    if ([fileManager fileExistsAtPath:[tmpUrlToExternalStorage path]]) {
+                        if ([fileManager fileExistsAtPath:[urlToExternalStorage path]]) {
+                            // Ooops, the external storage directory already exists, so we should not delete it or
+                            // we will risk losing some (new) media. Instead, merge the contents of the two directories
+                            NSError *mergeError = nil;
+                            [self mergeContentsOfPath:[tmpUrlToExternalStorage path] intoPath:[urlToExternalStorage path] error:&mergeError];
+                            if (!mergeError) {
+                                [fileManager removeItemAtURL:tmpUrlToExternalStorage error:nil];
+                            }
+                        } else {
+                            [fileManager moveItemAtURL:tmpUrlToExternalStorage toURL:urlToExternalStorage error:nil];
+                        }
+                        [self removeMigrationLeftover];
+                    }
+
+                    break;
+
+                default:
+                    _storeError = [ThreemaError threemaError:@"Unknown `StoreRequiresMigration` value"];
+
+                    break;
             }
-            
+
             if (_storeError == nil) {
                 NSError *error = nil;
                 
@@ -654,15 +682,15 @@ BOOL doMigrateInProgress = false;
             NSManagedObjectID *objectID = [_persistentStoreCoordinator managedObjectIDForURIRepresentation:url];
             if (objectID) {
                 NSManagedObject *object = [[dbContext main] objectWithID:objectID];
-                if ([object isKindOfClass:[Ballot class]]) {
-                    [self refreshBallot:(Ballot *)object mainContext:[dbContext main] notifyObjectIds:notifyObjectIds];
+                if ([object isKindOfClass:[BallotEntity class]]) {
+                    [self refreshBallot:(BallotEntity *)object mainContext:[dbContext main] notifyObjectIds:notifyObjectIds];
                 }
-                else if ([object isKindOfClass:[BallotMessage class]]) {
+                else if ([object isKindOfClass:[BallotMessageEntity class]]) {
                     [[dbContext main] refreshObject:object mergeChanges:NO];
                     DDLogInfo(@"[t-dirty-objects] Add dirty object %@ to notify", objectID);
                     [notifyObjectIds addObject:objectID];
                     if (object != nil) {
-                        BallotMessage *ballotMessage = (BallotMessage *)object;
+                        BallotMessageEntity *ballotMessage = (BallotMessageEntity *)object;
                         if (ballotMessage.ballot != nil) {
                             [self refreshBallot:ballotMessage.ballot mainContext:[dbContext main] notifyObjectIds:notifyObjectIds];
                         }
@@ -702,7 +730,7 @@ BOOL doMigrateInProgress = false;
     }
 }
 
-- (void)refreshBallot:(Ballot *)ballot mainContext:(TMAManagedObjectContext *)mainContext notifyObjectIds:(NSMutableSet *)notifyObjectIds {
+- (void)refreshBallot:(BallotEntity *)ballot mainContext:(TMAManagedObjectContext *)mainContext notifyObjectIds:(NSMutableSet *)notifyObjectIds {
     [mainContext refreshObject:ballot mergeChanges:NO];
     if (ballot != nil) {
         DDLogInfo(@"[t-dirty-objects] Add dirty object %@ to notify", ballot.objectID);
@@ -711,7 +739,7 @@ BOOL doMigrateInProgress = false;
     
     if (ballot != nil) {
         if (ballot.choices != nil) {
-            for (BallotChoice *ballotChoice in ballot.choices) {
+            for (BallotChoiceEntity *ballotChoice in ballot.choices) {
                 [mainContext refreshObject:ballotChoice mergeChanges:NO];
                 if (ballotChoice != nil) {
                     DDLogInfo(@"[t-dirty-objects] Add dirty object %@ to notify", ballotChoice.objectID);

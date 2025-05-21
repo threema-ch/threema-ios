@@ -102,7 +102,7 @@ public class VoIPCallSender {
             let msg =
                 "sendVoIPCallHangup may not be called on the main thread when wait is true. Wait will be disabled."
             assertionFailure(msg)
-            DDLogError(msg)
+            DDLogError("\(msg)")
         }
         
         let msg = BoxVoIPCallHangupMessage()

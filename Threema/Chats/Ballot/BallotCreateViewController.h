@@ -19,9 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "Ballot.h"
 #import "SZTextView.h"
 #import "Old_ThemedViewController.h"
+
+@class BallotEntity, BallotChoiceEntity;
 
 @interface BallotCreateViewController : Old_ThemedViewController
 
@@ -43,6 +44,6 @@
 
 + (instancetype) ballotCreateViewControllerForConversation:(ConversationEntity *)conversation;
 
-+ (instancetype) ballotCreateViewControllerForBallot:(Ballot *)ballot;
++ (instancetype) ballotCreateViewControllerForBallot:(BallotEntity *)ballot;
 
 @end

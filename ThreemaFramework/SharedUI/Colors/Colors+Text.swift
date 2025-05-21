@@ -22,19 +22,19 @@ import Foundation
 
 extension Colors {
     @objc public class var textSetup: UIColor {
-        Asset.SharedColors.white.color
+        .white
     }
     
     @objc public class var textLockScreen: UIColor {
-        Asset.SharedColors.white.color
+        .white
     }
     
     @objc public class var textInverted: UIColor {
         switch theme {
         case .light, .undefined:
-            Asset.SharedColors.white.color
+            .white
         case .dark:
-            Asset.SharedColors.black.color
+            .black
         }
     }
     

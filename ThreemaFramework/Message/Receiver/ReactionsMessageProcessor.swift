@@ -37,8 +37,8 @@ final class ReactionsMessageProcessor: NSObject {
     @objc func handleMessage(
         abstractMessage: ReactionMessage,
         conversation: ConversationEntity
-    ) -> BaseMessage? {
-        let message: BaseMessage? = entityManager.performAndWaitSave {
+    ) -> BaseMessageEntity? {
+        let message: BaseMessageEntity? = entityManager.performAndWaitSave {
             
             guard let decoded = abstractMessage.decoded else {
                 return nil
@@ -127,8 +127,8 @@ final class ReactionsMessageProcessor: NSObject {
     @objc func handleGroupMessage(
         abstractMessage: GroupReactionMessage,
         conversation: ConversationEntity
-    ) -> BaseMessage? {
-        let message: BaseMessage? = entityManager.performAndWaitSave {
+    ) -> BaseMessageEntity? {
+        let message: BaseMessageEntity? = entityManager.performAndWaitSave {
             
             guard let decoded = abstractMessage.decoded else {
                 return nil
@@ -217,7 +217,7 @@ final class ReactionsMessageProcessor: NSObject {
     /// Must be called in a save block
     @objc func handleLegacyReaction(ack: Bool, date: Date, messageID: NSManagedObjectID, sender: String) throws {
        
-        guard let message = entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessage,
+        guard let message = entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessageEntity,
               !message.isDeleted else {
             DDLogError("[Reaction] Message not found or is marked as deleted. Discarding incoming ack/dec.")
             return
@@ -235,7 +235,7 @@ final class ReactionsMessageProcessor: NSObject {
         // assume he still does not fully support reactions and remove the ones sent before to mimic the legacy
         // behavior.
         if let existingReactions = entityManager.entityFetcher.messageReactionEntities(
-            for: message,
+            forMessage: message,
             creator: contact
         ), !existingReactions.isEmpty {
             

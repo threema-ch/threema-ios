@@ -109,8 +109,8 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
         
         diagnosticTextView.textColor = .secondaryLabel
     
-        startButton.setTitleColor(.primary, for: .normal)
-        copyButton.setTitleColor(.primary, for: .normal)
+        startButton.setTitleColor(.tintColor, for: .normal)
+        copyButton.setTitleColor(.tintColor, for: .normal)
         
         diagnosticTextView.layer.borderWidth = 1.0
         diagnosticTextView.layer.borderColor = UIColor.systemGray4.cgColor
@@ -147,7 +147,10 @@ class CallDiagnosticViewController: UIViewController, RTCPeerConnectionDelegate 
     private func setupLocalizables() {
         title = #localize("webrtc_diagnostics.title")
         descriptionLabel.text = #localize("webrtc_diagnostics.description")
-        finishLabel.text = #localize("webrtc_diagnostics.done")
+        finishLabel.text = String.localizedStringWithFormat(
+            #localize("webrtc_diagnostics.done"),
+            TargetManager.localizedAppName
+        )
         
         startButton.setTitle(#localize("webrtc_diagnostics.start"), for: .normal)
         copyButton.setTitle(#localize("webrtc_diagnostics.copyToClipboard"), for: .normal)

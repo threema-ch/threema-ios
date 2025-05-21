@@ -20,9 +20,7 @@
 
 #import "BallotVoteViewController.h"
 #import "BallotVoteTableCell.h"
-#import "BallotChoice.h"
 #import "MyIdentityStore.h"
-#import "Ballot.h"
 #import "RectUtil.h"
 #import "BallotHeaderView.h"
 #import "BallotCreateViewController.h"
@@ -41,7 +39,7 @@
 @property NSArray *choices;
 @property EntityManager *entityManager;
 @property BallotManager *ballotManager;
-@property Ballot *ballot;
+@property BallotEntity *ballot;
 @property bool voted;
 
 @property BallotHeaderView *headerView;
@@ -50,7 +48,7 @@
 
 @implementation BallotVoteViewController
 
-+ (instancetype) ballotVoteViewControllerForBallot:(Ballot *)ballot {
++ (instancetype) ballotVoteViewControllerForBallot:(BallotEntity *)ballot {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Ballot" bundle:nil];
     
     BallotVoteViewController *viewController = (BallotVoteViewController *) [storyboard instantiateViewControllerWithIdentifier:@"BallotVoteViewController"];
@@ -58,7 +56,7 @@
     EntityManager *entityManager = [[EntityManager alloc] init];
     viewController.entityManager = entityManager;
     viewController.ballotManager = [[BallotManager alloc] initWithEntityManager:entityManager];
-    viewController.ballot = (Ballot *)[entityManager.entityFetcher existingObjectWithID:ballot.objectID];
+    viewController.ballot = (BallotEntity *)[entityManager.entityFetcher existingObjectWithID:ballot.objectID];
     
     return viewController;
 }
@@ -181,14 +179,14 @@
 }
 
 - (NSString *)choiceTextAt:(NSInteger)index {
-    BallotChoice *choice = [_choices objectAtIndex: index];
+    BallotChoiceEntity *choice = [_choices objectAtIndex: index];
     
     return choice.name;
 }
 
 - (NSString *)voteCountTextAt:(NSInteger)index {
-    BallotChoice *choice = [_choices objectAtIndex: index];
-    NSInteger count = [choice totalCountOfResultsTrue];
+    BallotChoiceEntity *choice = [_choices objectAtIndex: index];
+    NSInteger count = [choice countResultsTrue];
     
     return [NSString stringWithFormat:@"%li", (long)count];
 }
@@ -198,7 +196,7 @@
         [self resetAllValues];
     }
     
-    BallotChoice *choice = [_choices objectAtIndex:index];
+    BallotChoiceEntity *choice = [_choices objectAtIndex:index];
     
     [_ballotManager updateOwnChoice:choice with:[NSNumber numberWithBool:value]];
 
@@ -208,9 +206,9 @@
 }
 
 - (BOOL)resultForChoiceAt:(NSInteger)index {
-    BallotChoice *choice = [_choices objectAtIndex:index];
+    BallotChoiceEntity *choice = [_choices objectAtIndex:index];
     
-    BallotResultEntity *result = [choice getOwnResult];
+    BallotResultEntity *result = [choice getResultForLocalIdentity];
     if (result) {
         return result.boolValue;
     }
@@ -219,7 +217,7 @@
 }
 
 - (void)resetAllValues {
-    for (BallotChoice *choice in _choices) {
+    for (BallotChoiceEntity *choice in _choices) {
         [_ballotManager updateOwnChoice:choice with:[NSNumber numberWithBool:NO]];
     }
 }
@@ -252,8 +250,8 @@
 }
 
 - (void)setDefaultResultsIfMissing {
-    for (BallotChoice *choice in [_ballot choices]) {
-        if ([choice getOwnResult] == nil) {
+    for (BallotChoiceEntity *choice in [_ballot choices]) {
+        if ([choice getResultForLocalIdentity] == nil) {
             // Add default value
             [_ballotManager updateOwnChoice:choice with:[NSNumber numberWithBool:NO]];
         }
@@ -273,7 +271,7 @@
 
 - (void)closeBallot {
     
-    [_ballot setClosed];
+    [_ballot close];
     
     [_entityManager performSyncBlockAndSafe:nil];
 

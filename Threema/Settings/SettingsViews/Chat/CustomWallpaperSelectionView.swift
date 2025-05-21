@@ -54,7 +54,7 @@ struct CustomWallpaperSelectionView: View {
                     isSelected: $customSelected,
                     isSelectingCustom: $customSelected
                 )
-                .tint(UIColor.primary.color)
+                .tint(.accentColor)
                 .onTapGesture {
                     selectCustom()
                 }

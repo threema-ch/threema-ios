@@ -22,7 +22,7 @@ import Foundation
 import ThreemaMacros
 
 extension NewMessageToaster {
-    @objc func accessibilityText(for message: BaseMessage) -> String? {
+    @objc func accessibilityText(for message: BaseMessageEntity) -> String? {
         guard let previewableMessage = message as? PreviewableMessage else {
             return nil
         }

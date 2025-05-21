@@ -139,8 +139,8 @@
     return message;
 }
 
-- (BallotMessage *)ballotMessageFromBox:(AbstractMessage *)boxMsg {
-    BallotMessage *message = (BallotMessage *)[self createBaseMessageFromBox:boxMsg ofType:@"BallotMessage"];
+- (BallotMessageEntity *)ballotMessageFromBox:(AbstractMessage *)boxMsg {
+    BallotMessageEntity *message = (BallotMessageEntity *)[self createBaseMessageFromBox:boxMsg ofType:@"BallotMessage"];
     
     return message;
 }
@@ -168,7 +168,7 @@
 }
 
 - (TextMessageEntity *)textMessageEntityForConversationEntity:(ConversationEntity *)conversation setLastUpdate:(BOOL)setLastUpdate {
-    BaseMessage *message = [self createEntityOfType: @"TextMessage"];
+    BaseMessageEntity *message = [self createEntityOfType: @"TextMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
     
@@ -180,7 +180,7 @@
 }
 
 - (ImageMessageEntity *)imageMessageEntityForConversationEntity:(ConversationEntity *)conversation {
-    BaseMessage *message = [self createEntityOfType: @"ImageMessage"];
+    BaseMessageEntity *message = [self createEntityOfType: @"ImageMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
     conversation.lastUpdate = [NSDate date];
@@ -189,7 +189,7 @@
 }
 
 - (VideoMessageEntity *)videoMessageEntityForConversationEntity:(ConversationEntity *)conversation {
-    BaseMessage *message = [self createEntityOfType: @"VideoMessage"];
+    BaseMessageEntity *message = [self createEntityOfType: @"VideoMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
     conversation.lastUpdate = [NSDate date];
@@ -198,7 +198,7 @@
 }
 
 - (FileMessageEntity *)fileMessageEntityForConversationEntity:(ConversationEntity *)conversation {
-    BaseMessage *message = [self createEntityOfType: @"FileMessage"];
+    BaseMessageEntity *message = [self createEntityOfType: @"FileMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
     conversation.lastUpdate = [NSDate date];
@@ -207,7 +207,7 @@
 }
 
 - (AudioMessageEntity *)audioMessageEntityForConversationEntity:(ConversationEntity *)conversation {
-    BaseMessage *message = [self createEntityOfType: @"AudioMessage"];
+    BaseMessageEntity *message = [self createEntityOfType: @"AudioMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
     conversation.lastUpdate = [NSDate date];
@@ -216,7 +216,7 @@
 }
 
 - (LocationMessageEntity *)locationMessageEntityForConversationEntity:(ConversationEntity *)conversation setLastUpdate:(BOOL)setLastUpdate {
-    BaseMessage *message = [self createEntityOfType: @"LocationMessage"];
+    BaseMessageEntity *message = [self createEntityOfType: @"LocationMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
     
@@ -227,7 +227,7 @@
 }
 
 - (SystemMessageEntity *)systemMessageEntityForConversationEntity:(ConversationEntity *)conversation {
-    BaseMessage *message = [self createEntityOfType: @"SystemMessage"];
+    BaseMessageEntity *message = [self createEntityOfType: @"SystemMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     
     message.sent = [NSNumber numberWithBool:YES];
@@ -235,13 +235,13 @@
     return (SystemMessageEntity *)message;
 }
 
-- (BallotMessage *)ballotMessageForConversationEntity:(ConversationEntity *)conversation {
-    BaseMessage *message = [self createEntityOfType: @"BallotMessage"];
+- (BallotMessageEntity *)ballotMessageForConversationEntity:(ConversationEntity *)conversation {
+    BaseMessageEntity *message = [self createEntityOfType: @"BallotMessage"];
     [self setupBasePropertiesForNewMessage: message inConversation: conversation];
     conversation.lastMessage = message;
     conversation.lastUpdate = [NSDate date];
     
-    return (BallotMessage *)message;
+    return (BallotMessageEntity *)message;
 }
 
 - (ContactEntity *)contact {    
@@ -272,12 +272,12 @@
     return (GroupEntity *)[self createEntityOfType: @"Group"];
 }
 
-- (Ballot *)ballot {
-    return (Ballot *)[self createEntityOfType: @"Ballot"];
+- (BallotEntity *)ballot {
+    return (BallotEntity *)[self createEntityOfType: @"Ballot"];
 }
 
-- (BallotChoice *)ballotChoice {
-    BallotChoice *choice = [self createEntityOfType: @"BallotChoice"];
+- (BallotChoiceEntity *)ballotChoice {
+    BallotChoiceEntity *choice = [self createEntityOfType: @"BallotChoice"];
     choice.id = [NSNumber numberWithInt: arc4random()];
     choice.createDate = [NSDate date];
     
@@ -303,7 +303,7 @@
     return markers;
 }
 
-- (MessageHistoryEntryEntity *)messageHistoryEntryFor:(BaseMessage *)message {
+- (MessageHistoryEntryEntity *)messageHistoryEntryFor:(BaseMessageEntity *)message {
     MessageHistoryEntryEntity *historyEntry = (MessageHistoryEntryEntity *)[self createEntityOfType:@"MessageHistoryEntry"];
     historyEntry.message = message;
     
@@ -356,8 +356,8 @@
     return (LocationMessageEntity *)[self createBaseMessageFromBox:boxMsg ofType:@"LocationMessage"];
 }
 
-- (BaseMessage *)createBaseMessageFromBox:(AbstractMessage *)boxMsg ofType:(NSString *)typeName {
-    BaseMessage *message = [self createEntityOfType: typeName];
+- (BaseMessageEntity *)createBaseMessageFromBox:(AbstractMessage *)boxMsg ofType:(NSString *)typeName {
+    BaseMessageEntity *message = [self createEntityOfType: typeName];
     
     [self setupBasePropertiesFor:message withValuesFrom:boxMsg];
     
@@ -376,7 +376,7 @@
     contactEntity.createdAt = [NSDate date];
 }
 
-- (void)setupBasePropertiesForNewMessage:(BaseMessage *)message inConversation:(ConversationEntity *)conversation {
+- (void)setupBasePropertiesForNewMessage:(BaseMessageEntity *)message inConversation:(ConversationEntity *)conversation {
     message.id = [AbstractMessage randomMessageId];
     message.date = [NSDate date];
     message.isOwn = [NSNumber numberWithBool:YES];
@@ -387,7 +387,7 @@
     message.conversation = conversation;
 }
 
-- (void)setupBasePropertiesFor:(BaseMessage *)dbMessage withValuesFrom:(AbstractMessage *)incomingMsg {
+- (void)setupBasePropertiesFor:(BaseMessageEntity *)dbMessage withValuesFrom:(AbstractMessage *)incomingMsg {
     dbMessage.id = incomingMsg.messageId;
     dbMessage.date = [NSDate date];
     dbMessage.isOwn = [NSNumber numberWithBool:NO];

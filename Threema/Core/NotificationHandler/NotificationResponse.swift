@@ -189,9 +189,8 @@ class NotificationResponse: NSObject {
                    let baseMessage = self.businessInjector.entityManager.entityFetcher.message(
                        with: messageID.decodeHex(),
                        conversation: conversation
-                   ),
-                   let conversation = baseMessage.conversation {
-
+                   ) {
+                    let conversation = baseMessage.conversation
                     if !baseMessage.isGroupMessage,
                        let contact = conversation.contact {
 
@@ -202,7 +201,7 @@ class NotificationResponse: NSObject {
                         )
                     }
 
-                    await self.businessInjector.messageSender.sendTextMessage(
+                    let _ = await self.businessInjector.messageSender.sendTextMessage(
                         containing: userText,
                         in: conversation,
                         sendProfilePicture: false
@@ -229,7 +228,7 @@ class NotificationResponse: NSObject {
         ServerConnectorHelper.waitUntilConnected(timeout: 20) {
             Task { @MainActor in
                 if let conversation = self.conversation {
-                    await self.businessInjector.messageSender.sendTextMessage(
+                    _ = await self.businessInjector.messageSender.sendTextMessage(
                         containing: userText,
                         in: conversation,
                         sendProfilePicture: false
@@ -264,7 +263,7 @@ class NotificationResponse: NSObject {
             Task { @MainActor in
                 let entityManager = self.businessInjector.entityManager
                 let (messageObjectID, isGroupMessage, baseMessage):
-                    (NSManagedObjectID?, Bool, BaseMessage?) = await entityManager.perform {
+                    (NSManagedObjectID?, Bool, BaseMessageEntity?) = await entityManager.perform {
                         let baseMessage = entityManager.entityFetcher.message(
                             with: messageID.decodeHex(),
                             conversation: conversation
@@ -379,7 +378,7 @@ class NotificationResponse: NSObject {
 
     /// Update message read.
     /// - Parameter message: Message to set read true
-    private func updateMessageAsRead(for message: BaseMessage) async {
+    private func updateMessageAsRead(for message: BaseMessageEntity) async {
         await businessInjector.entityManager.performSave {
             message.read = NSNumber(booleanLiteral: true)
             message.readDate = Date()

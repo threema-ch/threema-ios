@@ -21,7 +21,30 @@
 import Foundation
 
 extension EntityFetcher {
-    
+
+    /// If a specific message from the sender has already been delivered.
+    /// - Parameters:
+    /// - identity: Sender of the message
+    /// - messageID: Message ID of the message looking for
+    public func isMessageDelivered(from identity: String, with messageID: Data) -> Bool {
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
+        fetchRequest.fetchLimit = 1
+        // Get delivered message in 1-1 or group conversation
+        fetchRequest.predicate = NSPredicate(
+            format: "(conversation.contact.identity == %@ OR sender.identity == %@) AND id == %@ AND delivered == true",
+            identity,
+            identity,
+            messageID as CVarArg
+        )
+
+        do {
+            return try managedObjectContext.count(for: fetchRequest) > 0
+        }
+        catch {
+            return false
+        }
+    }
+
     /// Returns the date of the oldest message in the DB or `.distantPast`.
     public func dateOfOldestMessage() -> Date {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
@@ -31,7 +54,7 @@ extension EntityFetcher {
         
         var date: Date = .distantPast
         managedObjectContext.performAndWait {
-            if let results = try? fetchRequest.execute() as? [BaseMessage], let message = results.first {
+            if let results = try? fetchRequest.execute() as? [BaseMessageEntity], let message = results.first {
                 date = message.date
             }
         }
@@ -110,26 +133,26 @@ extension EntityFetcher {
         return sorted.map(\.objectID)
     }
     
-    public func messagesWithUserAckDate() -> [BaseMessage]? {
+    public func messagesWithUserAckDate() -> [BaseMessageEntity]? {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
         let sortDescriptor = NSSortDescriptor(key: "date", ascending: true)
         fetchRequest.sortDescriptors = [sortDescriptor]
         fetchRequest.predicate = NSPredicate(format: "userackDate != nil")
         
         let result = managedObjectContext.performAndWait {
-            try? fetchRequest.execute() as? [BaseMessage]
+            try? fetchRequest.execute() as? [BaseMessageEntity]
         }
         return result
     }
     
-    public func messagesWithUserGroupReactions() -> [BaseMessage]? {
+    public func messagesWithUserGroupReactions() -> [BaseMessageEntity]? {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
         let sortDescriptor = NSSortDescriptor(key: "date", ascending: true)
         fetchRequest.sortDescriptors = [sortDescriptor]
         fetchRequest.predicate = NSPredicate(format: "groupDeliveryReceipts != nil")
         
         let result = managedObjectContext.performAndWait {
-            try? fetchRequest.execute() as? [BaseMessage]
+            try? fetchRequest.execute() as? [BaseMessageEntity]
         }
         return result
     }

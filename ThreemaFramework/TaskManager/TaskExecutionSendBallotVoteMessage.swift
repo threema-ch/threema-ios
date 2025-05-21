@@ -199,7 +199,7 @@ final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProt
                    let sendContactProfilePicture = task.sendContactProfilePicture,
                    sendContactProfilePicture {
                     // TODO: (IOS-4495) Inject for testing
-                    self.frameworkInjector.entityManager.performBlockAndWait {
+                    self.frameworkInjector.entityManager.performAndWait {
                         ContactPhotoSender(self.frameworkInjector.entityManager)
                             .sendProfilePicture(message: sentMessage)
                     }

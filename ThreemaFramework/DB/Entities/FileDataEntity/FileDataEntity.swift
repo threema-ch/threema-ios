@@ -22,22 +22,23 @@ import CoreData
 import Foundation
 
 @objc(FileDataEntity)
-public class FileDataEntity: NSManagedObject, Identifiable {
+public final class FileDataEntity: NSManagedObject, Identifiable {
     
-    // Attributes
-    @NSManaged @objc(data) public var data: Data?
+    // MARK: Attributes
+
+    @NSManaged public var data: Data?
     
-    // Relationships
+    // MARK: Relationships
+
     @NSManaged public var message: FileMessageEntity?
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
-    ///   - data: Data for the entity
-    ///   - message: FileMessageEntity the entity belongs to
+    ///   - context: `NSManagedObjectContext` to insert created entity into
+    ///   - data: `Data` for the entity
+    ///   - message: `FileMessageEntity` the entity belongs to
     public init(context: NSManagedObjectContext, data: Data? = nil, message: FileMessageEntity? = nil) {
         let entity = NSEntityDescription.entity(forEntityName: "FileData", in: context)!
         super.init(entity: entity, insertInto: context)

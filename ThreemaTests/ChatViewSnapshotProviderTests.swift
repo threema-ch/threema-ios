@@ -622,10 +622,10 @@ class ChatViewSnapshotProviderTests: XCTestCase {
         
         entityManager.performAndWaitSave {
             contact = entityManager.entityCreator.contact()!
-            contact.identity = identity
-            contact.verificationLevel = 0
+            contact.setIdentity(to: identity)
+            contact.contactVerificationLevel = .unverified
             contact.publicNickname = identity
-            contact.isContactHidden = false
+            contact.isHidden = false
             contact.workContact = 0
             contact.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }

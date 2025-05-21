@@ -20,8 +20,6 @@
 
 #import "BallotCreateViewController.h"
 #import "BallotCreateTableCell.h"
-#import "BallotChoice.h"
-#import "Ballot.h"
 #import "AppDelegate.h"
 #import "NaClCrypto.h"
 #import "ProtocolDefines.h"
@@ -38,7 +36,7 @@
 #define MIN_NUMBER_CHOICES 2
 #define BALLOT_CREATE_TABLE_CELL_ID @"BallotCreateTableCellId"
 
-// note: the new ballot object is created on a temorary NSManagedObjectContext, on save it is moved to the main context and saved there
+// note: the new ballot object is created on a temporary NSManagedObjectContext, on save it is moved to the main context and saved there
 // - the conversation object might get updated while editing the ballot
 // - if using the main context a unwanted save may occur while the ballot is in in invalid state
 
@@ -48,7 +46,7 @@
 @property EntityManager *entityManager;
 
 @property BOOL isNewBallot;
-@property Ballot *ballot;
+@property BallotEntity *ballot;
 @property ConversationEntity *conversation;
 @property (nonatomic, strong) NSIndexPath *indexPathForPicker;
 @property (nonatomic, strong) NSDate *lastSelectedDate;
@@ -72,11 +70,11 @@
     return viewController;
 }
 
-+ (instancetype) ballotCreateViewControllerForBallot:(Ballot *)ballot {
++ (instancetype) ballotCreateViewControllerForBallot:(BallotEntity *)ballot {
     BallotCreateViewController *viewController = [self ballotCreateViewController];
 
     [viewController.entityManager performBlockAndWait:^{
-        viewController.ballot = (Ballot *)[viewController.entityManager.entityFetcher existingObjectWithID:ballot.objectID];
+        viewController.ballot = (BallotEntity *)[viewController.entityManager.entityFetcher existingObjectWithID:ballot.objectID];
         viewController.conversation = viewController.ballot.conversation;
         viewController.isNewBallot = NO;
     }];
@@ -188,7 +186,7 @@
 
         NSArray *sortedChoices = [_ballot choicesSortedByOrder];
         if (_choices != nil) {
-            for (BallotChoice *choice in _choices) {
+            for (BallotChoiceEntity *choice in _choices) {
                 if ([sortedChoices containsObject: choice] == NO) {
                     [choice.managedObjectContext deleteObject: choice];
                 }
@@ -213,7 +211,7 @@
 
 - (void)addChoice {
     [_entityManager performBlockAndWait:^{
-        BallotChoice *choice = [_entityManager.entityCreator ballotChoice];
+        BallotChoiceEntity *choice = [_entityManager.entityCreator ballotChoice];
 
         [_choices addObject: choice];
     }];
@@ -226,7 +224,7 @@
 
         NSSet *verifiedChoices = [self verifiedChoices];
         NSInteger i=0;
-        for (BallotChoice *choice in _choices) {
+        for (BallotChoiceEntity *choice in _choices) {
             if ([verifiedChoices containsObject:choice]) {
                 choice.ballot = _ballot;
                 choice.orderPosition = [NSNumber numberWithInteger: i];
@@ -244,7 +242,7 @@
 - (NSSet *)verifiedChoices {
     NSMutableSet *verifiedChoices = [NSMutableSet set];
     [_entityManager performBlockAndWait:^{
-        for (BallotChoice *choice in _choices) {
+        for (BallotChoiceEntity *choice in _choices) {
             if (choice.name && [choice.name length] > MIN_NUMBER_CHARACTERS) {
                 [verifiedChoices addObject:choice];
             }
@@ -272,8 +270,8 @@
     [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:nil];
 }
 
-- (Ballot *)newBallot {
-    Ballot *ballot = [_entityManager.entityCreator ballot];
+- (BallotEntity *)newBallot {
+    BallotEntity *ballot = [_entityManager.entityCreator ballot];
     ballot.id = [[NaClCrypto sharedCrypto] randomBytes:kBallotIdLen];
     ballot.createDate = [NSDate date];
     ballot.creatorId = [MyIdentityStore sharedMyIdentityStore].identity;
@@ -290,7 +288,7 @@
     }
     
     // Clients will always send DisplayListMode, SummaryMode is only for Broadcast
-    ballot.ballotDisplayMode = BallotDisplayModeList;
+    ballot.displayMode = [NSNumber numberWithInt: BallotDisplayModeList];
     
     return ballot;
 }
@@ -364,7 +362,7 @@
     NSIndexPath *indexPath = [_choiceTableView indexPathForCell: cell];
 
     [_entityManager performBlockAndWait:^{
-        ((BallotChoice *)_choices[indexPath.row]).name = text;
+        ((BallotChoiceEntity *)_choices[indexPath.row]).name = text;
     }];
 }
 
@@ -459,7 +457,7 @@
     cell.delegate = self;
     
     [_entityManager performBlockAndWait:^{
-        cell.choiceTextField.text = ((BallotChoice *) _choices[indexPath.row]).name;
+        cell.choiceTextField.text = ((BallotChoiceEntity *) _choices[indexPath.row]).name;
     }];
     
     if (_isNewBallot == NO) {
@@ -472,7 +470,7 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         [_entityManager performBlockAndWait:^{
-            BallotChoice *choice = [_choices objectAtIndex:indexPath.row];
+            BallotChoiceEntity *choice = [_choices objectAtIndex:indexPath.row];
             [[_entityManager entityDestroyer] deleteWithBallotChoice:choice];
 
             [_choices removeObjectAtIndex: indexPath.row];
@@ -496,7 +494,7 @@
 }
 
 - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)sourceIndexPath toIndexPath:(NSIndexPath *)destinationIndexPath {
-    BallotChoice *choiceToMove = [_choices objectAtIndex:sourceIndexPath.row];
+    BallotChoiceEntity *choiceToMove = [_choices objectAtIndex:sourceIndexPath.row];
     [_choices removeObjectAtIndex:sourceIndexPath.row];
     [_choices insertObject:choiceToMove atIndex:destinationIndexPath.row];
 }

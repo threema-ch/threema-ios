@@ -52,7 +52,8 @@ class ThreemaWebViewController: ThemedTableViewController {
         factory.rendezvousServer { rendezvousServerInfo, _ in
             self.rendezvousServerAvailable = rendezvousServerInfo != nil
             
-            if self.rendezvousServerAvailable, !UserSettings.shared().desktopInfoBannerShown {
+            if self.rendezvousServerAvailable, !MDMSetup(setup: false).disableMultiDevice(),
+               !UserSettings.shared().desktopInfoBannerShown {
                 Task { @MainActor in
                     self.addHeaderView()
                 }
@@ -70,6 +71,8 @@ class ThreemaWebViewController: ThemedTableViewController {
         }
         
         title = #localize("webClientSession_title")
+        
+        addObservers()
         
         ServerInfoProviderFactory.makeServerInfoProvider()
             .webServer(ipv6: UserSettings.shared().enableIPv6) { webServerInfo, _ in
@@ -100,7 +103,7 @@ class ThreemaWebViewController: ThemedTableViewController {
         
         cleanupWebClientSessions()
         
-        cameraButton.image = UIImage(systemName: "qrcode.viewfinder")!.withTint(.primary)
+        cameraButton.image = UIImage(systemName: "qrcode.viewfinder")!.withTint(.tintColor)
         cameraButton.accessibilityLabel = #localize("scan_qr")
         
         ThreemaWebQRCodeScanner.shared.delegate = self
@@ -109,6 +112,23 @@ class ThreemaWebViewController: ThemedTableViewController {
     }
     
     // MARK: - Private functions
+    
+    private func addObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(mdmChanged),
+            name: Notification.Name(kNotificationSettingStoreSynchronization),
+            object: nil
+        )
+    }
+    
+    @objc private func mdmChanged() {
+        guard MDMSetup(setup: false)?.disableWeb() ?? false else {
+            return
+        }
+        
+        dismiss(animated: true)
+    }
     
     private func addHeaderView() {
         headerView.translatesAutoresizingMaskIntoConstraints = false
@@ -154,8 +174,7 @@ class ThreemaWebViewController: ThemedTableViewController {
             // Stop action
             alert
                 .addAction(UIAlertAction(
-                    title: BundleUtil
-                        .localizedString(forKey: "webClientSession_actionSheet_stopSession"),
+                    title: #localize("webClientSession_actionSheet_stopSession"),
                     style: .default
                 ) { _ in
                     ValidationLogger.shared().logString("[Threema Web] Disconnect webclient userStoppedSession")
@@ -166,9 +185,7 @@ class ThreemaWebViewController: ThemedTableViewController {
             // Start action
             alert
                 .addAction(UIAlertAction(
-                    title:
-                    BundleUtil
-                        .localizedString(forKey: "webClientSession_actionSheet_startSession"),
+                    title: #localize("webClientSession_actionSheet_startSession"),
                     style: .default
                 ) { _ in
                     ValidationLogger.shared().logString("[Threema Web] User start connection")
@@ -421,7 +438,8 @@ extension ThreemaWebViewController: ThreemaWebQRCodeScannerDelegate {
             message = String.localizedStringWithFormat(
                 #localize("settings_threema_web_multi_device_qr_code_message"),
                 #localize("settings"),
-                #localize("settings_list_threema_desktop_title")
+                #localize("settings_list_threema_desktop_title"),
+                TargetManager.appName
             )
         }
         else {

@@ -23,12 +23,12 @@ import ThreemaProtocols
 
 extension Sync_Contact {
     mutating func update(contact: ContactEntity, pushSetting: PushSetting) {
-        let activitySate = contact.state != nil ? ActivityState(rawValue: contact.state!.intValue) : nil
+        let activitySate = ActivityState(rawValue: contact.contactState.rawValue)
         update(activityState: activitySate)
 
-        update(acquaintanceLevel: contact.isContactHidden ? .groupOrDeleted : .direct)
+        update(acquaintanceLevel: contact.isHidden ? .groupOrDeleted : .direct)
         update(createdAt: contact.createdAt ?? Date(millisecondsSince1970: 0))
-        update(featureMask: contact.featureMask.uint64Value)
+        update(featureMask: UInt64(contact.featureMask))
         update(firstName: contact.firstName)
         update(identity: contact.identity)
         update(lastName: contact.lastName)
@@ -40,11 +40,11 @@ extension Sync_Contact {
         update(notificationTriggerType: pushSetting.type, notificationTriggerExpiresAt: pushSetting.periodOffTillDate)
 
         update(readReceipt: contact.readReceipt)
-        update(syncState: SyncState(rawValue: contact.importedStatus.rawValue))
+        update(syncState: SyncState(rawValue: contact.contactImportStatus.rawValue))
         update(typingIndicator: contact.typingIndicator)
-        update(verificationLevel: Sync_Contact.VerificationLevel(rawValue: contact.verificationLevel.intValue))
+        update(verificationLevel: Sync_Contact.VerificationLevel(rawValue: contact.contactVerificationLevel.rawValue))
         update(
-            workVerificationLevel: contact.isWorkContact() ? .workSubscriptionVerified : Sync_Contact
+            workVerificationLevel: contact.isWorkContact ? .workSubscriptionVerified : Sync_Contact
                 .WorkVerificationLevel.none
         )
     }
@@ -194,7 +194,7 @@ extension Sync_Contact {
         }
     }
 
-    mutating func update(readReceipt: ReadReceipt?) {
+    mutating func update(readReceipt: ContactEntity.ReadReceipt?) {
         if let readReceipt {
             switch readReceipt {
             case .default:
@@ -219,7 +219,7 @@ extension Sync_Contact {
         }
     }
 
-    mutating func update(typingIndicator: TypingIndicator?) {
+    mutating func update(typingIndicator: ContactEntity.TypingIndicator?) {
         if let typingIndicator {
             switch typingIndicator {
             case .default:

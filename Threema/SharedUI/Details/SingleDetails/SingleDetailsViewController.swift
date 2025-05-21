@@ -682,11 +682,12 @@ extension SingleDetailsViewController: UITableViewDelegate {
 extension ContactEntity {
     /// Get a content configuration base on this `Contact`
     fileprivate var contentConfiguration: DetailsHeaderProfileView.ContentConfiguration {
-        DetailsHeaderProfileView.ContentConfiguration(
-            profilePictureInfo: .contact(Contact(contactEntity: self)),
+        let contact = Contact(contactEntity: self)
+        return DetailsHeaderProfileView.ContentConfiguration(
+            profilePictureInfo: .contact(contact),
             name: displayName,
-            verificationLevelImage: verificationLevelImage(),
-            verificationLevelAccessibilityLabel: verificationLevelAccessibilityLabel()
+            verificationLevelImage: contact.verificationLevelImage,
+            verificationLevelAccessibilityLabel: contact.verificationLevelAccessibilityLabel
         )
     }
 }

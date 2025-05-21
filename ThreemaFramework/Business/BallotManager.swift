@@ -29,41 +29,43 @@ public class BallotManager: NSObject {
     }
     
     @objc public func choiceResultCount(
-        _ ballot: Ballot,
+        _ ballot: BallotEntity,
         choiceID: NSNumber
     ) -> Int {
-        guard let choice = entityManager.entityFetcher.ballotChoice(for: ballot.id, with: choiceID) else {
+        guard let choice = entityManager.entityFetcher.ballotChoice(for: ballot.id, with: choiceID),
+              let result = choice.result else {
             DDLogError("[Ballot] [\(ballot.id.hexString)] Could not fetch choice for ballot.")
             return 0
         }
         
-        return choice.result.count
+        return result.count
     }
     
     @objc public func removeInvalidChoiceResults(
-        _ ballot: Ballot,
+        _ ballot: BallotEntity,
         choiceID: NSNumber,
         participantIDs: [String]
     ) {
-        guard let choice = entityManager.entityFetcher.ballotChoice(for: ballot.id, with: choiceID) else {
+        guard let choice = entityManager.entityFetcher.ballotChoice(for: ballot.id, with: choiceID),
+              let result = choice.result else {
             DDLogError("[Ballot] [\(ballot.id.hexString)] Could not fetch choice for ballot.")
             return
         }
         
-        for ballotResult in choice.result as! Set<BallotResultEntity> {
+        for ballotResult in result {
             // swiftformat:disable acronyms
             if !participantIDs.contains(ballotResult.participantId) {
                 DDLogWarn(
                     "[Ballot] [\(ballot.id.hexString)] Removed vote (\(ballotResult.participantId) from ballot"
                 )
-                choice.removeResult(forContact: ballotResult.participantId)
+                choice.removeResultForIdentity(ballotResult.participantId)
             }
             // swiftformat:enable acronyms
         }
     }
     
     @objc public func updateBallot(
-        _ ballot: Ballot,
+        _ ballot: BallotEntity,
         choiceID: NSNumber,
         with newValue: NSNumber,
         for contactID: String
@@ -76,23 +78,25 @@ public class BallotManager: NSObject {
         updateChoice(choice, with: newValue, for: contactID)
     }
     
-    @objc public func updateOwnChoice(_ choice: BallotChoice, with newValue: NSNumber) {
+    @objc public func updateOwnChoice(_ choice: BallotChoiceEntity, with newValue: NSNumber) {
         updateChoice(choice, with: newValue, for: MyIdentityStore.shared().identity)
     }
     
-    @objc public func updateChoice(_ choice: BallotChoice, with newValue: NSNumber, for contactID: String) {
+    @objc public func updateChoice(_ choice: BallotChoiceEntity, with newValue: NSNumber, for contactID: String) {
         
-        if let result = choice.getResult(for: contactID) {
+        if let result = choice.getResultForIdentity(contactID) {
             result.value = newValue
             result.modifyDate = Date()
         }
         else {
-            let newResult = entityManager.entityCreator.ballotResultEntity()
-            newResult?.value = newValue
+            guard let newResult = entityManager.entityCreator.ballotResultEntity() else {
+                return
+            }
+            newResult.value = newValue
             // swiftformat:disable:next acronyms
-            newResult?.participantId = contactID
+            newResult.participantId = contactID
             
-            choice.addResultObject(newResult)
+            choice.addToResult(newResult)
         }
         choice.modifyDate = Date()
     }

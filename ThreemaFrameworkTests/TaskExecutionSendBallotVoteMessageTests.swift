@@ -110,7 +110,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                 let ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()!
                 ballot.id = MockData.generateBallotID()
                 ballot.createDate = Date()
-                ballot.creatorID = myIdentityStoreMock.identity
+                // swiftformat:disable:next acronyms
+                ballot.creatorId = myIdentityStoreMock.identity
                 ballot.conversation = conversation
 
                 ballotID = ballot.id
@@ -214,8 +215,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: receiverIdentity,
-                verificationLevel: 0
+                identity: receiverIdentity
             )
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
             conversation.contact = contact
@@ -224,7 +224,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             let ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()
             ballot?.id = ballotID
             ballot?.createDate = Date()
-            ballot?.creatorID = frameworkInjectorMock.myIdentityStore.identity
+            // swiftformat:disable:next acronyms
+            ballot?.creatorId = frameworkInjectorMock.myIdentityStore.identity
             ballot?.conversation = conversation
 
             return (ballotID, receiverIdentity)
@@ -326,8 +327,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                    identity: member,
-                    verificationLevel: 0
+                    identity: member
                 )
                 members.insert(contact)
             }
@@ -346,7 +346,8 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             let ballot = frameworkInjectorMock.entityManager.entityCreator.ballot()
             ballot?.id = ballotID
             ballot?.createDate = Date()
-            ballot?.creatorID = frameworkInjectorMock.myIdentityStore.identity
+            // swiftformat:disable:next acronyms
+            ballot?.creatorId = frameworkInjectorMock.myIdentityStore.identity
             ballot?.conversation = conversation
 
             let group = Group(

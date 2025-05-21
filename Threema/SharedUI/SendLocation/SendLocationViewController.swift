@@ -50,16 +50,19 @@ class SendLocationViewController: ThemedViewController {
     )
     
     private let conversation: ConversationEntity
+    private let mapsServerInfo: MapsServerInfo?
     
     // DiffableDataSource
     private lazy var mapDataSource = SendLocationMapDataSource(
         sendLocationViewController: self,
         tableView: mapTableView,
-        mapView: mapView
+        mapView: mapView,
+        mapsServerInfo: mapsServerInfo
     )
     private lazy var searchDataSource = SendLocationSearchDataSource(
         sendLocationViewController: self,
-        tableView: searchTableView
+        tableView: searchTableView,
+        mapsServerInfo: mapsServerInfo
     )
     
     // Buttons
@@ -94,7 +97,6 @@ class SendLocationViewController: ThemedViewController {
     
     private lazy var mapView: MKMapView = {
         let mapView = MKMapView()
-        mapView.tintColor = .primary
         mapView.translatesAutoresizingMaskIntoConstraints = false
         mapView.showsUserLocation = false
         
@@ -157,8 +159,9 @@ class SendLocationViewController: ThemedViewController {
     
     // MARK: - Lifecycle
     
-    @objc init(conversation: ConversationEntity) {
+    @objc init(conversation: ConversationEntity, mapsServerInfo: MapsServerInfo?) {
         self.conversation = conversation
+        self.mapsServerInfo = mapsServerInfo
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -188,8 +191,10 @@ class SendLocationViewController: ThemedViewController {
         // Configure Views & Constraints
         configureStackView()
         
-        // Don't show SearchBar if POI are disabled in privacy settings
-        if UserSettings.shared().enablePoi {
+        // Don't show SearchBar if POI are disabled in privacy settings or urls are not set in OPPF
+        if UserSettings.shared().enablePoi,
+           !TargetManager.isOnPrem ||
+           (TargetManager.isOnPrem && mapsServerInfo != nil) {
             navigationItem.searchController = searchController
             mapTableView.refreshControl = refreshControl
         }
@@ -314,7 +319,6 @@ extension SendLocationViewController: MKMapViewDelegate {
         }
         
         annotationView?.accessibilityElementsHidden = true
-        annotationView?.markerTintColor = .primary
         
         // If Annotation does not belong to fetched POI, it belongs to current- or markedLocation
         guard let poi = mapDataSource.pointsOfInterest.first(where: { annotation.type == $0.type }) else {

@@ -24,7 +24,7 @@ final class MessageDateAndStateVibrancyView {
     /// Message to show date and state for
     ///
     /// Reset to update with current message information.
-    var message: BaseMessage? {
+    var message: BaseMessageEntity? {
         didSet {
             guard let message else {
                 return

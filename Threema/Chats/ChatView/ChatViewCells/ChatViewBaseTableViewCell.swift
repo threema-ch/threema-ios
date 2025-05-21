@@ -209,7 +209,10 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
     private let debugColors = false
     
-    fileprivate var messageAndNeighbors: (message: BaseMessage?, neighbors: ChatViewDataSource.MessageNeighbors?) {
+    fileprivate var messageAndNeighbors: (
+        message: BaseMessageEntity?,
+        neighbors: ChatViewDataSource.MessageNeighbors?
+    ) {
         didSet {
             guard let message = messageAndNeighbors.message else {
                 reactionsManager = nil
@@ -536,7 +539,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     /// - Parameter message: Message that is shown in this cell. Set to `nil` to reset the cell.
     /// - Parameter neighbors: The messages that immediately preceded and succeeded `message` when the conversations
     ///                        messages are sorted as displayed in the chat. Should be `nil` if `message` is `nil`.
-    func setMessage(to message: BaseMessage?, with neighbors: ChatViewDataSource.MessageNeighbors?) {
+    func setMessage(to message: BaseMessageEntity?, with neighbors: ChatViewDataSource.MessageNeighbors?) {
         if message == nil, neighbors != nil {
             DDLogWarn("Neighbors should have a message")
         }
@@ -553,7 +556,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func updateNameLabelColor() {
-        let nameLabelColor = messageAndNeighbors.message?.sender?.idColor ?? .primary
+        let nameLabelColor = messageAndNeighbors.message?.sender?.idColor ?? .tintColor
         nameLabel.textColor = nameLabelColor
         nameLabel.highlightedTextColor = nameLabelColor
     }
@@ -1008,7 +1011,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         return shouldGroupMessage(message, with: nextMessage)
     }
     
-    private func shouldGroupMessage(_ lhs: BaseMessage, with rhs: BaseMessage) -> Bool {
+    private func shouldGroupMessage(_ lhs: BaseMessageEntity, with rhs: BaseMessageEntity) -> Bool {
         // TODO: (IOS-2943) Do we have to check if one is a system message...?
         
         // It needs to have the same sender

@@ -36,7 +36,7 @@
 
 @implementation BallotResultViewController
 
-+ (instancetype) ballotResultViewControllerForBallot:(Ballot *)ballot {
++ (instancetype) ballotResultViewControllerForBallot:(BallotEntity *)ballot {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Ballot" bundle:nil];
     
     BallotResultViewController *viewController = (BallotResultViewController *) [storyboard instantiateViewControllerWithIdentifier:@"BallotResultViewController"];

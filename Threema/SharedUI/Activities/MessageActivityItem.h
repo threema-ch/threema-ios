@@ -19,15 +19,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "BaseMessage.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class TextMessageEntity;
+@class TextMessageEntity, BaseMessageEntity;
 
 @interface MessageActivityItem : NSObject <UIActivityItemSource>
 
-+ (instancetype)activityItemFor:(nullable BaseMessage *)message;
++ (instancetype)activityItemFor:(nullable BaseMessageEntity *)message;
 
 - (nullable NSURL *)getURL;
 

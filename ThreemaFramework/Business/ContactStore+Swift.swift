@@ -77,18 +77,19 @@ extension ContactStore {
             if let allContacts = entityManager.entityFetcher.allContacts() as? [ContactEntity] {
                 for contactEntity in allContacts {
                     let isWorkContact = identities.contains(contactEntity.identity)
-                    if contactEntity.workContact.boolValue != isWorkContact {
+                    if contactEntity.isWorkContact != isWorkContact {
                         contactEntity.workContact = NSNumber(booleanLiteral: isWorkContact)
                         mediatorSyncableContacts.updateWorkVerificationLevel(
                             identity: contactEntity.identity,
                             value: contactEntity.workContact
                         )
 
-                        if !isWorkContact, contactEntity.verificationLevel.intValue != kVerificationLevelFullyVerified {
-                            contactEntity.verificationLevel = NSNumber(integerLiteral: kVerificationLevelUnverified)
+                        if !isWorkContact,
+                           contactEntity.contactVerificationLevel != .fullyVerified {
+                            contactEntity.contactVerificationLevel = .unverified
                             mediatorSyncableContacts.updateVerificationLevel(
                                 identity: contactEntity.identity,
-                                value: contactEntity.verificationLevel
+                                value: contactEntity.contactVerificationLevel.rawValue as NSNumber
                             )
                         }
                     }
@@ -105,8 +106,11 @@ extension ContactStore {
     @objc func updateStateToActive(for contactEntity: ContactEntity, entityManager: EntityManager) {
         let mediatorSyncableContacts = MediatorSyncableContacts()
         entityManager.performAndWaitSave {
-            contactEntity.state = NSNumber(value: kStateActive)
-            mediatorSyncableContacts.updateState(identity: contactEntity.identity, value: contactEntity.state)
+            contactEntity.contactState = .active
+            mediatorSyncableContacts.updateState(
+                identity: contactEntity.identity,
+                value: contactEntity.contactState.rawValue as NSNumber
+            )
         }
         mediatorSyncableContacts.syncAsync()
     }
@@ -114,7 +118,7 @@ extension ContactStore {
 
 extension ContactStoreProtocol {
     public func update(
-        readReceipt: ReadReceipt,
+        readReceipt: ContactEntity.ReadReceipt,
         for contactEntity: ContactEntity,
         entityManager: EntityManager
     ) {
@@ -127,7 +131,7 @@ extension ContactStoreProtocol {
     }
 
     public func update(
-        typingIndicator: TypingIndicator,
+        typingIndicator: ContactEntity.TypingIndicator,
         for contactEntity: ContactEntity,
         entityManager: EntityManager
     ) {

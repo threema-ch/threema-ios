@@ -33,8 +33,8 @@ struct DeveloperSettingsView: View {
     
     // Feature Flags
     @State var contactList2 = UserSettings.shared().contactList2
-    
     @State var ipcCommunicationEnabled = UserSettings.shared().ipcCommunicationEnabled
+    @State var newNavigationEnabled = UserSettings.shared().newNavigationEnabled
 
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
@@ -89,12 +89,6 @@ struct DeveloperSettingsView: View {
                     LaunchModalSettingsView()
                 } label: {
                     Text(verbatim: "Launch Modals")
-                }
-                
-                NavigationLink {
-                    AudioErrorDebugView()
-                } label: {
-                    Text(verbatim: "Audio Error Debug View")
                 }
                 
                 Button {
@@ -161,9 +155,26 @@ struct DeveloperSettingsView: View {
                 .onChange(of: ipcCommunicationEnabled) { newValue in
                     UserSettings.shared().ipcCommunicationEnabled = newValue
                 }
+                
+                Toggle(isOn: $newNavigationEnabled) {
+                    Text(verbatim: "Enable new Navigation")
+                }
+                .onChange(of: newNavigationEnabled) { newValue in
+                    UserSettings.shared().newNavigationEnabled = newValue
+                    exit(1)
+                }
             }
             header: {
                 Text(verbatim: "Feature Flags")
+            }
+            
+            Section {
+                // TODO: (IOS-5275) Remove after libthreema is used somewhere in our codebase
+                libthreemaIntegrationTestView()
+            } header: {
+                Text(verbatim: "libthreema")
+            } footer: {
+                Text(verbatim: "This will block the UI for a short time")
             }
             
             Section {
@@ -276,8 +287,7 @@ struct DeveloperSettingsView: View {
             
             Section {
                 Button {
-                    var nilString: String?
-                    print(nilString!)
+                    exit(1)
                 } label: {
                     Text(verbatim: "Crash the app")
                 }
@@ -286,7 +296,7 @@ struct DeveloperSettingsView: View {
             }
         }
         .navigationBarTitle(Text(verbatim: "Developer Settings"), displayMode: .inline)
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
         .sheet(isPresented: $showDebugDeviceJoin) {
             DebugDeviceJoinView()
         }

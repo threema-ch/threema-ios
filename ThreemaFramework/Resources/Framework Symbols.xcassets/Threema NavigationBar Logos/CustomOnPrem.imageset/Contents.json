@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "CustomOnPremBlack.pdf",
+      "filename" : "CustomOnPremBlack.svg",
       "idiom" : "universal"
     },
     {
@@ -11,7 +11,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "CustomOnPremWhite.pdf",
+      "filename" : "CustomOnPremWhite.svg",
       "idiom" : "universal"
     }
   ],

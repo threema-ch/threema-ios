@@ -84,7 +84,7 @@ static const NSUInteger newMaxLength = 6;
     _titleLabel.shadowColor = [UIColor colorWithRed:0.3 green:0.3 blue:0.4 alpha:0.6];
     _subtitleLabel.textColor = Colors.textLockScreen;
     _subtitleLabel.shadowColor = [UIColor colorWithRed:0.3 green:0.3 blue:0.4 alpha:0.6];
-    [_eraseDataButton setTitleColor:Colors.red forState:UIControlStateNormal];
+    [_eraseDataButton setTitleColor:UIColor.systemRedColor forState:UIControlStateNormal];
     [_eraseDataButton setTitleShadowColor:[UIColor colorWithRed:0.3 green:0.3 blue:0.4 alpha:0.6] forState:UIControlStateNormal];
     [self.view setBackgroundColor:Colors.backgroundView];
     

@@ -20,14 +20,30 @@
 
 /// Name of the app
 APP_NAME = Threema OnPrem
+/// Name of the app to be used in conjunction with features such as Calls, Safe or ID.
+/// Appropriately inserted into localized strings for example LOCALIZED_APP_NAME Calls for English or LOCALIZED_APP_NAME-Anrufe for German
+LOCALIZED_APP_NAME = Threema
 
 /// Target Manager Key
 TARGET_MANAGER_KEY = ThreemaOnPrem
 
+/// Bundle Identifiers
 BUNDLE_BASE_IDENTIFIER = ch.threema.onprem
 APP_BUNDLE_IDENTIFIER = $(BUNDLE_BASE_IDENTIFIER).iapp
+
+/// App Group of the bundle
 GROUP_IDENTIFIER = group.$(BUNDLE_BASE_IDENTIFIER)
+
+/// Suffix for version
 THREEMA_VERSION_SUFFIX = o
 
+/// Define a custom URL scheme for your app
+APP_URL_SCHEME = threemaonprem
+
+/// Declare the use of encryption to streamline the app submission process
+
+/// URL to sentry
 
 
+// Accent Color
+ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColorOnPrem

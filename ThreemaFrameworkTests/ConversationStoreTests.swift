@@ -289,8 +289,7 @@ final class ConversationStoreTests: XCTestCase {
         databasePreparer.save {
             let contact = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: identity,
-                verificationLevel: 0
+                identity: identity
             )
 
             conversation = databasePreparer.createConversation(

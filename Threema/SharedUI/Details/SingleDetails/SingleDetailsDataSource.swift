@@ -281,7 +281,7 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     
     func sortedGroupMembershipConversations() -> [ConversationEntity]? {
         contact.groupConversations?
-            .compactMap { $0 as? ConversationEntity }
+            .compactMap { $0 }
             .sortedDescendingByLastUpdatedDate()
     }
     
@@ -366,7 +366,10 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
             }
         }
         else if section == .fsActions {
-            return #localize("forward_security_explainer_footer")
+            return String.localizedStringWithFormat(
+                #localize("forward_security_explainer_footer"),
+                TargetManager.appName
+            )
         }
         
         return nil
@@ -494,7 +497,7 @@ extension SingleDetailsDataSource {
     private func callQuickAction(in viewController: UIViewController) -> [QuickAction] {
         // Only show call icon if Threema calls are enabled
         guard UserSettings.shared()?.enableThreemaCall == true,
-              !contact.isGatewayID(), !contact.isEchoEcho() else {
+              !contact.isGatewayID, !contact.isEchoEcho else {
             return []
         }
         
@@ -530,8 +533,14 @@ extension SingleDetailsDataSource {
                         // Calls not supported for this contact
                         UIAlertTemplate.showAlert(
                             owner: viewController,
-                            title: #localize("call_voip_not_supported_title"),
-                            message: #localize("call_voip_not_supported_text")
+                            title: String.localizedStringWithFormat(
+                                #localize("call_voip_not_supported_title"),
+                                TargetManager.localizedAppName
+                            ),
+                            message: String.localizedStringWithFormat(
+                                #localize("call_voip_not_supported_text"),
+                                TargetManager.localizedAppName
+                            )
                         )
                     }
                     else {
@@ -544,11 +553,7 @@ extension SingleDetailsDataSource {
     
     private func scanIdentityQuickAction(in viewController: UIViewController) -> [QuickAction] {
         // If not fully verified and camera is available: show scan quick action
-        guard ScanIdentityController.canScan(),
-              !(
-                  contact.verificationLevel.intValue == kVerificationLevelFullyVerified || contact.verificationLevel
-                      .intValue == kVerificationLevelWorkFullyVerified
-              ) else {
+        guard ScanIdentityController.canScan(), contact.contactVerificationLevel != .fullyVerified else {
             return []
         }
         
@@ -816,7 +821,10 @@ extension SingleDetailsDataSource {
             }
         }
         
-        let localizedThreemaID = #localize("threema_id")
+        let localizedThreemaID = String.localizedStringWithFormat(
+            #localize("threema_id"),
+            TargetManager.localizedAppName
+        )
         rows.append(.value(label: localizedThreemaID, value: contact.identity))
         rows.append(.verificationLevel(contact: contact))
         rows.append(.publicKey)
@@ -826,7 +834,7 @@ extension SingleDetailsDataSource {
             rows.append(.value(label: localizedNickname, value: nickname))
         }
         
-        if !contact.isGatewayID() {
+        if !contact.isGatewayID {
             rows.append(.linkedContact(linkedContactManager))
         }
         
@@ -912,8 +920,7 @@ extension SingleDetailsDataSource {
         var rows = [SingleDetails.Row]()
         
         let readReceiptsAction = Details.Action(
-            title: BundleUtil
-                .localizedString(forKey: "send_readReceipts")
+            title: #localize("send_readReceipts")
         ) { [weak self, weak singleDetailsViewController] view in
             guard let strongSelf = self,
                   let strongSingleDetailsViewController = singleDetailsViewController
@@ -976,8 +983,7 @@ extension SingleDetailsDataSource {
         rows.append(.privacySettings(action: readReceiptsAction, contact: contact))
         
         let typingIndicatorsAction = Details.Action(
-            title: BundleUtil
-                .localizedString(forKey: "send_typingIndicator")
+            title: #localize("send_typingIndicator")
         ) { [weak self, weak singleDetailsViewController] view in
             guard let strongSelf = self,
                   let strongSingleDetailsViewController = singleDetailsViewController
@@ -1208,7 +1214,7 @@ extension SingleDetailsDataSource {
         var actions: [SingleDetails.Row] = []
         actions.append(.booleanAction(blockContactBooleanAction))
 
-        if !contact.isContactHidden {
+        if !contact.isHidden {
             actions.append(.action(deleteContactAction))
         }
 
@@ -1318,7 +1324,7 @@ extension SingleDetailsDataSource: MWPhotoBrowserWrapperDelegate {
 
 extension ContactEntity {
     fileprivate var canBePickedAsProfilePictureRecipient: Bool {
-        guard !(isEchoEcho() || isGatewayID()) else {
+        guard !(isEchoEcho || isGatewayID) else {
             return false
         }
         
@@ -1326,7 +1332,7 @@ extension ContactEntity {
     }
     
     fileprivate var isProfilePictureRecipient: Bool {
-        guard !(isEchoEcho() || isGatewayID()) else {
+        guard !(isEchoEcho || isGatewayID) else {
             return false
         }
         

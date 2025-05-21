@@ -58,8 +58,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     typealias Config = ChatViewConfiguration.DataSource
     
     struct MessageNeighbors {
-        let previousMessage: BaseMessage?
-        let nextMessage: BaseMessage?
+        let previousMessage: BaseMessageEntity?
+        let nextMessage: BaseMessageEntity?
         
         static let noNeighbors = MessageNeighbors(previousMessage: nil, nextMessage: nil)
     }
@@ -582,15 +582,15 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
             return .noNeighbors
         }
         
-        var previousMessage: BaseMessage?
-        var nextMessage: BaseMessage?
+        var previousMessage: BaseMessageEntity?
+        var nextMessage: BaseMessageEntity?
         
         if index - 1 >= 0, case let .message(objectID: prevObjectID) = snapshot.itemIdentifiers[index - 1] {
-            previousMessage = entityManager.entityFetcher.existingObject(with: prevObjectID) as? BaseMessage
+            previousMessage = entityManager.entityFetcher.existingObject(with: prevObjectID) as? BaseMessageEntity
         }
         if index + 1 < snapshot.itemIdentifiers.count,
            case let .message(objectID: nextObjectID) = snapshot.itemIdentifiers[index + 1] {
-            nextMessage = entityManager.entityFetcher.existingObject(with: nextObjectID) as? BaseMessage
+            nextMessage = entityManager.entityFetcher.existingObject(with: nextObjectID) as? BaseMessageEntity
         }
         
         return ChatViewDataSource.MessageNeighbors(previousMessage: previousMessage, nextMessage: nextMessage)
@@ -683,8 +683,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
     private func observeMessage(
-        message: BaseMessage,
-        keyPath: KeyPath<BaseMessage, some Any>,
+        message: BaseMessageEntity,
+        keyPath: KeyPath<BaseMessageEntity, some Any>,
         changeHandler: @escaping () -> Void
     ) {
 
@@ -789,7 +789,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
             var deletedCount = 0
             
             for objectID in self.selectedObjectIDs {
-                guard let message = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessage
+                guard let message = self.entityManager.entityFetcher
+                    .existingObject(with: objectID) as? BaseMessageEntity
                 else {
                     continue
                 }
@@ -870,7 +871,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     /// Load message
     /// - Parameter objectID: Object ID of message to load
     /// - Returns: Loaded message if there was any for this object ID
-    func message(for objectID: NSManagedObjectID) -> BaseMessage? {
+    func message(for objectID: NSManagedObjectID) -> BaseMessageEntity? {
         messageProvider.message(for: objectID)
     }
     

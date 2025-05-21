@@ -172,9 +172,6 @@ class GroupCallAudioOutputButton: UIButton {
     }
 
     private func proximitySensor(enable: Bool) {
-        guard !dependencies.userSettings.disableProximityMonitoring else {
-            return
-        }
         Task { @MainActor in
             UIDevice.current.isProximityMonitoringEnabled = enable
         }

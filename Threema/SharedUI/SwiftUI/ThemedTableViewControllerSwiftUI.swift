@@ -145,7 +145,7 @@ extension ThemedTableViewControllerSwiftUI: ThreemaTitleUpdatable {
 
 class WrappedView: UIView {
 
-    private(set) var view: UIView!
+    private(set) var view: UIView
 
     init(view: UIView) {
         self.view = view
@@ -153,12 +153,14 @@ class WrappedView: UIView {
         addSubview(view)
     }
 
+    @available(*, unavailable)
     override init(frame: CGRect) {
-        super.init(frame: frame)
+        fatalError("init(frame:) has not been implemented")
     }
 
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        super.init(coder: coder)
+        fatalError("init(coder:) has not been implemented")
     }
 
     override func layoutSubviews() {

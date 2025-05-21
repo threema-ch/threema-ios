@@ -100,10 +100,10 @@ class ConversationActions: NSObject {
                 let conversation = backgroundBusinessInjector.entityManager.entityFetcher
                     .getManagedObject(by: conversationObjectID) as! ConversationEntity
 
-                var messages = [BaseMessage]()
+                var messages = [BaseMessageEntity]()
                 for messageObjectID in messageObjectIDs {
                     if let message = backgroundBusinessInjector.entityManager.entityFetcher
-                        .getManagedObject(by: messageObjectID) as? BaseMessage {
+                        .getManagedObject(by: messageObjectID) as? BaseMessageEntity {
                         messages.append(message)
                     }
                 }

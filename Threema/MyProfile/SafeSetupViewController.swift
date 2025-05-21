@@ -55,7 +55,14 @@ class SafeSetupViewController: ThemedViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        title = "Threema Safe"
+        title = String.localizedStringWithFormat(
+            #localize("safe_setup_backup_title"),
+            TargetManager.localizedAppName
+        )
+        safeSwitchLabel.text = String.localizedStringWithFormat(
+            #localize("safe_setup_backup_title"),
+            TargetManager.localizedAppName
+        )
         safeImageCircle.layer.cornerRadius = safeImageCircle.frame.height / 2
         safeSwitch.isEnabled = !mdmSetup.isSafeBackupForce()
         
@@ -82,8 +89,14 @@ class SafeSetupViewController: ThemedViewController {
             UIAlertTemplate.showConfirm(
                 owner: self,
                 popOverSource: safeSwitch!,
-                title: #localize("safe_deactivate"),
-                message: #localize("safe_deactivate_explain"),
+                title: String.localizedStringWithFormat(
+                    #localize("safe_deactivate"),
+                    TargetManager.localizedAppName
+                ),
+                message: String.localizedStringWithFormat(
+                    #localize("safe_deactivate_explain"),
+                    TargetManager.localizedAppName
+                ),
                 titleOk: #localize("deactivate"),
                 actionOk: { _ in
                     DispatchQueue.main.async {

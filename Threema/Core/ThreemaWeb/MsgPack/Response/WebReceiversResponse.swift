@@ -83,9 +83,9 @@ struct WebContact {
         self.firstName = contact.firstName
         self.lastName = contact.lastName
         self.publicNickname = contact.publicNickname
-        self.verificationLevel = contact.verificationLevel.intValue + 1 // iOS begins with 0
-        self.state = contact.isActive() ? "ACTIVE" : "INACTIVE"
-        self.featureMask = contact.featureMask.intValue
+        self.verificationLevel = contact.contactVerificationLevel.rawValue + 1 // iOS begins with 0
+        self.state = contact.isActive ? "ACTIVE" : "INACTIVE"
+        self.featureMask = Int(contact.featureMask)
 
         self.isWork = contact.workContact == NSNumber(value: true)
         self.identityType = UserSettings.shared().workIdentities.contains(contact.identity) ? 1 : 0
@@ -101,7 +101,7 @@ struct WebContact {
         }
         
         self.publicKey = contact.publicKey
-        self.hidden = contact.isContactHidden
+        self.hidden = contact.isHidden
         
         self.isBlocked = UserSettings.shared().blacklist.contains(contact.identity)
         
@@ -119,7 +119,7 @@ struct WebContact {
             canChangeAvatar = true
         }
         
-        if contact.isGatewayID() {
+        if contact.isGatewayID {
             canChangeAvatar = false
             canChangeFirstName = false
             canChangeLastName = false
@@ -210,7 +210,7 @@ struct WebGroup {
         self.color = "#181818"
         self.disabled = false
         self.members = group.members.filter { member -> Bool in
-            member.state != kStateInvalid
+            member.state != .invalid
         }.map(\.identity.string)
         // Add myself to members list if isSelfMember
         if group.isSelfMember {

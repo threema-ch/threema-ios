@@ -21,21 +21,13 @@
 import AVFoundation
 import CocoaLumberjackSwift
 
-enum AudioSessionError: Equatable, LocalizedError {
-    case couldNotActivateCategory
-    case callStateNotIdle
-    case error(NSError)
+protocol AudioSessionManagerProtocol: AnyObject {
+    var session: AVAudioSession { get }
+    var prevAudioSessionCategory: AVAudioSession.Category? { get }
     
-    var localizedDescription: String {
-        switch self {
-        case .couldNotActivateCategory:
-            "Could not activate audio session category"
-        case .callStateNotIdle:
-            "Call state is not idle"
-        case let .error(error):
-            error.localizedDescription
-        }
-    }
+    func setupForPlayback() throws
+    func setupForRecording() throws
+    func adaptToProximityState()
 }
 
 final class AudioSessionManager: AudioSessionManagerProtocol {
@@ -44,82 +36,27 @@ final class AudioSessionManager: AudioSessionManagerProtocol {
     
     init() {
         self.prevAudioSessionCategory = session.category
+        adaptToProximityState()
     }
     
     deinit {
         resetAudioSession()
     }
     
-    /// Sets up the audio session for recording.
-    /// It activates the audio session and sets the category to `.playAndRecord` with the mode set to `.default`.
-    /// It also allows Bluetooth options for the audio session.
-    /// - Returns: A `Result` indicating success or an `AudioSessionError`.
-    @discardableResult func setupForRecording() -> Result<Void, AudioSessionError> {
-        do {
-            try session.setActive(true)
-            try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.allowBluetooth, .allowBluetoothA2DP])
-            // VoiceOver is included in VoiceMessages, maybe not the best solution
-            if session.currentRoute.outputs.filter({ $0.portType == .headphones }).isEmpty {
-                try session.overrideOutputAudioPort(.none)
-            }
-            
-            return .success(())
-        }
-        catch let error as NSError {
-            DDLogError("\(error.localizedDescription)")
-            return .failure(.couldNotActivateCategory)
-        }
+    func setupForRecording() throws {
+        try session.setActive(true)
+        try session.setCategory(.playAndRecord, options: [.allowBluetooth, .allowBluetoothA2DP])
     }
     
-    /// Sets up the audio session for playback.
-    /// It activates the audio session and sets the category to `.playback` with the mode set to `.spokenAudio`.
-    /// - Returns: A `Result` indicating success or an `AudioSessionError`.
-    @discardableResult func setupAudioSessionForPlayback() -> Result<Void, AudioSessionError> {
-        do {
-            try session.setCategory(.playback)
-            try session.setMode(.spokenAudio)
-            try session.setActive(true)
-            
-            return .success(())
-        }
-        catch let error as NSError {
-            DDLogError("\(error.localizedDescription)")
-            return .failure(.couldNotActivateCategory)
-        }
+    func setupForPlayback() throws {
+        adaptToProximityState()
+        try session.setActive(true)
     }
     
-    /// Configures the audio session for either earpiece or speaker playback.
-    /// - Parameter isEarpiece: A Boolean value indicating whether the audio session should be set up for earpiece
-    /// playback.
-    /// - Returns: A `Result` indicating whether the audio session was successfully set up or an `AudioSessionError` if
-    /// an error occurred.
-    @discardableResult func setupAudioSession(isEarpiece: Bool) -> Result<Void, AudioSessionError> {
-        guard VoIPCallStateManager.shared.currentCallState() == .idle,
-              !NavigationBarPromptHandler.isGroupCallActive else {
-            return .failure(.callStateNotIdle)
-        }
-        
-        do {
-            if isEarpiece {
-                try session.overrideOutputAudioPort(.none)
-            }
-            
-            try session.setActive(true, options: .notifyOthersOnDeactivation)
-            
-            printInAndOutputs()
-            return .success(())
-        }
-        catch let error as NSError {
-            DDLogError("\(error.localizedDescription)")
-            return .failure(.error(error))
-        }
-    }
-    
-    /// Resets the audio session to its previous category if it has been changed.
-    /// This function will do nothing if the audio session is already reset or if there is an ongoing call.
-    func resetAudioSession() {
+    private func resetAudioSession() {
         guard let prevAVCat = prevAudioSessionCategory else {
-            DDLogInfo("AudioSession has already been reset")
+            assertionFailure()
+            DDLogInfo("[Voice Recorder] AudioSession has already been reset")
             return
         }
         
@@ -133,25 +70,25 @@ final class AudioSessionManager: AudioSessionManagerProtocol {
         prevAudioSessionCategory = nil
     }
     
-    func adaptToProximityState(isPlaying: Bool) {
-        guard let output = session.currentRoute.outputs.first,
-              isPlaying, [.builtInSpeaker, .builtInReceiver].contains(output.portType)
-        else {
-            setupAudioSession(isEarpiece: false)
+    func adaptToProximityState() {
+        let isClose = UIDevice.current.proximityState
+        
+        let outputs = session.currentRoute.outputs
+        
+        let usesBuiltInPortType = outputs.contains { $0.portType == .builtInSpeaker || $0.portType == .builtInReceiver }
+        
+        guard usesBuiltInPortType else {
+            try? session.overrideOutputAudioPort(.none)
             return
         }
-        Task { @MainActor in
-            setupAudioSession(isEarpiece: UIDevice.current.proximityState)
-        }
-    }
-
-    private func printInAndOutputs() {
-        session.availableInputs?.forEach {
-            DDLogInfo("Play/Record audio: Available input port: \($0.portType)")
-        }
         
-        for output in session.currentRoute.outputs {
-            DDLogInfo("Play/Record audio: Current output port: \(output.portType)")
+        if isClose {
+            try? session.setCategory(.playAndRecord, options: [.allowBluetooth, .allowBluetoothA2DP])
+            try? session.setMode(.spokenAudio)
+        }
+        else {
+            try? session.setCategory(.playback, options: [])
+            try? session.setMode(.spokenAudio)
         }
     }
 }

@@ -118,7 +118,7 @@ final class BlobMessageSender {
         let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
         var isReady = false
         
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             guard let fileMessage = entityManager.entityFetcher.existingObject(with: objectID) as? FileMessage else {
                 return
             }
@@ -136,7 +136,7 @@ final class BlobMessageSender {
             // If we have a a blobID, and possibly a thumbnail and its ID, this means that the upload has succeeded
             // and just the sending of the message must have failed, so we reset the error and mark it as ready
             if fileMessage.blobError {
-                entityManager.performSyncBlockAndSafe {
+                entityManager.performAndWaitSave {
                     fileMessage.blobError = false
                 }
             }

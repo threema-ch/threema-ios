@@ -22,23 +22,24 @@ import CoreData
 import Foundation
 
 @objc(MessageMarkersEntity)
-public class MessageMarkersEntity: NSManagedObject, Identifiable {
+public final class MessageMarkersEntity: NSManagedObject, Identifiable {
     
-    // Attributes
-    @NSManaged @objc(star) public var star: NSNumber
+    // MARK: Attributes
+
+    @NSManaged public var star: NSNumber
     
-    // Relationships
-    @NSManaged public var message: BaseMessage?
+    // MARK: Relationships
+
+    @NSManaged public var message: BaseMessageEntity?
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
+    ///   - context: `NSManagedObjectContext` to insert created entity into
     ///   - star: Bool value if message is starred
-    ///   - message: BaseMessage the entity belongs to
-    public init(context: NSManagedObjectContext, star: Bool = false, message: BaseMessage? = nil) {
+    ///   - message: `BaseMessageEntity` the entity belongs to
+    public init(context: NSManagedObjectContext, star: Bool = false, message: BaseMessageEntity? = nil) {
         let entity = NSEntityDescription.entity(forEntityName: "MessageMarkers", in: context)!
         super.init(entity: entity, insertInto: context)
         

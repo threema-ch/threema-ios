@@ -29,7 +29,6 @@ struct AppIconSettingsView: View {
     var body: some View {
         
         List {
-            
             Section {
                 ForEach(AppIcon.defaultIcon, id: \.self) { icon in
                     AppIconMenuItem(icon: icon, currentlySelected: $currentlySelected)
@@ -43,9 +42,11 @@ struct AppIconSettingsView: View {
                 ForEach(AppIcon.baseIcons, id: \.self) { icon in
                     AppIconMenuItem(icon: icon, currentlySelected: $currentlySelected)
                 }
-            }
-            header: {
-                Text(#localize("settings_appicon_legacy_header"))
+            } header: {
+                Text(String.localizedStringWithFormat(
+                    #localize("settings_appicon_legacy_header"),
+                    TargetManager.localizedAppName
+                ))
             }
             
             Section {
@@ -96,7 +97,7 @@ struct AppIconMenuItem: View {
             
             if icon.iconName == currentlySelected {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(UIColor.primary.color)
+                    .foregroundColor(.accentColor)
                     .imageScale(.large)
             }
         }

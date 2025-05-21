@@ -50,7 +50,7 @@ final class MessageHistoryEntryEntityTests: XCTestCase {
         // Act
         entityManager.performAndWaitSave {
             let contact = entityManager.entityCreator.contact()
-            contact?.identity = contactID
+            contact?.setIdentity(to: contactID)
             contact?.publicKey = MockData.generatePublicKey()
         }
         

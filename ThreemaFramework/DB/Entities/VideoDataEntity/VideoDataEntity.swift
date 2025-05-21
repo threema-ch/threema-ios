@@ -22,20 +22,23 @@ import CoreData
 import Foundation
 
 @objc(VideoDataEntity)
-public class VideoDataEntity: TMAManagedObject {
+public final class VideoDataEntity: TMAManagedObject {
     
-    // Attributes
-    @NSManaged @objc(data) public var data: Data
+    // MARK: Attributes
+
+    @NSManaged public var data: Data
     
-    // Relationships
+    // MARK: Relationships
+
     @NSManaged public var message: VideoMessageEntity?
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
+    // MARK: Lifecycle
+    
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
-    ///   - data: Data for the entity
-    ///   - message: VideoMessageEntity the entity belongs to
+    ///   - context: `NSManagedObjectContext` to insert created entity into
+    ///   - data: `Data` for the entity
+    ///   - message: `VideoMessageEntity` the entity belongs to
     public init(context: NSManagedObjectContext, data: Data, message: VideoMessageEntity? = nil) {
         let entity = NSEntityDescription.entity(forEntityName: "VideoData", in: context)!
         super.init(entity: entity, insertInto: context)

@@ -80,6 +80,10 @@ import ThreemaMacros
                 NotificationPresenterWrapper.presenter.displayLeftView(imageView)
             }
             
+            if type.notificationStyle.notificationLoadingIndicator {
+                NotificationPresenterWrapper.presenter.displayActivityIndicator(true)
+            }
+            
             if let hapticType = type.notificationStyle.hapticType {
                 NotificationPresenterWrapper.hapticGenerator.prepare()
                 NotificationPresenterWrapper.hapticGenerator.notificationOccurred(hapticType)
@@ -101,12 +105,14 @@ import ThreemaMacros
             NotificationPresenterWrapper.presenter.present(
                 type.notificationText,
                 styleName: type.notificationStyle.id,
-                duration: Configuration.defaultDelay,
                 completion: completion
             )
             
             if let imageView = type.notificationStyle.notificationImageView {
                 NotificationPresenterWrapper.presenter.displayLeftView(imageView)
+            }
+            if type.notificationStyle.notificationLoadingIndicator {
+                NotificationPresenterWrapper.presenter.displayActivityIndicator(true)
             }
             if let hapticType = type.notificationStyle.hapticType {
                 NotificationPresenterWrapper.hapticGenerator.prepare()

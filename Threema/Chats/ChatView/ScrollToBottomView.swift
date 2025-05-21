@@ -226,7 +226,7 @@ final class ScrollToBottomView: UIView {
     }
     
     func updateColors() {
-        unreadCountLabel.textColor = .primary
+        unreadCountLabel.textColor = .tintColor
         backgroundColor = Colors.backgroundChatBar
     }
     

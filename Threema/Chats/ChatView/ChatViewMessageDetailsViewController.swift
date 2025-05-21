@@ -50,7 +50,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         
         case fileSize
                 
-        case messageDisplayState(_ displayState: BaseMessage.DisplayState)
+        case messageDisplayState(_ displayState: BaseMessageEntity.DisplayState)
         
         case deletedMessage
         case editedMessage
@@ -71,9 +71,9 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
     // MARK: - Private properties
     
     private let messageManagedObjectID: NSManagedObjectID
-    private lazy var message: BaseMessage? = EntityManager().entityFetcher.existingObject(
+    private lazy var message: BaseMessageEntity? = EntityManager().entityFetcher.existingObject(
         with: messageManagedObjectID
-    ) as? BaseMessage
+    ) as? BaseMessageEntity
     
     private let messageCellProvider = ChatViewCellProvider()
     private static let contentConfigurationCellIdentifier = "contentConfigurationCellIdentifier"
@@ -342,10 +342,10 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
     /// All observers are store in the `observers` property.
     ///
     /// - Parameters:
-    ///   - keyPath: Key path in `BaseMessage` to observe
+    ///   - keyPath: Key path in `BaseMessageEntity` to observe
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeMessage(_ keyPath: KeyPath<BaseMessage, some Any>, changeHandler: @escaping () -> Void) {
+    private func observeMessage(_ keyPath: KeyPath<BaseMessageEntity, some Any>, changeHandler: @escaping () -> Void) {
         guard let message else {
             return
         }
@@ -458,9 +458,8 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         snapshot.appendSections([.message])
         snapshot.appendItems([.message])
         
-        let messageDisplayState = message.messageDisplayState
-        
         // TODO: (IOS-2788) Nothing interesting to show for now, so we don't show it
+//        let messageDisplayState = message.messageDisplayState
 //        if messageDisplayState == .failed {
 //            snapshot.appendSections([.errors])
 //            snapshot.appendItems([.messageDisplayState(.failed)])
@@ -546,7 +545,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
         return snapshot
     }
     
-    private func historyRows(for message: BaseMessage) -> [Row] {
+    private func historyRows(for message: BaseMessageEntity) -> [Row] {
         // Only add any rows if there are any history messages
         guard let historyEntries = message.historyEntries, !historyEntries.isEmpty else {
             return []

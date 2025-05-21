@@ -93,7 +93,7 @@ final class MessageReceiver {
 
             self.serverConnector.registerMessageListenerDelegate(delegate: messageListener!)
 
-            if let error = self.serverConnector.reflectMessage(getDevicesList) as? Error {
+            if let error = self.serverConnector.reflectMessage(getDevicesList) {
                 throw error
             }
 
@@ -111,7 +111,7 @@ final class MessageReceiver {
 
             for item in devicesInfo.augmentedDeviceInfo
                 .filter({ $0.key.littleEndianData.hexString != deviceID.hexString }) {
-                var label: String!
+                var label = "Unknown"
                 var platform: Platform = .unspecified
                 var platformDetails = "Unknown"
                 if !item.value.encryptedDeviceInfo.isEmpty,
@@ -124,9 +124,6 @@ final class MessageReceiver {
                     label = decodedDeviceInfo.label
                     platform = Platform(rawValue: decodedDeviceInfo.platform.rawValue) ?? .unspecified
                     platformDetails = "\(decodedDeviceInfo.appVersion) • \(decodedDeviceInfo.platformDetails)"
-                }
-                else {
-                    label = "Unknown"
                 }
 
                 let badge = item.value.deviceSlotExpirationPolicy == .volatile ? "Volatile Session" : nil
@@ -197,7 +194,7 @@ final class MessageReceiver {
 
             self.serverConnector.registerMessageListenerDelegate(delegate: messageListener!)
 
-            if let error = self.serverConnector.reflectMessage(dropDevice) as? Error {
+            if let error = self.serverConnector.reflectMessage(dropDevice) {
                 throw error
             }
 

@@ -41,10 +41,11 @@ class ConversationExporter: NSObject, PasswordCallback {
     private var entityManager: EntityManager
     private var withMedia: Bool
     private var cancelled = false
-    private var viewController: UIViewController?
+    private weak var viewController: UIViewController?
     private var emailSubject = ""
     private var timeString: String?
     private var zipFileContainer: ZipFileContainer?
+    private var passwordTrigger: CreatePasswordTrigger?
     
     private lazy var displayName: String = {
         var displayName = ""
@@ -95,6 +96,7 @@ class ConversationExporter: NSObject, PasswordCallback {
     func exportConversation() {
         emailSubject = String.localizedStringWithFormat(
             #localize("conversation_log_subject"),
+            TargetManager.appName,
             displayName
         )
         ZipFileContainer.cleanFiles()
@@ -208,7 +210,10 @@ extension ConversationExporter {
             do {
                 zipURL = try self.createZipFiles()
             }
-            catch CreateZipError.notEnoughStorage(storageNeeded: _) {
+            catch let CreateZipError.notEnoughStorage(storageNeeded: storage) {
+                DDLogError(
+                    "[Conversation Export] Not enough storage to export conversation. Storage needed: \(storage)."
+                )
                 let (success, totalStorageNeeded) = self.checkStorageNecessary()
                 if success {
                     DispatchQueue.main.async {
@@ -219,6 +224,8 @@ extension ConversationExporter {
                 }
             }
             catch {
+                DDLogError("[Conversation Export] Export failed: \(error)")
+                
                 if !self.cancelled {
                     DispatchQueue.main.async {
                         self.showGeneralAlert(errorCode: 0)
@@ -294,6 +301,7 @@ extension ConversationExporter {
     private func addMediaBatch(with messageFetcher: MessageFetcher, from: Int, to: Int) -> Bool {
         let messages = messageFetcher.messages(at: from, count: to - from)
         guard !messages.isEmpty else {
+            DDLogError("[Conversation Export] Media batch empty.")
             return false
         }
        
@@ -306,6 +314,7 @@ extension ConversationExporter {
                 }
                 
                 if !success {
+                    DDLogError("[Conversation Export] Add media for message \(message.id) failed.")
                     return false
                 }
                 
@@ -316,19 +325,23 @@ extension ConversationExporter {
         return success
     }
     
-    private func addMessage(message: BaseMessage) -> Bool {
+    private func addMessage(message: BaseMessageEntity) -> Bool {
         log.append(getMessageFrom(baseMessage: message))
+        
         if withMedia, let blobDataMessage = message as? BlobData, let blobData = blobDataMessage.blobData {
             let storageNecessary = Int64(blobData.count)
             if !enoughFreeStorage(toStore: storageNecessary) {
+                DDLogError("[Conversation Export] Not enough space to store media of message.")
                 return false
             }
             
             if !(zipFileContainer!.addMediaData(mediaData: blobDataMessage)) {
                 // Writing the file has failed
+                DDLogError("[Conversation Export] Writing of media data failed.")
                 return false
             }
         }
+        // We refresh to free memory
         entityManager.refresh(message, mergeChanges: true)
         return true
     }
@@ -363,6 +376,7 @@ extension ConversationExporter {
                 to: min(countTotal, i + strideInc)
             )
             if !success {
+                DDLogError("[Conversation Export] Media export unsuccessful.")
                 return false
             }
         }
@@ -408,7 +422,7 @@ extension ConversationExporter {
         return (true, totalStorageNecessary)
     }
     
-    private func getMessageFrom(baseMessage: BaseMessage) -> String {
+    private func getMessageFrom(baseMessage: BaseMessageEntity) -> String {
         var log = ""
         if baseMessage.isOwnMessage {
             log.append(">>> ")
@@ -436,7 +450,7 @@ extension ConversationExporter {
             if let displayName = quoteMessage.sender?.displayName {
                 log.append("\(displayName): ")
             }
-            else if let isOwn = quoteMessage.isOwn, !isOwn.boolValue, let contact = quoteMessage.conversation?.contact {
+            else if !quoteMessage.isOwn.boolValue, let contact = quoteMessage.conversation.contact {
                 log.append("\(contact.displayName): ")
             }
             else {
@@ -459,13 +473,13 @@ extension ConversationExporter {
 // MARK: - UI Elements
 
 extension ConversationExporter {
-    func passwordResult(_ password: String!, from _: UIViewController!) {
+    func passwordResult(_ password: String, from _: UIViewController) {
         self.password = password
         MBProgressHUD.showAdded(to: (viewController!.view)!, animated: true)
-        
-        viewController!.dismiss(animated: true, completion: ({
+        passwordTrigger?.passwordCallback = nil
+        viewController?.dismiss(animated: true) {
             self.createExport()
-        }))
+        }
     }
     
     /// Shows an alert with an error code
@@ -500,7 +514,7 @@ extension ConversationExporter {
     
     /// Presents the password request UI
     func requestPassword() {
-        let passwordTrigger = CreatePasswordTrigger(on: viewController)
+        passwordTrigger = CreatePasswordTrigger(on: viewController)
         passwordTrigger?.passwordAdditionalText = #localize("password_description_export")
         passwordTrigger?.passwordCallback = self
         
@@ -548,8 +562,7 @@ extension ConversationExporter {
     func cancelProgressHud() {
         removeCurrentHUD()
         MBProgressHUD.showAdded(to: viewController!.view, animated: true)
-        MBProgressHUD.forView(viewController!.view)?.label.text = BundleUtil
-            .localizedString(forKey: "cancelling_export")
+        MBProgressHUD.forView(viewController!.view)?.label.text = #localize("cancelling_export")
     }
     
     func initProgress(totalWork: Int64) {

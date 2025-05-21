@@ -25,7 +25,7 @@ import Foundation
 // MARK: - Appearance
 extension Colors {
     class func setupAppearance() {
-                
+        
         // MARK: Window
         update(window: UIWindow.appearance())
         
@@ -56,15 +56,12 @@ extension Colors {
         // MARK: UITextView
         UITextView.appearance().textColor = .label
         UITextView.appearance().tintColor = .primary
-        UITextView.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).textColor = Colors.white
+        UITextView.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).textColor = .white
         
         // MARK: TextField
         UITextField.appearance().textColor = .label
-        UITextField.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).textColor = Colors.white
+        UITextField.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).textColor = .white
         UITextField.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).keyboardAppearance = .dark
-                
-        // MARK: UISwitch
-        update(switchAppearance: UISwitch.appearance())
         
         // MARK: UIBarButtonItem
         UIBarButtonItem.appearance().tintColor = .primary
@@ -76,6 +73,8 @@ extension Colors {
                
         // MARK: UIActivityIndicatorView
         UIActivityIndicatorView.appearance().color = .label
+        
+        UISwitch.appearance().onTintColor = .primary
     }
 }
 
@@ -92,7 +91,7 @@ extension Colors {
             
             textField.textColor = .label
             textField.tintColor = .primary
-            
+
             if let placeholder = textField.attributedPlaceholder {
                 let p = NSMutableAttributedString(attributedString: placeholder)
                 p.addAttribute(
@@ -163,7 +162,6 @@ extension Colors {
     }
             
     @objc public class func update(navigationBar: UINavigationBar) {
-        navigationBar.tintColor = .primary
         navigationBar.barTintColor = colorForBarTint()
 
         navigationBar.standardAppearance = defaultNavigationBarAppearance()
@@ -171,7 +169,6 @@ extension Colors {
     }
         
     @objc public class func update(tabBar: UITabBar) {
-        tabBar.tintColor = .primary
         tabBar.isTranslucent = true
         tabBar.isOpaque = false
 
@@ -188,12 +185,10 @@ extension Colors {
     }
     
     @objc public class func update(toolBar: UIToolbar) {
-        toolBar.tintColor = .primary
         toolBar.barTintColor = Colors.backgroundToolbar
     }
     
     @objc public class func update(window: UIWindow) {
-        window.tintColor = .primary
         
         if !UserSettings.shared().useSystemTheme, window.overrideUserInterfaceStyle == .unspecified {
             window.overrideUserInterfaceStyle = theme == .dark ? .dark : .light

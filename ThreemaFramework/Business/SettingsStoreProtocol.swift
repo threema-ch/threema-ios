@@ -66,7 +66,6 @@ public protocol SettingsStoreProtocol {
 
     // Advanced
     var enableIPv6: Bool { get set }
-    var enableProximityMonitoring: Bool { get set }
     var validationLogging: Bool { get set }
     var sentryAppDevice: String? { get set }
 }

@@ -19,8 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "Ballot.h"
 #import "ThemedTableViewController.h"
+@class BallotEntity;
 
 @interface BallotCreateDetailViewController : ThemedTableViewController
 
@@ -33,7 +33,7 @@
 @property (weak, nonatomic) IBOutlet UISwitch *multipleChoiceSwitch;
 
 
-@property Ballot *ballot;
+@property BallotEntity *ballot;
 @property EntityManager *entityManager;
 
 @end

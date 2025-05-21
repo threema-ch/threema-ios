@@ -140,7 +140,7 @@ class MessageDecoderTests: XCTestCase {
 
             let expect = expectation(description: "Decode and create ballot")
 
-            var ballotMessage: BallotMessage?
+            var ballotMessage: BallotMessageEntity?
             ballotMessageDecoder!.decodeCreateBallot(
                 fromBox: boxBallotCreateMessage,
                 sender: nil,
@@ -207,7 +207,7 @@ class MessageDecoderTests: XCTestCase {
 
             let expect = expectation(description: "Decode and create ballot")
 
-            var ballotMessage: BallotMessage?
+            var ballotMessage: BallotMessageEntity?
             ballotMessageDecoder!.decodeCreateBallot(
                 fromBox: boxBallotCreateMessage,
                 sender: nil,
@@ -306,7 +306,7 @@ class MessageDecoderTests: XCTestCase {
 
         let expectInitial = expectation(description: "Decode and create initial ballot")
 
-        var ballotInitialMessage: BallotMessage?
+        var ballotInitialMessage: BallotMessageEntity?
         ballotMessageDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateInitialMessage,
             sender: nil,
@@ -325,8 +325,8 @@ class MessageDecoderTests: XCTestCase {
 
         // Check Initial Choices exist
         let initialChoicesSet = (ballotInitialMessage?.ballot?.choices!)! as NSSet
-        let initialChoicesArray = initialChoicesSet.allObjects as! [BallotChoice]
-        let initialChoicesSorted = initialChoicesArray.sorted { $0.orderPosition.intValue <= $1.orderPosition.intValue
+        let initialChoicesArray = initialChoicesSet.allObjects as! [BallotChoiceEntity]
+        let initialChoicesSorted = initialChoicesArray.sorted { $0.orderPosition!.intValue <= $1.orderPosition!.intValue
         }
 
         // Most Voted
@@ -368,8 +368,8 @@ class MessageDecoderTests: XCTestCase {
 
         // Check Results Message Overrides Initial (Local) Message
         let resultChoicesSet = (ballotInitialMessage?.ballot?.choices!)! as NSSet
-        let resultChoicesArray = resultChoicesSet.allObjects as! [BallotChoice]
-        let resultChoicesSorted = resultChoicesArray.sorted { $0.orderPosition.intValue <= $1.orderPosition.intValue }
+        let resultChoicesArray = resultChoicesSet.allObjects as! [BallotChoiceEntity]
+        let resultChoicesSorted = resultChoicesArray.sorted { $0.orderPosition!.intValue <= $1.orderPosition!.intValue }
 
         // Most Voted
         let resultChoice1 = resultChoicesSorted.first!
@@ -386,7 +386,7 @@ class MessageDecoderTests: XCTestCase {
         
         let databasePreparer = DatabasePreparer(context: mainCnx)
         databasePreparer.save {
-            contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)
+            contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO")
             
             conversation = databasePreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
@@ -981,10 +981,10 @@ class MessageDecoderTests: XCTestCase {
         return msg
     }
     
-    private func checkBallotResult(ballotMessage: BallotMessage?, result: [Any]) {
+    private func checkBallotResult(ballotMessage: BallotMessageEntity?, result: [Any]) {
         let allObjects = ((ballotMessage?.ballot?.choices)! as NSSet).allObjects
-        let choice1 = allObjects.first as! BallotChoice
-        let choice2 = allObjects.last as! BallotChoice
+        let choice1 = allObjects.first as! BallotChoiceEntity
+        let choice2 = allObjects.last as! BallotChoiceEntity
         
         if choice1.orderPosition == 0 {
             XCTAssertEqual(choice1.name, result[0] as? String)

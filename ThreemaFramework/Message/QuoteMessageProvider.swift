@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 /// Provides the quoted message
-public protocol QuoteMessageProvider: BaseMessage {
+public protocol QuoteMessageProvider: BaseMessageEntity {
     /// `QuotedMessage` if it exists, `nil` otherwise
     var quoteMessage: QuoteMessage? { get }
 }

@@ -42,57 +42,79 @@ struct RevokeView: View {
                         .bold()
                         .font(.title2)
                     
-                    GroupBox(
-                        label: Label(
-                            #localize("my_profile_revoke_info_delete"),
-                            systemImage: "trash.circle.fill"
-                        ),
-                        content: {
-                            VStack(alignment: .leading) {
-                                BulletText(string: #localize("my_profile_delete_bullet_id"))
-                                BulletText(string: #localize("my_profile_delete_bullet_safe"))
-                                BulletText(string: #localize("my_profile_delete_bullet_linked"))
-                            }
-                            .padding(.leading, 24.0)
-                            .padding(.top, 1)
-                            
-                            VStack(alignment: .leading) {
-                                Text(
-                                    String
-                                        .localizedStringWithFormat(
-                                            #localize("my_profile_revoke_identity_view_enter_id"),
-                                            identity
-                                        )
-                                )
-                                
-                                TextField(#localize("my_profile_revoke_identity_view_placeholder"), text: $enteredText)
-                                    .foregroundStyle(textFieldColor)
-                                    .textFieldStyle(.roundedBorder)
-                                    .textCase(.uppercase)
-                                    .textInputAutocapitalization(.characters)
-                                    .onChange(of: enteredText) { newValue in
-                                        // Workaround: TextField has the wrong color
-                                        textFieldColor = .white
-                                        textIsSameAsID = newValue == identity
-                                    }
-                            }
-                            .padding(.top)
+                    GroupBox {
+                        VStack(alignment: .leading) {
+                            BulletText(string: String.localizedStringWithFormat(
+                                #localize("my_profile_delete_bullet_id"),
+                                TargetManager.localizedAppName
+                            ))
+                            BulletText(string: String.localizedStringWithFormat(
+                                #localize("my_profile_delete_bullet_safe"),
+                                TargetManager.localizedAppName
+                            ))
+                            BulletText(string: #localize("my_profile_delete_bullet_linked"))
                         }
-                    )
+                        .padding(.leading, 24.0)
+                        .padding(.top, 1)
+                        
+                        VStack(alignment: .leading) {
+                            Text(
+                                String
+                                    .localizedStringWithFormat(
+                                        #localize("my_profile_revoke_identity_view_enter_id"),
+                                        TargetManager.localizedAppName,
+                                        identity
+                                    )
+                            )
+                            
+                            TextField(
+                                String
+                                    .localizedStringWithFormat(
+                                        #localize("my_profile_revoke_identity_view_placeholder"),
+                                        TargetManager.localizedAppName
+                                    ),
+                                text: $enteredText
+                            )
+                            .foregroundStyle(textFieldColor)
+                            .textFieldStyle(.roundedBorder)
+                            .textCase(.uppercase)
+                            .textInputAutocapitalization(.characters)
+                            .onChange(of: enteredText) { newValue in
+                                // Workaround: TextField has the wrong color
+                                textFieldColor = .white
+                                textIsSameAsID = newValue == identity
+                            }
+                        }
+                        .padding(.top)
+                    } label: {
+                        Label(
+                            String.localizedStringWithFormat(
+                                #localize("my_profile_revoke_info_delete"),
+                                TargetManager.appName,
+                                TargetManager.appName
+                            ),
+                            systemImage: "trash.circle.fill"
+                        )
+                    }
                     .groupBoxStyle(.info)
                     
-                    GroupBox(label: EmptyView(), content: {
+                    GroupBox {
                         Label {
-                            Text(#localize("my_profile_delete_info_revoke"))
-                                .foregroundColor(textIsSameAsID ? Colors.red.color : Colors.white.color)
+                            Text(String.localizedStringWithFormat(
+                                #localize("my_profile_delete_info_revoke"),
+                                TargetManager.localizedAppName
+                            ))
+                            .foregroundColor(textIsSameAsID ? .red : .white)
                         } icon: {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(
-                                    Colors.white.color,
-                                    textIsSameAsID ? Colors.red.color : Colors.orange.color
+                                    .white,
+                                    textIsSameAsID ? .red : .orange
                                 )
                         }
-                    })
+                    } label: {
+                        EmptyView()
+                    }
                     .groupBoxStyle(.info)
                     
                     Spacer()

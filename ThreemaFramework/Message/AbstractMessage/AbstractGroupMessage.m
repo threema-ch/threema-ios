@@ -29,7 +29,6 @@
 #import "GroupFileMessage.h"
 #import "BallotMessageDecoder.h"
 #import "FileMessageDecoder.h"
-#import "Ballot.h"
 #import "QuoteUtil.h"
 #import "TextStyleUtils.h"
 #import "ThreemaUtilityObjC.h"
@@ -80,7 +79,7 @@
         body = [NSString stringWithFormat:@"%@ (%@)", [BundleUtil localizedStringForKey:@"file_message_voice"], [ThreemaUtilityObjC timeStringForSeconds:((GroupAudioMessage *)self).duration]];
     }
     else if ([self isKindOfClass:[GroupBallotCreateMessage class]]) {
-        BOOL closed = [BallotMessageDecoder decodeNotificationCreateBallotStateFromBox:(BoxBallotCreateMessage *)self].integerValue == kBallotStateClosed;
+        BOOL closed = [BallotMessageDecoder decodeNotificationCreateBallotStateFromBox:(BoxBallotCreateMessage *)self].intValue == BallotStateClosed;
         NSString *ballotTitle = [BallotMessageDecoder decodeCreateBallotTitleFromBox:(BoxBallotCreateMessage *)self];
         if (closed) {
             body = [BundleUtil localizedStringForKey:@"new_ballot_closed_message"];
@@ -124,7 +123,11 @@
 #pragma mark - LoggingDescriptionProtocol
 
 - (NSString * _Nonnull)loggingDescription {
-    return [NSString stringWithFormat:@"(type: %@; id: %@; groupIdentity: id: %@ creator: %@)", [MediatorMessageProtocol getTypeDescriptionWithType:self.type], [NSString stringWithHexData:self.messageId], [NSString stringWithHexData:groupId], groupCreator];
+    return [NSString stringWithFormat:@"(type: %@; id: %@; groupIdentity: id: %@ creator: %@)",
+            [MediatorMessageProtocol getTypeDescriptionWithType:self.type],
+            [NSString stringWithHexData:self.messageId],
+            [NSString stringWithHexData:groupId],
+            groupCreator];
 }
 
 #pragma mark - NSSecureCoding

@@ -70,7 +70,7 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
     
     /// Run default action depending on the provided message
     /// - Parameter message: Message to run default action for
-    func run(for message: BaseMessage, customDefaultAction: (() -> Void)? = nil) {
+    func run(for message: BaseMessageEntity, customDefaultAction: (() -> Void)? = nil) {
         switch message {
         
         case let fileMessageProvider as FileMessageProvider:
@@ -113,7 +113,7 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         case let locationMessage as LocationMessageEntity:
             showLocationDetails(locationMessage: locationMessage)
         
-        case let ballotMessage as BallotMessage:
+        case let ballotMessage as BallotMessageEntity:
             showBallot(ballotMessage: ballotMessage)
         
         case let systemMessage as SystemMessageEntity:
@@ -169,13 +169,13 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
         chatViewController?.present(modalNavController, animated: true)
     }
     
-    private func showBallot(ballotMessage: BallotMessage) {
+    private func showBallot(ballotMessage: BallotMessageEntity) {
         // Opens the ballot of a ballot message in a modal
         entityManager.performBlock {
             if let ballot = ballotMessage.ballot,
-               let fetchedBallot = self.entityManager.entityFetcher.ballot(for: ballot.id) {
+               let fetchedBallot = self.entityManager.entityFetcher.ballotEntity(for: ballot.id) {
                 BallotDispatcher.showViewController(
-                    for: fetchedBallot,
+                    forBallot: fetchedBallot,
                     on: self.chatViewController?.navigationController
                 )
             }
@@ -185,7 +185,7 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
     private func startVoIPCall(callMessage: SystemMessageEntity) {
         // Starts a VoIP Call if contact supports it
         if UserSettings.shared()?.enableThreemaCall == true,
-           let identity = callMessage.conversation?.contact?.identity {
+           let identity = callMessage.conversation.contact?.identity {
             let identities = Set<String>([identity])
             FeatureMask.check(identities: identities, for: Int(FEATURE_MASK_VOIP)) { unsupportedContacts in
                 if unsupportedContacts.isEmpty == true {

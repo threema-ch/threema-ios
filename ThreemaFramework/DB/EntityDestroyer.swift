@@ -69,7 +69,7 @@ import Foundation
     }
     
     func deleteMediasOf(
-        messageType: (some BaseMessage).Type,
+        messageType: (some BaseMessageEntity).Type,
         olderThan: Date?,
         conversation: ConversationEntity? = nil
     ) -> Int? {
@@ -114,7 +114,7 @@ import Foundation
                 }
             }
             
-            guard let messages = try objCnx.fetch(mediaMetaInfo.fetchMessages) as? [BaseMessage] else {
+            guard let messages = try objCnx.fetch(mediaMetaInfo.fetchMessages) as? [BaseMessageEntity] else {
                 return 0
             }
 
@@ -129,7 +129,7 @@ import Foundation
         return 0
     }
 
-    private func deleteMedias<T: BaseMessage>(of messages: [BaseMessage], messageType: T.Type) throws {
+    private func deleteMedias<T: BaseMessageEntity>(of messages: [BaseMessageEntity], messageType: T.Type) throws {
         guard messageType is AudioMessageEntity.Type ||
             messageType is FileMessageEntity.Type ||
             messageType is ImageMessageEntity.Type ||
@@ -165,7 +165,7 @@ import Foundation
                     do {
                         let object = try self.objCnx.existingObject(with: mediaID)
 
-                        if let message = object as? BaseMessage {
+                        if let message = object as? BaseMessageEntity {
                             nullifyConversationLastMessage(for: [message])
                         }
 
@@ -231,7 +231,7 @@ import Foundation
 
     /// Delete content of given message, message metadata remains.
     /// - Parameter message: Message to its content
-    func deleteMessageContent(of message: BaseMessage) throws {
+    func deleteMessageContent(of message: BaseMessageEntity) throws {
         guard message.typeSupportsRemoteDeletion else {
             return
         }
@@ -310,7 +310,7 @@ import Foundation
         }
     }
 
-    private func deleteThumbnail(for message: BaseMessage) {
+    private func deleteThumbnail(for message: BaseMessageEntity) {
         guard message is FileMessageEntity || message is ImageMessageEntity || message is VideoMessageEntity else {
             return
         }
@@ -429,13 +429,13 @@ import Foundation
                 conversations,
                 olderThan as NSDate
             )
-            let messages = (try? self.objCnx.fetch(fetchMessages)) as? [BaseMessage] ?? []
+            let messages = (try? self.objCnx.fetch(fetchMessages)) as? [BaseMessageEntity] ?? []
             // Currently we want to keep open Ballots excluded from deletion
             let filtered = messages.filter { message in
-                guard let ballotMessage = message as? BallotMessage else {
+                guard let ballotMessage = message as? BallotMessageEntity else {
                     return true
                 }
-                return ballotMessage.ballot?.isClosed() ?? false
+                return ballotMessage.ballot?.isClosed ?? false
             }
             return filtered.count
         }
@@ -463,7 +463,7 @@ import Foundation
         return deletedMessages
     }
 
-    @objc func delete(ballot: Ballot) {
+    @objc func delete(ballot: BallotEntity) {
         delete(entity: ballot)
     }
     
@@ -471,11 +471,11 @@ import Foundation
         delete(entity: reaction)
     }
     
-    @objc func delete(ballotChoice: BallotChoice) {
+    @objc func delete(ballotChoice: BallotChoiceEntity) {
         delete(entity: ballotChoice)
     }
 
-    @objc public func delete(baseMessage: BaseMessage) {
+    @objc public func delete(baseMessage: BaseMessageEntity) {
         delete(entity: baseMessage)
     }
 
@@ -538,11 +538,7 @@ import Foundation
         else if let contact = object as? ContactEntity {
             // Remove all conversations and messages for this contact
             if let conversations = contact.conversations {
-                for genericConversation in conversations {
-                    guard let conversation = genericConversation as? ConversationEntity else {
-                        fatalError("Can't delete a conversation of a contact, because it's not a conversation object")
-                        continue
-                    }
+                for conversation in conversations {
                     delete(entity: conversation)
                 }
             }
@@ -563,7 +559,7 @@ import Foundation
 
         deleteExternalFiles(list: deleteFilenames)
 
-        if let message = object as? BaseMessage {
+        if let message = object as? BaseMessageEntity {
             nullifyConversationLastMessage(for: [message])
         }
         
@@ -731,11 +727,11 @@ import Foundation
         do {
             try Task.checkCancellation()
 
-            let messages = try (objCnx.fetch(fetchRequest)) as? [BaseMessage] ?? []
+            let messages = try (objCnx.fetch(fetchRequest)) as? [BaseMessageEntity] ?? []
             
             // Currently we want to keep open ballots and starred messages excluded from deletion
             let filtered = messages.filter { message in
-                if let ballotMessage = message as? BallotMessage, let isClosed = ballotMessage.ballot?.isClosed(),
+                if let ballotMessage = message as? BallotMessageEntity, let isClosed = ballotMessage.ballot?.isClosed,
                    !isClosed {
                     return false
                 }
@@ -970,7 +966,7 @@ import Foundation
         return 0
     }
 
-    private func nullifyConversationLastMessage(for messages: [BaseMessage]) {
+    private func nullifyConversationLastMessage(for messages: [BaseMessageEntity]) {
         guard !messages.isEmpty else {
             return
         }

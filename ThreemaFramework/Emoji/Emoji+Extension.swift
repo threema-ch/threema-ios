@@ -90,11 +90,8 @@ extension Emoji {
     }
     
     public var isAvailable: Bool {
-        // All pre iOS 15 are availabe due to our minimum target
-        if version < 14.0 {
-            true
-        }
-        else if version == 14.0, #available(iOS 15.4, *) {
+        // All pre iOS 16 are availabe due to our minimum target
+        if version < 15.0 {
             true
         }
         else if version == 15.0, #available(iOS 16.4, *) {

@@ -34,83 +34,104 @@ struct DeleteRevokeSuccessView: View {
                         .font(.title2)
                     
                     if successViewType == .delete {
-                        GroupBox(
-                            label: Label(
-                                #localize("my_profile_delete_identity_summary_view_removed_success"),
-                                systemImage: "checkmark.shield.fill"
-                            ),
-                            content: {
-                                VStack(alignment: .leading) {
-                                    Label {
-                                        Text(#localize("my_profile_delete_bullet_id"))
-                                    } icon: {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(Colors.green.color)
-                                    }
-                                    Label {
-                                        Text(#localize("my_profile_delete_bullet_chats"))
-                                    } icon: {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(Colors.green.color)
-                                    }
-                                    Label {
-                                        Text(#localize("my_profile_delete_bullet_picture"))
-                                    } icon: {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(Colors.green.color)
-                                    }
+                        GroupBox {
+                            VStack(alignment: .leading) {
+                                Label {
+                                    Text(String.localizedStringWithFormat(
+                                        #localize("my_profile_delete_bullet_id"),
+                                        TargetManager.localizedAppName
+                                    ))
+                                } icon: {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
                                 }
-                                .padding(.top, 1)
-                                .padding(.leading, 24.0)
-                                .padding(.bottom)
-                                
-                                Text(#localize("my_profile_delete_identity_summary_view_restart"))
+                                Label {
+                                    Text(#localize("my_profile_delete_bullet_chats"))
+                                } icon: {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                }
+                                Label {
+                                    Text(#localize("my_profile_delete_bullet_picture"))
+                                } icon: {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                }
                             }
-                        )
+                            .padding(.top, 1)
+                            .padding(.leading, 24.0)
+                            .padding(.bottom)
+                            
+                            Text(#localize("my_profile_delete_identity_summary_view_restart"))
+                        } label: {
+                            Label(
+                                String.localizedStringWithFormat(
+                                    #localize("my_profile_delete_identity_summary_view_removed_success"),
+                                    TargetManager.appName
+                                ),
+                                systemImage: "checkmark.shield.fill"
+                            )
+                        }
                         .groupBoxStyle(.info)
                     }
                     else {
-                        GroupBox(
-                            label: Label(
-                                #localize("my_profile_delete_identity_summary_view_removed_server_success"),
-                                systemImage: "checkmark.shield.fill"
-                            ),
-                            content: {
-                                VStack(alignment: .leading) {
-                                    Label {
-                                        Text(#localize("my_profile_delete_bullet_id"))
-                                    } icon: {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(Colors.green.color)
-                                    }
-                                    Label {
-                                        Text(#localize("my_profile_delete_bullet_safe"))
-                                    } icon: {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(Colors.green.color)
-                                    }
-                                    Label {
-                                        Text(#localize("my_profile_delete_bullet_linked"))
-                                    } icon: {
-                                        Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(Colors.green.color)
-                                    }
-                                }
-                                .padding(.top, 1.0)
-                                .padding(.leading, 24.0)
-                                
-                                Label {
-                                    Text(#localize("my_profile_delete_identity_summary_view_removed_threema_id"))
-                                } icon: {
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .foregroundStyle(Colors.white.color, Colors.red.color)
-                                }
-                                .padding(.vertical)
-                                
-                                Text(#localize("my_profile_delete_identity_summary_view_restart_new"))
-                            }
-                        )
                         
+                        GroupBox {
+                            VStack(alignment: .leading) {
+                                Label {
+                                    Text(String.localizedStringWithFormat(
+                                        #localize("my_profile_delete_bullet_id"),
+                                        TargetManager.localizedAppName
+                                    ))
+                                } icon: {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                }
+                                Label {
+                                    Text(String.localizedStringWithFormat(
+                                        #localize("my_profile_delete_bullet_safe"),
+                                        TargetManager.localizedAppName
+                                    ))
+                                } icon: {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                }
+                                Label {
+                                    Text(#localize("my_profile_delete_bullet_linked"))
+                                } icon: {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                }
+                            }
+                            .padding(.top, 1.0)
+                            .padding(.leading, 24.0)
+                            
+                            Label {
+                                Text(String.localizedStringWithFormat(
+                                    #localize("my_profile_delete_identity_summary_view_removed_threema_id"),
+                                    TargetManager.localizedAppName
+                                ))
+                            } icon: {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.white, .red)
+                            }
+                            .padding(.vertical)
+                            
+                            Text(String.localizedStringWithFormat(
+                                #localize("my_profile_delete_identity_summary_view_restart_new"),
+                                TargetManager.localizedAppName
+                            ))
+
+                        } label: {
+                            Label(
+                                String.localizedStringWithFormat(
+                                    #localize("my_profile_delete_identity_summary_view_removed_server_success"),
+                                    TargetManager.appName,
+                                    TargetManager.appName
+                                ),
+                                systemImage: "checkmark.shield.fill"
+                            )
+                        }
                         .groupBoxStyle(.info)
                     }
                     

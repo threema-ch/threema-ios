@@ -150,9 +150,7 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
                 let oldFeatureMask = contactEntity.featureMask
 
                 // Always update feature mask of local contact
-                contactEntity.featureMask = NSNumber(
-                    integerLiteral: featureMask.value
-                )
+                contactEntity.setFeatureMask(to: featureMask.value)
 
                 if !oldFeatureMask.isEqual(to: contactEntity.featureMask) {
                     mediatorSyncableContacts.updateFeatureMask(
@@ -255,7 +253,7 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
     ///   - mask: `Common_CspFeatureMaskFlag` to check receiver(s) for
     ///   - Returns: `true` if min. one receiver supports the mask, all unsupported contacts
     public static func check(
-        message: BaseMessage,
+        message: BaseMessageEntity,
         for mask: ThreemaProtocols.Common_CspFeatureMaskFlag
     ) -> (isSupported: Bool, unsupported: [Contact]) {
         guard let managedObjectContext = message.managedObjectContext else {

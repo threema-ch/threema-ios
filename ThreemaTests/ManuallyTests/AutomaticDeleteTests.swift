@@ -57,7 +57,7 @@ final class AutomaticDeleteTests: XCTestCase {
             let total = (option.days ?? 0)
             for index in 0..<total {
                 let calendar = Calendar.current
-                let date = calendar.date(byAdding: .day, value: -(index + 1), to: option.date ?? Date.currentDate)
+                let date = calendar.date(byAdding: .day, value: -(index + 1), to: option.date ?? Date.currentDate)!
                 let message = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)!
                 message.text = "\(index) - \(texts[index % texts.count])"
                 message.date = date
@@ -139,7 +139,7 @@ final class AutomaticDeleteTests: XCTestCase {
             let contactStoreExpectation = expectation(description: "Add contact to contact store")
             ContactStore.shared().addContact(
                 with: id,
-                verificationLevel: Int32(kVerificationLevelUnverified)
+                verificationLevel: Int32(ContactEntity.VerificationLevel.unverified.rawValue)
             ) { _, _ in
                 createdContacts.append(id)
                 contactStoreExpectation.fulfill()

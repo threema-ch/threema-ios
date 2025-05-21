@@ -33,7 +33,6 @@
 #import "MyIdentityStore.h"
 #import "PortraitNavigationController.h"
 #import "ThreemaUtilityObjC.h"
-#import "ContactEntity.h"
 #import "ContactsViewController.h"
 #import "ProtocolDefines.h"
 #import "PhoneNumberNormalizer.h"
@@ -61,7 +60,6 @@
 #import "MDMSetup.h"
 #import "NSString+Hex.h"
 
-#import "BaseMessage.h"
 #import "BoxBallotCreateMessage.h"
 #import "BallotMessageDecoder.h"
 #import "BoxImageMessage.h"
@@ -110,6 +108,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     DeviceLinking *deviceLinking;
     NSData *evaluatedPolicyDomainState;
     GroupCallUIHelper *groupCallUIHelper;
+    AppCoordinator *appCoordinator;
 }
 
 @synthesize window = _window;
@@ -294,7 +293,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     MBProgressHUD *progressHUD = [[MBProgressHUD alloc] initWithView:self.window];
     progressHUD.label.numberOfLines = 0;
-    progressHUD.label.text = [BundleUtil localizedStringForKey:@"updating_database"];
+    progressHUD.label.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"updating_database"], TargetManagerObjc.appName];
     progressHUD.mode = MBProgressHUDModeIndeterminate;
 
     [self.window addSubview:progressHUD];
@@ -363,7 +362,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
     if (databaseImported == false) {
         /* display spinner during migration */
-        progressHUD.label.text = [BundleUtil localizedStringForKey:@"updating_database"];
+        progressHUD.label.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"updating_database"], TargetManagerObjc.appName];
         progressHUD.mode = MBProgressHUDModeIndeterminate;
 
         [self.window addSubview:progressHUD];
@@ -568,7 +567,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
 
     if (hasPrivate) {
-        [UIAlertTemplate showAlertWithOwner:_window.rootViewController title:[BundleUtil localizedStringForKey:@"privateChat_alert_title"] message:[BundleUtil localizedStringForKey:@"privateChat_setup_alert_message"] titleOk:[BundleUtil localizedStringForKey:@"privateChat_code_alert_confirm"] actionOk:^(UIAlertAction * _Nonnull) {
+        [UIAlertTemplate showAlertWithOwner:_window.rootViewController title:[BundleUtil localizedStringForKey:@"privateChat_alert_title"] message: [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privateChat_setup_alert_message"], TargetManagerObjc.localizedAppName] titleOk:[BundleUtil localizedStringForKey:@"privateChat_code_alert_confirm"] actionOk:^(UIAlertAction * _Nonnull) {
             // No passcode is set, so we present it with the option to enable it
             JKLLockScreenViewController *vc = [[JKLLockScreenViewController alloc] initWithNibName:NSStringFromClass([JKLLockScreenViewController class]) bundle:[BundleUtil frameworkBundle]];
             vc.lockScreenMode = LockScreenModeNew;
@@ -604,19 +603,24 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             lockView = nil;
         }
         else if ([AppSetup isCompleted]) {
-            if (SYSTEM_IS_IPAD) {
-                SplitViewController *splitViewController = [[SplitViewController alloc] init];
-                [splitViewController setup];
-                self.window.rootViewController = splitViewController;
-            } else {
-                UIViewController *currentVC = self.window.rootViewController;
-                
-                if (![currentVC isKindOfClass:[MainTabBarController class]]) {
-                    if (currentVC != nil) {
-                        [currentVC dismissViewControllerAnimated:true completion:nil];
+            if (UserSettings.sharedUserSettings.newNavigationEnabled) {
+                appCoordinator = [[AppCoordinator alloc] initWithWindow:self.window];
+            }
+            else {
+                if (SYSTEM_IS_IPAD) {
+                    SplitViewController *splitViewController = [[SplitViewController alloc] init];
+                    [splitViewController setup];
+                    self.window.rootViewController = splitViewController;
+                } else {
+                    UIViewController *currentVC = self.window.rootViewController;
+                    
+                    if (![currentVC isKindOfClass:[MainTabBarController class]]) {
+                        if (currentVC != nil) {
+                            [currentVC dismissViewControllerAnimated:true completion:nil];
+                        }
+                        UIStoryboard *mainStoryboard = [AppDelegate getMainStoryboard];
+                        self.window.rootViewController = [mainStoryboard instantiateInitialViewController];
                     }
-                    UIStoryboard *mainStoryboard = [AppDelegate getMainStoryboard];
-                    self.window.rootViewController = [mainStoryboard instantiateInitialViewController];
                 }
             }
         }
@@ -1221,7 +1225,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      */
     DDLogNotice(@"AppState: applicationDidBecomeActive");
 
-    if (migrating) {
+    if (migrating || requiresMigration == RequiresMigrationError) {
         return;
     }
     if ([[KKPasscodeLock sharedLock] isPasscodeRequired] && isAppLocked) {
@@ -1335,7 +1339,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                     VoIPCallUserAction *action = [[VoIPCallUserAction alloc] initWithAction:ActionCall contactIdentity:contact.identity callID:nil completion:nil];
                     [[VoIPCallStateManager shared] processUserAction:action];
                 } else {
-                    [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:[BundleUtil localizedStringForKey:@"call_voip_not_supported_title"] message:[BundleUtil localizedStringForKey:@"call_voip_not_supported_text"] actionOk:nil];
+                    [UIAlertTemplate showAlertWithOwner:[self currentTopViewController] title:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"call_voip_not_supported_title"], TargetManagerObjc.localizedAppName] message:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"call_voip_not_supported_text"], TargetManagerObjc.localizedAppName] actionOk:nil];
                 }
             }];
         }
@@ -1557,7 +1561,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                     }
                     
                     evaluatedPolicyDomainState = evaluatePolicyStateData;
-                    [UIAlertTemplate showAlertWithOwner:_window.rootViewController title:title message:[BundleUtil localizedStringForKey:@"alert_biometrics_changed_message"] actionOk:^(UIAlertAction * _Nonnull) {
+                    [UIAlertTemplate showAlertWithOwner:_window.rootViewController title:title message:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"alert_biometrics_changed_message"], TargetManagerObjc.appName, TargetManagerObjc.appName] actionOk:^(UIAlertAction * _Nonnull) {
                         return;
                     }];
                 }

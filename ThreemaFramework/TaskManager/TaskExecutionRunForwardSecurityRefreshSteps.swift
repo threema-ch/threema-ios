@@ -101,7 +101,7 @@ final class TaskExecutionRunForwardSecurityRefreshSteps: TaskExecution, TaskExec
                 }
                 
                 //    1. If the `contact` does not support FS, abort these sub-steps.
-                guard contactEntity.isForwardSecurityAvailable() else {
+                guard contactEntity.isForwardSecurityAvailable else {
                     continue
                 }
                 

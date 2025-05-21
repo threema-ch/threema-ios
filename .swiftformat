@@ -8,6 +8,7 @@
 ## Vendored code
 --exclude DerivedData/**
 --exclude fastlane/**
+--exclude libthreemaSwift/Sources/libthreemaSwift/Generated/**
 --exclude NaClCrypto/**
 --exclude protobuf/**
 --exclude SaltyRTC/**

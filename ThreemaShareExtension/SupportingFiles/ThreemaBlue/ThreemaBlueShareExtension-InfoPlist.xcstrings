@@ -5,6 +5,12 @@
       "comment" : "Bundle display name",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema Blue"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -131,6 +137,12 @@
       "comment" : "Bundle name",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema Blue ShareExtension"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",

@@ -231,12 +231,12 @@ class EntityDestroyerTests: XCTestCase {
             return
         }
         
-        guard let conversations = fetchedContact.conversations as? Set<ConversationEntity> else {
+        guard let conversations = fetchedContact.conversations else {
             XCTFail()
             return
         }
         
-        guard let groupConversations = fetchedContact.groupConversations as? Set<ConversationEntity> else {
+        guard let groupConversations = fetchedContact.groupConversations else {
             XCTFail()
             return
         }
@@ -506,7 +506,7 @@ class EntityDestroyerTests: XCTestCase {
 
     func testDeleteMessagesAndNullifyLastMessage() throws {
         var conversation: ConversationEntity?
-        var lastMessage: BaseMessage?
+        var lastMessage: BaseMessageEntity?
 
         let dp = DatabasePreparer(context: objCnx)
         dp.save {
@@ -587,7 +587,7 @@ extension EntityDestroyerTests {
         
         XCTAssertEqual(refetchedContacts.count, totalContactsCount)
         
-        let allMessages = try! databaseMainCnx.main.fetch(fetchMessages) as! [BaseMessage]
+        let allMessages = try! databaseMainCnx.main.fetch(fetchMessages) as! [BaseMessageEntity]
         
         XCTAssertEqual(allMessages.count, totalMessagesCount)
         
@@ -610,30 +610,30 @@ extension EntityDestroyerTests {
         
         entityManager.performAndWaitSave {
             notDeletedContact = entityManager.entityCreator.contact()!
-            notDeletedContact.identity = "ECHOECH1"
-            notDeletedContact.verificationLevel = 0
+            notDeletedContact.setIdentity(to: "ECHOECH1")
+            notDeletedContact.contactVerificationLevel = .unverified
             notDeletedContact.publicNickname = "ECHOECH1"
-            notDeletedContact.isContactHidden = false
+            notDeletedContact.isHidden = false
             notDeletedContact.workContact = 0
             notDeletedContact.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }
         
         entityManager.performAndWaitSave {
             notDeletedContact2 = entityManager.entityCreator.contact()!
-            notDeletedContact2.identity = "ECHOECH2"
-            notDeletedContact2.verificationLevel = 0
+            notDeletedContact2.setIdentity(to: "ECHOECH2")
+            notDeletedContact2.contactVerificationLevel = .unverified
             notDeletedContact2.publicNickname = "ECHOECH2"
-            notDeletedContact2.isContactHidden = false
+            notDeletedContact2.isHidden = false
             notDeletedContact2.workContact = 0
             notDeletedContact2.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }
         
         entityManager.performAndWaitSave {
             notDeletedContact3 = entityManager.entityCreator.contact()!
-            notDeletedContact3.identity = "ECHOECH3"
-            notDeletedContact3.verificationLevel = 0
+            notDeletedContact3.setIdentity(to: "ECHOECH3")
+            notDeletedContact3.contactVerificationLevel = .unverified
             notDeletedContact3.publicNickname = "ECHOECH3"
-            notDeletedContact3.isContactHidden = false
+            notDeletedContact3.isHidden = false
             notDeletedContact3.workContact = 0
             notDeletedContact3.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }
@@ -647,10 +647,10 @@ extension EntityDestroyerTests {
         
         entityManager.performAndWaitSave {
             contact = entityManager.entityCreator.contact()!
-            contact.identity = identity
-            contact.verificationLevel = 0
+            contact.setIdentity(to: identity)
+            contact.contactVerificationLevel = .unverified
             contact.publicNickname = identity
-            contact.isContactHidden = false
+            contact.isHidden = false
             contact.workContact = 0
             contact.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }

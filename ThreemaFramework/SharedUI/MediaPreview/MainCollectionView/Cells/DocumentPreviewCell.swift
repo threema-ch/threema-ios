@@ -142,8 +142,7 @@ class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelegate {
     }
     
     func getDescription(for item: DocumentPreviewItem?) -> String {
-        (self.item?.type)! + " " + BundleUtil
-            .localizedString(forKey: "document") + " - " + (self.item?.fileSizeDescription)!
+        (self.item?.type)! + " " + #localize("document") + " - " + (self.item?.fileSizeDescription)!
     }
     
     func loadDocument(_ newItem: DocumentPreviewItem) {

@@ -39,7 +39,7 @@
 
 @implementation ImageMessageLoader
 
-- (NSData *)decryptData:(NSData *)data forMessage:(BaseMessage<BlobData> *)message {
+- (NSData *)decryptData:(NSData *)data forMessage:(BaseMessageEntity<BlobData> *)message {
     NSData *decryptedData = nil;
     
     @try {
@@ -67,7 +67,7 @@
     return decryptedData;
 }
 
-- (void)updateDBObject:(BaseMessage<BlobData> *)message with:(NSData *)data {
+- (void)updateDBObject:(BaseMessageEntity<BlobData> *)message with:(NSData *)data {
     if (![message isKindOfClass:ImageMessageEntity.class]) {
         return;
     }

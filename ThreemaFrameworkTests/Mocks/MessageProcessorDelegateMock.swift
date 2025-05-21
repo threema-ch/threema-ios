@@ -34,7 +34,7 @@ class MessageProcessorDelegateMock: NSObject, MessageProcessorDelegate {
         // no-op
     }
 
-    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessage) {
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessageEntity) {
         // no-op
     }
 

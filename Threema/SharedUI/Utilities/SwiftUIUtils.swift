@@ -55,7 +55,7 @@ extension View {
     func threemaNavigationBar(_ title: String) -> some View {
         ignoresSafeArea(.all)
             .navigationBarTitle(
-                title.localized,
+                title,
                 displayMode: .inline
             )
     }

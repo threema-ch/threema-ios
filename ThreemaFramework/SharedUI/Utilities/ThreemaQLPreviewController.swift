@@ -56,14 +56,14 @@ public class ThreemaQLPreviewController: QLPreviewController {
         
     var observations: [NSKeyValueObservation] = []
     
-    var mdmSetup: MDMSetup! = MDMSetup(setup: false)
+    var mdmSetup = MDMSetup(setup: false)
     
     var disableShareButton = false
     
     override public func viewDidLoad() {
         super.viewDidLoad()
         
-        disableShareButton = mdmSetup.disableShareMedia()
+        disableShareButton = mdmSetup?.disableShareMedia() ?? false
         
         if disableShareButton {
             navigationItem.setRightBarButton(UIBarButtonItem(), animated: false)
@@ -80,12 +80,10 @@ public class ThreemaQLPreviewController: QLPreviewController {
     }
     
     private func removeToolbarItems() {
-        if mdmSetup.disableShareMedia() {
-            if let navigationToolbar = navigationController?.toolbar {
-                navigationToolbar.isHidden = true
-                let observation = navigationToolbar.observe(\.isHidden, changeHandler: observeNavigationToolbarHidden)
-                observations.append(observation)
-            }
+        if mdmSetup?.disableShareMedia() ?? false, let navigationToolbar = navigationController?.toolbar {
+            navigationToolbar.isHidden = true
+            let observation = navigationToolbar.observe(\.isHidden, changeHandler: observeNavigationToolbarHidden)
+            observations.append(observation)
         }
     }
     

@@ -142,14 +142,14 @@
     _nickNameLabel.text = [BundleUtil localizedStringForKey:@"id_completed_nickname"];
     _linkedToLabel.text = [BundleUtil localizedStringForKey:@"id_completed_linked_to"];
     _syncContactsLabel.text = [BundleUtil localizedStringForKey:@"id_completed_sync_contacts"];
-    _enableSafeLabel.text = [BundleUtil localizedStringForKey:@"safe_setup_backup_title"];
+    _enableSafeLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"safe_setup_backup_title"], TargetManagerObjc.localizedAppName];
     
     [_finishButton setTitle:[BundleUtil localizedStringForKey:@"finish"] forState:UIControlStateNormal];
     _finishButton.accessibilityIdentifier = @"SetupFinishButton";
 
     self.scrollView.contentSize = self.mainContentView.frame.size;
     
-    _finishButton.backgroundColor = UIColor.primary;
+    _finishButton.backgroundColor = UIColor.tintColor;
     [_finishButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
     
     if ([AppDelegate hasBottomSafeAreaInsets]) {
@@ -316,7 +316,7 @@
     }
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self showSafeProgress:_enableSafeView progressValue:_enableSafeValue progressText:[BundleUtil localizedStringForKey:@"safe_preparing"]];
+        [self showSafeProgress:_enableSafeView progressValue:_enableSafeValue progressText:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"safe_preparing"], TargetManagerObjc.localizedAppName]];
     });
     
     dispatch_sync(dispatch_get_main_queue(), ^{

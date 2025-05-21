@@ -204,7 +204,10 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
             size: configuredSize,
             color: .secondaryLabel.resolvedColor(with: traitCollection)
         )
-        let progressConfig = waveformConfig(size: configuredSize, color: .primary.resolvedColor(with: traitCollection))
+        let progressConfig = waveformConfig(
+            size: configuredSize,
+            color: .tintColor.resolvedColor(with: traitCollection)
+        )
         let analyzer = WaveformAnalyzer()
         let sampleCount = Int(completeWaveformConfig.size.width * completeWaveformConfig.scale)
         let waveformDrawer = DSWaveformImage.WaveformImageDrawer()
@@ -223,7 +226,6 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         
         guard let image, let progressImage else {
             let msg = "Could not create waveform from url"
-            assertionFailure(msg)
             DDLogError("\(msg)")
             return
         }

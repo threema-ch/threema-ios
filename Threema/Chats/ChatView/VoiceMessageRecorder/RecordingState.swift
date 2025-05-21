@@ -22,19 +22,13 @@ import Foundation
 
 /// States of a recording session.
 enum RecordingState {
+   
     /// No recording is currently active.
-    case none
+    case ready
     
     // MARK: - Recording
-    
-    /// Recording process is starting
-    case recordingStarting
-    /// Recording is currently in progress.
+
     case recording
-    
-    /// Recording process is stopping
-    case recordingStopping
-    /// Recording has been stopped.
     case stopped
     
     // MARK: - Playback
@@ -45,17 +39,12 @@ enum RecordingState {
     case paused
     
     /// Indicating whether the recording has been stopped, either explicitly or by pausing or ending playback.
-    var isStopped: Bool {
+    var recordingStopped: Bool {
         switch self {
-        case .paused, .playing, .recordingStopping, .stopped:
+        case .paused, .playing, .stopped:
             true
         default:
             false
         }
-    }
-    
-    /// Indicating whether the recording is starting or ongoing
-    var isRecording: Bool {
-        self == .recordingStarting || self == .recording
     }
 }

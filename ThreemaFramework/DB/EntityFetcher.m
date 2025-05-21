@@ -22,9 +22,7 @@
 #import "DatabaseManager.h"
 #import "AbstractGroupMessage.h"
 #import "MyIdentityStore.h"
-#import "ContactEntity.h"
 #import "UserSettings.h"
-#import "BaseMessage.h"
 #import "BundleUtil.h"
 #import "LicenseStore.h"
 #import "NonceHasher.h"
@@ -85,15 +83,15 @@
     return managedObject;
 }
 
-- (BaseMessage *)ownMessageWithId:(NSData *)messageId conversationEntity:(ConversationEntity *)conversation {
+- (BaseMessageEntity *)ownMessageWithId:(NSData *)messageId conversationEntity:(ConversationEntity *)conversation {
     return [self singleEntityNamed:@"Message" withPredicate: @"id == %@ AND conversation == %@ AND isOwn == YES", messageId, conversation];
 }
 
-- (BaseMessage *)messageWithId:(NSData *)messageId conversationEntity:(ConversationEntity *)conversation {
+- (BaseMessageEntity *)messageWithId:(NSData *)messageId conversationEntity:(ConversationEntity *)conversation {
     return [self singleEntityNamed:@"Message" withPredicate: @"id == %@ AND conversation == %@", messageId, conversation];
 }
 
-- (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessage *)message inConversationEntity:(ConversationEntity *)conversation {
+- (NSArray *)quoteMessagesContaining:(NSString *)searchText message:(BaseMessageEntity *)message inConversationEntity:(ConversationEntity *)conversation {
     NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"date" ascending:NO]];
     NSArray *textMessages = [self entitiesNamed:@"TextMessage" fetchLimit:0 sortedBy:sortDescriptors withPredicate: @"text contains[cd] %@ AND conversation == %@ && date < %@", searchText, conversation, message.date];
     NSArray *imageMessages = [self entitiesNamed:@"ImageMessage" fetchLimit:0 sortedBy:sortDescriptors withPredicate: @"conversation == %@ && date < %@", conversation, message.date];
@@ -400,7 +398,7 @@
 
     // Prepare predicates
     
-    NSPredicate *validContactsOnly = [NSPredicate predicateWithFormat:@"state != %d", kStateInvalid];
+    NSPredicate *validContactsOnly = [NSPredicate predicateWithFormat:@"state != %d", ContactStateInvalid];
     
     NSPredicate *contactsWithActiveOneToOneConversation = [NSPredicate predicateWithFormat:@"SUBQUERY(conversations, $conversation, $conversation IN %@).@count > 0", nonGroupConversationsWithLastUpdate];
     NSPredicate *contactsWithActiveGroupConversation = [NSPredicate predicateWithFormat:@"SUBQUERY(groupConversations, $conversation, $conversation IN %@).@count > 0", allActiveGroupConversations];
@@ -533,7 +531,7 @@
     }
     
     if ([UserSettings sharedUserSettings].hideStaleContacts) {
-        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"state == %d", kStateActive];
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"state == %d", ContactStateActive];
         [predicates addObject:predicate];
     }
     
@@ -740,7 +738,7 @@
     return contact.displayName;
 }
 
-- (Ballot *)ballotForBallotId:(NSData *)ballotId {
+- (BallotEntity *)ballotEntityForBallotId:(NSData *)ballotId {
     return [self singleEntityNamed:@"Ballot" withPredicate: @"id == %@", ballotId];
 }
 
@@ -749,7 +747,7 @@
 }
 
 - (NSInteger)countOpenBallotsForConversationEntity:(ConversationEntity *)conversation {
-    return [self countEntityNamed:@"Ballot" withPredicate:@"conversation == %@ && state == %d", conversation, kBallotStateOpen];
+    return [self countEntityNamed:@"Ballot" withPredicate:@"conversation == %@ && state == %d", conversation, BallotStateOpen];
 }
 
 - (NSInteger)countMediaMessagesForConversationEntity:(ConversationEntity *)conversation {
@@ -817,7 +815,7 @@
     return [self allEntitiesNamed:@"Message" sortedBy:sortDescriptors withPredicate:@"isOwn == NO AND read == NO AND conversation == %@ ", conversation];
 }
 
-- (BallotChoice *)ballotChoiceForBallotId:(NSData *)ballotId choiceId:(NSNumber *)choiceId {
+- (BallotChoiceEntity *)ballotChoiceForBallotId:(NSData *)ballotId choiceId:(NSNumber *)choiceId {
     return [self singleEntityNamed:@"BallotChoice" withPredicate: @"id == %@ AND ballot.id == %@", choiceId, ballotId];
 }
 
@@ -898,12 +896,12 @@
     return [self singleEntityNamed:@"DistributionList" withPredicate: @"distributionListID == %@", distributionListID];
 }
 
-- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessage *)message creator:(nullable ContactEntity *)creator {
+- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessageEntity *)message creator:(nullable ContactEntity *)creator {
     return [self allEntitiesNamed:@"MessageReaction" sortedBy:nil withPredicate:@"message == %@ AND creator == %@", message, creator];
     
 }
 
-- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessage *)message {
+- (nullable NSArray<MessageReactionEntity *> *) messageReactionEntitiesForMessage:(nonnull BaseMessageEntity *)message {
     return [self allEntitiesNamed:@"MessageReaction" sortedBy:nil withPredicate:@"message == %@", message];
 }
 
@@ -1040,7 +1038,7 @@
     }
     
     if ([UserSettings sharedUserSettings].hideStaleContacts) {
-        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"state == %d", kStateActive];
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"state == %d", ContactStateActive];
         [predicates addObject:predicate];
     }
     

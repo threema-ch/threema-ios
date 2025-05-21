@@ -26,7 +26,7 @@ final class MessageMarkersView: UIView {
     /// Message to show markers for
     ///
     /// Reset to update with current message information.
-    var message: BaseMessage? {
+    var message: BaseMessageEntity? {
         didSet {
             guard let message else {
                 return
@@ -77,7 +77,7 @@ final class MessageMarkersView: UIView {
     
     // MARK: - Updates
     
-    private func updateMarkers(for message: BaseMessage) {
+    private func updateMarkers(for message: BaseMessageEntity) {
         guard message.hasMarkers else {
             markerStarImageView.isHidden = true
             NSLayoutConstraint.deactivate(markerStarConstraints)

@@ -241,7 +241,7 @@ class MediatorReflectedOutgoingMessageProcessor {
         outgoingMessage omsg: D2d_OutgoingMessage,
         contactSetPhotoMessage amsg: ContactSetPhotoMessage
     ) -> Promise<Void> {
-        frameworkInjector.entityManager.performSyncBlockAndSafe {
+        frameworkInjector.entityManager.performAndWaitSave {
             let contact = self.frameworkInjector.entityManager.entityFetcher
                 .contact(for: amsg.toIdentity)
             contact?.profilePictureBlobID = amsg.blobID.base64EncodedString(options: .endLineWithLineFeed)

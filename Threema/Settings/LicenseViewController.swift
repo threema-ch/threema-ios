@@ -18,36 +18,36 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import CocoaLumberjackSwift
-import Foundation
-import SafariServices
-import ThreemaFramework
-import WebKit
+import ThreemaMacros
 
-class LicenseViewController: ThemedViewController {
-
-    private var webView: WKWebView!
-    private var myIdentity = BusinessInjector.ui.myIdentityStore
+class LicenseViewController: SettingsWebViewViewController {
 
     private let licenseFileName = "license"
     
     // MARK: - Lifecycle
     
-    override func loadView() {
-        let webConfiguration = WKWebViewConfiguration()
-        webConfiguration.preferences.javaScriptEnabled = false
-        
-        webView = WKWebView(frame: .zero, configuration: webConfiguration)
-        webView.navigationDelegate = self
-        
-        view = webView
+    init() {
+        super.init(title: #localize("settings_list_license_title"))
     }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
-        webView.isOpaque = false
+        webView.backgroundColor = Colors.backgroundViewController
+                
+        let baseURL = URL(fileURLWithPath: Bundle.main.bundlePath)
+        if let myHtml = loadHTML() {
+            webView.loadHTMLString(myHtml, baseURL: baseURL)
+        }
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
         
+        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
+            return
+        }
+         
         let baseURL = URL(fileURLWithPath: Bundle.main.bundlePath)
         if let myHtml = loadHTML() {
             webView.loadHTMLString(myHtml, baseURL: baseURL)
@@ -91,39 +91,5 @@ class LicenseViewController: ThemedViewController {
         )
         
         return htmlString
-    }
-    
-    func showWebsite(_ url: URL) {
-        let config = SFSafariViewController.Configuration()
-        let safariView = SFSafariViewController(url: url, configuration: config)
-        present(safariView, animated: true)
-    }
-}
-
-// MARK: - WKNavigationDelegate
-
-extension LicenseViewController: WKNavigationDelegate {
-    
-    func webView(
-        _ webView: WKWebView,
-        didFailProvisionalNavigation navigation: WKNavigation!,
-        withError error: any Error
-    ) {
-        if (error as NSError).code == URLError.Code.notConnectedToInternet.rawValue {
-            NotificationPresenterWrapper.shared.present(type: .noConnection)
-        }
-    }
-    
-    func webView(
-        _ webView: WKWebView,
-        decidePolicyFor navigationAction: WKNavigationAction,
-        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
-    ) {
-        if let url = navigationAction.request.url, navigationAction.navigationType == .linkActivated {
-            showWebsite(url)
-            decisionHandler(.cancel)
-            return
-        }
-        decisionHandler(.allow)
     }
 }

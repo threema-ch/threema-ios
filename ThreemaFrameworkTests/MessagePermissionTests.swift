@@ -49,8 +49,7 @@ class MessagePermissionTests: XCTestCase {
         dbPreparer.save {
             let dbContatct = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: toIdentity,
-                verificationLevel: 0
+                identity: toIdentity
             )
             dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
@@ -77,8 +76,7 @@ class MessagePermissionTests: XCTestCase {
         dbPreparer.save {
             let dbContatct = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: toIdentity,
-                verificationLevel: 0
+                identity: toIdentity
             )
             dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
@@ -108,8 +106,7 @@ class MessagePermissionTests: XCTestCase {
         dbPreparer.save {
             let dbContatct = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: toIdentity,
-                verificationLevel: 0
+                identity: toIdentity
             )
             dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
@@ -143,8 +140,7 @@ class MessagePermissionTests: XCTestCase {
         dbPreparer.save {
             let dbContact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: toIdentity,
-                verificationLevel: 0
+                identity: toIdentity
             )
             dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
@@ -181,10 +177,9 @@ class MessagePermissionTests: XCTestCase {
         dbPreparer.save {
             let dbContact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: toIdentity,
-                verificationLevel: 0
+                identity: toIdentity
             )
-            dbContact.state = NSNumber(integerLiteral: kStateInvalid)
+            dbContact.contactState = .invalid
             dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
                     dbConversation.contact = dbContact
@@ -259,8 +254,7 @@ class MessagePermissionTests: XCTestCase {
         dbPreparer.save {
             let dbContactGroupCreator = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: groupCreatorIdentity,
-                verificationLevel: 0
+                identity: groupCreatorIdentity
             )
             let dbGroup = dbPreparer.createGroupEntity(
                 groupID: groupID,
@@ -354,13 +348,11 @@ class MessagePermissionTests: XCTestCase {
         dbPreparer.save {
             let dbContactGroupMember = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: groupMember,
-                verificationLevel: 0
+                identity: groupMember
             )
             let dbContactGroupCreator = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: groupCreatorIdentity,
-                verificationLevel: 0
+                identity: groupCreatorIdentity
             )
             let dbGroup = dbPreparer.createGroupEntity(
                 groupID: groupID,

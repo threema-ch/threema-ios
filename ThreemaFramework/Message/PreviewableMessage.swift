@@ -21,7 +21,7 @@
 import Foundation
 import ThreemaMacros
 
-public protocol PreviewableMessage: BaseMessage {
+public protocol PreviewableMessage: BaseMessageEntity {
     /// For private use only, use `previewText` instead
     @available(*, deprecated, message: "For private use only, use `previewText` instead")
     var privatePreviewText: String { get }
@@ -140,7 +140,7 @@ extension PreviewableMessage {
         
         // Add the sender name if specified in PreviewableMessageConfiguration
         let shouldShowName = configuration.includeSender &&
-            (conversation?.isGroup ?? false) &&
+            conversation.isGroup &&
             !(self is SystemMessageEntity) // TODO: We might need to update this for group calls
         
         if shouldShowName {

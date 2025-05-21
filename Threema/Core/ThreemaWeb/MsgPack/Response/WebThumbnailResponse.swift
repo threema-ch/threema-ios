@@ -26,7 +26,7 @@ class WebThumbnailResponse: WebAbstractMessage {
     var id: String
     var messageID: String
     var type: String
-    var message: BaseMessage?
+    var message: BaseMessageEntity?
     
     init(request: WebThumbnailRequest, imageMessageEntity: ImageMessageEntity) {
         self.id = request.id

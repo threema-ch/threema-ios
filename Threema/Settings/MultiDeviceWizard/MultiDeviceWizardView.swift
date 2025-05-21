@@ -57,7 +57,10 @@ struct MultiDeviceWizardView: View {
             }
         })
         
-        .alert(#localize("md_wizard_error_title"), isPresented: $wizardVM.shouldDismiss) {
+        .alert(
+            String.localizedStringWithFormat(#localize("md_wizard_error_title"), TargetManager.appName),
+            isPresented: $wizardVM.shouldDismiss
+        ) {
             Button(#localize("ok"), role: .cancel) {
                 wizardVM.cancelLinking()
                 dismiss()

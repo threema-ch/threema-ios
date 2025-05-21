@@ -53,8 +53,7 @@ class TaskExecutionReflectIncomingMessageTests: XCTestCase {
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: expectedToIdentity,
-                verificationLevel: 0
+                identity: expectedToIdentity
             )
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
 
@@ -147,8 +146,7 @@ class TaskExecutionReflectIncomingMessageTests: XCTestCase {
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: expectedToIdentity,
-                verificationLevel: 0
+                identity: expectedToIdentity
             )
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
 

@@ -1,0 +1,3 @@
+[toolchain]
+# Keep this in sync with `_RUST_VERSION` in `.devcontainer/env.sh`!
+channel = "1.85"

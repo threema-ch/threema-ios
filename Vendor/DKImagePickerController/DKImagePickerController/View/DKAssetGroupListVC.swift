@@ -62,7 +62,7 @@ class DKAssetGroupCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        self.selectedBackgroundView = self.customSelectedBackgroundView(DKImageResource.blueTickImage().withTint(.primary))
+        self.selectedBackgroundView = self.customSelectedBackgroundView(DKImageResource.blueTickImage().withTint(.tintColor))
         
         self.isAccessibilityElement = true;
         
@@ -278,7 +278,7 @@ class DKAssetGroupListVC: UITableViewController, DKGroupDataManagerObserver {
         cell.totalCountLabel.textColor = self.imagePickerController.UIDelegate.imagePickerControllerAssetGroupListCellSubTitleColor()
         /***** BEGIN THREEMA MODIFICATION: accessibilityIgnoresInvertColors *********/
         cell.thumbnailImageView.accessibilityIgnoresInvertColors = true
-        cell.tintColor = .primary
+        cell.tintColor = .tintColor
         /***** END THREEMA MODIFICATION: accessibilityIgnoresInvertColors *********/
         return cell
     }

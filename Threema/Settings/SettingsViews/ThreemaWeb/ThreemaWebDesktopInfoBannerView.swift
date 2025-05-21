@@ -31,8 +31,11 @@ struct ThreemaWebDesktopInfoBannerView: View {
                 HStack(alignment: .firstTextBaseline) {
                     Image(systemName: "desktopcomputer")
                         .foregroundStyle(.primary)
-                    Text(#localize("settings_threema_web_desktop_banner_title"))
-                        .bold()
+                    Text(String.localizedStringWithFormat(
+                        #localize("settings_threema_web_desktop_banner_title"),
+                        TargetManager.localizedAppName
+                    ))
+                    .bold()
                     Spacer()
                 }
                 
@@ -50,7 +53,7 @@ struct ThreemaWebDesktopInfoBannerView: View {
         .foregroundColor(.white)
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(uiColor: .primary))
+        .background(Color.accentColor)
         .cornerRadius(10)
         .padding()
         .background(Colors.backgroundView.color)

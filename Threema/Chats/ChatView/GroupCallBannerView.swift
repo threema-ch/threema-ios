@@ -165,9 +165,9 @@ final class GroupCallBannerView: UIView {
 
                 participantsLabel.text = localizedParticipantsText
 
-                let text = update.joinState == .joined ? BundleUtil
-                    .localizedString(forKey: "group_call_open_button_title") : BundleUtil
-                    .localizedString(forKey: "group_call_join_button_title")
+                let text = update
+                    .joinState == .joined ? #localize("group_call_open_button_title") :
+                    #localize("group_call_join_button_title")
                 joinButton.configuration?.title = text
 
                 startTimeLabelUpdates(startDate: update.startDate)

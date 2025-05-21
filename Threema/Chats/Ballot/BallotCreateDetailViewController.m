@@ -20,7 +20,6 @@
 
 #import "BallotCreateDetailViewController.h"
 #import "BallotSelectTableViewController.h"
-#import "BallotChoice.h"
 #import "BundleUtil.h"
 @interface BallotCreateDetailViewController ()
 
@@ -67,13 +66,23 @@ static NSData *ballotIdForAcceptedWarning;
 
 - (void)intermediateUpdated {
     [_entityManager performBlockAndWait:^{
-        [_ballot setIntermediate: _showIntermediateSwitch.on];
+        if (_showIntermediateSwitch.on) {
+            _ballot.type = [NSNumber numberWithInt:BallotTypeIntermediate];
+        }
+        else {
+            _ballot.type = [NSNumber numberWithInt:BallotTypeClosed];
+        }
     }];
 }
 
 - (void)multipleChoiceUpdated {
     [_entityManager performBlockAndWait:^{
-        [_ballot setMultipleChoice: _multipleChoiceSwitch.on];
+        if (_showIntermediateSwitch.on) {
+            _ballot.assessmentType = [NSNumber numberWithInt:BallotAssessmentTypeMulti];
+        }
+        else {
+            _ballot.assessmentType = [NSNumber numberWithInt:BallotAssessmentTypeSingle];
+        }
     }];
 }
 
@@ -94,7 +103,7 @@ static NSData *ballotIdForAcceptedWarning;
         return YES;
     }
     
-    for (BallotChoice *choice in _ballot.choices) {
+    for (BallotChoiceEntity *choice in _ballot.choices) {
         if ([choice.name length] > 0) {
             return YES;
         }

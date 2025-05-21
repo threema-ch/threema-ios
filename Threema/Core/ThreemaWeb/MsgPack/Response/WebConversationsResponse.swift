@@ -129,7 +129,7 @@ struct WebConversation {
         
         self.unreadCount = max(0, conversation.unreadMessageCount as! Int)
 
-        if let lastMessage = conversation.lastMessage, lastMessage.conversation != nil {
+        if let lastMessage = conversation.lastMessage {
             // This is a workaround for an issue that was introduced with IOS-3233 / IOS-3212
             // We would previously only ever set lastMessage on conversation for file messages after fileName was set.
             // With the new changes we first create the base message, set lastMessage on conversation and then decode

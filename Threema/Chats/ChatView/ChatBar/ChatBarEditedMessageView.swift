@@ -54,8 +54,7 @@ final class ChatBarEditedMessageView: UIView {
     private lazy var closeEditMessageButton: ChatBarButton = {
         let button = ChatBarButton(
             sfSymbolName: "xmark.circle.fill",
-            accessibilityLabel: BundleUtil
-                .localizedString(forKey: "accessibility_chatbar_close_edited_message_button_label"),
+            accessibilityLabel: #localize("accessibility_chatbar_close_edited_message_button_label"),
             defaultColor: { Colors.backgroundButton },
             action: { [weak self] _ in
                 self?.delegate?.editedMessageDismissed()

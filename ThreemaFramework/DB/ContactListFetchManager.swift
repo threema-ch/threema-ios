@@ -75,8 +75,13 @@ extension EntityFetcher: ContactListFetchManager {
                         selector: #selector(NSString.localizedStandardCompare(_:))
                     ),
                 ]
-
-                $0.predicate = NSPredicate(format: "hidden == nil OR hidden == 0")
+                
+                var predicates = [contactNotHiddenPredicate()]
+                if UserSettings.shared().hideStaleContacts {
+                    predicates.append(contactHideStalePredicate())
+                }
+                
+                $0.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
             },
             managedObjectContext: managedObjectContext,
             sectionNameKeyPath: "sortIndex",

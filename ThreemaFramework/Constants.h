@@ -169,6 +169,9 @@ static NSString * const kNotificationMediatorMessageAck = @"MediatorMessageAck";
 static NSString * const kSafeBackupTrigger = @"ThreemaSafeBackupTrigger";
 static NSString * const kSafeBackupUIRefresh = @"ThreemaSafeBackupUIRefresh";
 static NSString * const kSafeBackupPasswordCheck = @"ThreemaSafeBackupPasswordCheck";
+static NSString * const kRevocationPasswordUIRefresh = @"ThreemaRevocationPasswordUIRefresh";
+static NSString * const kLinkedPhoneUIRefresh = @"ThreemaLinkedPhoneUIRefresh";
+static NSString * const kLinkedEmailUIRefresh = @"ThreemaLinkedEmailUIRefresh";
 
 #define kSafeSetupUI @"ThreemaSafeSetupUI"
 

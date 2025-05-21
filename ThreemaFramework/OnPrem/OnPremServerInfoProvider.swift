@@ -260,7 +260,40 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             completionHandler(nil, err)
         }
     }
-
+    
+    func mapsServer(completionHandler: @escaping (MapsServerInfo?, Error?) -> Void) {
+        switch prepareConfigFetcher() {
+        case let .success(fetcher):
+            fetcher.fetch { result in
+                self.handleMapsServerResult(result, completionHandler: completionHandler)
+            }
+        case let .failure(err):
+            completionHandler(nil, err)
+        }
+    }
+    
+    private func handleMapsServerResult(
+        _ result: Swift.Result<OnPremConfig, Error>,
+        completionHandler: @escaping (MapsServerInfo?, Error?) -> Void
+    ) {
+        switch result {
+        case let .success(config):
+            if let mapsConfig = config.maps {
+                completionHandler(MapsServerInfo(
+                    poiNamesURL: mapsConfig.poiNamesURL,
+                    poiAroundURL: mapsConfig.poiAroundURL
+                ), nil)
+            }
+            else {
+                PublicServerInfoProvider().mapsServer { mapsServerInfo, _ in
+                    completionHandler(mapsServerInfo, nil)
+                }
+            }
+        case let .failure(err):
+            completionHandler(nil, err)
+        }
+    }
+    
     private var onPremConfigFetcher: OnPremConfigFetcher?
 
     private var lastConfigURLAuth: URL?

@@ -20,6 +20,7 @@
 
 #import "BoxBallotVoteMessage.h"
 #import "ProtocolDefines.h"
+#import "NSString+Hex.h"
 
 @implementation BoxBallotVoteMessage
 
@@ -61,6 +62,14 @@
 
 - (ObjcCspE2eFs_Version)minimumRequiredForwardSecurityVersion {
     return kV10;
+}
+
+#pragma mark - LoggingDescriptionProtocol
+
+- (NSString * _Nonnull)loggingDescription {
+    return [NSString stringWithFormat:@"(%@ ballotID: %@)",
+            [super loggingDescription],
+            [NSString stringWithHexData:self.ballotId]];
 }
 
 #pragma mark - NSSecureCoding

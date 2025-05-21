@@ -22,33 +22,34 @@ import CoreData
 import Foundation
 
 @objc(VideoMessageEntity)
-public final class VideoMessageEntity: BaseMessage {
+public final class VideoMessageEntity: BaseMessageEntity {
     
-    // Attributes
-    @NSManaged @objc(duration) public var duration: NSNumber
-    @NSManaged @objc(encryptionKey) public var encryptionKey: Data?
-    @NSManaged @objc(progress) public var progress: NSNumber?
-    // swiftformat:disable:next acronyms
-    @NSManaged @objc(videoBlobId) public var videoBlobId: Data?
-    @NSManaged @objc(videoSize) public var videoSize: NSNumber?
+    // MARK: Attributes
 
-    // Relationships
+    @NSManaged public var duration: NSNumber
+    @NSManaged public var encryptionKey: Data?
+    @NSManaged public var progress: NSNumber?
+    // swiftformat:disable:next acronyms
+    @NSManaged public var videoBlobId: Data?
+    @NSManaged public var videoSize: NSNumber?
+
+    // MARK: Relationships
+
     @NSManaged public var thumbnail: ImageDataEntity?
     @NSManaged public var video: VideoDataEntity?
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
+    ///   - context: `NSManagedObjectContext` to insert created entity into
     ///   - duration: Duration of the video
     ///   - encryptionKey: Key the video data is encrypted with
     ///   - progress: Progress
     ///   - videoBlobID: Blob id of the video data
     ///   - videoSize: Size of the video data
-    ///   - thumbnail: ImageDataEntity of the thumbnail
-    ///   - video: VideoDataEntity in which the video is saved
+    ///   - thumbnail: `ImageDataEntity` of the thumbnail
+    ///   - video: `VideoDataEntity` of the video
     public init(
         context: NSManagedObjectContext,
         duration: NSNumber = 0,

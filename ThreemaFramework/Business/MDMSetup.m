@@ -65,6 +65,7 @@ NSString * const MDM_KEY_DISABLE_GROUP_CALLS = @"th_disable_group_calls"; // Boo
 NSString * const MDM_KEY_DISABLE_CREATE_GROUP = @"th_disable_create_group"; // Bool
 NSString * const MDM_KEY_SKIP_WIZARD = @"th_skip_wizard"; // Bool
 NSString * const MDM_KEY_DISABLE_WEB = @"th_disable_web"; // Bool
+NSString * const MDM_KEY_DISABLE_MULTIDEVICE = @"th_disable_multidevice"; // Bool
 NSString * const MDM_KEY_WEB_HOSTS = @"th_web_hosts"; // String
 NSString * const MDM_KEY_DISABLE_SHARE_MEDIA = @"th_disable_share_media"; // Bool
 NSString * const MDM_KEY_DISABLE_WORK_DIRECTORY = @"th_disable_work_directory"; // Bool
@@ -179,6 +180,17 @@ static NSDictionary *_mdmCacheSetup;
 - (BOOL)disableWeb {
     NSNumber *disableWeb = [self getMdmConfigurationBoolForKey:MDM_KEY_DISABLE_WEB];
     return [disableWeb isKindOfClass:[NSNumber class]] ? disableWeb.boolValue : NO;
+}
+
+/// If the MDM key for multi-device is set, use the value from the disableMultidevice key.
+/// Otherwise, use the disableWeb key for multi-device.
+- (BOOL)disableMultiDevice {
+    if ([self existsMdmKey:MDM_KEY_DISABLE_MULTIDEVICE]) {
+        NSNumber *disableMultiDevice = [self getMdmConfigurationBoolForKey:MDM_KEY_DISABLE_MULTIDEVICE];
+        return [disableMultiDevice isKindOfClass:[NSNumber class]] ? disableMultiDevice.boolValue : NO;
+    }
+    
+    return [self disableWeb];
 }
 
 - (NSString *)webHosts {
@@ -372,6 +384,19 @@ static NSDictionary *_mdmCacheSetup;
     
     if ([self existsMdmKey:MDM_KEY_DISABLE_WORK_DIRECTORY]) {
         userSettings.companyDirectory = ![self disableWorkDirectory];
+    }
+    
+    if ([self existsMdmKey:MDM_KEY_DISABLE_MULTIDEVICE]) {
+        if ([self disableMultiDevice]) {
+            [self runDisableMultiDeviceWithCompletionHandler:^{
+                // do nothing
+            }];
+        }
+    }
+    else if ([self existsMdmKey:MDM_KEY_DISABLE_WEB] && [self disableWeb]) {
+        [self runDisableMultiDeviceWithCompletionHandler:^{
+            // do nothing
+        }];
     }
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationSettingStoreSynchronization object:nil];
@@ -775,7 +800,7 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (BOOL)isRenewable:(NSString *)mdmKey {
-    NSArray *renewableKeys = @[MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_WEB_HOSTS, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_PASSWORD, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_ONPREM_SERVER, MDM_KEY_KEEP_MESSAGE_DAYS];
+    NSArray *renewableKeys = @[MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_DISABLE_MULTIDEVICE, MDM_KEY_WEB_HOSTS, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_PASSWORD, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_ONPREM_SERVER, MDM_KEY_KEEP_MESSAGE_DAYS];
     return [renewableKeys containsObject:mdmKey];
 }
 

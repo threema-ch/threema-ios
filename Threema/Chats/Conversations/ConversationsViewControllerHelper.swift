@@ -615,7 +615,7 @@ class ConversationsViewControllerHelper {
         }
         privateAction.title = privateTitle
         privateAction.accessibilityLabel = privateTitle
-        privateAction.backgroundColor = Colors.gray
+        privateAction.backgroundColor = .systemGray
         
         return privateAction
     }

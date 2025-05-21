@@ -107,6 +107,7 @@ struct LockedButtonNavigationLink<Content: View>: View {
                 action()
             } cancelled: { } didDismissAfterSuccess: { }
                 .ignoresSafeArea(edges: .bottom)
+                .tint(.accentColor)
         }
     }
 }
@@ -147,6 +148,7 @@ struct LockedNavigationLink<Content: View, Label: View>: View {
                 isActive = true
             } cancelled: { }
                 .ignoresSafeArea(edges: .bottom)
+                .tint(.accentColor)
         }
         .onAppear {
             if !shouldNavigate {

@@ -28,7 +28,7 @@
 
 @property (weak, nonatomic) IBOutlet UITextField *passwordField;
 
-@property id<PasswordCallback> passwordCallback;
+@property (weak, nonatomic) id<PasswordCallback> passwordCallback;
 
 - (IBAction)nextAction:(id)sender;
 

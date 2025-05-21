@@ -122,6 +122,14 @@ class MeContactDetailsViewController: ThemedTableViewController {
             let cell = tableView.dequeueReusableCell(withIdentifier: "IdentityCell", for: indexPath)
             let label = cell.viewWithTag(100) as! UILabel
             label.text = MyIdentityStore.shared().identity
+            
+            if let threemaIDLabel = cell.viewWithTag(102) as? UILabel {
+                threemaIDLabel.text = String.localizedStringWithFormat(
+                    #localize("threema_id"),
+                    TargetManager.localizedAppName
+                )
+            }
+            
             return cell
         }
         else if indexPath.row == 1 {
@@ -155,8 +163,7 @@ class MeContactDetailsViewController: ThemedTableViewController {
         if let profilePicture = MyIdentityStore.shared().profilePicture,
            profilePicture["ProfilePicture"] != nil {
             let image = UIImage(data: profilePicture["ProfilePicture"] as! Data)
-            if image != nil {
-                let imageController: FullscreenImageViewController! = FullscreenImageViewController(for: image)
+            if image != nil, let imageController = FullscreenImageViewController(for: image) {
                 if UIDevice.current.userInterfaceIdiom == .pad {
                     let nav = ModalNavigationController(rootViewController: imageController)
                     nav.showDoneButton = true

@@ -22,7 +22,7 @@ import Foundation
 import ThreemaMacros
 import UIKit
 
-public protocol MessageAccessibility: BaseMessage {
+public protocol MessageAccessibility: BaseMessageEntity {
     /// For private use only, use `customAccessibilityLabel` instead
     @available(*, deprecated, message: "For private use only, use `customAccessibilityLabel` instead")
     var privateCustomAccessibilityLabel: String { get }

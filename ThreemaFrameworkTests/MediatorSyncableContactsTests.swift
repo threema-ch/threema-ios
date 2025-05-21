@@ -428,9 +428,9 @@ class MediatorSyncableContactsTests: XCTestCase {
             )
 
             contact.createdAt = Date()
-            contact.isContactHidden = false
+            contact.isHidden = false
             // Optional
-            contact.importedStatus = .initial
+            contact.contactImportStatus = .initial
             // Optional
             databasePreparer.createConversation(
                 typing: false,
@@ -443,8 +443,8 @@ class MediatorSyncableContactsTests: XCTestCase {
                 }
             )
             contact.publicNickname = "Nickname"
-            contact.firstName = "John"
-            contact.lastName = "Appleseed"
+            contact.setFirstName(to: "John")
+            contact.setLastName(to: "Appleseed")
             contact.imageData = setProfilePicture ? imageData : nil
             contact.contactImage = setContactProfilePicture ? contactImage : nil
             contact.readReceipt = .send
@@ -459,12 +459,11 @@ class MediatorSyncableContactsTests: XCTestCase {
         databasePreparer.save {
             let publicKey = MockData.generatePublicKey()
             let identity = SwiftUtils.pseudoRandomString(length: 8)
-            let verificationLevel = 0
 
             contact = databasePreparer.createContact(
                 publicKey: publicKey,
                 identity: identity,
-                verificationLevel: verificationLevel
+                verificationLevel: .unverified
             )
         }
         return contact

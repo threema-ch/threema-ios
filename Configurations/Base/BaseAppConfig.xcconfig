@@ -19,3 +19,16 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include "BaseConfig.xcconfig"
+
+PRIVACY_DESCRIPTION_CAMERA = Your camera is used when you take a photo or video, make video calls, or scan QR codes.
+PRIVACY_DESCRIPTION_CONTACTS = The address book is used to find other users when contact synchronization is on. Hashes of the phone numbers and email addresses will be uploaded to our server for synchronization, but the information is not stored on the servers.
+PRIVACY_DESCRIPTION_FACEID = You can use Face ID to unlock the app without entering your code.
+PRIVACY_DESCRIPTION_NETWORK = The app uses the local network for call connections.
+PRIVACY_DESCRIPTION_LOCATIONS = Your location is used when you share it in a chat and to display your own location on a map.
+PRIVACY_DESCRIPTION_MICROPHONE = The microphone is used in calls and to record audio messages.
+PRIVACY_DESCRIPTION_PHOTO_ADD = Incoming media can automatically be saved to the photo library.
+PRIVACY_DESCRIPTION_PHOTO_USE = Your photo library is used when you select an image from it and send it in a chat.
+
+// Needed to find SaltyRTC FFI library. There is a different build for devices & simulator
+LIBRARY_SEARCH_PATHS[sdk=iphoneos*][arch=arm64] = $(SRCROOT)/saltyrtc-task-relayed-data-rs/ffi/target/aarch64-apple-ios/release
+LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64] = $(SRCROOT)/saltyrtc-task-relayed-data-rs/ffi/target/aarch64-apple-ios-sim/release

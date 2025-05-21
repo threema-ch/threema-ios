@@ -58,7 +58,7 @@ class BadgeCountLabel: UILabel {
     }
     
     public func updateColors() {
-        backgroundColor = .red
+        backgroundColor = .systemRed
         textColor = .white
         highlightedTextColor = .white
     }

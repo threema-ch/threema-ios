@@ -71,8 +71,7 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
         dbPreparer.save {
             dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "ECHOECHO",
-                verificationLevel: 0
+                identity: "ECHOECHO"
             )
         }
         let (frameworkInjectorMock, messageStoreMock) = setUpMocks(group: nil)
@@ -157,8 +156,7 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
         dbPreparer.save {
             let groupCreator = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "MEMBER01",
-                verificationLevel: 0
+                identity: "MEMBER01"
             )
             let conversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
@@ -217,13 +215,11 @@ class MediatorReflectedIncomingMessageProcessorTests: XCTestCase {
         dbPreparer.save {
             dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "MEMBER02",
-                verificationLevel: 0
+                identity: "MEMBER02"
             )
             let groupCreator = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
-                identity: "MEMBER01",
-                verificationLevel: 0
+                identity: "MEMBER01"
             )
             let conversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in

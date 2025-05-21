@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaMacros
 import UIKit
 
 class DisplayOrderTableViewController: ThemedTableViewController {
@@ -33,6 +34,8 @@ class DisplayOrderTableViewController: ThemedTableViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        title = #localize("settings_appearance_display_order")
         
         tableView.reloadData()
     }

@@ -275,6 +275,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
             if let contactEntity = em.entityFetcher.contact(for: contact.identity.string) {
                 self.profilePictureView.info = .contact(contact)
                 self.nameLabel.contact = contactEntity
+                self.otherThreemaTypeIcon.isHidden = !contactEntity.showOtherThreemaTypeIcon
             }
             else {
                 DDLogError(

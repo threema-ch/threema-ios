@@ -265,7 +265,7 @@ extension ArchivedConversationsViewController {
         
         unarchiveAction.image = UIImage(resource: .threemaArchiveboxSlashFill)
         unarchiveAction.accessibilityLabel = #localize("unarchive")
-        unarchiveAction.backgroundColor = Colors.gray
+        unarchiveAction.backgroundColor = .systemGray
         
         // Delete
         

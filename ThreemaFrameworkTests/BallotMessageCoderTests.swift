@@ -53,18 +53,18 @@ class BallotMessageCoderTests: XCTestCase {
         
         // Create Ballot
         let ballot = createLocalBallot()
-        ballot.addChoices(createChoices())
-        ballot.ballotDisplayMode = .summary
+        createChoices(for: ballot)
+        ballot.displayMode = NSNumber(integerLiteral: BallotDisplayMode.summary.rawValue)
         
         // Act:
         // Encode:
-        let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
+        let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(forBallot: ballot)
         boxBallotCreateMessage.fromIdentity = "ECHOECHO"
 
         // Decode:
         let expect = expectation(description: "Decode and create ballot")
 
-        var decodedBallot: Ballot?
+        var decodedBallot: BallotEntity?
         ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
@@ -82,7 +82,7 @@ class BallotMessageCoderTests: XCTestCase {
         wait(for: [expect], timeout: 3)
 
         // Assert:
-        XCTAssertEqual(decodedBallot?.ballotDisplayMode, BallotDisplayMode.summary)
+        XCTAssertEqual(decodedBallot?.displayMode?.intValue, BallotDisplayMode.summary.rawValue)
     }
     
     func testBallotEncodingDisplayModeNotSpecified() throws {
@@ -99,17 +99,17 @@ class BallotMessageCoderTests: XCTestCase {
 
         // Create Ballot
         let ballot = createLocalBallot()
-        ballot.addChoices(createChoices())
+        createChoices(for: ballot)
 
         // Act:
         // Encode:
-        let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
+        let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(forBallot: ballot)
         boxBallotCreateMessage.fromIdentity = "ECHOECHO"
 
         // Decode:
         let expect = expectation(description: "Decode and create ballot")
 
-        var decodedBallot: Ballot?
+        var decodedBallot: BallotEntity?
         ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
@@ -127,7 +127,7 @@ class BallotMessageCoderTests: XCTestCase {
         wait(for: [expect], timeout: 3)
 
         // Assert:
-        XCTAssertEqual(decodedBallot?.ballotDisplayMode, BallotDisplayMode.list)
+        XCTAssertEqual(decodedBallot?.displayMode?.intValue, BallotDisplayMode.list.rawValue)
     }
 
     func testBallotEncodingChoicesTotalVotesNotSet() throws {
@@ -144,28 +144,25 @@ class BallotMessageCoderTests: XCTestCase {
 
         // Create Ballot
         let ballot = createLocalBallot()
-        ballot.addChoices(createChoices())
+        createChoices(for: ballot)
 
         // Act:
         // Add TotalVotes to Choices
-        for choice in ballot.choices {
-            guard let choice = choice as? BallotChoice else {
-                XCTFail("Choice must be BallotChoice")
-                return
-            }
+        for choice in ballot.choices! {
             choice.totalVotes = NSNumber(integerLiteral: Int.random(in: 0...100))
         }
+        
         // Encode:
-        let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: ballot)
+        let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(forBallot: ballot)
         boxBallotCreateMessage.fromIdentity = "ECHOECHO"
-        boxBallotCreateMessage.ballotID = ballot.id!
+        boxBallotCreateMessage.ballotID = ballot.id
         
         entityManager.entityDestroyer.delete(ballot: ballot)
 
         // Decode:
         let expect = expectation(description: "Decode and create ballot")
 
-        var decodedBallot: Ballot?
+        var decodedBallot: BallotEntity?
         ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
@@ -183,11 +180,7 @@ class BallotMessageCoderTests: XCTestCase {
         wait(for: [expect], timeout: 3)
 
         // Assert:
-        for choice in try XCTUnwrap(decodedBallot).choices {
-            guard let choice = choice as? BallotChoice else {
-                XCTFail("Choice must be BallotChoice")
-                return
-            }
+        for choice in try XCTUnwrap(decodedBallot?.choices) {
             XCTAssertEqual(choice.totalVotes, nil)
         }
     }
@@ -216,7 +209,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Act:
         let expect = expectation(description: "Decode and create ballot")
 
-        var decodedBallot: Ballot?
+        var decodedBallot: BallotEntity?
         ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
@@ -233,14 +226,14 @@ class BallotMessageCoderTests: XCTestCase {
 
         wait(for: [expect], timeout: 3)
 
-        guard let choices = decodedBallot?.choicesSortedByOrder() as? [BallotChoice] else {
+        guard let choices = decodedBallot?.choicesSortedByOrder as? [BallotChoiceEntity] else {
             XCTFail("Could not decode choices")
             return
         }
         let choice0 = choices[0]
         let choice1 = choices[1]
-        let results0: [BallotResultEntity] = (Array(choice0.result) as? [BallotResultEntity])!
-        let results1: [BallotResultEntity] = (Array(choice1.result) as? [BallotResultEntity])!
+        let results0: [BallotResultEntity] = (Array(choice0.result!) as? [BallotResultEntity])!
+        let results1: [BallotResultEntity] = (Array(choice1.result!) as? [BallotResultEntity])!
 
         // Assert:
         // Ballot
@@ -249,7 +242,7 @@ class BallotMessageCoderTests: XCTestCase {
         XCTAssertEqual(decodedBallot?.assessmentType, 1)
         XCTAssertEqual(decodedBallot?.type, 1)
         XCTAssertEqual(decodedBallot?.choicesType, 0)
-        XCTAssertEqual(decodedBallot?.ballotDisplayMode, .list)
+        XCTAssertEqual(decodedBallot?.displayMode?.intValue, BallotDisplayMode.list.rawValue)
 
         // Choices
         XCTAssertEqual(choices.count, 4)
@@ -319,7 +312,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Act:
         let expect = expectation(description: "Decode and create ballot")
 
-        var decodedBallot: Ballot?
+        var decodedBallot: BallotEntity?
         ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
@@ -336,7 +329,7 @@ class BallotMessageCoderTests: XCTestCase {
 
         wait(for: [expect], timeout: 3)
 
-        guard let choices = decodedBallot?.choicesSortedByOrder() as? [BallotChoice] else {
+        guard let choices = decodedBallot?.choicesSortedByOrder as? [BallotChoiceEntity] else {
             XCTFail("Could not decode choices")
             return
         }
@@ -377,7 +370,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Act:
         let expect = expectation(description: "Decode and create ballot")
 
-        var decodedBallot: Ballot?
+        var decodedBallot: BallotEntity?
         ballotDecoder?.decodeCreateBallot(
             fromBox: boxBallotCreateMessage,
             sender: nil,
@@ -394,7 +387,7 @@ class BallotMessageCoderTests: XCTestCase {
 
         wait(for: [expect], timeout: 3)
 
-        guard let choices = decodedBallot?.choicesSortedByOrder() as? [BallotChoice] else {
+        guard let choices = decodedBallot?.choicesSortedByOrder as? [BallotChoiceEntity] else {
             XCTFail("Could not decode choices")
             return
         }
@@ -403,13 +396,13 @@ class BallotMessageCoderTests: XCTestCase {
         let choice2 = choices[2]
         let choice3 = choices[3]
 
-        let results0: [BallotResultEntity] = (Array(choice0.result) as? [BallotResultEntity])!
-        let results1: [BallotResultEntity] = (Array(choice0.result) as? [BallotResultEntity])!
-        let results2: [BallotResultEntity] = (Array(choice0.result) as? [BallotResultEntity])!
-        let results3: [BallotResultEntity] = (Array(choice0.result) as? [BallotResultEntity])!
+        let results0: [BallotResultEntity] = (Array(choice0.result!) as? [BallotResultEntity])!
+        let results1: [BallotResultEntity] = (Array(choice0.result!) as? [BallotResultEntity])!
+        let results2: [BallotResultEntity] = (Array(choice0.result!) as? [BallotResultEntity])!
+        let results3: [BallotResultEntity] = (Array(choice0.result!) as? [BallotResultEntity])!
 
         // Assert:
-        XCTAssertEqual(decodedBallot?.participants.isEmpty, true)
+        XCTAssertEqual(decodedBallot?.participants?.isEmpty, true)
 
         XCTAssertEqual(choice0.totalVotes, 500)
         XCTAssertEqual(choice1.totalVotes, 100)
@@ -424,28 +417,33 @@ class BallotMessageCoderTests: XCTestCase {
     
     // MARK: - Functions
     
-    private func createLocalBallot() -> Ballot {
-        let ballot = Ballot(context: preparer.objectContext)
+    private func createLocalBallot() -> BallotEntity {
+        let ballot = BallotEntity(
+            context: preparer.objectContext,
+            assessmentType: .single,
+            id: MockData.generateBallotID(),
+            state: .open,
+            type: .closed
+        )
         ballot.id = MockData.generateBallotID()
         ballot.createDate = Date()
-        ballot.creatorID = "MyID"
+        // swiftformat:disable:next acronyms
+        ballot.creatorId = "MyID"
         ballot.title = "TestBallot"
-        ballot.state = 0
-        ballot.assessmentType = 0
         ballot.choicesType = 0
         
         return ballot
     }
     
-    private func createChoices() -> Set<BallotChoice> {
-        var choices = Set<BallotChoice>()
+    private func createChoices(for ballot: BallotEntity) {
         for i in 0..<3 {
-            let choice = BallotChoice(context: preparer.objectContext)
-            choice.id = NSNumber(integerLiteral: i)
+            let choice = BallotChoiceEntity(
+                context: preparer.objectContext,
+                id: NSNumber(integerLiteral: i),
+                ballot: ballot
+            )
             choice.name = "Choice \(i)"
             choice.orderPosition = NSNumber(integerLiteral: i)
-            choices.insert(choice)
         }
-        return choices
     }
 }

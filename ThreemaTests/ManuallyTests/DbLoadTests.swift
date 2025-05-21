@@ -87,18 +87,18 @@ class DBLoadTests: XCTestCase {
 
                     print("Create duplicate contact for \(identity)")
                     if let duplicateContact = em.entityCreator.contact() {
-                        duplicateContact.identity = identity
-                        duplicateContact.firstName = "Duplicate of"
-                        duplicateContact.lastName = identity
+                        duplicateContact.setIdentity(to: identity)
+                        duplicateContact.setFirstName(to: "Duplicate of")
+                        duplicateContact.setLastName(to: identity)
                         duplicateContact.publicKey = contact.publicKey
-                        duplicateContact.verificationLevel = contact.verificationLevel
+                        duplicateContact.contactVerificationLevel = contact.contactVerificationLevel
                         duplicateContact.workContact = contact.workContact
                         duplicateContact.forwardSecurityState = contact.forwardSecurityState
-                        duplicateContact.featureMask = contact.featureMask
-                        duplicateContact.isContactHidden = contact.isContactHidden
+                        duplicateContact.setFeatureMask(to: Int(truncating: contact.featureMask))
+                        duplicateContact.isHidden = contact.isHidden
                         duplicateContact.typingIndicator = contact.typingIndicator
                         duplicateContact.readReceipt = contact.readReceipt
-                        duplicateContact.importedStatus = contact.importedStatus
+                        duplicateContact.contactImportStatus = contact.contactImportStatus
                         duplicateContact.publicNickname = contact.publicNickname
 
                         newDuplicateContacts.append(duplicateContact)
@@ -141,7 +141,7 @@ class DBLoadTests: XCTestCase {
                 for _ in 0..<10 {
                     if let call = em.entityCreator.callEntity() {
                         call.callID = NSNumber(value: UInt32.random(in: UInt32.min..<UInt32.max))
-                        call.date = Date() as NSDate
+                        call.date = Date()
                         call.contact = firstDuplicateContact
                     }
                 }
@@ -186,7 +186,7 @@ class DBLoadTests: XCTestCase {
                 // alternate between regular and duplicate contacts
                 let duplicate = newDuplicateContacts[i]
                 let contact = i % 2 == 0 ? duplicate : em.entityFetcher.contact(for: duplicate.identity)
-                message.addRejectedBy(contact!)
+                message.addToRejectedBy(contact!)
             }
             print(
                 "Added message in group '\(group.name ?? "-")' rejected by various main contacts/duplicates"
@@ -219,7 +219,7 @@ class DBLoadTests: XCTestCase {
         entityManager.performAndWaitSave {
             for index in 0..<100_000 {
                 let calendar = Calendar.current
-                let date = calendar.date(byAdding: .hour, value: index, to: Date(timeIntervalSince1970: 0))
+                let date = calendar.date(byAdding: .hour, value: index, to: Date(timeIntervalSince1970: 0))!
                 let message = entityManager.entityCreator.textMessageEntity(
                     for: conversation,
                     setLastUpdate: true
@@ -230,7 +230,7 @@ class DBLoadTests: XCTestCase {
                 message.sent = true
                 message.delivered = true
                 message.read = true
-                message.remoteSentDate = Date()
+                message.remoteSentDate = Date.now
                 print("\(index)/100'000")
             }
         }
@@ -296,7 +296,7 @@ class DBLoadTests: XCTestCase {
         let entityManager = EntityManager()
         entityManager.performAndWaitSave {
             for item in entityManager.entityFetcher.allContacts() {
-                guard let contactEntity = item as? ContactEntity, !contactEntity.isContactHidden else {
+                guard let contactEntity = item as? ContactEntity, !contactEntity.isHidden else {
                     continue
                 }
 
@@ -310,12 +310,12 @@ class DBLoadTests: XCTestCase {
                     continue
                 }
 
-                var lastMessage: BaseMessage?
+                var lastMessage: BaseMessageEntity?
 
                 entityManager.performAndWaitSave {
                     for index in 0..<1000 {
                         let calendar = Calendar.current
-                        let date = calendar.date(byAdding: .second, value: index, to: Date(timeIntervalSince1970: 0))
+                        let date = calendar.date(byAdding: .second, value: index, to: Date(timeIntervalSince1970: 0))!
                         let message = entityManager.entityCreator.textMessageEntity(
                             for: conversation,
                             setLastUpdate: true
@@ -327,7 +327,7 @@ class DBLoadTests: XCTestCase {
                         message.sent = true
                         message.delivered = true
                         message.read = index % 5 == 0 ? true : false
-                        message.remoteSentDate = Date()
+                        message.remoteSentDate = Date.now
 
                         if index == 998 {
                             lastMessage = message
@@ -372,7 +372,7 @@ class DBLoadTests: XCTestCase {
             for index in 0..<5000 {
                 entityManager.performAndWaitSave {
                     let calendar = Calendar.current
-                    let date = calendar.date(byAdding: .second, value: +index, to: Date())
+                    let date = calendar.date(byAdding: .second, value: +index, to: Date())!
                     let message = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)!
                     let isOwn = index % 3 == 0 ? false : true
                     message.isOwn = NSNumber(booleanLiteral: isOwn)
@@ -408,7 +408,7 @@ class DBLoadTests: XCTestCase {
                 entityManager.performAndWaitSave {
                     for contact in entityManager.entityFetcher.allContacts() as! [ContactEntity] {
                         let calendar = Calendar.current
-                        let date = calendar.date(byAdding: .hour, value: 1, to: Date(timeIntervalSince1970: 0))
+                        let date = calendar.date(byAdding: .hour, value: 1, to: Date(timeIntervalSince1970: 0))!
                         let message = entityManager.entityCreator.textMessageEntity(
                             for: groupConversation,
                             setLastUpdate: true
@@ -483,10 +483,10 @@ class DBLoadTests: XCTestCase {
             
             entityManager.performAndWaitSave {
                 if let contact = entityManager.entityCreator.contact() {
-                    contact.identity = pk.key
-                    contact.verificationLevel = 0
+                    contact.setIdentity(to: pk.key)
+                    contact.contactVerificationLevel = .unverified
                     contact.publicNickname = pk.key
-                    contact.isContactHidden = false
+                    contact.isHidden = false
                     contact.workContact = 0
                     contact.publicKey = pk.value
                 }
@@ -569,7 +569,7 @@ class DBLoadTests: XCTestCase {
             message.sent = NSNumber(booleanLiteral: true)
             message.delivered = NSNumber(booleanLiteral: true)
             message.read = NSNumber(booleanLiteral: true)
-            message.remoteSentDate = Date()
+            message.remoteSentDate = Date.now
             message.encryptionKey = NaClCrypto.shared().randomBytes(kBlobKeyLen)
             
             do {
@@ -644,7 +644,7 @@ class DBLoadTests: XCTestCase {
             message.sent = NSNumber(booleanLiteral: true)
             message.delivered = NSNumber(booleanLiteral: true)
             message.read = NSNumber(booleanLiteral: true)
-            message.remoteSentDate = Date()
+            message.remoteSentDate = Date.now
             message.encryptionKey = NaClCrypto.shared().randomBytes(kBlobKeyLen)
             
             do {
@@ -710,7 +710,7 @@ class DBLoadTests: XCTestCase {
             message.sent = NSNumber(booleanLiteral: true)
             message.delivered = NSNumber(booleanLiteral: true)
             message.read = NSNumber(booleanLiteral: true)
-            message.remoteSentDate = Date()
+            message.remoteSentDate = Date.now
             message.encryptionKey = NaClCrypto.shared().randomBytes(kBlobKeyLen)
             
             do {
@@ -861,7 +861,7 @@ class DBLoadTests: XCTestCase {
         
         // Create set of messages to quote
         
-        var quotableMessages = [BaseMessage]()
+        var quotableMessages = [BaseMessageEntity]()
         
         // Text messages
         entityManager.performAndWaitSave {
@@ -873,7 +873,7 @@ class DBLoadTests: XCTestCase {
             outgoingMessage.date = Date()
             outgoingMessage.sent = true
             outgoingMessage.delivered = true
-            outgoingMessage.remoteSentDate = Date()
+            outgoingMessage.remoteSentDate = Date.now
             outgoingMessage.deliveryDate = Date()
             outgoingMessage.isOwn = true
             quotableMessages.append(outgoingMessage)
@@ -886,7 +886,7 @@ class DBLoadTests: XCTestCase {
             incomingMessage.date = Date()
             incomingMessage.sent = true
             incomingMessage.delivered = true
-            incomingMessage.remoteSentDate = Date()
+            incomingMessage.remoteSentDate = Date.now
             incomingMessage.deliveryDate = Date()
             incomingMessage.isOwn = false
             incomingMessage.sender = senderContact
@@ -1062,7 +1062,7 @@ class DBLoadTests: XCTestCase {
                 message.date = Date()
                 message.sent = true
                 message.delivered = true
-                message.remoteSentDate = Date()
+                message.remoteSentDate = Date.now
                 message.deliveryDate = Date()
                 
                 // Don't add a quote to every forth message
@@ -1348,7 +1348,7 @@ class DBLoadTests: XCTestCase {
                     return
                 }
                 
-                systemMessage.remoteSentDate = Date()
+                systemMessage.remoteSentDate = Date.now
                 systemMessage.type = NSNumber(integerLiteral: callType)
                 
                 var callInfo = [
@@ -1439,19 +1439,20 @@ class DBLoadTests: XCTestCase {
             entityManager.performAndWaitSave {
                 // Setup ballot
                 let baseBallot = entityManager.entityCreator.ballot()!
-                baseBallot.id = BytesUtility.generateRandomBytes(length: ThreemaProtocol.ballotIDLength)
+                baseBallot.id = BytesUtility.generateRandomBytes(length: ThreemaProtocol.ballotIDLength)!
                 baseBallot.createDate = Date()
-                baseBallot.creatorID = isIncoming ? "ECHOECHO" : myIdentityStoreMock.identity
+                // swiftformat:disable:next acronyms
+                baseBallot.creatorId = isIncoming ? "ECHOECHO" : myIdentityStoreMock.identity
                 baseBallot.conversation = conversation
                 baseBallot.title = ballotTitles[index % ballotTitles.count]
-                baseBallot.setIntermediate(intermediateResults)
-                baseBallot.setMultipleChoice(multipleChoice)
+                baseBallot.type = NSNumber(integerLiteral: BallotType.intermediate.rawValue)
+                baseBallot.assessmentType = NSNumber(integerLiteral: BallotAssessmentType.multi.rawValue)
                 
                 if isClosed {
-                    baseBallot.setClosed()
+                    baseBallot.close()
                 }
                 
-                var ballotChoices = [BallotChoice]()
+                var ballotChoices = [BallotChoiceEntity]()
                 
                 // Setup choices
                 for choiceNo in 0..<Int.random(in: choicesPerBallot) {
@@ -1493,7 +1494,7 @@ class DBLoadTests: XCTestCase {
                 ballotOpenMessage.isOwn = NSNumber(value: !isIncoming)
                 ballotOpenMessage.ballot = baseBallot
                 ballotOpenMessage.sender = sender
-                ballotOpenMessage.ballotState = NSNumber(value: kBallotStateOpen)
+                ballotOpenMessage.ballotState = NSNumber(value: BallotState.open.rawValue)
                 
                 // Only sometimes create ballot close message
                 if isClosed {
@@ -1501,7 +1502,7 @@ class DBLoadTests: XCTestCase {
                     ballotCloseMessage.isOwn = NSNumber(value: !isIncoming)
                     ballotCloseMessage.ballot = baseBallot
                     ballotCloseMessage.sender = sender
-                    ballotCloseMessage.ballotState = NSNumber(value: kBallotStateClosed)
+                    ballotCloseMessage.ballotState = NSNumber(value: BallotState.closed.rawValue)
                 }
             }
         }
@@ -1705,8 +1706,8 @@ class DBLoadTests: XCTestCase {
             
             let names = name.components(separatedBy: .whitespaces)
             entityManager.performAndWaitSave {
-                contact.firstName = names.first
-                contact.lastName = names.last
+                contact.setFirstName(to: names.first)
+                contact.setLastName(to: names.last)
             }
             
             return contact
@@ -1822,7 +1823,7 @@ class DBLoadTests: XCTestCase {
             let contactStoreExpectation = expectation(description: "Add contact to contact store")
             ContactStore.shared().addContact(
                 with: id,
-                verificationLevel: Int32(kVerificationLevelUnverified)
+                verificationLevel: Int32(ContactEntity.VerificationLevel.unverified.rawValue)
             ) { _, _ in
                 createdContacts.append(id)
                 contactStoreExpectation.fulfill()
@@ -1853,7 +1854,7 @@ class DBLoadTests: XCTestCase {
                 // Add work info as first message
                 let systemMessage = entityManager.entityCreator.systemMessageEntity(for: conversation)
                 systemMessage?.type = NSNumber(value: kSystemMessageContactOtherAppInfo)
-                systemMessage?.remoteSentDate = Date()
+                systemMessage?.remoteSentDate = Date.now
             }
             
             print("Created 1:1 conversation for \(contactEntity.identity)")
@@ -1864,8 +1865,8 @@ class DBLoadTests: XCTestCase {
         }
         
         // Check if the contact still needs to be hidden
-        if contactEntity.isContactHidden {
-            contactEntity.isContactHidden = false
+        if contactEntity.isHidden {
+            contactEntity.isHidden = false
             
             let mediatorSyncableContacts = MediatorSyncableContacts()
             mediatorSyncableContacts.updateAcquaintanceLevel(
@@ -1899,7 +1900,7 @@ class DBLoadTests: XCTestCase {
             
             message.date = Date()
             message.sent = true
-            message.remoteSentDate = Date()
+            message.remoteSentDate = Date.now
             message.delivered = true
             message.deliveryDate = Date()
             
@@ -1932,7 +1933,7 @@ class DBLoadTests: XCTestCase {
 
             message.date = Date()
             message.sent = true
-            message.remoteSentDate = Date()
+            message.remoteSentDate = Date.now
             message.delivered = true
             message.deliveryDate = Date()
             
@@ -1981,7 +1982,7 @@ class DBLoadTests: XCTestCase {
                 message.sender = conversation?.contact
 
                 message.sent = true
-                message.remoteSentDate = date
+                message.remoteSentDate = Date.now
                 message.date = Date()
                 message.delivered = true
                 message.deliveryDate = Date()

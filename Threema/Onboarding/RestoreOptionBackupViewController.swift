@@ -53,17 +53,20 @@ class RestoreOptionBackupViewController: IDCreationPageViewController {
         
         hideKeyboardWhenTappedAround()
 
-        titleLabel.text = hasDataOnDevice ? #localize("restore_option_id_title") : BundleUtil
-            .localizedString(forKey: "restore_option_title")
+        titleLabel.text = hasDataOnDevice ? #localize("restore_option_id_title") : #localize("restore_option_title")
         descriptionLabel.text = #localize("restore_option_description")
-        safeButton.setTitle("Threema Safe", for: .normal)
+        safeButton.setTitle(
+            String
+                .localizedStringWithFormat(#localize("safe_setup_backup_title"), TargetManager.localizedAppName),
+            for: .normal
+        )
         safeButton.accessibilityIdentifier = "RestoreOptionBackupViewControllerThreemaSafeButton"
-        safeLabel.text = hasDataOnDevice ? BundleUtil
-            .localizedString(forKey: "restore_option_safe_keep_data") : BundleUtil
-            .localizedString(forKey: "restore_option_safe")
+        safeLabel.text = hasDataOnDevice ? #localize("restore_option_safe_keep_data") : #localize("restore_option_safe")
         idButton.setTitle(#localize("id_backup"), for: .normal)
-        idLabel.text = hasDataOnDevice ? #localize("restore_option_id_keep_data") : BundleUtil
-            .localizedString(forKey: "restore_option_id")
+        idLabel.text = hasDataOnDevice ? String.localizedStringWithFormat(
+            #localize("restore_option_id_keep_data"),
+            TargetManager.localizedAppName
+        ) : #localize("restore_option_id")
         
         faqLinkLabel.tapDelegate = self
         let linkAttributes: [NSAttributedString.Key: Any] = [
@@ -127,14 +130,9 @@ extension RestoreOptionBackupViewController: ZSWTappableLabelTapDelegate {
         tappedAt idx: Int,
         withAttributes attributes: [NSAttributedString.Key: Any] = [:]
     ) {
-        let urlString = BundleUtil.object(forInfoDictionaryKey: "ThreemaBackupInfo") as! String
-        guard let url = URL(string: urlString) else {
-            DDLogError("Could not create url from string \(urlString)")
-            return
-        }
-        
-        if UIApplication.shared.canOpenURL(url) {
-            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        let backupFaqURL = ThreemaURLProvider.backupFaq
+        if UIApplication.shared.canOpenURL(backupFaqURL) {
+            UIApplication.shared.open(backupFaqURL, options: [:], completionHandler: nil)
         }
     }
 }

@@ -70,7 +70,7 @@ class MediatorSyncableContacts: NSObject {
     func getAllDeltaSyncContacts() -> [DeltaSyncContact] {
         var allDeltaContacts = [DeltaSyncContact]()
         
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             guard let allContacts = self.entityManager.entityFetcher.allContacts() else {
                 DDLogError("Unable to load all contacts")
                 return
@@ -117,7 +117,7 @@ class MediatorSyncableContacts: NSObject {
             return
         }
 
-        entityManager.performBlockAndWait {
+        entityManager.performAndWait {
             guard let contact = self.entityManager.entityFetcher.contact(for: identity) else {
                 return
             }
@@ -344,7 +344,7 @@ class MediatorSyncableContacts: NSObject {
     /// - Parameters:
     ///   - identity: Identity of contact to update value for
     ///   - value: One of the `ReadReceipt` raw values
-    @objc func updateReadReceipt(identity: String, value: ReadReceipt) {
+    @objc func updateReadReceipt(identity: String, value: ContactEntity.ReadReceipt) {
         guard userSettings.enableMultiDevice else {
             return
         }
@@ -380,7 +380,7 @@ class MediatorSyncableContacts: NSObject {
         apply(delta)
     }
 
-    @objc func updateTypingIndicator(identity: String, value: TypingIndicator) {
+    @objc func updateTypingIndicator(identity: String, value: ContactEntity.TypingIndicator) {
         guard userSettings.enableMultiDevice else {
             return
         }

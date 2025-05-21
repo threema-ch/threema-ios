@@ -42,15 +42,14 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         try contactReadReceiptSend(readReceipt: .doNotSend)
     }
 
-    private func contactReadReceiptSend(readReceipt: ReadReceipt) throws {
+    private func contactReadReceiptSend(readReceipt: ContactEntity.ReadReceipt) throws {
         let expectedToIdentity = "ECHOECHO"
 
         var contactEntity: ContactEntity!
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: expectedToIdentity,
-                verificationLevel: 0
+                identity: expectedToIdentity
             )
             contactEntity.readReceipt = readReceipt
 
@@ -113,7 +112,7 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
     }
 
     private func contactReadReceiptSendMultiDeviceActivated(
-        readReceipt: ReadReceipt,
+        readReceipt: ContactEntity.ReadReceipt,
         excludeAll: Bool
     ) throws {
         let expectedToIdentity = "ECHOECHO"
@@ -127,8 +126,7 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: expectedToIdentity,
-                verificationLevel: 0
+                identity: expectedToIdentity
             )
             contactEntity.readReceipt = readReceipt
 

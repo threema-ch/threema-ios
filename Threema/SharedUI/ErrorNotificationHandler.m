@@ -74,7 +74,7 @@ static ErrorNotificationHandler *singleton;
 
 - (void)handleRogueDevice:(NSNotification*)notification {
     NSString *title = [BundleUtil localizedStringForKey:@"error_rogue_device_title"];
-    NSString *message = [BundleUtil localizedStringForKey:@"error_rogue_device_message"];
+    NSString *message =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"error_rogue_device_message"], TargetManagerObjc.localizedAppName, TargetManagerObjc.localizedAppName];
     
     [self showAlertWithTitle:title message:message actionOk:^(UIAlertAction *action) {
         [[ServerConnector sharedServerConnector] clearDeviceCookieChangedIndicator];

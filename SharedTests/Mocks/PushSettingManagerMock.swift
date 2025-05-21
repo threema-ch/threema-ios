@@ -47,7 +47,7 @@ class PushSettingManagerMock: PushSettingManagerProtocol {
         true
     }
     
-    func canSendPush(for baseMessage: BaseMessage) -> Bool {
+    func canSendPush(for baseMessage: BaseMessageEntity) -> Bool {
         true
     }
 }

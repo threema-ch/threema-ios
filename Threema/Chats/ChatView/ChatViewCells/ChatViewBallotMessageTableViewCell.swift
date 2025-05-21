@@ -29,7 +29,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
     /// Ballot message to display
     ///
     /// Reset it when the message had any changes to update data shown in the views (e.g. date or status symbol).
-    var ballotMessageAndNeighbors: (message: BallotMessage, neighbors: ChatViewDataSource.MessageNeighbors)? {
+    var ballotMessageAndNeighbors: (message: BallotMessageEntity, neighbors: ChatViewDataSource.MessageNeighbors)? {
         didSet {
             let block = {
                 self.updateCell(for: self.ballotMessageAndNeighbors?.message)
@@ -191,7 +191,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         // We must change the icon based on the closing state and re-assign the attributed text for the icons to change
         // color as well
         if let ballotMessage = ballotMessageAndNeighbors?.message, !ballotMessage.willBeDeleted {
-            if ballotMessage.isSummaryMessage() ?? false {
+            if ballotMessage.isSummaryMessage() {
                 iconView.image = iconView.image?.withTintColor(.secondaryLabel)
             }
             else {
@@ -213,7 +213,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         ballotCellStackView.isUserInteractionEnabled = !editing
     }
     
-    private func updateCell(for ballotMessage: BallotMessage?) {
+    private func updateCell(for ballotMessage: BallotMessageEntity?) {
         // By accepting an optional the data is automatically reset when the ballot message is set to `nil`
         
         guard !(ballotMessage?.willBeDeleted ?? false) else {
@@ -249,7 +249,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
         messageDateAndStateView.message = ballotMessage
     }
     
-    private func observe(ballot: Ballot?, oldBallot: Ballot?) {
+    private func observe(ballot: BallotEntity?, oldBallot: BallotEntity?) {
         
         // Also handles case when `ballot` nil
         if oldBallot != ballot {
@@ -298,7 +298,7 @@ extension ChatViewBallotMessageTableViewCell: ChatViewMessageActions {
         // Primary actions
         
         // Message markers
-        let markStarHandler = { (message: BaseMessage) in
+        let markStarHandler = { (message: BaseMessageEntity) in
             self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
         }
         

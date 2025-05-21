@@ -129,7 +129,7 @@ extension CommonFileMessageMetadata {
 // MARK: - ThumbnailDisplayMessage
 
 /// General display message for message types that use a thumbnail
-public protocol ThumbnailDisplayMessage: BaseMessage & FileMessageProvider & CommonFileMessageMetadata {
+public protocol ThumbnailDisplayMessage: BaseMessageEntity & FileMessageProvider & CommonFileMessageMetadata {
     /// Thumbnail representing this message
     var thumbnailImage: UIImage? { get }
     /// Aspect ratio of (thumbnail) image (heigh/width)
@@ -175,14 +175,14 @@ public protocol VideoMessage: ThumbnailDisplayMessage {
 
 // MARK: - VoiceMessage
 
-public protocol VoiceMessage: BaseMessage & FileMessageProvider & CommonFileMessageMetadata {
+public protocol VoiceMessage: BaseMessageEntity & FileMessageProvider & CommonFileMessageMetadata {
     var durationTimeInterval: TimeInterval? { get }
     var consumed: Date? { get }
 }
 
 // MARK: - FileMessage
 
-public protocol FileMessage: BaseMessage & FileMessageProvider & CommonFileMessageMetadata {
+public protocol FileMessage: BaseMessageEntity & FileMessageProvider & CommonFileMessageMetadata {
     /// Name of file
     var name: String { get }
     /// File extension

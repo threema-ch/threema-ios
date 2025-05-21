@@ -163,8 +163,7 @@ class QuickActionButton: UIButton {
     }
     
     @objc private func updateColors() {
-        tintColor = .primary
-        buttonTitleLabel.textColor = .primary
+        buttonTitleLabel.textColor = .tintColor
         backgroundColor = .secondarySystemGroupedBackground
     }
     
@@ -234,5 +233,9 @@ extension QuickActionButton: QuickActionUpdate {
     
     func hide() {
         isHidden = true
+    }
+    
+    func popOverSourceView() -> UIView? {
+        self
     }
 }

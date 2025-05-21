@@ -135,9 +135,9 @@ class MembersActionDetailsTableViewCell: ThemedCodeTableViewCell {
     override func updateColors() {
         super.updateColors()
 
-        iconImageView.tintColor = .primary
+        iconImageView.tintColor = .tintColor
         iconBackgroundView.backgroundColor = .secondary
-        labelLabel.textColor = .primary
+        labelLabel.textColor = .tintColor
     }
     
     override public func layoutMarginsDidChange() {

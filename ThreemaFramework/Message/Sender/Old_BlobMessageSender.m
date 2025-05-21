@@ -274,9 +274,9 @@ static dispatch_queue_t backgroundQueue;
 #pragma mark - KVO
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    if ([object isKindOfClass:[BaseMessage class]]) {
+    if ([object isKindOfClass:[BaseMessageEntity class]]) {
         @try {
-            BaseMessage *messageObject = (BaseMessage *)object;
+            BaseMessageEntity *messageObject = (BaseMessageEntity *)object;
             
             if (messageObject.objectID == self.message.objectID) {
                 [_message removeObserver:self forKeyPath:@"sent"];

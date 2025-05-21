@@ -20,7 +20,7 @@
 
 import Foundation
 
-public enum BlobManagerResult {
+public enum BlobManagerResult: Sendable {
     case uploaded
     case downloaded
     case inProgress

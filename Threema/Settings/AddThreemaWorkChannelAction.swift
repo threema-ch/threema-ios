@@ -47,7 +47,7 @@ enum AddThreemaWorkChannelAction {
     private static func addWorkChannel(in viewController: UIViewController) {
         ContactStore.shared().addContact(
             with: threemaWorkChannelIdentity,
-            verificationLevel: Int32(kVerificationLevelUnverified),
+            verificationLevel: Int32(ContactEntity.VerificationLevel.unverified.rawValue),
             onCompletion: { contact, _ in
                 guard let contact else {
                     UIAlertTemplate.showAlert(

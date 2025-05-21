@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaMacros
 
 /// This class provides the list of available shortcut items.
 ///
@@ -35,11 +36,11 @@ import Foundation
         var localizedTitle: String {
             switch self {
             case .newMessage:
-                "application_shortcut_item_new_message"
+                #localize("application_shortcut_item_new_message")
             case .myID:
-                "application_shortcut_item_my_id"
+                #localize("application_shortcut_item_my_id")
             case .scanQrCode:
-                "application_shortcut_item_scan_qr_code"
+                #localize("application_shortcut_item_scan_qr_code")
             }
         }
       
@@ -68,7 +69,7 @@ import Foundation
         var item: UIApplicationShortcutItem {
             .init(
                 type: type,
-                localizedTitle: BundleUtil.localizedString(forKey: localizedTitle),
+                localizedTitle: localizedTitle,
                 localizedSubtitle: nil,
                 icon: UIApplicationShortcutIcon(systemImageName: icon)
             )

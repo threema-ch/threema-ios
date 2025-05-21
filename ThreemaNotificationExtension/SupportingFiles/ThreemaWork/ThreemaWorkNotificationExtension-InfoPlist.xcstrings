@@ -5,124 +5,130 @@
       "comment" : "Bundle display name",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema Work"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Threema Work NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "gsw-CH" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "pt" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work"
           }
         }
       }
@@ -131,16 +137,22 @@
       "comment" : "Bundle name",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Custom Work NotificationExtension"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "en" : {
@@ -158,97 +170,97 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "gsw-CH" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "pt" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "sk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema OnPrem NotificationExtension"
+            "value" : "Threema Work NotificationExtension"
           }
         }
       }

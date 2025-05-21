@@ -64,11 +64,11 @@
     }];
 }
 
-- (void)updateResultForChoice:(BallotChoice *)choice andParticipant:(NSString *)participant {
-    BallotResultEntity *result = [choice getResultForId: participant];
+- (void)updateResultForChoice:(BallotChoiceEntity *)choice andParticipant:(NSString *)participant {
+    BallotResultEntity *result = [choice getResultForIdentity: participant];
     
     if (result == nil) {
-        ;//
+        return;
     } else if (result.boolValue) {
         UIImageView *checkmark = [self getCheckmark];
         [self addSubview: checkmark];

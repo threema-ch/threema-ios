@@ -92,7 +92,6 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize profilePictureRequestList;
 
 @synthesize showGalleryPreview;
-@synthesize disableProximityMonitoring;
 
 @synthesize enableThreemaCall;
 @synthesize alwaysRelayCalls;
@@ -146,6 +145,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize contactList2;
 @synthesize ipcCommunicationEnabled;
 @synthesize ipcSecretPrefix;
+@synthesize newNavigationEnabled;
 
 /// Deprecated Keys, please add keys if they are removed:
 /// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
@@ -162,6 +162,7 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 /// - `useProfilePictureGenerator`
 /// - `BlockCommunication`
 /// - `SendEmojiReactions`
+/// - `DisableProximityMonitoring`
 
 static UserSettings *instance;
 
@@ -240,7 +241,6 @@ static UserSettings *instance;
                                         [NSArray array], @"ProfilePictureContactList",
                                         [NSArray array], @"ProfilePictureRequestList",
                                         [NSNumber numberWithBool:YES], @"ShowGalleryPreview",
-                                        [NSNumber numberWithBool:NO], @"DisableProximityMonitoring",
                                         [NSNumber numberWithBool:YES], @"EnableThreemaCall",
                                         [NSNumber numberWithBool:YES], @"EnableThreemaGroupCalls",
                                         [NSNumber numberWithBool:NO], @"AlwaysRelayCalls",
@@ -272,7 +272,7 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"ResetTipKitOnNextLaunch",
                                         [NSNumber numberWithBool:NO], @"JBDetectionDismissed",
                                         [NSNumber numberWithBool:NO], @"ContactList2",
-                                        [NSNumber numberWithBool:YES], @"IPCCommunicationEnabled",
+                                        [NSNumber numberWithBool:NO], @"NewNavigationEnabled",
                                         [NSData data], @"IPCSecretPrefix",
 
                                      nil];
@@ -337,7 +337,6 @@ static UserSettings *instance;
     profilePictureRequestList = [defaults arrayForKey:@"ProfilePictureRequestList"];
 
     showGalleryPreview = [defaults boolForKey:@"ShowGalleryPreview"];
-    disableProximityMonitoring = [defaults boolForKey:@"DisableProximityMonitoring"];
 
     enableThreemaCall = [defaults boolForKey:@"EnableThreemaCall"];
     enableThreemaGroupCalls = [defaults boolForKey:@"EnableThreemaGroupCalls"];
@@ -399,6 +398,7 @@ static UserSettings *instance;
     
     jbDetectionDismissed = [defaults boolForKey:@"JBDetectionDismissed"];
     contactList2 = [defaults boolForKey:@"ContactList2"];
+    newNavigationEnabled = [defaults boolForKey:@"NewNavigationEnabled"];
 
     if ([ThreemaEnvironment env] == EnvironmentTypeXcode) {
         ipcCommunicationEnabled = [defaults boolForKey:@"IPCCommunicationEnabled"];
@@ -684,12 +684,6 @@ static UserSettings *instance;
     [defaults setBool:showGalleryPreview forKey:@"ShowGalleryPreview"];
     [defaults synchronize];
 }
-
-- (void)setDisableProximityMonitoring:(BOOL)newDisableProximityMonitoring {
-    disableProximityMonitoring = newDisableProximityMonitoring;
-    [defaults setBool:disableProximityMonitoring forKey:@"DisableProximityMonitoring"];
-    [defaults synchronize];
-}
     
 - (void)setEnableThreemaCall:(BOOL)newEnableThreemaCall {
     enableThreemaCall = newEnableThreemaCall;
@@ -937,6 +931,11 @@ static UserSettings *instance;
 - (void)setContactList2:(BOOL)newContactList2 {
     contactList2 = newContactList2;
     [defaults setBool:contactList2 forKey:@"ContactList2"];
+    [defaults synchronize];
+}
+- (void)setNewNavigationEnabled:(BOOL)newNewNavigationEnabled {
+    newNavigationEnabled = newNewNavigationEnabled;
+    [defaults setBool:newNavigationEnabled forKey:@"NewNavigationEnabled"];
     [defaults synchronize];
 }
 

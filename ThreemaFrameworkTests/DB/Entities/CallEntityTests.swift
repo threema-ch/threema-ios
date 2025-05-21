@@ -42,13 +42,13 @@ final class CallEntityTests: XCTestCase {
         // Arrange
         let contactID = "TESTER01"
         let callID: NSNumber = 10
-        let date: NSDate = Date.now as NSDate
+        let date = Date.now
         let entityManager = EntityManager(databaseContext: dbContext)
         
         // Act
         let contact = try entityManager.performAndWaitSave {
             let contact = try XCTUnwrap(entityManager.entityCreator.contact())
-            contact.identity = contactID
+            contact.setIdentity(to: contactID)
             contact.publicKey = MockData.generatePublicKey()
             return contact
         }

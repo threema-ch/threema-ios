@@ -46,7 +46,7 @@ struct MultiDeviceWizardPreparationView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 130, height: 130)
-                        .foregroundColor(Color(.primary))
+                        .foregroundColor(.accentColor)
                         .rotationEffect(Angle(degrees: animate ? 360 : 0.0))
                         .animation(animation, value: animate)
                         .accessibilityHidden(true)
@@ -66,7 +66,7 @@ struct MultiDeviceWizardPreparationView: View {
                 Text(#localize("md_wizard_cancel"))
             }
             .buttonStyle(.bordered)
-            .tint(Color(.primary))
+            .tint(.accentColor)
         }
         .padding(.horizontal)
         .navigationBarTitle(#localize("md_wizard_header"))

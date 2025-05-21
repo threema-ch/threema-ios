@@ -61,6 +61,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readwrite) BOOL isAppInBackground;
 
+@property (nonatomic, readonly) BOOL isIPv6Connection;
+@property (nonatomic, readonly) BOOL isProxyConnection;
+
 /**
  Connect to chat or mediator server.
 
@@ -121,8 +124,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface ServerConnector : NSObject <ServerConnectorProtocol, SocketProtocolDelegate>
 
 @property (nonatomic, readwrite) double lastRtt;
-@property (nonatomic, readonly) BOOL isIPv6Connection;
-@property (nonatomic, readonly) BOOL isProxyConnection;
+
 
 + (ServerConnector*)sharedServerConnector;
 - (instancetype) __unavailable init;

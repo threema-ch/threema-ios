@@ -241,7 +241,8 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
     private func updateCell(for textMessage: TextMessageEntity?) {
        
         // Quote stack view displaying / hiding
-        if textMessage?.quoteMessage != nil {
+        // swiftformat:disable:next acronyms
+        if textMessage?.quotedMessageId != nil {
             containerView.addSubview(messageQuoteStackView)
             NSLayoutConstraint.deactivate(contentStackViewConstraints)
             NSLayoutConstraint.activate(messageQuoteStackViewConstraints)
@@ -279,10 +280,7 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
             invalidateObservers()
         }
         
-        guard let quotedMessage = quoteMessage as? BaseMessage else {
-            return
-        }
-        
+        let quotedMessage = quoteMessage as BaseMessageEntity
         let editObserver = quotedMessage.observe(\.lastEditedAt) { [weak self] _, _ in
             self?.messageQuoteStackView.quoteMessage = quoteMessage
         }
@@ -341,7 +339,7 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageActions {
         typealias Provider = ChatViewMessageActionsProvider
         
         // MessageMarkers
-        let markStarHandler = { (message: BaseMessage) in
+        let markStarHandler = { (message: BaseMessageEntity) in
             self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
         }
         

@@ -22,33 +22,34 @@ import CoreData
 import Foundation
 
 @objc(ImageMessageEntity)
-public final class ImageMessageEntity: BaseMessage {
+public final class ImageMessageEntity: BaseMessageEntity {
     
-    // Attributes
-    @NSManaged @objc(encryptionKey) public var encryptionKey: Data?
-    // swiftformat:disable:next acronyms
-    @NSManaged @objc(imageBlobId) public var imageBlobId: Data?
-    @NSManaged @objc(imageNonce) public var imageNonce: Data?
-    @NSManaged @objc(imageSize) public var imageSize: NSNumber?
-    @NSManaged @objc(progress) public var progress: NSNumber?
+    // MARK: Attributes
 
-    // Relationships
+    @NSManaged public var encryptionKey: Data?
+    // swiftformat:disable:next acronyms
+    @NSManaged public var imageBlobId: Data?
+    @NSManaged public var imageNonce: Data?
+    @NSManaged public var imageSize: NSNumber?
+    @NSManaged public var progress: NSNumber?
+
+    // MARK: Relationships
+
     @NSManaged public var image: ImageDataEntity?
     @NSManaged public var thumbnail: ImageDataEntity?
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
+    ///   - context: `NSManagedObjectContext` to insert created entity into
     ///   - encryptionKey: Key the image data is encrypted with
-    ///   - imageBlobID: Blob id of the image data
+    ///   - imageBlobID: BlobID of the image data
     ///   - imageNonce: Nonce of the image
     ///   - imageSize: Size of the image data
     ///   - progress: Progress
-    ///   - image: ImageDataEntity in which the image is saved
-    ///   - thumbnail: ImageDataEntity of the thumbnail
+    ///   - image: `ImageDataEntity` of the image
+    ///   - thumbnail: `ImageDataEntity` of the thumbnail
     public init(
         context: NSManagedObjectContext,
         encryptionKey: Data? = nil,

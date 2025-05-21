@@ -19,8 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "BallotMessage.h"
 #import "Old_ThemedViewController.h"
+
+@class BallotEntity;
 
 @interface BallotVoteViewController : Old_ThemedViewController
 
@@ -39,6 +40,6 @@
 @property (weak, nonatomic) IBOutlet UIButton *ballotCloseButton;
 @property (weak, nonatomic) IBOutlet UIButton *ballotEditButton;
 
-+ (instancetype) ballotVoteViewControllerForBallot:(Ballot *)ballot;
++ (instancetype) ballotVoteViewControllerForBallot:(BallotEntity *)ballot;
 
 @end

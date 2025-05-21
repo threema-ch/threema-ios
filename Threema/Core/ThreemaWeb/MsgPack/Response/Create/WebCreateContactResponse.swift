@@ -57,7 +57,7 @@ class WebCreateContactResponse: WebAbstractMessage {
         ContactStore.shared()
             .addContact(
                 with: identity,
-                verificationLevel: Int32(kVerificationLevelUnverified),
+                verificationLevel: Int32(ContactEntity.VerificationLevel.unverified.rawValue),
                 onCompletion: { theContact, _ in
                     if MyIdentityStore.shared().isValidIdentity, self.identity == MyIdentityStore.shared().identity {
                         self.ack!.success = false

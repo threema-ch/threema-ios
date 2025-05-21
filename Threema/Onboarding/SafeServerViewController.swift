@@ -59,12 +59,21 @@ class SafeServerViewController: IDCreationPageViewController {
         hideKeyboardWhenTappedAround()
         keyboardResize = KeyboardResizeCenterY(parent: view, resize: mainContentView)
 
-        titleLabel.text = #localize("safe_configure_choose_server")
+        titleLabel.text = String.localizedStringWithFormat(
+            #localize("safe_configure_choose_server"),
+            TargetManager.localizedAppName
+        )
         if TargetManager.isOnPrem {
-            descriptionLabel.text = #localize("safe_configure_server_explain_onprem")
+            descriptionLabel.text = String.localizedStringWithFormat(
+                #localize("safe_configure_server_explain_onprem"),
+                TargetManager.localizedAppName
+            )
         }
         else {
-            descriptionLabel.text = #localize("safe_configure_server_explain")
+            descriptionLabel.text = String.localizedStringWithFormat(
+                #localize("safe_configure_server_explain"),
+                TargetManager.localizedAppName
+            )
         }
 
         serverSwitchLabel.text = #localize("safe_use_default_server")
@@ -84,8 +93,6 @@ class SafeServerViewController: IDCreationPageViewController {
         serverField.text = customServer
         serverUsernameField.text = serverUsername
         serverPasswordField.text = serverPassword
-        
-        serverSwitch.onTintColor = .primary
     }
     
     // MARK: - Controlling the Keyboard

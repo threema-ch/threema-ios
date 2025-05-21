@@ -35,7 +35,7 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     
     func playNextMessageIfPossible(from message: NSManagedObjectID)
 
-    func didTap(message: BaseMessage?, in cell: ChatViewBaseTableViewCell?, customDefaultAction: (() -> Void)?)
+    func didTap(message: BaseMessageEntity?, in cell: ChatViewBaseTableViewCell?, customDefaultAction: (() -> Void)?)
     func didAccessibilityTapOnCell()
     
     func showQuoteView(message: QuoteMessage)
@@ -48,7 +48,7 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
     func showDetails(for messageID: NSManagedObjectID)
     func willDeleteMessage(with objectID: NSManagedObjectID)
     func didDeleteMessages()
-    func toggleMessageMarkerStar(message: BaseMessage)
+    func toggleMessageMarkerStar(message: BaseMessageEntity)
     func retryOrCancelSendingMessage(withID messageID: NSManagedObjectID, from sourceView: UIView)
     func editMessage(for messageObjectID: NSManagedObjectID)
 
@@ -72,7 +72,7 @@ protocol ChatViewTableViewCellDelegateProtocol: AnyObject {
 }
 
 extension ChatViewTableViewCellDelegateProtocol {
-    func didTap(message: BaseMessage?, in cell: ChatViewBaseTableViewCell?) {
+    func didTap(message: BaseMessageEntity?, in cell: ChatViewBaseTableViewCell?) {
         didTap(message: message, in: cell, customDefaultAction: nil)
     }
 }
@@ -224,7 +224,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
         IDNASafetyHelper.safeOpen(url: url, viewController: chatViewController)
     }
     
-    func didTap(message: BaseMessage?, in cell: ChatViewBaseTableViewCell?, customDefaultAction: (() -> Void)?) {
+    func didTap(message: BaseMessageEntity?, in cell: ChatViewBaseTableViewCell?, customDefaultAction: (() -> Void)?) {
         
         guard let message,
               let cell else {
@@ -271,7 +271,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     
     // MARK: - Message actions
     
-    func toggleMessageMarkerStar(message: BaseMessage) {
+    func toggleMessageMarkerStar(message: BaseMessageEntity) {
         entityManager.performAndWaitSave {
             if let markers = message.messageMarkers {
                 markers.star = NSNumber(booleanLiteral: !markers.star.boolValue)
@@ -360,7 +360,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     /// message is already uploading
     /// - Parameter messageObjectID: Managed object ID of the message to be loaded
     func retryOrCancelSendingMessage(withID messageID: NSManagedObjectID, from sourceView: UIView) {
-        guard let message = entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessage else {
+        guard let message = entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessageEntity else {
             DDLogError("Message could not be loaded.")
             return
         }
@@ -389,7 +389,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
 
         let rejectedByGroupMembers = backgroundBusinessInjector.entityManager.performAndWait {
             let message = backgroundBusinessInjector.entityManager.entityFetcher
-                .existingObject(with: messageID) as? BaseMessage
+                .existingObject(with: messageID) as? BaseMessageEntity
 
             var rejectedBy: Set<ContactEntity>? = nil
             if message?.conversation.isGroup ?? false, !(message?.rejectedBy?.isEmpty ?? true) {

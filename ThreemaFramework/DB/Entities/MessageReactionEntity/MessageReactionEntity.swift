@@ -22,32 +22,35 @@ import CoreData
 import Foundation
 
 @objc(MessageReactionEntity)
-public class MessageReactionEntity: TMAManagedObject {
+public final class MessageReactionEntity: TMAManagedObject {
 
-    // Attributes
-    @NSManaged @objc(reaction) public var reaction: String
-    @NSManaged @objc(date) public var date: Date
+    // MARK: Attributes
 
-    // Relationships
-    @NSManaged @objc(message) public var message: BaseMessage
-    @NSManaged @objc(creator) public var creator: ContactEntity?
+    @NSManaged public var reaction: String
+    @NSManaged public var date: Date
+
+    // MARK: Relationships
+
+    @NSManaged public var message: BaseMessageEntity
+    @NSManaged public var creator: ContactEntity?
     
-    // Lifecycle
+    // MARK: Lifecycle
+
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - creator: The contact of the creator of the reaction nil if we reacted
+    ///   - creator: The `ContactEntity` of the creator of the reaction, nil if we reacted
     ///   - reaction: The string of the reaction itself, e.g. the emoji
-    ///   - message: BaseMessage the entity belongs to
+    ///   - message: `BaseMessageEntity` the entity belongs to
     public init(
         context: NSManagedObjectContext,
         reaction: String,
         contact: ContactEntity? = nil,
-        message: BaseMessage
+        message: BaseMessageEntity
     ) {
         let entity = NSEntityDescription.entity(forEntityName: "MessageReaction", in: context)!
         super.init(entity: entity, insertInto: context)
         
-        self.creator = creator
+        self.creator = contact
         self.reaction = reaction
         
         self.message = message

@@ -22,7 +22,6 @@
 #import "AppDelegate.h"
 #import <Social/Social.h>
 #import "ShareTextActivityItemProvider.h"
-#import "ShareUrlActivityItemProvider.h"
 #import "ActivityUtil.h"
 #import "MyIdentityStore.h"
 #import "BundleUtil.h"
@@ -33,7 +32,7 @@
 static InviteController *currentInviteController;
 
 - (void)invite {
-    ShareTextActivityItemProvider *shareText = [[ShareTextActivityItemProvider alloc] initWithPlaceholderItem:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_facebook_text"], [[MyIdentityStore sharedMyIdentityStore] identity]]];
+    ShareTextActivityItemProvider *shareText = [[ShareTextActivityItemProvider alloc] initWithPlaceholderItem:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_facebook_text"], TargetManagerObjc.appName, TargetManagerObjc.localizedAppName,  [[MyIdentityStore sharedMyIdentityStore] identity]]];
     NSMutableArray *activityItems = [[NSMutableArray alloc] initWithArray:@[shareText]];
 
     UIActivityViewController* activityViewController = [ActivityUtil activityViewControllerWithActivityItems:activityItems applicationActivities:nil];
@@ -47,8 +46,8 @@ static InviteController *currentInviteController;
 
 - (void)presentMailComposer {
     MFMailComposeViewController *mailComposer = [[MFMailComposeViewController alloc] init];
-    [mailComposer setSubject:[BundleUtil localizedStringForKey:@"invite_email_subject"]];
-    [mailComposer setMessageBody:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_email_body"], [[MyIdentityStore sharedMyIdentityStore] identity]] isHTML:NO];
+    [mailComposer setSubject:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_email_subject"], TargetManagerObjc.appName]];
+    [mailComposer setMessageBody:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_email_body"], TargetManagerObjc.appName, TargetManagerObjc.localizedAppName, [[MyIdentityStore sharedMyIdentityStore] identity], TargetManagerObjc.appName] isHTML:NO];
     mailComposer.mailComposeDelegate = self;
     [self.parentViewController presentViewController:mailComposer animated:YES completion:nil];
     
@@ -58,7 +57,7 @@ static InviteController *currentInviteController;
 
 - (void)presentMessageComposer {
     MFMessageComposeViewController *smsComposer = [[MFMessageComposeViewController alloc] init];
-    [smsComposer setBody:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_sms_body"], [[MyIdentityStore sharedMyIdentityStore] identity]]];
+    [smsComposer setBody:[NSString stringWithFormat:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"invite_sms_body"],TargetManagerObjc.appName, TargetManagerObjc.localizedAppName,  [[MyIdentityStore sharedMyIdentityStore] identity]]]];
     smsComposer.messageComposeDelegate = self;
     [self.parentViewController presentViewController:smsComposer animated:YES completion:nil];
     

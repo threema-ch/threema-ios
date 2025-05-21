@@ -45,7 +45,8 @@ class LinkedContactManager: NSObject {
     
     /// Is the contact linked to any `CNContact`?
     private var contactIsLinked: Bool {
-        contact.cnContactID != nil
+        // swiftformat:disable:next acronyms
+        contact.cnContactId != nil
     }
     
     /// Current linked `CNContact`
@@ -94,7 +95,8 @@ class LinkedContactManager: NSObject {
         )
         
         // Get a notification when the linking of this contact changes
-        cnContactIDObserver = contact.observe(\.cnContactID) { [weak self] _, _ in
+        // swiftformat:disable:next acronyms
+        cnContactIDObserver = contact.observe(\.cnContactId) { [weak self] _, _ in
             DispatchQueue.main.async {
                 self?.updateCNContact()
             }
@@ -125,7 +127,8 @@ class LinkedContactManager: NSObject {
             return nil
         }
         
-        guard let linkedID = contact.cnContactID else {
+        // swiftformat:disable:next acronyms
+        guard let linkedID = contact.cnContactId else {
             return nil
         }
         
@@ -241,7 +244,7 @@ extension CNContactViewController {
     // Some custom settings are needed to make `CNContactViewController` appear as expected.
     fileprivate func applyWorkarounds() {
         // Enforce appearance to match app tint color
-        view.tintColor = .primary
+        view.tintColor = .tintColor
         
         // Because `CNContactViewController` comes with a custom "header view" that runs behind
         // the navigation bar we hide the navigation bar.
@@ -445,7 +448,7 @@ extension LinkedContactManager {
         let picker = CNContactPickerViewController()
         picker.delegate = self
         picker.modalPresentationStyle = .formSheet
-        picker.view.tintColor = .primary // Ensure everything gets the correct tint color
+        picker.view.tintColor = .tintColor // Ensure everything gets the correct tint color
         
         viewController.present(picker, animated: true)
     }

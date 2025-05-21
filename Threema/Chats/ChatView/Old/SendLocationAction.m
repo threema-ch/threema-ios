@@ -28,11 +28,14 @@
 @implementation SendLocationAction
 
 - (void)executeAction {
-    SendLocationViewController *previewLocationVc = [[SendLocationViewController alloc] initWithConversation:self.chatViewController.conversation];
-    ModalNavigationController *previewLocationNav = [[ModalNavigationController alloc] initWithRootViewController:previewLocationVc];
-    previewLocationNav.modalPresentationStyle = UIModalPresentationFormSheet;
-    [self.chatViewController.navigationController presentViewController:previewLocationNav animated:YES completion:nil];
+    [[ServerInfoProviderFactory makeServerInfoProvider] mapsServerWithCompletionHandler:^(MapsServerInfo * _Nullable mapsServerInfo, __unused NSError * _Nullable error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            SendLocationViewController *previewLocationVc = [[SendLocationViewController alloc] initWithConversation:self.chatViewController.conversation mapsServerInfo:mapsServerInfo];
+            ModalNavigationController *previewLocationNav = [[ModalNavigationController alloc] initWithRootViewController:previewLocationVc];
+            previewLocationNav.modalPresentationStyle = UIModalPresentationFormSheet;
+            [self.chatViewController.navigationController presentViewController:previewLocationNav animated:YES completion:nil];
+        });
+    }];
 }
-
 
 @end

@@ -637,9 +637,7 @@ public final class DeviceJoin {
                 return []
             }
             
-            return allContacts.filter {
-                $0.isForwardSecurityAvailable()
-            }
+            return allContacts.filter(\.isForwardSecurityAvailable)
         }
     }
     
@@ -841,9 +839,9 @@ extension Group {
         
         syncGroup.update(state: state)
         
-        // `notification_trigger_policy_override` is currently not supported on iOS: IOS-2825
+        // `notification_trigger_policy_override` is currently not supported on iOS: IOS-5207
         syncGroup.notificationTriggerPolicyOverride.default = Common_Unit()
-        // `notification_sound_policy_override` is currently not supported on iOS: IOS-2825
+        // `notification_sound_policy_override` is currently not supported on iOS: IOS-5207
         syncGroup.notificationSoundPolicyOverride.default = Common_Unit()
         
         syncGroup.memberIdentities.identities = allActiveMemberIdentitiesWithoutCreator

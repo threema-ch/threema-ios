@@ -77,7 +77,10 @@ class ConversationActionsTest: XCTestCase {
         var conversation: ConversationEntity!
         
         dbPreparer.save {
-            contact = dbPreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO", verificationLevel: 0)
+            contact = dbPreparer.createContact(
+                publicKey: Data([1]),
+                identity: "ECHOECHO"
+            )
 
             conversation = dbPreparer.createConversation(
                 typing: false,

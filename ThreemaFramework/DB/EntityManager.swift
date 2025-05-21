@@ -168,6 +168,11 @@ public class EntityManager: NSObject {
         dbContext.current.rollback()
     }
     
+    @objc public func fullRollback() {
+        dbContext.current.rollback()
+        dbContext.main.rollback()
+    }
+    
     // MARK: - Data access & creation helpers
     
     /// Convert URL serialized managed object ID to `NSManagedObjectID`
@@ -189,12 +194,7 @@ public class EntityManager: NSObject {
                     continue
                 }
 
-                if let msgID = lastMessage.id {
-                    if self.entityFetcher.message(with: msgID, conversation: conversation) == nil {
-                        conversation.lastMessage = nil
-                    }
-                }
-                else {
+                if self.entityFetcher.message(with: lastMessage.id, conversation: conversation) == nil {
                     conversation.lastMessage = nil
                 }
             }
@@ -361,7 +361,7 @@ public class EntityManager: NSObject {
                     continue
                 }
 
-                dbMsg.removeRejectedBy(contact)
+                dbMsg.removeFromRejectedBy(contact)
             }
         }
     }
@@ -510,8 +510,8 @@ extension EntityManager {
         
         // Check if the contact still needs to be hidden
         if !keepContactHidden,
-           contactEntity.isContactHidden {
-            contactEntity.isContactHidden = false
+           contactEntity.isHidden {
+            contactEntity.isHidden = false
 
             let mediatorSyncableContacts = MediatorSyncableContacts()
             mediatorSyncableContacts.updateAcquaintanceLevel(
@@ -614,9 +614,8 @@ extension EntityManager {
             return (conversation, sender, receiver)
         }
 
-        var result: (conversation: ConversationEntity?, sender: ContactEntity?, receiver: ContactEntity?)!
-        dbContext.current.performAndWait {
-            result = conversationSenderReceiver(fetcher: entityFetcher)
+        var result = dbContext.current.performAndWait {
+            conversationSenderReceiver(fetcher: entityFetcher)
         }
 
         if result.conversation == nil, result.sender == nil, result.receiver == nil, !isMainDBContext {
@@ -709,7 +708,7 @@ extension EntityManager {
         sender: ContactEntity?,
         conversation: ConversationEntity,
         thumbnail: UIImage?,
-        onCompletion: @escaping (BaseMessage) -> Void,
+        onCompletion: @escaping (BaseMessageEntity) -> Void,
         onError: @escaping (Error) -> Void
     ) {
         do {
@@ -741,16 +740,16 @@ extension EntityManager {
         sender: ContactEntity?,
         conversation: ConversationEntity,
         thumbnail: UIImage?
-    ) throws -> BaseMessage {
+    ) throws -> BaseMessageEntity {
         assert(abstractMessage.fromIdentity != nil, "Sender identity is needed to calculating sending direction")
 
-        // Get DB objects BaseMessage from particular entity fetcher
-        func getMessage(for conversation: ConversationEntity, fetcher: EntityFetcher) -> BaseMessage? {
+        // Get DB objects BaseMessageEntity from particular entity fetcher
+        func getMessage(for conversation: ConversationEntity, fetcher: EntityFetcher) -> BaseMessageEntity? {
             fetcher.message(with: abstractMessage.messageID, conversation: conversation)
         }
 
         return try getOrCreateMessageQueue.sync {
-            var message: BaseMessage?
+            var message: BaseMessageEntity?
 
             try dbContext.current.performAndWait {
                 message = getMessage(for: conversation, fetcher: entityFetcher)
@@ -773,7 +772,7 @@ extension EntityManager {
                 // Apply message to current DB context
                 if let messageObjectID {
                     DDLogNotice("Apply message \(abstractMessage.messageID.hexString) to current DB context")
-                    message = dbContext.current.object(with: messageObjectID) as? BaseMessage
+                    message = dbContext.current.object(with: messageObjectID) as? BaseMessageEntity
                     guard !(message?.delivered.boolValue ?? false) else {
                         DDLogWarn("Message ID \(abstractMessage.messageID.hexString) already processed")
                         throw ThreemaProtocolError.messageAlreadyProcessed
@@ -790,7 +789,7 @@ extension EntityManager {
                     }
                 }
                 else if abstractMessage is BoxBallotCreateMessage || abstractMessage is GroupBallotCreateMessage {
-                    guard message is BallotMessage else {
+                    guard message is BallotMessageEntity else {
                         throw TaskExecutionError
                             .messageTypeMismatch(message: "message ID: \(abstractMessage.messageID.hexString)")
                     }
@@ -918,7 +917,7 @@ extension EntityManager {
         for abstractMessage: AbstractMessage,
         conversation: ConversationEntity,
         onError: @escaping (Error) -> Void
-    ) -> BaseMessage? {
+    ) -> BaseMessageEntity? {
         do {
             return try deleteMessage(for: abstractMessage, conversation: conversation)
         }
@@ -931,7 +930,7 @@ extension EntityManager {
     func deleteMessage(
         for abstractMessage: AbstractMessage,
         conversation: ConversationEntity
-    ) throws -> BaseMessage {
+    ) throws -> BaseMessageEntity {
         var e2eDeleteMessage: CspE2e_DeleteMessage?
 
         if let deleteMessage = abstractMessage as? DeleteMessage {
@@ -982,7 +981,7 @@ extension EntityManager {
         for abstractMessage: AbstractMessage,
         conversation: ConversationEntity,
         onError: @escaping (Error) -> Void
-    ) -> BaseMessage? {
+    ) -> BaseMessageEntity? {
         do {
             return try editMessage(for: abstractMessage, conversation: conversation)
         }
@@ -995,7 +994,7 @@ extension EntityManager {
     func editMessage(
         for abstractMessage: AbstractMessage,
         conversation: ConversationEntity
-    ) throws -> BaseMessage {
+    ) throws -> BaseMessageEntity {
         var e2eEditMessage: CspE2e_EditMessage?
 
         if let editMessage = abstractMessage as? EditMessage {
@@ -1075,8 +1074,8 @@ extension EntityManager {
 
         // Check if the contact still needs to be hidden
         if let contactEntity = conversation?.contact,
-           contactEntity.isContactHidden {
-            contactEntity.isContactHidden = false
+           contactEntity.isHidden {
+            contactEntity.isHidden = false
 
             let mediatorSyncableContacts = MediatorSyncableContacts()
             mediatorSyncableContacts.updateAcquaintanceLevel(

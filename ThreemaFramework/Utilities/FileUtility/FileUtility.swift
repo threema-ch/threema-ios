@@ -70,7 +70,7 @@ import Foundation
             }
         }
         catch {
-            DDLogError(error.localizedDescription)
+            DDLogError("\(error.localizedDescription)")
         }
     }
     
@@ -88,7 +88,7 @@ import Foundation
             return fileAttr[FileAttributeKey.size] as? Int64
         }
         catch {
-            DDLogError(error.localizedDescription)
+            DDLogError("\(error.localizedDescription)")
         }
         
         return nil
@@ -214,7 +214,7 @@ import Foundation
             return true
         }
         catch {
-            DDLogError(error.localizedDescription)
+            DDLogError("\(error.localizedDescription)")
         }
         
         return false
@@ -229,7 +229,7 @@ import Foundation
             return true
         }
         catch {
-            DDLogError(error.localizedDescription)
+            DDLogError("\(error.localizedDescription)")
         }
         
         return false
@@ -244,7 +244,7 @@ import Foundation
             return true
         }
         catch {
-            DDLogError(error.localizedDescription)
+            DDLogError("\(error.localizedDescription)")
         }
         
         return false
@@ -272,7 +272,7 @@ import Foundation
             fileHandle.closeFile()
         }
         catch {
-            DDLogError(error.localizedDescription)
+            DDLogError("\(error.localizedDescription)")
         }
         
         return content
@@ -300,7 +300,7 @@ import Foundation
                 fileHandle.closeFile()
             }
             catch {
-                DDLogError(error.localizedDescription)
+                DDLogError("\(error.localizedDescription)")
             }
             
             result = true
@@ -347,12 +347,12 @@ import Foundation
                     }
                 }
                 catch {
-                    DDLogError(error.localizedDescription)
+                    DDLogError("\(error.localizedDescription)")
                 }
             }
         }
         catch {
-            DDLogError(error.localizedDescription)
+            DDLogError("\(error.localizedDescription)")
         }
     }
     

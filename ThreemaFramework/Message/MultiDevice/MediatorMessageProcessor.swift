@@ -134,7 +134,7 @@ class MediatorMessageProcessor: NSObject {
                         clientHello.encryptedDeviceInfo = encryptedData
                     }
 
-                    DDLogVerbose(String(format: "Device ID: %llx", clientHello.deviceID))
+                    DDLogVerbose("\(String(format: "Device ID: %llx", clientHello.deviceID))")
 
                     if let clientHelloMessage = mediatorMessageProtocol.encodeClientHello(clientHello: clientHello) {
                         return clientHelloMessage

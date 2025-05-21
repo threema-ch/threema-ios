@@ -28,6 +28,7 @@ public enum NotificationPresenterStyle: Identifiable {
     case success
     case error
     case warning
+    case loading
     
     public var id: String {
         switch self {
@@ -39,6 +40,8 @@ public enum NotificationPresenterStyle: Identifiable {
             "threemaErrorStyle"
         case .warning:
             "threemaInfoStyle"
+        case .loading:
+            "threemaLoadingStyle"
         }
     }
     
@@ -64,9 +67,32 @@ public enum NotificationPresenterStyle: Identifiable {
             let image = UIImage(systemName: "info.circle.fill")
             view.image = image
             view.tintColor = .systemOrange
+            
+        case .loading:
+            return nil
         }
         
         return view
+    }
+    
+    /// Optional UIImageView to be used in notification
+    public var notificationLoadingIndicator: Bool {
+        switch self {
+        case .none:
+            false
+            
+        case .success:
+            false
+            
+        case .error:
+            false
+            
+        case .warning:
+            false
+            
+        case .loading:
+            true
+        }
     }
     
     /// Optional haptic feedback style
@@ -80,6 +106,8 @@ public enum NotificationPresenterStyle: Identifiable {
             .error
         case .warning:
             .warning
+        case .loading:
+            nil
         }
     }
 }
@@ -109,7 +137,10 @@ public struct NotificationPresenterType {
         notificationStyle: .success
     )
     public static let copyIDSuccess = NotificationPresenterType(
-        notificationText: #localize("notification_copying_id_succeeded"),
+        notificationText: String.localizedStringWithFormat(
+            #localize("notification_copying_id_succeeded"),
+            TargetManager.localizedAppName
+        ),
         notificationStyle: .success
     )
     public static let copyError = NotificationPresenterType(
@@ -142,6 +173,18 @@ public struct NotificationPresenterType {
     )
     public static let recordingTooLong = NotificationPresenterType(
         notificationText: #localize("notification_recording_too_long"),
+        notificationStyle: .error
+    )
+    public static let recordingCallRunning = NotificationPresenterType(
+        notificationText: #localize("notification_recording_call_running"),
+        notificationStyle: .error
+    )
+    public static let recordingFailed = NotificationPresenterType(
+        notificationText: #localize("notification_recording_failed"),
+        notificationStyle: .error
+    )
+    public static let recordingPlayingFailed = NotificationPresenterType(
+        notificationText: #localize("notification_recording_playing_failed"),
         notificationStyle: .error
     )
     public static let playingError = NotificationPresenterType(
@@ -264,6 +307,50 @@ public struct NotificationPresenterType {
     public static let emojiPartialGroup = NotificationPresenterType(
         notificationText: #localize("notification_emojis_partial_group"),
         notificationStyle: .warning
+    )
+    
+    public static let contactSyncFailed = NotificationPresenterType(
+        notificationText: #localize("notification_contact_sync_failed"),
+        notificationStyle: .error
+    )
+    
+    public static let contactSyncSuccess = NotificationPresenterType(
+        notificationText: #localize("notification_contact_sync_success"),
+        notificationStyle: .success
+    )
+    
+    public static let contactSyncOffWarning = NotificationPresenterType(
+        notificationText: #localize("notification_contact_sync_off_warning"),
+        notificationStyle: .warning
+    )
+    
+    public static let workSyncFailed = NotificationPresenterType(
+        notificationText: #localize("notification_work_sync_failed"),
+        notificationStyle: .error
+    )
+    
+    public static let directoryContactAdded = NotificationPresenterType(
+        notificationText: #localize("notification_directory_contact_added"),
+        notificationStyle: .success
+    )
+    
+    public static let loadingWebSite = NotificationPresenterType(
+        notificationText: #localize("notification_loading_website"),
+        notificationStyle: .loading
+    )
+    
+    public static let revocationPasswordSuccess = NotificationPresenterType(
+        notificationText: #localize("revocation_request_success"),
+        notificationStyle: .success
+    )
+    public static let revocationPasswordError = NotificationPresenterType(
+        notificationText: #localize("revocation_request_failed"),
+        notificationStyle: .error
+    )
+    
+    public static let verificationEmailSent = NotificationPresenterType(
+        notificationText: #localize("link_email_sent_title"),
+        notificationStyle: .success
     )
 }
 

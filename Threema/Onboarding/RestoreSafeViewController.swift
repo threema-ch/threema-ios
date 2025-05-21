@@ -56,11 +56,20 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
 
         hideKeyboardWhenTappedAround()
         
-        titleLabel.text = #localize("safe_restore")
-        descriptionLabel.text = #localize("safe_restore_enter_id")
+        titleLabel.text = String.localizedStringWithFormat(
+            #localize("safe_restore"),
+            TargetManager.localizedAppName
+        )
+        descriptionLabel.text = String.localizedStringWithFormat(
+            #localize("safe_restore_enter_id"),
+            TargetManager.localizedAppName
+        )
         forgotIDButton.setTitle(#localize("safe_forgot_your_id"), for: .normal)
         identityField.delegate = self
-        identityField.placeholder = #localize("safe_threema_id")
+        identityField.placeholder = String.localizedStringWithFormat(
+            #localize("safe_threema_id"),
+            TargetManager.localizedAppName
+        )
         identityField.threemaID = true
         identityField.accessibilityIdentifier = "RestoreSafeViewControllerIdentityTextField"
         expertOptionsButton.setTitle(#localize("safe_advanced_options"), for: .normal)
@@ -68,9 +77,7 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
         cancelButton.setTitle(#localize("cancel"), for: .normal)
         okButton.setTitle(#localize("restore"), for: .normal)
         okButton.accessibilityIdentifier = "RestoreSafeViewControllerRestoreButton"
-        
-        forgotIDButton.setTitleColor(UIColor.primary, for: .normal)
-        
+                
         // check MDM for Threema Safe restore
         let mdmSetup = MDMSetup(setup: true)!
         if TargetManager.isBusinessApp {
@@ -146,7 +153,10 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
         if identifier == "RestoreSafePassword" {
             guard let identity = identityField.text, identity.count == 8 else {
                 let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
-                alert.showAlert(#localize("invalid_threema_id"))
+                alert.showAlert(String.localizedStringWithFormat(
+                    #localize("invalid_threema_id"),
+                    TargetManager.localizedAppName
+                ))
                 return false
             }
         }

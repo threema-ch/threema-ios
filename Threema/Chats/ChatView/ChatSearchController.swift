@@ -263,6 +263,10 @@ final class ChatSearchController: NSObject {
         fatalError("No available")
     }
     
+    deinit {
+        DatabaseContext.removeDirectBackgroundContext(with: context)
+    }
+    
     // MARK: - Public functions
     
     /// Activate the search bar text field
@@ -318,7 +322,7 @@ final class ChatSearchController: NSObject {
                             filterPredicate: nil,
                             fetchLimit: ChatViewConfiguration.SearchResultsFetching.maxItemsToFetch
                         )
-                        .compactMap { $0 as? BaseMessage }
+                        .compactMap { $0 as? BaseMessageEntity }
                         .map(\.objectID)
                     }
                     else {
@@ -328,7 +332,7 @@ final class ChatSearchController: NSObject {
                             filterPredicate: nil,
                             fetchLimit: ChatViewConfiguration.SearchResultsFetching.maxItemsToFetch
                         )
-                        .compactMap { $0 as? BaseMessage }
+                        .compactMap { $0 as? BaseMessageEntity }
                         .map(\.objectID)
                     }
                 }

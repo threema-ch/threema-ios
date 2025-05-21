@@ -308,20 +308,20 @@ class TaskExecution: NSObject {
                     return
                 }
 
-                guard toContact.isValid() else {
+                guard toContact.isValid else {
                     let msg =
                         "Do not sending message to invalid identity \(String(describing: message.toIdentity)) (\(String(describing: message.loggingDescription)))"
                     guard message.flagGroupMessage() else {
                         seal.reject(TaskExecutionError.invalidContact(message: msg))
                         return
                     }
-                    DDLogWarn(msg)
+                    DDLogWarn("\(msg)")
 
                     seal.fulfill(nil)
                     return
                 }
 
-                if let task = self.taskDefinition as? TaskDefinitionSendMessageProtocol,
+                if self.taskDefinition is TaskDefinitionSendMessageProtocol,
                    let toIdentity = message.toIdentity {
                     guard !self.isMessageAlreadySentTo(identity: toIdentity) else {
                         DDLogWarn(
@@ -339,7 +339,7 @@ class TaskExecution: NSObject {
                 // security (Common Send Steps (6.1))
                 if ThreemaEnvironment.supportsForwardSecurity,
                    !(message is ForwardSecurityEnvelopeMessage),
-                   toContact.isForwardSecurityAvailable() {
+                   toContact.isForwardSecurityAvailable {
                     do {
                         let fsContact = ForwardSecurityContact(
                             identity: toContact.identity,
@@ -367,7 +367,7 @@ class TaskExecution: NSObject {
                             "[ForwardSecurity] Don't try sending \(message.loggingDescription) with FS, because it is already an FS message"
                         )
                     }
-                    else if !toContact.isForwardSecurityAvailable() {
+                    else if !toContact.isForwardSecurityAvailable {
                         DDLogNotice(
                             "[ForwardSecurity] Don't try sending \(message.loggingDescription) with FS, because \(toContact.identity) doesn't support it: featureMask=\(toContact.featureMask)"
                         )
@@ -541,7 +541,7 @@ class TaskExecution: NSObject {
                         return
                     }
                     
-                    guard toContact.isValid() else {
+                    guard toContact.isValid else {
                         let msg =
                             "Do not sending message to invalid identity \(message.toIdentity ?? "no identity") (\(message.loggingDescription))"
                         seal.reject(TaskExecutionError.invalidContact(message: msg))
@@ -907,7 +907,7 @@ class TaskExecution: NSObject {
         }
         else if let task = task as? TaskDefinitionSendBallotVoteMessage {
             conversation = frameworkInjector.entityManager.entityFetcher
-                .ballot(for: task.ballotID)?.conversation
+                .ballotEntity(for: task.ballotID)?.conversation
         }
         else if let task = task as? TaskDefinitionReflectIncomingMessage {
             conversation = frameworkInjector.entityManager.conversation(forMessage: task.message)
@@ -1021,8 +1021,8 @@ class TaskExecution: NSObject {
                 }
                 return msg
             }
-            else if let message = message as? BallotMessage {
-                let msg: BoxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(for: message.ballot!)
+            else if let message = message as? BallotMessageEntity, let ballot = message.ballot {
+                let msg: BoxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(forBallot: ballot)
                 msg.messageID = message.id
 
                 guard let groupID = task.groupID,
@@ -1146,9 +1146,9 @@ class TaskExecution: NSObject {
         }
         else if let task = task as? TaskDefinitionSendBallotVoteMessage,
                 let ballot = frameworkInjector.entityManager.entityFetcher
-                .ballot(for: task.ballotID) {
+                .ballotEntity(for: task.ballotID) {
 
-            let msg: BoxBallotVoteMessage = BallotMessageEncoder.encodeVoteMessage(for: ballot)
+            let msg: BoxBallotVoteMessage = BallotMessageEncoder.encodeVoteMessage(forBallot: ballot)
             guard let groupID = task.groupID,
                   let groupCreatorIdentity = task.groupCreatorIdentity,
                   frameworkInjector.groupManager

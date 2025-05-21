@@ -4,6 +4,12 @@
     "CFBundleDisplayName" : {
       "comment" : "Bundle display name",
       "localizations" : {
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Threema Green"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",
@@ -73,7 +79,7 @@
         "pt" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema Green"
+            "value" : "Threema Green ShareExtension"
           }
         },
         "pt-BR" : {
@@ -115,13 +121,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema Green"
+            "value" : "Threema Green ShareExtension"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema Green"
+            "value" : "Threema Green ShareExtension"
           }
         }
       }
@@ -130,6 +136,12 @@
       "comment" : "Bundle name",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "bg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зелено Threema споделено разширение"
+          }
+        },
         "cs" : {
           "stringUnit" : {
             "state" : "translated",

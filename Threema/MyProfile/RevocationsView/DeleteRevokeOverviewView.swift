@@ -36,24 +36,36 @@ struct DeleteRevokeOverviewView: View {
                         .bold()
                         .font(.title2)
                     
-                    GroupBox(
-                        label: Label(
-                            #localize("my_profile_delete_info_delete"),
+                    GroupBox {
+                        Text(String.localizedStringWithFormat(
+                            #localize("my_profile_delete_info_keep"),
+                            TargetManager.localizedAppName
+                        ))
+                        .padding(.top, 4)
+                    } label: {
+                        Label(
+                            String.localizedStringWithFormat(
+                                #localize("my_profile_delete_info_delete"),
+                                TargetManager.appName
+                            ),
                             systemImage: "trash.circle.fill"
-                        ),
-                        content: {
-                            Text(#localize("my_profile_delete_info_keep"))
-                                .padding(.top, 4)
-                        }
-                    )
+                        )
+                    }
+                    
                     .groupBoxStyle(.info)
                     
                     HStack {
-                        Text(#localize("my_profile_delete_info_revoke_info"))
-                            .italic() +
-                            Text(.init(#localize("my_profile_delete_info_revoke_info_link")))
-                            .underline()
-                            .italic()
+                        Text(String.localizedStringWithFormat(
+                            #localize("my_profile_delete_info_revoke_info"),
+                            TargetManager.localizedAppName
+                        ))
+                        .italic() +
+                        Text(.init(String.localizedStringWithFormat(
+                            #localize("my_profile_delete_info_revoke_info_link"),
+                            TargetManager.localizedAppName
+                        )))
+                        .underline()
+                        .italic()
                         Spacer()
                     }
                     .font(.footnote)
@@ -88,7 +100,10 @@ struct DeleteRevokeOverviewView: View {
                 .frame(minHeight: proxy.size.height)
             }
             .alert(
-                #localize("my_profile_delete_info_alert_title"),
+                String.localizedStringWithFormat(
+                    #localize("my_profile_delete_info_alert_title"),
+                    TargetManager.localizedAppName
+                ),
                 isPresented: $showConfirmationAlert,
                 actions: {
                     Button(

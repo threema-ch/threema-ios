@@ -73,8 +73,8 @@
         _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_title_work"], TargetManagerObjc.appName];
         _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_description_work"], TargetManagerObjc.appName];
     } else {
-        _titleLabel.text = [BundleUtil localizedStringForKey:@"id_sync_title"];
-        _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_sync_description"];
+        _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_title"], TargetManagerObjc.appName];
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_description"], TargetManagerObjc.appName];
     }
     _syncContactsLabel.text = [BundleUtil localizedStringForKey:@"id_sync_contacts"];
 
@@ -86,7 +86,7 @@
     _syncContactsView.layer.borderWidth = 0.5;
     self.syncContactsSwitch.enabled = ![mdmSetup existsMdmKey:MDM_KEY_CONTACT_SYNC];
     
-    _syncContactsSwitch.onTintColor = UIColor.primary;
+    _syncContactsSwitch.onTintColor = UIColor.tintColor;
 }
 
 - (BOOL)isInputValid {

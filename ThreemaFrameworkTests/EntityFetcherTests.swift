@@ -49,8 +49,7 @@ final class EntityFetcherTests: XCTestCase {
         databasePreparer.save {
             databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(kNaClCryptoPubKeySize))!,
-                identity: "ECHOECHO",
-                verificationLevel: 0
+                identity: "ECHOECHO"
             )
         }
 
@@ -69,8 +68,7 @@ final class EntityFetcherTests: XCTestCase {
             for _ in 0...1 {
                 databasePreparer.createContact(
                     publicKey: publicKey1,
-                    identity: identity1,
-                    verificationLevel: 0
+                    identity: identity1
                 )
             }
 
@@ -79,8 +77,7 @@ final class EntityFetcherTests: XCTestCase {
             for _ in 0...2 {
                 databasePreparer.createContact(
                     publicKey: publicKey2,
-                    identity: identity2,
-                    verificationLevel: 0
+                    identity: identity2
                 )
             }
         }
@@ -170,7 +167,7 @@ final class EntityFetcherTests: XCTestCase {
         let contact = databasePreparer.save {
             databasePreparer.createContact(
                 identity: contactIdentity.string,
-                state: NSNumber(integerLiteral: kStateInactive)
+                state: .inactive
             )
         }
         
@@ -198,7 +195,7 @@ final class EntityFetcherTests: XCTestCase {
         let contact = databasePreparer.save {
             databasePreparer.createContact(
                 identity: contactIdentity.string,
-                state: NSNumber(integerLiteral: kStateInvalid)
+                state: .invalid
             )
         }
         
@@ -209,7 +206,7 @@ final class EntityFetcherTests: XCTestCase {
                 
         // Run
         
-        let entityFetcher = EntityFetcher(mainContext, myIdentityStore: MyIdentityStoreMock())!
+        let entityFetcher = entityManager.entityFetcher
         let solicitedContacts = entityFetcher.allSolicitedContactIdentities()
         
         //  Validate
@@ -515,6 +512,71 @@ final class EntityFetcherTests: XCTestCase {
         measure {
             let allContactIdentities = entityFetcher.allContactIdentities()
             XCTAssertEqual(numberOfContacts, allContactIdentities.count)
+        }
+    }
+
+    func testIsMessageDelivered() throws {
+        let expectedSenderIdentity = "ECHOECHO"
+
+        // Test case for message are delivered and not
+        let testCases: [Bool] = [true, false]
+
+        for testCaseIsMessageDeleivered in testCases {
+            let expectedMessageID = MockData.generateMessageID()
+            let expectedGroupMessageID = MockData.generateMessageID()
+
+            let databasePreparer = DatabasePreparer(context: mainContext)
+            try databasePreparer.save {
+                let contact = databasePreparer.createContact(
+                    publicKey: BytesUtility.generateRandomBytes(length: Int(kNaClCryptoPubKeySize))!,
+                    identity: expectedSenderIdentity,
+                    verificationLevel: .unverified
+                )
+
+                let conversation = databasePreparer.createConversation(contactEntity: contact)
+
+                // New 1-1 message
+                databasePreparer.createTextMessage(
+                    conversation: conversation,
+                    delivered: testCaseIsMessageDeleivered,
+                    id: expectedMessageID,
+                    isOwn: false,
+                    sender: nil,
+                    remoteSentDate: nil
+                )
+
+                let (_, _, groupConversation) = try databasePreparer.createGroup(
+                    groupID: MockData.generateGroupID(),
+                    groupCreatorIdentity: expectedSenderIdentity,
+                    members: [expectedSenderIdentity]
+                )
+
+                // New group message
+                databasePreparer.createTextMessage(
+                    conversation: groupConversation,
+                    delivered: testCaseIsMessageDeleivered,
+                    id: expectedGroupMessageID,
+                    isOwn: false,
+                    sender: contact,
+                    remoteSentDate: nil
+                )
+            }
+
+            let entityFetcher = EntityFetcher(mainContext, myIdentityStore: MyIdentityStoreMock())!
+
+            let isMessageDelivered = entityFetcher.isMessageDelivered(
+                from: expectedSenderIdentity,
+                with: expectedMessageID
+            )
+
+            XCTAssertEqual(isMessageDelivered, testCaseIsMessageDeleivered)
+
+            let isGroupMessageDelivered = entityFetcher.isMessageDelivered(
+                from: expectedSenderIdentity,
+                with: expectedGroupMessageID
+            )
+
+            XCTAssertEqual(isGroupMessageDelivered, testCaseIsMessageDeleivered)
         }
     }
 }

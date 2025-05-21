@@ -149,8 +149,8 @@ class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
             labelLabel.textColor = .systemRed
         }
         else {
-            iconImageView.tintColor = .primary
-            labelLabel.textColor = .primary
+            iconImageView.tintColor = .tintColor
+            labelLabel.textColor = .tintColor
         }
     }
     

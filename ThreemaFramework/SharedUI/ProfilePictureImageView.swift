@@ -30,6 +30,7 @@ import UIKit
         case distributionList(DistributionList?)
         case group(Group?)
         case me
+        case directoryContact
     }
     
     public enum TypeIconConfiguration {
@@ -66,6 +67,9 @@ import UIKit
                 
             case .me:
                 setMyPicture()
+                
+            case .directoryContact:
+                setAndClip(image: ProfilePictureGenerator.directoryContactImage)
                 
             case nil:
                 profilePictureObserver?.invalidate()

@@ -22,37 +22,53 @@ import CoreData
 import Foundation
 
 @objc(ConversationEntity)
-public class ConversationEntity: TMAManagedObject {
+public final class ConversationEntity: TMAManagedObject {
     
-    // Attributes
-    @NSManaged @objc(category) public var category: NSNumber
-    // swiftformat:disable:next acronyms
-    @NSManaged @objc(groupId) public var groupId: Data?
-    @NSManaged @objc(groupImageSetDate) public var groupImageSetDate: Date?
-    @NSManaged @objc(groupMyIdentity) public var groupMyIdentity: String?
-    @NSManaged @objc(groupName) public var groupName: String?
-    @NSManaged @objc(lastTypingStart) public private(set) var lastTypingStart: Date?
-    @NSManaged @objc(lastUpdate) public var lastUpdate: Date?
-    @NSManaged @objc(marked) public var marked: NSNumber
-    @NSManaged @objc(typing) public private(set) var typing: NSNumber
-    @NSManaged @objc(unreadMessageCount) public var unreadMessageCount: NSNumber
-    @NSManaged @objc(visibility) public var visibility: NSNumber
+    // MARK: Attributes
 
-    // Relationships
-    @NSManaged public var groupImage: ImageDataEntity?
-    @NSManaged public var lastMessage: BaseMessage?
-    @NSManaged public var ballots: Set<Ballot>?
-    @NSManaged public var distributionList: DistributionListEntity?
+    @NSManaged public var category: NSNumber
+    // swiftformat:disable:next acronyms
+    @NSManaged public var groupId: Data?
+    @NSManaged public var groupImageSetDate: Date?
+    @NSManaged public var groupMyIdentity: String?
+    @NSManaged public var groupName: String?
+    @NSManaged public private(set) var lastTypingStart: Date?
+    @NSManaged public var lastUpdate: Date?
+    @available(*, deprecated, renamed: "visibility", message: "Use `.pinned` in `visibility` instead.")
+    @NSManaged public var marked: NSNumber
+    @NSManaged public private(set) var typing: NSNumber
+    @NSManaged public var unreadMessageCount: NSNumber
+    @NSManaged public var visibility: NSNumber
+
+    // MARK: Relationships
+
+    @NSManaged public var ballots: Set<BallotEntity>?
     @NSManaged public var contact: ContactEntity?
+    @NSManaged public var distributionList: DistributionListEntity?
+    @NSManaged public var groupImage: ImageDataEntity?
+    @NSManaged public var lastMessage: BaseMessageEntity?
     @NSManaged public var members: Set<ContactEntity>?
 
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
-
+    ///   - context: `NSManagedObjectContext` to insert created entity into
+    ///   - category: `Category` of the conversation
+    ///   - groupID: GroupID of the conversation
+    ///   - groupImageSetDate: `Date` the group image was set
+    ///   - groupMyIdentity: Our ID when we were added to the group
+    ///   - groupName: The name of the group
+    ///   - lastTypingStart: `Date` we last received a start typing
+    ///   - lastUpdate: `Date` the conversation was last updated at
+    ///   - typing: `True` if the other side is typing at the moment
+    ///   - unreadMessageCount: Count of unread messages
+    ///   - visibility: `Visibility` of the conversation
+    ///   - groupImage: `ImageDataEntity` of the group picture
+    ///   - lastMessage: `BaseMessageEntity` that is the last message
+    ///   - distributionList: `DistributionListEntity` if the conversation is a distribution list
+    ///   - contact: `ContactEntity` other participant if conversation is 1:1
+    ///   - members: Set of `ContactEntity` if conversation is a group
     public init(
         context: NSManagedObjectContext,
         category: Category = .default,
@@ -62,13 +78,11 @@ public class ConversationEntity: TMAManagedObject {
         groupName: String? = nil,
         lastTypingStart: Date? = nil,
         lastUpdate: Date? = nil,
-        marked: Bool = false,
         typing: Bool = false,
         unreadMessageCount: NSNumber = 0,
         visibility: Visibility = .default,
         groupImage: ImageDataEntity? = nil,
-        lastMessage: BaseMessage? = nil,
-        ballots: Set<Ballot>? = nil,
+        lastMessage: BaseMessageEntity? = nil,
         distributionList: DistributionListEntity? = nil,
         contact: ContactEntity? = nil,
         members: Set<ContactEntity>? = nil
@@ -84,10 +98,12 @@ public class ConversationEntity: TMAManagedObject {
         self.groupName = groupName
         self.lastTypingStart = lastTypingStart
         self.lastUpdate = lastUpdate
-        self.marked = NSNumber(booleanLiteral: marked)
+        // Deprecated
+        self.marked = false
         self.typing = NSNumber(booleanLiteral: typing)
         self.unreadMessageCount = unreadMessageCount
         self.visibility = visibility.rawValue as NSNumber
+        
         self.groupImage = groupImage
         self.lastMessage = lastMessage
         self.ballots = ballots
@@ -109,4 +125,32 @@ public class ConversationEntity: TMAManagedObject {
     public convenience init(context: NSManagedObjectContext) {
         fatalError("\(#function) not implemented")
     }
+    
+    // MARK: Generated accessors for ballots
+
+    @objc(addBallotsObject:)
+    @NSManaged public func addToBallots(_ value: BallotEntity)
+
+    @objc(removeBallotsObject:)
+    @NSManaged public func removeFromBallots(_ value: BallotEntity)
+
+    @objc(addBallots:)
+    @NSManaged public func addToBallots(_ values: NSSet)
+
+    @objc(removeBallots:)
+    @NSManaged public func removeFromBallots(_ values: NSSet)
+    
+    // MARK: Generated accessors for members
+
+    @objc(addMembersObject:)
+    @NSManaged public func addToMembers(_ value: ContactEntity)
+
+    @objc(removeMembersObject:)
+    @NSManaged public func removeFromMembers(_ value: ContactEntity)
+
+    @objc(addMembers:)
+    @NSManaged public func addToMembers(_ values: NSSet)
+
+    @objc(removeMembers:)
+    @NSManaged public func removeFromMembers(_ values: NSSet)
 }

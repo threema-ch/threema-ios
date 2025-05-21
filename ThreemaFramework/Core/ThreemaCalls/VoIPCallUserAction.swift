@@ -24,7 +24,6 @@ import Foundation
     
     @objc public enum Action: Int {
         case call
-        case callWithVideo
         case accept
         case acceptCallKit
         case reject

@@ -621,25 +621,32 @@ class MessageStore: MessageStoreProtocol {
                 return
             }
 
-            var senderPublicKey: Data!
-            var messageID: Data!
-            var conversationObjectID: NSManagedObjectID!
-            var blobID: Data!
-            var blobOrigin: BlobOrigin!
-            var encryptionKey: Data!
-            var nonce: Data!
-
-            frameworkInjector.entityManager.performAndWaitSave {
+            let (senderPublicKey, messageID, conversationObjectID, blobID, blobOrigin, encryptionKey, nonce): (
+                Data,
+                Data,
+                NSManagedObjectID,
+                Data?,
+                BlobOrigin,
+                Data?,
+                Data?
+            ) = frameworkInjector.entityManager.performAndWaitSave {
                 msg.date = createdAt
                 msg.remoteSentDate = createdAt
-
-                senderPublicKey = sender.publicKey
-                messageID = msg.id
-                conversationObjectID = conversation.objectID
-                blobID = msg.blobIdentifier
-                blobOrigin = msg.blobOrigin
-                encryptionKey = msg.encryptionKey
-                nonce = msg.imageNonce
+                
+                return (
+                    sender.publicKey,
+                    msg.id,
+                    conversation.objectID,
+                    msg.blobIdentifier,
+                    msg.blobOrigin,
+                    msg.encryptionKey,
+                    msg.imageNonce
+                )
+            }
+            
+            guard let blobID else {
+                seal.reject(MediatorReflectedProcessorError.messageNotProcessed(message: "BlobID of image is nil."))
+                return
             }
 
             // Create image message in DB and download and decrypt blob
@@ -1018,17 +1025,11 @@ class MessageStore: MessageStoreProtocol {
                 thumbnailBlobID = videoMessage.thumbnailBlobID
             }
 
-            var conversationObjectID: NSManagedObjectID!
-            var messageID: Data!
-            var blobOrigin: BlobOrigin!
-
-            frameworkInjector.entityManager.performAndWaitSave {
+            let (conversationObjectID, messageID, blobOrigin) = frameworkInjector.entityManager.performAndWaitSave {
                 msg.date = createdAt
                 msg.remoteSentDate = createdAt
 
-                conversationObjectID = conversation.objectID
-                messageID = msg.id
-                blobOrigin = msg.blobOrigin
+                return (conversation.objectID, msg.id, msg.blobOrigin)
             }
 
             assert(videoMessage.fromIdentity == senderIdentity)
@@ -1332,7 +1333,9 @@ class MessageStore: MessageStoreProtocol {
                             seal.fulfill_()
                         }
                     ) { error in
-                        DDLogWarn("Reverse geocoding failed: \(error)")
+                        if let error {
+                            DDLogWarn("Reverse geocoding failed: \(error)")
+                        }
 
                         self.frameworkInjector.entityManager.performAndWaitSave {
                             message.poiAddress = String(format: "%.5f°, %.5f°", latitude, longitude)
@@ -1386,7 +1389,7 @@ class MessageStore: MessageStoreProtocol {
 
     private func changedBallot(with ballotID: Data) {
         frameworkInjector.entityManager.performAndWait {
-            if let ballot = self.frameworkInjector.entityManager.entityFetcher.ballot(for: ballotID) {
+            if let ballot = self.frameworkInjector.entityManager.entityFetcher.ballotEntity(for: ballotID) {
                 self.messageProcessorDelegate.changedManagedObjectID(ballot.objectID)
             }
         }

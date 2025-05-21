@@ -46,46 +46,51 @@ struct EnterLicenseInfoView: View {
                             .font(.title2)
                         }
                         .accessibilityElement(children: .combine)
-
-                        Text(.init(#localize("enter_license_infoview_more_link")))
+                        
+                        if !TargetManager.isOnPrem {
+                            Text(.init(String.localizedStringWithFormat(
+                                #localize("enter_license_infoview_more_link"),
+                                TargetManager.localizedAppName
+                            )))
                             .underline()
                             .environment(\.openURL, OpenURLAction(handler: handleWorkURL))
+                        }
                     }
                                         
-                    GroupBox(
-                        content: {
-                            VStack {
-                                Image(uiImage: Colors.consumerLogoRoundCorners)
-                                    .resizable()
-                                    .frame(width: 50, height: 50, alignment: .center)
-                                    .scaledToFit()
-                                    .aspectRatio(contentMode: .fit)
+                    GroupBox {
+                        VStack {
+                            Image(uiImage: Colors.consumerLogoRoundCorners)
+                                .resizable()
+                                .frame(width: 50, height: 50, alignment: .center)
+                                .scaledToFit()
+                                .aspectRatio(contentMode: .fit)
                                 
-                                Image(uiImage: Colors.darkConsumerLogo)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .aspectRatio(contentMode: .fit)
-                                    .padding(.horizontal, 80)
+                            Image(uiImage: Colors.darkConsumerLogo)
+                                .resizable()
+                                .scaledToFit()
+                                .aspectRatio(contentMode: .fit)
+                                .padding(.horizontal, 80)
                                 
-                                Text(#localize("enter_license_infoview_private_use"))
-                                    .font(.title2)
-                            }
-                            
-                            Text(#localize("enter_license_infoview_threema_description"))
-                                .font(.body)
-                                                        
-                            Button {
-                                if let url = URL(string: "itms-apps://itunes.apple.com/app/id578665578") {
-                                    UIApplication.shared.open(url)
-                                }
-                            } label: {
-                                Text(#localize("enter_license_infoview_appstore_link"))
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .accentColor(Colors.green.color)
+                            Text(#localize("enter_license_infoview_private_use"))
+                                .font(.title2)
                         }
-                    )
+                            
+                        // Note that this always refers to "Threema" and thus isn't parametrized
+                        Text(#localize("enter_license_infoview_threema_description"))
+                            .font(.body)
+                                                        
+                        Button {
+                            if let url = URL(string: "itms-apps://itunes.apple.com/app/id578665578") {
+                                UIApplication.shared.open(url)
+                            }
+                        } label: {
+                            // Note that this always refers to "Threema" and thus isn't parametrized
+                            Text(#localize("enter_license_infoview_appstore_link"))
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(UIColor(resource: .accentColorPrivate).color)
+                    }
                     .groupBoxStyle(.wizard)
                     .environment(\.colorScheme, .light)
                     .accessibilityElement(children: .combine)

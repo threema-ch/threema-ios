@@ -19,11 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "Ballot.h"
+
+@class BallotEntity;
 
 @interface BallotResultMatrixView : UIView
 
-@property (nonatomic) Ballot *ballot;
+@property (nonatomic) BallotEntity *ballot;
 
 - (void)adaptToInterfaceRotation;
 

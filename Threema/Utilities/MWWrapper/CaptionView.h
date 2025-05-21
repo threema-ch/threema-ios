@@ -19,7 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "MWCaptionView.h"
-#import "BaseMessage.h"
+
+@class BaseMessageEntity;
 
 @interface CaptionView : MWCaptionView
 
@@ -29,6 +30,6 @@
 
 - (UITextView *)createTextViewInRect:(CGRect)rect;
 
-- (BaseMessage *)message;
+- (BaseMessageEntity *)message;
 
 @end

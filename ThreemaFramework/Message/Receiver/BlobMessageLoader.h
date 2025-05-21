@@ -20,15 +20,14 @@
 
 #import <Foundation/Foundation.h>
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
-#import "BaseMessage.h"
 #import "BlobOrigin.h"
 
 @interface BlobMessageLoader : NSObject
 
 @property EntityManager *entityManager;
 
-- (void)startWithMessage:(BaseMessage<BlobData> *)message onCompletion:(void (^)(BaseMessage<BlobData> *loadedMessage))onCompletion onError:(void (^)(NSError *error))onError;
+- (void)startWithMessage:(BaseMessageEntity<BlobData> *)message onCompletion:(void (^)(BaseMessageEntity<BlobData> *loadedMessage))onCompletion onError:(void (^)(NSError *error))onError;
 
-- (void)updateDBObject:(BaseMessage<BlobData> *)message with:(NSData *)data;
+- (void)updateDBObject:(BaseMessageEntity<BlobData> *)message with:(NSData *)data;
 
 @end

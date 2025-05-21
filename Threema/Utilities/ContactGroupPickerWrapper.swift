@@ -25,10 +25,10 @@ import Foundation
 /// Wraps the `ContactGroupPickerViewController` for it to be used in the new chat view.
 @objc class ContactGroupPickerWrapper: NSObject, ContactGroupPickerDelegate {
         
-    private let message: BaseMessage
+    private let message: BaseMessageEntity
     private weak var modalNavController: ModalNavigationController?
 
-    init(message: BaseMessage) {
+    init(message: BaseMessageEntity) {
         self.message = message
     }
         

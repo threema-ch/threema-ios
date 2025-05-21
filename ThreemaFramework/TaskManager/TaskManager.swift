@@ -259,7 +259,7 @@ extension TaskManager: TaskManagerProtocolObjc {
             return
         }
         
-        add(taskDefinition: taskDefinition)
+        _ = add(taskDefinition: taskDefinition)
     }
 
     @objc func addObjc(taskDefinition: AnyObject, completionHandler: @escaping (AnyObject, Error?) -> Void) {
@@ -269,8 +269,8 @@ extension TaskManager: TaskManagerProtocolObjc {
             return
         }
 
-        add(taskDefinition: taskDefinition, completionHandler: { task, error in
+        _ = add(taskDefinition: taskDefinition) { task, error in
             completionHandler(task as! TaskDefinition, error)
-        })
+        }
     }
 }

@@ -38,7 +38,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
     var caption: String?
     var tmpError: String?
     
-    var baseMessage: BaseMessage?
+    var baseMessage: BaseMessageEntity?
     
     var session: WCSession?
     

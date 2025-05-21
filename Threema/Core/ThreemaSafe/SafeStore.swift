@@ -389,12 +389,12 @@ import ThreemaMacros
                     
                     let jContact = SafeJsonParser.SafeBackupData.Contact(
                         identity: contact.identity,
-                        verification: Int(truncating: contact.verificationLevel)
+                        verification: contact.contactVerificationLevel.rawValue
                     )
-                    let verifiedLevel2OrInvalid = contact.verificationLevel == 2 || !contact.isValid()
+                    let verifiedLevel2OrInvalid = contact.contactVerificationLevel == .fullyVerified || !contact.isValid
                     jContact.publickey = verifiedLevel2OrInvalid ? contact.publicKey.base64EncodedString() : nil
                     jContact.workVerified = contact.workContact != 0
-                    jContact.hidden = contact.isContactHidden
+                    jContact.hidden = contact.isHidden
                     
                     if let firstname = contact.firstName {
                         jContact.firstname = firstname
@@ -411,9 +411,6 @@ import ThreemaMacros
                     
                     if let conversations = contact.conversations {
                         for conversation in conversations {
-                            guard let conversation = conversation as? ConversationEntity else {
-                                continue
-                            }
                             if conversation.conversationCategory == .private {
                                 jContact.private = true
                                 break
@@ -777,9 +774,13 @@ import ThreemaMacros
                                     // a bug, should not before restore is finished)
                                     if let contact = entityManager.entityFetcher.contact(for: bContact.identity) {
                                         entityManager.performAndWaitSave {
-                                            contact.verificationLevel = Int32(bContact.verification ?? 0) as NSNumber
-                                            contact.firstName = bContact.firstname
-                                            contact.lastName = bContact.lastname
+                                            contact.contactVerificationLevel = ContactEntity
+                                                .VerificationLevel(
+                                                    rawValue: bContact.verification ?? ContactEntity
+                                                        .VerificationLevel.unverified.rawValue
+                                                ) ?? .unverified
+                                            contact.setFirstName(to: bContact.firstname)
+                                            contact.setLastName(to: bContact.lastname)
                                             contact.publicNickname = bContact.nickname
                                         }
 
@@ -789,11 +790,15 @@ import ThreemaMacros
                                         entityManager.performAndWaitSave {
                                             if let contact = entityManager.entityCreator.contact(),
                                                let bIdentity = bContact.identity {
-                                                contact.identity = bIdentity.uppercased()
-                                                contact
-                                                    .verificationLevel = Int32(bContact.verification ?? 0) as NSNumber
-                                                contact.firstName = bContact.firstname
-                                                contact.lastName = bContact.lastname
+                                                contact.setIdentity(to: bIdentity.uppercased())
+                                                contact.contactVerificationLevel = ContactEntity
+                                                    .VerificationLevel(
+                                                        rawValue: bContact.verification ?? ContactEntity
+                                                            .VerificationLevel.unverified.rawValue
+                                                    ) ??
+                                                    .unverified
+                                                contact.setFirstName(to: bContact.firstname)
+                                                contact.setLastName(to: bContact.lastname)
                                                 contact.publicNickname = bContact.nickname
                                                 
                                                 if let createdAt = bContact.createdAt,
@@ -807,18 +812,26 @@ import ThreemaMacros
                                                 }
                                                 
                                                 if let hidden = bContact.hidden {
-                                                    contact.isContactHidden = hidden
+                                                    contact.isHidden = hidden
                                                 }
                                             
-                                                contact.readReceipt = bContact
-                                                    .readReceipts != nil ?
-                                                    ReadReceipt(rawValue: bContact.readReceipts!)! :
-                                                    ReadReceipt.default
-                                                contact.typingIndicator = bContact
-                                                    .typingIndicators != nil ?
-                                                    TypingIndicator(rawValue: bContact.typingIndicators!)! :
-                                                    TypingIndicator
-                                                    .default
+                                                contact.readReceipt =
+                                                    if let readReceipts = bContact.readReceipts {
+                                                        ContactEntity.ReadReceipt(rawValue: readReceipts) ?? .default
+                                                    }
+                                                    else {
+                                                        .default
+                                                    }
+
+                                                contact.typingIndicator =
+                                                    if let typingIndicators = bContact
+                                                        .typingIndicators {
+                                                        ContactEntity
+                                                            .TypingIndicator(rawValue: typingIndicators) ?? .default
+                                                    }
+                                                    else {
+                                                        .default
+                                                    }
                                             
                                                 if let workVerified = bContact.workVerified {
                                                     contact.workContact = workVerified ? 1 : 0
@@ -830,11 +843,12 @@ import ThreemaMacros
                                             
                                                 if let featureMasks,
                                                    let featureMask = featureMasks[index] as? Int {
-                                                    contact.featureMask = NSNumber(integerLiteral: featureMask)
+                                                    contact.setFeatureMask(to: featureMask)
                                                 }
                                                 if let states,
                                                    let state = states[index] as? Int {
-                                                    contact.state = NSNumber(integerLiteral: state)
+                                                    contact.contactState = ContactEntity
+                                                        .ContactState(rawValue: state) ?? .active
                                                 }
                                                 if let types,
                                                    let type = types[index] as? Int {
@@ -899,7 +913,10 @@ import ThreemaMacros
                     DDLogError("Safe error while request identities:\(error.localizedDescription)")
                     completionHandler(
                         SafeError
-                            .restoreError(message: #localize("safe_restore_error"))
+                            .restoreError(message: String.localizedStringWithFormat(
+                                #localize("safe_restore_error"),
+                                TargetManager.localizedAppName
+                            ))
                     )
                 }
             }

@@ -32,14 +32,20 @@ struct CallSettingsView: View {
         List {
             Section {
                 Toggle(isOn: $settingsVM.enableThreemaCall) {
-                    Text(#localize("settings_threema_calls_enable_calls"))
+                    Text(String.localizedStringWithFormat(
+                        #localize("settings_threema_calls_enable_calls"),
+                        TargetManager.localizedAppName
+                    ))
                 }
                 .disabled(
                     ThreemaEnvironment.supportsCallKit() ? mdmSetup?.existsMdmKey(MDM_KEY_DISABLE_CALLS) ?? false : true
                 )
             } footer: {
                 if !ThreemaEnvironment.supportsCallKit() {
-                    Text(#localize("settings_threema_voip_no_callkit_in_china_footer"))
+                    Text(String.localizedStringWithFormat(
+                        #localize("settings_threema_voip_no_callkit_in_china_footer"),
+                        TargetManager.localizedAppName
+                    ))
                 }
             }
             
@@ -51,7 +57,8 @@ struct CallSettingsView: View {
                     } label: {
                         SettingsListItemView(
                             cellTitle: #localize("settings_threema_calls_call_sound"),
-                            accessoryText: BundleUtil.localizedString(forKey: "sound_\(settingsVM.voIPSound)")
+                            accessoryText: settingsVM.voIPSound == "threema_best" ? TargetManager.appName : BundleUtil
+                                .localizedString(forKey: "sound_\(settingsVM.voIPSound)")
                         )
                     }
                 }
@@ -109,7 +116,10 @@ struct CallSettingsView: View {
             
             Section {
                 Toggle(isOn: $settingsVM.enableThreemaGroupCalls) {
-                    Text(#localize("settings_threema_calls_enable_group_calls"))
+                    Text(String.localizedStringWithFormat(
+                        #localize("settings_threema_calls_enable_group_calls"),
+                        TargetManager.localizedAppName
+                    ))
                 }
                 .disabled(disableGroupCallToggle())
             } header: {
@@ -118,7 +128,7 @@ struct CallSettingsView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(#localize("settings_threema_calls"))
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
     }
     
     private func disableGroupCallToggle() -> Bool {
@@ -146,7 +156,9 @@ struct CallSettingsView: View {
     private func voIPFooterString() -> String {
         let setting = settingsVM.alwaysRelayCalls ? "on" : "off"
         let onPrem = TargetManager.isOnPrem ? "_onprem" : ""
-        return BundleUtil.localizedString(forKey: "settings_threema_calls\(onPrem)_hide_voip_call_ip_footer_\(setting)")
+        let key = "settings_threema_calls\(onPrem)_hide_voip_call_ip_footer_\(setting)"
+        
+        return String.localizedStringWithFormat(BundleUtil.localizedString(forKey: key), TargetManager.appName)
     }
 }
 
@@ -158,7 +170,7 @@ struct CallSettingsView_Previews: PreviewProvider {
             CallSettingsView()
                 .navigationBarTitleDisplayMode(.inline)
         }
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
         .environmentObject(BusinessInjector.ui.settingsStore as! SettingsStore)
     }
 }

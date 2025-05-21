@@ -26,7 +26,7 @@ import ThreemaFramework
 import ThreemaMacros
 
 @objc class NotificationBannerHelper: NSObject {
-    @objc class func newBanner(baseMessage: BaseMessage) {
+    @objc class func newBanner(baseMessage: BaseMessageEntity) {
         DispatchQueue.main.async {
             // Reload CoreData object because of concurrency problem
             let businessInjector = BusinessInjector.ui
@@ -107,11 +107,11 @@ import ThreemaMacros
                 sideViewSize: 50.0
             )
             
-            if let groupID = message.conversation?.groupID {
+            if let groupID = message.conversation.groupID {
                 banner.identifier = groupID.hexEncodedString()
             }
             else {
-                if let contact = message.conversation?.contact {
+                if let contact = message.conversation.contact {
                     banner.identifier = contact.identity
                 }
             }
@@ -182,14 +182,12 @@ import ThreemaMacros
             }
             banner.onTap = {
                 banner.bannerQueue.dismissAllForced()
-                // switch to selected conversation
-                if let conversation = message.conversation {
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                        object: nil,
-                        userInfo: [kKeyConversation: conversation]
-                    )
-                }
+                // Switch to selected conversation
+                NotificationCenter.default.post(
+                    name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                    object: nil,
+                    userInfo: [kKeyConversation: message.conversation]
+                )
             }
             
             banner.onSwipeUp = {
@@ -360,11 +358,11 @@ import ThreemaMacros
 class CustomBannerColors: BannerColorsProtocol {
     func color(for style: BannerStyle) -> UIColor {
         switch style {
-        case .danger: Colors.red
+        case .danger: .systemRed
         case .info: Colors.backgroundNotification
         case .customView: Colors.backgroundNotification
-        case .success: Colors.green
-        case .warning: Colors.orange
+        case .success: .systemGreen
+        case .warning: .systemOrange
         }
     }
 }

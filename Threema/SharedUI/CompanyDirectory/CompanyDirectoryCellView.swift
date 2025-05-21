@@ -112,7 +112,7 @@ class CompanyDirectoryCellView: UIStackView {
         
         companyNameLabel.textColor = .label
         companyDirectoryDescriptionLabel.textColor = .secondaryLabel
-        tintColor = .primary
+        tintColor = .tintColor
     }
         
     @objc public func refresh() {

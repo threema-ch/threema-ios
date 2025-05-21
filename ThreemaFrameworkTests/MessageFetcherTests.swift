@@ -212,7 +212,7 @@ class MessageFetcherTests: XCTestCase {
                 sender: nil,
                 remoteSentDate: Date()
             )
-            textMessage.addRejectedBy(contact)
+            textMessage.addToRejectedBy(contact)
         }
         
         let rejectedMessages = messageFetcher.rejectedGroupMessages()

@@ -46,8 +46,7 @@ class EntityObserverTests: XCTestCase {
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: groupCreatorIdentity,
-                verificationLevel: 0
+                identity: groupCreatorIdentity
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
@@ -130,8 +129,7 @@ class EntityObserverTests: XCTestCase {
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: groupCreatorIdentity,
-                verificationLevel: 0
+                identity: groupCreatorIdentity
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
@@ -201,8 +199,7 @@ class EntityObserverTests: XCTestCase {
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: groupCreatorIdentity,
-                verificationLevel: 0
+                identity: groupCreatorIdentity
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
@@ -254,8 +251,7 @@ class EntityObserverTests: XCTestCase {
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: groupCreatorIdentity,
-                verificationLevel: 0
+                identity: groupCreatorIdentity
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
@@ -308,8 +304,7 @@ class EntityObserverTests: XCTestCase {
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: groupCreatorIdentity,
-                verificationLevel: 0
+                identity: groupCreatorIdentity
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
@@ -372,8 +367,7 @@ class EntityObserverTests: XCTestCase {
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
-                identity: groupCreatorIdentity,
-                verificationLevel: 0
+                identity: groupCreatorIdentity
             )
             let groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in

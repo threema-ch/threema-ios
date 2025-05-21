@@ -833,7 +833,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             if let conversation = self
                 .getConversation(for: GroupIdentity(id: groupID, creator: ThreemaIdentity(creator))) {
                 currentMembers = conversation.unwrappedMembers.map(\.identity)
-                hiddenContacts = conversation.unwrappedMembers.filter(\.isContactHidden).map(\.identity)
+                hiddenContacts = conversation.unwrappedMembers.filter(\.isHidden).map(\.identity)
             }
         }
 
@@ -899,7 +899,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 contact.identity.elementsEqual(member)
             }) {
                 self.entityManager.performAndWaitSave {
-                    conversation.members?.remove(contact)
+                    _ = conversation.members?.remove(contact)
                 }
 
                 self.postSystemMessage(
@@ -1030,7 +1030,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             let errorMessage =
                 "Could not send empty member list because the group does not exist or I am not the creator of the group (id: \(groupIdentity.id.hexString), creator: \(groupIdentity.creator.string))"
             assertionFailure(errorMessage)
-            DDLogError(errorMessage)
+            DDLogError("\(errorMessage)")
             return
         }
         
@@ -1372,7 +1372,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             sysMsg.type = NSNumber(integerLiteral: type)
             sysMsg.arg = arg
             sysMsg.remoteSentDate = date
-            conversation.lastMessage = sysMsg as BaseMessage
+            conversation.lastMessage = sysMsg as BaseMessageEntity
         }
     }
     
@@ -1596,13 +1596,13 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         // Get all hidden contacts and mark them as visible
         let hiddenMembers = conversation.unwrappedMembers.filter { member -> Bool in
             !member.identity.elementsEqual(myIdentityStore.identity)
-                && member.isContactHidden
+                && member.isHidden
         }
         
         if !hiddenMembers.isEmpty {
             entityManager.performAndWaitSave {
                 for member in hiddenMembers {
-                    member.isContactHidden = false
+                    member.isHidden = false
                 }
             }
         }
@@ -1640,7 +1640,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
                 // We only reset `sendFailed` if the message was sent successfully before. As `sendFailed` might not
                 // have been set because of rejections. In theory this should never happen as an unsent message should
                 // never have been rejected.
-                if rejectedMessage.sent?.boolValue ?? false {
+                if rejectedMessage.sent.boolValue {
                     rejectedMessage.sendFailed = false
                 }
             }
@@ -1663,7 +1663,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         }
     }
     
-    private func updateRejectedMessage(_ rejectedMessage: BaseMessage, with groupMembers: [ThreemaIdentity]) {
+    private func updateRejectedMessage(_ rejectedMessage: BaseMessageEntity, with groupMembers: [ThreemaIdentity]) {
         
         //       1. Let `receivers` be the list of receivers requiring a re-send for
         //          `message`.
@@ -1683,7 +1683,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
             guard let contact = entityManager.entityFetcher.contact(for: contactToRemove.string) else {
                 continue
             }
-            rejectedMessage.removeRejectedBy(contact)
+            rejectedMessage.removeFromRejectedBy(contact)
         }
         
         //       3. If `receivers` is now empty, remove the _re-send requested_ mark on
@@ -1692,7 +1692,7 @@ public final class GroupManager: NSObject, GroupManagerProtocol {
         // We only reset `sendFailed` if the message was sent successfully before. As `sendFailed` might not
         // have been set because of rejections. In theory this should never happen as an unsent message should
         // never have been rejected.
-        if rejectedMessage.rejectedBy?.isEmpty ?? true, rejectedMessage.sent?.boolValue ?? false {
+        if rejectedMessage.rejectedBy?.isEmpty ?? true, rejectedMessage.sent.boolValue {
             rejectedMessage.sendFailed = false
         }
     }

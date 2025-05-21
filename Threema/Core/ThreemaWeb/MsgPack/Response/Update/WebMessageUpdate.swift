@@ -36,7 +36,7 @@ class WebMessagesUpdate: WebAbstractMessage {
     
     init(
         _ requestID: String? = nil,
-        baseMessage: BaseMessage,
+        baseMessage: BaseMessageEntity,
         conversation: ConversationEntity,
         objectMode: ObjectMode,
         session: WCSession

@@ -24,39 +24,40 @@ import Foundation
 @objc(WebClientSessionEntity)
 public final class WebClientSessionEntity: TMAManagedObject {
     
-    // Attributes
-    @NSManaged @objc(active) public var active: NSNumber?
-    @NSManaged @objc(browserName) public var browserName: String?
-    @NSManaged @objc(browserVersion) public var browserVersion: NSNumber?
-    @NSManaged @objc(initiatorPermanentPublicKey) public var initiatorPermanentPublicKey: Data
-    @NSManaged @objc(initiatorPermanentPublicKeyHash) public var initiatorPermanentPublicKeyHash: String?
-    @NSManaged @objc(lastConnection) public var lastConnection: Date?
-    @NSManaged @objc(name) public var name: String?
-    @NSManaged @objc(permanent) public var permanent: NSNumber
-    @NSManaged @objc(privateKey) public var privateKey: Data?
-    @NSManaged @objc(saltyRTCHost) public var saltyRTCHost: String
-    @NSManaged @objc(saltyRTCPort) public var saltyRTCPort: NSNumber
-    @NSManaged @objc(selfHosted) public var selfHosted: NSNumber
-    @NSManaged @objc(serverPermanentPublicKey) public var serverPermanentPublicKey: Data
-    @NSManaged @objc(version) public var version: NSNumber?
+    // MARK: Attributes
 
-    // Non-CoreData Properties
+    @NSManaged public var active: NSNumber?
+    @NSManaged public var browserName: String?
+    @NSManaged public var browserVersion: NSNumber?
+    @NSManaged public var initiatorPermanentPublicKey: Data
+    @NSManaged public var initiatorPermanentPublicKeyHash: String?
+    @NSManaged public var lastConnection: Date?
+    @NSManaged public var name: String?
+    @NSManaged public var permanent: NSNumber
+    @NSManaged public var privateKey: Data?
+    @NSManaged public var saltyRTCHost: String
+    @NSManaged public var saltyRTCPort: NSNumber
+    @NSManaged public var selfHosted: NSNumber
+    @NSManaged public var serverPermanentPublicKey: Data
+    @NSManaged public var version: NSNumber?
+
+    // MARK: Non-CoreData Properties
+
     @objc public var isConnecting = false
     
-    // Lifecycle
+    // MARK: Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
-    ///   - active: True if the session active
+    ///   - context: `NSManagedObjectContext` to insert created entity into
+    ///   - active: `True` if the session active
     ///   - browserName: Name of the browser
     ///   - browserVersion: Version of the browser
     ///   - initiatorPermanentPublicKey: Public key of the initiator
     ///   - initiatorPermanentPublicKeyHash: Hash of the public key of the initiator
-    ///   - lastConnection: Date of the last connection
+    ///   - lastConnection: `Date` of the last connection
     ///   - name: Name of the session
-    ///   - permanent: True if session is permanent
+    ///   - permanent: `True` if session is permanent
     ///   - privateKey: Private key of the session
     ///   - saltyRTCHost: SaltyRTC host
     ///   - saltyRTCPort: SaltyRTC port

@@ -157,7 +157,7 @@ import PromiseKit
                     let thumbnailData = thumbnailImage?
                         .jpegData(compressionQuality: CGFloat(kJPEGCompressionQualityLow))
                     
-                    var message: BaseMessage?
+                    var message: BaseMessageEntity?
                     
                     self.entityManager.performAndWaitSave {
                         guard let conversation = self.entityManager.entityFetcher

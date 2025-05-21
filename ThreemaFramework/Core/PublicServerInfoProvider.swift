@@ -152,4 +152,17 @@ class PublicServerInfoProvider: ServerInfoProvider {
     func domains(completionHandler: @escaping ([Domain]?, Error?) -> Void) {
         completionHandler(Domain.defaultConfig, nil)
     }
+    
+    func mapsServer(completionHandler: @escaping (MapsServerInfo?, Error?) -> Void) {
+        guard let poiNamesURL = BundleUtil.object(forInfoDictionaryKey: "ThreemaPOINamesURL") as? String,
+              let poiAroundURL = BundleUtil.object(forInfoDictionaryKey: "ThreemaPOIAroundURL") as? String else {
+            assertionFailure("ThreemaPOINamesURL and ThreemaPOIAroundURL must be set in Info.plist")
+            completionHandler(nil, nil)
+            return
+        }
+        completionHandler(MapsServerInfo(
+            poiNamesURL: poiNamesURL,
+            poiAroundURL: poiAroundURL
+        ), nil)
+    }
 }

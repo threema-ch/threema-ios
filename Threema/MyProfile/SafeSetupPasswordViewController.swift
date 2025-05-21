@@ -182,7 +182,10 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     owner: self,
                     popOverSource: passwordField,
                     title: #localize("password_bad"),
-                    message: #localize("password_bad_explain"),
+                    message: String.localizedStringWithFormat(
+                        #localize("password_bad_explain"),
+                        TargetManager.localizedAppName
+                    ),
                     titleOk: #localize("continue_anyway"),
                     actionOk: { _ in
                         self.activate(safePassword: safePassword)
@@ -235,7 +238,10 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     DispatchQueue.main.async {
                         UIAlertTemplate.showAlert(
                             owner: self,
-                            title: #localize("safe_error_preparing"),
+                            title: String.localizedStringWithFormat(
+                                #localize("safe_error_preparing"),
+                                TargetManager.localizedAppName
+                            ),
                             message: safeError.errorDescription ?? safeError.localizedDescription
                         )
                     }
@@ -244,7 +250,10 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     DispatchQueue.main.async {
                         UIAlertTemplate.showAlert(
                             owner: self,
-                            title: #localize("safe_error_preparing"),
+                            title: String.localizedStringWithFormat(
+                                #localize("safe_error_preparing"),
+                                TargetManager.localizedAppName
+                            ),
                             message: error.localizedDescription
                         )
                     }
@@ -479,23 +488,43 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
         switch section {
         case 0:
             if mdmSetup.safePassword() != nil {
-                return #localize("threema_safe_company_mdm_password_changed_title") + ".\n" +
+                return String.localizedStringWithFormat(
+                    #localize("threema_safe_company_mdm_password_changed_title"),
+                    TargetManager.localizedAppName
+                ) + ".\n" +
                     #localize("safe_change_password_disabled") + "."
             }
             else if isForcedBackup {
-                return #localize("safe_configure_choose_password_mdm") + "\n\n" +
-                    #localize("safe_configure_choose_password")
+                return String.localizedStringWithFormat(
+                    #localize("safe_configure_choose_password_mdm"),
+                    TargetManager.localizedAppName
+                ) + "\n\n" +
+                    String.localizedStringWithFormat(
+                        #localize("safe_configure_choose_password"),
+                        TargetManager.localizedAppName
+                    )
             }
             else {
-                return #localize("safe_configure_choose_password")
+                return String.localizedStringWithFormat(
+                    #localize("safe_configure_choose_password"),
+                    TargetManager.localizedAppName
+                )
             }
         case 1:
-            var explainText = "safe_configure_server_explain"
-            if TargetManager.isOnPrem {
-                explainText = "safe_configure_server_explain_onprem"
-            }
-            return !safeManager.isActivated && !mdmSetup.isSafeBackupServerPreset() && !isForcedBackup ? BundleUtil
-                .localizedString(forKey: explainText) : nil
+            let message =
+                if TargetManager.isOnPrem {
+                    String.localizedStringWithFormat(
+                        #localize("safe_configure_server_explain_onprem"),
+                        TargetManager.localizedAppName
+                    )
+                }
+                else {
+                    String.localizedStringWithFormat(
+                        #localize("safe_configure_server_explain"),
+                        TargetManager.localizedAppName
+                    )
+                }
+            return !safeManager.isActivated && !mdmSetup.isSafeBackupServerPreset() && !isForcedBackup ? message : nil
         case 2:
             return nil
         default:

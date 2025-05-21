@@ -55,16 +55,15 @@ public class MessagePermission: NSObject {
             if let conversation = self.entityManager.entityFetcher.conversationEntity(forIdentity: identity) {
                 result = self.canSend(to: conversation)
             }
+            // Check for blacklisted contact
             else if let contact = self.entityManager.entityFetcher.contact(for: identity),
                     self.userSettings.blacklist.contains(contact.identity) {
-                // Check for blacklisted contact
                 DDLogError("Cannot send a message to this contact \(identity) because it is blocked")
                 result = (false, #localize("contact_blocked_cannot_send"))
             }
+            // Check for invalid contact
             else if let contact = self.entityManager.entityFetcher.contact(for: identity),
-                    let state = contact.state,
-                    state.intValue == kStateInvalid {
-                // Check for invalid contact
+                    contact.contactState == .invalid {
                 DDLogError("Cannot send a message to this contact (\(contact.identity) because it is invalid")
                 result = (false, #localize("contact_invalid_cannot_send"))
             }
@@ -137,14 +136,19 @@ public class MessagePermission: NSObject {
             DDLogError(
                 "Cannot send a message to this group. This group was created while user were using a different Threema ID. Cannot send any messages to it with your current ID"
             )
-            return (false, #localize("group_different_identity"))
+            return (
+                false,
+                String.localizedStringWithFormat(
+                    #localize("group_different_identity"),
+                    TargetManager.localizedAppName
+                )
+            )
         }
 
         // Check for invalid contact
         if conversation.groupID == nil,
            let contact = conversation.contact,
-           let state = contact.state,
-           state.intValue == kStateInvalid {
+           contact.contactState == .invalid {
             DDLogError("Cannot send a message to this contact (\(contact.identity) because it is invalid")
             return (false, #localize("contact_invalid_cannot_send"))
         }

@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
-import SwiftUI
 import ThreemaFramework
 
 final class GlobalSearchResultsViewController: ThemedViewController {
@@ -162,9 +161,9 @@ extension GlobalSearchResultsViewController: UITableViewDelegate {
         }
         
         let headerView = tableView.dequeueReusableHeaderFooterView(
-            withIdentifier: GlobalSearchContentConfigurations.contentConfigurationSectionHeaderIdentifier
+            withIdentifier: SearchContentConfigurations.contentConfigurationSectionHeaderIdentifier
         )
-        headerView?.contentConfiguration = GlobalSearchContentConfigurations.contentConfigurationForSectionHeader(
+        headerView?.contentConfiguration = SearchContentConfigurations.contentConfigurationForSectionHeader(
             with: localizedSectionTitle
         )
         
@@ -213,11 +212,11 @@ extension GlobalSearchResultsViewController: UITableViewDelegate {
         
         if case let .message(messageID) = dataSource.itemIdentifier(for: indexPath) {
             entityManager.performAndWait {
-                guard let message = self.entityManager.entityFetcher.existingObject(with: messageID) as? BaseMessage,
-                      let conversation = message.conversation else {
+                guard let message = self.entityManager.entityFetcher
+                    .existingObject(with: messageID) as? BaseMessageEntity else {
                     return
                 }
-                let info: [AnyHashable: Any] = [kKeyConversation: conversation, kKeyMessage: message]
+                let info: [AnyHashable: Any] = [kKeyConversation: message.conversation, kKeyMessage: message]
                 NotificationCenter.default.post(
                     name: NSNotification.Name(kNotificationShowConversation),
                     object: nil,

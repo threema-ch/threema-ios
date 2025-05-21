@@ -20,7 +20,9 @@
 
 #import <Foundation/Foundation.h>
 #import "ContactGroupDataSource.h"
-#import "ContactEntity.h"
+#import <CoreData/CoreData.h>
+
+@class ContactEntity;
 
 @interface ContactTableDataSource : NSObject <ContactGroupDataSource>
 

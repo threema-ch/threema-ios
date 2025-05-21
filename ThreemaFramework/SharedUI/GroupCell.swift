@@ -73,14 +73,14 @@ public final class GroupCell: ThemedCodeTableViewCell {
     
     // MARK: - Subviews
     
-    private var profilePictureSizeConstraint: NSLayoutConstraint!
+    private var profilePictureSizeConstraint: NSLayoutConstraint?
     
     private lazy var profilePictureView: ProfilePictureImageView = {
         let imageView = ProfilePictureImageView()
         
         profilePictureSizeConstraint = imageView.heightAnchor
             .constraint(lessThanOrEqualToConstant: configuration.maxProfilePictureSize)
-        profilePictureSizeConstraint.isActive = true
+        profilePictureSizeConstraint?.isActive = true
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             imageView.isHidden = true
@@ -192,7 +192,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
         
         // Note: We don't reload the profile picture here. So if the `content` is assigned before the `size`
         // we might have a blurry profile picture.
-        profilePictureSizeConstraint.constant = configuration.maxProfilePictureSize
+        profilePictureSizeConstraint?.constant = configuration.maxProfilePictureSize
         
         updateSeparatorInset()
     }

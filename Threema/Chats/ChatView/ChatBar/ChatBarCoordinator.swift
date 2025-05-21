@@ -64,7 +64,8 @@ final class ChatBarCoordinator {
     private var conversation: ConversationEntity
     private var messageToEdit: EditedMessage? {
         didSet {
-            if let baseMessage = messageToEdit as? BaseMessage {
+            if let messageToEdit {
+                let baseMessage = messageToEdit as BaseMessageEntity
                 editedMessageDeletionObserver = baseMessage.observe(\.willBeDeleted) { [weak self] baseMessage, _ in
                     if baseMessage.willBeDeleted {
                         self?.removeEditedMessageView()
@@ -80,7 +81,8 @@ final class ChatBarCoordinator {
 
     private var quoteMessage: QuoteMessage? {
         didSet {
-            if let baseMessage = quoteMessage as? BaseMessage {
+            if let quoteMessage {
+                let baseMessage = quoteMessage as BaseMessageEntity
                 quotedMessageDeletionObserver = baseMessage.observe(\.willBeDeleted) { [weak self] baseMessage, _ in
                     if baseMessage.willBeDeleted {
                         self?.removeQuoteView()
@@ -124,7 +126,14 @@ final class ChatBarCoordinator {
     
     private var mentionsVisible = false
     
-    private var precomposedText: String?
+    private var precomposedText: String? {
+        didSet {
+            guard let precomposedText else {
+                return
+            }
+            chatBar.setCurrentText(precomposedText)
+        }
+    }
     
     /// Keeps track of the last sent typing state
     private var lastTypingIndicatorState = false
@@ -155,36 +164,7 @@ final class ChatBarCoordinator {
             previewPrecomposedImage(image)
         }
         else {
-            if let draft = MessageDraftStore.shared.loadDraft(for: self.conversation) {
-                switch draft {
-                case let .text(string):
-                    self.precomposedText = string
-                    
-                case let .audio(url):
-                    startRecording(with: url)
-                    
-                case let .json(subtype):
-                    switch subtype {
-                    case let .quote(text, objectIDString):
-                        guard let quotedMessage = businessInjector.entityManager.entityFetcher
-                            .existingObject(withIDString: objectIDString) as? QuoteMessage else {
-                            MessageDraftStore.shared.deleteDraft(for: conversation)
-                            return
-                        }
-                        self.precomposedText = text
-                        showQuoteView(for: quotedMessage)
-                        
-                    case let .edit(text, objectIDString):
-                        guard let editMessage = businessInjector.entityManager.entityFetcher
-                            .existingObject(withIDString: objectIDString) as? EditedMessage else {
-                            MessageDraftStore.shared.deleteDraft(for: conversation)
-                            return
-                        }
-                        self.precomposedText = text
-                        showEditedMessageView(for: editMessage)
-                    }
-                }
-            }
+            loadDraft()
         }
     }
     
@@ -206,26 +186,57 @@ final class ChatBarCoordinator {
         chatBar.updateSendButton()
     }
     
+    func loadDraft() {
+        // Do not load drafts if we are in preview mode
+        guard let mode = chatBarCoordinatorDelegate?.userInterfaceMode, mode != .preview else {
+            return
+        }
+        
+        if let draft = MessageDraftStore.shared.loadDraft(for: conversation) {
+            switch draft {
+            case let .text(string):
+                precomposedText = string
+                
+            case let .audio(url):
+                startRecording(with: url)
+                
+            case let .json(subtype):
+                switch subtype {
+                case let .quote(text, objectIDString):
+                    guard let quotedMessage = businessInjector.entityManager.entityFetcher
+                        .existingObject(withIDString: objectIDString) as? QuoteMessage else {
+                        MessageDraftStore.shared.deleteDraft(for: conversation)
+                        return
+                    }
+                    precomposedText = text
+                    showQuoteView(for: quotedMessage)
+                    
+                case let .edit(text, objectIDString):
+                    guard let editMessage = businessInjector.entityManager.entityFetcher
+                        .existingObject(withIDString: objectIDString) as? EditedMessage else {
+                        MessageDraftStore.shared.deleteDraft(for: conversation)
+                        return
+                    }
+                    precomposedText = text
+                    showEditedMessageView(for: editMessage)
+                }
+            }
+        }
+    }
+    
     func saveDraft(andDeleteText: Bool = false) {
+        // Do not save drafts if we are in preview mode
+        guard let mode = chatBarCoordinatorDelegate?.userInterfaceMode, mode != .preview else {
+            return
+        }
+        
         if isRecording {
-            guard let mode = chatBarCoordinatorDelegate?.userInterfaceMode else {
+            // Only save draft when leaving chat view, not when entering backgroung
+            guard let chatViewController, chatViewController.isApplicationInForeground else {
                 return
             }
             
-            Task {
-                // Avoid file operations if the chat is peeked
-                let currentState = await chatBar.getCurrentSessionState(shouldMove: mode != .preview)
-                await MainActor.run {
-                    switch currentState {
-                    case .background:
-                        break
-                    case let .closed(audioFile):
-                        MessageDraftStore.shared.saveDraft(.audio(audioFile), for: conversation)
-                    case nil:
-                        MessageDraftStore.shared.deleteDraft(for: conversation)
-                    }
-                }
-            }
+            chatBar.saveVoiceMessageRecordingAsDraft()
         }
         else if let quoteMessage {
             guard let currentText = chatBar.getCurrentText() else {
@@ -478,7 +489,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     func setIsResettingKeyboard(_ setReset: Bool) {
         chatViewController?.isResettingKeyboard = setReset
     }
-
+    
     func showCamera() {
         guard let action = SendMediaAction(for: chatViewActionsHelper) else {
             let message = "Could not create SendMediaAction in \(#function)"
@@ -661,7 +672,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         if let group = businessInjector.groupManager.getGroup(conversation: conversation) {
             return messagePermission.canSend(groudID: group.groupID, groupCreatorIdentity: group.groupCreatorIdentity)
         }
-        else if let distributionList = conversation.distributionList {
+        else if conversation.distributionList != nil {
             // TODO: (IOS-4366) Check send possible for each recipient
             return (true, nil)
         }
@@ -677,7 +688,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         guard canSendText() else {
             return
         }
-                
+        
         var sendableRawText = rawText
         // Sending
         // Edit Message
@@ -687,7 +698,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
                 showEditMessageSentTooLongAgoAlert()
                 return
             }
-           
+            
             var unsupportedContacts = FeatureMask.check(
                 message: messageToEdit,
                 for: .editMessageSupport
@@ -713,7 +724,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
                     // All non gate way ID's are added anyways
                     filteredUnsupportedContact.append(unsupportedContact)
                 }
-
+                
                 unsupportedContacts = filteredUnsupportedContact
             }
             
@@ -790,12 +801,14 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             )
             firstFive.append(countString)
             if let totalSummary = listFormatter.string(from: Array(firstFive)) {
-                summary = "\(totalSummary)\n\(#localize("edit_message_requirement"))"
+                summary =
+                    "\(totalSummary)\n\(String.localizedStringWithFormat(#localize("edit_message_requirement"), TargetManager.appName))"
             }
         }
         else {
             if let shortsSummary = listFormatter.string(from: displayNames) {
-                summary = "\(shortsSummary)\n\(#localize("edit_message_requirement"))"
+                summary =
+                    "\(shortsSummary)\n\(String.localizedStringWithFormat(#localize("edit_message_requirement"), TargetManager.appName))"
             }
         }
         
@@ -818,17 +831,45 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             message: #localize("edit_message_text_to_long")
         )
     }
-        
-    func startRecording(with audioFileURL: URL? = nil) {
-        chatViewTableViewVoiceMessageCellDelegate?.pausePlaying()
-        
-        UIAccessibility.post(notification: UIAccessibility.Notification.screenChanged, argument: nil)
-        
-        Benchmark.run {
-            self.chatBar.presentVoiceMessageRecorderView(with: self, with: audioFileURL)
+    
+    /// Checks permission for microphone and starts recording if granted. Shows alert otherwise.
+    func startRecording(with draftAudioURL: URL? = nil) {
+        if #available(iOS 18.0, *) {
+            AVAudioApplication.requestRecordPermission { granted in
+                if granted {
+                    self.record(with: draftAudioURL)
+                }
+                else {
+                    self.showMicrophonePermissionAlert()
+                }
+            }
         }
-        
-        isRecording = true
+        else {
+            AVAudioSession.sharedInstance().requestRecordPermission { granted in
+                if granted {
+                    self.record(with: draftAudioURL)
+                }
+                else {
+                    self.showMicrophonePermissionAlert()
+                }
+            }
+        }
+    }
+    
+    private func record(with draftAudioURL: URL? = nil) {
+        Task { @MainActor in
+            chatViewTableViewVoiceMessageCellDelegate?.pausePlaying()
+            isRecording = true
+            chatBar.presentVoiceMessageRecorderView(with: self, with: draftAudioURL)
+            UIAccessibility.post(notification: UIAccessibility.Notification.screenChanged, argument: nil)
+        }
+    }
+    
+    private func showMicrophonePermissionAlert() {
+        guard let chatViewController else {
+            return
+        }
+        UIAlertTemplate.showOpenSettingsAlert(owner: chatViewController, noAccessAlertType: .microphone)
     }
     
     func sendTypingIndicator(startTyping: Bool) {

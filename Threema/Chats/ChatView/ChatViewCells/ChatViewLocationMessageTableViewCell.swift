@@ -209,7 +209,7 @@ extension ChatViewLocationMessageTableViewCell: ChatViewMessageActions {
         }
         
         // MessageMarkers
-        let markStarHandler = { (message: BaseMessage) in
+        let markStarHandler = { (message: BaseMessageEntity) in
             self.chatViewTableViewCellDelegate?.toggleMessageMarkerStar(message: message)
         }
         

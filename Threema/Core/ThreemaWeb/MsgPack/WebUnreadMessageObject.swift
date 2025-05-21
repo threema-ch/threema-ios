@@ -30,7 +30,7 @@ class WebUnreadMessageObject: NSObject {
     var statusType: String?
     var unread: Bool?
     
-    init(firstUnreadMessage: BaseMessage) {
+    init(firstUnreadMessage: BaseMessageEntity) {
         self.type = "contact"
         self.id = "unreadMessage"
         let currentDate = firstUnreadMessage.displayDate

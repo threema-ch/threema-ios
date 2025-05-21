@@ -60,7 +60,8 @@ extension EntityCreator {
         entity.data = fileData
         entity.progress = nil
         entity.sendFailed = false
-        entity.webRequestID = webRequestID
+        // swiftformat:disable:next acronyms
+        entity.webRequestId = webRequestID
         entity.correlationID = correlationID
         entity.caption = item.caption
         entity.fileSize = NSNumber(integerLiteral: data.count)

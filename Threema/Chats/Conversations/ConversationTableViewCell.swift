@@ -711,9 +711,9 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             hideUpdateGroupCallButton()
         }
         else {
-            let text = update.joinState == .joined ? BundleUtil
-                .localizedString(forKey: "group_call_open_button_title") : BundleUtil
-                .localizedString(forKey: "group_call_join_button_title")
+            let text = update
+                .joinState == .joined ? #localize("group_call_open_button_title") :
+                #localize("group_call_join_button_title")
             groupCallJoinButton.configuration?.title = text
             groupCallJoinButton.isHidden = false
         }
@@ -722,8 +722,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     private func hideUpdateGroupCallButton() {
         groupCallJoinButton.isHidden = true
-        groupCallJoinButton.configuration?.title = BundleUtil
-            .localizedString(forKey: "group_call_join_button_title")
+        groupCallJoinButton.configuration?.title = #localize("group_call_join_button_title")
     }
     
     private func updateTitleLabel() {
@@ -1126,14 +1125,14 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     private func observeLastMessageProperties() {
-        if let lastMessage = conversation?.lastMessage as? BaseMessage {
+        if let lastMessage = conversation?.lastMessage as? BaseMessageEntity {
             observeLastMessage(lastMessage, keyPath: \.deletedAt, callOnCreation: false) { [weak self] in
                 self?.updateLastMessagePreview()
                 self?.updateDisplayStateImage()
             }
         }
 
-        if let lastMessage = conversation?.lastMessage as? BallotMessage {
+        if let lastMessage = conversation?.lastMessage as? BallotMessageEntity {
             observeLastMessage(lastMessage, keyPath: \.ballot, callOnCreation: false) { [weak self] in
                 self?.updateLastMessagePreview()
             }
@@ -1220,7 +1219,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     ///   - callOnCreation: Should the handler be called during observer creation?
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeLastMessage<Message: BaseMessage>(
+    private func observeLastMessage<Message: BaseMessageEntity>(
         _ lastMessage: Message,
         keyPath: KeyPath<Message, some Any>,
         callOnCreation: Bool = true,

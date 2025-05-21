@@ -52,7 +52,7 @@ struct ChatSettingsView: View {
             }
         }
         .navigationBarTitle(#localize("settings_list_chat_title"), displayMode: .inline)
-        .tint(UIColor.primary.color)
+        .tint(.accentColor)
     }
 }
 
@@ -95,7 +95,7 @@ struct WallpaperSectionView: View {
                 }
                 
                 WallpaperTypeView(
-                    description: "Threema",
+                    description: TargetManager.appName,
                     image: $threemaImage,
                     isSelected: $threemaSelected,
                     isSelectingCustom: $isSelectingCustom
@@ -139,8 +139,7 @@ struct WallpaperSectionView: View {
                 title: Text(#localize("settings_chat_wallpaper_reset")),
                 message: Text(#localize("settings_chat_wallpaper_reset_all_alert")),
                 primaryButton: .destructive(Text(
-                    BundleUtil
-                        .localizedString(forKey: "settings_privacy_TIRR_reset_alert_action")
+                    #localize("settings_privacy_TIRR_reset_alert_action")
                 )) {
                     settingsVM.wallpaperStore.deleteAllCustom()
                 },
@@ -263,7 +262,7 @@ struct WallpaperTypeView: View {
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .padding(25)
-                            .foregroundColor(UIColor.primary.color)
+                            .foregroundColor(.accentColor)
                     }
                 }
                 .cornerRadius(15)
@@ -272,7 +271,7 @@ struct WallpaperTypeView: View {
                 .overlay {
                     RoundedRectangle(cornerRadius: 15)
                         .stroke(
-                            Color(uiColor: isSelected ? UIColor.primary : .tertiaryLabel),
+                            Color(uiColor: isSelected ? .tintColor : .tertiaryLabel),
                             lineWidth: 2
                         )
                 }
@@ -280,7 +279,7 @@ struct WallpaperTypeView: View {
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
                     .imageScale(.large)
-                    .foregroundColor(UIColor.primary.color)
+                    .foregroundColor(.accentColor)
             }
             else {
                 Image(systemName: "circle")

@@ -115,7 +115,7 @@ import ThreemaFramework
         }
     }
     
-    func updateWebClientSession(session: WebClientSessionEntity, browserName: String!, browserVersion: NSNumber!) {
+    func updateWebClientSession(session: WebClientSessionEntity, browserName: String, browserVersion: NSNumber) {
         entityManager!.performAndWaitSave {
             session.browserName = browserName
             session.browserVersion = browserVersion

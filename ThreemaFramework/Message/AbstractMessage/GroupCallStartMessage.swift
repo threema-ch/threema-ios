@@ -53,7 +53,7 @@ import ThreemaProtocols
               let serializedData = try? decoded?.serializedData()
         else {
             let message = "Unable to create GroupCallStartMessage body"
-            DDLogError(message)
+            DDLogError("\(message)")
             return nil
         }
         
@@ -65,7 +65,7 @@ import ThreemaProtocols
         return body
     }
     
-    override public func pushNotificationBody() -> String! {
+    override public func pushNotificationBody() -> String {
         #localize("group_call_notification_body")
     }
     

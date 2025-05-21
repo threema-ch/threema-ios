@@ -22,27 +22,7 @@ import CoreData
 import Foundation
 
 @objc(FileMessageEntity)
-public final class FileMessageEntity: BaseMessage {
-    
-    // Attributes
-    // swiftformat:disable: acronyms
-    @NSManaged @objc(blobId) public var blobId: Data?
-    @NSManaged @objc(blobThumbnailId) public var blobThumbnailId: Data?
-    // swiftformat:enable: acronyms
-    @NSManaged @objc(caption) public var caption: String?
-    @NSManaged @objc(consumed) public var consumed: Date?
-    @NSManaged @objc(encryptionKey) public var encryptionKey: Data?
-    @NSManaged @objc(fileName) public var fileName: String?
-    @NSManaged @objc(fileSize) public var fileSize: NSNumber?
-    @NSManaged @objc(json) public var json: String?
-    @NSManaged @objc(mimeType) public var mimeType: String?
-    @NSManaged @objc(origin) public var origin: NSNumber?
-    @NSManaged @objc(progress) public var progress: NSNumber?
-    @NSManaged @objc(type) public var type: NSNumber?
-
-    // Relationships
-    @NSManaged public var thumbnail: ImageDataEntity?
-    @NSManaged public var data: FileDataEntity?
+public final class FileMessageEntity: BaseMessageEntity {
     
     enum FileMessageJSONKeys: String {
         case correlationID = "c"
@@ -52,15 +32,36 @@ public final class FileMessageEntity: BaseMessage {
         case width = "w"
         case durationJSONCaption = "d"
     }
-
-    // Lifecycle
     
-    // TODO: (IOS-4752) Use in EntityCreator/DB Preparer
+    // MARK: Attributes
+
+    // swiftformat:disable: acronyms
+    @NSManaged public var blobId: Data?
+    @NSManaged public var blobThumbnailId: Data?
+    // swiftformat:enable: acronyms
+    @NSManaged public var caption: String?
+    @NSManaged public var consumed: Date?
+    @NSManaged public var encryptionKey: Data?
+    @NSManaged public var fileName: String?
+    @NSManaged public var fileSize: NSNumber?
+    @NSManaged public var json: String?
+    @NSManaged public var mimeType: String?
+    @NSManaged public var origin: NSNumber?
+    @NSManaged public var progress: NSNumber?
+    @NSManaged public var type: NSNumber?
+
+    // MARK: Relationships
+
+    @NSManaged public var data: FileDataEntity?
+    @NSManaged public var thumbnail: ImageDataEntity?
+    
+    // MARK: Lifecycle
+    
     /// Preferred initializer that ensures all non optional values are set
     /// - Parameters:
-    ///   - context: NSManagedObjectContext to insert created entity into
-    ///   - blobId: Blob id of the file data
-    ///   - blobThumbnailId: Blob id of the thumbnail data
+    ///   - context: `NSManagedObjectContext` to insert created entity into
+    ///   - blobId: BlobID of the file data
+    ///   - blobThumbnailId: BlobID of the thumbnail data
     ///   - caption: Caption describing the data
     ///   - consumed: Has the file been consumed?
     ///   - encryptionKey: Key the file data is encrypted with
@@ -126,7 +127,7 @@ public final class FileMessageEntity: BaseMessage {
         fatalError("\(#function) not implemented")
     }
     
-    // Properties
+    // MARK: Properties
     
     @objc public lazy var correlationID: String? = {
         guard let json else {

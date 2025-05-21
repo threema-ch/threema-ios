@@ -44,7 +44,7 @@ final class EntityManagerTests: XCTestCase {
 
         var sender: ContactEntity?
         var conversation: ConversationEntity!
-        var message: BaseMessage?
+        var message: BaseMessageEntity?
 
         let databasePreparer = DatabasePreparer(context: mainCnx)
         databasePreparer.save {
@@ -52,8 +52,7 @@ final class EntityManagerTests: XCTestCase {
             let identity2 = "ECHOECHO"
             sender = databasePreparer.createContact(
                 publicKey: publicKey2,
-                identity: identity2,
-                verificationLevel: 0
+                identity: identity2
             )
 
             conversation = databasePreparer
@@ -78,7 +77,7 @@ final class EntityManagerTests: XCTestCase {
 
         let expec = expectation(description: "Expec")
 
-        var resultMessage: BaseMessage?
+        var resultMessage: BaseMessageEntity?
 
         DispatchQueue.global().async {
             let entityManager =
@@ -123,8 +122,7 @@ final class EntityManagerTests: XCTestCase {
             let identity2 = "ECHOECHO"
             sender = databasePreparer.createContact(
                 publicKey: publicKey2,
-                identity: identity2,
-                verificationLevel: 0
+                identity: identity2
             )
 
             conversation = databasePreparer
@@ -135,7 +133,7 @@ final class EntityManagerTests: XCTestCase {
 
         let expec = expectation(description: "Expec")
 
-        var resultMessage: BaseMessage?
+        var resultMessage: BaseMessageEntity?
 
         DispatchQueue.global().async {
             let entityManager =
@@ -177,8 +175,7 @@ final class EntityManagerTests: XCTestCase {
             let identity2 = "ECHOECHO"
             sender = databasePreparer.createContact(
                 publicKey: publicKey2,
-                identity: identity2,
-                verificationLevel: 0
+                identity: identity2
             )
         }
 
@@ -247,7 +244,7 @@ final class EntityManagerTests: XCTestCase {
                 myIdentityStore: MyIdentityStoreMock()
             )
 
-            var deletedMessage: BaseMessage? = nil
+            var deletedMessage: BaseMessageEntity? = nil
 
             if testCase.isThrowingError {
                 XCTAssertThrowsError(

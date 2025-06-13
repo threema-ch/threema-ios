@@ -107,9 +107,6 @@
             </BuildableReference>
             <SkippedTests>
                <Test
-                  Identifier = "(null)">
-               </Test>
-               <Test
                   Identifier = "AddressBoolLoadTests">
                </Test>
                <Test

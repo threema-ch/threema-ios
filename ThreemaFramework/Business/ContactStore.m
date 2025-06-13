@@ -1830,11 +1830,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
 - (void)updateStatusForAllContactsIgnoreInterval:(BOOL)ignoreInterval contactSyncer:(MediatorSyncableContacts *)mediatorSyncableContacts onCompletion:(void(^)(void))onCompletion onError:(nullable void(^)(NSError *error))onError {
     if (ProcessInfoHelper.isRunningForScreenshots)  {
-        [self updateStatusWithContactSyncer:mediatorSyncableContacts onCompletion:^() {
-            [self setupCheckStatusTimer];
-        } onError:^(NSError *error){
-            [self setupCheckStatusTimer];
-        }];
+        // do nothing
     } else {
         if ([self needCheckStatus:ignoreInterval] == NO) {
             DDLogNotice(@"[ContactSync] Do not update status and featuremasks");

@@ -33,4 +33,8 @@ extension ProfileView: MainTabViewRepresentable {
     var tag: Int {
         2
     }
+    
+    var screenshotIdentifier: String {
+        "TabBarProfile"
+    }
 }

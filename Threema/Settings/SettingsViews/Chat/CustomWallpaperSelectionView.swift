@@ -23,7 +23,7 @@ import ThreemaMacros
 
 struct CustomWallpaperSelectionView: View {
     let conversationID: NSManagedObjectID
-    
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var settingsVM: SettingsStore
     @State private var showingImagePicker = false
 
@@ -38,55 +38,67 @@ struct CustomWallpaperSelectionView: View {
     var onDismiss: () -> Void
     
     var body: some View {
-        List {
-            HStack(alignment: .center, spacing: 20) {
-                WallpaperTypeView(
-                    description: #localize("settings_chat_wallpaper_default"),
-                    image: $defaultImage, isSelected: $defaultSelected,
-                    isSelectingCustom: $customSelected
-                )
-                .onTapGesture {
-                    selectDefault()
+        NavigationView {
+            List {
+                HStack(alignment: .center, spacing: 20) {
+                    WallpaperTypeView(
+                        description: #localize("settings_chat_wallpaper_default"),
+                        image: $defaultImage, isSelected: $defaultSelected,
+                        isSelectingCustom: $customSelected
+                    )
+                    .onTapGesture {
+                        selectDefault()
+                    }
+                    WallpaperTypeView(
+                        description: #localize("settings_chat_wallpaper_custom"),
+                        image: $customImage,
+                        isSelected: $customSelected,
+                        isSelectingCustom: $customSelected
+                    )
+                    .tint(.accentColor)
+                    .onTapGesture {
+                        selectCustom()
+                    }
+                    .onChange(of: selectedUIImage) { _ in
+                        loadImage()
+                    }
                 }
-                WallpaperTypeView(
-                    description: #localize("settings_chat_wallpaper_custom"),
-                    image: $customImage,
-                    isSelected: $customSelected,
-                    isSelectingCustom: $customSelected
-                )
-                .tint(.accentColor)
-                .onTapGesture {
-                    selectCustom()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(#localize("settings_chat_wallpaper_title"))
+            .sheet(isPresented: $showingImagePicker) {
+                SwiftUIImagePicker(image: $selectedUIImage)
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text(#localize("Done"))
+                            .bold()
+                    }
                 }
-                .onChange(of: selectedUIImage) { _ in
-                    loadImage()
+            }
+            .onAppear {
+                if settingsVM.wallpaperStore.hasCustomWallpaper(for: conversationID) {
+                    selectedUIImage = settingsVM.wallpaperStore.wallpaper(for: conversationID)
+                    customImage = Image(uiImage: selectedUIImage!)
+                    customSelected = true
+                }
+                else {
+                    defaultSelected = true
+                }
+                
+                if let currentDefault = settingsVM.wallpaperStore.currentDefaultWallpaper() {
+                    defaultImage = Image(uiImage: currentDefault)
+                }
+                else {
+                    defaultImage = Image(uiImage: UIImage(ciImage: CIImage.empty()))
                 }
             }
-        }
-        .sheet(isPresented: $showingImagePicker, onDismiss: {
-            loadImage()
-        }, content: {
-            SwiftUIImagePicker(image: $selectedUIImage)
-        })
-        .onAppear {
-            if settingsVM.wallpaperStore.hasCustomWallpaper(for: conversationID) {
-                selectedUIImage = settingsVM.wallpaperStore.wallpaper(for: conversationID)
-                customImage = Image(uiImage: selectedUIImage!)
-                customSelected = true
+            .onDisappear {
+                onDismiss()
             }
-            else {
-                defaultSelected = true
-            }
-            
-            if let currentDefault = settingsVM.wallpaperStore.currentDefaultWallpaper() {
-                defaultImage = Image(uiImage: currentDefault)
-            }
-            else {
-                defaultImage = Image(uiImage: UIImage(ciImage: CIImage.empty()))
-            }
-        }
-        .onDisappear {
-            onDismiss()
         }
     }
     
@@ -126,10 +138,7 @@ struct CustomWallpaperSelectionView: View {
     }
 }
 
-public class CustomWallpaperSelectionViewController: UIViewController {
-    
-    private var viewController: UIViewController?
-    
+public class CustomWallpaperSelectionViewController {
     public func customWallpaperSelectionView(
         conversationID: NSManagedObjectID,
         onDismiss: @escaping () -> Void
@@ -139,11 +148,6 @@ public class CustomWallpaperSelectionViewController: UIViewController {
             onDismiss: onDismiss
         ).environmentObject(BusinessInjector.ui.settingsStore as! SettingsStore)
         let hostingController = UIHostingController(rootView: view)
-        let action = UIAction { _ in
-            hostingController.dismiss(animated: true)
-        }
-        hostingController.navigationItem.rightBarButtonItem = UIBarButtonItem(systemItem: .close, primaryAction: action)
-        hostingController.navigationItem.title = #localize("settings_chat_wallpaper_title")
 
         return hostingController
     }

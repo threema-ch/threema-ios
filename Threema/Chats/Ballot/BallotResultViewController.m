@@ -79,6 +79,12 @@
     [self updateColors];
 }
 
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+        
+    [_matrixView adaptToSize:_resultView.frame.size];
+}
+
 - (void)refresh {
     [super refresh];
     

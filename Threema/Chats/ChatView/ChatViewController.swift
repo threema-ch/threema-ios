@@ -591,7 +591,7 @@ final class ChatViewController: ThemedViewController {
     ///   - businessInjector: Business injector to load messages
     init(
         for conversation: ConversationEntity,
-        businessInjector: BusinessInjectorProtocol = BusinessInjector.ui,
+        businessInjector: BusinessInjectorProtocol = BusinessInjector(),
         chatScrollPositionProvider: ChatScrollPositionProvider = ChatScrollPosition.shared,
         showConversationInformation: ShowConversationInformation? = nil
     ) {
@@ -1011,6 +1011,7 @@ final class ChatViewController: ThemedViewController {
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         cellHeightCache.clear()
         super.viewWillTransition(to: size, with: coordinator)
+        wallpaperChanged()
     }
     
     // MARK: - Notifications
@@ -1068,7 +1069,13 @@ final class ChatViewController: ThemedViewController {
         }
         else {
             backgroundView.backgroundColor = nil
-            backgroundView.image = wallpaperStore.wallpaper(for: conversation.objectID)
+            if let image = wallpaperStore.wallpaper(for: conversation.objectID) {
+                backgroundView.image = MediaConverter.downscaleImage(
+                    image: image,
+                    toSize: UIScreen.main.bounds.size,
+                    scale: UIScreen.main.scale
+                )
+            }
         }
     }
 }
@@ -2345,7 +2352,8 @@ extension ChatViewController: ChatViewDataSourceDelegate {
     }
     
     func checkToShowReactionsTip() {
-        guard #available(iOS 17, *),
+        guard !ProcessInfoHelper.isRunningForScreenshots,
+              #available(iOS 17, *),
               !chatViewShowsEmojiLongPressInfoTip else {
             return
         }

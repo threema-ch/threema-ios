@@ -125,7 +125,9 @@ extension BallotEntity {
                     choices
                 }
                 else {
-                    if displayMode?.intValue == BallotDisplayMode.summary.rawValue {
+                    if displayMode?.intValue == BallotDisplayMode.summary.rawValue ||
+                        // swiftformat:disable:next acronyms
+                        (!isIntermediate && creatorId != MyIdentityStore.shared().identity) {
                         #localize("ballot_message_tap_to_vote")
                     }
                     else {

@@ -267,12 +267,34 @@ class GroupCallParticipantCell: UICollectionViewCell {
                 if isRunningForScreenshots {
                     if UIDevice.current.userInterfaceIdiom == .phone {
                         NSLayoutConstraint.activate(profilePictureViewHeightConstraintScreenshots)
-                        profilePictureView.contentMode = .scaleAspectFill
+
+                        switch participant.threemaIdentity.string {
+                        case "H3BK2FVH", "VK55MZ3W", "OOOBNWYK", "OOO8U3TJ":
+                            profilePictureView.contentMode = .scaleAspectFit
+                        default:
+                            profilePictureView.contentMode = .scaleAspectFill
+                        }
                     }
                     else {
                         NSLayoutConstraint.activate(profilePictureViewWidthConstraintScreenshots)
-                        profilePictureView.contentMode = .scaleAspectFill
+                        
+                        participant.threemaIdentity
+                        
+                        switch participant.threemaIdentity.string {
+                        case "H3BK2FVH":
+                            if participant.displayName == "Peter Schreiner" {
+                                profilePictureView.contentMode = .scaleAspectFit
+                            }
+                            else {
+                                profilePictureView.contentMode = .scaleAspectFill
+                            }
+                        case "OOOBNWYK":
+                            profilePictureView.contentMode = .scaleAspectFit
+                        default:
+                            profilePictureView.contentMode = .scaleAspectFill
+                        }
                     }
+                    
                     NSLayoutConstraint.deactivate(profilePictureViewWidthConstraint)
                     NSLayoutConstraint.activate(blurBackgroundConstrains)
                     contentView.insertSubview(blurBackground, at: 1)

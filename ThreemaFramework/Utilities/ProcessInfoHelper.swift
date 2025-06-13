@@ -27,4 +27,6 @@ import Foundation
     
     @objc public static var isRunningForTests: Bool = ProcessInfo.processInfo.arguments
         .contains("-isRunningForTests")
+    
+    public static var targetManagerKeyForScreenshots: String? = ProcessInfo.processInfo.environment["TargetManagerKey"]
 }

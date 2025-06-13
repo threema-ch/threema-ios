@@ -100,27 +100,6 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4D5C4CA11CD79C8500512FE6"
-               BuildableName = "Threema Work Tests.xctest"
-               BlueprintName = "Threema Work Tests"
-               ReferencedContainer = "container:Threema.xcodeproj">
-            </BuildableReference>
-            <SkippedTests>
-               <Test
-                  Identifier = "AudioTrackAnalyzerTests">
-               </Test>
-               <Test
-                  Identifier = "DbLoadTests">
-               </Test>
-               <Test
-                  Identifier = "MdmSetupTests">
-               </Test>
-            </SkippedTests>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
                BlueprintIdentifier = "CEFBD1901E51FB6C00722ED7"
                BuildableName = "ScreenshotsWithDataWork.xctest"
                BlueprintName = "ScreenshotsWithDataWork"
@@ -139,15 +118,6 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0A7DF6C11C9FDBDE002D4DC3"
-            BuildableName = "Threema Work.app"
-            BlueprintName = "Threema Work"
-            ReferencedContainer = "container:Threema.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "AppStore"

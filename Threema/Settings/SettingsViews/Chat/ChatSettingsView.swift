@@ -114,10 +114,17 @@ struct WallpaperSectionView: View {
                     selectCustom()
                 }
                 .onChange(of: selectedUIImage) { image in
-                    guard image != nil else {
+                    guard image != nil, isSelectingCustom else {
                         return
                     }
                     
+                    settingsVM.wallpaperStore.saveDefaultWallpaper(selectedUIImage)
+                    selectedUIImage = nil
+                }
+                .onReceive(
+                    NotificationCenter.default
+                        .publisher(for: Notification.Name(kNotificationWallpaperChanged))
+                ) { _ in
                     loadImage()
                 }
             }
@@ -131,6 +138,9 @@ struct WallpaperSectionView: View {
                     Text(#localize("settings_chat_wallpaper_reset"))
                 }
                 Spacer()
+            }
+            .sheet(isPresented: $showingImagePicker) {
+                SwiftUIImagePicker(image: $selectedUIImage)
             }
         }
         
@@ -147,12 +157,6 @@ struct WallpaperSectionView: View {
                     // Noop
                 }
             )
-        })
-        
-        .sheet(isPresented: $showingImagePicker, onDismiss: {
-            loadImage()
-        }, content: {
-            SwiftUIImagePicker(image: $selectedUIImage)
         })
         
         .onAppear {
@@ -203,6 +207,7 @@ struct WallpaperSectionView: View {
         withAnimation {
             emptySelected = false
             threemaSelected = false
+            customImage = nil
             isSelectingCustom = true
             customSelected = true
             showingImagePicker = true
@@ -212,20 +217,19 @@ struct WallpaperSectionView: View {
     private func loadImage() {
         isSelectingCustom = false
 
-        guard let selectedUIImage else {
-            if TargetManager.isBusinessApp {
-                selectEmpty()
-            }
-            else {
-                selectThreema()
-            }
-            return
+        if settingsVM.wallpaperStore.defaultIsEmptyWallpaper() {
+            emptySelected = true
+            customImage = nil
         }
-        
-        withAnimation {
-            customImage = Image(uiImage: selectedUIImage)
+        else if settingsVM.wallpaperStore.defaultIsThreemaWallpaper() {
+            threemaSelected = true
+            customImage = nil
         }
-        settingsVM.wallpaperStore.saveDefaultWallpaper(selectedUIImage)
+        else {
+            selectedUIImage = settingsVM.wallpaperStore.currentDefaultWallpaper()
+            customImage = Image(uiImage: selectedUIImage!)
+            customSelected = true
+        }
     }
 }
 
@@ -248,11 +252,24 @@ struct WallpaperTypeView: View {
                 .frame(width: 80, height: 150)
                 .background {
                   
-                    if image != nil {
-                        image!
+                    if let image {
+                        if let uiImage = image.getUIImage(newSize: CGSize(width: 240, height: 450)) {
+                            Image(uiImage: MediaConverter.downscaleImage(
+                                image: uiImage,
+                                toSize: CGSize(width: 80, height: 150)
+                            ))
                             .resizable()
                             .scaledToFill()
+                            .frame(width: 80, height: 150)
                             .cornerRadius(15)
+                        }
+                        else {
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 80, height: 150)
+                                .cornerRadius(15)
+                        }
                     }
                     else if isSelectingCustom, image == nil {
                         ProgressView()
@@ -289,5 +306,22 @@ struct WallpaperTypeView: View {
         }
         .accessibilityElement(children: .combine)
         .frame(maxWidth: .infinity)
+    }
+}
+
+extension Image {
+    @MainActor
+    func getUIImage(newSize: CGSize) -> UIImage? {
+        let image = resizable()
+            .scaledToFill()
+            .frame(width: newSize.width, height: newSize.height)
+            .clipped()
+        if #available(iOS 16.0, *) {
+            return ImageRenderer(content: image).uiImage
+        }
+        else {
+            // Fallback on earlier versions
+            return nil
+        }
     }
 }

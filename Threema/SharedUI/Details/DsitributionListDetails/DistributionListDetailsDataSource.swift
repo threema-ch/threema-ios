@@ -380,13 +380,11 @@ extension DistributionListDetailsDataSource {
                 return
             }
             
-            let navigationController =
-                ThemedNavigationController(
-                    rootViewController: CustomWallpaperSelectionViewController()
-                        .customWallpaperSelectionView(conversationID: strongSelf.conversation.objectID) {
-                            strongSelf.reload(sections: [.wallpaperActions])
-                        }
-                )
+            let navigationController = CustomWallpaperSelectionViewController()
+                .customWallpaperSelectionView(conversationID: strongSelf.conversation.objectID) {
+                    strongSelf.reload(sections: [.wallpaperActions])
+                }
+                
             navigationController.modalPresentationStyle = .formSheet
             strongSelf.distributionListDetailsViewController?.present(navigationController, animated: true)
         }

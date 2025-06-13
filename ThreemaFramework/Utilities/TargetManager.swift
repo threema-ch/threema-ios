@@ -49,9 +49,27 @@ public enum TargetManager {
         case let .some(bundleName):
             fatalError("There is a unknown bundle id \(bundleName)")
         case .none:
-            fatalError("There is no bundle id")
+            return handleNoneTargetManager()
         }
     }()
+    
+    /// Verify the appropriate course of action in the event that the targetManagerKey is not set.
+    /// - Returns: TargetManager
+    private static func handleNoneTargetManager() -> TargetManager {
+        guard ProcessInfoHelper.isRunningForScreenshots else {
+            fatalError("There is no bundle id")
+        }
+        switch ProcessInfoHelper.targetManagerKeyForScreenshots {
+        case "Threema":
+            return .threema
+        case "ThreemaWork":
+            return .work
+        case "ThreemaOnPrem":
+            return .onPrem
+        default:
+            fatalError("There is no target manager key for screenshots")
+        }
+    }
     
     /// Returns the CFBundleName for the current process. E.g. `ThreemaShareExtension` for the share extension or
     /// `Threema` for the app.
@@ -121,7 +139,7 @@ public enum TargetManager {
 }
 
 @objc public class TargetManagerObjc: NSObject {
-          
+    
     @objc public enum TargetManager: Int, RawRepresentable {
         case threema
         case work
@@ -152,10 +170,28 @@ public enum TargetManager {
         case let .some(key):
             fatalError("There is a unknown target manager key \(key)")
         case .none:
-            fatalError("There is no target manager key")
+            return handleNoneTargetManager()
         }
     }()
-        
+    
+    /// Verify the appropriate course of action in the event that the targetManagerKey is not set.
+    /// - Returns: TargetManager
+    private static func handleNoneTargetManager() -> TargetManager {
+        guard ProcessInfoHelper.isRunningForScreenshots else {
+            fatalError("There is no bundle id")
+        }
+        switch ProcessInfoHelper.targetManagerKeyForScreenshots {
+        case "Threema":
+            return .threema
+        case "ThreemaWork":
+            return .work
+        case "ThreemaOnPrem":
+            return .onPrem
+        default:
+            fatalError("There is no target manager key for screenshots")
+        }
+    }
+    
     @objc public static let targetName: String = Bundle.main
         .object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Threema"
     

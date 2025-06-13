@@ -1113,12 +1113,11 @@ extension SingleDetailsDataSource {
             }
             
             let navigationController =
-                ThemedNavigationController(
-                    rootViewController: CustomWallpaperSelectionViewController()
-                        .customWallpaperSelectionView(conversationID: conversation.objectID) {
-                            strongSelf.reload(sections: [.wallpaper])
-                        }
-                )
+                CustomWallpaperSelectionViewController()
+                    .customWallpaperSelectionView(conversationID: conversation.objectID) {
+                        strongSelf.reload(sections: [.wallpaper])
+                    }
+                
             navigationController.modalPresentationStyle = .formSheet
             strongSelf.singleDetailsViewController?.present(navigationController, animated: true)
         }

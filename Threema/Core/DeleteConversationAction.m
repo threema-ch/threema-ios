@@ -154,6 +154,11 @@
         }
     }];
     [alertController addAction:cancelAction];
+    
+    if (SYSTEM_IS_IPAD) {
+        alertController.popoverPresentationController.sourceRect = _presentingRect;
+        alertController.popoverPresentationController.sourceView = _presentingViewController.view;
+    }
 
     [_presentingViewController presentViewController:alertController animated:YES completion:nil];
 }

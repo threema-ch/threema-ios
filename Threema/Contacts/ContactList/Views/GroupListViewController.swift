@@ -90,7 +90,8 @@ import ThreemaMacros
         
         let action = UIContextualAction(style: .destructive, title: #localize("delete")) { [weak self] _, _, _ in
             guard let self,
-                  let group = group(for: indexPath)
+                  let group = group(for: indexPath),
+                  let cell = tableView.cellForRow(at: indexPath)
             else {
                 return
             }
@@ -104,6 +105,7 @@ import ThreemaMacros
             }
             
             deleteAction.presentingViewController = self
+            deleteAction.presentingRect = cell.convert(cell.bounds, to: tableView)
             deleteAction.execute { didDelete in
                 if didDelete {
                     tableView.reloadData()

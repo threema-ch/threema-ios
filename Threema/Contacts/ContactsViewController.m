@@ -867,7 +867,7 @@ typedef enum : NSUInteger {
         }
         else if (_mode == ModeGroups) {
             Group *group = [self.groupsDataSource groupAtIndexPath:indexPath];
-            [self deleteGroup:group];
+            [self deleteGroup:group atIndexPath:indexPath];
             [self updateNoContactsView];
         }
         else if (_mode == ModeWorkContacts) {
@@ -938,7 +938,7 @@ typedef enum : NSUInteger {
         NSString *localizedDeleteActionTitle = [BundleUtil localizedStringForKey:@"delete"];
         UIImage *deleteActionImage = [UIImage systemImageNamed:@"trash"];
         UIAction *deleteAction = [UIAction actionWithTitle:localizedDeleteActionTitle image:deleteActionImage identifier:nil handler:^(__unused UIAction * _Nonnull action) {
-            [self deleteGroup:group];
+            [self deleteGroup:group atIndexPath:indexPath];
         }];
         deleteAction.attributes = UIMenuElementAttributesDestructive;
         [actionArray addObject:deleteAction];
@@ -1016,11 +1016,17 @@ typedef enum : NSUInteger {
     }
 }
 
-- (void)deleteGroup:(Group *)group {
+- (void)deleteGroup:(Group *)group atIndexPath:(nonnull NSIndexPath *)indexPath {
     ConversationEntity *conversation = group.conversation;
     DeleteConversationAction *deleteAction = [DeleteConversationAction deleteActionForConversation:conversation];
-    deleteAction.presentingViewController = self;
     
+    UIView *groupCell = [self.tableView cellForRowAtIndexPath:indexPath];
+    if (groupCell == nil) {
+        groupCell = self.view;
+    }
+    
+    deleteAction.presentingViewController = self;
+    deleteAction.presentingRect = [groupCell convertRect:groupCell.bounds toView:self.tableView];
     _deleteAction = deleteAction;
     [deleteAction executeOnCompletion:^(BOOL succeeded) {
         [self updateTableViewAfterDeletion:succeeded];

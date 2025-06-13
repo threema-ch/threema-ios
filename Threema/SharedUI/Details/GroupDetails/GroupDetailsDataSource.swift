@@ -1003,13 +1003,11 @@ extension GroupDetailsDataSource {
                 return
             }
             
-            let navigationController =
-                ThemedNavigationController(
-                    rootViewController: CustomWallpaperSelectionViewController()
-                        .customWallpaperSelectionView(conversationID: strongSelf.conversation.objectID) {
-                            strongSelf.reload(sections: [.wallpaper])
-                        }
-                )
+            let navigationController = CustomWallpaperSelectionViewController()
+                .customWallpaperSelectionView(conversationID: strongSelf.conversation.objectID) {
+                    strongSelf.reload(sections: [.wallpaper])
+                }
+                
             navigationController.modalPresentationStyle = .formSheet
             strongSelf.groupDetailsViewController?.present(navigationController, animated: true)
         }

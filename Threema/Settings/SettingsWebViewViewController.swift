@@ -179,6 +179,34 @@ import UIKit
             return URL(string: urlString)
         }
     }
+    
+    /// Check and add SUPPORT as contact and open the chat with it.
+    private func addSupportContactAndOpenChat() {
+        ContactStore.shared()
+            .addContact(
+                with: "*SUPPORT",
+                verificationLevel: Int32(ContactEntity.VerificationLevel.fullyVerified.rawValue),
+                onCompletion: { contact, _ in
+                    let message = "My app version: \(ThreemaUtility.clientVersionWithMDM)"
+                    let info = [
+                        kKeyContact: contact,
+                        kKeyForceCompose: NSNumber(value: true),
+                        kKeyText: message,
+                    ] as [String: Any]
+                    
+                    DispatchQueue.main.async {
+                        NotificationCenter.default.post(
+                            name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                            object: nil,
+                            userInfo: info
+                        )
+                    }
+                },
+                onError: { error in
+                    DDLogError("\(error)")
+                }
+            )
+    }
 }
 
 // MARK: - Notifications
@@ -215,7 +243,15 @@ extension SettingsWebViewViewController: WKNavigationDelegate {
                 present(safariView, animated: true)
             }
             else {
-                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                if let host = url.host,
+                   host == "compose",
+                   let query = url.query,
+                   query.hasPrefix("id=*SUPPORT") {
+                    addSupportContactAndOpenChat()
+                }
+                else {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
             }
             decisionHandler(.cancel)
             return

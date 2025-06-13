@@ -128,15 +128,15 @@
     _popoverView = nil;
 
     _matrixRect = [self matrixRectForSize:size];
-    
-    _choicesView.frame = [self choicesRectForSize:size];
-    
+        
     CGRect newContactsRect = [self contactsRectForSize:size];
     if (CGSizeEqualToSize(newContactsRect.size, _contactsView.frame.size) == NO) {
         ScrollViewContent *matrixContent = [self makeMatrixView];
         [_matrixView setContent: matrixContent];
         ScrollViewContent *contactsContent = [self makeContactsViewForSize:size];
         [_contactsView setContent: contactsContent];
+        ScrollViewContent *choicesConetnt = [self makeChoicesViewForSize:size];
+        [_choicesView setContent: choicesConetnt];
         
         [self updateLineColors];
         [self markHighestVotes];
@@ -145,6 +145,7 @@
     
     _contactsView.frame = newContactsRect;
     _matrixView.frame = _matrixRect;
+    _choicesView.frame = [self choicesRectForSize:size];
     _totalsView.frame = [self totalsRectForSize:size];
     _notVotedView.frame = [self textRectForSize:size];
 }

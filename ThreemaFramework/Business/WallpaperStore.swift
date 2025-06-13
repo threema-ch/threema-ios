@@ -27,7 +27,7 @@ public class WallpaperStore {
     
     public static let shared = WallpaperStore()
     
-    public let defaultWallPaper: UIImage! = UIImage(resource: .chatBackground)
+    public lazy var defaultWallPaper: UIImage! = UIImage(resource: .chatBackground)
         .draw(withTintColor: Colors.backgroundChatLines)
     
     // MARK: - Public Functions
@@ -75,18 +75,10 @@ public class WallpaperStore {
            let filename = wallpapers[key] as? String,
            let data = FileUtility.shared.read(fileURL: wallpaperPath(filename: filename)),
            let wallpaper = UIImage(data: data) {
-            
-            // In order to fix to large wallpapers that were saved before we compressed them, we check each upon loading
-            migrateExistingWallpaper(data: data, id: conversationID)
-            
             return wallpaper
         }
         else if let data = BusinessInjector().userSettings.wallpaper,
                 let wallpaper = UIImage(data: data) {
-            
-            // In order to fix to large wallpapers that were saved before we compressed them, we check each upon loading
-            migrateExistingWallpaper(data: data, id: nil)
-            
             return wallpaper
         }
         else {
@@ -199,52 +191,24 @@ public class WallpaperStore {
     
     /// Compresses de passed in image data until it's smaller than the maximal size defined in the function
     /// - Parameter data: Image data to compress
-    /// - Returns: Comnpressed data or original if is alsready smaller than size
+    /// - Returns: Compressed data or original if is already smaller than size
     private func compressImageData(_ data: Data?) -> Data? {
         let maxSize = 1_500_000
         guard let data, data.count >= maxSize else {
             return data
         }
-        
-        var compressed: Data = data
+       
         DDLogInfo("[WallpaperStore] Compressing image data. Original size: \(data.count)")
-        
-        while compressed.count > maxSize {
-            guard let freshlyCompressed = MediaConverter.scaleImageData(
-                to: compressed,
-                toMaxSize: 3000,
-                useJPEG: true,
-                withQuality: 0.5
-            ) else {
-                break
-            }
-            compressed = freshlyCompressed
+        guard let compressed = MediaConverter.scaleImageData(
+            to: data,
+            toMaxSize: max(UIScreen.main.bounds.width, UIScreen.main.bounds.height),
+            useJPEG: true,
+            withQuality: 1
+        ) else {
+            return data
         }
-        
         DDLogInfo("[WallpaperStore] Compressed image data. Final size: \(compressed.count)")
+      
         return compressed
-    }
-    
-    /// Compresses given image data in background and saves it.
-    /// - Parameters:
-    ///   - data: Data of image to compress
-    ///   - id: Optional id, if nil, data will be saved to default wallpaper
-    private func migrateExistingWallpaper(data: Data, id: NSManagedObjectID?) {
-        Task.detached {
-            if let compressed = self.compressImageData(data), compressed.count != data.count,
-               let compressedImage = UIImage(data: compressed) {
-                DDLogNotice(
-                    "[WallpaperStore] Compressed exitsting wallpaper from \(data.count) to \(compressed.count) bytes."
-                )
-                
-                // Views will be updated by the notification thrown in the save functions.
-                if let id {
-                    self.saveWallpaper(compressedImage, for: id)
-                }
-                else {
-                    self.saveDefaultWallpaper(compressedImage)
-                }
-            }
-        }
     }
 }

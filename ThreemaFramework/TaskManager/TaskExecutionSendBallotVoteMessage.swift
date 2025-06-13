@@ -98,10 +98,26 @@ final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProt
                         // Do not send message for note group
                         if task.isNoteGroup ?? false {
                             seal.fulfill(sendMessages)
+                            return
                         }
                         else if let receivingGroupMembers = task.receivingGroupMembers {
+                            
+                            guard let ballot = self.frameworkInjector.entityManager.entityFetcher
+                                .ballotEntity(for: task.ballotID) else {
+                                seal.reject(TaskExecutionError.createAbstractMessageFailed)
+                                return
+                            }
+                            
+                            // swiftformat:disable:next acronyms
+                            let creatorID = ballot.creatorId
+                            let isIntermediate = ballot.isIntermediate
+                            
                             for member in receivingGroupMembers {
                                 if member == self.frameworkInjector.myIdentityStore.identity {
+                                    continue
+                                }
+                                // If ballot is not intermediate, only send votes to creator
+                                if !isIntermediate, creatorID != member {
                                     continue
                                 }
 

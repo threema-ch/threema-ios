@@ -60,8 +60,8 @@
     NSFetchRequest *fetchRequest = [entityManager.entityFetcher fetchRequestForEntity:@"Ballot"];
     
     NSArray *sortDescriptors = @[
-                                 [NSSortDescriptor sortDescriptorWithKey:@"modifyDate" ascending:NO],
-                                 [NSSortDescriptor sortDescriptorWithKey:@"createDate" ascending:NO]
+                                 [NSSortDescriptor sortDescriptorWithKey:@"createDate" ascending:NO],
+                                 [NSSortDescriptor sortDescriptorWithKey:@"modifyDate" ascending:NO]
                                  ];
     
     [fetchRequest setSortDescriptors:sortDescriptors];

@@ -33,4 +33,8 @@ extension SettingsView: MainTabViewRepresentable {
     var tag: Int {
         3
     }
+    
+    var screenshotIdentifier: String {
+        "TabBarSettings"
+    }
 }

@@ -27,6 +27,7 @@ protocol MainTabViewRepresentable: View {
     var title: String { get }
     var symbol: UIImage? { get }
     var tag: Int { get }
+    var screenshotIdentifier: String { get }
 }
 
 extension MainTabViewRepresentable {
@@ -38,6 +39,7 @@ extension MainTabViewRepresentable {
             $0.tabBarItem.title = title
             $0.tabBarItem.image = symbol
             $0.tabBarItem.tag = tag
+            $0.tabBarItem.accessibilityIdentifier = screenshotIdentifier
         }
     }
 }

@@ -349,6 +349,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             // swiftformat:disable:next acronyms
             ballot?.creatorId = frameworkInjectorMock.myIdentityStore.identity
             ballot?.conversation = conversation
+            ballot?.type = BallotEntity.BallotType.intermediate.rawValue as NSNumber
 
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,

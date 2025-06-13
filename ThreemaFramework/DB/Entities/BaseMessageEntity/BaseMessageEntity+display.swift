@@ -284,6 +284,11 @@ extension BaseMessageEntity {
             // Sent and everything else
             return date
         }
+        
+        if self is SystemMessageEntity {
+            return date
+        }
+        
         return remoteSentDate ?? .now
     }
     

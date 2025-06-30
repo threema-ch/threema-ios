@@ -82,6 +82,27 @@ class ConversationActions: NSObject {
             }
         }
     }
+    
+    /// Reads all unread messages of a conversation if read receipts are enabled, also updates the unread messages count
+    /// - Parameters:
+    ///   - conversation: ConversationEntity to read messages for
+    ///   - isAppInBackground: If app is in background, default gets current status from AppDelegate
+    func readAll(isAppInBackground: Bool) async {
+        await businessInjector.runInBackground { backgroundBusinessInjector in
+            await backgroundBusinessInjector.entityManager.perform {
+                if let conversations = backgroundBusinessInjector.entityManager.entityFetcher
+                    .allConversations() as? [ConversationEntity] {
+                    Task {
+                        for conversation in conversations {
+                            await self.read(conversation, isAppInBackground: isAppInBackground)
+                        }
+                    }
+                }
+            }
+            
+            self.notificationManagerResolve(backgroundBusinessInjector).updateUnreadMessagesCount()
+        }
+    }
 
     /// Marks the messages passed in from the argument as read
     /// This is a workaround implemented specifically for `ChatViewController`.

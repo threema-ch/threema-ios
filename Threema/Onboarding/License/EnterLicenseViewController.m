@@ -74,6 +74,7 @@
     
     _logoImageView.image = [Colors threemaLogo];
     _logoImageView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    _logoImageView.contentMode = UIViewContentModeScaleAspectFit;
     
     if (TargetManagerObjc.isOnPrem) {
         _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_onprem_description"], TargetManagerObjc.appName];

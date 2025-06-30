@@ -139,12 +139,12 @@ public class MarkupParser {
                 ]
             case .url:
                 [
-                    NSAttributedString.Key.foregroundColor: UIColor.primary,
+                    NSAttributedString.Key.foregroundColor: UIColor.linkColor,
                     NSAttributedString.Key.tokenType: TokenType.url,
                 ]
             case .mention:
                 [
-                    NSAttributedString.Key.foregroundColor: UIColor.primary,
+                    NSAttributedString.Key.foregroundColor: UIColor.linkColor,
                     NSAttributedString.Key.tokenType: TokenType.mention,
                 ]
             default:
@@ -267,7 +267,7 @@ extension MarkupParser {
                        var urlSourceString = attributedString.string.substring(with: result.range) {
                         
                         // Add missing URL scheme, if happen when NSDataDetector detected an URL without scheme in
-                        // the text (eg. 'threema.ch')
+                        // the text (eg. 'threema.com')
                         if let scheme = urlResult.scheme, !urlSourceString.starts(with: scheme) {
                             if scheme == "mailto" {
                                 urlSourceString = "\(scheme):\(urlSourceString)"

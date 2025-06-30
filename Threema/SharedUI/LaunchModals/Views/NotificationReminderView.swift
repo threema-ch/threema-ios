@@ -59,6 +59,7 @@ struct NotificationReminderView: View {
                 Text(#localize("push_reminder_set_now"))
                     .font(.title3)
                     .bold()
+                    .foregroundColor(Colors.textProminentButton.color)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)

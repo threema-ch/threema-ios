@@ -64,6 +64,7 @@ struct DeviceJoinSuccessView: View {
                 Text(#localize("continue"))
                     .font(.title3) // This is a little bit too big
                     .bold()
+                    .foregroundStyle(Colors.textProminentButton.color)
                     .padding(8)
                     .frame(maxWidth: .infinity)
             }

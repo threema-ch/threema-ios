@@ -28,6 +28,7 @@ public enum AppIcon: CaseIterable {
     
     // Base Icons
     // We also have the current here, so users can `hard` select it
+    case icon2025
     case icon2019
     case icon20132
     case icon20131
@@ -37,7 +38,7 @@ public enum AppIcon: CaseIterable {
     
     // This is also the order in AppIconSettingsView
     public static let defaultIcon: [AppIcon] = [.default]
-    public static let baseIcons: [AppIcon] = [.icon2019, .icon20132, .icon20131]
+    public static let baseIcons: [AppIcon] = [.icon2025, .icon2019, .icon20132, .icon20131]
     public static let specialIcons: [AppIcon] = [.anniversary10]
     
     // These strings are defined in the xcconfig
@@ -45,6 +46,8 @@ public enum AppIcon: CaseIterable {
         switch self {
         case .default:
             nil
+        case .icon2025:
+            "Icon2025"
         case .icon2019:
             "Icon2019"
         case .icon20131:
@@ -58,10 +61,10 @@ public enum AppIcon: CaseIterable {
         
     public var displayTitle: String {
         switch self {
-        case .default:
+        case .default, .icon2025:
             #localize("app_icon_title_current")
         case .icon2019:
-            #localize("app_icon_title_current")
+            #localize("app_icon_title_third")
         case .icon20131:
             #localize("app_icon_title_first")
         case .icon20132:
@@ -73,10 +76,10 @@ public enum AppIcon: CaseIterable {
     
     public var displayInfo: String {
         switch self {
-        case .default:
-            #localize("app_icon_description_current")
+        case .default, .icon2025:
+            #localize("app_icon_description_fourth")
         case .icon2019:
-            #localize("app_icon_description_current")
+            #localize("app_icon_description_third")
         case .icon20131:
             #localize("app_icon_description_first")
         case .icon20132:
@@ -99,6 +102,8 @@ public enum AppIcon: CaseIterable {
                 switch self {
                 case .default:
                     UIImage(resource: .appIcon)
+                case .icon2025:
+                    UIImage(resource: .icon2025)
                 case .icon2019:
                     UIImage(resource: .icon2019)
                 case .icon20131:
@@ -113,7 +118,7 @@ public enum AppIcon: CaseIterable {
                 switch self {
                 case .default:
                     UIImage(resource: .appIcon)
-                case .icon2019, .icon20131, .icon20132, .anniversary10:
+                case .icon2025, .icon2019, .icon20131, .icon20132, .anniversary10:
                     UIImage(systemName: "questionmark.square.dashed")
                 }
         #endif

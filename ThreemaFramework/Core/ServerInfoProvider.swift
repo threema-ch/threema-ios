@@ -191,13 +191,25 @@ extension Domain {
             Domain(
                 "threema.ch",
                 spkis: [
-                    ["8kTK9HP1KHIP0sn6T2AFH3Bq+qq3wn2i/OJSMjewpFw=": .sha256],
-                    ["KKBJHJn1PQSdNTmoAfhxqWTO61r8O8bPi/JeGtP/6gg=": .sha256],
-                    ["h2gHawxPZyMCiZSkJN0dQ4RsDxowVuTmuiNQyjeU+Sk=": .sha256],
-                    ["HXqz8rMr6nBDdUX3CdyIwln8ym3qFUBwv4QGyMN2uEg=": .sha256],
-                    ["2Vpy8qUQCqc2+Lg6BgRO8G6e6vh7NmvVHTljfwP/Pfk=": .sha256],
                     ["vGQZ8hm2h+km+q7rnJ7kF9S17BwSY0rbhwjz6nIupf0=": .sha256],
-                    ["jsQHAHKQ2oOf3rvMn9GJVIKslkhLpODGOMPSxgLeIyo=": .sha256],
+                    ["3L0bKTNfTwVUCjYqqhZXJIO03qC00bSnuxZFsb09OUo=": .sha256],
+                    ["NN6Lb+2AE7CN3HWZKoWOe6mmHROOnywWoKZYWL1oHIU=": .sha256],
+                    ["efJCZofFPR3oV/bBk0wmehqnhy3Vv+s9P+3sjhHem/E=": .sha256],
+                    ["2Vpy8qUQCqc2+Lg6BgRO8G6e6vh7NmvVHTljfwP/Pfk=": .sha256],
+                    ["KKBJHJn1PQSdNTmoAfhxqWTO61r8O8bPi/JeGtP/6gg=": .sha256],
+                ],
+                matchMode: .includeSubdomains,
+                reportUris: ["https://3ma.ch/pinreport"]
+            ),
+            Domain(
+                "threema.com",
+                spkis: [
+                    ["saKwtUPx8bCj9CW+c55nU2jb4aOpr0vBD8XMJveXq34=": .sha256],
+                    ["nZWRY8rNSEqxjQDQjaunWlUL+YBOTK1xN5Bb0wMq/K0=": .sha256],
+                    ["5AfgU7xFqhx5AS69cQZlAGv6JpmLm0A+Z6yBrLPOCP8=": .sha256],
+                    ["GGSYKwkV3h6SRIY16Ixsh8LEKuGuhx3B4CamRde4xgY=": .sha256],
+                    ["oD0JGdy32wZtoUT4n9ac3HLOgEosnx2kq+qaJnmtsQk=": .sha256],
+                    ["j4n4RTr0MLfQ3gBmONIFreXDq5/Kkb2oquVTmq0n5pI=": .sha256],
                 ],
                 matchMode: .includeSubdomains,
                 reportUris: ["https://3ma.ch/pinreport"]

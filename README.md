@@ -6,7 +6,7 @@
 
 # Threema for iOS
 
-[This repository](https://github.com/threema-ch/threema-ios) contains the complete source code of [Threema](https://threema.ch/) for iOS.
+[This repository](https://github.com/threema-ch/threema-ios) contains the complete source code of [Threema](https://threema.com/) for iOS.
 
 ## Table of Contents
 
@@ -24,9 +24,9 @@
 
 ## <a name="issues"></a>Bug Reports / Feature Requests / Security Issues
 
-To report bugs and request new features, please contact the [Threema support team](https://threema.ch/support).
+To report bugs and request new features, please contact the [Threema support team](https://threema.com/support).
 
-If you discover a security issue in Threema, please adhere to the coordinated vulnerability disclosure model. To be eligible for a bug bounty, please [file a report on GObugfree](https://app.gobugfree.com/programs/threema) (where all the details, including the bounty levels, are listed). If you're not interested in the bug bounty program, you can contact us via Threema or by email; for contact details, see [threema.ch/contact](https://threema.ch/en/contact) (section "Security").
+If you discover a security issue in Threema, please adhere to the coordinated vulnerability disclosure model. To be eligible for a bug bounty, please [file a report on GObugfree](https://app.gobugfree.com/programs/threema) (where all the details, including the bounty levels, are listed). If you're not interested in the bug bounty program, you can contact us via Threema or by email; for contact details, see [threema.com/contact](https://threema.com/en/contact) (section "Security").
 
 
 ## <a name="release-policy"></a>Source Code Release Policy
@@ -52,11 +52,11 @@ Note that the ID creation endpoint is monitored for abuse.
 
 ### Threema Work
 
-If you build the Threema Work target, credentials from the [Threema Work](https://work.threema.ch/) subscription must be provided in order to use the app.
+If you build the Threema Work target, credentials from the [Threema Work](https://work.threema.com/) subscription must be provided in order to use the app.
 
 ### Threema OnPrem
 
-If you build the Threema OnPrem target, credentials from the [Threema OnPrem](https://threema.ch/en/onprem/) subscription must be provided in order to use the app.
+If you build the Threema OnPrem target, credentials from the [Threema OnPrem](https://threema.com/onprem/) subscription must be provided in order to use the app.
 
 ## <a name="schemes"></a>Schemes
 
@@ -150,7 +150,7 @@ Due to restrictions by Apple, it’s no easy task to offer reproducible builds f
 
 ## <a name="architecture"></a>Code Organization / Architecture
 
-Before digging into the codebase, you should read the [Cryptography Whitepaper](https://threema.ch/press-files/2_documentation/cryptography_whitepaper.pdf) to understand the design concepts.
+Before digging into the codebase, you should read the [Cryptography Whitepaper](https://threema.com/press-files/2_documentation/cryptography_whitepaper.pdf) to understand the design concepts.
 
 These are the most important groups of the Xcode project:
 
@@ -165,7 +165,7 @@ Our dependencies are managed with Swift Package Manager. Additionally we use Web
 
 ## <a name="contributions"></a>Contributions
 
-We accept GitHub pull requests. Please refer to <https://threema.ch/open-source/contributions> for more information on how to contribute.
+We accept GitHub pull requests. Please refer to <https://threema.com/open-source/contributions> for more information on how to contribute.
 
 
 ## <a name="license"></a>License

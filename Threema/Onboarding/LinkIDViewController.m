@@ -261,7 +261,7 @@
     _emailTextField.tintColor = UIColor.tintColor;
     _phoneTextField.tintColor = UIColor.tintColor;
     _selectedCountryButton.backgroundColor = UIColor.tintColor;
-    [_selectedCountryButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
+    [_selectedCountryButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
     
     _phoneImageView.image = [[UIImage systemImageNamed:@"phone.fill"] imageWithTintColor:UIColor.whiteColor];
     _mailImageView.image = [[UIImage systemImageNamed:@"envelope.fill"] imageWithTintColor:UIColor.whiteColor];

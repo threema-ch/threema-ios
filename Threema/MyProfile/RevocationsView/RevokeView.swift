@@ -135,6 +135,7 @@ struct RevokeView: View {
                         } label: {
                             Text(#localize("back"))
                                 .frame(maxWidth: .infinity)
+                                .foregroundColor(Colors.textProminentButtonWizard.color)
                         }
                         .disabled(isDeleting)
                         .buttonStyle(.borderedProminent)
@@ -177,11 +178,5 @@ struct RevokeView: View {
 
 #Preview {
     RevokeView(tabSelection: .constant(1), successViewType: .constant(.revoke))
-        .background(
-            Image("WizardBg")
-                .resizable()
-                .scaledToFill()
-                .accessibilityHidden(true)
-                .edgesIgnoringSafeArea(.all)
-        )
+        .background(.black)
 }

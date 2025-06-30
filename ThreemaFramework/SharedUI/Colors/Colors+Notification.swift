@@ -47,8 +47,4 @@ extension Colors {
             .clear
         }
     }
-    
-    public class var successGreen: UIColor {
-        .green
-    }
 }

@@ -86,10 +86,11 @@ static const NSUInteger newMaxLength = 6;
     _subtitleLabel.shadowColor = [UIColor colorWithRed:0.3 green:0.3 blue:0.4 alpha:0.6];
     [_eraseDataButton setTitleColor:UIColor.systemRedColor forState:UIControlStateNormal];
     [_eraseDataButton setTitleShadowColor:[UIColor colorWithRed:0.3 green:0.3 blue:0.4 alpha:0.6] forState:UIControlStateNormal];
-    [self.view setBackgroundColor:Colors.backgroundView];
+    [self.view setBackgroundColor:UIColor.blackColor];
     
     //------------------ Threema edit begin ---------------------------
     _threemaLogo.image = [Colors threemaLogoForPasscode];
+    _threemaLogo.layer.cornerRadius = 10;
     //------------------ Threema edit end ---------------------------
     
     [Colors updateWithNavigationBar:self.navigationController.navigationBar];

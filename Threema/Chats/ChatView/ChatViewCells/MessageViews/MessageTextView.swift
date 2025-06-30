@@ -158,6 +158,7 @@ final class MessageTextView: RTLAligningTextView {
         delegate = self
         isAccessibilityElement = false
         accessibilityElementsHidden = true
+        linkTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.linkColor]
         
         // Needed to detect and ignore long-presses and pans on the view
         for gestureRecognizer in gestureRecognizers ?? [] {

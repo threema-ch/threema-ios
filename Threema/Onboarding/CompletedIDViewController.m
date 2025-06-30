@@ -150,7 +150,7 @@
     self.scrollView.contentSize = self.mainContentView.frame.size;
     
     _finishButton.backgroundColor = UIColor.tintColor;
-    [_finishButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
+    [_finishButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
     
     if ([AppDelegate hasBottomSafeAreaInsets]) {
         CGFloat iPadSpace = SYSTEM_IS_IPAD ? 50 : 0;

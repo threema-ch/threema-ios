@@ -112,7 +112,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     
-    if ([AppLaunchTasks lastLaunchedVersionChanged] && ![[UserSettings sharedUserSettings] jbDetectionDismissed]) {
+    if ([AppLaunchTasks lastLaunchedVersionChanged] || ![[UserSettings sharedUserSettings] jbDetectionDismissed]) {
         JBDetector* detector = [JBDetector new];
         if (detector.detectJB) {
             [UIAlertTemplate showAlertWithOwner:[AppDelegate.sharedAppDelegate currentTopViewController]

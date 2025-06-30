@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "ThreemaOnPremBlack.svg",
+      "filename" : "OnPremAny.svg",
       "idiom" : "universal"
     },
     {
@@ -11,7 +11,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "ThreemaOnPremWhite.svg",
+      "filename" : "OnPremDark.svg",
       "idiom" : "universal"
     }
   ],

@@ -155,11 +155,5 @@ struct DeleteRevokeSuccessView: View {
 
 #Preview {
     DeleteRevokeSuccessView(successViewType: .constant(.revoke))
-        .background(
-            Image("WizardBg")
-                .resizable()
-                .scaledToFill()
-                .accessibilityHidden(true)
-                .edgesIgnoringSafeArea(.all)
-        )
+        .background(.black)
 }

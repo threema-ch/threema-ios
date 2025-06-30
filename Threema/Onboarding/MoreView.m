@@ -102,7 +102,7 @@
     _okButton.layer.cornerRadius = 3;
     _okButton.backgroundColor = UIColor.tintColor;
     _okButton.titleLabel.font = FONT_SMALL;
-    [_okButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
+    [_okButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
 
     [_okButton setTitle:[BundleUtil localizedStringForKey:@"ok"] forState:UIControlStateNormal];
     _okButton.hidden = YES;

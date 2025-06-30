@@ -72,4 +72,17 @@ extension UIColor {
             .circleButtonCustomOnPrem
         }
     }
+    
+    public static let linkColor = UIColor { _ in
+        switch TargetManager.current {
+        case .threema, .green:
+            UIColor(resource: .linkColorPrivate)
+        case .work, .blue:
+            UIColor(resource: .accentColorWork)
+        case .onPrem:
+            UIColor(resource: .accentColorOnPrem)
+        case .customOnPrem:
+            UIColor(resource: .accentColorCustomOnPrem)
+        }
+    }
 }

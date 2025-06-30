@@ -361,6 +361,7 @@
 		2400C2272C33ECFB006C3522 /* MessageSymbolMetadataVibrancyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2400C2242C33ECFA006C3522 /* MessageSymbolMetadataVibrancyView.swift */; };
 		2400C2282C33ECFB006C3522 /* MessageSymbolMetadataVibrancyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2400C2242C33ECFA006C3522 /* MessageSymbolMetadataVibrancyView.swift */; };
 		2400C2292C33ECFB006C3522 /* MessageSymbolMetadataVibrancyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2400C2242C33ECFA006C3522 /* MessageSymbolMetadataVibrancyView.swift */; };
+		24010C682E02B5C2004D4322 /* Documentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = 24010C672E02B5C2004D4322 /* Documentation.docc */; };
 		2401B6E3299BDF7D00BD331F /* ShowConversationInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2401B6E2299BDF7D00BD331F /* ShowConversationInformation.swift */; };
 		2403CDD92C8AD08700089D6C /* GroupEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2403CDD82C8AD08700089D6C /* GroupEntity.swift */; };
 		2403CDDB2C8AD23A00089D6C /* GroupEntity+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2403CDDA2C8AD23A00089D6C /* GroupEntity+Extension.swift */; };
@@ -1022,6 +1023,8 @@
 		24A0D9A62D9680CF00DACAA5 /* SettingsCollectionViewDataSource+SectionsRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A0D9A22D9680CF00DACAA5 /* SettingsCollectionViewDataSource+SectionsRows.swift */; };
 		24A0D9A72D9680CF00DACAA5 /* SettingsCollectionViewDataSource+SectionsRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A0D9A22D9680CF00DACAA5 /* SettingsCollectionViewDataSource+SectionsRows.swift */; };
 		24A0D9A82D9680CF00DACAA5 /* SettingsCollectionViewDataSource+SectionsRows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A0D9A22D9680CF00DACAA5 /* SettingsCollectionViewDataSource+SectionsRows.swift */; };
+		24A108902DDDE7B100370181 /* TargetColorsPrivate.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 24F7EE922DC5074F005921BC /* TargetColorsPrivate.xcassets */; };
+		24A108912DDDE7B100370181 /* TargetColorsPrivate.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 24F7EE922DC5074F005921BC /* TargetColorsPrivate.xcassets */; };
 		24A25C3928EAFFF600446BB3 /* BlobManagerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A25C3828EAFFF600446BB3 /* BlobManagerProtocol.swift */; };
 		24A2EB3F2CA18399009E5840 /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24143A1A2900386B0046AF6B /* AppIcon.swift */; };
 		24A2EB402CA1839A009E5840 /* AppIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24143A1A2900386B0046AF6B /* AppIcon.swift */; };
@@ -1168,6 +1171,9 @@
 		24CFA7412BB3F58F002F10E9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 24CFA7382BB3F517002F10E9 /* PrivacyInfo.xcprivacy */; };
 		24CFA7422BB3F596002F10E9 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 24CFA73A2BB3F525002F10E9 /* PrivacyInfo.xcprivacy */; };
 		24CFB4232D636CA900E68583 /* ContactEntity+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24CFB4222D636CA900E68583 /* ContactEntity+Extension.swift */; };
+		24CFD8C82DFC5619003E57F9 /* ScreenshotDocumentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = 24CFD8C72DFC5619003E57F9 /* ScreenshotDocumentation.docc */; };
+		24CFD8C92DFC5619003E57F9 /* ScreenshotDocumentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = 24CFD8C72DFC5619003E57F9 /* ScreenshotDocumentation.docc */; };
+		24CFD8CA2DFC5619003E57F9 /* ScreenshotDocumentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = 24CFD8C72DFC5619003E57F9 /* ScreenshotDocumentation.docc */; };
 		24D02F352A56EF650074ABE4 /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 24D02F342A56EF650074ABE4 /* ThreemaEssentials */; };
 		24D02F372A56EF700074ABE4 /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 24D02F362A56EF700074ABE4 /* ThreemaEssentials */; };
 		24D02F392A56EF760074ABE4 /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 24D02F382A56EF760074ABE4 /* ThreemaEssentials */; };
@@ -1859,7 +1865,6 @@
 		2D5A1F1624C9B5DF00F87DD0 /* DKCameraResource.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B141EB38270004973D5 /* DKCameraResource.bundle */; };
 		2D5A1F1A24C9B5DF00F87DD0 /* MWPhotoBrowser.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4D8B812518D38B4F0079014F /* MWPhotoBrowser.bundle */; };
 		2D5A1F1C24C9B5DF00F87DD0 /* license.html in Resources */ = {isa = PBXBuildFile; fileRef = 4DBCC0311656DE3D00B3CFFF /* license.html */; };
-		2D5A1F2024C9B5DF00F87DD0 /* logoAnimation_work.gif in Resources */ = {isa = PBXBuildFile; fileRef = CEBB86D9231F96F000078CBE /* logoAnimation_work.gif */; };
 		2D5A1F2324C9B5DF00F87DD0 /* ringing-tone-ch-fade.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE5D049D1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 */; };
 		2D5A1F2524C9B5DF00F87DD0 /* BallotHeaderView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0AC6B3E51A0280DD00D1A77A /* BallotHeaderView.xib */; };
 		2D5A1F2A24C9B5DF00F87DD0 /* ProtectedDataUnavailable.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4D95F92020B59E78005BC753 /* ProtectedDataUnavailable.storyboard */; };
@@ -2395,7 +2400,6 @@
 		2DEDB3C524C9903400FC9099 /* CreateID.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A5ECC9D1BE101C7003B3A84 /* CreateID.storyboard */; };
 		2DEDB3CB24C9903400FC9099 /* threema_goody.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E1242CCE6400D094A1 /* threema_goody.caf */; };
 		2DEDB3CE24C9903400FC9099 /* DKCameraResource.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B141EB38270004973D5 /* DKCameraResource.bundle */; };
-		2DEDB3CF24C9903400FC9099 /* logoAnimation.gif in Resources */ = {isa = PBXBuildFile; fileRef = CEBB86D7231F96DB00078CBE /* logoAnimation.gif */; };
 		2DEDB3D024C9903400FC9099 /* threema_best.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E3242CCE6500D094A1 /* threema_best.caf */; };
 		2DEDB3D224C9903400FC9099 /* ringing-tone-ch-fade.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE5D049D1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 */; };
 		2DEDB3D324C9903400FC9099 /* FileMessagePreviewUnsupportedTypeView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A868E1D1B45B97600A5B755 /* FileMessagePreviewUnsupportedTypeView.xib */; };
@@ -3436,7 +3440,6 @@
 		4D088ACE255C0CD4002F3129 /* DKCameraResource.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B141EB38270004973D5 /* DKCameraResource.bundle */; };
 		4D088AD2255C0CD4002F3129 /* MWPhotoBrowser.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4D8B812518D38B4F0079014F /* MWPhotoBrowser.bundle */; };
 		4D088AD4255C0CD4002F3129 /* license.html in Resources */ = {isa = PBXBuildFile; fileRef = 4DBCC0311656DE3D00B3CFFF /* license.html */; };
-		4D088AD8255C0CD4002F3129 /* logoAnimation_work.gif in Resources */ = {isa = PBXBuildFile; fileRef = CEBB86D9231F96F000078CBE /* logoAnimation_work.gif */; };
 		4D088ADB255C0CD4002F3129 /* ringing-tone-ch-fade.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE5D049D1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 */; };
 		4D088ADD255C0CD4002F3129 /* BallotHeaderView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0AC6B3E51A0280DD00D1A77A /* BallotHeaderView.xib */; };
 		4D088AE3255C0CD4002F3129 /* ProtectedDataUnavailable.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4D95F92020B59E78005BC753 /* ProtectedDataUnavailable.storyboard */; };
@@ -4377,11 +4380,6 @@
 		949190092B16445900CA337D /* GenericSectionItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 949190042B16445900CA337D /* GenericSectionItem.swift */; };
 		94955ED72B96057300493B8A /* ThreemaGreenLaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 94955EC82B96057200493B8A /* ThreemaGreenLaunchScreen.storyboard */; };
 		94955EDA2B96057300493B8A /* SplashScreenThreemaWork.png in Resources */ = {isa = PBXBuildFile; fileRef = 94955ECA2B96057200493B8A /* SplashScreenThreemaWork.png */; };
-		94955EDE2B96057300493B8A /* LaunchscreenBackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 94955ECB2B96057200493B8A /* LaunchscreenBackground.png */; };
-		94955EDF2B96057300493B8A /* LaunchscreenBackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 94955ECB2B96057200493B8A /* LaunchscreenBackground.png */; };
-		94955EE02B96057300493B8A /* LaunchscreenBackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 94955ECB2B96057200493B8A /* LaunchscreenBackground.png */; };
-		94955EE12B96057300493B8A /* LaunchscreenBackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 94955ECB2B96057200493B8A /* LaunchscreenBackground.png */; };
-		94955EE22B96057300493B8A /* LaunchscreenBackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 94955ECB2B96057200493B8A /* LaunchscreenBackground.png */; };
 		94955EE72B96057300493B8A /* SplashScreenThreemaBlue.png in Resources */ = {isa = PBXBuildFile; fileRef = 94955ECC2B96057200493B8A /* SplashScreenThreemaBlue.png */; };
 		94955EE82B96057300493B8A /* SplashScreenThreema.png in Resources */ = {isa = PBXBuildFile; fileRef = 94955ECD2B96057200493B8A /* SplashScreenThreema.png */; };
 		94955EEF2B96057300493B8A /* SplashScreenThreemaOnPrem.png in Resources */ = {isa = PBXBuildFile; fileRef = 94955ECE2B96057200493B8A /* SplashScreenThreemaOnPrem.png */; };
@@ -4579,7 +4577,7 @@
 		CE07C86820B462FC000A1AD2 /* WebUpdateConversationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE07C86720B462FC000A1AD2 /* WebUpdateConversationRequest.swift */; };
 		CE07C86A20B462FC000A1AD2 /* WebUpdateConversationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE07C86720B462FC000A1AD2 /* WebUpdateConversationRequest.swift */; };
 		CE08C0C5272989C8001EFCDE /* PPAssetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE10D8F51EA8FA0300802355 /* PPAssetManager.swift */; };
-		CE08C0C8272989C8001EFCDE /* ScreenshotsRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7D4B7E221D76FC007FE158 /* ScreenshotsRunner.swift */; };
+		CE08C0C8272989C8001EFCDE /* ScreenshotsRunnerLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7D4B7E221D76FC007FE158 /* ScreenshotsRunnerLight.swift */; };
 		CE08C0CD272989C8001EFCDE /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE19614F1E262C46009937C3 /* XCTest.framework */; };
 		CE08C0CE272989C8001EFCDE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
 		CE08C0CF272989C8001EFCDE /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6C14C1CCA900EF7690 /* UIKit.framework */; };
@@ -4766,7 +4764,6 @@
 		CE2C9C602886AE1F00277427 /* VoIPCallSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE2C9C5E2886AE1E00277427 /* VoIPCallSender.swift */; };
 		CE2C9C622886AF2000277427 /* VoIPCallUserAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3DB104228EDD3C00217B23 /* VoIPCallUserAction.swift */; };
 		CE3014021EBB2F0D00068754 /* UIImage+MWPhotoBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = CE3014011EBB2F0D00068754 /* UIImage+MWPhotoBrowser.m */; };
-		CE3415282746B704002D8BF6 /* logoAnimation_onprem.gif in Resources */ = {isa = PBXBuildFile; fileRef = CE3415262746B703002D8BF6 /* logoAnimation_onprem.gif */; };
 		CE35B3CB260DC506003C4881 /* GCDAsyncSocketFactory.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D17BD7F2317E0DC00AD52F6 /* GCDAsyncSocketFactory.h */; };
 		CE376F1B2886A7D6005BD96A /* BackgroundTaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE414D1221071BF00084F476 /* BackgroundTaskManager.swift */; };
 		CE376F1C2886A7D7005BD96A /* BackgroundTaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE414D1221071BF00084F476 /* BackgroundTaskManager.swift */; };
@@ -4850,7 +4847,7 @@
 		CE6CFBD7204E9A21001FCBDD /* WebUpdateProfileRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE6CFBD4204E9A21001FCBDD /* WebUpdateProfileRequest.swift */; };
 		CE6CFBF52052AF18001FCBDD /* WebMessagesRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE6CFBF42052AF18001FCBDD /* WebMessagesRequest.swift */; };
 		CE6CFBF72052AF18001FCBDD /* WebMessagesRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE6CFBF42052AF18001FCBDD /* WebMessagesRequest.swift */; };
-		CE6DE4BD22200F2400979018 /* ScreenshotsRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7D4B7E221D76FC007FE158 /* ScreenshotsRunner.swift */; };
+		CE6DE4BD22200F2400979018 /* ScreenshotsRunnerLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7D4B7E221D76FC007FE158 /* ScreenshotsRunnerLight.swift */; };
 		CE703D8120612DB5008DB924 /* WebAckRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE703D8020612DB5008DB924 /* WebAckRequest.swift */; };
 		CE703D8320612DB5008DB924 /* WebAckRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE703D8020612DB5008DB924 /* WebAckRequest.swift */; };
 		CE703D8C20615D61008DB924 /* WebBlobRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE703D8B20615D61008DB924 /* WebBlobRequest.swift */; };
@@ -4894,7 +4891,7 @@
 		CE752311269C81C1008064E4 /* SharedColors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE752310269C81C1008064E4 /* SharedColors.xcassets */; };
 		CE7B1F1E20458FF200C40AEF /* WorkContactTableDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = CE7B1F1C20458FF200C40AEF /* WorkContactTableDataSource.h */; };
 		CE7B1F1F20458FF200C40AEF /* WorkContactTableDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = CE7B1F1D20458FF200C40AEF /* WorkContactTableDataSource.m */; };
-		CE7D4B7F221D76FC007FE158 /* ScreenshotsRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7D4B7E221D76FC007FE158 /* ScreenshotsRunner.swift */; };
+		CE7D4B7F221D76FC007FE158 /* ScreenshotsRunnerLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7D4B7E221D76FC007FE158 /* ScreenshotsRunnerLight.swift */; };
 		CE7D4B85221D9135007FE158 /* PPAssetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE10D8F51EA8FA0300802355 /* PPAssetManager.swift */; };
 		CE7D4B86221D9135007FE158 /* PPAssetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE10D8F51EA8FA0300802355 /* PPAssetManager.swift */; };
 		CE7E001E25FA563D0054373A /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = CE7E001D25FA563D0054373A /* Ed25519 */; };
@@ -5090,8 +5087,6 @@
 		CEB88B4F206A744600A1E371 /* WebUpdateGroupRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB88B4E206A744600A1E371 /* WebUpdateGroupRequest.swift */; };
 		CEB88B51206A744600A1E371 /* WebUpdateGroupRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB88B4E206A744600A1E371 /* WebUpdateGroupRequest.swift */; };
 		CEB8D23B257E84A600E360E3 /* Test.pdf in Resources */ = {isa = PBXBuildFile; fileRef = CEB8D23A257E84A600E360E3 /* Test.pdf */; };
-		CEBB86D8231F96DB00078CBE /* logoAnimation.gif in Resources */ = {isa = PBXBuildFile; fileRef = CEBB86D7231F96DB00078CBE /* logoAnimation.gif */; };
-		CEBB86DA231F96F000078CBE /* logoAnimation_work.gif in Resources */ = {isa = PBXBuildFile; fileRef = CEBB86D9231F96F000078CBE /* logoAnimation_work.gif */; };
 		CEBBB9E8205922BC00130885 /* WebReadRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEBBB9E7205922BC00130885 /* WebReadRequest.swift */; };
 		CEBBB9EA205922BC00130885 /* WebReadRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEBBB9E7205922BC00130885 /* WebReadRequest.swift */; };
 		CEC0FBDF27B3C55B003060E6 /* ThreemaUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEC0FBDE27B3C55B003060E6 /* ThreemaUtility.swift */; };
@@ -5809,6 +5804,12 @@
 		F2E68B562BA0A487001410E3 /* LockCover.xib in Resources */ = {isa = PBXBuildFile; fileRef = CECB311A231FAB2F00C80FF2 /* LockCover.xib */; };
 		F2E68B572BA0A488001410E3 /* LockCover.xib in Resources */ = {isa = PBXBuildFile; fileRef = CECB311A231FAB2F00C80FF2 /* LockCover.xib */; };
 		F2E68B582BA0A489001410E3 /* LockCover.xib in Resources */ = {isa = PBXBuildFile; fileRef = CECB311A231FAB2F00C80FF2 /* LockCover.xib */; };
+		F2E825852DF1D0EC004E7567 /* ScreenshotsSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E825842DF1D04E004E7567 /* ScreenshotsSteps.swift */; };
+		F2E825862DF1D0EC004E7567 /* ScreenshotsSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E825842DF1D04E004E7567 /* ScreenshotsSteps.swift */; };
+		F2E825872DF1D0EC004E7567 /* ScreenshotsSteps.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E825842DF1D04E004E7567 /* ScreenshotsSteps.swift */; };
+		F2E825882DF1D6D8004E7567 /* ScreenshotsRunnerDark.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E825832DF1D027004E7567 /* ScreenshotsRunnerDark.swift */; };
+		F2E825892DF1D6D8004E7567 /* ScreenshotsRunnerDark.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E825832DF1D027004E7567 /* ScreenshotsRunnerDark.swift */; };
+		F2E8258A2DF1D6D8004E7567 /* ScreenshotsRunnerDark.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E825832DF1D027004E7567 /* ScreenshotsRunnerDark.swift */; };
 		F2EAFBE92D6CC9C400DFFD48 /* ImageMessageLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = 2DA42B0525BC7996004F6355 /* ImageMessageLoader.m */; };
 		F2EAFBEA2D6CC9C400DFFD48 /* GrayCircleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E171B24C2822CAF700FC56FE /* GrayCircleView.swift */; };
 		F2EAFBEB2D6CC9C400DFFD48 /* GrowingNotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7E4F2523E2C312009977A5 /* GrowingNotificationBanner.swift */; };
@@ -6578,8 +6579,6 @@
 		F2EAFEF92D6CC9C400DFFD48 /* License.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A232DCE1CA0391C00AA0187 /* License.storyboard */; };
 		F2EAFEFA2D6CC9C400DFFD48 /* RendezvousEmoji.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 24FA486F2CCB658900E2331A /* RendezvousEmoji.xcstrings */; };
 		F2EAFEFB2D6CC9C400DFFD48 /* license.html in Resources */ = {isa = PBXBuildFile; fileRef = 4DBCC0311656DE3D00B3CFFF /* license.html */; };
-		F2EAFEFC2D6CC9C400DFFD48 /* logoAnimation_work.gif in Resources */ = {isa = PBXBuildFile; fileRef = CEBB86D9231F96F000078CBE /* logoAnimation_work.gif */; };
-		F2EAFEFD2D6CC9C400DFFD48 /* logoAnimation_onprem.gif in Resources */ = {isa = PBXBuildFile; fileRef = CE3415262746B703002D8BF6 /* logoAnimation_onprem.gif */; };
 		F2EAFEFE2D6CC9C400DFFD48 /* music_box.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C4260C9F8E0015B726 /* music_box.caf */; };
 		F2EAFEFF2D6CC9C400DFFD48 /* scan_success.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C3260C9F8E0015B726 /* scan_success.caf */; };
 		F2EAFF002D6CC9C400DFFD48 /* LicenseOnPrem.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4D61E25A255C1EC800F484D8 /* LicenseOnPrem.storyboard */; };
@@ -6617,7 +6616,6 @@
 		F2EAFF232D6CC9C400DFFD48 /* ProfilePicture.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEE0F44C1E92A5FA00008F5B /* ProfilePicture.storyboard */; };
 		F2EAFF242D6CC9C400DFFD48 /* threema_problem.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7891F57FFEE00503071 /* threema_problem.mp3 */; };
 		F2EAFF252D6CC9C400DFFD48 /* bamboo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CD260C9F8E0015B726 /* bamboo.caf */; };
-		F2EAFF262D6CC9C400DFFD48 /* LaunchscreenBackground.png in Resources */ = {isa = PBXBuildFile; fileRef = 94955ECB2B96057200493B8A /* LaunchscreenBackground.png */; };
 		F2EAFF282D6CC9C400DFFD48 /* threema_best.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E3242CCE6500D094A1 /* threema_best.caf */; };
 		F2EAFF292D6CC9C400DFFD48 /* sent_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C6260C9F8E0015B726 /* sent_message.caf */; };
 		F2EAFF2A2D6CC9C400DFFD48 /* synth.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C5260C9F8E0015B726 /* synth.caf */; };
@@ -7391,6 +7389,7 @@
 		0AFF744A1B58DD4B008E08DB /* DocumentPicker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DocumentPicker.m; sourceTree = "<group>"; };
 		0AFF75081B5FD71C008E08DB /* Photos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Photos.framework; path = System/Library/Frameworks/Photos.framework; sourceTree = SDKROOT; };
 		2400C2242C33ECFA006C3522 /* MessageSymbolMetadataVibrancyView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageSymbolMetadataVibrancyView.swift; sourceTree = "<group>"; };
+		24010C672E02B5C2004D4322 /* Documentation.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = Documentation.docc; sourceTree = "<group>"; };
 		2401B6E2299BDF7D00BD331F /* ShowConversationInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowConversationInformation.swift; sourceTree = "<group>"; };
 		2403CDD82C8AD08700089D6C /* GroupEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupEntity.swift; sourceTree = "<group>"; };
 		2403CDDA2C8AD23A00089D6C /* GroupEntity+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GroupEntity+Extension.swift"; sourceTree = "<group>"; };
@@ -7705,6 +7704,7 @@
 		24CFA7382BB3F517002F10E9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		24CFA73A2BB3F525002F10E9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		24CFB4222D636CA900E68583 /* ContactEntity+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ContactEntity+Extension.swift"; sourceTree = "<group>"; };
+		24CFD8C72DFC5619003E57F9 /* ScreenshotDocumentation.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = ScreenshotDocumentation.docc; sourceTree = "<group>"; };
 		24D03C3E2C3D4F3700EEA384 /* ThreemaWebDesktopInfoBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaWebDesktopInfoBannerView.swift; sourceTree = "<group>"; };
 		24D36FE629E981DD007DD136 /* SwiftUIImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIImagePicker.swift; sourceTree = "<group>"; };
 		24D59CC62BA18D5600954DF0 /* GlobalSearchDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchDataSource.swift; sourceTree = "<group>"; };
@@ -8961,7 +8961,6 @@
 		949190042B16445900CA337D /* GenericSectionItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericSectionItem.swift; sourceTree = "<group>"; };
 		94955EC82B96057200493B8A /* ThreemaGreenLaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = ThreemaGreenLaunchScreen.storyboard; sourceTree = "<group>"; };
 		94955ECA2B96057200493B8A /* SplashScreenThreemaWork.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SplashScreenThreemaWork.png; sourceTree = "<group>"; };
-		94955ECB2B96057200493B8A /* LaunchscreenBackground.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = LaunchscreenBackground.png; sourceTree = "<group>"; };
 		94955ECC2B96057200493B8A /* SplashScreenThreemaBlue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SplashScreenThreemaBlue.png; sourceTree = "<group>"; };
 		94955ECD2B96057200493B8A /* SplashScreenThreema.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SplashScreenThreema.png; sourceTree = "<group>"; };
 		94955ECE2B96057200493B8A /* SplashScreenThreemaOnPrem.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SplashScreenThreemaOnPrem.png; sourceTree = "<group>"; };
@@ -9096,7 +9095,6 @@
 		CE2C9C5E2886AE1E00277427 /* VoIPCallSender.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoIPCallSender.swift; sourceTree = "<group>"; };
 		CE3014001EBB2F0D00068754 /* UIImage+MWPhotoBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+MWPhotoBrowser.h"; sourceTree = "<group>"; };
 		CE3014011EBB2F0D00068754 /* UIImage+MWPhotoBrowser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+MWPhotoBrowser.m"; sourceTree = "<group>"; };
-		CE3415262746B703002D8BF6 /* logoAnimation_onprem.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = logoAnimation_onprem.gif; sourceTree = "<group>"; };
 		CE3AB51F23102EA5001AF17C /* App Symbols.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "App Symbols.xcassets"; sourceTree = "<group>"; };
 		CE3AB52923103192001AF17C /* ContactsNavigationController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContactsNavigationController.h; sourceTree = "<group>"; };
 		CE3AB52A23103192001AF17C /* ContactsNavigationController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ContactsNavigationController.m; sourceTree = "<group>"; };
@@ -9167,7 +9165,7 @@
 		CE781D2F2302933800DB79D6 /* StyleKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyleKit.swift; sourceTree = "<group>"; };
 		CE7B1F1C20458FF200C40AEF /* WorkContactTableDataSource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WorkContactTableDataSource.h; sourceTree = "<group>"; };
 		CE7B1F1D20458FF200C40AEF /* WorkContactTableDataSource.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WorkContactTableDataSource.m; sourceTree = "<group>"; };
-		CE7D4B7E221D76FC007FE158 /* ScreenshotsRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotsRunner.swift; sourceTree = "<group>"; };
+		CE7D4B7E221D76FC007FE158 /* ScreenshotsRunnerLight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotsRunnerLight.swift; sourceTree = "<group>"; };
 		CE7E4906229537E50097E002 /* CallViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallViewController.swift; sourceTree = "<group>"; };
 		CE7E4F1D23E2C312009977A5 /* FloatingNotificationBanner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FloatingNotificationBanner.swift; sourceTree = "<group>"; };
 		CE7E4F1E23E2C312009977A5 /* UIWindow+orientation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIWindow+orientation.swift"; sourceTree = "<group>"; };
@@ -9256,8 +9254,6 @@
 		CEB88B49206A456900A1E371 /* WebConfirmResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebConfirmResponse.swift; sourceTree = "<group>"; };
 		CEB88B4E206A744600A1E371 /* WebUpdateGroupRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebUpdateGroupRequest.swift; sourceTree = "<group>"; };
 		CEB8D23A257E84A600E360E3 /* Test.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = Test.pdf; sourceTree = "<group>"; };
-		CEBB86D7231F96DB00078CBE /* logoAnimation.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = logoAnimation.gif; sourceTree = "<group>"; };
-		CEBB86D9231F96F000078CBE /* logoAnimation_work.gif */ = {isa = PBXFileReference; lastKnownFileType = image.gif; path = logoAnimation_work.gif; sourceTree = "<group>"; };
 		CEBBB9E7205922BC00130885 /* WebReadRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebReadRequest.swift; sourceTree = "<group>"; };
 		CEC0FBDE27B3C55B003060E6 /* ThreemaUtility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaUtility.swift; sourceTree = "<group>"; };
 		CEC4DACD210F359F004C7DCF /* UserNotificationsUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotificationsUI.framework; path = System/Library/Frameworks/UserNotificationsUI.framework; sourceTree = SDKROOT; };
@@ -9524,6 +9520,8 @@
 		F2E68B4E2BA0A16C001410E3 /* Threema Target Symbols.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Threema Target Symbols.xcassets"; sourceTree = "<group>"; };
 		F2E68B512BA0A28B001410E3 /* Work Target Symbols.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Work Target Symbols.xcassets"; sourceTree = "<group>"; };
 		F2E68B542BA0A2A1001410E3 /* OnPrem Target Symbols.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "OnPrem Target Symbols.xcassets"; sourceTree = "<group>"; };
+		F2E825832DF1D027004E7567 /* ScreenshotsRunnerDark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotsRunnerDark.swift; sourceTree = "<group>"; };
+		F2E825842DF1D04E004E7567 /* ScreenshotsSteps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotsSteps.swift; sourceTree = "<group>"; };
 		F2EAFF3E2D6CC9C400DFFD48 /* Custom OnPrem.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Custom OnPrem.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2EAFF402D6CC9FB00DFFD48 /* CustomOnPremAppConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CustomOnPremAppConfig.xcconfig; sourceTree = "<group>"; };
 		F2EAFF412D6CC9FB00DFFD48 /* CustomOnPremConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CustomOnPremConfig.xcconfig; sourceTree = "<group>"; };
@@ -13142,12 +13140,12 @@
 		4A980B542806C2C1005929B9 /* Configurations */ = {
 			isa = PBXGroup;
 			children = (
+				F2EAFF442D6CC9FB00DFFD48 /* CustomOnPrem */,
 				F2451B5D2D563A77008B4116 /* Base */,
 				2471CBEF2CA1755300E11F7E /* Threema */,
 				2471CBF12CA1756B00E11F7E /* ThreemaBlue */,
 				2471CBF22CA1757D00E11F7E /* ThreemaGreen */,
 				2471CBF32CA1758400E11F7E /* ThreemaOnPrem */,
-				F2EAFF442D6CC9FB00DFFD48 /* CustomOnPrem */,
 				2471CBF02CA1755B00E11F7E /* ThreemaWork */,
 				24A2EB272CA178E3009E5840 /* ThreemaFramework */,
 			);
@@ -14089,7 +14087,6 @@
 		4DF7730016309982001808D3 /* Images */ = {
 			isa = PBXGroup;
 			children = (
-				CEDB32B423191C9B00E963EB /* Animation */,
 				CE3AB51F23102EA5001AF17C /* App Symbols.xcassets */,
 				F2E68B4E2BA0A16C001410E3 /* Threema Target Symbols.xcassets */,
 				F2E68B512BA0A28B001410E3 /* Work Target Symbols.xcassets */,
@@ -14338,7 +14335,6 @@
 		94955EC92B96057200493B8A /* Images */ = {
 			isa = PBXGroup;
 			children = (
-				94955ECB2B96057200493B8A /* LaunchscreenBackground.png */,
 				94955ECA2B96057200493B8A /* SplashScreenThreemaWork.png */,
 				94955ECC2B96057200493B8A /* SplashScreenThreemaBlue.png */,
 				94955ECD2B96057200493B8A /* SplashScreenThreema.png */,
@@ -14580,13 +14576,16 @@
 		CE4CA9991E2629B100F3A560 /* ScreenshotsWithData */ = {
 			isa = PBXGroup;
 			children = (
-				CE7D4B7E221D76FC007FE158 /* ScreenshotsRunner.swift */,
+				CE7D4B7E221D76FC007FE158 /* ScreenshotsRunnerLight.swift */,
+				F2E825832DF1D027004E7567 /* ScreenshotsRunnerDark.swift */,
+				F2E825842DF1D04E004E7567 /* ScreenshotsSteps.swift */,
 				2420475629A368D000101F7D /* ScreenshotsConsumer.xctestplan */,
 				24A4394629A525E600560A72 /* ScreenshotsWork.xctestplan */,
 				24A4394429A525CF00560A72 /* ScreenshotsOnPrem.xctestplan */,
 				CE4CA99C1E2629B100F3A560 /* Info.plist */,
 				E1428E9427426EEF00D9A4AE /* ScreenshotsWithDataOnPrem-Info.plist */,
 				CEFBD1A31E51FB6C00722ED7 /* ScreenshotsWithDataWork-Info.plist */,
+				24CFD8C72DFC5619003E57F9 /* ScreenshotDocumentation.docc */,
 			);
 			path = ScreenshotsWithData;
 			sourceTree = "<group>";
@@ -14919,16 +14918,6 @@
 			path = MsgPack;
 			sourceTree = "<group>";
 		};
-		CEDB32B423191C9B00E963EB /* Animation */ = {
-			isa = PBXGroup;
-			children = (
-				CE3415262746B703002D8BF6 /* logoAnimation_onprem.gif */,
-				CEBB86D7231F96DB00078CBE /* logoAnimation.gif */,
-				CEBB86D9231F96F000078CBE /* logoAnimation_work.gif */,
-			);
-			path = Animation;
-			sourceTree = "<group>";
-		};
 		CEEB4FC526E09FB400FFF622 /* Colors */ = {
 			isa = PBXGroup;
 			children = (
@@ -15209,6 +15198,7 @@
 		F2EAFF442D6CC9FB00DFFD48 /* CustomOnPrem */ = {
 			isa = PBXGroup;
 			children = (
+				24010C672E02B5C2004D4322 /* Documentation.docc */,
 				F2EAFF412D6CC9FB00DFFD48 /* CustomOnPremConfig.xcconfig */,
 				F2EAFF402D6CC9FB00DFFD48 /* CustomOnPremAppConfig.xcconfig */,
 				F2EAFF422D6CC9FB00DFFD48 /* CustomOnPremNotificationExtensionConfig.xcconfig */,
@@ -16727,8 +16717,6 @@
 				0A7DF8881C9FDBDE002D4DC3 /* license.html in Resources */,
 				24564C8F2C947C8800C34497 /* InfoPlist.xcstrings in Resources */,
 				24E46F6D2BAABF81009B718E /* PrivacyInfo.xcprivacy in Resources */,
-				94955EDF2B96057300493B8A /* LaunchscreenBackground.png in Resources */,
-				CEBB86DA231F96F000078CBE /* logoAnimation_work.gif in Resources */,
 				CE1E70DE260C9F8F0015B726 /* music_box.caf in Resources */,
 				24FA48712CCB658900E2331A /* RendezvousEmoji.xcstrings in Resources */,
 				CE5D049F1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 in Resources */,
@@ -16887,7 +16875,6 @@
 				F2E68B532BA0A28B001410E3 /* Work Target Symbols.xcassets in Resources */,
 				24FA48742CCB658900E2331A /* RendezvousEmoji.xcstrings in Resources */,
 				CE1E70F5260C9F8F0015B726 /* sms.caf in Resources */,
-				2D5A1F2024C9B5DF00F87DD0 /* logoAnimation_work.gif in Resources */,
 				24564C8D2C947C8700C34497 /* InfoPlist.xcstrings in Resources */,
 				2D5A1F2324C9B5DF00F87DD0 /* ringing-tone-ch-fade.mp3 in Resources */,
 				2D5A1F2524C9B5DF00F87DD0 /* BallotHeaderView.xib in Resources */,
@@ -16903,7 +16890,6 @@
 				2D5A1F3024C9B5DF00F87DD0 /* CallStoryboard.storyboard in Resources */,
 				2D321D0724D8499D009720C3 /* ThreemaBlue.xcassets in Resources */,
 				2D5A1F3724C9B5DF00F87DD0 /* threema_incom.caf in Resources */,
-				94955EE22B96057300493B8A /* LaunchscreenBackground.png in Resources */,
 				2D5A1F3824C9B5DF00F87DD0 /* threema_goody.caf in Resources */,
 				2D5A1F3924C9B5DF00F87DD0 /* CreateID.storyboard in Resources */,
 				CE1E7104260C9F8F0015B726 /* silent.caf in Resources */,
@@ -16941,6 +16927,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				24A108902DDDE7B100370181 /* TargetColorsPrivate.xcassets in Resources */,
 				24CFA73E2BB3F57D002F10E9 /* PrivacyInfo.xcprivacy in Resources */,
 				2484A5052C9AAC990058A5CF /* ThreemaNotificationExtension-InfoPlist.xcstrings in Resources */,
 				2D1CAF4B2D8976C700B97503 /* App Symbols.xcassets in Resources */,
@@ -16952,6 +16939,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				24A108912DDDE7B100370181 /* TargetColorsPrivate.xcassets in Resources */,
 				2484A5012C9AAC990058A5CF /* ThreemaGreenNotificationExtension-InfoPlist.xcstrings in Resources */,
 				24CFA7402BB3F588002F10E9 /* PrivacyInfo.xcprivacy in Resources */,
 				2D1CAF4A2D8975F000B97503 /* App Symbols.xcassets in Resources */,
@@ -17020,7 +17008,6 @@
 				241AEFD92C945A54001FA52A /* MyIdentityStoryboard.storyboard in Resources */,
 				2DEDB3B424C9903400FC9099 /* BallotHeaderView.xib in Resources */,
 				2DEDB3B524C9903400FC9099 /* threema_pickup.mp3 in Resources */,
-				94955EE12B96057300493B8A /* LaunchscreenBackground.png in Resources */,
 				2DEDB3BA24C9903400FC9099 /* IntroQuestionView.xib in Resources */,
 				2DEDB3BC24C9903400FC9099 /* CreateGroup.storyboard in Resources */,
 				F2E68B502BA0A199001410E3 /* Threema Target Symbols.xcassets in Resources */,
@@ -17035,7 +17022,6 @@
 				CE1E7117260C9F8F0015B726 /* glass.caf in Resources */,
 				2DEDB3CB24C9903400FC9099 /* threema_goody.caf in Resources */,
 				2DEDB3CE24C9903400FC9099 /* DKCameraResource.bundle in Resources */,
-				2DEDB3CF24C9903400FC9099 /* logoAnimation.gif in Resources */,
 				4A38E3D02A5EDB40008484A2 /* Settings.bundle in Resources */,
 				F271802D2CEE2A5400FCD4F7 /* SharedColors.xcassets in Resources */,
 				2DEDB3D024C9903400FC9099 /* threema_best.caf in Resources */,
@@ -17106,8 +17092,6 @@
 				CE7E039625FA6F520054373A /* License.storyboard in Resources */,
 				24FA48722CCB658900E2331A /* RendezvousEmoji.xcstrings in Resources */,
 				4D088AD4255C0CD4002F3129 /* license.html in Resources */,
-				4D088AD8255C0CD4002F3129 /* logoAnimation_work.gif in Resources */,
-				CE3415282746B704002D8BF6 /* logoAnimation_onprem.gif in Resources */,
 				CE1E70DF260C9F8F0015B726 /* music_box.caf in Resources */,
 				CE1E70DA260C9F8F0015B726 /* scan_success.caf in Resources */,
 				4D61E25C255C1EC900F484D8 /* LicenseOnPrem.storyboard in Resources */,
@@ -17147,7 +17131,6 @@
 				4D088AF7255C0CD4002F3129 /* ProfilePicture.storyboard in Resources */,
 				4D088AFB255C0CD4002F3129 /* threema_problem.mp3 in Resources */,
 				CE1E710C260C9F8F0015B726 /* bamboo.caf in Resources */,
-				94955EE02B96057300493B8A /* LaunchscreenBackground.png in Resources */,
 				2440215D2BAAC30F00F8B74F /* PrivacyInfo.xcprivacy in Resources */,
 				4D088AFC255C0CD4002F3129 /* threema_best.caf in Resources */,
 				CE1E70E9260C9F8F0015B726 /* sent_message.caf in Resources */,
@@ -17201,7 +17184,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				94955EDE2B96057300493B8A /* LaunchscreenBackground.png in Resources */,
 				24F7EE992DC5074F005921BC /* TargetColorsPrivate.xcassets in Resources */,
 				241AEFDC2C94605C001FA52A /* MainStoryboard.storyboard in Resources */,
 				CE1E70F1260C9F8F0015B726 /* sms.caf in Resources */,
@@ -17271,7 +17253,6 @@
 				CE1E711E260C9F8F0015B726 /* drum.caf in Resources */,
 				CEFEB5E8242CCE6500D094A1 /* threema_goody.caf in Resources */,
 				CE8A2B331EB38270004973D5 /* DKCameraResource.bundle in Resources */,
-				CEBB86D8231F96DB00078CBE /* logoAnimation.gif in Resources */,
 				CE1E70E2260C9F8F0015B726 /* synth.caf in Resources */,
 				CEFEB5EC242CCE6500D094A1 /* threema_best.caf in Resources */,
 				24E46F5B2BAABAA4009B718E /* PrivacyInfo.xcprivacy in Resources */,
@@ -17359,8 +17340,6 @@
 				F2EAFEFA2D6CC9C400DFFD48 /* RendezvousEmoji.xcstrings in Resources */,
 				F29412B32D6CDBC2000B3681 /* SplashScreenCustomOnPrem.png in Resources */,
 				F2EAFEFB2D6CC9C400DFFD48 /* license.html in Resources */,
-				F2EAFEFC2D6CC9C400DFFD48 /* logoAnimation_work.gif in Resources */,
-				F2EAFEFD2D6CC9C400DFFD48 /* logoAnimation_onprem.gif in Resources */,
 				F2EAFEFE2D6CC9C400DFFD48 /* music_box.caf in Resources */,
 				F2EAFEFF2D6CC9C400DFFD48 /* scan_success.caf in Resources */,
 				F2EAFF002D6CC9C400DFFD48 /* LicenseOnPrem.storyboard in Resources */,
@@ -17401,7 +17380,6 @@
 				F2EAFF232D6CC9C400DFFD48 /* ProfilePicture.storyboard in Resources */,
 				F2EAFF242D6CC9C400DFFD48 /* threema_problem.mp3 in Resources */,
 				F2EAFF252D6CC9C400DFFD48 /* bamboo.caf in Resources */,
-				F2EAFF262D6CC9C400DFFD48 /* LaunchscreenBackground.png in Resources */,
 				F2EAFF282D6CC9C400DFFD48 /* threema_best.caf in Resources */,
 				F2EAFF292D6CC9C400DFFD48 /* sent_message.caf in Resources */,
 				F2EAFF2A2D6CC9C400DFFD48 /* synth.caf in Resources */,
@@ -22330,8 +22308,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F2E825872DF1D0EC004E7567 /* ScreenshotsSteps.swift in Sources */,
 				CE08C0C5272989C8001EFCDE /* PPAssetManager.swift in Sources */,
-				CE08C0C8272989C8001EFCDE /* ScreenshotsRunner.swift in Sources */,
+				24CFD8CA2DFC5619003E57F9 /* ScreenshotDocumentation.docc in Sources */,
+				CE08C0C8272989C8001EFCDE /* ScreenshotsRunnerLight.swift in Sources */,
+				F2E8258A2DF1D6D8004E7567 /* ScreenshotsRunnerDark.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -22356,8 +22337,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CE7D4B7F221D76FC007FE158 /* ScreenshotsRunner.swift in Sources */,
+				F2E825852DF1D0EC004E7567 /* ScreenshotsSteps.swift in Sources */,
+				CE7D4B7F221D76FC007FE158 /* ScreenshotsRunnerLight.swift in Sources */,
+				24CFD8C82DFC5619003E57F9 /* ScreenshotDocumentation.docc in Sources */,
 				CE7D4B86221D9135007FE158 /* PPAssetManager.swift in Sources */,
+				F2E825882DF1D6D8004E7567 /* ScreenshotsRunnerDark.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -22365,8 +22349,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F2E825862DF1D0EC004E7567 /* ScreenshotsSteps.swift in Sources */,
 				CE7D4B85221D9135007FE158 /* PPAssetManager.swift in Sources */,
-				CE6DE4BD22200F2400979018 /* ScreenshotsRunner.swift in Sources */,
+				24CFD8C92DFC5619003E57F9 /* ScreenshotDocumentation.docc in Sources */,
+				CE6DE4BD22200F2400979018 /* ScreenshotsRunnerLight.swift in Sources */,
+				F2E825892DF1D6D8004E7567 /* ScreenshotsRunnerDark.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -22535,6 +22522,7 @@
 				F2EAFC862D6CC9C400DFFD48 /* FileCaptionView.m in Sources */,
 				F2EAFC872D6CC9C400DFFD48 /* WebUpdateGroupResponse.swift in Sources */,
 				F2EAFC882D6CC9C400DFFD48 /* SwiftUIImagePicker.swift in Sources */,
+				24010C682E02B5C2004D4322 /* Documentation.docc in Sources */,
 				F2EAFC892D6CC9C400DFFD48 /* StorageManagementView.swift in Sources */,
 				F2EAFC8A2D6CC9C400DFFD48 /* Old_ContactCell.m in Sources */,
 				F2EAFC8B2D6CC9C400DFFD48 /* EmojiPicker.swift in Sources */,

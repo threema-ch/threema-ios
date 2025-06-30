@@ -20,6 +20,7 @@
 
 /// Name of the app
 APP_NAME = Custom OnPrem
+
 /// Name of the app to be used in conjunction with features such as Calls, Safe or ID.
 /// Appropriately inserted into localized strings for example LOCALIZED_APP_NAME Calls for English or LOCALIZED_APP_NAME-Anrufe for German
 LOCALIZED_APP_NAME = Custom
@@ -39,8 +40,8 @@ APP_URL_SCHEME = customonprem
 
 /// Declare the use of encryption to streamline the app submission process
 
-/// Do NOT change the TARGET_MANAGER_KEY
 /// Target Manager Key
+/// Do NOT change the TARGET_MANAGER_KEY
 TARGET_MANAGER_KEY = CustomOnPrem
 
 // Accent Color

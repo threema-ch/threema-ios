@@ -35,7 +35,7 @@ class WebTest: XCTestCase {
     }
     
     func testIsWebHostAllowedNo() {
-        XCTAssertFalse(WCSessionManager.isWebHostAllowed(scannedHostName: "threema.ch", whiteList: "example.com"))
+        XCTAssertFalse(WCSessionManager.isWebHostAllowed(scannedHostName: "threema.com", whiteList: "example.com"))
         XCTAssertFalse(WCSessionManager.isWebHostAllowed(scannedHostName: "x.example.com", whiteList: "example.com"))
         XCTAssertFalse(WCSessionManager.isWebHostAllowed(scannedHostName: "x.example", whiteList: "*.example.com"))
     }

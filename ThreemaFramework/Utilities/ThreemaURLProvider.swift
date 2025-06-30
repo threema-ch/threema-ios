@@ -20,10 +20,10 @@
 
 import Foundation
 
-/// Use this class to get your URL to threema.ch or threema.ch/work
+/// Use this class to get your URL to threema.com or threema.com/work
 public enum ThreemaURLProvider {
     
-    private static let defaultURLString = "https://threema.ch/"
+    private static let defaultURLString = "https://threema.com/"
     
     // Consumer
     public static let rogueDeviceInfo =
@@ -60,7 +60,7 @@ public enum ThreemaURLProvider {
     }
 }
 
-/// Use this class to get your URL to threema.ch or threema.ch/work
+/// Use this class to get your URL to threema.com or threema.com/work
 ///
 /// - returns: URL
 @available(*, deprecated, message: "Only use from Objective-C", renamed: "conversationStore")

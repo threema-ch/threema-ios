@@ -42,13 +42,7 @@ struct DeleteRevokeView: View {
         .padding()
         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
         .animation(.easeOut(duration: 2.0), value: tabSelection)
-        .background(
-            Image("WizardBg")
-                .resizable()
-                .scaledToFill()
-                .accessibilityHidden(true)
-                .edgesIgnoringSafeArea(.all)
-        )
+        .background(.black)
         .edgesIgnoringSafeArea(.all)
         .onAppear {
             UIScrollView.appearance().isScrollEnabled = false

@@ -64,14 +64,16 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
     if (!text) {
         return text;
     }
-    
+        
     NSRegularExpression *mentionsRegex = [NSRegularExpression regularExpressionWithPattern:regex options:NSRegularExpressionCaseInsensitive error:nil];
+    EntityManager *entityManager = [[BusinessInjector new] entityManager];
     
     BOOL finished = NO;
-    int lastNotFoundIndex = -1;
-    
+    __block int lastNotFoundIndex = -1;
+    __block NSString *mentionsText = text;
+
     while (!finished) {
-        NSArray *mentionResults = [mentionsRegex matchesInString:text options:NSMatchingReportCompletion range:NSMakeRange(0, [text length])];
+        NSArray *mentionResults = [mentionsRegex matchesInString:mentionsText options:NSMatchingReportCompletion range:NSMakeRange(0, [mentionsText length])];
         
         NSTextCheckingResult *result = nil;
         if (lastNotFoundIndex == -1) {
@@ -87,30 +89,32 @@ static NSString *regex = @"@\\[[0-9A-Z*@]{8}\\]";
             break;
         }
         
-        NSString *mentionTag = [text substringWithRange:result.range];
+        NSString *mentionTag = [mentionsText substringWithRange:result.range];
         NSString *identity = [mentionTag substringWithRange:NSMakeRange(2, 8)].uppercaseString;
-        
-        ContactEntity *contact = [[ContactStore sharedContactStore] contactForIdentity:identity];
-        
-        if (contact || [identity isEqualToString:[[MyIdentityStore sharedMyIdentityStore] identity]] || [identity isEqualToString:@"@@@@@@@@"]) {
-            NSString *displayName = [[MyIdentityStore sharedMyIdentityStore] displayName];
-            if (contact) {
-                displayName = contact.mentionName;
-            } else if ([identity isEqualToString:@"@@@@@@@@"]) {
-                displayName = [BundleUtil localizedStringForKey:@"all"];
-            }
-            text = [text stringByReplacingCharactersInRange:result.range withString:[NSString stringWithFormat:@"@%@", displayName]];
-        } else {
-            text = [text stringByReplacingCharactersInRange:result.range withString:[NSString stringWithFormat:@"@%@", identity]];
-            if (lastNotFoundIndex == -1) {
-                lastNotFoundIndex = 0;
+
+        [entityManager performBlockAndWait:^{
+            ContactEntity *contact = [[entityManager entityFetcher] contactForId:identity];
+            
+            if (contact || [identity isEqualToString:[[MyIdentityStore sharedMyIdentityStore] identity]] || [identity isEqualToString:@"@@@@@@@@"]) {
+                NSString *displayName = [[MyIdentityStore sharedMyIdentityStore] displayName];
+                if (contact) {
+                    displayName = contact.mentionName;
+                } else if ([identity isEqualToString:@"@@@@@@@@"]) {
+                    displayName = [BundleUtil localizedStringForKey:@"all"];
+                }
+                mentionsText = [mentionsText stringByReplacingCharactersInRange:result.range withString:[NSString stringWithFormat:@"@%@", displayName]];
             } else {
-                lastNotFoundIndex++;
+                mentionsText = [mentionsText stringByReplacingCharactersInRange:result.range withString:[NSString stringWithFormat:@"@%@", identity]];
+                if (lastNotFoundIndex == -1) {
+                    lastNotFoundIndex = 0;
+                } else {
+                    lastNotFoundIndex++;
+                }
             }
-        }
+        }];
     }
     
-    return text;
+    return mentionsText;
 }
 
 + (NSAttributedString *)makeMentionsAttributedStringForAttributedString:(NSMutableAttributedString *)text textFont:(UIFont *)textFont atColor:(UIColor *)atColor messageInfo:(int)messageInfo application:(UIApplication *)application {

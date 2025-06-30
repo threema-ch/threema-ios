@@ -346,7 +346,7 @@ typedef enum : NSUInteger {
         if (TargetManagerObjc.isOnPrem) {
             _noContactsMessageLabel.text = @"";
         } else {
-            NSString *stringSyncON = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"alert_biometrics_changed_message"], TargetManagerObjc.appName, TargetManagerObjc.appName];
+            NSString *stringSyncON = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_contacts_syncon"], TargetManagerObjc.appName];
             NSString *stringSyncOFF = [BundleUtil localizedStringForKey:@"no_contacts_syncoff"];
             _noContactsMessageLabel.text = [UserSettings sharedUserSettings].syncContacts ? stringSyncON : stringSyncOFF;
         }

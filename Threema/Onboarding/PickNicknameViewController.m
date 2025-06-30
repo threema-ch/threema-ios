@@ -107,7 +107,7 @@
     _nicknameBackgroundView.layer.borderWidth = 0.5;
 
     NSString *placeholder = [BundleUtil localizedStringForKey:@"id_enter_nickname"];
-   _nicknameTextfield.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder attributes:@{NSForegroundColorAttributeName: THREEMA_COLOR_PLACEHOLDER}];
+    _nicknameTextfield.placeholder = placeholder;
     _nicknameTextfield.delegate = self;
     [_nicknameTextfield setAccessibilityHint:[BundleUtil localizedStringForKey:@"id_completed_nickname"]];
     

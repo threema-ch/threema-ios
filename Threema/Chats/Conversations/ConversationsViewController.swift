@@ -38,10 +38,12 @@ class ConversationsViewController: ThemedTableViewController {
         action: #selector(newMessage)
     )
     private lazy var editButton = UIBarButtonItem(
-        barButtonSystemItem: .edit,
-        target: self,
-        action: #selector(showToolbar)
+        title: #localize("edit"),
+        image: UIImage(systemName: "ellipsis.circle"),
+        primaryAction: nil,
+        menu: menu
     )
+    
     private lazy var toolbarArchiveButton = UIBarButtonItem(
         title: #localize("archive"),
         style: .plain,
@@ -71,6 +73,20 @@ class ConversationsViewController: ThemedTableViewController {
         target: self,
         action: #selector(selectAllRows)
     )
+    
+    private lazy var menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [
+        UIAction(title: #localize("conversations_menu_read_all"), image: UIImage(systemName: "eye")) { _ in
+            Task {
+                await self.utilities.readAll(isAppInBackground: self.viewLoadedInBackground)
+            }
+        },
+        UIAction(
+            title: #localize("conversations_menu_select"),
+            image: UIImage(systemName: "checkmark.circle")
+        ) { _ in
+            self.showToolbar()
+        },
+    ])
     
     private lazy var searchController: UISearchController = {
         var controller = UISearchController(searchResultsController: globalSearchResultsViewController)
@@ -120,6 +136,7 @@ class ConversationsViewController: ThemedTableViewController {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         
+        editButton.accessibilityLabel = #localize("edit")
         newChatButton.accessibilityLabel = #localize("new_message_accessibility")
         
         addObservers()
@@ -297,6 +314,7 @@ extension ConversationsViewController {
         
         showToolbar()
         didStartMultiselect = true
+        updateNavigationBarContent()
     }
     
     override func tableViewDidEndMultipleSelectionInteraction(_ tableView: UITableView) {
@@ -307,7 +325,13 @@ extension ConversationsViewController {
         if tableView.indexPathsForSelectedRows?.count == nil {
             hideToolbar()
             didStartMultiselect = false
+            updateNavigationBarContent()
         }
+    }
+    
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        updateNavigationBarContent()
     }
 }
 
@@ -727,20 +751,30 @@ extension ConversationsViewController {
     }
     
     override func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        
+        updateNavigationBarContent()
+    }
+    
+    private func updateNavigationBarContent() {
         let navHeight = navigationController!.navigationBar.frame.size.height
         let textInNavBar = navigationItem.prompt != nil
-        if (navHeight <= BrandingUtils.compactNavBarHeight && !textInNavBar) ||
+        if isEditing {
+            hideTitleView()
+        }
+        else if (navHeight <= BrandingUtils.compactNavBarHeight && !textInNavBar) ||
             (navHeight <= BrandingUtils.compactPromptNavBarHeight && textInNavBar),
             navigationItem.titleView != nil {
-            navigationItem.titleView = nil
-            title = #localize("chats_title")
+            hideTitleView()
         }
         else if (navHeight > BrandingUtils.compactNavBarHeight && !textInNavBar) ||
             (navHeight > BrandingUtils.compactPromptNavBarHeight && textInNavBar),
             navigationItem.titleView == nil {
             BrandingUtils.updateTitleLogo(of: navigationItem, in: navigationController)
         }
+    }
+    
+    private func hideTitleView() {
+        navigationItem.titleView = nil
+        title = #localize("chats_title")
     }
     
     @objc func displayChat(chatViewController: ChatViewController, animated: Bool) {

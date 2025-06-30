@@ -59,11 +59,12 @@ struct EnterLicenseInfoView: View {
                                         
                     GroupBox {
                         VStack {
-                            Image(uiImage: Colors.consumerLogoRoundCorners)
+                            Image(uiImage: Colors.consumerAppIcon)
                                 .resizable()
                                 .frame(width: 50, height: 50, alignment: .center)
                                 .scaledToFit()
                                 .aspectRatio(contentMode: .fit)
+                                .cornerRadius(12)
                                 
                             Image(uiImage: Colors.darkConsumerLogo)
                                 .resizable()
@@ -72,7 +73,7 @@ struct EnterLicenseInfoView: View {
                                 .padding(.horizontal, 80)
                                 
                             Text(#localize("enter_license_infoview_private_use"))
-                                .font(.title2)
+                                .font(.title3)
                         }
                             
                         // Note that this always refers to "Threema" and thus isn't parametrized
@@ -89,7 +90,7 @@ struct EnterLicenseInfoView: View {
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(UIColor(resource: .accentColorPrivate).color)
+                        .tint(UIColor(resource: .accentColorPrivateShared).color)
                     }
                     .groupBoxStyle(.wizard)
                     .environment(\.colorScheme, .light)
@@ -98,13 +99,7 @@ struct EnterLicenseInfoView: View {
                 .padding(.horizontal)
                 .frame(maxHeight: .infinity)
             }
-            .background(
-                Image("WizardBg")
-                    .resizable()
-                    .scaledToFill()
-                    .accessibilityHidden(true)
-                    .edgesIgnoringSafeArea(.all)
-            )
+            .background(.black)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

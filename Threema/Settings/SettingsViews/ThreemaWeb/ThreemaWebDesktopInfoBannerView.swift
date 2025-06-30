@@ -50,7 +50,7 @@ struct ThreemaWebDesktopInfoBannerView: View {
             }
             .buttonStyle(.plain)
         }
-        .foregroundColor(.white)
+        .foregroundColor(Colors.textProminentButton.color)
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color.accentColor)

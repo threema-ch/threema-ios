@@ -35,7 +35,7 @@ final class MockHTTPClient: GroupCallHTTPClientAdapterProtocol {
     var lock = NSLock()
     
     convenience init(returnCode: Int) {
-        let url = URL(string: "http://threema.ch")!
+        let url = URL(string: "http://threema.com")!
         
         let urlResponse = HTTPURLResponse(url: url, statusCode: returnCode, httpVersion: nil, headerFields: nil)!
         
@@ -43,7 +43,7 @@ final class MockHTTPClient: GroupCallHTTPClientAdapterProtocol {
     }
     
     convenience init() {
-        let url = URL(string: "http://threema.ch")!
+        let url = URL(string: "http://threema.com")!
         
         let urlResponse = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!
         
@@ -58,7 +58,7 @@ final class MockHTTPClient: GroupCallHTTPClientAdapterProtocol {
     init(authorization: String?) {
         // Noop
         
-        let url = URL(string: "http://threema.ch")!
+        let url = URL(string: "http://threema.com")!
         let urlResponse = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!
         
         self.returnData = Data()

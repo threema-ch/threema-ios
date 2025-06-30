@@ -24,15 +24,15 @@ import Foundation
     @objc override public func draw(_ rect: CGRect) {
         super.draw(rect)
         
-        drawCanvas1(frame: rect)
+        backgroundColor = .red
     }
     
     func drawCanvas1(frame: CGRect = CGRect(x: 0, y: 0, width: 2890, height: 1380)) {
-        //// General Declarations
+        // General Declarations
         // This non-generic function dramatically improves compilation times of complex expressions.
         func fastFloor(_ x: CGFloat) -> CGFloat { floor(x) }
 
-        //// Color Declarations
+        // Color Declarations
         let fillColor = UIColor(red: 0.169, green: 0.169, blue: 0.169, alpha: 1.000)
         let fillColor2 = UIColor(red: 0.000, green: 0.000, blue: 0.000, alpha: 0.130)
         let fillColor3 = UIColor(red: 0.000, green: 0.000, blue: 0.000, alpha: 0.200)
@@ -41,11 +41,11 @@ import Foundation
         let fillColor6 = UIColor(red: 0.000, green: 0.000, blue: 0.000, alpha: 0.250)
         let fillColor7 = UIColor(red: 0.000, green: 0.000, blue: 0.000, alpha: 0.500)
 
-        //// Subframes
+        // Subframes
         let wizardBgpdfGroup = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: frame.height)
 
-        //// WizardBg.pdf Group
-        //// Rectangle Drawing
+        // WizardBg.pdf Group
+        // Rectangle Drawing
         let rectanglePath = UIBezierPath(rect: CGRect(
             x: wizardBgpdfGroup.minX + fastFloor(wizardBgpdfGroup.width * 0.00000 + 0.5),
             y: wizardBgpdfGroup.minY + fastFloor(wizardBgpdfGroup.height * 0.00000 + 0.5),
@@ -57,7 +57,7 @@ import Foundation
         fillColor.setFill()
         rectanglePath.fill()
 
-        //// Bezier Drawing
+        // Bezier Drawing
         let bezierPath = UIBezierPath()
         bezierPath.move(to: CGPoint(
             x: wizardBgpdfGroup.minX + 0.00000 * wizardBgpdfGroup.width,
@@ -88,7 +88,7 @@ import Foundation
         fillColor2.setFill()
         bezierPath.fill()
 
-        //// Bezier 2 Drawing
+        // Bezier 2 Drawing
         let bezier2Path = UIBezierPath()
         bezier2Path.move(to: CGPoint(
             x: wizardBgpdfGroup.minX + 1.00000 * wizardBgpdfGroup.width,
@@ -123,7 +123,7 @@ import Foundation
         fillColor3.setFill()
         bezier2Path.fill()
 
-        //// Bezier 3 Drawing
+        // Bezier 3 Drawing
         let bezier3Path = UIBezierPath()
         bezier3Path.move(to: CGPoint(
             x: wizardBgpdfGroup.minX + 0.00000 * wizardBgpdfGroup.width,
@@ -154,7 +154,7 @@ import Foundation
         fillColor4.setFill()
         bezier3Path.fill()
 
-        //// Bezier 4 Drawing
+        // Bezier 4 Drawing
         let bezier4Path = UIBezierPath()
         bezier4Path.move(to: CGPoint(
             x: wizardBgpdfGroup.minX + 1.00000 * wizardBgpdfGroup.width,
@@ -185,7 +185,7 @@ import Foundation
         fillColor5.setFill()
         bezier4Path.fill()
 
-        //// Bezier 5 Drawing
+        // Bezier 5 Drawing
         let bezier5Path = UIBezierPath()
         bezier5Path.move(to: CGPoint(
             x: wizardBgpdfGroup.minX + 0.00000 * wizardBgpdfGroup.width,
@@ -216,7 +216,7 @@ import Foundation
         fillColor6.setFill()
         bezier5Path.fill()
 
-        //// Bezier 6 Drawing
+        // Bezier 6 Drawing
         let bezier6Path = UIBezierPath()
         bezier6Path.move(to: CGPoint(
             x: wizardBgpdfGroup.minX + 1.00000 * wizardBgpdfGroup.width,

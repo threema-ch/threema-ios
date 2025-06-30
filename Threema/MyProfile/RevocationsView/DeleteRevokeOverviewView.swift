@@ -90,6 +90,7 @@ struct DeleteRevokeOverviewView: View {
                         } label: {
                             Text(#localize("cancel"))
                                 .frame(maxWidth: .infinity)
+                                .foregroundColor(Colors.textProminentButtonWizard.color)
                         }
                         .buttonStyle(.borderedProminent)
                     }
@@ -132,11 +133,5 @@ struct DeleteRevokeOverviewView: View {
 
 #Preview {
     DeleteRevokeOverviewView(tabSelection: .constant(1))
-        .background(
-            Image("WizardBg")
-                .resizable()
-                .scaledToFill()
-                .accessibilityHidden(true)
-                .edgesIgnoringSafeArea(.all)
-        )
+        .background(.black)
 }

@@ -113,7 +113,8 @@ final class PublicKeyView: UIView {
         button.setTitle(#localize("ok"), for: .normal)
         button.titleLabel?.adjustsFontForContentSizeCategory = true
         button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
-        
+        button.setTitleColor(.label, for: .normal)
+
         button.backgroundColor = .secondarySystemBackground
         
         return button

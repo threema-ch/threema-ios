@@ -19,8 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "SplashViewController.h"
-#import "FLAnimatedImageView.h"
-#import "FLAnimatedImage.h"
 #import "BundleUtil.h"
 #import "RectUtil.h"
 #import <QuartzCore/QuartzCore.h>
@@ -58,9 +56,8 @@
   static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #endif
 
-@interface SplashViewController () <FLAnimatedImageViewDelegate, RandomSeedViewControllerDelegate, CompletedIDDelegate, RestoreOptionDataViewControllerDelegate, RestoreOptionBackupViewControllerDelegate, RestoreSafeViewControllerDelegate, RestoreIdentityViewControllerDelegate, IntroQuestionDelegate, EnterLicenseDelegate, ZSWTappableLabelTapDelegate, MFMailComposeViewControllerDelegate>
+@interface SplashViewController () <RandomSeedViewControllerDelegate, CompletedIDDelegate, RestoreOptionDataViewControllerDelegate, RestoreOptionBackupViewControllerDelegate, RestoreSafeViewControllerDelegate, RestoreIdentityViewControllerDelegate, IntroQuestionDelegate, EnterLicenseDelegate, ZSWTappableLabelTapDelegate, MFMailComposeViewControllerDelegate>
 
-@property FLAnimatedImageView *animatedView;
 @property RandomSeedViewController *randomSeedViewController;
 @property RestoreOptionDataViewController *restoreOptionDataViewController;
 @property RestoreOptionBackupViewController *restoreOptionBackupViewController;
@@ -102,12 +99,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    if (AppSetup.shouldDirectlyShowSetupWizard || TargetManagerObjc.isCustomOnPrem) {
-        _bgImagescale = 1.5;
-    } else {
-        // during intro image will be zoomed
-        _bgImagescale = 1.2;
-    }
+    _bgImagescale = 1.5;
 
     [self setupControls];
 
@@ -120,12 +112,6 @@
 
     _threemaLogoView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     _threemaLogoView.image = [Colors threemaLogo];
-}
-
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-
-    _threemaLogoView.hidden = YES;
 }
 
 - (void)setupBackgroundView {
@@ -142,31 +128,6 @@
     [self.view sendSubviewToBack:_bgView];
 }
 
-- (void)setupAnimatedView {
-    if (_animatedView == nil) {
-        CGFloat logoScale = 2.2;
-        CGRect rect = CGRectMake(0, 0, 250.0/logoScale, 300.0/logoScale);
-        rect = [RectUtil rect:rect centerIn:self.view.frame round:YES];
-
-        _animatedView = [[FLAnimatedImageView alloc] initWithFrame:rect];
-        
-        NSString *animationName = @"logoAnimation";
-        if (TargetManagerObjc.isOnPrem) {
-            animationName = [NSString stringWithFormat:@"%@_onprem", animationName];
-        }
-        else if (TargetManagerObjc.isWork) {
-            animationName = [NSString stringWithFormat:@"%@_work", animationName];
-        }
-
-        NSURL *url = [BundleUtil URLForResource:animationName withExtension:@"gif"];
-        if (url != nil) {
-            FLAnimatedImage *image = [FLAnimatedImage animatedImageWithGIFData:[NSData dataWithContentsOfURL:url]];
-            _animatedView.animatedImage = image;
-            _animatedView.delegate = self;
-        }
-    }
-}
-
 - (void)setupControls {
     
     _privacyView.hidden = YES;
@@ -177,7 +138,7 @@
     _setupButton.backgroundColor = UIColor.tintColor;
     _setupButton.layer.cornerRadius = 5;
     _setupButton.accessibilityIdentifier = @"SplashViewControllerSetupButton";
-    [_setupButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
+    [_setupButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
     
     _restoreButton.backgroundColor = UIColor.tintColor;
     _restoreButton.layer.borderWidth = 1;
@@ -186,7 +147,7 @@
     _restoreButton.titleLabel.adjustsFontSizeToFitWidth = YES;
     _restoreButton.titleLabel.minimumScaleFactor = 0.6;
     _restoreButton.accessibilityIdentifier = @"SplashViewControllerRestoreButton";
-    [_restoreButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
+    [_restoreButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
 
     _setupTitleLabel.textColor = Colors.textSetup;
     _setupTitleLabel.accessibilityElementsHidden = true;
@@ -212,7 +173,7 @@
         _privacyPolicyInfo.tapDelegate = self;
         NSDictionary *normalAttributes = @{NSFontAttributeName: _privacyPolicyInfo.font, NSForegroundColorAttributeName: [UIColor whiteColor]};
         NSDictionary *linkAttributes = @{@"ZSWTappableLabelTappableRegionAttributeName": @YES,
-                                         @"ZSWTappableLabelHighlightedForegroundAttributeName": UIColor.systemRedColor,
+                                         @"ZSWTappableLabelHighlightedForegroundAttributeName": UIColor.whiteColor,
                                          NSForegroundColorAttributeName: Colors.textWizardLink,
                                          NSUnderlineStyleAttributeName: @(NSUnderlineStyleSingle),
                                          @"NSTextCheckingResult": @1
@@ -265,9 +226,7 @@
         } else {
             privacyTargetRect = [RectUtil setYPositionOf:_privacyView.frame y:170.0];
         }
-        
-        CGRect animationTargetRect = [RectUtil setPositionOf:_animatedView.frame x:(viewFrame.size.width - _animatedView.frame.size.width)/2 y:privacyTargetRect.origin.y - _animatedView.frame.size.height];
-        
+                
         CGRect controlsTargetRect;
         if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
             /* iPhone 4s */
@@ -277,7 +236,6 @@
         }
                 
         _privacyView.frame = privacyTargetRect;
-        _animatedView.frame = animationTargetRect;
         _controlsView.frame = controlsTargetRect;
     }];
 }
@@ -332,34 +290,13 @@
     } else if (AppSetup.shouldDirectlyShowSetupWizard) {
         [self presentPageViewController];
     } else {
-        if (TargetManagerObjc.isCustomOnPrem) {
-            CGFloat duration = 1.0;
-            UIViewAnimationOptions options = UIViewAnimationOptionCurveEaseInOut;
-            [UIView animateWithDuration:duration delay:0.0 options:options animations:^{
-                _bgImagescale = 1.5;
-                [self setupBackgroundView];
-            } completion:^(BOOL finished) {
-                _threemaLogoView.hidden = NO;
-                [self checkRefreshStoreReceipt];
-                [self slidePrivacyControlsIn];
-            }];
-        } else {
-            // Show logo if `shouldDirectlyShowSetupWizard` is false
-            _threemaLogoView.hidden = NO;
-
-            [self setupAnimatedView];
-            [self checkRefreshStoreReceipt];
-
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1200 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
-                if (_animatedView.superview == nil) {
-                    [_containerView addSubview:_animatedView];
-                }
-            });
-        }
+        [self setupBackgroundView];
+        [self checkRefreshStoreReceipt];
+        [self showPrivacyControls];
     }
 }
 
-- (void)slidePrivacyControlsIn {
+- (void)showPrivacyControls {
     CGRect viewFrame = self.view.safeAreaLayoutGuide.layoutFrame;
     
     CGRect privacyTargetRect;
@@ -371,10 +308,6 @@
         privacyTargetRect = [RectUtil setYPositionOf:_privacyView.frame y:170.0];
     }
     
-    CGRect animationTargetRect = [RectUtil setYPositionOf:_animatedView.frame y:privacyTargetRect.origin.y - _animatedView.frame.size.height];
-
-    CGRect privacySourceRect = [RectUtil setYPositionOf:_privacyView.frame y:_privacyView.frame.origin.y];
-
     CGRect controlsTargetRect;
     if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
         /* iPhone 4s */
@@ -383,36 +316,27 @@
         controlsTargetRect = [RectUtil setYPositionOf:_controlsView.frame y:privacyTargetRect.origin.y + privacyTargetRect.size.height];
     }
     
-    CGRect controlsSourceRect = [RectUtil setYPositionOf:_controlsView.frame y:viewFrame.size.height];
-
     _privacyView.hidden = NO;
-    _privacyView.alpha = 0.0;
-    _privacyView.frame = privacySourceRect;
     _controlsView.hidden = NO;
-    _controlsView.alpha = 0.0;
-    _controlsView.frame = controlsSourceRect;
-
-    [UIView animateWithDuration:1.2 delay:0.0 usingSpringWithDamping:0.9 initialSpringVelocity:10.0 options:0 animations:^{
-        _privacyView.alpha = 1.0;
-        _privacyView.frame = privacyTargetRect;
-        _animatedView.frame = animationTargetRect;
-        _controlsView.alpha = 1.0;
-        _controlsView.frame = controlsTargetRect;
-    } completion:^(BOOL finished) {
-        UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, self.welcomeLabel);
+    
+    _privacyView.alpha = 1.0;
+    _privacyView.frame = privacyTargetRect;
+    _controlsView.alpha = 1.0;
+    _controlsView.frame = controlsTargetRect;
+    
+    UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, self.welcomeLabel);
+    
+    // Deactivate Multi Device if is enabled
+    if ([[UserSettings sharedUserSettings] enableMultiDevice] == YES) {
+        [[ServerConnector sharedServerConnector] deactivateMultiDevice];
         
-        // Deactivate Multi Device if is enabled
-        if ([[UserSettings sharedUserSettings] enableMultiDevice] == YES) {
-            [[ServerConnector sharedServerConnector] deactivateMultiDevice];
-            
-            NSString *title = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_title"];
-            NSString *message =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_message"], TargetManagerObjc.appName];
-            NSString *linkButton = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_reset_button"];
-            [UIAlertTemplate showAlertWithOwner:self title:title message:message titleOk:linkButton actionOk:^(UIAlertAction * _Nonnull action) {
-                [[UIApplication sharedApplication] openURL:[ThreemaURLProviderObjc getURL:ThreemaURLProviderTypeMultiDeviceReset] options:@{} completionHandler:nil];
-            }];
-        }
-    }];
+        NSString *title = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_title"];
+        NSString *message =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_message"], TargetManagerObjc.appName];
+        NSString *linkButton = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_reset_button"];
+        [UIAlertTemplate showAlertWithOwner:self title:title message:message titleOk:linkButton actionOk:^(UIAlertAction * _Nonnull action) {
+            [[UIApplication sharedApplication] openURL:[ThreemaURLProviderObjc getURL:ThreemaURLProviderTypeMultiDeviceReset] options:@{} completionHandler:nil];
+        }];
+    }
 }
 
 - (void)restoreIDFromMDM {
@@ -589,40 +513,6 @@
 
 - (void)hideIDExistsQuestion {
     [self hideMessageView:_existingIdQuestionView];
-}
-
-
-#pragma mark - FLAnimatedImageViewDelegate
-
-- (void)animatedImageViewWillDrawFrame:(NSUInteger)frameIndex {
-    if ((int)frameIndex == 0 && _privacyView.hidden == NO) {
-        // stay at last frame
-        _animatedView.currentFrameIndex = 98;
-    }
-    else if ((int)frameIndex == 0) {
-        CGFloat duration = 1.0;
-        UIViewAnimationOptions options = UIViewAnimationOptionCurveEaseInOut;
-        [UIView animateWithDuration:duration delay:0.0 options:options animations:^{
-            _bgImagescale = 1.5;
-            [self setupBackgroundView];
-        } completion:nil];
-    }
-    else if (TargetManagerObjc.isOnPrem) {
-        if ((int)frameIndex == 62  && _privacyView.hidden == YES) {
-            [self slidePrivacyControlsIn];
-        }
-        else if ((int)frameIndex == 88 && _privacyView.hidden == NO) {
-            // go back for jumping dots
-            _animatedView.currentFrameIndex = 73;
-        }
-    }
-    else if ((int)frameIndex == 72  && _privacyView.hidden == YES) {
-        [self slidePrivacyControlsIn];
-    }
-    else if ((int)frameIndex == 98 && _privacyView.hidden == NO) {
-        // go back for jumping dots
-        _animatedView.currentFrameIndex = 83;
-    }
 }
 
 #pragma mark - manage views

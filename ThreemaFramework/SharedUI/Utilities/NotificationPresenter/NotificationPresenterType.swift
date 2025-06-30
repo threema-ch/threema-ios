@@ -56,7 +56,7 @@ public enum NotificationPresenterStyle: Identifiable {
         case .success:
             let image = UIImage(systemName: "checkmark.circle.fill")
             view.image = image
-            view.tintColor = Colors.successGreen
+            view.tintColor = .systemGreen
             
         case .error:
             let image = UIImage(systemName: "exclamationmark.circle.fill")

@@ -461,32 +461,32 @@ class MarkupParserTests: XCTestCase {
             expectedURLString: String
         )] = [
             (
-                "threema.ch",
-                "http://threema.ch"
+                "threema.com",
+                "http://threema.com"
             ),
             (
-                "http://threema.ch",
-                "http://threema.ch"
+                "http://threema.com",
+                "http://threema.com"
             ),
             (
-                "HTTP://threema.ch",
-                "HTTP://threema.ch"
+                "HTTP://threema.com",
+                "HTTP://threema.com"
             ),
             (
-                "https://threema.ch",
-                "https://threema.ch"
+                "https://threema.com",
+                "https://threema.com"
             ),
             (
-                "HTTPS://threema.ch",
-                "HTTPS://threema.ch"
+                "HTTPS://threema.com",
+                "HTTPS://threema.com"
             ),
             (
-                "HTTps://threema.ch",
-                "HTTps://threema.ch"
+                "HTTps://threema.com",
+                "HTTps://threema.com"
             ),
             (
-                "https://threema.ch/maps?saddr=Current%20Location&dirflg=d&daddr=Musterstraße%201,St%20Musterstadt",
-                "https://threema.ch/maps?saddr=Current%20Location&dirflg=d&daddr=Musterstra%C3%9Fe%201,St%20Musterstadt"
+                "https://threema.com/maps?saddr=Current%20Location&dirflg=d&daddr=Musterstraße%201,St%20Musterstadt",
+                "https://threema.com/maps?saddr=Current%20Location&dirflg=d&daddr=Musterstra%C3%9Fe%201,St%20Musterstadt"
             ),
             (
                 "info@threema.ch",

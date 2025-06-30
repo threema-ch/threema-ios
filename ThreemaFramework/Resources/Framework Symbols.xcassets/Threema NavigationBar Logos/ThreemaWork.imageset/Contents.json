@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "ThreemaWorkBlack.svg",
+      "filename" : "WorkAny.svg",
       "idiom" : "universal"
     },
     {
@@ -11,7 +11,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "ThreemaWorkWhite.svg",
+      "filename" : "WorkDark.svg",
       "idiom" : "universal"
     }
   ],

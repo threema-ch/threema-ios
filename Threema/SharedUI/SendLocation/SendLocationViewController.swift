@@ -328,10 +328,12 @@ extension SendLocationViewController: MKMapViewDelegate {
             else {
                 annotationView?.displayPriority = .defaultHigh
             }
+            annotationView?.markerTintColor = .tintColor
             return annotationView
         }
         
         annotationView?.glyphImage = poi.image
+        annotationView?.markerTintColor = .tintColor
         return annotationView
     }
     

@@ -91,7 +91,7 @@ import UIKit
         }
         else {
             backgroundColor = isEnabled ? accentColor : accentColorDisabled
-            setTitleColor(textColor, for: .normal)
+            setTitleColor(Colors.textProminentButtonWizard, for: .normal)
         }
     }
 }

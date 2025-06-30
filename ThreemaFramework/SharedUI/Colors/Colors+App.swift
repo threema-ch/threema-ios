@@ -60,7 +60,7 @@ extension Colors {
         }
     }
     
-    @objc public class var consumerLogoRoundCorners: UIImage {
+    @objc public class var consumerAppIcon: UIImage {
         switch TargetManager.current {
         case .blue:
             UIImage(resource: .passcodeLogoGreen)

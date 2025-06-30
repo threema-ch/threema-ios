@@ -82,7 +82,7 @@
     [_doneButton setTitle:[BundleUtil localizedStringForKey:@"Done"] forState:UIControlStateNormal];
     [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"cancel"] forState:UIControlStateNormal];
     _doneButton.backgroundColor = UIColor.tintColor;
-    [_doneButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
+    [_doneButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
     
     [_cancelButton setTitleColor:UIColor.tintColor forState:UIControlStateNormal];
     

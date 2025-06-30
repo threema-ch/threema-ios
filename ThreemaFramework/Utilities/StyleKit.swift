@@ -518,11 +518,11 @@ open class StyleKit: NSObject {
     // MARK: - Drawing Methods
     
     public dynamic class func drawVerification(frame: CGRect = CGRect(x: 0, y: 0, width: 32, height: 8), level: Int) {
-        //// General Declarations
+        // General Declarations
         // This non-generic function dramatically improves compilation times of complex expressions.
         func fastFloor(_ x: CGFloat) -> CGFloat { floor(x) }
         
-        //// Subframes
+        // Subframes
         let group = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: frame.height)
         var width = fastFloor(group.width * 0.25000 + 0.5) - fastFloor(group.width * 0.00000 + 0.5)
         var height = fastFloor(group.height * 1.00000 + 0.5) - fastFloor(group.height * 0.00000 + 0.5)
@@ -536,11 +536,24 @@ open class StyleKit: NSObject {
         
         let red: UIColor = .systemRed
         let orange: UIColor = .systemOrange
-        let green: UIColor = .systemGreen
+        let green = UIColor(resource: .accentColorPrivate)
         let gray: UIColor = .systemGray
-        let blue: UIColor = .systemBlue
-        //// Group
-        //// Oval Drawing
+        let work =
+            if TargetManager.isWork {
+                UIColor(resource: .accentColorWork)
+            }
+            else if TargetManager.current == .onPrem {
+                UIColor(resource: .accentColorOnPrem)
+            }
+            else if TargetManager.isCustomOnPrem {
+                UIColor(resource: .accentColorCustomOnPrem)
+            }
+            else {
+                UIColor(resource: .accentColorPrivate)
+            }
+        
+        // Group
+        // Oval Drawing
         let ovalPath = UIBezierPath(ovalIn: CGRect(
             x: group.minX + fastFloor(group.width * 0.00000 + 0.5),
             y: group.minY + fastFloor(group.height * 0.00000 + 0.5),
@@ -555,13 +568,13 @@ open class StyleKit: NSObject {
         case 2:
             green.setFill()
         case 3, 4:
-            blue.setFill()
+            work.setFill()
         default:
             gray.setFill()
         }
         ovalPath.fill()
         
-        //// Oval 2 Drawing
+        // Oval 2 Drawing
         let oval2Path = UIBezierPath(ovalIn: CGRect(
             x: group.minX + fastFloor(group.width * 0.37500 + 0.5),
             y: group.minY + fastFloor(group.height * 0.00000 + 0.5),
@@ -574,13 +587,13 @@ open class StyleKit: NSObject {
         case 2:
             green.setFill()
         case 3, 4:
-            blue.setFill()
+            work.setFill()
         default:
             gray.setFill()
         }
         oval2Path.fill()
         
-        //// Oval 3 Drawing
+        // Oval 3 Drawing
         let oval3Path = UIBezierPath(ovalIn: CGRect(
             x: group.minX + fastFloor(group.width * 0.75000 + 0.5),
             y: group.minY + fastFloor(group.height * 0.00000 + 0.5),
@@ -591,7 +604,7 @@ open class StyleKit: NSObject {
         case 2:
             green.setFill()
         case 4:
-            blue.setFill()
+            work.setFill()
         default:
             gray.setFill()
         }
@@ -599,20 +612,20 @@ open class StyleKit: NSObject {
     }
     
     @objc public dynamic class func drawCheck(frame: CGRect = CGRect(x: 0, y: 0, width: 22, height: 22)) {
-        //// General Declarations
+        // General Declarations
         // This non-generic function dramatically improves compilation times of complex expressions.
         func fastFloor(_ x: CGFloat) -> CGFloat { floor(x) }
         
-        //// Color Declarations
+        // Color Declarations
         let color2 = .systemGray as UIColor
         let color3 = UIColor.white
         let color4 = .primary as UIColor
         
-        //// Subframes
+        // Subframes
         let group = CGRect(x: frame.minX + 1, y: frame.minY + 1, width: frame.width - 2, height: frame.height - 2)
         
-        //// Group
-        //// Oval 2 Drawing
+        // Group
+        // Oval 2 Drawing
         let oval2Path = UIBezierPath(ovalIn: CGRect(
             x: group.minX + fastFloor(group.width * 0.05000 + 0.5),
             y: group.minY + fastFloor(group.height * 0.05000 + 0.5),
@@ -623,7 +636,7 @@ open class StyleKit: NSObject {
         oval2Path.fill()
         oval2Path.lineWidth = 1
         
-        //// Oval Drawing
+        // Oval Drawing
         let ovalPath = UIBezierPath(ovalIn: CGRect(
             x: group.minX + fastFloor(group.width * 0.00000 + 0.5),
             y: group.minY + fastFloor(group.height * 0.00000 + 0.5),
@@ -634,7 +647,7 @@ open class StyleKit: NSObject {
         ovalPath.lineWidth = 1
         ovalPath.stroke()
         
-        //// Bezier Drawing
+        // Bezier Drawing
         let bezierPath = UIBezierPath()
         bezierPath.move(to: CGPoint(x: frame.minX + 0.26607 * frame.width, y: frame.minY + 0.46120 * frame.height))
         bezierPath.addCurve(
@@ -681,10 +694,10 @@ open class StyleKit: NSObject {
     }
 
     @objc public dynamic class func drawUncheck(frame: CGRect = CGRect(x: 0, y: 0, width: 22, height: 22)) {
-        //// Color Declarations
+        // Color Declarations
         let color = UIColor.systemGray
         
-        //// Oval Drawing
+        // Oval Drawing
         let ovalPath =
             UIBezierPath(ovalIn: CGRect(
                 x: frame.minX + 1,
@@ -701,21 +714,21 @@ open class StyleKit: NSObject {
         frame targetFrame: CGRect = CGRect(x: 0, y: 0, width: 20, height: 20),
         resizing: ResizingBehavior = .aspectFit
     ) {
-        //// General Declarations
+        // General Declarations
         let context = UIGraphicsGetCurrentContext()!
         
-        //// Resize to Target Frame
+        // Resize to Target Frame
         context.saveGState()
         let resizedFrame: CGRect = resizing.apply(rect: CGRect(x: 0, y: 0, width: 20, height: 20), target: targetFrame)
         context.translateBy(x: resizedFrame.minX, y: resizedFrame.minY)
         context.scaleBy(x: resizedFrame.width / 20, y: resizedFrame.height / 20)
         
-        //// Color Declarations
+        // Color Declarations
         let fillColor = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000)
-        let fillColor2 = UIColor.systemBlue
+        let fillColor2 = UIColor.accentColorWork
         
-        //// work_app_icon_mit_rand Group
-        //// Path Drawing
+        // work_app_icon_mit_rand Group
+        // Path Drawing
         let pathPath = UIBezierPath()
         pathPath.move(to: CGPoint(x: 10, y: 0))
         pathPath.addLine(to: CGPoint(x: 10, y: 0))
@@ -768,7 +781,7 @@ open class StyleKit: NSObject {
         fillColor.setFill()
         pathPath.fill()
         
-        //// Shape 2 Drawing
+        // Shape 2 Drawing
         let shape2Path = UIBezierPath()
         shape2Path.move(to: CGPoint(x: 10, y: 0.91))
         shape2Path.addLine(to: CGPoint(x: 10, y: 19.09))
@@ -830,7 +843,7 @@ open class StyleKit: NSObject {
         fillColor.setFill()
         shape2Path.fill()
         
-        //// Shape Drawing
+        // Shape Drawing
         let shapePath = UIBezierPath()
         shapePath.move(to: CGPoint(x: 10, y: 0.91))
         shapePath.addLine(to: CGPoint(x: 10, y: 0.91))
@@ -919,21 +932,21 @@ open class StyleKit: NSObject {
         frame targetFrame: CGRect = CGRect(x: 0, y: 0, width: 20, height: 20),
         resizing: ResizingBehavior = .aspectFit
     ) {
-        //// General Declarations
+        // General Declarations
         let context = UIGraphicsGetCurrentContext()!
         
-        //// Resize to Target Frame
+        // Resize to Target Frame
         context.saveGState()
         let resizedFrame: CGRect = resizing.apply(rect: CGRect(x: 0, y: 0, width: 20, height: 20), target: targetFrame)
         context.translateBy(x: resizedFrame.minX, y: resizedFrame.minY)
         context.scaleBy(x: resizedFrame.width / 20, y: resizedFrame.height / 20)
         
-        //// Color Declarations
+        // Color Declarations
         let fillColor = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000)
-        let fillColor2 = UIColor.systemGreen
+        let fillColor2 = UIColor.accentColorPrivate
         
-        //// consumer_app_icon_mit_rand Group
-        //// Path Drawing
+        // consumer_app_icon_mit_rand Group
+        // Path Drawing
         let pathPath = UIBezierPath()
         pathPath.move(to: CGPoint(x: 10, y: 0))
         pathPath.addLine(to: CGPoint(x: 10, y: 0))
@@ -986,7 +999,7 @@ open class StyleKit: NSObject {
         fillColor.setFill()
         pathPath.fill()
         
-        //// Shape Drawing
+        // Shape Drawing
         let shapePath = UIBezierPath()
         shapePath.move(to: CGPoint(x: 10, y: 0.91))
         shapePath.addLine(to: CGPoint(x: 10, y: 0.91))
@@ -1049,7 +1062,7 @@ open class StyleKit: NSObject {
         fillColor2.setFill()
         shapePath.fill()
         
-        //// Shape 2 Drawing
+        // Shape 2 Drawing
         let shape2Path = UIBezierPath()
         shape2Path.move(to: CGPoint(x: 0.91, y: 10))
         shape2Path.addLine(to: CGPoint(x: 0.91, y: 10))
@@ -1103,10 +1116,10 @@ open class StyleKit: NSObject {
         frame targetFrame: CGRect = CGRect(x: 0, y: 0, width: 220, height: 250),
         resizing: ResizingBehavior = .aspectFit
     ) {
-        //// General Declarations
+        // General Declarations
         let context = UIGraphicsGetCurrentContext()!
         
-        //// Resize to Target Frame
+        // Resize to Target Frame
         context.saveGState()
         let resizedFrame: CGRect = resizing.apply(
             rect: CGRect(x: 0, y: 0, width: 220, height: 250),
@@ -1115,13 +1128,13 @@ open class StyleKit: NSObject {
         context.translateBy(x: resizedFrame.minX, y: resizedFrame.minY)
         context.scaleBy(x: resizedFrame.width / 220, y: resizedFrame.height / 250)
         
-        //// Color Declarations
+        // Color Declarations
         let fillColor = UIColor(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000)
         let fillColor5 = .primary as UIColor
         let fillColor6 = UIColor(red: 0.847, green: 0.847, blue: 0.847, alpha: 1.000)
         
-        //// finger_with_circles Group
-        //// Bezier Drawing
+        // finger_with_circles Group
+        // Bezier Drawing
         let bezierPath = UIBezierPath()
         bezierPath.move(to: CGPoint(x: 109.96, y: 53.34))
         bezierPath.addLine(to: CGPoint(x: 109.98, y: 53.34))
@@ -1185,7 +1198,7 @@ open class StyleKit: NSObject {
         fillColor5.setFill()
         bezierPath.fill()
         
-        //// Bezier 2 Drawing
+        // Bezier 2 Drawing
         context.saveGState()
         context.setAlpha(0.4)
         
@@ -1255,7 +1268,7 @@ open class StyleKit: NSObject {
         
         context.restoreGState()
         
-        //// Bezier 3 Drawing
+        // Bezier 3 Drawing
         context.saveGState()
         context.setAlpha(0.1)
         
@@ -1325,7 +1338,7 @@ open class StyleKit: NSObject {
         
         context.restoreGState()
         
-        //// Bezier 4 Drawing
+        // Bezier 4 Drawing
         let bezier4Path = UIBezierPath()
         bezier4Path.move(to: CGPoint(x: 101.24, y: 249.96))
         bezier4Path.addLine(to: CGPoint(x: 193.35, y: 249.96))
@@ -1346,7 +1359,7 @@ open class StyleKit: NSObject {
         fillColor.setFill()
         bezier4Path.fill()
         
-        //// Bezier 5 Drawing
+        // Bezier 5 Drawing
         let bezier5Path = UIBezierPath()
         bezier5Path.move(to: CGPoint(x: 100.77, y: 75.71))
         bezier5Path.addLine(to: CGPoint(x: 100.76, y: 75.71))
@@ -1386,10 +1399,10 @@ open class StyleKit: NSObject {
     ///
     /// - Parameter frame: Frame of the image
     @objc public dynamic class func drawCheckedBackground(frame: CGRect = CGRect(x: 0, y: 0, width: 62, height: 62)) {
-        //// Color Declarations
+        // Color Declarations
         let color: UIColor = .primary
 
-        //// Bezier Drawing
+        // Bezier Drawing
         let bezierPath = UIBezierPath()
         bezierPath.move(to: CGPoint(x: frame.minX + 0.66129 * frame.width, y: frame.minY + 4))
         bezierPath.addLine(to: CGPoint(x: frame.minX + 8.59, y: frame.minY + 4))

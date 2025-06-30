@@ -65,6 +65,7 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
             TargetManager.localizedAppName
         )
         forgotIDButton.setTitle(#localize("safe_forgot_your_id"), for: .normal)
+        forgotIDButton.setTitleColor(UIColor.tintColor, for: .normal)
         identityField.delegate = self
         identityField.placeholder = String.localizedStringWithFormat(
             #localize("safe_threema_id"),

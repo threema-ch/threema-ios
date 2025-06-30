@@ -31,7 +31,7 @@ extension BaseMessageEntity {
     
     /// Date that sectioning is based on. (See `sectionDateString`)
     public var sectionDate: Date {
-        guard !willBeDeleted || !wasDeleted else {
+        guard !willBeDeleted, !wasDeleted else {
             return .now
         }
         

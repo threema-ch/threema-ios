@@ -57,4 +57,21 @@ extension Colors {
     @objc public class var textWizardLink: UIColor {
         .primary
     }
+    
+    @objc public class var textProminentButton: UIColor {
+        switch TargetManager.current {
+        case .threema, .green:
+            .prominentButtonTextPrivate
+        case .work, .blue:
+            .prominentButtonTextWork
+        case .onPrem:
+            .prominentButtonTextOnPrem
+        case .customOnPrem:
+            .prominentButtonTextCustomOnPrem
+        }
+    }
+    
+    @objc public class var textProminentButtonWizard: UIColor {
+        textProminentButton.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
+    }
 }

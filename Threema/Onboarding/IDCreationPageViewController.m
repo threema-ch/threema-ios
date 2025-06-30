@@ -91,7 +91,7 @@
 }
 
 - (BOOL)shouldAdaptToSmallScreen {
-    return self.view.frame.size.height < 580.0;
+    return self.view.frame.size.height <= 667.0;
 }
 
 - (void)showMessageView:(UIView *)messageView {

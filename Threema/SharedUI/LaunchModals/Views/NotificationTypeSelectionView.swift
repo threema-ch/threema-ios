@@ -102,7 +102,7 @@ struct NotificationTypeSelectionView: View {
                         Text(#localize("continue"))
                             .font(.title3)
                             .bold()
-                            .foregroundColor(.white)
+                            .foregroundColor(Colors.textProminentButton.color)
                             .padding()
                             .frame(maxWidth: .infinity)
                             .background(Color.accentColor)

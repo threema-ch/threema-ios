@@ -436,7 +436,7 @@ extension ConversationExporter {
             }
         }
         
-        let date = DateFormatter.longStyleDateTime(baseMessage.remoteSentDate)
+        let date = DateFormatter.longStyleDateTime(baseMessage.remoteSentDate ?? baseMessage.date)
         log.append(date)
         log.append(": ")
         

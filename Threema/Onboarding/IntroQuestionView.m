@@ -53,10 +53,10 @@
     _okButton.layer.cornerRadius = 3;
     
     _yesButton.backgroundColor = UIColor.tintColor;
-    [_yesButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
+    [_yesButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
     _yesButton.accessibilityIdentifier = @"setupYesButton";
     _okButton.backgroundColor = UIColor.tintColor;
-    [_okButton setTitleColor:Colors.textSetup forState:UIControlStateNormal];
+    [_okButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
     _okButton.accessibilityIdentifier = @"setupOKButton";
 
     _noButton.layer.borderWidth = 1;

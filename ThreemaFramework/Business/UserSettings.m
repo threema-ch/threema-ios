@@ -313,8 +313,24 @@ static UserSettings *instance;
 
     disableBigEmojis = [defaults boolForKey:@"DisableBigEmojis"];
     sendMessageFeedback = [defaults boolForKey:@"SendMessageFeedback"];
-    darkTheme = [defaults boolForKey:@"DarkTheme"];
-    useSystemTheme = [defaults boolForKey:@"UseSystemTheme"];
+    if (ProcessInfoHelper.isRunningForScreenshots) {
+        if (ProcessInfoHelper.predefinedThemeLight) {
+            darkTheme = false;
+            useSystemTheme = false;
+        }
+        else if (ProcessInfoHelper.predefinedThemeDark) {
+            darkTheme = true;
+            useSystemTheme = false;
+        }
+        else {
+            darkTheme = false;
+            useSystemTheme = true;
+        }
+    }
+    else {
+        darkTheme = [defaults boolForKey:@"DarkTheme"];
+        useSystemTheme = [defaults boolForKey:@"UseSystemTheme"];
+    }
     showProfilePictures = [defaults boolForKey:@"ShowProfilePictures"];
 
     NSString *wallpaperPath = [self wallpaperPath];

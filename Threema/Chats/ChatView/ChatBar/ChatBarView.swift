@@ -493,7 +493,13 @@ final class ChatBarView: UIView {
         let newRecordButtonAlpha: CGFloat = hide ? 0.0 : 1.0
         let newCameraButtonAlpha: CGFloat = newRecordButtonAlpha
         let newImagePickerButtonAlpha: CGFloat = newRecordButtonAlpha
-        let newSendButtonAlpha: CGFloat = !hide ? 0.0 : 1.0
+        var newSendButtonAlpha: CGFloat = !hide ? 0.0 : 1.0
+        
+        // Hide the “Send” button when the VoiceMessageRecorderView is in use.
+        // The VoiceMessageRecorderView has a dedicated “Send” button.
+        if voiceMessageController != nil {
+            newSendButtonAlpha = 0.0
+        }
         
         UIView.animate(
             withDuration: totalDuration,

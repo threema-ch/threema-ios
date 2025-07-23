@@ -346,8 +346,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [LogManager addFileLogger:logFile];
 
     if (databaseImported == false) {
-        WizardBackgroundView *migrationBgView = [[WizardBackgroundView alloc] initWithFrame:self.window.frame];
+        UIView *migrationBgView = [[UIView alloc] initWithFrame:self.window.frame];
         migrationBgView.contentMode = UIViewContentModeScaleAspectFill;
+        migrationBgView.backgroundColor = UIColor.blackColor;
         [self.window addSubview:migrationBgView];
         [self.window makeKeyAndVisible];
     }

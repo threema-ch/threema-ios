@@ -103,6 +103,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     
     /* Create Message in DB */
     [_entityManager getOrCreateMessageFor:boxMessage sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessageEntity *message) {
+        __block BOOL *thrownError = false;
+        
         [_entityManager performSyncBlockAndSafe:^{
             BallotEntity *ballot = [_entityManager.entityFetcher ballotEntityForBallotId:ballotId];
             NSDate *conversationLastUpdate = conversation.lastUpdate;
@@ -130,6 +132,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 }
                 
                 onError([ThreemaError threemaError:[NSString stringWithFormat:@"[Ballot] Parsing of ballot failed, message deleted for message (ID: %@)", boxMessage.messageId] withCode:ThreemaProtocolErrorMessageProcessingFailed]);
+                thrownError = true;
                 return;
             }
             
@@ -138,7 +141,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             BallotMessageEntity * ballotMessageEntity = ((BallotMessageEntity *)message);
             [ballotMessageEntity updateBallot: ballot];
         }];
-        onCompletion((BallotMessageEntity *)message);
+        
+        /// Only execute the code in the onCompletion handler if there was no error.
+        /// Due to the return statement in the sync block, this line will also be executed after the return.
+        if (!thrownError) {
+            onCompletion((BallotMessageEntity *)message);
+        }
     } onError:onError];
 }
 
@@ -214,7 +222,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [_ballotManager updateBallot:ballot choiceID:choiceId with:value for:contactId];
     }
 
+    /// Displays only the vote information if:
+    /// - I am the creator of the group
+    /// - The voter’s Threema ID does not match mine (due to MD)
+    /// - The ballot is intermediate or an initial vote
     if (ballot.creatorId == [MyIdentityStore sharedMyIdentityStore].identity &&
+        contactId != [MyIdentityStore sharedMyIdentityStore].identity &&
         (ballot.isIntermediate == YES || !updatedVote)) {
         DDLogNotice(@"[Ballot] [%@] New vote [%@] received", [NSString stringWithHexData:ballot.id], contactId);
         [_ballotManager addVoteSystemMessageWithBallotTitle:ballot.title conversation:ballot.conversation contactID:contactId showIntermediateResults:ballot.isIntermediate updatedVote:updatedVote];

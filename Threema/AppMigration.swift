@@ -267,8 +267,8 @@ import ThreemaMacros
 
                 for msg in messageFetcher.messages(at: 0, count: messageFetcher.count()).reversed() {
                     if !msg.isOwnMessage,
-                       msg.read.boolValue {
-                        let remoteSendDate = msg.remoteSentDate ?? msg.date
+                       msg.read.boolValue,
+                       let remoteSendDate = msg.remoteSentDate {
                         if firstRemoteSentDate == nil {
                             firstRemoteSentDate = remoteSendDate
                         }

@@ -77,7 +77,7 @@ static NSData *ballotIdForAcceptedWarning;
 
 - (void)multipleChoiceUpdated {
     [_entityManager performBlockAndWait:^{
-        if (_showIntermediateSwitch.on) {
+        if (_multipleChoiceSwitch.on) {
             _ballot.assessmentType = [NSNumber numberWithInt:BallotAssessmentTypeMulti];
         }
         else {

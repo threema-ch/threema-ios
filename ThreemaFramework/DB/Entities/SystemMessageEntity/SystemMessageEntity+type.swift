@@ -412,7 +412,7 @@ extension SystemMessageEntity {
             case .consumer:
                 String.localizedStringWithFormat(
                     #localize("contact_threema_conversation_info"),
-                    TargetManager.appName
+                    TargetManager.localizedAppName
                 )
             }
         }

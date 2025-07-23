@@ -38,8 +38,8 @@ public class BaseMessageEntity: TMAManagedObject {
     
     // MARK: Attributes
 
-    /// Creation date of this message in Core Data
-    @NSManaged public var date: Date
+    /// Creation date of this message in Core Data, non-optional in DB Model
+    @NSManaged public var date: Date?
     @NSManaged public var deletedAt: Date?
     @NSManaged public var delivered: NSNumber
     

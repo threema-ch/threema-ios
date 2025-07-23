@@ -552,6 +552,9 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     }
     
     func willDismissView() {
+        stopRecordTimer()
+        terminatePlayer()
+
         if let combinedRecordings {
             MediaManager.cleanupFiles(combinedRecordings.url)
         }

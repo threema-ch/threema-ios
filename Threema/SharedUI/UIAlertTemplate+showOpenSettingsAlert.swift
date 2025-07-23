@@ -107,7 +107,9 @@ extension UIAlertTemplate {
             handler: { _ in actionCancel?() }
         ))
 
-        owner.present(alert, animated: true)
+        Task { @MainActor in
+            owner.present(alert, animated: true)
+        }
     }
     
     /// Shows an alert which informs the user that some access is not granted, and gives them the option to open

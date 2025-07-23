@@ -69,9 +69,12 @@ class RootNavigationController: UINavigationController {
             object: nil
         )
         
-        if extensionIsReady() {
-            startExtension()
+        guard extensionIsReady() else {
+            DDLogWarn("[ShareExtension] Share extension not ready.")
+            return
         }
+        
+        startExtension()
     }
     
     func setContactsFromIntent() {
@@ -521,22 +524,26 @@ class RootNavigationController: UINavigationController {
     private func extensionIsReady() -> Bool {
         // drop shared instance, otherwise we won't notice any changes to it
         MyIdentityStore.resetSharedInstance()
-                
+        
         if !AppSetup.isCompleted {
+            DDLogWarn("[ShareExtension] App setup not completed")
             showNeedStartAppFirst()
         }
         
         if !hasLicense() {
+            DDLogWarn("[ShareExtension] License issue")
             showNeedStartAppFirst()
             return false
         }
         
         if !isDBReady() {
+            DDLogWarn("[ShareExtension] DB not ready")
             showNeedStartAppFirst()
             return false
         }
 
         if !isAppReady() {
+            DDLogWarn("[ShareExtension] App not ready")
             showNeedStartAppFirst()
             return false
         }

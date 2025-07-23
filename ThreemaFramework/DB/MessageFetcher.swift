@@ -176,21 +176,21 @@ public class MessageFetcher: NSObject {
     
     private lazy var countImageMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: imageEntityName)
-        fetchRequest.predicate = conversationPredicate
+        fetchRequest.predicate = conversationImagePredicate
         // Sorting doesn't matter for counting
         return fetchRequest
     }()
     
     private lazy var countVideoMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: videoEntityName)
-        fetchRequest.predicate = conversationPredicate
+        fetchRequest.predicate = conversationVideoPredicate
         // Sorting doesn't matter for counting
         return fetchRequest
     }()
     
     private lazy var countAudioMessagesFetchRequest: NSFetchRequest<NSFetchRequestResult> = {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: audioEntityName)
-        fetchRequest.predicate = conversationPredicate
+        fetchRequest.predicate = conversationAudioPredicate
         // Sorting doesn't matter for counting
         return fetchRequest
     }()

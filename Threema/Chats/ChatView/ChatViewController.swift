@@ -1569,7 +1569,10 @@ extension ChatViewController {
             return
         }
         
-        let messageDate = message.date
+        guard let messageDate = message.date else {
+            DDLogWarn("Unable to load date for message (\(messageObjectID.uriRepresentation())) to jump to.")
+            return
+        }
         
         dataSource.loadMessages(around: messageDate).done { [weak self] in
             guard let indexPath = self?.dataSource.indexPath(
@@ -1733,7 +1736,10 @@ extension ChatViewController {
     ) {
         isJumping = true
         
-        let messageDate = message.date
+        guard let messageDate = message.date else {
+            DDLogWarn("Unable to load date for message (\(message.objectID.uriRepresentation())) to jump to.")
+            return
+        }
         
         dataSource.loadMessages(around: messageDate).done {
             // TODO: This is a workaround that will be resolved with IOS-2720

@@ -114,7 +114,8 @@ import Foundation
                 }
             }
             
-            guard let messages = try objCnx.fetch(mediaMetaInfo.fetchMessages) as? [BaseMessageEntity] else {
+            guard let messages = try objCnx.fetch(mediaMetaInfo.fetchMessages) as? [BaseMessageEntity],
+                  !messages.isEmpty else {
                 return 0
             }
 
@@ -593,7 +594,7 @@ import Foundation
     /// - Returns: True own contact was found and deleted
     public func deleteOwnContact() -> Bool {
         guard let identity = myIdentityStore.identity else {
-            DDLogError("[AppMigration] Own contact cannot be deleted because no Threema-ID is in the keychain")
+            DDLogError("[EntityDestroyer] Own contact cannot be deleted because no Threema-ID is in the keychain")
             return false
         }
         
@@ -601,6 +602,7 @@ import Foundation
         fetchContacts.predicate = NSPredicate(format: "identity = %@", identity)
 
         guard let entities = try? objCnx.fetch(fetchContacts) as? [ContactEntity], !entities.isEmpty else {
+            DDLogNotice("[EntityDestroyer] No own contact found to delete")
             return false
         }
 

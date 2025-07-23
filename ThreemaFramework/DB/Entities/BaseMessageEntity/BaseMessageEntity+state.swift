@@ -71,7 +71,7 @@ extension BaseMessageEntity {
 
     /// Message can only be edited if it was sent no more than 6 hours ago
     public var wasSentMoreThanSixHoursAgo: Bool {
-        guard let sixHoursAgo = Calendar.current.date(byAdding: .hour, value: -6, to: .now)
+        guard let date, let sixHoursAgo = Calendar.current.date(byAdding: .hour, value: -6, to: .now)
         else {
             return true
         }

@@ -348,7 +348,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         finalMessages.append(contentsOf: videoMessages)
         finalMessages.append(contentsOf: fileMessages)
 
-        mediaMessages = finalMessages.sorted { $0.date < $1.date }
+        mediaMessages = finalMessages.sorted { $0.date ?? .now < $1.date ?? .now }
     }
     
     private func deleteMedia(for indexes: Set<UInt>, completion: @escaping () -> Void) {

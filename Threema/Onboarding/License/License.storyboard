@@ -12,7 +12,7 @@
         <scene sceneID="KRZ-HZ-Kqb">
             <objects>
                 <viewController storyboardIdentifier="RandomSeedViewController" id="PEi-Qh-1Aa" customClass="EnterLicenseViewController" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="u1K-kU-cNE" customClass="WizardBackgroundView" customModule="ThreemaFramework">
+                    <view key="view" contentMode="scaleToFill" id="u1K-kU-cNE">
                         <rect key="frame" x="0.0" y="0.0" width="430" height="932"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>

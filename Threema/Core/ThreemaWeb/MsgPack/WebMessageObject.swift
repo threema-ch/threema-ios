@@ -61,7 +61,7 @@ class WebMessageObject: NSObject {
         self.date = Int(message.displayDate.timeIntervalSince1970)
         let messageEvents = MessageEvents(baseMessage: baseMessage)
         self.events = messageEvents.events
-        self.sortKey = UInt64((message.date.timeIntervalSince1970 * 1000.0).rounded())
+        self.sortKey = UInt64(((message.date?.timeIntervalSince1970 ?? 0) * 1000.0).rounded())
         
         if let sender = message.sender {
             if message.isOwnMessage {
@@ -546,11 +546,12 @@ struct MessageEvents {
             }
         }
         else {
-            let date = baseMessage.remoteSentDate ?? baseMessage.date
-            var event = [String: Any]()
-            event.updateValue("sent", forKey: "type")
-            event.updateValue(Int(date.timeIntervalSince1970), forKey: "date")
-            events.append(event)
+            if let date = baseMessage.remoteSentDate {
+                var event = [String: Any]()
+                event.updateValue("sent", forKey: "type")
+                event.updateValue(Int(date.timeIntervalSince1970), forKey: "date")
+                events.append(event)
+            }
             
             if let deliveryDate = baseMessage.deliveryDate {
                 var event = [String: Any]()

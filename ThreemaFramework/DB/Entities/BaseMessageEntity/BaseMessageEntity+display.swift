@@ -256,11 +256,21 @@ extension BaseMessageEntity {
         // If user delete a message, the conversation property in the message is nil
         // We have to use the date if it's on state willBeDeleted
         if willBeDeleted {
+            guard let date else {
+                DDLogError("No display date. Will deleted is true and date nil")
+                return Date()
+            }
+            
             return date
         }
             
         if isGroupMessage {
             if isOwnMessage {
+                guard let date else {
+                    DDLogError("No display date. Date nil")
+                    return .now
+                }
+                
                 return date
             }
             else {
@@ -282,11 +292,13 @@ extension BaseMessageEntity {
                 return deliveryDate
             }
             // Sent and everything else
-            return date
+            else if let date {
+                return date
+            }
         }
         
         if self is SystemMessageEntity {
-            return date
+            return date ?? .now
         }
         
         return remoteSentDate ?? .now

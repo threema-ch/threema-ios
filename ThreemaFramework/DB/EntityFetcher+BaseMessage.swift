@@ -54,8 +54,9 @@ extension EntityFetcher {
         
         var date: Date = .distantPast
         managedObjectContext.performAndWait {
-            if let results = try? fetchRequest.execute() as? [BaseMessageEntity], let message = results.first {
-                date = message.date
+            if let results = try? fetchRequest.execute() as? [BaseMessageEntity], let message = results.first,
+               let messageDate = message.date {
+                date = messageDate
             }
         }
         return date

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftUI
+import ThreemaFramework
 import ThreemaMacros
 
 struct CallSoundSettingsView: View {
@@ -26,14 +27,23 @@ struct CallSoundSettingsView: View {
     
     private static let soundPreviewPlayer = SoundPreviewPlayer()
     
-    private let soundList = [
-        "default",
-        "threema_best",
-        "threema_incom",
-        "threema_xylo",
-        "threema_goody",
-        "threema_alphorn",
-    ]
+    private var soundList: [String] {
+        var sounds = [
+            "default",
+            "threema_best",
+            "threema_incom",
+            "threema_xylo",
+            "threema_goody",
+            "threema_alphorn",
+        ]
+
+        // Work/OnPrem specific call sounds
+        if TargetManager.isBusinessApp {
+            sounds.append("threema_alarm")
+        }
+
+        return sounds
+    }
     
     var body: some View {
         List {

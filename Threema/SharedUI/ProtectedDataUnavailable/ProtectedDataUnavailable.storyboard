@@ -11,8 +11,8 @@
         <!--Protected Data Unavailable View Controller-->
         <scene sceneID="ht4-NA-HBF">
             <objects>
-                <viewController id="7k9-ck-zh0" customClass="ProtectedDataUnavailableViewController" customModule="Threema" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="G9a-uW-1Nd" customClass="WizardBackgroundView" customModule="ThreemaFramework">
+                <viewController id="7k9-ck-zh0" customClass="ProtectedDataUnavailableViewController" customModule="Threema" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="G9a-uW-1Nd">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>

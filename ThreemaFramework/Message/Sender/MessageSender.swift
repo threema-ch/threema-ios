@@ -890,7 +890,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             
             if hasTextChanged, let history = self.entityManager.entityCreator.messageHistoryEntry(for: baseMessage) {
                 history.message = baseMessage
-                history.editDate = baseMessage.lastEditedAt ?? baseMessage.date
+                history.editDate = baseMessage.lastEditedAt ?? baseMessage.date ?? .now
                 history.text = previousText
             }
             else {

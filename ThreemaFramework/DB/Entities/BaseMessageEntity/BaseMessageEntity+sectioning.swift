@@ -35,7 +35,15 @@ extension BaseMessageEntity {
             return .now
         }
         
-        return date
+        if let date {
+            return date
+        }
+        else if let remoteSentDate {
+            return remoteSentDate
+        }
+        
+        DDLogError("[BaseMessageEntity] Unable to load correct sectioning date")
+        return .now
     }
     
     /// Key paths of properties used for sectioning. Use them to prefetch this information.

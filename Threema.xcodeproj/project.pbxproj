@@ -1857,30 +1857,18 @@
 		2D5A1EFE24C9B5DF00F87DD0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6C14C1CCA900EF7690 /* UIKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		2D5A1F0024C9B5DF00F87DD0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F7014C1CCA900EF7690 /* CoreGraphics.framework */; };
 		2D5A1F0824C9B5DF00F87DD0 /* Ballot.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AEBA04419D31A5A002DE2C3 /* Ballot.storyboard */; };
-		2D5A1F0A24C9B5DF00F87DD0 /* threema_hangup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78B1F57FFEE00503071 /* threema_hangup.mp3 */; };
-		2D5A1F0F24C9B5DF00F87DD0 /* busy-4x.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6101EF97A4900C49480 /* busy-4x.mp3 */; };
-		2D5A1F1124C9B5DF00F87DD0 /* pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6051EF96D0E00C49480 /* pickup.mp3 */; };
 		2D5A1F1224C9B5DF00F87DD0 /* bad_passwords.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D0CAC392186F6B700571DAD /* bad_passwords.txt */; };
-		2D5A1F1524C9B5DF00F87DD0 /* threema_xylo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E0242CCE6400D094A1 /* threema_xylo.caf */; };
 		2D5A1F1624C9B5DF00F87DD0 /* DKCameraResource.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B141EB38270004973D5 /* DKCameraResource.bundle */; };
 		2D5A1F1A24C9B5DF00F87DD0 /* MWPhotoBrowser.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4D8B812518D38B4F0079014F /* MWPhotoBrowser.bundle */; };
 		2D5A1F1C24C9B5DF00F87DD0 /* license.html in Resources */ = {isa = PBXBuildFile; fileRef = 4DBCC0311656DE3D00B3CFFF /* license.html */; };
-		2D5A1F2324C9B5DF00F87DD0 /* ringing-tone-ch-fade.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE5D049D1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 */; };
 		2D5A1F2524C9B5DF00F87DD0 /* BallotHeaderView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0AC6B3E51A0280DD00D1A77A /* BallotHeaderView.xib */; };
 		2D5A1F2A24C9B5DF00F87DD0 /* ProtectedDataUnavailable.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4D95F92020B59E78005BC753 /* ProtectedDataUnavailable.storyboard */; };
 		2D5A1F2B24C9B5DF00F87DD0 /* IntroQuestionView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0AF75A861BFA0FE800210FB3 /* IntroQuestionView.xib */; };
 		2D5A1F2E24C9B5DF00F87DD0 /* License.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A232DCE1CA0391C00AA0187 /* License.storyboard */; };
 		2D5A1F2F24C9B5DF00F87DD0 /* CreateGroup.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AE10AB81BA15B54009DD83B /* CreateGroup.storyboard */; };
 		2D5A1F3024C9B5DF00F87DD0 /* CallStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7C21F5DC14200503071 /* CallStoryboard.storyboard */; };
-		2D5A1F3724C9B5DF00F87DD0 /* threema_incom.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5DE242CCE6300D094A1 /* threema_incom.caf */; };
-		2D5A1F3824C9B5DF00F87DD0 /* threema_goody.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E1242CCE6400D094A1 /* threema_goody.caf */; };
 		2D5A1F3924C9B5DF00F87DD0 /* CreateID.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A5ECC9D1BE101C7003B3A84 /* CreateID.storyboard */; };
 		2D5A1F3C24C9B5DF00F87DD0 /* ProfilePicture.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEE0F44C1E92A5FA00008F5B /* ProfilePicture.storyboard */; };
-		2D5A1F4024C9B5DF00F87DD0 /* threema_problem.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7891F57FFEE00503071 /* threema_problem.mp3 */; };
-		2D5A1F4124C9B5DF00F87DD0 /* threema_best.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E3242CCE6500D094A1 /* threema_best.caf */; };
-		2D5A1F4624C9B5DF00F87DD0 /* silent.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE0D8AB82412945F007ACAEB /* silent.mp3 */; };
-		2D5A1F4824C9B5DF00F87DD0 /* threema_alphorn.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E2242CCE6400D094A1 /* threema_alphorn.caf */; };
-		2D5A1F4A24C9B5DF00F87DD0 /* threema_pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78A1F57FFEE00503071 /* threema_pickup.mp3 */; };
 		2D5A1F4B24C9B5DF00F87DD0 /* FileMessagePreviewUnsupportedTypeView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A868E1D1B45B97600A5B755 /* FileMessagePreviewUnsupportedTypeView.xib */; };
 		2D5A1F4D24C9B5DF00F87DD0 /* DKImagePickerController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B1D1EB38270004973D5 /* DKImagePickerController.bundle */; };
 		2D5A1F4F24C9B5DF00F87DD0 /* ThreemaFramework.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -2378,30 +2366,18 @@
 		2DEDB38724C9903400FC9099 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6C14C1CCA900EF7690 /* UIKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		2DEDB38924C9903400FC9099 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F7014C1CCA900EF7690 /* CoreGraphics.framework */; };
 		2DEDB38D24C9903400FC9099 /* CallStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7C21F5DC14200503071 /* CallStoryboard.storyboard */; };
-		2DEDB38F24C9903400FC9099 /* threema_alphorn.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E2242CCE6400D094A1 /* threema_alphorn.caf */; };
 		2DEDB39424C9903400FC9099 /* Ballot.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AEBA04419D31A5A002DE2C3 /* Ballot.storyboard */; };
-		2DEDB39524C9903400FC9099 /* threema_xylo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E0242CCE6400D094A1 /* threema_xylo.caf */; };
-		2DEDB39924C9903400FC9099 /* busy-4x.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6101EF97A4900C49480 /* busy-4x.mp3 */; };
 		2DEDB39B24C9903400FC9099 /* bad_passwords.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D0CAC392186F6B700571DAD /* bad_passwords.txt */; };
 		2DEDB39C24C9903400FC9099 /* ProfilePicture.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEE0F44C1E92A5FA00008F5B /* ProfilePicture.storyboard */; };
-		2DEDB3A024C9903400FC9099 /* pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6051EF96D0E00C49480 /* pickup.mp3 */; };
-		2DEDB3A424C9903400FC9099 /* threema_problem.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7891F57FFEE00503071 /* threema_problem.mp3 */; };
 		2DEDB3A624C9903400FC9099 /* MWPhotoBrowser.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4D8B812518D38B4F0079014F /* MWPhotoBrowser.bundle */; };
 		2DEDB3A724C9903400FC9099 /* license.html in Resources */ = {isa = PBXBuildFile; fileRef = 4DBCC0311656DE3D00B3CFFF /* license.html */; };
 		2DEDB3AA24C9903400FC9099 /* LockCover.xib in Resources */ = {isa = PBXBuildFile; fileRef = CECB311A231FAB2F00C80FF2 /* LockCover.xib */; };
-		2DEDB3AD24C9903400FC9099 /* threema_hangup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78B1F57FFEE00503071 /* threema_hangup.mp3 */; };
-		2DEDB3AE24C9903400FC9099 /* silent.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE0D8AB82412945F007ACAEB /* silent.mp3 */; };
 		2DEDB3B424C9903400FC9099 /* BallotHeaderView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0AC6B3E51A0280DD00D1A77A /* BallotHeaderView.xib */; };
-		2DEDB3B524C9903400FC9099 /* threema_pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78A1F57FFEE00503071 /* threema_pickup.mp3 */; };
 		2DEDB3BA24C9903400FC9099 /* IntroQuestionView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0AF75A861BFA0FE800210FB3 /* IntroQuestionView.xib */; };
 		2DEDB3BC24C9903400FC9099 /* CreateGroup.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AE10AB81BA15B54009DD83B /* CreateGroup.storyboard */; };
 		2DEDB3BD24C9903400FC9099 /* DKImagePickerController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B1D1EB38270004973D5 /* DKImagePickerController.bundle */; };
-		2DEDB3C324C9903400FC9099 /* threema_incom.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5DE242CCE6300D094A1 /* threema_incom.caf */; };
 		2DEDB3C524C9903400FC9099 /* CreateID.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A5ECC9D1BE101C7003B3A84 /* CreateID.storyboard */; };
-		2DEDB3CB24C9903400FC9099 /* threema_goody.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E1242CCE6400D094A1 /* threema_goody.caf */; };
 		2DEDB3CE24C9903400FC9099 /* DKCameraResource.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B141EB38270004973D5 /* DKCameraResource.bundle */; };
-		2DEDB3D024C9903400FC9099 /* threema_best.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E3242CCE6500D094A1 /* threema_best.caf */; };
-		2DEDB3D224C9903400FC9099 /* ringing-tone-ch-fade.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE5D049D1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 */; };
 		2DEDB3D324C9903400FC9099 /* FileMessagePreviewUnsupportedTypeView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A868E1D1B45B97600A5B755 /* FileMessagePreviewUnsupportedTypeView.xib */; };
 		2DEDB3D524C9903400FC9099 /* ProtectedDataUnavailable.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4D95F92020B59E78005BC753 /* ProtectedDataUnavailable.storyboard */; };
 		2DEDB3D824C9903400FC9099 /* ThreemaFramework.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -3432,29 +3408,17 @@
 		4D088AB5255C0CD4002F3129 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6C14C1CCA900EF7690 /* UIKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		4D088AB7255C0CD4002F3129 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F7014C1CCA900EF7690 /* CoreGraphics.framework */; };
 		4D088ABF255C0CD4002F3129 /* Ballot.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AEBA04419D31A5A002DE2C3 /* Ballot.storyboard */; };
-		4D088AC1255C0CD4002F3129 /* threema_hangup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78B1F57FFEE00503071 /* threema_hangup.mp3 */; };
-		4D088AC7255C0CD4002F3129 /* busy-4x.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6101EF97A4900C49480 /* busy-4x.mp3 */; };
-		4D088AC9255C0CD4002F3129 /* pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6051EF96D0E00C49480 /* pickup.mp3 */; };
 		4D088ACA255C0CD4002F3129 /* bad_passwords.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D0CAC392186F6B700571DAD /* bad_passwords.txt */; };
-		4D088ACD255C0CD4002F3129 /* threema_xylo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E0242CCE6400D094A1 /* threema_xylo.caf */; };
 		4D088ACE255C0CD4002F3129 /* DKCameraResource.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B141EB38270004973D5 /* DKCameraResource.bundle */; };
 		4D088AD2255C0CD4002F3129 /* MWPhotoBrowser.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4D8B812518D38B4F0079014F /* MWPhotoBrowser.bundle */; };
 		4D088AD4255C0CD4002F3129 /* license.html in Resources */ = {isa = PBXBuildFile; fileRef = 4DBCC0311656DE3D00B3CFFF /* license.html */; };
-		4D088ADB255C0CD4002F3129 /* ringing-tone-ch-fade.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE5D049D1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 */; };
 		4D088ADD255C0CD4002F3129 /* BallotHeaderView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0AC6B3E51A0280DD00D1A77A /* BallotHeaderView.xib */; };
 		4D088AE3255C0CD4002F3129 /* ProtectedDataUnavailable.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4D95F92020B59E78005BC753 /* ProtectedDataUnavailable.storyboard */; };
 		4D088AE4255C0CD4002F3129 /* IntroQuestionView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0AF75A861BFA0FE800210FB3 /* IntroQuestionView.xib */; };
 		4D088AE9255C0CD4002F3129 /* CreateGroup.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AE10AB81BA15B54009DD83B /* CreateGroup.storyboard */; };
 		4D088AEA255C0CD4002F3129 /* CallStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7C21F5DC14200503071 /* CallStoryboard.storyboard */; };
-		4D088AF2255C0CD4002F3129 /* threema_incom.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5DE242CCE6300D094A1 /* threema_incom.caf */; };
-		4D088AF3255C0CD4002F3129 /* threema_goody.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E1242CCE6400D094A1 /* threema_goody.caf */; };
 		4D088AF4255C0CD4002F3129 /* CreateID.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A5ECC9D1BE101C7003B3A84 /* CreateID.storyboard */; };
 		4D088AF7255C0CD4002F3129 /* ProfilePicture.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEE0F44C1E92A5FA00008F5B /* ProfilePicture.storyboard */; };
-		4D088AFB255C0CD4002F3129 /* threema_problem.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7891F57FFEE00503071 /* threema_problem.mp3 */; };
-		4D088AFC255C0CD4002F3129 /* threema_best.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E3242CCE6500D094A1 /* threema_best.caf */; };
-		4D088B01255C0CD4002F3129 /* silent.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE0D8AB82412945F007ACAEB /* silent.mp3 */; };
-		4D088B03255C0CD4002F3129 /* threema_alphorn.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E2242CCE6400D094A1 /* threema_alphorn.caf */; };
-		4D088B05255C0CD4002F3129 /* threema_pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78A1F57FFEE00503071 /* threema_pickup.mp3 */; };
 		4D088B06255C0CD4002F3129 /* FileMessagePreviewUnsupportedTypeView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A868E1D1B45B97600A5B755 /* FileMessagePreviewUnsupportedTypeView.xib */; };
 		4D088B08255C0CD4002F3129 /* DKImagePickerController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B1D1EB38270004973D5 /* DKImagePickerController.bundle */; };
 		4D088B0A255C0CD4002F3129 /* ThreemaFramework.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -4594,8 +4558,6 @@
 		CE08C0F527299A13001EFCDE /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; };
 		CE08C0F727299A13001EFCDE /* audioAnalyzerTest.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 2D34DB4525FB5A4100A41842 /* audioAnalyzerTest.m4a */; };
 		CE0B5E151E5F49480044E3BB /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE0B5E141E5F49480044E3BB /* UserNotifications.framework */; };
-		CE0D8AB92412945F007ACAEB /* silent.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE0D8AB82412945F007ACAEB /* silent.mp3 */; };
-		CE0D8ABA2412945F007ACAEB /* silent.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE0D8AB82412945F007ACAEB /* silent.mp3 */; };
 		CE10D8C726F1D4BC0046F6B3 /* PageContentViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CE10D8C026F1D4BC0046F6B3 /* PageContentViewController.m */; };
 		CE10D8C826F1D4BC0046F6B3 /* ParallaxPageViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = CE10D8C126F1D4BC0046F6B3 /* ParallaxPageViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CE10D8C926F1D4BC0046F6B3 /* PageView.m in Sources */ = {isa = PBXBuildFile; fileRef = CE10D8C226F1D4BC0046F6B3 /* PageView.m */; };
@@ -4661,91 +4623,6 @@
 		CE1C4B9B2056EA7300678D32 /* WebThumbnailRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1C4B982056EA7300678D32 /* WebThumbnailRequest.swift */; };
 		CE1C4BA42056EB1400678D32 /* WebThumbnailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1C4BA32056EB1400678D32 /* WebThumbnailResponse.swift */; };
 		CE1C4BA62056EB1400678D32 /* WebThumbnailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1C4BA32056EB1400678D32 /* WebThumbnailResponse.swift */; };
-		CE1E70D3260C9F8F0015B726 /* trill.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C2260C9F8E0015B726 /* trill.caf */; };
-		CE1E70D4260C9F8F0015B726 /* trill.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C2260C9F8E0015B726 /* trill.caf */; };
-		CE1E70D5260C9F8F0015B726 /* trill.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C2260C9F8E0015B726 /* trill.caf */; };
-		CE1E70D6260C9F8F0015B726 /* trill.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C2260C9F8E0015B726 /* trill.caf */; };
-		CE1E70D7260C9F8F0015B726 /* trill.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C2260C9F8E0015B726 /* trill.caf */; };
-		CE1E70D8260C9F8F0015B726 /* scan_success.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C3260C9F8E0015B726 /* scan_success.caf */; };
-		CE1E70D9260C9F8F0015B726 /* scan_success.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C3260C9F8E0015B726 /* scan_success.caf */; };
-		CE1E70DA260C9F8F0015B726 /* scan_success.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C3260C9F8E0015B726 /* scan_success.caf */; };
-		CE1E70DB260C9F8F0015B726 /* scan_success.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C3260C9F8E0015B726 /* scan_success.caf */; };
-		CE1E70DC260C9F8F0015B726 /* scan_success.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C3260C9F8E0015B726 /* scan_success.caf */; };
-		CE1E70DD260C9F8F0015B726 /* music_box.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C4260C9F8E0015B726 /* music_box.caf */; };
-		CE1E70DE260C9F8F0015B726 /* music_box.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C4260C9F8E0015B726 /* music_box.caf */; };
-		CE1E70DF260C9F8F0015B726 /* music_box.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C4260C9F8E0015B726 /* music_box.caf */; };
-		CE1E70E0260C9F8F0015B726 /* music_box.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C4260C9F8E0015B726 /* music_box.caf */; };
-		CE1E70E1260C9F8F0015B726 /* music_box.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C4260C9F8E0015B726 /* music_box.caf */; };
-		CE1E70E2260C9F8F0015B726 /* synth.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C5260C9F8E0015B726 /* synth.caf */; };
-		CE1E70E3260C9F8F0015B726 /* synth.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C5260C9F8E0015B726 /* synth.caf */; };
-		CE1E70E4260C9F8F0015B726 /* synth.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C5260C9F8E0015B726 /* synth.caf */; };
-		CE1E70E5260C9F8F0015B726 /* synth.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C5260C9F8E0015B726 /* synth.caf */; };
-		CE1E70E6260C9F8F0015B726 /* synth.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C5260C9F8E0015B726 /* synth.caf */; };
-		CE1E70E7260C9F8F0015B726 /* sent_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C6260C9F8E0015B726 /* sent_message.caf */; };
-		CE1E70E8260C9F8F0015B726 /* sent_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C6260C9F8E0015B726 /* sent_message.caf */; };
-		CE1E70E9260C9F8F0015B726 /* sent_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C6260C9F8E0015B726 /* sent_message.caf */; };
-		CE1E70EA260C9F8F0015B726 /* sent_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C6260C9F8E0015B726 /* sent_message.caf */; };
-		CE1E70EB260C9F8F0015B726 /* sent_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C6260C9F8E0015B726 /* sent_message.caf */; };
-		CE1E70EC260C9F8F0015B726 /* incoming_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C7260C9F8E0015B726 /* incoming_message.caf */; };
-		CE1E70ED260C9F8F0015B726 /* incoming_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C7260C9F8E0015B726 /* incoming_message.caf */; };
-		CE1E70EE260C9F8F0015B726 /* incoming_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C7260C9F8E0015B726 /* incoming_message.caf */; };
-		CE1E70EF260C9F8F0015B726 /* incoming_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C7260C9F8E0015B726 /* incoming_message.caf */; };
-		CE1E70F0260C9F8F0015B726 /* incoming_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C7260C9F8E0015B726 /* incoming_message.caf */; };
-		CE1E70F1260C9F8F0015B726 /* sms.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C8260C9F8E0015B726 /* sms.caf */; };
-		CE1E70F2260C9F8F0015B726 /* sms.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C8260C9F8E0015B726 /* sms.caf */; };
-		CE1E70F3260C9F8F0015B726 /* sms.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C8260C9F8E0015B726 /* sms.caf */; };
-		CE1E70F4260C9F8F0015B726 /* sms.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C8260C9F8E0015B726 /* sms.caf */; };
-		CE1E70F5260C9F8F0015B726 /* sms.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C8260C9F8E0015B726 /* sms.caf */; };
-		CE1E70F6260C9F8F0015B726 /* marimba1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C9260C9F8E0015B726 /* marimba1.caf */; };
-		CE1E70F7260C9F8F0015B726 /* marimba1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C9260C9F8E0015B726 /* marimba1.caf */; };
-		CE1E70F8260C9F8F0015B726 /* marimba1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C9260C9F8E0015B726 /* marimba1.caf */; };
-		CE1E70F9260C9F8F0015B726 /* marimba1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C9260C9F8E0015B726 /* marimba1.caf */; };
-		CE1E70FA260C9F8F0015B726 /* marimba1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C9260C9F8E0015B726 /* marimba1.caf */; };
-		CE1E70FB260C9F8F0015B726 /* marimba2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CA260C9F8E0015B726 /* marimba2.caf */; };
-		CE1E70FC260C9F8F0015B726 /* marimba2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CA260C9F8E0015B726 /* marimba2.caf */; };
-		CE1E70FD260C9F8F0015B726 /* marimba2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CA260C9F8E0015B726 /* marimba2.caf */; };
-		CE1E70FE260C9F8F0015B726 /* marimba2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CA260C9F8E0015B726 /* marimba2.caf */; };
-		CE1E70FF260C9F8F0015B726 /* marimba2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CA260C9F8E0015B726 /* marimba2.caf */; };
-		CE1E7100260C9F8F0015B726 /* silent.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CB260C9F8E0015B726 /* silent.caf */; };
-		CE1E7101260C9F8F0015B726 /* silent.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CB260C9F8E0015B726 /* silent.caf */; };
-		CE1E7102260C9F8F0015B726 /* silent.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CB260C9F8E0015B726 /* silent.caf */; };
-		CE1E7103260C9F8F0015B726 /* silent.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CB260C9F8E0015B726 /* silent.caf */; };
-		CE1E7104260C9F8F0015B726 /* silent.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CB260C9F8E0015B726 /* silent.caf */; };
-		CE1E7105260C9F8F0015B726 /* whoop.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CC260C9F8E0015B726 /* whoop.caf */; };
-		CE1E7106260C9F8F0015B726 /* whoop.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CC260C9F8E0015B726 /* whoop.caf */; };
-		CE1E7107260C9F8F0015B726 /* whoop.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CC260C9F8E0015B726 /* whoop.caf */; };
-		CE1E7108260C9F8F0015B726 /* whoop.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CC260C9F8E0015B726 /* whoop.caf */; };
-		CE1E7109260C9F8F0015B726 /* whoop.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CC260C9F8E0015B726 /* whoop.caf */; };
-		CE1E710A260C9F8F0015B726 /* bamboo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CD260C9F8E0015B726 /* bamboo.caf */; };
-		CE1E710B260C9F8F0015B726 /* bamboo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CD260C9F8E0015B726 /* bamboo.caf */; };
-		CE1E710C260C9F8F0015B726 /* bamboo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CD260C9F8E0015B726 /* bamboo.caf */; };
-		CE1E710D260C9F8F0015B726 /* bamboo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CD260C9F8E0015B726 /* bamboo.caf */; };
-		CE1E710E260C9F8F0015B726 /* bamboo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CD260C9F8E0015B726 /* bamboo.caf */; };
-		CE1E710F260C9F8F0015B726 /* received_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CE260C9F8E0015B726 /* received_message.caf */; };
-		CE1E7110260C9F8F0015B726 /* received_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CE260C9F8E0015B726 /* received_message.caf */; };
-		CE1E7111260C9F8F0015B726 /* received_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CE260C9F8E0015B726 /* received_message.caf */; };
-		CE1E7112260C9F8F0015B726 /* received_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CE260C9F8E0015B726 /* received_message.caf */; };
-		CE1E7113260C9F8F0015B726 /* received_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CE260C9F8E0015B726 /* received_message.caf */; };
-		CE1E7114260C9F8F0015B726 /* glass.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CF260C9F8E0015B726 /* glass.caf */; };
-		CE1E7115260C9F8F0015B726 /* glass.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CF260C9F8E0015B726 /* glass.caf */; };
-		CE1E7116260C9F8F0015B726 /* glass.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CF260C9F8E0015B726 /* glass.caf */; };
-		CE1E7117260C9F8F0015B726 /* glass.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CF260C9F8E0015B726 /* glass.caf */; };
-		CE1E7118260C9F8F0015B726 /* glass.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CF260C9F8E0015B726 /* glass.caf */; };
-		CE1E7119260C9F8F0015B726 /* input.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D0260C9F8E0015B726 /* input.caf */; };
-		CE1E711A260C9F8F0015B726 /* input.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D0260C9F8E0015B726 /* input.caf */; };
-		CE1E711B260C9F8F0015B726 /* input.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D0260C9F8E0015B726 /* input.caf */; };
-		CE1E711C260C9F8F0015B726 /* input.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D0260C9F8E0015B726 /* input.caf */; };
-		CE1E711D260C9F8F0015B726 /* input.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D0260C9F8E0015B726 /* input.caf */; };
-		CE1E711E260C9F8F0015B726 /* drum.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D1260C9F8E0015B726 /* drum.caf */; };
-		CE1E711F260C9F8F0015B726 /* drum.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D1260C9F8E0015B726 /* drum.caf */; };
-		CE1E7120260C9F8F0015B726 /* drum.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D1260C9F8E0015B726 /* drum.caf */; };
-		CE1E7121260C9F8F0015B726 /* drum.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D1260C9F8E0015B726 /* drum.caf */; };
-		CE1E7122260C9F8F0015B726 /* drum.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D1260C9F8E0015B726 /* drum.caf */; };
-		CE1E7123260C9F8F0015B726 /* pulse.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D2260C9F8E0015B726 /* pulse.caf */; };
-		CE1E7124260C9F8F0015B726 /* pulse.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D2260C9F8E0015B726 /* pulse.caf */; };
-		CE1E7125260C9F8F0015B726 /* pulse.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D2260C9F8E0015B726 /* pulse.caf */; };
-		CE1E7126260C9F8F0015B726 /* pulse.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D2260C9F8E0015B726 /* pulse.caf */; };
-		CE1E7127260C9F8F0015B726 /* pulse.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D2260C9F8E0015B726 /* pulse.caf */; };
 		CE21E7B72600BA7200F12EB7 /* QuoteUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D3B89B31DE758C1002F2B6D /* QuoteUtil.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CE225BB621256F880075B7CC /* WebConnectionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE225BB521256F880075B7CC /* WebConnectionContext.swift */; };
 		CE225BB82126CB960075B7CC /* WebConnectionAckRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE225BB72126CB960075B7CC /* WebConnectionAckRequest.swift */; };
@@ -4809,8 +4686,6 @@
 		CE5400B4260DD0EE00B7DA8C /* LicenseStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A7DF9791C9FF626002D4DC3 /* LicenseStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CE56496224C1DA87007DEE6E /* ContactAndWorkContactTableDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = CE56496024C1DA87007DEE6E /* ContactAndWorkContactTableDataSource.h */; };
 		CE56496324C1DA87007DEE6E /* ContactAndWorkContactTableDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = CE56496124C1DA87007DEE6E /* ContactAndWorkContactTableDataSource.m */; };
-		CE5D049E1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE5D049D1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 */; };
-		CE5D049F1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE5D049D1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 */; };
 		CE5D04A71EF18A7500C40E25 /* BoxVoIPCallRingingMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = CE5D04A51EF18A7500C40E25 /* BoxVoIPCallRingingMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CE5D04A81EF18A7500C40E25 /* BoxVoIPCallRingingMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = CE5D04A61EF18A7500C40E25 /* BoxVoIPCallRingingMessage.m */; };
 		CE5E3300273D44070039DD90 /* OnPremConfigAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED325C42735352200CD852E /* OnPremConfigAvatar.swift */; };
@@ -5068,12 +4943,6 @@
 		CEB7A75E22E1ED8B009ADFDF /* WCSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB7A75C22E1ED8B009ADFDF /* WCSession.swift */; };
 		CEB7A76122E1F003009ADFDF /* WCConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB7A76022E1F003009ADFDF /* WCConnection.swift */; };
 		CEB7A76222E1F003009ADFDF /* WCConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB7A76022E1F003009ADFDF /* WCConnection.swift */; };
-		CEB7F78C1F57FFEE00503071 /* threema_problem.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7891F57FFEE00503071 /* threema_problem.mp3 */; };
-		CEB7F78D1F57FFEE00503071 /* threema_problem.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7891F57FFEE00503071 /* threema_problem.mp3 */; };
-		CEB7F78F1F57FFEE00503071 /* threema_pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78A1F57FFEE00503071 /* threema_pickup.mp3 */; };
-		CEB7F7901F57FFEE00503071 /* threema_pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78A1F57FFEE00503071 /* threema_pickup.mp3 */; };
-		CEB7F7921F57FFEE00503071 /* threema_hangup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78B1F57FFEE00503071 /* threema_hangup.mp3 */; };
-		CEB7F7931F57FFEE00503071 /* threema_hangup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78B1F57FFEE00503071 /* threema_hangup.mp3 */; };
 		CEB7F7C31F5DC14200503071 /* CallStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7C21F5DC14200503071 /* CallStoryboard.storyboard */; };
 		CEB7F7C41F5DC14200503071 /* CallStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7C21F5DC14200503071 /* CallStoryboard.storyboard */; };
 		CEB88B25206920FB00A1E371 /* WebConversationUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB88B24206920FB00A1E371 /* WebConversationUpdate.swift */; };
@@ -5151,10 +5020,6 @@
 		CED9857F2812D29D00EA4053 /* String+Emoji.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED9857A2812D29D00EA4053 /* String+Emoji.swift */; };
 		CEDCFE891E8D5272001AA976 /* ContactPhotoSender.h in Headers */ = {isa = PBXBuildFile; fileRef = CEDCFE871E8D5272001AA976 /* ContactPhotoSender.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CEDCFE8A1E8D5272001AA976 /* ContactPhotoSender.m in Sources */ = {isa = PBXBuildFile; fileRef = CEDCFE881E8D5272001AA976 /* ContactPhotoSender.m */; };
-		CEDDF6061EF96D0E00C49480 /* pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6051EF96D0E00C49480 /* pickup.mp3 */; };
-		CEDDF6071EF96D0E00C49480 /* pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6051EF96D0E00C49480 /* pickup.mp3 */; };
-		CEDDF6111EF97A4900C49480 /* busy-4x.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6101EF97A4900C49480 /* busy-4x.mp3 */; };
-		CEDDF6121EF97A4900C49480 /* busy-4x.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6101EF97A4900C49480 /* busy-4x.mp3 */; };
 		CEDE4B9F20A5AD62008AFF3F /* WebClientSessionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEDE4B9E20A5AD62008AFF3F /* WebClientSessionCell.swift */; };
 		CEDE4BA120A5AD62008AFF3F /* WebClientSessionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEDE4B9E20A5AD62008AFF3F /* WebClientSessionCell.swift */; };
 		CEE018F61EA9ED49003DF98E /* PPAssetsActionHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE018F51EA9ED49003DF98E /* PPAssetsActionHelper.swift */; };
@@ -5165,7 +5030,6 @@
 		CEE0F4531E92A68D00008F5B /* ProfilePictureNavigationController.m in Sources */ = {isa = PBXBuildFile; fileRef = CEE0F4511E92A68D00008F5B /* ProfilePictureNavigationController.m */; };
 		CEE0F4571E92A85800008F5B /* PickContactsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CEE0F4561E92A85800008F5B /* PickContactsViewController.m */; };
 		CEE0F4581E92A85800008F5B /* PickContactsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CEE0F4561E92A85800008F5B /* PickContactsViewController.m */; };
-		CEE1CA7423E9CD9B00CEDF9F /* WizardBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE1CA7323E9CD9B00CEDF9F /* WizardBackgroundView.swift */; };
 		CEE31ED4205976F4000B9B78 /* WebReceiverUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE31ED3205976F4000B9B78 /* WebReceiverUpdate.swift */; };
 		CEE31ED6205976F4000B9B78 /* WebReceiverUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE31ED3205976F4000B9B78 /* WebReceiverUpdate.swift */; };
 		CEE6296F1ECC7AB20055F239 /* CallKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEE6296E1ECC7AB20055F239 /* CallKit.framework */; };
@@ -5198,16 +5062,6 @@
 		CEFBD19B1E51FB6C00722ED7 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6C14C1CCA900EF7690 /* UIKit.framework */; };
 		CEFBFA481F7A69A700031BF4 /* Contacts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE654D7C1F1E066400E24C1E /* Contacts.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		CEFD37871FBF1A4000248F6F /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEFFAABC1FA0F90E0039916C /* AVKit.framework */; };
-		CEFEB5E4242CCE6500D094A1 /* threema_incom.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5DE242CCE6300D094A1 /* threema_incom.caf */; };
-		CEFEB5E5242CCE6500D094A1 /* threema_incom.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5DE242CCE6300D094A1 /* threema_incom.caf */; };
-		CEFEB5E6242CCE6500D094A1 /* threema_xylo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E0242CCE6400D094A1 /* threema_xylo.caf */; };
-		CEFEB5E7242CCE6500D094A1 /* threema_xylo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E0242CCE6400D094A1 /* threema_xylo.caf */; };
-		CEFEB5E8242CCE6500D094A1 /* threema_goody.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E1242CCE6400D094A1 /* threema_goody.caf */; };
-		CEFEB5E9242CCE6500D094A1 /* threema_goody.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E1242CCE6400D094A1 /* threema_goody.caf */; };
-		CEFEB5EA242CCE6500D094A1 /* threema_alphorn.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E2242CCE6400D094A1 /* threema_alphorn.caf */; };
-		CEFEB5EB242CCE6500D094A1 /* threema_alphorn.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E2242CCE6400D094A1 /* threema_alphorn.caf */; };
-		CEFEB5EC242CCE6500D094A1 /* threema_best.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E3242CCE6500D094A1 /* threema_best.caf */; };
-		CEFEB5ED242CCE6500D094A1 /* threema_best.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E3242CCE6500D094A1 /* threema_best.caf */; };
 		CEFFAABD1FA0F90F0039916C /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEFFAABC1FA0F90E0039916C /* AVKit.framework */; };
 		D701C5F427B55B9900E243D4 /* MessageSecondaryTextLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D701C5F327B55B9900E243D4 /* MessageSecondaryTextLabel.swift */; };
 		D701C5F527B55B9900E243D4 /* MessageSecondaryTextLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D701C5F327B55B9900E243D4 /* MessageSecondaryTextLabel.swift */; };
@@ -6552,42 +6406,25 @@
 		F2EAFEDB2D6CC9C400DFFD48 /* WebRTC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D965B3D271E9C4F009A4E4C /* WebRTC.xcframework */; };
 		F2EAFEDC2D6CC9C400DFFD48 /* GroupCalls in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBD52D6CC9C400DFFD48 /* GroupCalls */; };
 		F2EAFEDD2D6CC9C400DFFD48 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F7014C1CCA900EF7690 /* CoreGraphics.framework */; };
-		F2EAFEDF2D6CC9C400DFFD48 /* glass.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CF260C9F8E0015B726 /* glass.caf */; };
 		F2EAFEE02D6CC9C400DFFD48 /* MainStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 241AEFDB2C94605C001FA52A /* MainStoryboard.storyboard */; };
 		F2EAFEE12D6CC9C400DFFD48 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 24564C752C947C8600C34497 /* Localizable.xcstrings */; };
-		F2EAFEE22D6CC9C400DFFD48 /* marimba1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C9260C9F8E0015B726 /* marimba1.caf */; };
-		F2EAFEE32D6CC9C400DFFD48 /* whoop.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CC260C9F8E0015B726 /* whoop.caf */; };
 		F2EAFEE42D6CC9C400DFFD48 /* Ballot.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AEBA04419D31A5A002DE2C3 /* Ballot.storyboard */; };
 		F2EAFEE52D6CC9C400DFFD48 /* SettingsStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 241AEFCF2C94582A001FA52A /* SettingsStoryboard.storyboard */; };
-		F2EAFEE62D6CC9C400DFFD48 /* threema_hangup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78B1F57FFEE00503071 /* threema_hangup.mp3 */; };
 		F2EAFEE72D6CC9C400DFFD48 /* LockCover.xib in Resources */ = {isa = PBXBuildFile; fileRef = CECB311A231FAB2F00C80FF2 /* LockCover.xib */; };
-		F2EAFEE82D6CC9C400DFFD48 /* trill.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C2260C9F8E0015B726 /* trill.caf */; };
-		F2EAFEE92D6CC9C400DFFD48 /* input.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D0260C9F8E0015B726 /* input.caf */; };
-		F2EAFEEA2D6CC9C400DFFD48 /* busy-4x.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6101EF97A4900C49480 /* busy-4x.mp3 */; };
-		F2EAFEEB2D6CC9C400DFFD48 /* received_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CE260C9F8E0015B726 /* received_message.caf */; };
 		F2EAFEEC2D6CC9C400DFFD48 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4A38E3CC2A5EDB40008484A2 /* Settings.bundle */; };
-		F2EAFEED2D6CC9C400DFFD48 /* pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEDDF6051EF96D0E00C49480 /* pickup.mp3 */; };
 		F2EAFEEE2D6CC9C400DFFD48 /* bad_passwords.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D0CAC392186F6B700571DAD /* bad_passwords.txt */; };
-		F2EAFEEF2D6CC9C400DFFD48 /* pulse.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D2260C9F8E0015B726 /* pulse.caf */; };
 		F2EAFEF02D6CC9C400DFFD48 /* CreatePassword.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 241AEFE12C9463F9001FA52A /* CreatePassword.storyboard */; };
-		F2EAFEF12D6CC9C400DFFD48 /* threema_xylo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E0242CCE6400D094A1 /* threema_xylo.caf */; };
 		F2EAFEF22D6CC9C400DFFD48 /* DKCameraResource.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B141EB38270004973D5 /* DKCameraResource.bundle */; };
 		F2EAFEF32D6CC9C400DFFD48 /* RendezvousEmoji.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 42AD36222A404F6200919AD8 /* RendezvousEmoji.xcassets */; };
 		F2EAFEF52D6CC9C400DFFD48 /* MyIdentityStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 241AEFD52C945A54001FA52A /* MyIdentityStoryboard.storyboard */; };
-		F2EAFEF62D6CC9C400DFFD48 /* sms.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C8260C9F8E0015B726 /* sms.caf */; };
 		F2EAFEF82D6CC9C400DFFD48 /* MWPhotoBrowser.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 4D8B812518D38B4F0079014F /* MWPhotoBrowser.bundle */; };
 		F2EAFEF92D6CC9C400DFFD48 /* License.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A232DCE1CA0391C00AA0187 /* License.storyboard */; };
 		F2EAFEFA2D6CC9C400DFFD48 /* RendezvousEmoji.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 24FA486F2CCB658900E2331A /* RendezvousEmoji.xcstrings */; };
 		F2EAFEFB2D6CC9C400DFFD48 /* license.html in Resources */ = {isa = PBXBuildFile; fileRef = 4DBCC0311656DE3D00B3CFFF /* license.html */; };
-		F2EAFEFE2D6CC9C400DFFD48 /* music_box.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C4260C9F8E0015B726 /* music_box.caf */; };
-		F2EAFEFF2D6CC9C400DFFD48 /* scan_success.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C3260C9F8E0015B726 /* scan_success.caf */; };
 		F2EAFF002D6CC9C400DFFD48 /* LicenseOnPrem.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4D61E25A255C1EC800F484D8 /* LicenseOnPrem.storyboard */; };
-		F2EAFF012D6CC9C400DFFD48 /* marimba2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CA260C9F8E0015B726 /* marimba2.caf */; };
-		F2EAFF022D6CC9C400DFFD48 /* ringing-tone-ch-fade.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE5D049D1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 */; };
 		F2EAFF032D6CC9C400DFFD48 /* BallotHeaderView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0AC6B3E51A0280DD00D1A77A /* BallotHeaderView.xib */; };
 		F2EAFF042D6CC9C400DFFD48 /* ProtectedDataUnavailable.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4D95F92020B59E78005BC753 /* ProtectedDataUnavailable.storyboard */; };
 		F2EAFF052D6CC9C400DFFD48 /* IntroQuestionView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0AF75A861BFA0FE800210FB3 /* IntroQuestionView.xib */; };
-		F2EAFF062D6CC9C400DFFD48 /* silent.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CB260C9F8E0015B726 /* silent.caf */; };
 		F2EAFF082D6CC9C400DFFD48 /* CreateGroup.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AE10AB81BA15B54009DD83B /* CreateGroup.storyboard */; };
 		F2EAFF092D6CC9C400DFFD48 /* App Symbols.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE3AB51F23102EA5001AF17C /* App Symbols.xcassets */; };
 		F2EAFF0A2D6CC9C400DFFD48 /* emojis.generated.localization.fr.json in Resources */ = {isa = PBXBuildFile; fileRef = 24FAA8D52D428611003958F1 /* emojis.generated.localization.fr.json */; };
@@ -6607,21 +6444,9 @@
 		F2EAFF182D6CC9C400DFFD48 /* emojis.generated.localization.en.json in Resources */ = {isa = PBXBuildFile; fileRef = 24FAA8D32D428611003958F1 /* emojis.generated.localization.en.json */; };
 		F2EAFF192D6CC9C400DFFD48 /* emojis.generated.localization.sk.json in Resources */ = {isa = PBXBuildFile; fileRef = 24FAA8DD2D428611003958F1 /* emojis.generated.localization.sk.json */; };
 		F2EAFF1A2D6CC9C400DFFD48 /* CallStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7C21F5DC14200503071 /* CallStoryboard.storyboard */; };
-		F2EAFF1C2D6CC9C400DFFD48 /* drum.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70D1260C9F8E0015B726 /* drum.caf */; };
-		F2EAFF1D2D6CC9C400DFFD48 /* threema_incom.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5DE242CCE6300D094A1 /* threema_incom.caf */; };
-		F2EAFF1E2D6CC9C400DFFD48 /* threema_goody.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E1242CCE6400D094A1 /* threema_goody.caf */; };
 		F2EAFF1F2D6CC9C400DFFD48 /* CreateID.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A5ECC9D1BE101C7003B3A84 /* CreateID.storyboard */; };
-		F2EAFF202D6CC9C400DFFD48 /* incoming_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C7260C9F8E0015B726 /* incoming_message.caf */; };
 		F2EAFF222D6CC9C400DFFD48 /* CallDiagnostic.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2D2B2FFB260B8AF00056AAAB /* CallDiagnostic.storyboard */; };
 		F2EAFF232D6CC9C400DFFD48 /* ProfilePicture.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CEE0F44C1E92A5FA00008F5B /* ProfilePicture.storyboard */; };
-		F2EAFF242D6CC9C400DFFD48 /* threema_problem.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F7891F57FFEE00503071 /* threema_problem.mp3 */; };
-		F2EAFF252D6CC9C400DFFD48 /* bamboo.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70CD260C9F8E0015B726 /* bamboo.caf */; };
-		F2EAFF282D6CC9C400DFFD48 /* threema_best.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E3242CCE6500D094A1 /* threema_best.caf */; };
-		F2EAFF292D6CC9C400DFFD48 /* sent_message.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C6260C9F8E0015B726 /* sent_message.caf */; };
-		F2EAFF2A2D6CC9C400DFFD48 /* synth.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E70C5260C9F8E0015B726 /* synth.caf */; };
-		F2EAFF2B2D6CC9C400DFFD48 /* silent.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CE0D8AB82412945F007ACAEB /* silent.mp3 */; };
-		F2EAFF2C2D6CC9C400DFFD48 /* threema_alphorn.caf in Resources */ = {isa = PBXBuildFile; fileRef = CEFEB5E2242CCE6400D094A1 /* threema_alphorn.caf */; };
-		F2EAFF2D2D6CC9C400DFFD48 /* threema_pickup.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = CEB7F78A1F57FFEE00503071 /* threema_pickup.mp3 */; };
 		F2EAFF2F2D6CC9C400DFFD48 /* FileMessagePreviewUnsupportedTypeView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0A868E1D1B45B97600A5B755 /* FileMessagePreviewUnsupportedTypeView.xib */; };
 		F2EAFF302D6CC9C400DFFD48 /* DKImagePickerController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B1D1EB38270004973D5 /* DKImagePickerController.bundle */; };
 		F2EAFF312D6CC9C400DFFD48 /* SharedColors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE752310269C81C1008064E4 /* SharedColors.xcassets */; };
@@ -9023,7 +8848,6 @@
 		CE08C0D7272989C8001EFCDE /* ScreenshotsWithDataOnPrem.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenshotsWithDataOnPrem.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE08C0FE27299A13001EFCDE /* Threema OnPrem Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Threema OnPrem Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE0B5E141E5F49480044E3BB /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
-		CE0D8AB82412945F007ACAEB /* silent.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = silent.mp3; sourceTree = "<group>"; };
 		CE10D8C026F1D4BC0046F6B3 /* PageContentViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PageContentViewController.m; sourceTree = "<group>"; };
 		CE10D8C126F1D4BC0046F6B3 /* ParallaxPageViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParallaxPageViewController.h; sourceTree = "<group>"; };
 		CE10D8C226F1D4BC0046F6B3 /* PageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PageView.m; sourceTree = "<group>"; };
@@ -9069,23 +8893,6 @@
 		CE19614F1E262C46009937C3 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		CE1C4B982056EA7300678D32 /* WebThumbnailRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebThumbnailRequest.swift; sourceTree = "<group>"; };
 		CE1C4BA32056EB1400678D32 /* WebThumbnailResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebThumbnailResponse.swift; sourceTree = "<group>"; };
-		CE1E70C2260C9F8E0015B726 /* trill.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = trill.caf; sourceTree = "<group>"; };
-		CE1E70C3260C9F8E0015B726 /* scan_success.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = scan_success.caf; sourceTree = "<group>"; };
-		CE1E70C4260C9F8E0015B726 /* music_box.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = music_box.caf; sourceTree = "<group>"; };
-		CE1E70C5260C9F8E0015B726 /* synth.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = synth.caf; sourceTree = "<group>"; };
-		CE1E70C6260C9F8E0015B726 /* sent_message.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = sent_message.caf; sourceTree = "<group>"; };
-		CE1E70C7260C9F8E0015B726 /* incoming_message.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = incoming_message.caf; sourceTree = "<group>"; };
-		CE1E70C8260C9F8E0015B726 /* sms.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = sms.caf; sourceTree = "<group>"; };
-		CE1E70C9260C9F8E0015B726 /* marimba1.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = marimba1.caf; sourceTree = "<group>"; };
-		CE1E70CA260C9F8E0015B726 /* marimba2.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = marimba2.caf; sourceTree = "<group>"; };
-		CE1E70CB260C9F8E0015B726 /* silent.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = silent.caf; sourceTree = "<group>"; };
-		CE1E70CC260C9F8E0015B726 /* whoop.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = whoop.caf; sourceTree = "<group>"; };
-		CE1E70CD260C9F8E0015B726 /* bamboo.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = bamboo.caf; sourceTree = "<group>"; };
-		CE1E70CE260C9F8E0015B726 /* received_message.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = received_message.caf; sourceTree = "<group>"; };
-		CE1E70CF260C9F8E0015B726 /* glass.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = glass.caf; sourceTree = "<group>"; };
-		CE1E70D0260C9F8E0015B726 /* input.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = input.caf; sourceTree = "<group>"; };
-		CE1E70D1260C9F8E0015B726 /* drum.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = drum.caf; sourceTree = "<group>"; };
-		CE1E70D2260C9F8E0015B726 /* pulse.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = pulse.caf; sourceTree = "<group>"; };
 		CE225BB521256F880075B7CC /* WebConnectionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebConnectionContext.swift; sourceTree = "<group>"; };
 		CE225BB72126CB960075B7CC /* WebConnectionAckRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebConnectionAckRequest.swift; sourceTree = "<group>"; };
 		CE225BBB2126CC600075B7CC /* WebConnectionAckUpdateResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebConnectionAckUpdateResponse.swift; sourceTree = "<group>"; };
@@ -9125,7 +8932,6 @@
 		CE5397E91ED31582002EB388 /* PushKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PushKit.framework; path = System/Library/Frameworks/PushKit.framework; sourceTree = SDKROOT; };
 		CE56496024C1DA87007DEE6E /* ContactAndWorkContactTableDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactAndWorkContactTableDataSource.h; sourceTree = "<group>"; };
 		CE56496124C1DA87007DEE6E /* ContactAndWorkContactTableDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ContactAndWorkContactTableDataSource.m; sourceTree = "<group>"; };
-		CE5D049D1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "ringing-tone-ch-fade.mp3"; sourceTree = "<group>"; };
 		CE5D04A51EF18A7500C40E25 /* BoxVoIPCallRingingMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BoxVoIPCallRingingMessage.h; sourceTree = "<group>"; };
 		CE5D04A61EF18A7500C40E25 /* BoxVoIPCallRingingMessage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BoxVoIPCallRingingMessage.m; sourceTree = "<group>"; };
 		CE5E6DE6202A1281006796B5 /* ThreemaWebViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaWebViewController.swift; sourceTree = "<group>"; };
@@ -9244,9 +9050,6 @@
 		CEB7A75222E1EC24009ADFDF /* WCSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSessionManager.swift; sourceTree = "<group>"; };
 		CEB7A75C22E1ED8B009ADFDF /* WCSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSession.swift; sourceTree = "<group>"; };
 		CEB7A76022E1F003009ADFDF /* WCConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCConnection.swift; sourceTree = "<group>"; };
-		CEB7F7891F57FFEE00503071 /* threema_problem.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = threema_problem.mp3; sourceTree = "<group>"; };
-		CEB7F78A1F57FFEE00503071 /* threema_pickup.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = threema_pickup.mp3; sourceTree = "<group>"; };
-		CEB7F78B1F57FFEE00503071 /* threema_hangup.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = threema_hangup.mp3; sourceTree = "<group>"; };
 		CEB7F7C21F5DC14200503071 /* CallStoryboard.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = CallStoryboard.storyboard; sourceTree = "<group>"; };
 		CEB88B24206920FB00A1E371 /* WebConversationUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebConversationUpdate.swift; sourceTree = "<group>"; };
 		CEB88B39206A32FC00A1E371 /* WebTypingUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebTypingUpdate.swift; sourceTree = "<group>"; };
@@ -9285,8 +9088,6 @@
 		CED9857A2812D29D00EA4053 /* String+Emoji.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Emoji.swift"; sourceTree = "<group>"; };
 		CEDCFE871E8D5272001AA976 /* ContactPhotoSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContactPhotoSender.h; sourceTree = "<group>"; };
 		CEDCFE881E8D5272001AA976 /* ContactPhotoSender.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ContactPhotoSender.m; sourceTree = "<group>"; };
-		CEDDF6051EF96D0E00C49480 /* pickup.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = pickup.mp3; sourceTree = "<group>"; };
-		CEDDF6101EF97A4900C49480 /* busy-4x.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "busy-4x.mp3"; sourceTree = "<group>"; };
 		CEDE4B9E20A5AD62008AFF3F /* WebClientSessionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebClientSessionCell.swift; sourceTree = "<group>"; };
 		CEE018F51EA9ED49003DF98E /* PPAssetsActionHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PPAssetsActionHelper.swift; sourceTree = "<group>"; };
 		CEE0F44C1E92A5FA00008F5B /* ProfilePicture.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = ProfilePicture.storyboard; sourceTree = "<group>"; };
@@ -9294,7 +9095,6 @@
 		CEE0F4511E92A68D00008F5B /* ProfilePictureNavigationController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ProfilePictureNavigationController.m; sourceTree = "<group>"; };
 		CEE0F4551E92A85800008F5B /* PickContactsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PickContactsViewController.h; sourceTree = "<group>"; };
 		CEE0F4561E92A85800008F5B /* PickContactsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PickContactsViewController.m; sourceTree = "<group>"; };
-		CEE1CA7323E9CD9B00CEDF9F /* WizardBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WizardBackgroundView.swift; sourceTree = "<group>"; };
 		CEE31ED3205976F4000B9B78 /* WebReceiverUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebReceiverUpdate.swift; sourceTree = "<group>"; };
 		CEE6296E1ECC7AB20055F239 /* CallKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CallKit.framework; path = System/Library/Frameworks/CallKit.framework; sourceTree = SDKROOT; };
 		CEE93D9620AB1EE8002C1304 /* ThreemaWebSettingCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaWebSettingCell.swift; sourceTree = "<group>"; };
@@ -9317,11 +9117,6 @@
 		CEFBD1A21E51FB6C00722ED7 /* ScreenshotsWithDataWork.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ScreenshotsWithDataWork.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEFBD1A31E51FB6C00722ED7 /* ScreenshotsWithDataWork-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ScreenshotsWithDataWork-Info.plist"; sourceTree = "<group>"; };
 		CEFD82441F54568200E6A048 /* Intents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Intents.framework; path = System/Library/Frameworks/Intents.framework; sourceTree = SDKROOT; };
-		CEFEB5DE242CCE6300D094A1 /* threema_incom.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = threema_incom.caf; sourceTree = "<group>"; };
-		CEFEB5E0242CCE6400D094A1 /* threema_xylo.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = threema_xylo.caf; sourceTree = "<group>"; };
-		CEFEB5E1242CCE6400D094A1 /* threema_goody.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = threema_goody.caf; sourceTree = "<group>"; };
-		CEFEB5E2242CCE6400D094A1 /* threema_alphorn.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = threema_alphorn.caf; sourceTree = "<group>"; };
-		CEFEB5E3242CCE6500D094A1 /* threema_best.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = threema_best.caf; sourceTree = "<group>"; };
 		CEFFAABC1FA0F90E0039916C /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		D701C5F327B55B9900E243D4 /* MessageSecondaryTextLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageSecondaryTextLabel.swift; sourceTree = "<group>"; };
 		D701C5FA27B55D3A00E243D4 /* IconMessageContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconMessageContentView.swift; sourceTree = "<group>"; };
@@ -9572,6 +9367,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		24A7E0EF2E1E2DA900BC5307 /* Sounds */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Sounds; sourceTree = "<group>"; };
 		F2CED9492DE5EE6C00879CDA /* ManuallyTests */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (F2CED9552DE5EE6C00879CDA /* PBXFileSystemSynchronizedBuildFileExceptionSet */, F2CED9562DE5EE6C00879CDA /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ManuallyTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -10519,7 +10315,6 @@
 			children = (
 				4D6CF5A91645901C003D7DCC /* ContactNameLabel.h */,
 				4D6CF5AA1645901D003D7DCC /* ContactNameLabel.m */,
-				CEE1CA7323E9CD9B00CEDF9F /* WizardBackgroundView.swift */,
 			);
 			path = CustomViews;
 			sourceTree = "<group>";
@@ -13329,15 +13124,6 @@
 			path = ForwardSecurity;
 			sourceTree = "<group>";
 		};
-		4D4A972616470EB60038F7D1 /* Sounds */ = {
-			isa = PBXGroup;
-			children = (
-				CE16BCE41F2877840029251C /* Call */,
-				CE1E70C1260C9F8E0015B726 /* Messages */,
-			);
-			path = Sounds;
-			sourceTree = "<group>";
-		};
 		4D7457222611EFB800DDC098 /* Metadata */ = {
 			isa = PBXGroup;
 			children = (
@@ -14078,7 +13864,7 @@
 				7DFE65862CC7D49500B9C976 /* Emoji */,
 				4DF7730016309982001808D3 /* Images */,
 				94955EC72B96057200493B8A /* LaunchScreens */,
-				4D4A972616470EB60038F7D1 /* Sounds */,
+				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
 				4D90AF821634719D001BDF83 /* Strings */,
 			);
 			path = SharedResources;
@@ -14518,39 +14304,6 @@
 			path = Thumbnails;
 			sourceTree = "<group>";
 		};
-		CE16BCE41F2877840029251C /* Call */ = {
-			isa = PBXGroup;
-			children = (
-				CEFEB5EF242CCE8200D094A1 /* mp3 */,
-				CEFEB5EE242CCE7600D094A1 /* caf */,
-			);
-			path = Call;
-			sourceTree = "<group>";
-		};
-		CE1E70C1260C9F8E0015B726 /* Messages */ = {
-			isa = PBXGroup;
-			children = (
-				CE1E70CD260C9F8E0015B726 /* bamboo.caf */,
-				CE1E70D1260C9F8E0015B726 /* drum.caf */,
-				CE1E70CF260C9F8E0015B726 /* glass.caf */,
-				CE1E70C7260C9F8E0015B726 /* incoming_message.caf */,
-				CE1E70D0260C9F8E0015B726 /* input.caf */,
-				CE1E70C9260C9F8E0015B726 /* marimba1.caf */,
-				CE1E70CA260C9F8E0015B726 /* marimba2.caf */,
-				CE1E70C4260C9F8E0015B726 /* music_box.caf */,
-				CE1E70D2260C9F8E0015B726 /* pulse.caf */,
-				CE1E70CE260C9F8E0015B726 /* received_message.caf */,
-				CE1E70C3260C9F8E0015B726 /* scan_success.caf */,
-				CE1E70C6260C9F8E0015B726 /* sent_message.caf */,
-				CE1E70CB260C9F8E0015B726 /* silent.caf */,
-				CE1E70C8260C9F8E0015B726 /* sms.caf */,
-				CE1E70C5260C9F8E0015B726 /* synth.caf */,
-				CE1E70C2260C9F8E0015B726 /* trill.caf */,
-				CE1E70CC260C9F8E0015B726 /* whoop.caf */,
-			);
-			path = Messages;
-			sourceTree = "<group>";
-		};
 		CE2C9C612886AEF500277427 /* ThreemaCalls */ = {
 			isa = PBXGroup;
 			children = (
@@ -14934,32 +14687,6 @@
 				247700B828AE365E00634745 /* Colors+Notification.swift */,
 			);
 			path = Colors;
-			sourceTree = "<group>";
-		};
-		CEFEB5EE242CCE7600D094A1 /* caf */ = {
-			isa = PBXGroup;
-			children = (
-				CEFEB5E2242CCE6400D094A1 /* threema_alphorn.caf */,
-				CEFEB5E3242CCE6500D094A1 /* threema_best.caf */,
-				CEFEB5E1242CCE6400D094A1 /* threema_goody.caf */,
-				CEFEB5DE242CCE6300D094A1 /* threema_incom.caf */,
-				CEFEB5E0242CCE6400D094A1 /* threema_xylo.caf */,
-			);
-			path = caf;
-			sourceTree = "<group>";
-		};
-		CEFEB5EF242CCE8200D094A1 /* mp3 */ = {
-			isa = PBXGroup;
-			children = (
-				CE5D049D1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 */,
-				CEDDF6051EF96D0E00C49480 /* pickup.mp3 */,
-				CEDDF6101EF97A4900C49480 /* busy-4x.mp3 */,
-				CEB7F7891F57FFEE00503071 /* threema_problem.mp3 */,
-				CEB7F78A1F57FFEE00503071 /* threema_pickup.mp3 */,
-				CEB7F78B1F57FFEE00503071 /* threema_hangup.mp3 */,
-				CE0D8AB82412945F007ACAEB /* silent.mp3 */,
-			);
-			path = mp3;
 			sourceTree = "<group>";
 		};
 		E102CAD725A8B3C10020D025 /* DetailsCells */ = {
@@ -15510,6 +15237,9 @@
 				0A7DF9641C9FDF99002D4DC3 /* PBXTargetDependency */,
 				2DD445932511F482008EC521 /* PBXTargetDependency */,
 			);
+			fileSystemSynchronizedGroups = (
+				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
+			);
 			name = "Threema Work";
 			packageProductDependencies = (
 				E152441926145E4800471E1B /* RSKImageCropper */,
@@ -15736,6 +15466,9 @@
 				2DC414B024C9C07500A7C58E /* PBXTargetDependency */,
 				2DD445A92511F913008EC521 /* PBXTargetDependency */,
 			);
+			fileSystemSynchronizedGroups = (
+				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
+			);
 			name = "Threema Blue";
 			packageProductDependencies = (
 				E152441F26145E6500471E1B /* RSKImageCropper */,
@@ -15871,6 +15604,9 @@
 				2DEDB3E524C9907B00FC9099 /* PBXTargetDependency */,
 				2D0551BB2510876400BF0A88 /* PBXTargetDependency */,
 			);
+			fileSystemSynchronizedGroups = (
+				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
+			);
 			name = "Threema Green";
 			packageProductDependencies = (
 				E152441D26145E5D00471E1B /* RSKImageCropper */,
@@ -15974,6 +15710,9 @@
 				4D088882255C0CD4002F3129 /* PBXTargetDependency */,
 				4D088C3B255C1628002F3129 /* PBXTargetDependency */,
 				4D088C86255C1729002F3129 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
 			);
 			name = "Threema OnPrem";
 			packageProductDependencies = (
@@ -16103,6 +15842,9 @@
 				0A677B961C6250CA0019B361 /* PBXTargetDependency */,
 				0AE4355A1C636AB500E1ECC8 /* PBXTargetDependency */,
 				2DEC5514250A56E100B9826D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
 			);
 			name = Threema;
 			packageProductDependencies = (
@@ -16236,6 +15978,9 @@
 				F2EAFBBF2D6CC9C400DFFD48 /* PBXTargetDependency */,
 				F245C40E2D704ED100100444 /* PBXTargetDependency */,
 				F245C4112D704ED100100444 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
 			);
 			name = "Custom OnPrem";
 			packageProductDependencies = (
@@ -16673,7 +16418,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				241AEFDD2C94605C001FA52A /* MainStoryboard.storyboard in Resources */,
-				CE1E70E8260C9F8F0015B726 /* sent_message.caf in Resources */,
 				0A7DF83C1C9FDBDE002D4DC3 /* Ballot.storyboard in Resources */,
 				24FAA9012D428611003958F1 /* emojis.generated.localization.fr.json in Resources */,
 				24FAA9022D428611003958F1 /* emojis.generated.localization.it.json in Resources */,
@@ -16692,63 +16436,35 @@
 				24FAA90F2D428611003958F1 /* emojis.generated.localization.en.json in Resources */,
 				24FAA9102D428611003958F1 /* emojis.generated.localization.sk.json in Resources */,
 				24564C772C947C8600C34497 /* Localizable.xcstrings in Resources */,
-				CE1E7101260C9F8F0015B726 /* silent.caf in Resources */,
-				CE1E70D4260C9F8F0015B726 /* trill.caf in Resources */,
-				CE1E7115260C9F8F0015B726 /* glass.caf in Resources */,
-				CEB7F7931F57FFEE00503071 /* threema_hangup.mp3 in Resources */,
-				CE1E70FC260C9F8F0015B726 /* marimba2.caf in Resources */,
 				F271802B2CEE2A5400FCD4F7 /* SharedColors.xcassets in Resources */,
-				CE1E711F260C9F8F0015B726 /* drum.caf in Resources */,
 				42AD36242A404F6200919AD8 /* RendezvousEmoji.xcassets in Resources */,
-				CEDDF6121EF97A4900C49480 /* busy-4x.mp3 in Resources */,
 				2D375C7D260C887C00BC479B /* CallDiagnostic.storyboard in Resources */,
-				CEDDF6071EF96D0E00C49480 /* pickup.mp3 in Resources */,
 				2D0CAC432186F6B700571DAD /* bad_passwords.txt in Resources */,
-				CE1E70ED260C9F8F0015B726 /* incoming_message.caf in Resources */,
 				241AEFE32C9463F9001FA52A /* CreatePassword.storyboard in Resources */,
-				CEFEB5E7242CCE6500D094A1 /* threema_xylo.caf in Resources */,
 				F2E68B522BA0A28B001410E3 /* Work Target Symbols.xcassets in Resources */,
 				249CABFD2DC882F000A2774E /* TargetColorsWork.xcassets in Resources */,
 				94955EDA2B96057300493B8A /* SplashScreenThreemaWork.png in Resources */,
 				CE8A2B341EB38270004973D5 /* DKCameraResource.bundle in Resources */,
 				241AEFD72C945A54001FA52A /* MyIdentityStoryboard.storyboard in Resources */,
 				0A7DF87A1C9FDBDE002D4DC3 /* MWPhotoBrowser.bundle in Resources */,
-				CE1E70F7260C9F8F0015B726 /* marimba1.caf in Resources */,
 				0A7DF8881C9FDBDE002D4DC3 /* license.html in Resources */,
 				24564C8F2C947C8800C34497 /* InfoPlist.xcstrings in Resources */,
 				24E46F6D2BAABF81009B718E /* PrivacyInfo.xcprivacy in Resources */,
-				CE1E70DE260C9F8F0015B726 /* music_box.caf in Resources */,
 				24FA48712CCB658900E2331A /* RendezvousEmoji.xcstrings in Resources */,
-				CE5D049F1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 in Resources */,
 				4A38E3CE2A5EDB40008484A2 /* Settings.bundle in Resources */,
 				0A7DF8AB1C9FDBDE002D4DC3 /* BallotHeaderView.xib in Resources */,
 				F2E68B572BA0A488001410E3 /* LockCover.xib in Resources */,
-				CE1E711A260C9F8F0015B726 /* input.caf in Resources */,
 				F2FCC0CD2BA4750C007AB8FD /* App Symbols.xcassets in Resources */,
 				4D95F92320B59E78005BC753 /* ProtectedDataUnavailable.storyboard in Resources */,
-				CE1E70E3260C9F8F0015B726 /* synth.caf in Resources */,
 				0A7DF8D61C9FDBDE002D4DC3 /* IntroQuestionView.xib in Resources */,
 				0A232DCF1CA0391C00AA0187 /* License.storyboard in Resources */,
 				0A7DF8E41C9FDBDE002D4DC3 /* CreateGroup.storyboard in Resources */,
 				CEB7F7C41F5DC14200503071 /* CallStoryboard.storyboard in Resources */,
-				CE1E7106260C9F8F0015B726 /* whoop.caf in Resources */,
-				CEFEB5E5242CCE6500D094A1 /* threema_incom.caf in Resources */,
-				CE1E7124260C9F8F0015B726 /* pulse.caf in Resources */,
-				CEFEB5E9242CCE6500D094A1 /* threema_goody.caf in Resources */,
 				241AEFD12C94582A001FA52A /* SettingsStoryboard.storyboard in Resources */,
-				CE1E710B260C9F8F0015B726 /* bamboo.caf in Resources */,
 				0A7DF8F51C9FDBDE002D4DC3 /* CreateID.storyboard in Resources */,
-				CE1E70D9260C9F8F0015B726 /* scan_success.caf in Resources */,
 				94955EFD2B96057300493B8A /* ThreemaWorkLaunchScreen.storyboard in Resources */,
-				CE1E7110260C9F8F0015B726 /* received_message.caf in Resources */,
 				CEE0F44E1E92A5FA00008F5B /* ProfilePicture.storyboard in Resources */,
 				0A03A1591CAC078200B4C74B /* ThreemaWork.xcassets in Resources */,
-				CEB7F78D1F57FFEE00503071 /* threema_problem.mp3 in Resources */,
-				CEFEB5ED242CCE6500D094A1 /* threema_best.caf in Resources */,
-				CE1E70F2260C9F8F0015B726 /* sms.caf in Resources */,
-				CE0D8ABA2412945F007ACAEB /* silent.mp3 in Resources */,
-				CEFEB5EB242CCE6500D094A1 /* threema_alphorn.caf in Resources */,
-				CEB7F7901F57FFEE00503071 /* threema_pickup.mp3 in Resources */,
 				0A7DF91F1C9FDBDE002D4DC3 /* FileMessagePreviewUnsupportedTypeView.xib in Resources */,
 				CE8A2B431EB38270004973D5 /* DKImagePickerController.bundle in Resources */,
 			);
@@ -16829,8 +16545,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CE1E70E1260C9F8F0015B726 /* music_box.caf in Resources */,
-				CE1E7109260C9F8F0015B726 /* whoop.caf in Resources */,
 				241AEFE02C94605C001FA52A /* MainStoryboard.storyboard in Resources */,
 				24FAA9212D428611003958F1 /* emojis.generated.localization.fr.json in Resources */,
 				24FAA9222D428611003958F1 /* emojis.generated.localization.it.json in Resources */,
@@ -16850,64 +16564,37 @@
 				24FAA9302D428611003958F1 /* emojis.generated.localization.sk.json in Resources */,
 				2D5A1F0824C9B5DF00F87DD0 /* Ballot.storyboard in Resources */,
 				4A38E3D12A5EDB40008484A2 /* Settings.bundle in Resources */,
-				CE1E710E260C9F8F0015B726 /* bamboo.caf in Resources */,
-				2D5A1F0A24C9B5DF00F87DD0 /* threema_hangup.mp3 in Resources */,
-				CE1E711D260C9F8F0015B726 /* input.caf in Resources */,
 				2D375C8E260C887E00BC479B /* CallDiagnostic.storyboard in Resources */,
 				F271802E2CEE2A5400FCD4F7 /* SharedColors.xcassets in Resources */,
-				2D5A1F0F24C9B5DF00F87DD0 /* busy-4x.mp3 in Resources */,
 				24564C7A2C947C8600C34497 /* Localizable.xcstrings in Resources */,
-				2D5A1F1124C9B5DF00F87DD0 /* pickup.mp3 in Resources */,
 				2D5A1F1224C9B5DF00F87DD0 /* bad_passwords.txt in Resources */,
 				241AEFE62C9463F9001FA52A /* CreatePassword.storyboard in Resources */,
-				2D5A1F1524C9B5DF00F87DD0 /* threema_xylo.caf in Resources */,
 				2D5A1F1624C9B5DF00F87DD0 /* DKCameraResource.bundle in Resources */,
 				241AEFDA2C945A54001FA52A /* MyIdentityStoryboard.storyboard in Resources */,
-				CE1E70FA260C9F8F0015B726 /* marimba1.caf in Resources */,
-				CE1E70EB260C9F8F0015B726 /* sent_message.caf in Resources */,
 				249CABF52DC882F000A2774E /* TargetColorsWork.xcassets in Resources */,
 				2D5A1F1A24C9B5DF00F87DD0 /* MWPhotoBrowser.bundle in Resources */,
 				2440215B2BAAC2FB00F8B74F /* PrivacyInfo.xcprivacy in Resources */,
 				241AEFD42C94582A001FA52A /* SettingsStoryboard.storyboard in Resources */,
-				CE1E7122260C9F8F0015B726 /* drum.caf in Resources */,
 				F2FCC0CC2BA47508007AB8FD /* App Symbols.xcassets in Resources */,
 				2D5A1F1C24C9B5DF00F87DD0 /* license.html in Resources */,
 				F2E68B532BA0A28B001410E3 /* Work Target Symbols.xcassets in Resources */,
 				24FA48742CCB658900E2331A /* RendezvousEmoji.xcstrings in Resources */,
-				CE1E70F5260C9F8F0015B726 /* sms.caf in Resources */,
 				24564C8D2C947C8700C34497 /* InfoPlist.xcstrings in Resources */,
-				2D5A1F2324C9B5DF00F87DD0 /* ringing-tone-ch-fade.mp3 in Resources */,
 				2D5A1F2524C9B5DF00F87DD0 /* BallotHeaderView.xib in Resources */,
 				42AD36272A404F6200919AD8 /* RendezvousEmoji.xcassets in Resources */,
-				CE1E70E6260C9F8F0015B726 /* synth.caf in Resources */,
 				94955EE72B96057300493B8A /* SplashScreenThreemaBlue.png in Resources */,
 				2D5A1F2A24C9B5DF00F87DD0 /* ProtectedDataUnavailable.storyboard in Resources */,
 				2D5A1F2B24C9B5DF00F87DD0 /* IntroQuestionView.xib in Resources */,
 				2D5A1F2E24C9B5DF00F87DD0 /* License.storyboard in Resources */,
-				CE1E70F0260C9F8F0015B726 /* incoming_message.caf in Resources */,
 				2D5A1F2F24C9B5DF00F87DD0 /* CreateGroup.storyboard in Resources */,
 				F2E68B582BA0A489001410E3 /* LockCover.xib in Resources */,
 				2D5A1F3024C9B5DF00F87DD0 /* CallStoryboard.storyboard in Resources */,
 				2D321D0724D8499D009720C3 /* ThreemaBlue.xcassets in Resources */,
-				2D5A1F3724C9B5DF00F87DD0 /* threema_incom.caf in Resources */,
-				2D5A1F3824C9B5DF00F87DD0 /* threema_goody.caf in Resources */,
 				2D5A1F3924C9B5DF00F87DD0 /* CreateID.storyboard in Resources */,
-				CE1E7104260C9F8F0015B726 /* silent.caf in Resources */,
 				2D5A1F3C24C9B5DF00F87DD0 /* ProfilePicture.storyboard in Resources */,
-				CE1E70D7260C9F8F0015B726 /* trill.caf in Resources */,
-				2D5A1F4024C9B5DF00F87DD0 /* threema_problem.mp3 in Resources */,
-				2D5A1F4124C9B5DF00F87DD0 /* threema_best.caf in Resources */,
-				CE1E70FF260C9F8F0015B726 /* marimba2.caf in Resources */,
-				CE1E7118260C9F8F0015B726 /* glass.caf in Resources */,
-				2D5A1F4624C9B5DF00F87DD0 /* silent.mp3 in Resources */,
-				CE1E7113260C9F8F0015B726 /* received_message.caf in Resources */,
-				CE1E7127260C9F8F0015B726 /* pulse.caf in Resources */,
-				2D5A1F4824C9B5DF00F87DD0 /* threema_alphorn.caf in Resources */,
 				F244A8EF2B9F2CCE001DB743 /* ThreemaBlueLaunchScreen.storyboard in Resources */,
-				2D5A1F4A24C9B5DF00F87DD0 /* threema_pickup.mp3 in Resources */,
 				2D5A1F4B24C9B5DF00F87DD0 /* FileMessagePreviewUnsupportedTypeView.xib in Resources */,
 				2D5A1F4D24C9B5DF00F87DD0 /* DKImagePickerController.bundle in Resources */,
-				CE1E70DC260C9F8F0015B726 /* scan_success.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -16954,10 +16641,6 @@
 				241AEFDF2C94605C001FA52A /* MainStoryboard.storyboard in Resources */,
 				24F7EE9B2DC5074F005921BC /* TargetColorsPrivate.xcassets in Resources */,
 				2DEDB38D24C9903400FC9099 /* CallStoryboard.storyboard in Resources */,
-				CE1E7103260C9F8F0015B726 /* silent.caf in Resources */,
-				CE1E710D260C9F8F0015B726 /* bamboo.caf in Resources */,
-				CE1E70E0260C9F8F0015B726 /* music_box.caf in Resources */,
-				2DEDB38F24C9903400FC9099 /* threema_alphorn.caf in Resources */,
 				24FAA8F12D428611003958F1 /* emojis.generated.localization.fr.json in Resources */,
 				24FAA8F22D428611003958F1 /* emojis.generated.localization.it.json in Resources */,
 				24FAA8F32D428611003958F1 /* emojis.generated.localization.cs.json in Resources */,
@@ -16974,60 +16657,35 @@
 				24FAA8FE2D428611003958F1 /* emojis.generated.localization.es.json in Resources */,
 				24FAA8FF2D428611003958F1 /* emojis.generated.localization.en.json in Resources */,
 				24FAA9002D428611003958F1 /* emojis.generated.localization.sk.json in Resources */,
-				CE1E70EA260C9F8F0015B726 /* sent_message.caf in Resources */,
-				CE1E7108260C9F8F0015B726 /* whoop.caf in Resources */,
 				94955EF52B96057300493B8A /* SplashScreenThreemaGreen.png in Resources */,
 				24564C792C947C8600C34497 /* Localizable.xcstrings in Resources */,
 				42AD36262A404F6200919AD8 /* RendezvousEmoji.xcassets in Resources */,
-				CE1E70F4260C9F8F0015B726 /* sms.caf in Resources */,
 				2DEDB39424C9903400FC9099 /* Ballot.storyboard in Resources */,
 				F2FCC0CB2BA47506007AB8FD /* App Symbols.xcassets in Resources */,
 				2440215F2BAAC32B00F8B74F /* PrivacyInfo.xcprivacy in Resources */,
 				24FA48732CCB658900E2331A /* RendezvousEmoji.xcstrings in Resources */,
-				2DEDB39524C9903400FC9099 /* threema_xylo.caf in Resources */,
-				CE1E711C260C9F8F0015B726 /* input.caf in Resources */,
 				94955ED72B96057300493B8A /* ThreemaGreenLaunchScreen.storyboard in Resources */,
-				2DEDB39924C9903400FC9099 /* busy-4x.mp3 in Resources */,
 				24564C892C947C8700C34497 /* InfoPlist.xcstrings in Resources */,
 				2DEDB39B24C9903400FC9099 /* bad_passwords.txt in Resources */,
 				2DEDB39C24C9903400FC9099 /* ProfilePicture.storyboard in Resources */,
 				241AEFE52C9463F9001FA52A /* CreatePassword.storyboard in Resources */,
-				2DEDB3A024C9903400FC9099 /* pickup.mp3 in Resources */,
-				2DEDB3A424C9903400FC9099 /* threema_problem.mp3 in Resources */,
-				CE1E70DB260C9F8F0015B726 /* scan_success.caf in Resources */,
 				2DEDB3A624C9903400FC9099 /* MWPhotoBrowser.bundle in Resources */,
 				2DEDB3A724C9903400FC9099 /* license.html in Resources */,
 				2DEDB3AA24C9903400FC9099 /* LockCover.xib in Resources */,
 				241AEFD32C94582A001FA52A /* SettingsStoryboard.storyboard in Resources */,
 				2D375C8D260C887E00BC479B /* CallDiagnostic.storyboard in Resources */,
-				2DEDB3AD24C9903400FC9099 /* threema_hangup.mp3 in Resources */,
-				CE1E70EF260C9F8F0015B726 /* incoming_message.caf in Resources */,
-				2DEDB3AE24C9903400FC9099 /* silent.mp3 in Resources */,
-				CE1E70F9260C9F8F0015B726 /* marimba1.caf in Resources */,
 				2D95D33C24D8417600006621 /* ThreemaGreen.xcassets in Resources */,
 				241AEFD92C945A54001FA52A /* MyIdentityStoryboard.storyboard in Resources */,
 				2DEDB3B424C9903400FC9099 /* BallotHeaderView.xib in Resources */,
-				2DEDB3B524C9903400FC9099 /* threema_pickup.mp3 in Resources */,
 				2DEDB3BA24C9903400FC9099 /* IntroQuestionView.xib in Resources */,
 				2DEDB3BC24C9903400FC9099 /* CreateGroup.storyboard in Resources */,
 				F2E68B502BA0A199001410E3 /* Threema Target Symbols.xcassets in Resources */,
 				2DEDB3BD24C9903400FC9099 /* DKImagePickerController.bundle in Resources */,
-				CE1E70E5260C9F8F0015B726 /* synth.caf in Resources */,
-				2DEDB3C324C9903400FC9099 /* threema_incom.caf in Resources */,
 				2DEDB3C524C9903400FC9099 /* CreateID.storyboard in Resources */,
-				CE1E7126260C9F8F0015B726 /* pulse.caf in Resources */,
-				CE1E70D6260C9F8F0015B726 /* trill.caf in Resources */,
-				CE1E7112260C9F8F0015B726 /* received_message.caf in Resources */,
-				CE1E70FE260C9F8F0015B726 /* marimba2.caf in Resources */,
-				CE1E7117260C9F8F0015B726 /* glass.caf in Resources */,
-				2DEDB3CB24C9903400FC9099 /* threema_goody.caf in Resources */,
 				2DEDB3CE24C9903400FC9099 /* DKCameraResource.bundle in Resources */,
 				4A38E3D02A5EDB40008484A2 /* Settings.bundle in Resources */,
 				F271802D2CEE2A5400FCD4F7 /* SharedColors.xcassets in Resources */,
-				2DEDB3D024C9903400FC9099 /* threema_best.caf in Resources */,
-				2DEDB3D224C9903400FC9099 /* ringing-tone-ch-fade.mp3 in Resources */,
 				2DEDB3D324C9903400FC9099 /* FileMessagePreviewUnsupportedTypeView.xib in Resources */,
-				CE1E7121260C9F8F0015B726 /* drum.caf in Resources */,
 				2DEDB3D524C9903400FC9099 /* ProtectedDataUnavailable.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -17063,44 +16721,27 @@
 			buildActionMask = 2147483647;
 			files = (
 				249CAC0F2DC8833100A2774E /* TargetColorsOnPrem.xcassets in Resources */,
-				CE1E7116260C9F8F0015B726 /* glass.caf in Resources */,
 				241AEFDE2C94605C001FA52A /* MainStoryboard.storyboard in Resources */,
 				24564C782C947C8600C34497 /* Localizable.xcstrings in Resources */,
-				CE1E70F8260C9F8F0015B726 /* marimba1.caf in Resources */,
-				CE1E7107260C9F8F0015B726 /* whoop.caf in Resources */,
 				4D088ABF255C0CD4002F3129 /* Ballot.storyboard in Resources */,
 				241AEFD22C94582A001FA52A /* SettingsStoryboard.storyboard in Resources */,
-				4D088AC1255C0CD4002F3129 /* threema_hangup.mp3 in Resources */,
 				F2E68B562BA0A487001410E3 /* LockCover.xib in Resources */,
-				CE1E70D5260C9F8F0015B726 /* trill.caf in Resources */,
-				CE1E711B260C9F8F0015B726 /* input.caf in Resources */,
-				4D088AC7255C0CD4002F3129 /* busy-4x.mp3 in Resources */,
-				CE1E7111260C9F8F0015B726 /* received_message.caf in Resources */,
 				4A38E3CF2A5EDB40008484A2 /* Settings.bundle in Resources */,
-				4D088AC9255C0CD4002F3129 /* pickup.mp3 in Resources */,
 				4D088ACA255C0CD4002F3129 /* bad_passwords.txt in Resources */,
-				CE1E7125260C9F8F0015B726 /* pulse.caf in Resources */,
 				241AEFE42C9463F9001FA52A /* CreatePassword.storyboard in Resources */,
-				4D088ACD255C0CD4002F3129 /* threema_xylo.caf in Resources */,
 				4D088ACE255C0CD4002F3129 /* DKCameraResource.bundle in Resources */,
 				42AD36252A404F6200919AD8 /* RendezvousEmoji.xcassets in Resources */,
 				24564C872C947C8700C34497 /* InfoPlist.xcstrings in Resources */,
 				241AEFD82C945A54001FA52A /* MyIdentityStoryboard.storyboard in Resources */,
-				CE1E70F3260C9F8F0015B726 /* sms.caf in Resources */,
 				94955EEF2B96057300493B8A /* SplashScreenThreemaOnPrem.png in Resources */,
 				4D088AD2255C0CD4002F3129 /* MWPhotoBrowser.bundle in Resources */,
 				CE7E039625FA6F520054373A /* License.storyboard in Resources */,
 				24FA48722CCB658900E2331A /* RendezvousEmoji.xcstrings in Resources */,
 				4D088AD4255C0CD4002F3129 /* license.html in Resources */,
-				CE1E70DF260C9F8F0015B726 /* music_box.caf in Resources */,
-				CE1E70DA260C9F8F0015B726 /* scan_success.caf in Resources */,
 				4D61E25C255C1EC900F484D8 /* LicenseOnPrem.storyboard in Resources */,
-				CE1E70FD260C9F8F0015B726 /* marimba2.caf in Resources */,
-				4D088ADB255C0CD4002F3129 /* ringing-tone-ch-fade.mp3 in Resources */,
 				4D088ADD255C0CD4002F3129 /* BallotHeaderView.xib in Resources */,
 				4D088AE3255C0CD4002F3129 /* ProtectedDataUnavailable.storyboard in Resources */,
 				4D088AE4255C0CD4002F3129 /* IntroQuestionView.xib in Resources */,
-				CE1E7102260C9F8F0015B726 /* silent.caf in Resources */,
 				4D088AE9255C0CD4002F3129 /* CreateGroup.storyboard in Resources */,
 				F2E68B4D2BA09FE4001410E3 /* App Symbols.xcassets in Resources */,
 				24FAA9112D428611003958F1 /* emojis.generated.localization.fr.json in Resources */,
@@ -17121,23 +16762,11 @@
 				24FAA9202D428611003958F1 /* emojis.generated.localization.sk.json in Resources */,
 				4D088AEA255C0CD4002F3129 /* CallStoryboard.storyboard in Resources */,
 				4D7B00C125E53AED00BC6BCE /* ThreemaOnPrem.xcassets in Resources */,
-				CE1E7120260C9F8F0015B726 /* drum.caf in Resources */,
-				4D088AF2255C0CD4002F3129 /* threema_incom.caf in Resources */,
-				4D088AF3255C0CD4002F3129 /* threema_goody.caf in Resources */,
 				4D088AF4255C0CD4002F3129 /* CreateID.storyboard in Resources */,
-				CE1E70EE260C9F8F0015B726 /* incoming_message.caf in Resources */,
 				F2E68B552BA0A2A1001410E3 /* OnPrem Target Symbols.xcassets in Resources */,
 				2D375C7F260C887D00BC479B /* CallDiagnostic.storyboard in Resources */,
 				4D088AF7255C0CD4002F3129 /* ProfilePicture.storyboard in Resources */,
-				4D088AFB255C0CD4002F3129 /* threema_problem.mp3 in Resources */,
-				CE1E710C260C9F8F0015B726 /* bamboo.caf in Resources */,
 				2440215D2BAAC30F00F8B74F /* PrivacyInfo.xcprivacy in Resources */,
-				4D088AFC255C0CD4002F3129 /* threema_best.caf in Resources */,
-				CE1E70E9260C9F8F0015B726 /* sent_message.caf in Resources */,
-				CE1E70E4260C9F8F0015B726 /* synth.caf in Resources */,
-				4D088B01255C0CD4002F3129 /* silent.mp3 in Resources */,
-				4D088B03255C0CD4002F3129 /* threema_alphorn.caf in Resources */,
-				4D088B05255C0CD4002F3129 /* threema_pickup.mp3 in Resources */,
 				94955F082B96057300493B8A /* ThreemaOnPremLaunchScreen.storyboard in Resources */,
 				4D088B06255C0CD4002F3129 /* FileMessagePreviewUnsupportedTypeView.xib in Resources */,
 				4D088B08255C0CD4002F3129 /* DKImagePickerController.bundle in Resources */,
@@ -17186,10 +16815,8 @@
 			files = (
 				24F7EE992DC5074F005921BC /* TargetColorsPrivate.xcassets in Resources */,
 				241AEFDC2C94605C001FA52A /* MainStoryboard.storyboard in Resources */,
-				CE1E70F1260C9F8F0015B726 /* sms.caf in Resources */,
 				CEB7F7C31F5DC14200503071 /* CallStoryboard.storyboard in Resources */,
 				F2E68B4F2BA0A16C001410E3 /* Threema Target Symbols.xcassets in Resources */,
-				CEFEB5EA242CCE6500D094A1 /* threema_alphorn.caf in Resources */,
 				24FAA8E12D428611003958F1 /* emojis.generated.localization.fr.json in Resources */,
 				24FAA8E22D428611003958F1 /* emojis.generated.localization.it.json in Resources */,
 				24FAA8E32D428611003958F1 /* emojis.generated.localization.cs.json in Resources */,
@@ -17208,35 +16835,18 @@
 				24FAA8F02D428611003958F1 /* emojis.generated.localization.sk.json in Resources */,
 				24FA48702CCB658900E2331A /* RendezvousEmoji.xcstrings in Resources */,
 				0AEBA04519D31A5A002DE2C3 /* Ballot.storyboard in Resources */,
-				CEFEB5E6242CCE6500D094A1 /* threema_xylo.caf in Resources */,
-				CEDDF6111EF97A4900C49480 /* busy-4x.mp3 in Resources */,
-				CE1E70F6260C9F8F0015B726 /* marimba1.caf in Resources */,
 				94955EE82B96057300493B8A /* SplashScreenThreema.png in Resources */,
 				2D0CAC412186F6B700571DAD /* bad_passwords.txt in Resources */,
-				CE1E7119260C9F8F0015B726 /* input.caf in Resources */,
 				CEE0F44D1E92A5FA00008F5B /* ProfilePicture.storyboard in Resources */,
 				24564C8B2C947C8700C34497 /* InfoPlist.xcstrings in Resources */,
 				241AEFE22C9463F9001FA52A /* CreatePassword.storyboard in Resources */,
-				CEDDF6061EF96D0E00C49480 /* pickup.mp3 in Resources */,
-				CE1E70D8260C9F8F0015B726 /* scan_success.caf in Resources */,
-				CE1E710F260C9F8F0015B726 /* received_message.caf in Resources */,
-				CEB7F78C1F57FFEE00503071 /* threema_problem.mp3 in Resources */,
 				4D8B813518D38B4F0079014F /* MWPhotoBrowser.bundle in Resources */,
 				4DBCC0321656DE3E00B3CFFF /* license.html in Resources */,
-				CE1E710A260C9F8F0015B726 /* bamboo.caf in Resources */,
 				42AD36232A404F6200919AD8 /* RendezvousEmoji.xcassets in Resources */,
 				24564C762C947C8600C34497 /* Localizable.xcstrings in Resources */,
-				CE1E7123260C9F8F0015B726 /* pulse.caf in Resources */,
-				CE1E7114260C9F8F0015B726 /* glass.caf in Resources */,
 				CECB311B231FAB2F00C80FF2 /* LockCover.xib in Resources */,
-				CE1E70EC260C9F8F0015B726 /* incoming_message.caf in Resources */,
-				CEB7F7921F57FFEE00503071 /* threema_hangup.mp3 in Resources */,
-				CE0D8AB92412945F007ACAEB /* silent.mp3 in Resources */,
-				CE1E70E7260C9F8F0015B726 /* sent_message.caf in Resources */,
 				241AEFD62C945A54001FA52A /* MyIdentityStoryboard.storyboard in Resources */,
 				0AC6B3E61A0280DD00D1A77A /* BallotHeaderView.xib in Resources */,
-				CEB7F78F1F57FFEE00503071 /* threema_pickup.mp3 in Resources */,
-				CE1E70FB260C9F8F0015B726 /* marimba2.caf in Resources */,
 				94955EF72B96057300493B8A /* ThreemaLaunchScreen.storyboard in Resources */,
 				0A11EE961C63A39C00B72CCB /* Threema.xcassets in Resources */,
 				0AF75A871BFA0FE800210FB3 /* IntroQuestionView.xib in Resources */,
@@ -17245,21 +16855,11 @@
 				2D2B2FFC260B8AF00056AAAB /* CallDiagnostic.storyboard in Resources */,
 				241AEFD02C94582A001FA52A /* SettingsStoryboard.storyboard in Resources */,
 				F2FCC0CE2BA4750D007AB8FD /* App Symbols.xcassets in Resources */,
-				CE1E7100260C9F8F0015B726 /* silent.caf in Resources */,
 				4A38E3CD2A5EDB40008484A2 /* Settings.bundle in Resources */,
-				CEFEB5E4242CCE6500D094A1 /* threema_incom.caf in Resources */,
-				CE1E7105260C9F8F0015B726 /* whoop.caf in Resources */,
 				0A5ECC9E1BE101C7003B3A84 /* CreateID.storyboard in Resources */,
-				CE1E711E260C9F8F0015B726 /* drum.caf in Resources */,
-				CEFEB5E8242CCE6500D094A1 /* threema_goody.caf in Resources */,
 				CE8A2B331EB38270004973D5 /* DKCameraResource.bundle in Resources */,
-				CE1E70E2260C9F8F0015B726 /* synth.caf in Resources */,
-				CEFEB5EC242CCE6500D094A1 /* threema_best.caf in Resources */,
 				24E46F5B2BAABAA4009B718E /* PrivacyInfo.xcprivacy in Resources */,
 				F271802A2CEE2A5400FCD4F7 /* SharedColors.xcassets in Resources */,
-				CE1E70D3260C9F8F0015B726 /* trill.caf in Resources */,
-				CE1E70DD260C9F8F0015B726 /* music_box.caf in Resources */,
-				CE5D049E1EF188B200C40E25 /* ringing-tone-ch-fade.mp3 in Resources */,
 				0A868E1E1B45B97600A5B755 /* FileMessagePreviewUnsupportedTypeView.xib in Resources */,
 				4D95F92120B59E78005BC753 /* ProtectedDataUnavailable.storyboard in Resources */,
 			);
@@ -17310,45 +16910,28 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F2EAFEDF2D6CC9C400DFFD48 /* glass.caf in Resources */,
 				F2EAFEE02D6CC9C400DFFD48 /* MainStoryboard.storyboard in Resources */,
 				F2EAFEE12D6CC9C400DFFD48 /* Localizable.xcstrings in Resources */,
-				F2EAFEE22D6CC9C400DFFD48 /* marimba1.caf in Resources */,
-				F2EAFEE32D6CC9C400DFFD48 /* whoop.caf in Resources */,
 				F29412B62D6CE0B4000B3681 /* CustomOnPrem.xcassets in Resources */,
 				F2EAFEE42D6CC9C400DFFD48 /* Ballot.storyboard in Resources */,
 				F2EAFEE52D6CC9C400DFFD48 /* SettingsStoryboard.storyboard in Resources */,
-				F2EAFEE62D6CC9C400DFFD48 /* threema_hangup.mp3 in Resources */,
 				F2EAFEE72D6CC9C400DFFD48 /* LockCover.xib in Resources */,
-				F2EAFEE82D6CC9C400DFFD48 /* trill.caf in Resources */,
-				F2EAFEE92D6CC9C400DFFD48 /* input.caf in Resources */,
-				F2EAFEEA2D6CC9C400DFFD48 /* busy-4x.mp3 in Resources */,
-				F2EAFEEB2D6CC9C400DFFD48 /* received_message.caf in Resources */,
 				249CAC262DC883BE00A2774E /* TargetColorsCustomOnPrem.xcassets in Resources */,
 				F2EAFEEC2D6CC9C400DFFD48 /* Settings.bundle in Resources */,
-				F2EAFEED2D6CC9C400DFFD48 /* pickup.mp3 in Resources */,
 				F2EAFEEE2D6CC9C400DFFD48 /* bad_passwords.txt in Resources */,
-				F2EAFEEF2D6CC9C400DFFD48 /* pulse.caf in Resources */,
 				F2EAFEF02D6CC9C400DFFD48 /* CreatePassword.storyboard in Resources */,
-				F2EAFEF12D6CC9C400DFFD48 /* threema_xylo.caf in Resources */,
 				F2EAFEF22D6CC9C400DFFD48 /* DKCameraResource.bundle in Resources */,
 				F2EAFEF32D6CC9C400DFFD48 /* RendezvousEmoji.xcassets in Resources */,
 				F2EAFEF52D6CC9C400DFFD48 /* MyIdentityStoryboard.storyboard in Resources */,
-				F2EAFEF62D6CC9C400DFFD48 /* sms.caf in Resources */,
 				F2EAFEF82D6CC9C400DFFD48 /* MWPhotoBrowser.bundle in Resources */,
 				F2EAFEF92D6CC9C400DFFD48 /* License.storyboard in Resources */,
 				F2EAFEFA2D6CC9C400DFFD48 /* RendezvousEmoji.xcstrings in Resources */,
 				F29412B32D6CDBC2000B3681 /* SplashScreenCustomOnPrem.png in Resources */,
 				F2EAFEFB2D6CC9C400DFFD48 /* license.html in Resources */,
-				F2EAFEFE2D6CC9C400DFFD48 /* music_box.caf in Resources */,
-				F2EAFEFF2D6CC9C400DFFD48 /* scan_success.caf in Resources */,
 				F2EAFF002D6CC9C400DFFD48 /* LicenseOnPrem.storyboard in Resources */,
-				F2EAFF012D6CC9C400DFFD48 /* marimba2.caf in Resources */,
-				F2EAFF022D6CC9C400DFFD48 /* ringing-tone-ch-fade.mp3 in Resources */,
 				F2EAFF032D6CC9C400DFFD48 /* BallotHeaderView.xib in Resources */,
 				F2EAFF042D6CC9C400DFFD48 /* ProtectedDataUnavailable.storyboard in Resources */,
 				F2EAFF052D6CC9C400DFFD48 /* IntroQuestionView.xib in Resources */,
-				F2EAFF062D6CC9C400DFFD48 /* silent.caf in Resources */,
 				F2EAFF082D6CC9C400DFFD48 /* CreateGroup.storyboard in Resources */,
 				F2EAFF092D6CC9C400DFFD48 /* App Symbols.xcassets in Resources */,
 				F2EAFF0A2D6CC9C400DFFD48 /* emojis.generated.localization.fr.json in Resources */,
@@ -17371,22 +16954,10 @@
 				F2EAFFAC2D6CCA8700DFFD48 /* InfoPlist.xcstrings in Resources */,
 				F2EAFF192D6CC9C400DFFD48 /* emojis.generated.localization.sk.json in Resources */,
 				F2EAFF1A2D6CC9C400DFFD48 /* CallStoryboard.storyboard in Resources */,
-				F2EAFF1C2D6CC9C400DFFD48 /* drum.caf in Resources */,
-				F2EAFF1D2D6CC9C400DFFD48 /* threema_incom.caf in Resources */,
-				F2EAFF1E2D6CC9C400DFFD48 /* threema_goody.caf in Resources */,
 				F2EAFF1F2D6CC9C400DFFD48 /* CreateID.storyboard in Resources */,
-				F2EAFF202D6CC9C400DFFD48 /* incoming_message.caf in Resources */,
 				F2EAFF222D6CC9C400DFFD48 /* CallDiagnostic.storyboard in Resources */,
 				F2EAFF232D6CC9C400DFFD48 /* ProfilePicture.storyboard in Resources */,
-				F2EAFF242D6CC9C400DFFD48 /* threema_problem.mp3 in Resources */,
-				F2EAFF252D6CC9C400DFFD48 /* bamboo.caf in Resources */,
-				F2EAFF282D6CC9C400DFFD48 /* threema_best.caf in Resources */,
-				F2EAFF292D6CC9C400DFFD48 /* sent_message.caf in Resources */,
-				F2EAFF2A2D6CC9C400DFFD48 /* synth.caf in Resources */,
-				F2EAFF2B2D6CC9C400DFFD48 /* silent.mp3 in Resources */,
 				F245C4052D6DD8BB00100444 /* Custom OnPrem Target Symbols.xcassets in Resources */,
-				F2EAFF2C2D6CC9C400DFFD48 /* threema_alphorn.caf in Resources */,
-				F2EAFF2D2D6CC9C400DFFD48 /* threema_pickup.mp3 in Resources */,
 				F2EAFF2F2D6CC9C400DFFD48 /* FileMessagePreviewUnsupportedTypeView.xib in Resources */,
 				F2EAFF302D6CC9C400DFFD48 /* DKImagePickerController.bundle in Resources */,
 				F2EAFF312D6CC9C400DFFD48 /* SharedColors.xcassets in Resources */,
@@ -17933,7 +17504,6 @@
 				245FC7D52B5E7C4A00674B31 /* DistributionListCell.swift in Sources */,
 				0A03A15E1CAC0B5600B4C74B /* MDMSetup.m in Sources */,
 				4AD8CD542A3738CE00059576 /* MessageDecoder+Swift.swift in Sources */,
-				CEE1CA7423E9CD9B00CEDF9F /* WizardBackgroundView.swift in Sources */,
 				426C37712BB6231C0020A031 /* AppSetupState.swift in Sources */,
 				0A3864271C62570B00924A29 /* ContactUtil.m in Sources */,
 				245A3AF42D5B2C1F0026DE12 /* BallotChoiceEntity+Extension.swift in Sources */,

@@ -52,7 +52,7 @@ struct DeleteRevokeView: View {
         }
         .navigationBarHidden(true)
         .dynamicTypeSize(.small ... .xxxLarge)
-        .colorScheme(.dark)
+        .preferredColorScheme(.dark)
         .navigationBarBackButtonHidden(true)
     }
 }

@@ -196,6 +196,12 @@ import ThreemaMacros
             )
         }
         else {
+            guard safeConfigManager.getCustomServer() == nil || safeConfigManager.getCustomServer()?.isEmpty ?? true
+            else {
+                completion(false)
+                return
+            }
+            
             getSafeDefaultServer(key: safeConfigManager.getKey()!) { result in
                 switch result {
                 case let .success(safeServer):

@@ -194,6 +194,10 @@ import ThreemaMacros
                 try migrateTo6_6()
                 migratedTo = .v6_6
             }
+            if migratedTo < .v6_8 {
+                try migrateTo6_8()
+                migratedTo = .v6_8
+            }
 
             // Add here a check if migration is necessary for a particular version...
         }
@@ -720,7 +724,7 @@ import ThreemaMacros
         os_signpost(.end, log: osPOILog, name: "6.2 migration")
         DDLogNotice("[AppMigration] App migration to version 6.2 successfully finished")
     }
-    
+
     /// Migrate to version 6.6:
     /// - Migrate legacy reactions to new reactions
     private func migrateTo6_6() throws {
@@ -775,30 +779,30 @@ import ThreemaMacros
                 message.userack = 0
             }
         }
-        
+
         // Group messages
         businessInjector.entityManager.performAndWaitSave {
             guard let messages = self.businessInjector.entityManager.entityFetcher.messagesWithUserGroupReactions()
             else {
                 return
             }
-            
+
             DDLogNotice(
                 "[AppMigration] App migration to version 6.6: found \(messages.count) from group chats with ack/dec."
             )
-            
+
             for message in messages {
-                
+
                 guard let receipts = message.groupDeliveryReceipts, !receipts.isEmpty else {
                     continue
                 }
-                
+
                 for receipt in receipts {
                     let type = receipt.deliveryReceiptType()
                     guard type == .acknowledged || type == .declined else {
                         continue
                     }
-                    
+
                     var contact: ContactEntity? = nil
                     if receipt.identity != self.businessInjector.myIdentityStore.identity {
                         guard let fetchedContact = self.businessInjector.entityManager.entityFetcher
@@ -818,5 +822,20 @@ import ThreemaMacros
 
         os_signpost(.end, log: osPOILog, name: "6.6 migration")
         DDLogNotice("[AppMigration] App migration to version 6.6 successfully finished")
+    }
+
+    /// Migrate to version 6.8:
+    /// - Migrate Keychain when downgrade Threema, respectively delete all (incompatible) Keychain items except "Threema
+    /// identity 1"
+    private func migrateTo6_8() throws {
+        DDLogNotice("[AppMigration] App migration to version 6.8 started")
+        os_signpost(.begin, log: osPOILog, name: "6.8 migration")
+
+        if AppMigrationVersion.isAppVersionDowngraded {
+            try businessInjector.keychainHelper.migrateToDowngrade()
+        }
+
+        os_signpost(.end, log: osPOILog, name: "6.8 migration")
+        DDLogNotice("[AppMigration] App migration to version 6.8 successfully finished")
     }
 }

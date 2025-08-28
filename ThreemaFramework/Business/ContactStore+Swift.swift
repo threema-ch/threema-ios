@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 
 extension ContactStore {
 
@@ -142,7 +143,37 @@ extension ContactStoreProtocol {
         }
         mediatorSyncableContacts.syncAsync()
     }
-    
+        
+    /// Update the acquaintance level of the contact to direct and sync it with multi device if activated
+    /// - Parameters:
+    ///   - identity: Identity of the contact
+    ///   - entityManager: EntityManager (default is BusinessInjector.ui.entityManager)
+    /// - Returns: Business Object of Contact
+    public func updateAcquaintanceLevelToDirect(
+        for identity: ThreemaIdentity,
+        entityManager: EntityManager = BusinessInjector.ui.entityManager
+    ) -> Contact? {
+        entityManager.performAndWait {
+            guard let contactEntity = entityManager.entityFetcher.contact(for: identity.string) else {
+                return nil
+            }
+
+            if contactEntity.isHidden {
+                let mediatorSyncableContacts = MediatorSyncableContacts()
+                entityManager.performAndWaitSave {
+                    contactEntity.isHidden = false
+                    mediatorSyncableContacts.updateAcquaintanceLevel(
+                        identity: contactEntity.identity,
+                        value: NSNumber(integerLiteral: ContactAcquaintanceLevel.direct.rawValue)
+                    )
+                }
+                mediatorSyncableContacts.syncAsync()
+            }
+
+            return Contact(contactEntity: contactEntity)
+        }
+    }
+        
     /// Async version of `updateStatus(forAllContactsIgnoreInterval:onCompletion:onError:)`
     func updateStatusForAllContacts(ignoreInterval: Bool) async throws {
         try await withCheckedThrowingContinuation { continuation in

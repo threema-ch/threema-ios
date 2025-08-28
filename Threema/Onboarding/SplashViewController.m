@@ -98,6 +98,8 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
 
     _bgImagescale = 1.5;
 
@@ -391,16 +393,16 @@
     viewController.modalPresentationStyle = UIModalPresentationFullScreen;
     viewController.view.hidden = true;
     
-    EnterLicenseInfoViewController *ec = [EnterLicenseInfoViewController new];
+    FlavorInfoViewController *fc = [FlavorInfoViewController new];
     
     if (showInfoView) {
-        UIViewController *enterLicenseInfoViewController = [ec viewControllerWithDismiss:^{
+        UIViewController *flavorInfoViewController = [fc viewControllerWithDismiss:^{
             [viewController dismissViewControllerAnimated:YES completion:nil];
         }];
-        enterLicenseInfoViewController.modalPresentationStyle = SYSTEM_IS_IPAD ? UIModalPresentationFormSheet : UIModalPresentationFullScreen;
+        flavorInfoViewController.modalPresentationStyle = UIModalPresentationFullScreen;
         
         [self presentViewController:viewController animated:NO completion:^{
-            [viewController presentViewController:enterLicenseInfoViewController animated:NO completion:^{
+            [viewController presentViewController:flavorInfoViewController animated:NO completion:^{
                 viewController.view.hidden = false;
             }];
         }];

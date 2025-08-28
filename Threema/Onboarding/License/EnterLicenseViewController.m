@@ -190,6 +190,18 @@
     
     [self updateConfirmButton];
     [self updateColors];
+    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    NSString *predefinedOppfMDM = [mdmSetup onPremConfigUrl];
+    if ([TargetManagerObjc isCustomOnPrem] && predefinedOppfMDM != nil) {
+        if (![[LicenseStore sharedLicenseStore] validCustomOnPremConfigUrlWithPredefinedUrl:predefinedOppfMDM]) {
+            _licenseUsernameTextField.userInteractionEnabled = NO;
+            _licensePasswordTextField.userInteractionEnabled = NO;
+            _serverTextField.userInteractionEnabled = NO;
+            _confirmButton.userInteractionEnabled = NO;
+            [self showErrorMessage:NSLocalizedString(@"enter_license_invalid_oppf_mdm", @"")];
+        }
+    }
 }
 
 - (BOOL)prefersStatusBarHidden {

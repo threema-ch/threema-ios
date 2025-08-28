@@ -295,7 +295,10 @@
     // apply Threema Safe password and server config from MDM
     MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
     NSString *customServer = nil;
-    NSString *server = nil;
+    NSString *customServerUsername = nil;
+    NSString *customServerPassword = nil;
+    NSNumber *maxBackupBytes = nil;
+    NSNumber *retentionDays = nil;
     
     if ([mdmSetup isSafeBackupPasswordPreset]) {
         self.identityStore.tempSafePassword = [mdmSetup safePassword];
@@ -303,10 +306,18 @@
     
     if ([mdmSetup isSafeBackupServerPreset]) {
         customServer = [mdmSetup safeServerUrl];
+        customServerUsername = [mdmSetup safeServerUsername];
+        customServerPassword = [mdmSetup safeServerPassword];
 
         // Set data to safeConfigManager in case of empty or to short password
         [safeConfigManager setCustomServer:customServer];
         [safeConfigManager setServer:customServer];
+    } else if ([safeConfigManager getCustomServer] != nil) {
+        customServer = [safeConfigManager getCustomServer];
+        customServerUsername = [safeConfigManager getServerUser];
+        customServerPassword = [safeConfigManager getServerPassword];
+        maxBackupBytes = [safeConfigManager getMaxBackupBytesObjC];
+        retentionDays = [safeConfigManager getRetentionDaysObjC];
     }
         
     if (self.identityStore.tempSafePassword == nil || self.identityStore.tempSafePassword.length < 8) {
@@ -320,7 +331,7 @@
     });
     
     dispatch_sync(dispatch_get_main_queue(), ^{
-        [safeManager activateWithIdentity:self.identityStore.identity safePassword:self.identityStore.tempSafePassword customServer:customServer serverUser:[mdmSetup safeServerUsername] serverPassword:[mdmSetup safeServerPassword] server:server maxBackupBytes:nil retentionDays:nil completion:^(NSError * _Nullable error) {
+        [safeManager activateWithIdentity:self.identityStore.identity safePassword:self.identityStore.tempSafePassword customServer:customServer serverUser:customServerUsername serverPassword:customServerPassword server:nil maxBackupBytes:maxBackupBytes retentionDays:retentionDays completion:^(NSError * _Nullable error) {
             if (error != nil) {
                 _hasErrors = YES;
                 [_syncSafeProgressLabel showErrorMessage:error.localizedDescription];

@@ -407,11 +407,6 @@
 		240FEB032C7CB18D00790570 /* FileDataEntity+ExternalStorageInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 240FEB022C7CB18D00790570 /* FileDataEntity+ExternalStorageInfo.swift */; };
 		240FEB052C7CB6EE00790570 /* FileDataEntityTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 240FEB042C7CB6EE00790570 /* FileDataEntityTest.swift */; };
 		24109E4E28C9B9EA00F9EE1F /* XCTest+AsyncAssertThrows.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24109E4D28C9B9EA00F9EE1F /* XCTest+AsyncAssertThrows.swift */; };
-		24122E4A2A52FE900049F38E /* TrailingLabelStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24122E492A52FE900049F38E /* TrailingLabelStyle.swift */; };
-		24122E4B2A52FE900049F38E /* TrailingLabelStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24122E492A52FE900049F38E /* TrailingLabelStyle.swift */; };
-		24122E4C2A52FE900049F38E /* TrailingLabelStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24122E492A52FE900049F38E /* TrailingLabelStyle.swift */; };
-		24122E4D2A52FE900049F38E /* TrailingLabelStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24122E492A52FE900049F38E /* TrailingLabelStyle.swift */; };
-		24122E4E2A52FE900049F38E /* TrailingLabelStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24122E492A52FE900049F38E /* TrailingLabelStyle.swift */; };
 		2413C54A29EFD4840070E490 /* BulletText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2413C54929EFD4840070E490 /* BulletText.swift */; };
 		2413C54B29EFD4840070E490 /* BulletText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2413C54929EFD4840070E490 /* BulletText.swift */; };
 		2413C54C29EFD4840070E490 /* BulletText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2413C54929EFD4840070E490 /* BulletText.swift */; };
@@ -618,11 +613,6 @@
 		244356602B5554C100BE22DD /* DeleteRevokeSuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2443565D2B5554C100BE22DD /* DeleteRevokeSuccessView.swift */; };
 		244356612B5554C100BE22DD /* DeleteRevokeSuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2443565D2B5554C100BE22DD /* DeleteRevokeSuccessView.swift */; };
 		244356622B5554C100BE22DD /* DeleteRevokeSuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2443565D2B5554C100BE22DD /* DeleteRevokeSuccessView.swift */; };
-		244356642B55554A00BE22DD /* InfoGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 244356632B55554A00BE22DD /* InfoGroupBoxStyle.swift */; };
-		244356652B55554A00BE22DD /* InfoGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 244356632B55554A00BE22DD /* InfoGroupBoxStyle.swift */; };
-		244356662B55554A00BE22DD /* InfoGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 244356632B55554A00BE22DD /* InfoGroupBoxStyle.swift */; };
-		244356672B55554A00BE22DD /* InfoGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 244356632B55554A00BE22DD /* InfoGroupBoxStyle.swift */; };
-		244356682B55554A00BE22DD /* InfoGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 244356632B55554A00BE22DD /* InfoGroupBoxStyle.swift */; };
 		2446173D2CE5EE22004FE0EC /* ReactionViewStackViewItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2446173C2CE5EE22004FE0EC /* ReactionViewStackViewItemView.swift */; };
 		2446173E2CE5EE22004FE0EC /* ReactionViewStackViewItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2446173C2CE5EE22004FE0EC /* ReactionViewStackViewItemView.swift */; };
 		2446173F2CE5EE22004FE0EC /* ReactionViewStackViewItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2446173C2CE5EE22004FE0EC /* ReactionViewStackViewItemView.swift */; };
@@ -1543,6 +1533,9 @@
 		2D4A76792608E401005713B2 /* VoIPCallMessageProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4A76782608E400005713B2 /* VoIPCallMessageProtocol.swift */; };
 		2D4AFF4C23D0B25A00B468F8 /* MediatorMessageProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4AFF4B23D0B25A00B468F8 /* MediatorMessageProtocol.swift */; };
 		2D4E597D25C0561600924DC5 /* TaskExecutionTransactionDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 2D4E597B25C054C400924DC5 /* TaskExecutionTransactionDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		2D54E81F2E3B34AA0045FA53 /* KeychainMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D54E81E2E3B34510045FA53 /* KeychainMigration.swift */; };
+		2D54E8212E3B44880045FA53 /* KeychainHelperMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D54E8202E3B447C0045FA53 /* KeychainHelperMock.swift */; };
+		2D54E8222E3B44880045FA53 /* KeychainHelperMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D54E8202E3B447C0045FA53 /* KeychainHelperMock.swift */; };
 		2D5523E32303DA8600A21671 /* AppSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D5523E22303DA8600A21671 /* AppSetup.swift */; };
 		2D55A84F23851E9300613425 /* TestLoggerMock.m in Sources */ = {isa = PBXBuildFile; fileRef = 2D55A84E23851E9300613425 /* TestLoggerMock.m */; };
 		2D5A1CD624C9B5DF00F87DD0 /* GrowingNotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7E4F2523E2C312009977A5 /* GrowingNotificationBanner.swift */; };
@@ -5608,16 +5601,6 @@
 		F27180312CEE2A5400FCD4F7 /* SharedColors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE752310269C81C1008064E4 /* SharedColors.xcassets */; };
 		F27180322CEE2A5400FCD4F7 /* SharedColors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE752310269C81C1008064E4 /* SharedColors.xcassets */; };
 		F27180332CEE2A5400FCD4F7 /* SharedColors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CE752310269C81C1008064E4 /* SharedColors.xcassets */; };
-		F28735B62BC53CAA00DE8A46 /* EnterLicenseInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28735B52BC53CAA00DE8A46 /* EnterLicenseInfoView.swift */; };
-		F28735B72BC53CAA00DE8A46 /* EnterLicenseInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28735B52BC53CAA00DE8A46 /* EnterLicenseInfoView.swift */; };
-		F28735B82BC53CAA00DE8A46 /* EnterLicenseInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28735B52BC53CAA00DE8A46 /* EnterLicenseInfoView.swift */; };
-		F28735B92BC53CAA00DE8A46 /* EnterLicenseInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28735B52BC53CAA00DE8A46 /* EnterLicenseInfoView.swift */; };
-		F28735BA2BC53CAA00DE8A46 /* EnterLicenseInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28735B52BC53CAA00DE8A46 /* EnterLicenseInfoView.swift */; };
-		F28F43F82CF4AD8E000279CA /* StorageManagementGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28F43F72CF4AD8C000279CA /* StorageManagementGroupBoxStyle.swift */; };
-		F28F43F92CF4AD8E000279CA /* StorageManagementGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28F43F72CF4AD8C000279CA /* StorageManagementGroupBoxStyle.swift */; };
-		F28F43FA2CF4AD8E000279CA /* StorageManagementGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28F43F72CF4AD8C000279CA /* StorageManagementGroupBoxStyle.swift */; };
-		F28F43FB2CF4AD8E000279CA /* StorageManagementGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28F43F72CF4AD8C000279CA /* StorageManagementGroupBoxStyle.swift */; };
-		F28F43FC2CF4AD8E000279CA /* StorageManagementGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28F43F72CF4AD8C000279CA /* StorageManagementGroupBoxStyle.swift */; };
 		F29412B02D6CDB96000B3681 /* CustomOnPremLaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F29412AE2D6CDB96000B3681 /* CustomOnPremLaunchScreen.storyboard */; };
 		F29412B32D6CDBC2000B3681 /* SplashScreenCustomOnPrem.png in Resources */ = {isa = PBXBuildFile; fileRef = F29412B12D6CDBC2000B3681 /* SplashScreenCustomOnPrem.png */; };
 		F29412B62D6CE0B4000B3681 /* CustomOnPrem.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F29412B42D6CE0B4000B3681 /* CustomOnPrem.xcassets */; };
@@ -5629,16 +5612,6 @@
 		F2B7CB992CDA0279000B74E9 /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2AC27BA2CD273DD005E4054 /* BlockListView.swift */; };
 		F2B7CB9A2CDA0279000B74E9 /* BlockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2AC27BA2CD273DD005E4054 /* BlockListView.swift */; };
 		F2BADBD22DEF178C00D48B47 /* MediaConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2BADBD12DEF178800D48B47 /* MediaConverter.swift */; };
-		F2C0C5642BC5730100069C44 /* WizardGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5632BC5730100069C44 /* WizardGroupBoxStyle.swift */; };
-		F2C0C5652BC5730200069C44 /* WizardGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5632BC5730100069C44 /* WizardGroupBoxStyle.swift */; };
-		F2C0C5662BC5730200069C44 /* WizardGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5632BC5730100069C44 /* WizardGroupBoxStyle.swift */; };
-		F2C0C5672BC5730200069C44 /* WizardGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5632BC5730100069C44 /* WizardGroupBoxStyle.swift */; };
-		F2C0C5682BC5730200069C44 /* WizardGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5632BC5730100069C44 /* WizardGroupBoxStyle.swift */; };
-		F2C0C56A2BC584E500069C44 /* EnterLicenseInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5692BC584E500069C44 /* EnterLicenseInfoViewController.swift */; };
-		F2C0C56B2BC584E500069C44 /* EnterLicenseInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5692BC584E500069C44 /* EnterLicenseInfoViewController.swift */; };
-		F2C0C56C2BC584E500069C44 /* EnterLicenseInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5692BC584E500069C44 /* EnterLicenseInfoViewController.swift */; };
-		F2C0C56D2BC584E500069C44 /* EnterLicenseInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5692BC584E500069C44 /* EnterLicenseInfoViewController.swift */; };
-		F2C0C56E2BC584E500069C44 /* EnterLicenseInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5692BC584E500069C44 /* EnterLicenseInfoViewController.swift */; };
 		F2D1442F2B8F652100A3527E /* IDColorDebugViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42507F2828FDB85600742867 /* IDColorDebugViewController.swift */; };
 		F2D144302B8F652200A3527E /* IDColorDebugViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42507F2828FDB85600742867 /* IDColorDebugViewController.swift */; };
 		F2D144312B8F652300A3527E /* IDColorDebugViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42507F2828FDB85600742867 /* IDColorDebugViewController.swift */; };
@@ -5868,7 +5841,6 @@
 		F2EAFCB42D6CC9C400DFFD48 /* BulletText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2413C54929EFD4840070E490 /* BulletText.swift */; };
 		F2EAFCB52D6CC9C400DFFD48 /* GroupDetailsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11E2B052653FCB9004AFD0B /* GroupDetailsDataSource.swift */; };
 		F2EAFCB62D6CC9C400DFFD48 /* BannerHapticGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7E4F2623E2C312009977A5 /* BannerHapticGenerator.swift */; };
-		F2EAFCB72D6CC9C400DFFD48 /* EnterLicenseInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5692BC584E500069C44 /* EnterLicenseInfoViewController.swift */; };
 		F2EAFCB82D6CC9C400DFFD48 /* EmojiScrollGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D63C0F32CCA70C0009A49C5 /* EmojiScrollGrid.swift */; };
 		F2EAFCB92D6CC9C400DFFD48 /* ProgressLabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 0AA26DF51C0F2B0C0019F6EC /* ProgressLabel.m */; };
 		F2EAFCBA2D6CC9C400DFFD48 /* CreatePasswordTrigger.m in Sources */ = {isa = PBXBuildFile; fileRef = 0A23FB0E19BED36600337603 /* CreatePasswordTrigger.m */; };
@@ -5900,7 +5872,6 @@
 		F2EAFCD72D6CC9C400DFFD48 /* VoiceMessageError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9457363B2C490B0300FC6729 /* VoiceMessageError.swift */; };
 		F2EAFCD82D6CC9C400DFFD48 /* ProfileView+MainTabViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94DAE9522B02650000332E20 /* ProfileView+MainTabViewRepresentable.swift */; };
 		F2EAFCD92D6CC9C400DFFD48 /* PPCheckedViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE10D8F91EA8FA0300802355 /* PPCheckedViewCell.swift */; };
-		F2EAFCDA2D6CC9C400DFFD48 /* TrailingLabelStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24122E492A52FE900049F38E /* TrailingLabelStyle.swift */; };
 		F2EAFCDB2D6CC9C400DFFD48 /* QuickAction+UIPreviewAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1B479B82681DE2700D601C0 /* QuickAction+UIPreviewAction.swift */; };
 		F2EAFCDC2D6CC9C400DFFD48 /* ChatViewControllerActionsHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A65952227C7CC6D0011A00D /* ChatViewControllerActionsHelper.swift */; };
 		F2EAFCDD2D6CC9C400DFFD48 /* NotificationTypeSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24195D04295B26E700754929 /* NotificationTypeSelectionView.swift */; };
@@ -5914,7 +5885,6 @@
 		F2EAFCE52D6CC9C400DFFD48 /* WebAvatarUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE46D74720B5C4430097A112 /* WebAvatarUpdate.swift */; };
 		F2EAFCE62D6CC9C400DFFD48 /* VerificationLevelInfoViewController+LevelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1BB072525D177E100ACC9A4 /* VerificationLevelInfoViewController+LevelView.swift */; };
 		F2EAFCE72D6CC9C400DFFD48 /* StdTypeHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6725D92F21BEA9EF0058B8C0 /* StdTypeHelper.swift */; };
-		F2EAFCE82D6CC9C400DFFD48 /* InfoGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 244356632B55554A00BE22DD /* InfoGroupBoxStyle.swift */; };
 		F2EAFCE92D6CC9C400DFFD48 /* EditableAvatarView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0AE10AC11BA172F6009DD83B /* EditableAvatarView.m */; };
 		F2EAFCEA2D6CC9C400DFFD48 /* WebProfileUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE626F3A20BC01C3004C6D61 /* WebProfileUpdate.swift */; };
 		F2EAFCEC2D6CC9C400DFFD48 /* EmojiSearchScrollGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D63C1052CCA722A009A49C5 /* EmojiSearchScrollGrid.swift */; };
@@ -6002,7 +5972,6 @@
 		F2EAFD3E2D6CC9C400DFFD48 /* PublicKeyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE743B4D274BDACD0051422A /* PublicKeyView.swift */; };
 		F2EAFD3F2D6CC9C400DFFD48 /* ChatTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7DB3285A7BA10067B737 /* ChatTextView.swift */; };
 		F2EAFD402D6CC9C400DFFD48 /* ChatViewMessageActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D78BCA4227F2F901001E699E /* ChatViewMessageActions.swift */; };
-		F2EAFD412D6CC9C400DFFD48 /* StorageManagementGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28F43F72CF4AD8C000279CA /* StorageManagementGroupBoxStyle.swift */; };
 		F2EAFD422D6CC9C400DFFD48 /* LinkMobileNoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C84FA1652F38C00657260 /* LinkMobileNoViewController.m */; };
 		F2EAFD432D6CC9C400DFFD48 /* WebSequenceNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEC4DAE9211C5D5D004C7DCF /* WebSequenceNumber.swift */; };
 		F2EAFD442D6CC9C400DFFD48 /* ConversationsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1E00752689F7F5000D3781 /* ConversationsViewController.swift */; };
@@ -6151,7 +6120,6 @@
 		F2EAFDD82D6CC9C400DFFD48 /* LaunchModalType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D754A12940B30C00113BD9 /* LaunchModalType.swift */; };
 		F2EAFDD92D6CC9C400DFFD48 /* CompanyDirectoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0621AE21E4EBB100029B3A /* CompanyDirectoryViewController.swift */; };
 		F2EAFDDA2D6CC9C400DFFD48 /* InviteController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DA05170166FD3D70090F24D /* InviteController.m */; };
-		F2EAFDDB2D6CC9C400DFFD48 /* EnterLicenseInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F28735B52BC53CAA00DE8A46 /* EnterLicenseInfoView.swift */; };
 		F2EAFDDC2D6CC9C400DFFD48 /* PushSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A48C7C27294E270070DF15 /* PushSounds.swift */; };
 		F2EAFDDD2D6CC9C400DFFD48 /* ReactionViewStackViewItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2446173C2CE5EE22004FE0EC /* ReactionViewStackViewItemView.swift */; };
 		F2EAFDDE2D6CC9C400DFFD48 /* WebCreateContactResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE703DA420650A75008DB924 /* WebCreateContactResponse.swift */; };
@@ -6224,7 +6192,6 @@
 		F2EAFE222D6CC9C400DFFD48 /* ChatSearchResultsTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42C2EF2E28DCEB7200F0B3DA /* ChatSearchResultsTableViewCell.swift */; };
 		F2EAFE232D6CC9C400DFFD48 /* ChatViewMessageDetailsMessageHistoryTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24FFE89F2C21B23E002E7DCF /* ChatViewMessageDetailsMessageHistoryTableViewCell.swift */; };
 		F2EAFE242D6CC9C400DFFD48 /* ChatBarQuoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AFA7DB4285A7BA20067B737 /* ChatBarQuoteView.swift */; };
-		F2EAFE252D6CC9C400DFFD48 /* WizardGroupBoxStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2C0C5632BC5730100069C44 /* WizardGroupBoxStyle.swift */; };
 		F2EAFE262D6CC9C400DFFD48 /* MediaSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 248B9AB32A0B7F0F0071D796 /* MediaSettingsView.swift */; };
 		F2EAFE272D6CC9C400DFFD48 /* WebReceiverUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE31ED3205976F4000B9B78 /* WebReceiverUpdate.swift */; };
 		F2EAFE282D6CC9C400DFFD48 /* VerificationLevelDetailsTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E16DB9E025B02B6A00E29325 /* VerificationLevelDetailsTableViewCell.swift */; };
@@ -7235,7 +7202,6 @@
 		240FEB022C7CB18D00790570 /* FileDataEntity+ExternalStorageInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileDataEntity+ExternalStorageInfo.swift"; sourceTree = "<group>"; };
 		240FEB042C7CB6EE00790570 /* FileDataEntityTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDataEntityTest.swift; sourceTree = "<group>"; };
 		24109E4D28C9B9EA00F9EE1F /* XCTest+AsyncAssertThrows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCTest+AsyncAssertThrows.swift"; sourceTree = "<group>"; };
-		24122E492A52FE900049F38E /* TrailingLabelStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailingLabelStyle.swift; sourceTree = "<group>"; };
 		2412D2A82DA63954008823F5 /* ThreemaWorkTestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = ThreemaWorkTestPlan.xctestplan; sourceTree = "<group>"; };
 		2412D2AE2DA639DC008823F5 /* Threema Green Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Threema Green Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2412D2BF2DA63A1A008823F5 /* Threema Blue Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Threema Blue Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -7316,7 +7282,6 @@
 		244356512B55543100BE22DD /* DeleteRevokeOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteRevokeOverviewView.swift; sourceTree = "<group>"; };
 		244356572B55547000BE22DD /* RevokeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevokeView.swift; sourceTree = "<group>"; };
 		2443565D2B5554C100BE22DD /* DeleteRevokeSuccessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeleteRevokeSuccessView.swift; sourceTree = "<group>"; };
-		244356632B55554A00BE22DD /* InfoGroupBoxStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoGroupBoxStyle.swift; sourceTree = "<group>"; };
 		2446173C2CE5EE22004FE0EC /* ReactionViewStackViewItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionViewStackViewItemView.swift; sourceTree = "<group>"; };
 		244698F92B976BAB00DA9955 /* MessageDateAndStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageDateAndStateView.swift; sourceTree = "<group>"; };
 		2446DF3C2BDFB39400F4ACD1 /* ThreemaUtilityTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaUtilityTest.swift; sourceTree = "<group>"; };
@@ -7651,6 +7616,8 @@
 		2D4A76782608E400005713B2 /* VoIPCallMessageProtocol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoIPCallMessageProtocol.swift; sourceTree = "<group>"; };
 		2D4AFF4B23D0B25A00B468F8 /* MediatorMessageProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediatorMessageProtocol.swift; sourceTree = "<group>"; };
 		2D4E597B25C054C400924DC5 /* TaskExecutionTransactionDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TaskExecutionTransactionDelegate.h; sourceTree = "<group>"; };
+		2D54E81E2E3B34510045FA53 /* KeychainMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainMigration.swift; sourceTree = "<group>"; };
+		2D54E8202E3B447C0045FA53 /* KeychainHelperMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelperMock.swift; sourceTree = "<group>"; };
 		2D5523E22303DA8600A21671 /* AppSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSetup.swift; sourceTree = "<group>"; };
 		2D55A84E23851E9300613425 /* TestLoggerMock.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestLoggerMock.m; sourceTree = "<group>"; };
 		2D55A85023851EAE00613425 /* TestLoggerMock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestLoggerMock.h; sourceTree = "<group>"; };
@@ -9299,16 +9266,12 @@
 		F25C2E0C2B5EC5AB00966EA6 /* GlobalSearchResultsTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSearchResultsTableViewCell.swift; sourceTree = "<group>"; };
 		F25C2E182B601E9600966EA6 /* ThreemaDataV44.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV44.xcdatamodel; sourceTree = "<group>"; };
 		F2616C472C60C3E300636C3B /* ThreemaURLProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreemaURLProvider.swift; sourceTree = "<group>"; };
-		F28735B52BC53CAA00DE8A46 /* EnterLicenseInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterLicenseInfoView.swift; sourceTree = "<group>"; };
-		F28F43F72CF4AD8C000279CA /* StorageManagementGroupBoxStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageManagementGroupBoxStyle.swift; sourceTree = "<group>"; };
 		F29412AE2D6CDB96000B3681 /* CustomOnPremLaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = CustomOnPremLaunchScreen.storyboard; sourceTree = "<group>"; };
 		F29412B12D6CDBC2000B3681 /* SplashScreenCustomOnPrem.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = SplashScreenCustomOnPrem.png; sourceTree = "<group>"; };
 		F29412B42D6CE0B4000B3681 /* CustomOnPrem.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = CustomOnPrem.xcassets; sourceTree = "<group>"; };
 		F298DFBD2D49122B00FD9467 /* TargetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TargetManager.swift; sourceTree = "<group>"; };
 		F2AC27BA2CD273DD005E4054 /* BlockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListView.swift; sourceTree = "<group>"; };
 		F2BADBD12DEF178800D48B47 /* MediaConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaConverter.swift; sourceTree = "<group>"; };
-		F2C0C5632BC5730100069C44 /* WizardGroupBoxStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WizardGroupBoxStyle.swift; sourceTree = "<group>"; };
-		F2C0C5692BC584E500069C44 /* EnterLicenseInfoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterLicenseInfoViewController.swift; sourceTree = "<group>"; };
 		F2C26CE72C9DBD1700CEBB6F /* ThreemaDataV53.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ThreemaDataV53.xcdatamodel; sourceTree = "<group>"; };
 		F2D1444A2B90915700A3527E /* UIImage+Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Config.swift"; sourceTree = "<group>"; };
 		F2DC71D42BBC5C71004F47AA /* NewMessageToaster+Swift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NewMessageToaster+Swift.swift"; sourceTree = "<group>"; };
@@ -9368,6 +9331,8 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		24A7E0EF2E1E2DA900BC5307 /* Sounds */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Sounds; sourceTree = "<group>"; };
+		F2048BEC2E2FC263003D05FD /* FlavorInfoView */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = FlavorInfoView; sourceTree = "<group>"; };
+		F246CBFA2E38FFBB00F8FE15 /* CustomStyles */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = CustomStyles; sourceTree = "<group>"; };
 		F2CED9492DE5EE6C00879CDA /* ManuallyTests */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (F2CED9552DE5EE6C00879CDA /* PBXFileSystemSynchronizedBuildFileExceptionSet */, F2CED9562DE5EE6C00879CDA /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = ManuallyTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
@@ -10191,6 +10156,7 @@
 				4A01C5DC2518F088001A2CD8 /* IntermediateItem.swift */,
 				4A58FFD5252B6CED001DF858 /* ItemLoader.swift */,
 				248A0BC52B909B18004E7AE0 /* KeychainHelper.swift */,
+				2D54E81E2E3B34510045FA53 /* KeychainMigration.swift */,
 				24345FAD2A36EDEB0060CC8E /* LAContext+unlockType.swift */,
 				428250142DA910BC008F0111 /* libthreemaIntegrationTest.swift */,
 				CE65417926FB23B70090FE82 /* MarkupParser.swift */,
@@ -10853,7 +10819,7 @@
 			isa = PBXGroup;
 			children = (
 				2413C54829EFD41B0070E490 /* CustomViews */,
-				24122E482A52FE6C0049F38E /* CustomStyles */,
+				F246CBFA2E38FFBB00F8FE15 /* CustomStyles */,
 				94138AA32AE004C600FF8787 /* General */,
 				24122E472A52FE0E0049F38E /* Representables */,
 				2483EA1B29BB5A26003CD3E9 /* SwiftUIAdapter.swift */,
@@ -10873,17 +10839,6 @@
 				24D36FE629E981DD007DD136 /* SwiftUIImagePicker.swift */,
 			);
 			path = Representables;
-			sourceTree = "<group>";
-		};
-		24122E482A52FE6C0049F38E /* CustomStyles */ = {
-			isa = PBXGroup;
-			children = (
-				244356632B55554A00BE22DD /* InfoGroupBoxStyle.swift */,
-				F28F43F72CF4AD8C000279CA /* StorageManagementGroupBoxStyle.swift */,
-				24122E492A52FE900049F38E /* TrailingLabelStyle.swift */,
-				F2C0C5632BC5730100069C44 /* WizardGroupBoxStyle.swift */,
-			);
-			path = CustomStyles;
 			sourceTree = "<group>";
 		};
 		2413C54829EFD41B0070E490 /* CustomViews */ = {
@@ -12029,8 +11984,7 @@
 		2D2B2FA8260B86440056AAAB /* License */ = {
 			isa = PBXGroup;
 			children = (
-				F2C0C5692BC584E500069C44 /* EnterLicenseInfoViewController.swift */,
-				F28735B52BC53CAA00DE8A46 /* EnterLicenseInfoView.swift */,
+				F2048BEC2E2FC263003D05FD /* FlavorInfoView */,
 				0A232DD01CA03A2C00AA0187 /* EnterLicenseViewController.h */,
 				0A232DD11CA03A2C00AA0187 /* EnterLicenseViewController.m */,
 				0A232DCE1CA0391C00AA0187 /* License.storyboard */,
@@ -13958,6 +13912,7 @@
 		7E697EF72876A2F8003BE925 /* Mocks */ = {
 			isa = PBXGroup;
 			children = (
+				2D54E8202E3B447C0045FA53 /* KeychainHelperMock.swift */,
 				7E8B2B492BE5104B00A09B98 /* AuthenticationChallengeSenderMock.swift */,
 				7EEB1EFB2A66B18500E9CB2F /* BlobUploaderMock.swift */,
 				7E697EFE2876AE5F003BE925 /* ContactStoreMock.swift */,
@@ -15239,6 +15194,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
+				F2048BEC2E2FC263003D05FD /* FlavorInfoView */,
+				F246CBFA2E38FFBB00F8FE15 /* CustomStyles */,
 			);
 			name = "Threema Work";
 			packageProductDependencies = (
@@ -15468,6 +15425,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
+				F2048BEC2E2FC263003D05FD /* FlavorInfoView */,
+				F246CBFA2E38FFBB00F8FE15 /* CustomStyles */,
 			);
 			name = "Threema Blue";
 			packageProductDependencies = (
@@ -15606,6 +15565,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
+				F2048BEC2E2FC263003D05FD /* FlavorInfoView */,
+				F246CBFA2E38FFBB00F8FE15 /* CustomStyles */,
 			);
 			name = "Threema Green";
 			packageProductDependencies = (
@@ -15713,6 +15674,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
+				F2048BEC2E2FC263003D05FD /* FlavorInfoView */,
+				F246CBFA2E38FFBB00F8FE15 /* CustomStyles */,
 			);
 			name = "Threema OnPrem";
 			packageProductDependencies = (
@@ -15845,6 +15808,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
+				F2048BEC2E2FC263003D05FD /* FlavorInfoView */,
+				F246CBFA2E38FFBB00F8FE15 /* CustomStyles */,
 			);
 			name = Threema;
 			packageProductDependencies = (
@@ -15981,6 +15946,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				24A7E0EF2E1E2DA900BC5307 /* Sounds */,
+				F2048BEC2E2FC263003D05FD /* FlavorInfoView */,
+				F246CBFA2E38FFBB00F8FE15 /* CustomStyles */,
 			);
 			name = "Custom OnPrem";
 			packageProductDependencies = (
@@ -17826,6 +17793,7 @@
 				7EA9BF472B7203B00033010E /* TaskDefinitionMdmParameterSync.swift in Sources */,
 				2DDB9D8C2577DD340032B7CB /* RTCSessionDescriptionJson.swift in Sources */,
 				0A38644E1C62576500924A29 /* PhoneNumberNormalizer.m in Sources */,
+				2D54E81F2E3B34AA0045FA53 /* KeychainMigration.swift in Sources */,
 				4D9D544D294B24A400F6399C /* KeychainKeyWrapper.swift in Sources */,
 				24B6EF3128F437C1006C0E46 /* PreviewableMessage.swift in Sources */,
 				7E96035029F023E4001A12F1 /* TaskDefinitionSendDeliveryReceiptsMessage.swift in Sources */,
@@ -17958,6 +17926,7 @@
 				249A24E82C19B3DD00DBF482 /* DistributionListManagerMock.swift in Sources */,
 				4D4941E528B8C2DA003FFC9B /* SQLDHSessionStoreTests.swift in Sources */,
 				2D5DED3F23EA9C2C0028AD7C /* BytesUtilityTests.swift in Sources */,
+				2D54E8222E3B44880045FA53 /* KeychainHelperMock.swift in Sources */,
 				42228C092A38D6D100A9DEC5 /* EncryptedRendezvousConnectionMock.swift in Sources */,
 				7E5F431629C475830038B8BF /* MockData.swift in Sources */,
 				E14837DB26F1D900006295D8 /* Collection+ContactTests.swift in Sources */,
@@ -18113,6 +18082,7 @@
 				7E697F0B2876AFE1003BE925 /* UserSettingsMock.swift in Sources */,
 				4A5B551028476068009A92B4 /* TextViewKeyboardWorkaroundHandlerTests.swift in Sources */,
 				E106D92D2580D33800FBF29A /* ChatProfileViewTests.swift in Sources */,
+				2D54E8212E3B44880045FA53 /* KeychainHelperMock.swift in Sources */,
 				7E8432D928588BA100D8ACC2 /* DeviceGroupKeyManagerTests.swift in Sources */,
 				7E697F052876AF4C003BE925 /* MultiDeviceManagerMock.swift in Sources */,
 				E1331FD027995924003BC7B2 /* ChatScrollPositionTests.swift in Sources */,
@@ -18340,7 +18310,6 @@
 				4AB4AF8D2A0145BC00B65246 /* VideoCallQualitySelectionView.swift in Sources */,
 				0A7DF7281C9FDBDE002D4DC3 /* ProgressLabel.m in Sources */,
 				0A7DF7291C9FDBDE002D4DC3 /* CreatePasswordTrigger.m in Sources */,
-				F2C0C56B2BC584E500069C44 /* EnterLicenseInfoViewController.swift in Sources */,
 				945328E52B1A40D300E954CC /* EmptyViewDestination.swift in Sources */,
 				7D63C0F52CCA70C0009A49C5 /* EmojiScrollGrid.swift in Sources */,
 				4A7DB2BA288EDEE30047C54A /* ChatViewTableViewVoiceMessageCellDelegate.swift in Sources */,
@@ -18535,7 +18504,6 @@
 				E11B328D282164030057F6EE /* FileIcon.swift in Sources */,
 				249921042BA181630082BBBA /* ThreemaBackgroundTask.swift in Sources */,
 				2D84777621BEC668009EB43B /* SetupButton.swift in Sources */,
-				F28F43F92CF4AD8E000279CA /* StorageManagementGroupBoxStyle.swift in Sources */,
 				CE0621BA21E635C300029B3A /* CompanyDirectoryCell.swift in Sources */,
 				0A7DF7811C9FDBDE002D4DC3 /* URLHandler.m in Sources */,
 				E190EA52261200BA00760667 /* CircleButton.swift in Sources */,
@@ -18631,7 +18599,6 @@
 				94AD6BFD2C2D7FD300079BAD /* ContactListCellProvider.swift in Sources */,
 				94DAE9482B02637E00332E20 /* SettingsView+MainTabViewRepresentable.swift in Sources */,
 				0A7DF7B01C9FDBDE002D4DC3 /* MWZoomingScrollView.m in Sources */,
-				F28735B72BC53CAA00DE8A46 /* EnterLicenseInfoView.swift in Sources */,
 				8D9ECD1F26A158260045BE4C /* ArchivedConversationsViewController.swift in Sources */,
 				94B195422ACB185200FBD041 /* Profile+QRCodeView.swift in Sources */,
 				CE703DA2206509A5008DB924 /* WebCreateContactRequest.swift in Sources */,
@@ -18678,7 +18645,6 @@
 				4DB439731DBFA36E0056EC10 /* ZSWTappableLabel.m in Sources */,
 				0A7DF7C11C9FDBDE002D4DC3 /* IntroQuestionView.m in Sources */,
 				247357522D952F40008B3FE9 /* SettingsCollectionViewDataSource.swift in Sources */,
-				244356652B55554A00BE22DD /* InfoGroupBoxStyle.swift in Sources */,
 				0A7DF7C31C9FDBDE002D4DC3 /* SendLocationAction.m in Sources */,
 				D7251AE427C8C41C006F7A0F /* ChatViewCallSystemMessageTableViewCell.swift in Sources */,
 				4A67DFDA28E5B0DD00F80651 /* RTLAligningTextView.swift in Sources */,
@@ -18688,7 +18654,6 @@
 				4A3B4F8B290AC3EA0023879F /* UnreadMessagesStateManager.swift in Sources */,
 				CE8A2B3D1EB38270004973D5 /* DKAssetGroup.swift in Sources */,
 				2409249E2DA93A7100E5E9E5 /* LinkPhoneNumberLinkedView.swift in Sources */,
-				24122E4B2A52FE900049F38E /* TrailingLabelStyle.swift in Sources */,
 				CE8A2B491EB38270004973D5 /* DKImagePickerControllerDefaultUIDelegate.swift in Sources */,
 				2D2B304D260B90380056AAAB /* NotificationBannerHelper.swift in Sources */,
 				0A7DF7C71C9FDBDE002D4DC3 /* MWPhotoBrowser.m in Sources */,
@@ -18707,7 +18672,6 @@
 				CE0318E1209C5ED600830E58 /* WebClientSessionStore.swift in Sources */,
 				CE3D66EE2271AD4C00720DF1 /* ZSWTappableLabelTappableRegionInfoImpl.m in Sources */,
 				0A7DF7CF1C9FDBDE002D4DC3 /* BallotHeaderView.m in Sources */,
-				F2C0C5652BC5730200069C44 /* WizardGroupBoxStyle.swift in Sources */,
 				24FFE8A12C21B23E002E7DCF /* ChatViewMessageDetailsMessageHistoryTableViewCell.swift in Sources */,
 				2D84777821BEC6A2009EB43B /* SetupTextField.swift in Sources */,
 				4AC8F36C286AE68A00D7440F /* NewUnreadMessageLineLineView.swift in Sources */,
@@ -19158,11 +19122,9 @@
 				4A7DB2BD288EDEE30047C54A /* ChatViewTableViewVoiceMessageCellDelegate.swift in Sources */,
 				4ABCEB3A28C5E0F400AEFFDD /* ChatViewTypingIndicatorTableViewCell.swift in Sources */,
 				2D5A1D7424C9B5DF00F87DD0 /* DKPopoverViewController.swift in Sources */,
-				F2C0C56E2BC584E500069C44 /* EnterLicenseInfoViewController.swift in Sources */,
 				24C08CF728A38D320058DAA6 /* MessageAnimatedMediaTapView.swift in Sources */,
 				E1DB6C91265E3E470098E7CA /* GroupMembersTableViewController.swift in Sources */,
 				2D5A1D7924C9B5DF00F87DD0 /* SafeServerViewController.swift in Sources */,
-				244356682B55554A00BE22DD /* InfoGroupBoxStyle.swift in Sources */,
 				E1ABF93A265D38BB00CBDB50 /* MembersActionDetailsTableViewCell.swift in Sources */,
 				2D5A1D7A24C9B5DF00F87DD0 /* PPCheckedViewCell.swift in Sources */,
 				E1E4885027CE65BD00EFAE07 /* ChatViewThumbnailDisplayMessageTableViewCell.swift in Sources */,
@@ -19267,7 +19229,6 @@
 				2D5A1DBA24C9B5DF00F87DD0 /* MeContactDetailsViewController.swift in Sources */,
 				2D5A1DBB24C9B5DF00F87DD0 /* ActivityUtil.m in Sources */,
 				2D5A1DBC24C9B5DF00F87DD0 /* SafeStore.swift in Sources */,
-				F28F43FA2CF4AD8E000279CA /* StorageManagementGroupBoxStyle.swift in Sources */,
 				941B8C2B2AD5516000F1624C /* Profile+Animation.swift in Sources */,
 				8D9FFC26275A74590039F8B8 /* SendLocationSearchDataSource.swift in Sources */,
 				42AD36212A404DC600919AD8 /* RendezvousEmojisView.swift in Sources */,
@@ -19313,7 +19274,6 @@
 				94AD6C302C2D813100079BAD /* CoreDataContactListProvider.swift in Sources */,
 				42207D2B299B61D900FB22B6 /* UIAlertTemplate+showOpenSettingsAlert.swift in Sources */,
 				E167C450256E3EC90081767F /* ChatProfileView.swift in Sources */,
-				24122E4E2A52FE900049F38E /* TrailingLabelStyle.swift in Sources */,
 				2D5A1DE924C9B5DF00F87DD0 /* ChunkedDc.swift in Sources */,
 				2D5A1DEA24C9B5DF00F87DD0 /* WebContactDetailResponse.swift in Sources */,
 				2D5A1DEB24C9B5DF00F87DD0 /* DKImageResource.swift in Sources */,
@@ -19344,7 +19304,6 @@
 				942355162AD5736C00A8496B /* ShortcutItemProvider.swift in Sources */,
 				4AC9D5642919653B001AAB23 /* BatchingSnapshotInfoDebounce.swift in Sources */,
 				2D5A1DF524C9B5DF00F87DD0 /* DKGroupDataManager.swift in Sources */,
-				F28735BA2BC53CAA00DE8A46 /* EnterLicenseInfoView.swift in Sources */,
 				8D9E953326AFF86300FF90AF /* ConversationsViewControllerHelper.swift in Sources */,
 				E11B3290282164030057F6EE /* FileIcon.swift in Sources */,
 				4A78BDB029A5266C00620CEE /* ChatViewScrollState.swift in Sources */,
@@ -19478,7 +19437,6 @@
 				E17FA11525ACAF9200B6D47D /* DetailsHeaderView.swift in Sources */,
 				2D5A1E4924C9B5DF00F87DD0 /* WebMessageObject.swift in Sources */,
 				94DAE9582B02654600332E20 /* SwiftUIUtils.swift in Sources */,
-				F2C0C5682BC5730200069C44 /* WizardGroupBoxStyle.swift in Sources */,
 				2D5A1E4B24C9B5DF00F87DD0 /* WebContactDetailRequest.swift in Sources */,
 				2D5A1E4C24C9B5DF00F87DD0 /* CreateGroupNavigationController.m in Sources */,
 				2D5A1E4D24C9B5DF00F87DD0 /* ScrollViewContent.m in Sources */,
@@ -19909,9 +19867,7 @@
 				42C2EF3228DCEB7200F0B3DA /* ChatSearchResultsTableViewCell.swift in Sources */,
 				2DEDB1F924C9903400FC9099 /* WebConnectionAckRequest.swift in Sources */,
 				9455C6E22B0DF7F20058536C /* StorageManagementConversationView+SectionView.swift in Sources */,
-				24122E4D2A52FE900049F38E /* TrailingLabelStyle.swift in Sources */,
 				7E996B6528E4208400E14EAA /* DeviceLinking.swift in Sources */,
-				F28F43F82CF4AD8E000279CA /* StorageManagementGroupBoxStyle.swift in Sources */,
 				2DEDB1FB24C9903400FC9099 /* WebGroupSyncRequest.swift in Sources */,
 				24E6B7D52DACE05C0020FBA4 /* LinkEmailLinkedView.swift in Sources */,
 				E11E2B092653FCB9004AFD0B /* GroupDetailsDataSource.swift in Sources */,
@@ -20007,7 +19963,6 @@
 				2DEDB23724C9903400FC9099 /* CompanyDirectoryCategoryViewController.swift in Sources */,
 				42AD36362A41A4E000919AD8 /* DeviceJoinManager.swift in Sources */,
 				24D7549F294091E400113BD9 /* LaunchModalManager.swift in Sources */,
-				F28735B92BC53CAA00DE8A46 /* EnterLicenseInfoView.swift in Sources */,
 				2DEDB23824C9903400FC9099 /* DocumentPicker.m in Sources */,
 				2DEDB23924C9903400FC9099 /* WebThumbnailRequest.swift in Sources */,
 				E1CA8C122600E99200F90F3E /* GroupsTableViewController.swift in Sources */,
@@ -20085,7 +20040,6 @@
 				2429307729757B40006F944F /* LaunchModalSettingsView.swift in Sources */,
 				2DEDB27824C9903400FC9099 /* CompanyDirectoryCell.swift in Sources */,
 				94AD6BF32C2D7F9A00079BAD /* ContactListFilterMenu.swift in Sources */,
-				244356672B55554A00BE22DD /* InfoGroupBoxStyle.swift in Sources */,
 				946C77822B557E830020D6EB /* AudioMediaManager.swift in Sources */,
 				94AD6BF92C2D7FBC00079BAD /* ContactListAddItem.swift in Sources */,
 				2DEDB27924C9903400FC9099 /* WebCreateGroupResponse.swift in Sources */,
@@ -20142,7 +20096,6 @@
 				9400C4CB2CE643A200F6AC0D /* EmojiReactionsModalView.swift in Sources */,
 				2DEDB2AB24C9903400FC9099 /* WebClientSessionCell.swift in Sources */,
 				4A813EE82892837300D2AD78 /* AudioSessionInputOutputAdapter.swift in Sources */,
-				F2C0C56D2BC584E500069C44 /* EnterLicenseInfoViewController.swift in Sources */,
 				2DEDB2AD24C9903400FC9099 /* UIWindow+orientation.swift in Sources */,
 				2DEDB2AE24C9903400FC9099 /* pbkdf2.c in Sources */,
 				D7F4E8CF27BBE77C00BC96DA /* CellHeightCache.swift in Sources */,
@@ -20248,7 +20201,6 @@
 				E1229D932834EFF30031CD10 /* MessageMetadataTextLabel.swift in Sources */,
 				2DEDB2E824C9903400FC9099 /* ModalPresenter.m in Sources */,
 				E1DB6C90265E3E470098E7CA /* GroupMembersTableViewController.swift in Sources */,
-				F2C0C5672BC5730200069C44 /* WizardGroupBoxStyle.swift in Sources */,
 				4A67DFE228E5B10A00F80651 /* RTLAligningLabel.swift in Sources */,
 				2DEDB2EB24C9903400FC9099 /* PortraitNavigationController.m in Sources */,
 				2DEDB2ED24C9903400FC9099 /* ZSWTappableLabel.m in Sources */,
@@ -20613,7 +20565,6 @@
 				2413C54C29EFD4840070E490 /* BulletText.swift in Sources */,
 				E11E2B082653FCB9004AFD0B /* GroupDetailsDataSource.swift in Sources */,
 				4D088916255C0CD4002F3129 /* BannerHapticGenerator.swift in Sources */,
-				F2C0C56C2BC584E500069C44 /* EnterLicenseInfoViewController.swift in Sources */,
 				7D63C0F62CCA70C0009A49C5 /* EmojiScrollGrid.swift in Sources */,
 				4D088917255C0CD4002F3129 /* ProgressLabel.m in Sources */,
 				4D088918255C0CD4002F3129 /* CreatePasswordTrigger.m in Sources */,
@@ -20644,7 +20595,6 @@
 				9457363E2C490B0300FC6729 /* VoiceMessageError.swift in Sources */,
 				94DAE9552B02650000332E20 /* ProfileView+MainTabViewRepresentable.swift in Sources */,
 				4D08892B255C0CD4002F3129 /* PPCheckedViewCell.swift in Sources */,
-				24122E4C2A52FE900049F38E /* TrailingLabelStyle.swift in Sources */,
 				E1B479BB2681DE2700D601C0 /* QuickAction+UIPreviewAction.swift in Sources */,
 				4A65952527C7CC6D0011A00D /* ChatViewControllerActionsHelper.swift in Sources */,
 				24195D07295B26E700754929 /* NotificationTypeSelectionView.swift in Sources */,
@@ -20659,7 +20609,6 @@
 				4D088934255C0CD4002F3129 /* WebAvatarUpdate.swift in Sources */,
 				E1BB072825D177E100ACC9A4 /* VerificationLevelInfoViewController+LevelView.swift in Sources */,
 				4D088937255C0CD4002F3129 /* StdTypeHelper.swift in Sources */,
-				244356662B55554A00BE22DD /* InfoGroupBoxStyle.swift in Sources */,
 				4D088938255C0CD4002F3129 /* EditableAvatarView.m in Sources */,
 				4D088939255C0CD4002F3129 /* WebProfileUpdate.swift in Sources */,
 				7D63C1082CCA722A009A49C5 /* EmojiSearchScrollGrid.swift in Sources */,
@@ -20752,7 +20701,6 @@
 				CE743B50274BDACD0051422A /* PublicKeyView.swift in Sources */,
 				4AFA7DD5285A7BA20067B737 /* ChatTextView.swift in Sources */,
 				D78BCA4527F2F901001E699E /* ChatViewMessageActions.swift in Sources */,
-				F28F43FC2CF4AD8E000279CA /* StorageManagementGroupBoxStyle.swift in Sources */,
 				4D088975255C0CD4002F3129 /* LinkMobileNoViewController.m in Sources */,
 				4D088979255C0CD4002F3129 /* WebSequenceNumber.swift in Sources */,
 				8D1E00782689F7F5000D3781 /* ConversationsViewController.swift in Sources */,
@@ -20906,7 +20854,6 @@
 				24D754A42940B30C00113BD9 /* LaunchModalType.swift in Sources */,
 				4D0889E5255C0CD4002F3129 /* CompanyDirectoryViewController.swift in Sources */,
 				4D0889E6255C0CD4002F3129 /* InviteController.m in Sources */,
-				F28735B82BC53CAA00DE8A46 /* EnterLicenseInfoView.swift in Sources */,
 				2453A14F2D76FFD200CE01EE /* ContactListSearchResultsViewController.swift in Sources */,
 				2453A1502D76FFD200CE01EE /* ContactListSearchToken.swift in Sources */,
 				24E6B7BA2DACD26E0020FBA4 /* LinkEmailViewModel.swift in Sources */,
@@ -20986,7 +20933,6 @@
 				42C2EF3128DCEB7200F0B3DA /* ChatSearchResultsTableViewCell.swift in Sources */,
 				24FFE8A22C21B23E002E7DCF /* ChatViewMessageDetailsMessageHistoryTableViewCell.swift in Sources */,
 				4AFA7DDA285A7BA20067B737 /* ChatBarQuoteView.swift in Sources */,
-				F2C0C5662BC5730200069C44 /* WizardGroupBoxStyle.swift in Sources */,
 				248B9AB62A0B7F0F0071D796 /* MediaSettingsView.swift in Sources */,
 				4D088A1D255C0CD4002F3129 /* WebReceiverUpdate.swift in Sources */,
 				E16DB9E325B02B6A00E29325 /* VerificationLevelDetailsTableViewCell.swift in Sources */,
@@ -21202,7 +21148,6 @@
 				CE165D8B20232058006D10E5 /* ShareTextActivityItemProvider.m in Sources */,
 				24E6B7C42DACD3DF0020FBA4 /* LinkEmailUnlinkedView.swift in Sources */,
 				24282ABC28EDAD0200B435C8 /* MultiDeviceWizardSuccessView.swift in Sources */,
-				244356642B55554A00BE22DD /* InfoGroupBoxStyle.swift in Sources */,
 				E1442D0F274BE5850072E107 /* ChatViewDataSource.swift in Sources */,
 				4D6638D317E0B98300D03144 /* ChatNavigationController.m in Sources */,
 				2449ABF92A441DAB0003B823 /* StatusNavigationBar.swift in Sources */,
@@ -21370,7 +21315,6 @@
 				2DAD893B215CB1D200B9EA0B /* SafeActivatedViewController.swift in Sources */,
 				CE10D9031EA8FA0300802355 /* PPAssetManager.swift in Sources */,
 				4AEED567274BEEB7001F24EA /* MentionsTableViewCell.swift in Sources */,
-				F2C0C56A2BC584E500069C44 /* EnterLicenseInfoViewController.swift in Sources */,
 				7D63C0F42CCA70C0009A49C5 /* EmojiScrollGrid.swift in Sources */,
 				4A7DB2B9288EDEE30047C54A /* ChatViewTableViewVoiceMessageCellDelegate.swift in Sources */,
 				942361822B9769C200E6C328 /* StorageManagementView+StorageUsage.swift in Sources */,
@@ -21506,7 +21450,6 @@
 				E1970DD925F2388600DACC9D /* DoNotDisturbViewController+Cells.swift in Sources */,
 				948CE09E2B2739DD0010FDE9 /* StorageManagementView.swift in Sources */,
 				24E6B7CC2DACDD7E0020FBA4 /* LinkEmailVerifyView.swift in Sources */,
-				F28F43FB2CF4AD8E000279CA /* StorageManagementGroupBoxStyle.swift in Sources */,
 				CEE0F4521E92A68D00008F5B /* ProfilePictureNavigationController.m in Sources */,
 				244F24EA2D92A1CA004CC9D7 /* TabNavigationHelper.swift in Sources */,
 				942F56482AE7A76C0013B35C /* RotationModifier.swift in Sources */,
@@ -21669,7 +21612,6 @@
 				CE7E4F2C23E2C313009977A5 /* UIWindow+orientation.swift in Sources */,
 				949190052B16445900CA337D /* GenericSectionItem.swift in Sources */,
 				2DE1BED5210EEDDD0058D7FF /* pbkdf2.c in Sources */,
-				F28735B62BC53CAA00DE8A46 /* EnterLicenseInfoView.swift in Sources */,
 				2446173D2CE5EE22004FE0EC /* ReactionViewStackViewItemView.swift in Sources */,
 				24D59CC72BA18D5600954DF0 /* GlobalSearchDataSource.swift in Sources */,
 				24282A9828EDA24C00B435C8 /* MultiDeviceWizardView.swift in Sources */,
@@ -21746,7 +21688,6 @@
 				4A67DFD928E5B0DD00F80651 /* RTLAligningTextView.swift in Sources */,
 				24FFE8A02C21B23E002E7DCF /* ChatViewMessageDetailsMessageHistoryTableViewCell.swift in Sources */,
 				4DD5512C1689DF3900B19DF8 /* VideoMessageLoader.m in Sources */,
-				F2C0C5642BC5730100069C44 /* WizardGroupBoxStyle.swift in Sources */,
 				456E7F522AEB130A00AC6A6A /* ContactsCleanupView.swift in Sources */,
 				42C6BBE42A012A4300C08B7F /* LinkedDevicesView.swift in Sources */,
 				CEB7A75D22E1ED8B009ADFDF /* WCSession.swift in Sources */,
@@ -21812,7 +21753,6 @@
 				CECD3EAD206BE29300C451BA /* WebDeleteMessageRequest.swift in Sources */,
 				E1D4CB5E27A9951100B07DB6 /* ChatViewTextMessageTableViewCell.swift in Sources */,
 				4D8B813318D38B4F0079014F /* MWGridViewController.m in Sources */,
-				24122E4A2A52FE900049F38E /* TrailingLabelStyle.swift in Sources */,
 				CEB7A76122E1F003009ADFDF /* WCConnection.swift in Sources */,
 				4AFA7DB5285A7BA20067B737 /* ChatBarView+PasteboardHandler.swift in Sources */,
 				7D63C0DC2CCA7077009A49C5 /* EmojiSkinTonePicker.swift in Sources */,
@@ -22142,7 +22082,6 @@
 				F2EAFCB52D6CC9C400DFFD48 /* GroupDetailsDataSource.swift in Sources */,
 				24E6B7DE2DACFBDE0020FBA4 /* QrCodeView.swift in Sources */,
 				F2EAFCB62D6CC9C400DFFD48 /* BannerHapticGenerator.swift in Sources */,
-				F2EAFCB72D6CC9C400DFFD48 /* EnterLicenseInfoViewController.swift in Sources */,
 				F2EAFCB82D6CC9C400DFFD48 /* EmojiScrollGrid.swift in Sources */,
 				F2EAFCB92D6CC9C400DFFD48 /* ProgressLabel.m in Sources */,
 				F2EAFCBA2D6CC9C400DFFD48 /* CreatePasswordTrigger.m in Sources */,
@@ -22175,7 +22114,6 @@
 				F2EAFCD72D6CC9C400DFFD48 /* VoiceMessageError.swift in Sources */,
 				F2EAFCD82D6CC9C400DFFD48 /* ProfileView+MainTabViewRepresentable.swift in Sources */,
 				F2EAFCD92D6CC9C400DFFD48 /* PPCheckedViewCell.swift in Sources */,
-				F2EAFCDA2D6CC9C400DFFD48 /* TrailingLabelStyle.swift in Sources */,
 				F2EAFCDB2D6CC9C400DFFD48 /* QuickAction+UIPreviewAction.swift in Sources */,
 				F2EAFCDC2D6CC9C400DFFD48 /* ChatViewControllerActionsHelper.swift in Sources */,
 				F2EAFCDD2D6CC9C400DFFD48 /* NotificationTypeSelectionView.swift in Sources */,
@@ -22189,7 +22127,6 @@
 				F2EAFCE52D6CC9C400DFFD48 /* WebAvatarUpdate.swift in Sources */,
 				F2EAFCE62D6CC9C400DFFD48 /* VerificationLevelInfoViewController+LevelView.swift in Sources */,
 				F2EAFCE72D6CC9C400DFFD48 /* StdTypeHelper.swift in Sources */,
-				F2EAFCE82D6CC9C400DFFD48 /* InfoGroupBoxStyle.swift in Sources */,
 				F2EAFCE92D6CC9C400DFFD48 /* EditableAvatarView.m in Sources */,
 				F2EAFCEA2D6CC9C400DFFD48 /* WebProfileUpdate.swift in Sources */,
 				246D9F792DA3C85B00793509 /* ProfileViewController.swift in Sources */,
@@ -22282,7 +22219,6 @@
 				F2EAFD3E2D6CC9C400DFFD48 /* PublicKeyView.swift in Sources */,
 				F2EAFD3F2D6CC9C400DFFD48 /* ChatTextView.swift in Sources */,
 				F2EAFD402D6CC9C400DFFD48 /* ChatViewMessageActions.swift in Sources */,
-				F2EAFD412D6CC9C400DFFD48 /* StorageManagementGroupBoxStyle.swift in Sources */,
 				F2EAFD422D6CC9C400DFFD48 /* LinkMobileNoViewController.m in Sources */,
 				2409248B2DA9322F00E5E9E5 /* LinkPhoneNumberViewModel.swift in Sources */,
 				F2EAFD432D6CC9C400DFFD48 /* WebSequenceNumber.swift in Sources */,
@@ -22437,7 +22373,6 @@
 				F2EAFDD82D6CC9C400DFFD48 /* LaunchModalType.swift in Sources */,
 				F2EAFDD92D6CC9C400DFFD48 /* CompanyDirectoryViewController.swift in Sources */,
 				F2EAFDDA2D6CC9C400DFFD48 /* InviteController.m in Sources */,
-				F2EAFDDB2D6CC9C400DFFD48 /* EnterLicenseInfoView.swift in Sources */,
 				24E6B7C02DACD2840020FBA4 /* LinkEmailDeciderView.swift in Sources */,
 				F2EAFDDC2D6CC9C400DFFD48 /* PushSounds.swift in Sources */,
 				F2EAFDDD2D6CC9C400DFFD48 /* ReactionViewStackViewItemView.swift in Sources */,
@@ -22519,7 +22454,6 @@
 				F2EAFE222D6CC9C400DFFD48 /* ChatSearchResultsTableViewCell.swift in Sources */,
 				F2EAFE232D6CC9C400DFFD48 /* ChatViewMessageDetailsMessageHistoryTableViewCell.swift in Sources */,
 				F2EAFE242D6CC9C400DFFD48 /* ChatBarQuoteView.swift in Sources */,
-				F2EAFE252D6CC9C400DFFD48 /* WizardGroupBoxStyle.swift in Sources */,
 				F2EAFE262D6CC9C400DFFD48 /* MediaSettingsView.swift in Sources */,
 				F2EAFE272D6CC9C400DFFD48 /* WebReceiverUpdate.swift in Sources */,
 				F2EAFE282D6CC9C400DFFD48 /* VerificationLevelDetailsTableViewCell.swift in Sources */,

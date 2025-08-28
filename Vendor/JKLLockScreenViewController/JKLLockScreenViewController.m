@@ -105,6 +105,9 @@ static const NSUInteger newMaxLength = 6;
 - (void)viewDidLoad {
     [super viewDidLoad];
     //------------------ Threema edit begin ---------------------------
+    
+    self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+
     _cancelButton.titleLabel.adjustsFontSizeToFitWidth = YES;
     _deleteButton.titleLabel.adjustsFontSizeToFitWidth = YES;
     

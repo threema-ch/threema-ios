@@ -38,7 +38,7 @@ extension Colors {
             UIImage(resource: .threemaBlue)
         }
     }
-    
+
     @objc public class var darkConsumerLogo: UIImage {
         UIImage(resource: .threemaBlackLogo)
     }

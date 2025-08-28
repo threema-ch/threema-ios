@@ -66,7 +66,7 @@ class AppMigrationTests: XCTestCase {
         setupDataForMigrationVersion6_2()
         setupDataForMigrationVersion6_2_1()
         try setupDataForMigrationVersion6_6()
-        
+
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
         DatabaseManager.db().doMigrateDB()
@@ -74,11 +74,14 @@ class AppMigrationTests: XCTestCase {
         // Setup mocks
         userSettingsMock.appMigratedToVersion = AppMigrationVersion.none.rawValue
 
+        let keychainHelperMock = KeychainHelperMock()
+
         let businessInjectorMock = BusinessInjectorMock(
             entityManager: EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
             groupManager: groupManagerMock,
             myIdentityStore: myIdentityStoreMock,
-            userSettings: userSettingsMock
+            userSettings: userSettingsMock,
+            keychainHelper: keychainHelperMock
         )
 
         let appMigration = AppMigration(
@@ -134,6 +137,11 @@ class AppMigrationTests: XCTestCase {
         XCTAssertTrue(
             ddLoggerMock
                 .exists(message: "[AppMigration] App migration to version 6.6 successfully finished")
+        )
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 6.8 started"))
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(message: "[AppMigration] App migration to version 6.8 successfully finished")
         )
 
         let entityManager = EntityManager(databaseContext: dbMainCnx)
@@ -284,6 +292,9 @@ class AppMigrationTests: XCTestCase {
                 XCTAssertEqual(reaction.reaction, "👍")
             }
         }
+
+        // Check for 6.8 migration
+        XCTAssertEqual(keychainHelperMock.migrateToDowngradeCalls, 0)
     }
 
     private func setupDataForMigrationVersion4_8() {

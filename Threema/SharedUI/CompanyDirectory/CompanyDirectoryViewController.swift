@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
@@ -483,29 +484,40 @@ extension CompanyDirectoryViewController: UITableViewDelegate {
         }
         else {
             let directoryContact = contactsWithSections[indexPath.section][indexPath.row]
-            ContactStore.shared().addWorkContact(
-                with: directoryContact.id,
-                publicKey: directoryContact.pk,
-                firstname: directoryContact.first,
-                lastname: directoryContact.last,
-                csi: directoryContact.csi,
-                jobTitle: directoryContact.jobTitle,
-                department: directoryContact.department,
-                acquaintanceLevel: .direct
-            ) { contactEntity in
-                // show chat
-                Task { @MainActor in
-                    self.navigationController?.dismiss(animated: true, completion: {
-                        let info = [kKeyContact: contactEntity, kKeyForceCompose: true] as [String: Any]
-                        NotificationCenter.default.post(
-                            name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                            object: nil,
-                            userInfo: info
-                        )
-                    })
+            
+            guard let contact = ContactStore.shared()
+                .updateAcquaintanceLevelToDirect(for: ThreemaIdentity(directoryContact.id)) else {
+                ContactStore.shared().addWorkContact(
+                    with: directoryContact.id,
+                    publicKey: directoryContact.pk,
+                    firstname: directoryContact.first,
+                    lastname: directoryContact.last,
+                    csi: directoryContact.csi,
+                    jobTitle: directoryContact.jobTitle,
+                    department: directoryContact.department,
+                    acquaintanceLevel: .direct
+                ) { addedContactEntity in
+                    // show chat
+                    self.showChat(contactIdentity: ThreemaIdentity(addedContactEntity.identity))
+                } onError: { error in
+                    DDLogError("Add work contact failed \(error)")
                 }
-            } onError: { error in
-                DDLogError("Add work contact failed \(error)")
+                return
+            }
+            
+            showChat(contactIdentity: contact.identity)
+        }
+    }
+    
+    private func showChat(contactIdentity: ThreemaIdentity) {
+        Task { @MainActor in
+            self.navigationController?.dismiss(animated: true) {
+                let info = [kKeyContactIdentity: contactIdentity.string, kKeyForceCompose: true] as [String: Any]
+                NotificationCenter.default.post(
+                    name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                    object: nil,
+                    userInfo: info
+                )
             }
         }
     }

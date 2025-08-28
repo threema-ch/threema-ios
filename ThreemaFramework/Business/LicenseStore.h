@@ -32,6 +32,8 @@
 + (nonnull instancetype)sharedLicenseStore;
 - (nonnull instancetype) __unavailable init;
 
+- (BOOL)validCustomOnPremConfigUrlWithPredefinedUrl:(NSString *)onPremConfigUrl;
+
 - (BOOL)isValid;
 
 - (BOOL)isWithinCheckInterval;

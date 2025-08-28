@@ -130,16 +130,21 @@
                 NSString *username = [query objectForKey:@"username"][0];
                 NSString *password = [query objectForKey:@"password"][0];
                 NSString *server = [query objectForKey:@"server"][0];
+                BOOL validServer = [[LicenseStore sharedLicenseStore] validCustomOnPremConfigUrlWithPredefinedUrl:server];
                 
                 // show license screen if
-                if (username == nil || password == nil || (server == nil && TargetManagerObjc.isOnPrem)) {
+                if (username == nil || password == nil || (server == nil && TargetManagerObjc.isOnPrem) || !validServer) {
                     [licenseStore setLicenseUsername:username];
                     [licenseStore setLicensePassword:password];
-                    if (TargetManagerObjc.isOnPrem) {
+                    if (TargetManagerObjc.isOnPrem && validServer) {
                         [licenseStore setOnPremConfigUrl:server];
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseMissing object:nil];
+                        NSString *errorMessage = nil;
+                        if (!validServer) {
+                            errorMessage = NSLocalizedString(@"enter_license_invalid_url_link", @"");
+                        }
+                        [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseMissing object:errorMessage];
                     });
                 } else {
                     [licenseStore setLicenseUsername:username];

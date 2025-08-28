@@ -52,6 +52,8 @@ class SafeServerViewController: IDCreationPageViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        overrideUserInterfaceStyle = .dark
         
         cancelSegueID = isServerForRestore ? "CancelRestoreSafeServer" : "CancelSafeServer"
         okSegueID = isServerForRestore ? "OkRestoreSafeServer" : "OkSafeServer"

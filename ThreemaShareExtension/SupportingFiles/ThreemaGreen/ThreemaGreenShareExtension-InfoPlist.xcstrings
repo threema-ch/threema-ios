@@ -121,13 +121,13 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema Green ShareExtension"
+            "value" : "Threema Green"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema Green ShareExtension"
+            "value" : "Threema Green"
           }
         }
       }
@@ -139,7 +139,7 @@
         "bg" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Зелено Threema споделено разширение"
+            "value" : "Threema Green ShareExtension"
           }
         },
         "cs" : {

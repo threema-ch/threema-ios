@@ -37,6 +37,7 @@ public protocol BusinessInjectorProtocol: AnyObject {
     var userSettings: UserSettingsProtocol { get }
     var settingsStore: any SettingsStoreProtocol { get }
     var pushSettingManager: PushSettingManagerProtocol { get }
+    var keychainHelper: KeychainHelperProtocol { get }
 
     /// Do work with a background business injector. This runs on the thread of the caller!
     ///

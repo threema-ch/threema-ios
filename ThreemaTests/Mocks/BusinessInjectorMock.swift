@@ -68,6 +68,8 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         
     var pushSettingManager: ThreemaFramework.PushSettingManagerProtocol
 
+    var keychainHelper: KeychainHelperProtocol
+
     init(
         runsInBackground: Bool = false,
         contactStore: ContactStoreProtocol = ContactStoreMock(),
@@ -84,7 +86,8 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         settingsStore: SettingsStoreProtocol = SettingsStoreMock(),
         serverConnector: ServerConnectorProtocol = ServerConnectorMock(),
         messageRetentionManager: any MessageRetentionManagerModelProtocol = MessageRetentionManagerModelMock(),
-        pushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock()
+        pushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock(),
+        keychainHelper: KeychainHelperProtocol = KeychainHelperMock()
     ) {
         self.runsInBackground = runsInBackground
         self.contactStore = contactStore
@@ -102,5 +105,6 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         self.serverConnector = serverConnector
         self.messageRetentionManager = messageRetentionManager
         self.pushSettingManager = pushSettingManager
+        self.keychainHelper = keychainHelper
     }
 }

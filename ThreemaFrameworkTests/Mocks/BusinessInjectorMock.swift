@@ -65,6 +65,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     
     var pushSettingManager: ThreemaFramework.PushSettingManagerProtocol
 
+    var keychainHelper: any ThreemaFramework.KeychainHelperProtocol
+
     // MARK: BusinessInternalInjectorProtocol
 
     var mediatorMessageProtocol: MediatorMessageProtocolProtocol
@@ -104,6 +106,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         settingsStore: SettingsStoreInternalProtocol & SettingsStoreProtocol = SettingsStoreMock(),
         serverConnector: ServerConnectorProtocol = ServerConnectorMock(),
         pushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock(),
+        keychainHelper: KeychainHelperProtocol = KeychainHelperMock(),
         mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocolMock(),
         mediatorReflectedProcessor: MediatorReflectedProcessorProtocol = MediatorReflectedProcessorMock(),
         messageProcessor: MessageProcessorProtocol = MessageProcessorMock(),
@@ -127,6 +130,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.userSettings = userSettings
         self.serverConnector = serverConnector
         self.pushSettingManager = pushSettingManager
+        self.keychainHelper = keychainHelper
         self.mediatorMessageProtocol = mediatorMessageProtocol
         self.mediatorReflectedProcessor = mediatorReflectedProcessor
         self.messageProcessor = messageProcessor

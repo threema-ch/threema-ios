@@ -194,12 +194,16 @@ import UIKit
             if let server {
                 safeConfigManager.setServer(server)
                 safeConfigManager.setCustomServer(customServer)
+                safeConfigManager.setServerUser(serverUsername)
+                safeConfigManager.setServerPassword(serverPassword)
                 safeConfigManager.setMaxBackupBytes(maxBackupBytes)
                 safeConfigManager.setRetentionDays(retentionDays)
             }
             else {
                 safeConfigManager.setServer(nil)
                 safeConfigManager.setCustomServer(nil)
+                safeConfigManager.setServerUser(nil)
+                safeConfigManager.setServerPassword(nil)
                 safeConfigManager.setMaxBackupBytes(nil)
                 safeConfigManager.setRetentionDays(nil)
             }

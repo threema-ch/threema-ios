@@ -94,7 +94,7 @@ protocol SafeConfigManagerProtocol {
         setConfig(config)
     }
 
-    public func getCustomServer() -> String? {
+    @objc public func getCustomServer() -> String? {
         getConfig().customServer
     }
 
@@ -104,7 +104,7 @@ protocol SafeConfigManagerProtocol {
         setConfig(config)
     }
 
-    public func getServerUser() -> String? {
+    @objc public func getServerUser() -> String? {
         getConfig().serverUser
     }
 
@@ -114,7 +114,7 @@ protocol SafeConfigManagerProtocol {
         setConfig(config)
     }
 
-    public func getServerPassword() -> String? {
+    @objc public func getServerPassword() -> String? {
         getConfig().serverPassword
     }
 
@@ -137,6 +137,10 @@ protocol SafeConfigManagerProtocol {
     public func getMaxBackupBytes() -> Int? {
         getConfig().maxBackupBytes
     }
+    
+    @objc public func getMaxBackupBytesObjC() -> NSNumber? {
+        getConfig().maxBackupBytes as NSNumber?
+    }
 
     public func setMaxBackupBytes(_ value: Int?) {
         let config = getConfig()
@@ -146,6 +150,10 @@ protocol SafeConfigManagerProtocol {
 
     public func getRetentionDays() -> Int? {
         getConfig().retentionDays
+    }
+    
+    @objc public func getRetentionDaysObjC() -> NSNumber? {
+        getConfig().retentionDays as NSNumber?
     }
 
     public func setRetentionDays(_ value: Int?) {

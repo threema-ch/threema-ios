@@ -53,4 +53,6 @@
 
 - (IBAction)confirmAction:(id)sender;
 
+- (void)showErrorMessage:(NSString *)errorMessage;
+
 @end

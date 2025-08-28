@@ -37,7 +37,10 @@ public enum ThreemaURLProvider {
     public static let iOSBackupManualEN =
         URL(string: defaultURLString + "docs/threema/ios_backup_manual_en.pdf")!
     public static let safeWebdav = URL(string: defaultURLString + "faq/threema_safe_webdav")!
-    public static let enterLicenseWorkInfo = URL(string: defaultURLString + "work?li=in-app-work")!
+    public static let flavorInfoWork =
+        URL(string: defaultURLString + "products/work?mtm_campaign=introduction-work-promo&mtm_kwd=ios")
+    public static let flavorInfoOnPrem =
+        URL(string: defaultURLString + "products/onprem?mtm_campaign=introduction-onprem-promo&mtm_kwd=ios")
     public static let backupFaq = URL(string: defaultURLString + "faq/backup-options")!
     public static let notificationTypesFaq = URL(string: defaultURLString + "faq/ios-notification-types")!
     public static let interactionFaq = URL(string: defaultURLString + "faq/ios-interactions")!
@@ -47,6 +50,7 @@ public enum ThreemaURLProvider {
     // Work
     public static let workDownload = URL(string: defaultURLString + "/work/download")!
     public static let workInfo = URL(string: defaultURLString + "work_info")!
+    public static let privateDownlaodAppStore: URL? = URL(string: "itms-apps://itunes.apple.com/app/id578665578")
     
     public static let supportFaq = {
         if let licenseURL = BusinessInjector.ui.myIdentityStore.licenseSupportURL, let url = URL(string: licenseURL),

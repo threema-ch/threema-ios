@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 /// If your code is run in the notification extension (`NotificationService`) you should in general use already created
 /// instance of business injector.
@@ -185,6 +186,9 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         taskManager,
         TargetManager.isBusinessApp
     )
+
+    public private(set) lazy var keychainHelper: any KeychainHelperProtocol =
+        KeychainHelper(identity: ThreemaIdentity(MyIdentityStore.shared().identity))
 
     public func runInBackground<T>(
         _ block: @escaping (BusinessInjectorProtocol) async throws -> T

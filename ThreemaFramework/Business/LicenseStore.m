@@ -242,32 +242,58 @@ static LicenseStore *singleton;
     return _licensePassword;
 }
 
-- (void)setOnPremConfigUrl:(NSString *)onPremConfigUrl {
-    // Automatically expand hostnames to default provisioning URL
-    if (![onPremConfigUrl hasPrefix:@"https://"]) {
-        onPremConfigUrl = [NSString stringWithFormat:@"https://%@", onPremConfigUrl];
-    }
-    else if ([onPremConfigUrl hasPrefix:@"https://https://"]) {
-        onPremConfigUrl= [onPremConfigUrl substringFromIndex:8];
-    }
-    
-    NSString *check = [onPremConfigUrl substringFromIndex:8];
-    if (![check hasSuffix:@".oppf"]) {
-        if ([check hasSuffix:@"/"]) {
-            onPremConfigUrl = [NSString stringWithFormat:@"%@prov/config.oppf", onPremConfigUrl];
+- (BOOL)validCustomOnPremConfigUrlWithPredefinedUrl:(NSString *)onPremConfigUrl {
+    if ([TargetManagerObjc isCustomOnPrem]) {
+        NSString *formattedOnPremConfigUrl = [self formatOnPremConfigUrl:onPremConfigUrl];
+        
+        NSString *presetOppfUrl = [BundleUtil objectForInfoDictionaryKey:@"PresetOppfUrl"];
+        if (presetOppfUrl != nil) {
+            return [presetOppfUrl isEqualToString:formattedOnPremConfigUrl];
         }
         else {
-            onPremConfigUrl = [NSString stringWithFormat:@"%@/prov/config.oppf", onPremConfigUrl];
+            return YES;
         }
     }
     
+    return YES;
+}
+
+- (void)setOnPremConfigUrl:(NSString *)onPremConfigUrl {
+    NSString *formattedOnPremConfigUrl = [self formatOnPremConfigUrl:onPremConfigUrl];
+    
     // Change it only if the final url was changed. Otherwise it will be in a endless loop when the url is set in the company mdm
-    if ([_onPremConfigUrl isEqualToString:onPremConfigUrl] == NO) {
-        _onPremConfigUrl = onPremConfigUrl;
-        _didCheckLicense = NO;
-        
-        [self saveLicense];
+    if ([_onPremConfigUrl isEqualToString:formattedOnPremConfigUrl] == NO) {
+        if ([self validCustomOnPremConfigUrlWithPredefinedUrl:formattedOnPremConfigUrl]) {
+            _onPremConfigUrl = formattedOnPremConfigUrl;
+            _didCheckLicense = NO;
+            
+            [self saveLicense];
+        } else {
+            // Show Error
+        }
     }
+}
+
+- (NSString *)formatOnPremConfigUrl:(NSString *)onPremConfigUrl {
+    NSString *formattedOnPremConfigUrl = onPremConfigUrl;
+    // Automatically expand hostnames to default provisioning URL
+    if (![formattedOnPremConfigUrl hasPrefix:@"https://"]) {
+        formattedOnPremConfigUrl = [NSString stringWithFormat:@"https://%@", formattedOnPremConfigUrl];
+    }
+    else if ([formattedOnPremConfigUrl hasPrefix:@"https://https://"]) {
+        formattedOnPremConfigUrl= [formattedOnPremConfigUrl substringFromIndex:8];
+    }
+    
+    NSString *check = [formattedOnPremConfigUrl substringFromIndex:8];
+    if (![check hasSuffix:@".oppf"]) {
+        if ([check hasSuffix:@"/"]) {
+            formattedOnPremConfigUrl = [NSString stringWithFormat:@"%@prov/config.oppf", formattedOnPremConfigUrl];
+        }
+        else {
+            formattedOnPremConfigUrl = [NSString stringWithFormat:@"%@/prov/config.oppf", formattedOnPremConfigUrl];
+        }
+    }
+    return formattedOnPremConfigUrl;
 }
 
 - (NSString *)onPremConfigUrl {

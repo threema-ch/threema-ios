@@ -804,16 +804,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
     
     EnterLicenseViewController *viewController = [EnterLicenseViewController instantiate];
+    
+    __block NSString *errorMessage = nil;
+    if (notification.object != nil) {
+        errorMessage = (NSString *)notification.object;
+    }
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         [self closeMainTabBarModalViewsWithCompletion:^{
             [self closeRootViewControllerModalViewsWithCompletion:^{
                 [UIView animateWithDuration:0.0 animations:^{
                     if ([AppDelegate isAlertViewShown]) {
                         [self.window.rootViewController dismissViewControllerAnimated:NO completion:^{
-                            [self presentEnterLicenseViewController:viewController];
+                            [self presentEnterLicenseViewController:viewController errorMessage:errorMessage];
                         }];
                     } else {
-                        [self presentEnterLicenseViewController:viewController];
+                        [self presentEnterLicenseViewController:viewController errorMessage:errorMessage];
                     }
                 }];
             }];
@@ -821,12 +827,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     });
 }
 
-- (void)presentEnterLicenseViewController:(EnterLicenseViewController *)viewController {
+- (void)presentEnterLicenseViewController:(EnterLicenseViewController *)viewController errorMessage:(NSString *)errorMessage {
     viewController.delegate = self;
     viewController.modalPresentationStyle = UIModalPresentationFullScreen;
     [[WCSessionManager shared] stopAndForgetAllSessions];
     
-    [self.window.rootViewController presentViewController:viewController animated:NO completion:nil];
+    [self.window.rootViewController presentViewController:viewController animated:NO completion:^{
+        if (errorMessage != nil) {
+            [viewController showErrorMessage:errorMessage];
+        }
+    }];
 }
 
 - (void)showLockScreen {

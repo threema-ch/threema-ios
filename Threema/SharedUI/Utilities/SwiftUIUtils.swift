@@ -44,12 +44,25 @@ extension View {
             : NavigationView { self }.asAnyView
     }
     
+    func apply(@ViewBuilder _ apply: (Self) -> some View) -> some View {
+        apply(self)
+    }
+    
     func applyIf(_ condition: Bool, apply: (Self) -> AnyView) -> AnyView {
         condition ? apply(self) : asAnyView
     }
     
     func applyIf(_ condition: Bool, apply: (Self) -> some View) -> some View {
         condition ? apply(self).asAnyView : asAnyView
+    }
+    
+    func applyScrollBounceBahaviorIfNeeded() -> AnyView {
+        if #available(iOS 16.4, *) {
+            self.scrollBounceBehavior(.basedOnSize, axes: [.vertical]).asAnyView
+        }
+        else {
+            asAnyView
+        }
     }
     
     func threemaNavigationBar(_ title: String) -> some View {

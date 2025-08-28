@@ -221,6 +221,11 @@ final class ChatTextView: CustomResponderTextView {
         backgroundColor = .secondarySystemGroupedBackground
         adjustsFontForContentSizeCategory = true
         
+        if #available(iOS 18.0, *) {
+            // To address the malfunction with the deactivate sticker switch, situated within the iOS settings
+            supportsAdaptiveImageGlyph = false
+        }
+        
         textContainer.lineFragmentPadding = 0
         
         isScrollEnabled = false

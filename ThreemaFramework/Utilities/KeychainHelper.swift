@@ -22,7 +22,11 @@ import CocoaLumberjackSwift
 import Foundation
 import ThreemaEssentials
 
-public final class KeychainHelper {
+public protocol KeychainHelperProtocol {
+    func migrateToDowngrade() throws
+}
+
+public final class KeychainHelper: KeychainHelperProtocol {
 
     public enum KeychainItem: CustomStringConvertible {
         case deviceGroupKey
@@ -189,5 +193,11 @@ public final class KeychainHelper {
                 throw KeychainHelperError.destroyFailed(item: item)
             }
         }
+    }
+
+    // MARK: - Migration
+
+    public func migrateToDowngrade() throws {
+        try KeychainMigration.migrateToDowngrade()
     }
 }

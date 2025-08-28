@@ -40,6 +40,8 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
 
     [self setup];
     [self updateNavigationButtons];

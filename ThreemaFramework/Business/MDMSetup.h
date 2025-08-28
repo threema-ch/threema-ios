@@ -154,6 +154,8 @@ typedef enum : int {
 
 - (nullable NSNumber *)keepMessagesDays;
 
+- (nullable NSString *)onPremConfigUrl;
+
 - (BOOL)safeRestoreEnable;
 
 - (NSString*)safeRestoreId NS_SWIFT_NAME(safeRestoreID());

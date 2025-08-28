@@ -46,13 +46,18 @@ public enum AppMigrationVersion: Int, Comparable, CaseIterable {
     case v6_2_1 = 26
     case v6_3 = 27
     case v6_6 = 28
+    case v6_8 = 29
     // Add new version for app migration here...
 
+    public private(set) static var isAppVersionDowngraded = false
+
     public static func isMigrationRequired(userSettings: UserSettingsProtocol) -> Bool {
+        
         // If `appMigratedToVersion` greater than latest migration version means, that the BETA user has downgraded the
         // app. In this case run all migrations again.
         if AppMigrationVersion.allCases.last!.rawValue < userSettings.appMigratedToVersion {
             userSettings.appMigratedToVersion = AppMigrationVersion.none.rawValue
+            isAppVersionDowngraded = true
         }
         
         return AppMigrationVersion.allCases.last!.rawValue > userSettings.appMigratedToVersion

@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
@@ -168,15 +169,8 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
                 }
                 
                 Task { @MainActor in
-                    let contactEntity = entityManager.performAndWait {
-                        entityManager.entityFetcher.existingObject(with: contact.objectID) as? ContactEntity
-                    }
-                    guard let contactEntity else {
-                        return
-                    }
-                    
                     navigationController.pushViewController(
-                        SingleDetailsViewController(for: Contact(contactEntity: contactEntity), displayStyle: .default),
+                        SingleDetailsViewController(for: contact, displayStyle: .default),
                         animated: true
                     )
                 }
@@ -276,40 +270,30 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
     
     private func addDirectoryContact(
         _ directoryContact: CompanyDirectoryContact,
-        completion: @escaping (ContactEntity?) -> Void
+        completion: @escaping (Contact?) -> Void
     ) {
-        // If we already have the contact, we unhide it
-        let contactEntity = businessInjector.entityManager.performAndWaitSave {
-            let contact = self.businessInjector.entityManager.entityFetcher.contact(for: directoryContact.id)
-            
-            if let contact {
-                contact.isHidden = false
+        guard let contact = ContactStore.shared()
+            .updateAcquaintanceLevelToDirect(for: ThreemaIdentity(directoryContact.id)) else {
+            businessInjector.contactStore.addWorkContact(
+                with: directoryContact.id,
+                publicKey: directoryContact.pk,
+                firstname: directoryContact.first,
+                lastname: directoryContact.last,
+                csi: directoryContact.csi,
+                jobTitle: directoryContact.jobTitle,
+                department: directoryContact.department,
+                acquaintanceLevel: .direct
+            ) { contactEntity in
+                NotificationPresenterWrapper.shared.present(type: .directoryContactAdded)
+                completion(Contact(contactEntity: contactEntity))
+            } onError: { error in
+                DDLogError("Add work contact failed \(error)")
+                completion(nil)
             }
-            
-            return contact
-        }
-        
-        if let contactEntity {
-            completion(contactEntity)
             return
         }
         
-        businessInjector.contactStore.addWorkContact(
-            with: directoryContact.id,
-            publicKey: directoryContact.pk,
-            firstname: directoryContact.first,
-            lastname: directoryContact.last,
-            csi: directoryContact.csi,
-            jobTitle: directoryContact.jobTitle,
-            department: directoryContact.department,
-            acquaintanceLevel: .direct
-        ) { contact in
-            NotificationPresenterWrapper.shared.present(type: .directoryContactAdded)
-            completion(contact)
-        } onError: { error in
-            DDLogError("Add work contact failed \(error)")
-            completion(nil)
-        }
+        completion(contact)
     }
 }
 

@@ -278,6 +278,11 @@ static NSDictionary *_mdmCacheSetup;
     return [keepMessagesDays isKindOfClass:[NSNumber class]] ? keepMessagesDays : nil;
 }
 
+- (nullable NSString *)onPremConfigUrl {
+    NSString *onPremConfigUrl = [self getMdmConfigurationValueForKey:MDM_KEY_ONPREM_SERVER];
+    return [onPremConfigUrl isKindOfClass:[NSString class]] && onPremConfigUrl.length > 0 ? onPremConfigUrl : nil;
+}
+
 // MARK: Threema Safe status
 
 - (BOOL)isSafeBackupDisable {
@@ -417,8 +422,8 @@ static NSDictionary *_mdmCacheSetup;
         [LicenseStore sharedLicenseStore].licensePassword = licensePassword;
     }
     
-    NSString *onPremConfigUrl = [self getMdmConfigurationValueForKey:MDM_KEY_ONPREM_SERVER];
-    if ([onPremConfigUrl isKindOfClass:[NSString class]] && onPremConfigUrl.length > 0) {
+    NSString *onPremConfigUrl = [self onPremConfigUrl];
+    if (onPremConfigUrl != nil && [[LicenseStore sharedLicenseStore] validCustomOnPremConfigUrlWithPredefinedUrl:onPremConfigUrl]) {
         [LicenseStore sharedLicenseStore].onPremConfigUrl = onPremConfigUrl;
     }
 }

@@ -79,7 +79,7 @@ public enum NotificationType: Equatable, CaseIterable, Hashable {
         case .complete:
             String.localizedStringWithFormat(
                 #localize("settings_notification_type_preview_complete_description"),
-                ThreemaURLProvider.notificationTypesFaq.absoluteString
+                ThreemaURLProvider.notificationTypesFAQ.absoluteString
             )
         }
     }

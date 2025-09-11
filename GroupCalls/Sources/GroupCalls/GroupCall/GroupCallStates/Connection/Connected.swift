@@ -394,6 +394,8 @@ extension Connected {
                 if !groupCallContext.hasAnyParticipants {
                     emptyCallTimeout.start()
                 }
+
+            case .timestampResponse: break
             }
         }
     }

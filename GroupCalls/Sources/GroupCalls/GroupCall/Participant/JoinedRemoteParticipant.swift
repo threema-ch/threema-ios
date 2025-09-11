@@ -69,6 +69,7 @@ final class JoinedRemoteParticipant: RemoteParticipant, ViewModelParticipant {
     
     var audioMuteState: MuteState = .muted
     var videoMuteState: MuteState = .muted
+    var screenMuteState: MuteState = .muted
     
     // MARK: - Lifecycle
     
@@ -113,6 +114,13 @@ final class JoinedRemoteParticipant: RemoteParticipant, ViewModelParticipant {
     
     func setVideoMuteState(to state: MuteState) async {
         videoMuteState = state
+    }
+    
+    func setScreenMuteState(to state: MuteState) async {
+        screenMuteState = state
+        if screenMuteState == .unmuted {
+            dependencies.notificationPresenterWrapper.presentGroupCallNotification(type: .screenUnmuted)
+        }
     }
 }
 
@@ -161,6 +169,21 @@ extension JoinedRemoteParticipant {
                     return .participantToSFU(subscribeVideo(), self, .videoState(.unmuted))
                 case .off:
                     return .participantToSFU(unsubscribeVideo(), self, .videoState(.muted))
+                }
+                
+            case let .screen(muteState):
+                guard let innerState = muteState.state else {
+                    DDLogError(
+                        "[GroupCall] Screen sharing state announcement of JoinedRemoteParticipant \(participantID) doesn't have a state"
+                    )
+                    assertionFailure()
+                    throw GroupCallError.decryptionFailure
+                }
+                switch innerState {
+                case .on:
+                    return .muteStateChanged(self, .screenState(.unmuted))
+                case .off:
+                    return .muteStateChanged(self, .screenState(.muted))
                 }
             
             case let .microphone(muteState):

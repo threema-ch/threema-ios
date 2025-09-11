@@ -129,6 +129,11 @@ public struct Url_DeviceGroupJoinRequestOrOffer: Sendable {
 
   public var version: Url_DeviceGroupJoinRequestOrOffer.Version = .v10
 
+  /// D2D protocol version (`d2d.ProtocolVersion`) used by the device
+  ///
+  /// If `0`, assume V0.1 (`0x0001`).
+  public var d2DProtocolVersion: UInt32 = 0
+
   public var variant: Url_DeviceGroupJoinRequestOrOffer.Variant {
     get {return _variant ?? Url_DeviceGroupJoinRequestOrOffer.Variant()}
     set {_variant = newValue}
@@ -150,6 +155,7 @@ public struct Url_DeviceGroupJoinRequestOrOffer: Sendable {
 
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
+  /// Device join protocol version used by the device.
   public enum Version: SwiftProtobuf.Enum, Swift.CaseIterable {
     public typealias RawValue = Int
 
@@ -300,6 +306,7 @@ extension Url_DeviceGroupJoinRequestOrOffer: SwiftProtobuf.Message, SwiftProtobu
   public static let protoMessageName: String = _protobuf_package + ".DeviceGroupJoinRequestOrOffer"
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "version"),
+    4: .standard(proto: "d2d_protocol_version"),
     2: .same(proto: "variant"),
     3: .standard(proto: "rendezvous_init"),
   ]
@@ -313,6 +320,7 @@ extension Url_DeviceGroupJoinRequestOrOffer: SwiftProtobuf.Message, SwiftProtobu
       case 1: try { try decoder.decodeSingularEnumField(value: &self.version) }()
       case 2: try { try decoder.decodeSingularMessageField(value: &self._variant) }()
       case 3: try { try decoder.decodeSingularMessageField(value: &self._rendezvousInit) }()
+      case 4: try { try decoder.decodeSingularUInt32Field(value: &self.d2DProtocolVersion) }()
       default: break
       }
     }
@@ -332,11 +340,15 @@ extension Url_DeviceGroupJoinRequestOrOffer: SwiftProtobuf.Message, SwiftProtobu
     try { if let v = self._rendezvousInit {
       try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     } }()
+    if self.d2DProtocolVersion != 0 {
+      try visitor.visitSingularUInt32Field(value: self.d2DProtocolVersion, fieldNumber: 4)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Url_DeviceGroupJoinRequestOrOffer, rhs: Url_DeviceGroupJoinRequestOrOffer) -> Bool {
     if lhs.version != rhs.version {return false}
+    if lhs.d2DProtocolVersion != rhs.d2DProtocolVersion {return false}
     if lhs._variant != rhs._variant {return false}
     if lhs._rendezvousInit != rhs._rendezvousInit {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}

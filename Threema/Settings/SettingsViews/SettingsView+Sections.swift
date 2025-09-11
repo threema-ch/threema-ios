@@ -358,7 +358,7 @@ extension SettingsView {
                 ItemSection {
                     (
                         view: uiViewController(SettingsWebViewViewController(
-                            url: ThreemaURLProvider.supportFaq(),
+                            url: ThreemaURLProvider.supportFAQ(),
                             title: #localize("settings_list_support_title"),
                             allowsContentJavaScript: true
                         )),

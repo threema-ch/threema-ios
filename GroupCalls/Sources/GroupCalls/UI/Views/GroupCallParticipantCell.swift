@@ -99,6 +99,18 @@ class GroupCallParticipantCell: UICollectionViewCell {
         return statusSymbolView
     }()
     
+    private lazy var screenShareSymbolView: UIImageView = {
+        let screenShareSymbolView = UIImageView(
+            image: UIImage(systemName: "display")
+        )
+        
+        screenShareSymbolView.preferredSymbolConfiguration = cellConfig.stateImageConfig
+        screenShareSymbolView.tintColor = .white
+        screenShareSymbolView.translatesAutoresizingMaskIntoConstraints = false
+        screenShareSymbolView.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return screenShareSymbolView
+    }()
+    
     private lazy var blurBackground = {
         let visualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
         visualEffectView.translatesAutoresizingMaskIntoConstraints = false
@@ -106,7 +118,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
     }()
     
     private lazy var participantInfoStackView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [statusSymbolView, nameLabel])
+        let stackView = UIStackView(arrangedSubviews: [screenShareSymbolView, statusSymbolView, nameLabel])
         stackView.alignment = .leading
 
         stackView.layoutMargins = UIEdgeInsets(
@@ -201,6 +213,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
         NSLayoutConstraint.deactivate(blurBackgroundConstrains + videoRendererViewConstraints())
         nameLabel.textColor = .white
         statusSymbolView.tintColor = .white
+        screenShareSymbolView.tintColor = .white
     }
     
     public func showRenderer() {
@@ -209,6 +222,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
         NSLayoutConstraint.activate(blurBackgroundConstrains + videoRendererViewConstraints())
         nameLabel.textColor = participant?.idColor ?? .black
         statusSymbolView.tintColor = participant?.idColor ?? .black
+        screenShareSymbolView.tintColor = participant?.idColor ?? .black
     }
     
     public func resetRendererView() {
@@ -241,6 +255,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
             let displayName = participant.displayName
             let profilePicture = participant.profilePicture
             let audioMuteState = await participant.audioMuteState
+            let screenMuteState = await participant.screenMuteState
             let isRunningForScreenshots = participant.dependencies.isRunningForScreenshots
             
             computedAccessibilityLabel = await participant.cellAccessibilityLabel()
@@ -308,9 +323,12 @@ class GroupCallParticipantCell: UICollectionViewCell {
                 if isRunningForScreenshots {
                     if participant.participantID.id != 3 {
                         participantInfoStackView.removeArrangedSubview(statusSymbolView)
+                        participantInfoStackView.removeArrangedSubview(screenShareSymbolView)
                         statusSymbolView.removeFromSuperview()
+                        screenShareSymbolView.removeFromSuperview()
                     }
                     statusSymbolView.tintColor = idColor
+                    screenShareSymbolView.tintColor = idColor
                 }
                 else {
                     switch audioMuteState {
@@ -322,6 +340,18 @@ class GroupCallParticipantCell: UICollectionViewCell {
                         UIView.animate(withDuration: 0.2) {
                             self.participantInfoStackView.removeArrangedSubview(self.statusSymbolView)
                             self.statusSymbolView.removeFromSuperview()
+                        }
+                    }
+                    
+                    switch screenMuteState {
+                    case .muted:
+                        UIView.animate(withDuration: 0.2) {
+                            self.participantInfoStackView.removeArrangedSubview(self.screenShareSymbolView)
+                            self.screenShareSymbolView.removeFromSuperview()
+                        }
+                    case .unmuted:
+                        UIView.animate(withDuration: 0.2) {
+                            self.participantInfoStackView.insertArrangedSubview(self.screenShareSymbolView, at: 0)
                         }
                     }
                 }

@@ -41,25 +41,67 @@ public enum ThreemaURLProvider {
         URL(string: defaultURLString + "products/work?mtm_campaign=introduction-work-promo&mtm_kwd=ios")
     public static let flavorInfoOnPrem =
         URL(string: defaultURLString + "products/onprem?mtm_campaign=introduction-onprem-promo&mtm_kwd=ios")
-    public static let backupFaq = URL(string: defaultURLString + "faq/backup-options")!
-    public static let notificationTypesFaq = URL(string: defaultURLString + "faq/ios-notification-types")!
-    public static let interactionFaq = URL(string: defaultURLString + "faq/ios-interactions")!
-    
-    private static let supportFaqURL = URL(string: defaultURLString + "ios/support")!
-    
+    public static let backupFAQ = URL(string: defaultURLString + "faq/backup-options")!
+    public static let notificationTypesFAQ = URL(string: defaultURLString + "faq/ios-notification-types")!
+    public static let interactionFAQ = URL(string: defaultURLString + "faq/ios-interactions")!
+        
     // Work
     public static let workDownload = URL(string: defaultURLString + "/work/download")!
     public static let workInfo = URL(string: defaultURLString + "work_info")!
-    public static let privateDownlaodAppStore: URL? = URL(string: "itms-apps://itunes.apple.com/app/id578665578")
+    public static let privateDownloadAppStore: URL? = URL(string: "itms-apps://itunes.apple.com/app/id578665578")
+       
+    private static let supportFAQURL = URL(string: defaultURLString + "ios/support")!
+    private static let deviceJoinDownloadPrivateString = "https://three.ma/md"
+    private static let deviceJoinDownloadWorkString = "https://three.ma/mdw"
+    private static let deviceJoinDownloadOnPremString = "https://three.ma/mdo"
     
-    public static let supportFaq = {
-        if let licenseURL = BusinessInjector.ui.myIdentityStore.licenseSupportURL, let url = URL(string: licenseURL),
-           !licenseURL.isEmpty {
-            let supportURL = url
-            return supportURL
+    public static let supportFAQ = {
+        switch TargetManager.current {
+        case .threema, .green:
+            return supportFAQURL
+            
+        case .work, .blue, .onPrem:
+            guard let licenseURL = BusinessInjector.ui.myIdentityStore.licenseSupportURL,
+                  let url = URL(string: licenseURL),
+                  !licenseURL.isEmpty else {
+                return supportFAQURL
+            }
+            
+            return url
+            
+        case .customOnPrem:
+            if let presetSupportFAQ = BundleUtil.object(forInfoDictionaryKey: "SupportFAQURL") as? String,
+               !presetSupportFAQ.isEmpty,
+               let presetSupportFAQURL = URL(string: presetSupportFAQ) {
+                return presetSupportFAQURL
+            }
+            
+            guard let licenseURL = BusinessInjector.ui.myIdentityStore.licenseSupportURL,
+                  let url = URL(string: licenseURL),
+                  !licenseURL.isEmpty else {
+                return supportFAQURL
+            }
+            
+            return url
         }
-        else {
-            return supportFaqURL
+    }
+    
+    public static let deviceJoinDownloadString = {
+        switch TargetManager.current {
+        case .threema, .green:
+            return deviceJoinDownloadPrivateString
+        case .work, .blue:
+            return deviceJoinDownloadWorkString
+        case .onPrem:
+            return deviceJoinDownloadOnPremString
+        case .customOnPrem:
+            guard let predefinedDeviceJoinDownloadString = BundleUtil
+                .object(forInfoDictionaryKey: "DeviceJoinDownloadURL") as? String,
+                !predefinedDeviceJoinDownloadString.isEmpty else {
+                return deviceJoinDownloadOnPremString
+            }
+            
+            return predefinedDeviceJoinDownloadString
         }
     }
 }

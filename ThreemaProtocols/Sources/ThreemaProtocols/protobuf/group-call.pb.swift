@@ -832,6 +832,14 @@ public struct Groupcall_SfuToParticipant: Sendable {
       set {content = .hello(newValue)}
     }
 
+    public var timestampResponse: Groupcall_SfuToParticipant.Timestamp {
+      get {
+        if case .timestampResponse(let v)? = content {return v}
+        return Groupcall_SfuToParticipant.Timestamp()
+      }
+      set {content = .timestampResponse(newValue)}
+    }
+
     public var participantJoined: Groupcall_SfuToParticipant.ParticipantJoined {
       get {
         if case .participantJoined(let v)? = content {return v}
@@ -853,6 +861,7 @@ public struct Groupcall_SfuToParticipant: Sendable {
     public enum OneOf_Content: Equatable, Sendable {
       case relay(Groupcall_ParticipantToParticipant.OuterEnvelope)
       case hello(Groupcall_SfuToParticipant.Hello)
+      case timestampResponse(Groupcall_SfuToParticipant.Timestamp)
       case participantJoined(Groupcall_SfuToParticipant.ParticipantJoined)
       case participantLeft(Groupcall_SfuToParticipant.ParticipantLeft)
 
@@ -922,6 +931,23 @@ public struct Groupcall_SfuToParticipant: Sendable {
     public init() {}
   }
 
+  /// Current UNIX-ish timestamp in milliseconds of the SFU.
+  ///
+  /// When receiving this message:
+  ///
+  /// 1. Resolve the first pending timestamp request with the response.
+  public struct Timestamp: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    public var ms: UInt64 = 0
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+  }
+
   public init() {}
 }
 
@@ -973,6 +999,14 @@ public struct Groupcall_ParticipantToSfu: Sendable {
       set {content = .updateCallState(newValue)}
     }
 
+    public var requestTimestamp: Groupcall_ParticipantToSfu.RequestTimestamp {
+      get {
+        if case .requestTimestamp(let v)? = content {return v}
+        return Groupcall_ParticipantToSfu.RequestTimestamp()
+      }
+      set {content = .requestTimestamp(newValue)}
+    }
+
     public var requestParticipantMicrophone: Groupcall_ParticipantToSfu.ParticipantMicrophone {
       get {
         if case .requestParticipantMicrophone(let v)? = content {return v}
@@ -989,12 +1023,12 @@ public struct Groupcall_ParticipantToSfu: Sendable {
       set {content = .requestParticipantCamera(newValue)}
     }
 
-    public var requestParticipantScreenShare: Groupcall_ParticipantToSfu.ParticipantScreen {
+    public var requestParticipantScreen: Groupcall_ParticipantToSfu.ParticipantScreen {
       get {
-        if case .requestParticipantScreenShare(let v)? = content {return v}
+        if case .requestParticipantScreen(let v)? = content {return v}
         return Groupcall_ParticipantToSfu.ParticipantScreen()
       }
-      set {content = .requestParticipantScreenShare(newValue)}
+      set {content = .requestParticipantScreen(newValue)}
     }
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -1002,11 +1036,27 @@ public struct Groupcall_ParticipantToSfu: Sendable {
     public enum OneOf_Content: Equatable, Sendable {
       case relay(Groupcall_ParticipantToParticipant.OuterEnvelope)
       case updateCallState(Groupcall_ParticipantToSfu.UpdateCallState)
+      case requestTimestamp(Groupcall_ParticipantToSfu.RequestTimestamp)
       case requestParticipantMicrophone(Groupcall_ParticipantToSfu.ParticipantMicrophone)
       case requestParticipantCamera(Groupcall_ParticipantToSfu.ParticipantCamera)
-      case requestParticipantScreenShare(Groupcall_ParticipantToSfu.ParticipantScreen)
+      case requestParticipantScreen(Groupcall_ParticipantToSfu.ParticipantScreen)
 
     }
+
+    public init() {}
+  }
+
+  /// Request the current timestamp of the SFU.
+  ///
+  /// When receiving this message:
+  ///
+  /// 1. Respond with a `TimestampResponse` message.
+  public struct RequestTimestamp: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public init() {}
   }
@@ -1195,6 +1245,15 @@ public struct Groupcall_ParticipantToSfu: Sendable {
   }
 
   /// Subscribe or unsubscribe to a participant's screen feed.
+  ///
+  /// When receiving this message:
+  ///
+  /// 1. If the `participant_id` refers to the sender's participant ID or an
+  ///    unknown participant ID, discard the message and abort these steps.
+  /// 2. If `subscribe` is set, forward the screen feed to the client that fits
+  ///    best to the provided parameters.
+  /// 3. If `unsubscribe` is set, stop forwarding screen feed of this participant
+  ///    to the client.
   public struct ParticipantScreen: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -1236,9 +1295,27 @@ public struct Groupcall_ParticipantToSfu: Sendable {
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
 
+      /// Desired resolution. The client should use the canvas' resolution the
+      /// screen feed be displayed in. The SFU will select the spatial layer that
+      /// fits best.
+      public var desiredResolution: Common_Resolution {
+        get {return _desiredResolution ?? Common_Resolution()}
+        set {_desiredResolution = newValue}
+      }
+      /// Returns true if `desiredResolution` has been explicitly set.
+      public var hasDesiredResolution: Bool {return self._desiredResolution != nil}
+      /// Clears the value of `desiredResolution`. Subsequent reads from it will return its default value.
+      public mutating func clearDesiredResolution() {self._desiredResolution = nil}
+
+      /// Desired frame rate. The SFU will select the temporal layer that fits
+      /// best.
+      public var desiredFps: UInt32 = 0
+
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
       public init() {}
+
+      fileprivate var _desiredResolution: Common_Resolution? = nil
     }
 
     /// Unsubscribe a participant's screen feed.
@@ -2002,7 +2079,11 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
   /// 3. If `device` is to be turned _on_:
   ///    1. Start capturing from the device.
   ///    2. Resume the corresponding media track.
-  /// 4. Send the `CaptureState` message for the `device`.
+  /// 4. If `device` is of type _screen_:
+  ///    1. Send a `RequestTimestamp` to the SFU.
+  ///    2. Let `context` be the corresponding `Timestamp` response.
+  /// 5. Send the `CaptureState` message for the `device` with the provided
+  ///    `context`.
   ///
   /// When receiving this message:
   ///
@@ -2023,8 +2104,11 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
   ///    3. If `device` is `Microphone`, no further action is necessary.
   ///    4. If `device` is `Camera`, send a `ParticipantCamera.Subscribe` message
   ///       to the SFU.
-  ///    5. If `device` is `Screen`, send a `ParticipantScreen.Subscribe` message
-  ///       to the SFU.
+  ///    5. If `device` is `Screen`:
+  ///       1. Send a `ParticipantScreen.Subscribe` message to the SFU.
+  ///       2. If `device`'s `started_at` timestamp is the most recent timestamp
+  ///          from all currently active screen shares of all participants, set
+  ///          the focus to this participant's screen.
   public struct CaptureState: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -2048,11 +2132,20 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
       set {state = .camera(newValue)}
     }
 
+    public var screen: Groupcall_ParticipantToParticipant.CaptureState.Screen {
+      get {
+        if case .screen(let v)? = state {return v}
+        return Groupcall_ParticipantToParticipant.CaptureState.Screen()
+      }
+      set {state = .screen(newValue)}
+    }
+
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
     public enum OneOf_State: Equatable, Sendable {
       case microphone(Groupcall_ParticipantToParticipant.CaptureState.Microphone)
       case camera(Groupcall_ParticipantToParticipant.CaptureState.Camera)
+      case screen(Groupcall_ParticipantToParticipant.CaptureState.Screen)
 
     }
 
@@ -2134,10 +2227,10 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
 
       public var state: Groupcall_ParticipantToParticipant.CaptureState.Screen.OneOf_State? = nil
 
-      public var on: Common_Unit {
+      public var on: Groupcall_ParticipantToParticipant.CaptureState.Screen.On {
         get {
           if case .on(let v)? = state {return v}
-          return Common_Unit()
+          return Groupcall_ParticipantToParticipant.CaptureState.Screen.On()
         }
         set {state = .on(newValue)}
       }
@@ -2153,9 +2246,23 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
       public var unknownFields = SwiftProtobuf.UnknownStorage()
 
       public enum OneOf_State: Equatable, Sendable {
-        case on(Common_Unit)
+        case on(Groupcall_ParticipantToParticipant.CaptureState.Screen.On)
         case off(Common_Unit)
 
+      }
+
+      public struct On: Sendable {
+        // SwiftProtobuf.Message conformance is added in an extension below. See the
+        // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+        // methods supported on all messages.
+
+        /// UNIX-ish timestamp in milliseconds retrieved from the SFU for when
+        /// the screen share was initiated.
+        public var startedAt: UInt64 = 0
+
+        public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+        public init() {}
       }
 
       public init() {}
@@ -2249,10 +2356,13 @@ extension Groupcall_CallState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
 
 extension Groupcall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_CallState.protoMessageName + ".Participant"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    2: .same(proto: "threema"),
-    3: .same(proto: "guest"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(
+      reservedNames: [],
+      reservedRanges: [1..<2],
+      numberNameMappings: [
+        2: .same(proto: "threema"),
+        3: .same(proto: "guest"),
+  ])
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2692,6 +2802,7 @@ extension Groupcall_SfuToParticipant.Envelope: SwiftProtobuf.Message, SwiftProto
     1: .same(proto: "padding"),
     2: .same(proto: "relay"),
     3: .same(proto: "hello"),
+    6: .standard(proto: "timestamp_response"),
     4: .standard(proto: "participant_joined"),
     5: .standard(proto: "participant_left"),
   ]
@@ -2755,6 +2866,19 @@ extension Groupcall_SfuToParticipant.Envelope: SwiftProtobuf.Message, SwiftProto
           self.content = .participantLeft(v)
         }
       }()
+      case 6: try {
+        var v: Groupcall_SfuToParticipant.Timestamp?
+        var hadOneofValue = false
+        if let current = self.content {
+          hadOneofValue = true
+          if case .timestampResponse(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.content = .timestampResponse(v)
+        }
+      }()
       default: break
       }
     }
@@ -2784,6 +2908,10 @@ extension Groupcall_SfuToParticipant.Envelope: SwiftProtobuf.Message, SwiftProto
     case .participantLeft?: try {
       guard case .participantLeft(let v)? = self.content else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
+    }()
+    case .timestampResponse?: try {
+      guard case .timestampResponse(let v)? = self.content else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
     }()
     case nil: break
     }
@@ -2894,6 +3022,38 @@ extension Groupcall_SfuToParticipant.ParticipantLeft: SwiftProtobuf.Message, Swi
   }
 }
 
+extension Groupcall_SfuToParticipant.Timestamp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = Groupcall_SfuToParticipant.protoMessageName + ".Timestamp"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "ms"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.ms) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.ms != 0 {
+      try visitor.visitSingularUInt64Field(value: self.ms, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Groupcall_SfuToParticipant.Timestamp, rhs: Groupcall_SfuToParticipant.Timestamp) -> Bool {
+    if lhs.ms != rhs.ms {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
 extension Groupcall_ParticipantToSfu: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ParticipantToSfu"
   public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
@@ -2919,9 +3079,10 @@ extension Groupcall_ParticipantToSfu.Envelope: SwiftProtobuf.Message, SwiftProto
     1: .same(proto: "padding"),
     2: .same(proto: "relay"),
     3: .standard(proto: "update_call_state"),
+    7: .standard(proto: "request_timestamp"),
     6: .standard(proto: "request_participant_microphone"),
     4: .standard(proto: "request_participant_camera"),
-    5: .standard(proto: "request_participant_screen_share"),
+    5: .standard(proto: "request_participant_screen"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -2975,12 +3136,12 @@ extension Groupcall_ParticipantToSfu.Envelope: SwiftProtobuf.Message, SwiftProto
         var hadOneofValue = false
         if let current = self.content {
           hadOneofValue = true
-          if case .requestParticipantScreenShare(let m) = current {v = m}
+          if case .requestParticipantScreen(let m) = current {v = m}
         }
         try decoder.decodeSingularMessageField(value: &v)
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
-          self.content = .requestParticipantScreenShare(v)
+          self.content = .requestParticipantScreen(v)
         }
       }()
       case 6: try {
@@ -2994,6 +3155,19 @@ extension Groupcall_ParticipantToSfu.Envelope: SwiftProtobuf.Message, SwiftProto
         if let v = v {
           if hadOneofValue {try decoder.handleConflictingOneOf()}
           self.content = .requestParticipantMicrophone(v)
+        }
+      }()
+      case 7: try {
+        var v: Groupcall_ParticipantToSfu.RequestTimestamp?
+        var hadOneofValue = false
+        if let current = self.content {
+          hadOneofValue = true
+          if case .requestTimestamp(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.content = .requestTimestamp(v)
         }
       }()
       default: break
@@ -3022,13 +3196,17 @@ extension Groupcall_ParticipantToSfu.Envelope: SwiftProtobuf.Message, SwiftProto
       guard case .requestParticipantCamera(let v)? = self.content else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 4)
     }()
-    case .requestParticipantScreenShare?: try {
-      guard case .requestParticipantScreenShare(let v)? = self.content else { preconditionFailure() }
+    case .requestParticipantScreen?: try {
+      guard case .requestParticipantScreen(let v)? = self.content else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 5)
     }()
     case .requestParticipantMicrophone?: try {
       guard case .requestParticipantMicrophone(let v)? = self.content else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 6)
+    }()
+    case .requestTimestamp?: try {
+      guard case .requestTimestamp(let v)? = self.content else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 7)
     }()
     case nil: break
     }
@@ -3038,6 +3216,25 @@ extension Groupcall_ParticipantToSfu.Envelope: SwiftProtobuf.Message, SwiftProto
   public static func ==(lhs: Groupcall_ParticipantToSfu.Envelope, rhs: Groupcall_ParticipantToSfu.Envelope) -> Bool {
     if lhs.padding != rhs.padding {return false}
     if lhs.content != rhs.content {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Groupcall_ParticipantToSfu.RequestTimestamp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = Groupcall_ParticipantToSfu.protoMessageName + ".RequestTimestamp"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    // Load everything into unknown fields
+    while try decoder.nextFieldNumber() != nil {}
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Groupcall_ParticipantToSfu.RequestTimestamp, rhs: Groupcall_ParticipantToSfu.RequestTimestamp) -> Bool {
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -3404,18 +3601,41 @@ extension Groupcall_ParticipantToSfu.ParticipantScreen: SwiftProtobuf.Message, S
 
 extension Groupcall_ParticipantToSfu.ParticipantScreen.Subscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToSfu.ParticipantScreen.protoMessageName + ".Subscribe"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "desired_resolution"),
+    2: .standard(proto: "desired_fps"),
+  ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
-    // Load everything into unknown fields
-    while try decoder.nextFieldNumber() != nil {}
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._desiredResolution) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.desiredFps) }()
+      default: break
+      }
+    }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    try { if let v = self._desiredResolution {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 1)
+    } }()
+    if self.desiredFps != 0 {
+      try visitor.visitSingularUInt32Field(value: self.desiredFps, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Groupcall_ParticipantToSfu.ParticipantScreen.Subscribe, rhs: Groupcall_ParticipantToSfu.ParticipantScreen.Subscribe) -> Bool {
+    if lhs._desiredResolution != rhs._desiredResolution {return false}
+    if lhs.desiredFps != rhs.desiredFps {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -4298,6 +4518,7 @@ extension Groupcall_ParticipantToParticipant.CaptureState: SwiftProtobuf.Message
   public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "microphone"),
     2: .same(proto: "camera"),
+    3: .same(proto: "screen"),
   ]
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -4332,6 +4553,19 @@ extension Groupcall_ParticipantToParticipant.CaptureState: SwiftProtobuf.Message
           self.state = .camera(v)
         }
       }()
+      case 3: try {
+        var v: Groupcall_ParticipantToParticipant.CaptureState.Screen?
+        var hadOneofValue = false
+        if let current = self.state {
+          hadOneofValue = true
+          if case .screen(let m) = current {v = m}
+        }
+        try decoder.decodeSingularMessageField(value: &v)
+        if let v = v {
+          if hadOneofValue {try decoder.handleConflictingOneOf()}
+          self.state = .screen(v)
+        }
+      }()
       default: break
       }
     }
@@ -4350,6 +4584,10 @@ extension Groupcall_ParticipantToParticipant.CaptureState: SwiftProtobuf.Message
     case .camera?: try {
       guard case .camera(let v)? = self.state else { preconditionFailure() }
       try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    }()
+    case .screen?: try {
+      guard case .screen(let v)? = self.state else { preconditionFailure() }
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 3)
     }()
     case nil: break
     }
@@ -4517,7 +4755,7 @@ extension Groupcall_ParticipantToParticipant.CaptureState.Screen: SwiftProtobuf.
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try {
-        var v: Common_Unit?
+        var v: Groupcall_ParticipantToParticipant.CaptureState.Screen.On?
         var hadOneofValue = false
         if let current = self.state {
           hadOneofValue = true
@@ -4568,6 +4806,38 @@ extension Groupcall_ParticipantToParticipant.CaptureState.Screen: SwiftProtobuf.
 
   public static func ==(lhs: Groupcall_ParticipantToParticipant.CaptureState.Screen, rhs: Groupcall_ParticipantToParticipant.CaptureState.Screen) -> Bool {
     if lhs.state != rhs.state {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Groupcall_ParticipantToParticipant.CaptureState.Screen.On: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = Groupcall_ParticipantToParticipant.CaptureState.Screen.protoMessageName + ".On"
+  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .standard(proto: "started_at"),
+  ]
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.startedAt) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.startedAt != 0 {
+      try visitor.visitSingularUInt64Field(value: self.startedAt, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Groupcall_ParticipantToParticipant.CaptureState.Screen.On, rhs: Groupcall_ParticipantToParticipant.CaptureState.Screen.On) -> Bool {
+    if lhs.startedAt != rhs.startedAt {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

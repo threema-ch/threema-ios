@@ -40,9 +40,14 @@ class ScreenshotParticipant: ViewModelParticipant {
     
     var audioMuteState: MuteState = .muted
     var videoMuteState: MuteState = .muted
+    var screenMuteState: MuteState = .muted
     
     func setVideoMuteState(to state: MuteState) async {
         videoMuteState = state
+    }
+    
+    func setScreenMuteState(to state: MuteState) async {
+        screenMuteState = state
     }
     
     func setAudioMuteState(to state: MuteState) async {

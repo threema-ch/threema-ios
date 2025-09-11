@@ -18,8 +18,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-VERSION_NUMBER=6.8.4
-BUILD_NUMBER=6882
+VERSION_NUMBER=6.8.5
+BUILD_NUMBER=6884
 
 SLASH = /
 

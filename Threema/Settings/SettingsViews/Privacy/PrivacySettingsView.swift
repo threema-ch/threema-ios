@@ -100,7 +100,7 @@ struct PrivacySettingsView: View {
                     ))
                     Link(
                         #localize("learn_more"),
-                        destination: ThreemaURLProvider.interactionFaq
+                        destination: ThreemaURLProvider.interactionFAQ
                     )
                     .font(.footnote)
                 }

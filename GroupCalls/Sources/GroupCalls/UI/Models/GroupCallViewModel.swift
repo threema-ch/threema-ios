@@ -433,6 +433,8 @@ public final class GroupCallViewModel: Sendable {
             await participant.setAudioMuteState(to: muteState)
         case let .videoState(muteState):
             await participant.setVideoMuteState(to: muteState)
+        case let .screenState(muteState):
+            await participant.setScreenMuteState(to: muteState)
         }
     }
 

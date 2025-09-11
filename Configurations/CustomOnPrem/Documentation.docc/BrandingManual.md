@@ -30,8 +30,11 @@ Main config file. Other files inherit/reference some of these values.
 | `PRESET_OPPF_URL`                                 | URL of the OPPF file (not editable for the user on the login screen when set)     | ✅          |
 | `APP_URL_SCHEME`                                  | Define a custom URL scheme for the app                                            | ✅          |
 | `APP_ENCRYPTION_EXPORT_COMPLIANCE_CODE`           | Declare the use of encryption to streamline the app submission process            | ✅          |
-| `TARGET_MANAGER_KEY`                              | Must be CustomOnPrem, do not change this                                          | ❌          |
 | `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME`  | Name of the accent color defined in `SharedResources/TargetColorsCustomOnPrem`    | ✅          |
+| `SUPPORT_FAQ_URL`                                 | FAQ URL; Use $(SLASH) for the first of double slashes                             | ✅          | 
+| `DEVICE_JOIN_DOWNLOAD_URL`                        | URL to download the desktop 2.0 app; Use $(SLASH) for the first of double slashes | ✅          | 
+| `TARGET_MANAGER_KEY`                              | Must be CustomOnPrem, do not change this                                          | ❌          |
+
 
 #### CustomOnPremAppConfig.xcconfig
 Config file for the app target. Do **NOT CHANGE** these values!
@@ -43,8 +46,8 @@ Config file for the app target. Do **NOT CHANGE** these values!
 | `APP_URL_TYPE_IDENTIFIER`                             | URL identifier                                                    | ❌          |
 | `ASSETCATALOG_COMPILER_APPICON_NAME`                  | Name of the asset for the app icons                               | ❌          |
 | `ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS`    | Only the primary app icon will be included in the built product   | ❌          |
-| `INFOPLIST_KEY_UILaunchStoryboardName`                | Name of the storyboard for the launch screen                     | ❌          |
-| `PRIVACY_DESCRIPTION_CONTACTS`                        | Description in the alert to get access to contacts        | ❌          |
+| `INFOPLIST_KEY_UILaunchStoryboardName`                | Name of the storyboard for the launch screen                      | ❌          |
+| `PRIVACY_DESCRIPTION_CONTACTS`                        | Description in the alert to get access to contacts                | ❌          |
 
 #### CustomOnPremNotificationExtensionConfig.xcconfig
 Config file for the notification extension target. Do **NOT CHANGE** these values!

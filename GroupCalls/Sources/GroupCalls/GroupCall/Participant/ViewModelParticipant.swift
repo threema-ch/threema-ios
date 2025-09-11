@@ -32,9 +32,11 @@ protocol ViewModelParticipant: Participant {
     nonisolated var idColor: UIColor { get }
 
     var audioMuteState: MuteState { get }
+    var screenMuteState: MuteState { get }
     var videoMuteState: MuteState { get }
     
     func setVideoMuteState(to state: MuteState) async
+    func setScreenMuteState(to state: MuteState) async
     func setAudioMuteState(to state: MuteState) async
 
     func cellAccessibilityLabel() -> String

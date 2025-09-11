@@ -40,9 +40,21 @@ APP_URL_SCHEME = customonprem
 
 /// Declare the use of encryption to streamline the app submission process
 
-/// Target Manager Key
-/// Do NOT change the TARGET_MANAGER_KEY
-TARGET_MANAGER_KEY = CustomOnPrem
-
 // Accent Color
 ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColorCustomOnPrem
+
+// FAQ URL
+// Use $(SLASH) for the first of double slashes
+// Example: https:$(SLASH)/threema.com/ios/support
+SUPPORT_FAQ_URL = 
+
+// URL to download the desktop 2.0 app
+// Use $(SLASH) for the first of double slashes
+// Example: https:$(SLASH)/three.ma/md
+DEVICE_JOIN_DOWNLOAD_URL =
+
+
+
+/// Target Manager Key
+/// Do NOT change the TARGET_MANAGER_KEY !!!
+TARGET_MANAGER_KEY = CustomOnPrem

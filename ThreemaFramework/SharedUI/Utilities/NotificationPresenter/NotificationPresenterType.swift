@@ -287,6 +287,10 @@ public struct NotificationPresenterType {
         notificationText: #localize("notification_video_unmuted"),
         notificationStyle: .none
     )
+    public static let screenUnmuted = NotificationPresenterType(
+        notificationText: #localize("notification_screen_unmuted"),
+        notificationStyle: .warning
+    )
     public static let safePasswordAccepted = NotificationPresenterType(
         notificationText: #localize("threema_safe_company_mdm_password_changed_accepted"),
         notificationStyle: .success
@@ -378,5 +382,8 @@ public struct AccessibilityAnnouncementType {
     )
     public static let videoUnmuted = AccessibilityAnnouncementType(
         announcementText: #localize("notification_video_unmuted")
+    )
+    public static let screenUnmuted = AccessibilityAnnouncementType(
+        announcementText: #localize("notification_screen_unmuted")
     )
 }

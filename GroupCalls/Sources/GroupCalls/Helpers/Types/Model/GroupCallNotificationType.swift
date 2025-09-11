@@ -21,5 +21,5 @@
 import Foundation
 
 public enum GroupCallNotificationType {
-    case audioMuted, audioUnmuted, videoMuted, videoUnmuted
+    case audioMuted, audioUnmuted, videoMuted, videoUnmuted, screenUnmuted
 }

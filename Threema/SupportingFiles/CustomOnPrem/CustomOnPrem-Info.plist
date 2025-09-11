@@ -105,6 +105,10 @@
 	</array>
 	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
 	<true/>
+	<key>SupportFAQURL</key>
+	<string>$(SUPPORT_FAQ_URL)</string>
+	<key>DeviceJoinDownloadURL</key>
+	<string>$(DEVICE_JOIN_DOWNLOAD_URL)</string>
 	<key>PresetOppfUrl</key>
 	<string>$(PRESET_OPPF_URL)</string>
 	<key>SentryClientDsn</key>

@@ -370,7 +370,7 @@ public struct Rendezvous_RendezvousInit: @unchecked Sendable {
     public var networkCost: Rendezvous_RendezvousInit.NetworkCost = .unknown
 
     /// Full URL to the WebSocket server with a random 32 byte hex-encoded
-    /// rendezvous path. Must begin with `wss://``.
+    /// rendezvous path. Must begin with `wss://`.
     public var url: String = String()
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()

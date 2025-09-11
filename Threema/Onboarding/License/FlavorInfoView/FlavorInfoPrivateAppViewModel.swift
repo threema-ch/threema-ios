@@ -27,7 +27,7 @@ struct FlavorInfoPrivateAppViewModel {
     
     let downloadNow = #localize("flavorinfo_privateappviewmodel_load_now")
         
-    let privateAppAppStoreLink: URL? = ThreemaURLProvider.privateDownlaodAppStore
+    let privateAppAppStoreLink: URL? = ThreemaURLProvider.privateDownloadAppStore
     
     func openPrivateAppStoreStoreLink() {
         if let url = privateAppAppStoreLink {

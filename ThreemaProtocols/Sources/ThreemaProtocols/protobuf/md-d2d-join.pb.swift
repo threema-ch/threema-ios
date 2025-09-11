@@ -368,6 +368,10 @@ public struct Join_EssentialData: @unchecked Sendable {
   public mutating func clearSettings() {_uniqueStorage()._settings = nil}
 
   /// MDM parameters
+  ///
+  /// Optional for a Threema Work app. Must not be present in a Threema consumer app.
+  ///
+  /// [//]: # "TODO(SE-307): Make this required for Threema Work!"
   public var mdmParameters: Sync_MdmParameters {
     get {return _storage._mdmParameters ?? Sync_MdmParameters()}
     set {_uniqueStorage()._mdmParameters = newValue}
@@ -724,19 +728,22 @@ extension Join_Begin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
 
 extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EssentialData"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    2: .standard(proto: "identity_data"),
-    12: .standard(proto: "work_credentials"),
-    3: .standard(proto: "device_group_data"),
-    4: .standard(proto: "user_profile"),
-    5: .same(proto: "settings"),
-    6: .standard(proto: "mdm_parameters"),
-    7: .same(proto: "contacts"),
-    8: .same(proto: "groups"),
-    9: .standard(proto: "distribution_lists"),
-    10: .standard(proto: "csp_hashed_nonces"),
-    11: .standard(proto: "d2d_hashed_nonces"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(
+      reservedNames: [],
+      reservedRanges: [1..<2],
+      numberNameMappings: [
+        2: .standard(proto: "identity_data"),
+        12: .standard(proto: "work_credentials"),
+        3: .standard(proto: "device_group_data"),
+        4: .standard(proto: "user_profile"),
+        5: .same(proto: "settings"),
+        6: .standard(proto: "mdm_parameters"),
+        7: .same(proto: "contacts"),
+        8: .same(proto: "groups"),
+        9: .standard(proto: "distribution_lists"),
+        10: .standard(proto: "csp_hashed_nonces"),
+        11: .standard(proto: "d2d_hashed_nonces"),
+  ])
 
   fileprivate class _StorageClass {
     var _identityData: Join_EssentialData.IdentityData? = nil
@@ -751,15 +758,11 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
     var _cspHashedNonces: [Data] = []
     var _d2DHashedNonces: [Data] = []
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 
@@ -1013,15 +1016,11 @@ extension Join_EssentialData.AugmentedGroup: SwiftProtobuf.Message, SwiftProtobu
     var _group: Sync_Group? = nil
     var _lastUpdateAt: UInt64 = 0
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 

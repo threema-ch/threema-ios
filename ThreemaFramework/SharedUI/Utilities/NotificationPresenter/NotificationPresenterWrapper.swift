@@ -217,6 +217,8 @@ extension NotificationPresenterWrapper: NotificationPresenterWrapperProtocol {
             present(type: NotificationPresenterType.videoMuted)
         case .videoUnmuted:
             present(type: NotificationPresenterType.videoUnmuted)
+        case .screenUnmuted:
+            present(type: NotificationPresenterType.screenUnmuted)
         }
         
         if UIAccessibility.isVoiceOverRunning {
@@ -245,6 +247,11 @@ extension NotificationPresenterWrapper: NotificationPresenterWrapperProtocol {
                     UIAccessibility.post(
                         notification: .announcement,
                         argument: AccessibilityAnnouncementType.videoUnmuted.announcementText
+                    )
+                case .screenUnmuted:
+                    UIAccessibility.post(
+                        notification: .announcement,
+                        argument: AccessibilityAnnouncementType.screenUnmuted.announcementText
                     )
                 }
             }

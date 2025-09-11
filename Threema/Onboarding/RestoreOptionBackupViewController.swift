@@ -133,7 +133,7 @@ extension RestoreOptionBackupViewController: ZSWTappableLabelTapDelegate {
         tappedAt idx: Int,
         withAttributes attributes: [NSAttributedString.Key: Any] = [:]
     ) {
-        let backupFaqURL = ThreemaURLProvider.backupFaq
+        let backupFaqURL = ThreemaURLProvider.backupFAQ
         if UIApplication.shared.canOpenURL(backupFaqURL) {
             UIApplication.shared.open(backupFaqURL, options: [:], completionHandler: nil)
         }

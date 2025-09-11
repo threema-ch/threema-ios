@@ -231,6 +231,7 @@ public struct D2d_TransactionScope: Sendable {
     case settingsSync // = 4
     case mdmParameterSync // = 5
     case newDeviceSync // = 6
+    case dropDevice // = 7
     case UNRECOGNIZED(Int)
 
     public init() {
@@ -246,6 +247,7 @@ public struct D2d_TransactionScope: Sendable {
       case 4: self = .settingsSync
       case 5: self = .mdmParameterSync
       case 6: self = .newDeviceSync
+      case 7: self = .dropDevice
       default: self = .UNRECOGNIZED(rawValue)
       }
     }
@@ -259,6 +261,7 @@ public struct D2d_TransactionScope: Sendable {
       case .settingsSync: return 4
       case .mdmParameterSync: return 5
       case .newDeviceSync: return 6
+      case .dropDevice: return 7
       case .UNRECOGNIZED(let i): return i
       }
     }
@@ -272,6 +275,7 @@ public struct D2d_TransactionScope: Sendable {
       .settingsSync,
       .mdmParameterSync,
       .newDeviceSync,
+      .dropDevice,
     ]
 
   }
@@ -1434,6 +1438,7 @@ extension D2d_TransactionScope.Scope: SwiftProtobuf._ProtoNameProviding {
     4: .same(proto: "SETTINGS_SYNC"),
     5: .same(proto: "MDM_PARAMETER_SYNC"),
     6: .same(proto: "NEW_DEVICE_SYNC"),
+    7: .same(proto: "DROP_DEVICE"),
   ]
 }
 
@@ -1461,15 +1466,11 @@ extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     var _protocolVersion: UInt32 = 0
     var _content: D2d_Envelope.OneOf_Content?
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 
@@ -1977,14 +1978,17 @@ extension D2d_OutgoingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf
 
 extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".IncomingMessage"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "sender_identity"),
-    2: .standard(proto: "message_id"),
-    3: .standard(proto: "created_at"),
-    5: .same(proto: "type"),
-    6: .same(proto: "body"),
-    7: .same(proto: "nonce"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(
+      reservedNames: [],
+      reservedRanges: [4..<5],
+      numberNameMappings: [
+        1: .standard(proto: "sender_identity"),
+        2: .standard(proto: "message_id"),
+        3: .standard(proto: "created_at"),
+        5: .same(proto: "type"),
+        6: .same(proto: "body"),
+        7: .same(proto: "nonce"),
+  ])
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2522,15 +2526,11 @@ extension D2d_GroupSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     var _group: Sync_Group? = nil
     var _memberStateChanges: Dictionary<String,D2d_GroupSync.Update.MemberStateChange> = [:]
 
-    #if swift(>=5.10)
       // This property is used as the initial default value for new instances of the type.
       // The type itself is protecting the reference to its storage via CoW semantics.
       // This will force a copy to be made of this reference when the first mutation occurs;
       // hence, it is safe to mark this as `nonisolated(unsafe)`.
       static nonisolated(unsafe) let defaultInstance = _StorageClass()
-    #else
-      static let defaultInstance = _StorageClass()
-    #endif
 
     private init() {}
 

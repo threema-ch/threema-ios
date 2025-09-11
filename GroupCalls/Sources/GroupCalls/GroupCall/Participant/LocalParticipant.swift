@@ -68,6 +68,7 @@ final class LocalParticipant: ViewModelParticipant, Sendable {
     
     var audioMuteState: MuteState = .muted
     var videoMuteState: MuteState = .muted
+    var screenMuteState: MuteState = .muted
     
     // MARK: - Lifecycle
 
@@ -102,6 +103,10 @@ final class LocalParticipant: ViewModelParticipant, Sendable {
     
     func setVideoMuteState(to state: MuteState) async {
         videoMuteState = state
+    }
+    
+    func setScreenMuteState(to state: MuteState) async {
+        screenMuteState = state
     }
     
     func setActiveCameraPosition(to position: CameraPosition) async {

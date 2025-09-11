@@ -639,10 +639,13 @@ extension D2m_DeviceSlotState: SwiftProtobuf._ProtoNameProviding {
 
 extension D2m_ClientUrlInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ClientUrlInfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "device_group_id"),
-    3: .standard(proto: "server_group"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(
+      reservedNames: [],
+      reservedRanges: [2..<3],
+      numberNameMappings: [
+        1: .standard(proto: "device_group_id"),
+        3: .standard(proto: "server_group"),
+  ])
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

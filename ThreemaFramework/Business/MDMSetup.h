@@ -73,6 +73,8 @@ extern NSString * _Nonnull const MDM_KEY_SAFE_RESTORE_ID;
 extern NSString * _Nonnull const MDM_KEY_SAFE_PASSWORD_PATTERN;
 extern NSString * _Nonnull const MDM_KEY_SAFE_PASSWORD_MESSAGE;
 
+extern NSString * _Nonnull const MDM_KEY_ONPREM_SERVER;
+
 extern NSString * _Nonnull const MDM_KEY_THREEMA_CONFIGURATION;
 extern NSString * _Nonnull const MDM_KEY_THREEMA_OVERRIDE;
 extern NSString * _Nonnull const MDM_KEY_THREEMA_PARAMS;

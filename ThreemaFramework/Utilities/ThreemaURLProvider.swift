@@ -55,7 +55,7 @@ public enum ThreemaURLProvider {
     private static let deviceJoinDownloadWorkString = "https://three.ma/mdw"
     private static let deviceJoinDownloadOnPremString = "https://three.ma/mdo"
     
-    public static let supportFAQ = {
+    public static let supportFAQ: URL? = {
         switch TargetManager.current {
         case .threema, .green:
             return supportFAQURL
@@ -79,12 +79,12 @@ public enum ThreemaURLProvider {
             guard let licenseURL = BusinessInjector.ui.myIdentityStore.licenseSupportURL,
                   let url = URL(string: licenseURL),
                   !licenseURL.isEmpty else {
-                return supportFAQURL
+                return nil
             }
             
             return url
         }
-    }
+    }()
     
     public static let deviceJoinDownloadString = {
         switch TargetManager.current {
@@ -98,7 +98,7 @@ public enum ThreemaURLProvider {
             guard let predefinedDeviceJoinDownloadString = BundleUtil
                 .object(forInfoDictionaryKey: "DeviceJoinDownloadURL") as? String,
                 !predefinedDeviceJoinDownloadString.isEmpty else {
-                return deviceJoinDownloadOnPremString
+                return "URL is missing"
             }
             
             return predefinedDeviceJoinDownloadString

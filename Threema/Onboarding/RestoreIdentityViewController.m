@@ -70,6 +70,8 @@
     _scanView.layer.cornerRadius = 3;
     _scanView.layer.borderWidth = 1;
     _scanView.layer.borderColor = UIColor.tintColor.CGColor;
+    // With a transparent background, the button is only accessible when the finger is positioned over the text
+    _scanView.backgroundColor = [UIColor.blackColor colorWithAlphaComponent:0.02];
     _scanView.isAccessibilityElement = YES;
     _scanView.accessibilityTraits = UIAccessibilityTraitButton;
 
@@ -78,6 +80,8 @@
     _cancelButton.layer.borderWidth = 1;
     _cancelButton.layer.borderColor = UIColor.tintColor.CGColor;
     _cancelButton.layer.cornerRadius = 3;
+    // With a transparent background, the button is only accessible when the finger is positioned over the text
+    _cancelButton.backgroundColor = [UIColor.blackColor colorWithAlphaComponent:0.02];
     
     [_doneButton setTitle:[BundleUtil localizedStringForKey:@"Done"] forState:UIControlStateNormal];
     [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"cancel"] forState:UIControlStateNormal];

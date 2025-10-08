@@ -84,7 +84,8 @@ struct DeviceJoinVerifyEmojiView: View {
                         // label and hide it, which also disables interaction. This can be resolved if the minimal
                         // target is iOS 16 which provides new programatic navigation APIs.
                         NavigationLink(
-                            destination: DeviceJoinSendDataView(showWizard: $showWizard),
+                            destination: DeviceJoinSendDataView(showWizard: $showWizard)
+                                .environmentObject(deviceJoinManager),
                             isActive: $startSendData
                         ) {
                             EmptyView()

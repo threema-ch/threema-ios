@@ -248,7 +248,7 @@ static LicenseStore *singleton;
         
         NSString *presetOppfUrl = [BundleUtil objectForInfoDictionaryKey:@"PresetOppfUrl"];
         if (presetOppfUrl != nil) {
-            return [presetOppfUrl isEqualToString:formattedOnPremConfigUrl];
+            return [[self formatOnPremConfigUrl:presetOppfUrl] isEqualToString:formattedOnPremConfigUrl];
         }
         else {
             return YES;

@@ -117,6 +117,8 @@
     _cancelButton.layer.cornerRadius = 5;
     _cancelButton.titleLabel.adjustsFontSizeToFitWidth = YES;
     _cancelButton.titleLabel.minimumScaleFactor = 0.6;
+    // With a transparent background, the button is only accessible when the finger is positioned over the text
+    _cancelButton.backgroundColor = [UIColor.blackColor colorWithAlphaComponent:0.02];
     [_cancelButton setTitleColor:UIColor.tintColor forState:UIControlStateNormal];
     [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"cancel"] forState:UIControlStateNormal];
 }

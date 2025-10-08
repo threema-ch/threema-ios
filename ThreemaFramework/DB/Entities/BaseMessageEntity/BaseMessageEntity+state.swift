@@ -121,13 +121,31 @@ extension BaseMessageEntity {
             return false
         }
         
+        let businessInjector = BusinessInjector(forBackgroundProcess: true)
+        
+        let isNoteGroup = {
+            guard conversation.isGroup else {
+                return false
+            }
+                        
+            guard let group = businessInjector.groupManager.getGroup(conversation: conversation),
+                  group.isNoteGroup else {
+                return false
+            }
+            
+            return true
+        }()
+        
         return isOwnMessage &&
             typeSupportsRemoteDeletion &&
             deletedAt == nil &&
-            !wasSentMoreThanSixHoursAgo &&
+            (!wasSentMoreThanSixHoursAgo || isNoteGroup) &&
             messageState != .sending &&
             messageState != .failed &&
-            FeatureMask.check(message: self, for: .deleteMessageSupport).isSupported
+            (
+                FeatureMask.check(message: self, for: .deleteMessageSupport).isSupported ||
+                    (isNoteGroup && businessInjector.settingsStore.isMultiDeviceRegistered)
+            )
     }
     
     /// Is there a pending (blob) download for this message?

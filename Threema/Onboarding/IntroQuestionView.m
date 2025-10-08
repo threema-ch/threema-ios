@@ -62,6 +62,8 @@
     _noButton.layer.borderWidth = 1;
     _noButton.layer.borderColor = _yesButton.backgroundColor.CGColor;
     _noButton.layer.cornerRadius = 3;
+    // With a transparent background, the button is only accessible when the finger is positioned over the text
+    _noButton.backgroundColor = [UIColor.blackColor colorWithAlphaComponent:0.02];
     _noButton.accessibilityIdentifier = @"IntroQuestionViewNoButton";
 
     [_yesButton setTitle:[BundleUtil localizedStringForKey:@"yes"] forState:UIControlStateNormal];

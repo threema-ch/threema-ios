@@ -127,6 +127,8 @@
                     });
                 }
             } else {
+                MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:[AppSetup isCompleted]];
+                
                 NSString *username = [query objectForKey:@"username"][0];
                 NSString *password = [query objectForKey:@"password"][0];
                 NSString *server = [query objectForKey:@"server"][0];
@@ -134,10 +136,16 @@
                 
                 // show license screen if
                 if (username == nil || password == nil || (server == nil && TargetManagerObjc.isOnPrem) || !validServer) {
-                    [licenseStore setLicenseUsername:username];
-                    [licenseStore setLicensePassword:password];
+                    if (![mdmSetup existsMdmKey:MDM_KEY_LICENSE_USERNAME]) {
+                        [licenseStore setLicenseUsername:username];
+                    }
+                    if (![mdmSetup existsMdmKey:MDM_KEY_LICENSE_PASSWORD]) {
+                        [licenseStore setLicensePassword:password];
+                    }
                     if (TargetManagerObjc.isOnPrem && validServer) {
-                        [licenseStore setOnPremConfigUrl:server];
+                        if (![mdmSetup existsMdmKey:MDM_KEY_ONPREM_SERVER]) {
+                            [licenseStore setOnPremConfigUrl:server];
+                        }
                     }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         NSString *errorMessage = nil;
@@ -147,10 +155,16 @@
                         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLicenseMissing object:errorMessage];
                     });
                 } else {
-                    [licenseStore setLicenseUsername:username];
-                    [licenseStore setLicensePassword:password];
+                    if (![mdmSetup existsMdmKey:MDM_KEY_LICENSE_USERNAME]) {
+                        [licenseStore setLicenseUsername:username];
+                    }
+                    if (![mdmSetup existsMdmKey:MDM_KEY_LICENSE_PASSWORD]) {
+                        [licenseStore setLicensePassword:password];
+                    }
                     if (TargetManagerObjc.isOnPrem) {
-                        [licenseStore setOnPremConfigUrl:server];
+                        if (![mdmSetup existsMdmKey:MDM_KEY_ONPREM_SERVER]) {
+                            [licenseStore setOnPremConfigUrl:server];
+                        }
                     }
 
                     dispatch_async(dispatch_get_main_queue(), ^{

@@ -70,8 +70,8 @@ extension StorageManagementConversationView {
                 if let group = businessInjector.groupManager.getGroup(conversation: conversation) {
                     self.group = group
                 }
-                if let contactID = conversation.contact?.identity,
-                   let contact = businessInjector.entityManager.entityFetcher.contact(for: contactID) {
+                else if let contactID = conversation.contact?.identity,
+                        let contact = businessInjector.entityManager.entityFetcher.contact(for: contactID) {
                     self.contact = Contact(contactEntity: contact)
                 }
             }

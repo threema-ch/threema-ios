@@ -29,7 +29,7 @@ struct DeviceJoinScanQRCodeView: View {
     
     @Environment(\.openURL) private var openURL
     
-    @EnvironmentObject private var deviceJoinManager: DeviceJoinManager
+    @ObservedObject var deviceJoinManager: DeviceJoinManager
     
     // MARK: Private state
     
@@ -58,7 +58,7 @@ struct DeviceJoinScanQRCodeView: View {
             // it, which also disables interaction. This can be resolved if the minimal target is iOS 16 which provides
             // new programatic navigation APIs.
             NavigationLink(
-                destination: DeviceJoinVerifyEmojiView(showWizard: $showWizard),
+                destination: DeviceJoinVerifyEmojiView(showWizard: $showWizard).environmentObject(deviceJoinManager),
                 isActive: $showVerifyEmojiView
             ) {
                 EmptyView()
@@ -364,13 +364,11 @@ struct DeviceJoinScanQRCodeView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            DeviceJoinScanQRCodeView(showWizard: .constant(true))
-                .environmentObject(DeviceJoinManager())
+            DeviceJoinScanQRCodeView(showWizard: .constant(true), deviceJoinManager: DeviceJoinManager())
         }
         
         NavigationView {
-            DeviceJoinScanQRCodeView(showWizard: .constant(true))
-                .environmentObject(deviceJoinManager2)
+            DeviceJoinScanQRCodeView(showWizard: .constant(true), deviceJoinManager: deviceJoinManager2)
         }
     }
 }

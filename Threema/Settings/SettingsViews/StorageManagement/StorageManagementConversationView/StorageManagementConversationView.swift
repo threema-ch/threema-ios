@@ -57,7 +57,7 @@ struct StorageManagementConversationView: View {
     
     @ViewBuilder
     private var headerView: some View {
-        if model.isSingleConversation, let contact = model.contact {
+        if let contact = model.contact {
             DetailsHeaderView(
                 with: .init(
                     profilePictureInfo: .contact(contact),

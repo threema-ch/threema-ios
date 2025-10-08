@@ -279,8 +279,13 @@ public class ImageURLSenderItemCreator: NSObject {
     /// - Parameters:
     ///   - image: any png image
     ///   - uti: any uti type
-    /// - Returns: true if it can be represented as a sticker and false otherwise
+    /// - Returns: True if it can be represented as a sticker and false otherwise (If in ShareExtension, returns always
+    /// false due to an issue with screenshots from iOS 26.0)
     @objc static func isPNGSticker(image: UIImage, uti: String) -> Bool {
+        guard AppGroup.getCurrentType() != AppGroupTypeShareExtension else {
+            return false
+        }
+        
         if UTIConverter.isPNGImageMimeType(UTIConverter.mimeType(fromUTI: uti)) {
             guard let cgImage = image.cgImage else {
                 return false

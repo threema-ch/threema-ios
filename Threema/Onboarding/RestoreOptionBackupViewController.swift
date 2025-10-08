@@ -52,6 +52,10 @@ class RestoreOptionBackupViewController: IDCreationPageViewController {
         super.viewDidLoad()
         
         hideKeyboardWhenTappedAround()
+        
+        // With a transparent background, the button is only accessible when the finger is positioned over the text
+        cancelButton.backgroundColor = .black.withAlphaComponent(0.02)
+        idButton.backgroundColor = .black.withAlphaComponent(0.02)
 
         titleLabel.text = hasDataOnDevice ? #localize("restore_option_id_title") : #localize("restore_option_title")
         descriptionLabel.text = #localize("restore_option_description")

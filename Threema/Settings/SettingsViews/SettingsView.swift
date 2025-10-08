@@ -22,7 +22,7 @@ import SwiftUI
 import ThreemaFramework
 
 struct SettingsView: View {
-    @StateObject var settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
+    var settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
     @ObservedObject var settingsViewModel = SettingsViewModel()
 
     // MARK: - Body

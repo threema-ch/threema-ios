@@ -356,15 +356,17 @@ extension SettingsView {
         var body: some View {
             Section {
                 ItemSection {
-                    (
-                        view: uiViewController(SettingsWebViewViewController(
-                            url: ThreemaURLProvider.supportFAQ(),
+                    if ThreemaURLProvider.supportFAQ != nil {
+                        (
+                            view: uiViewController(SettingsWebViewViewController(
+                                url: ThreemaURLProvider.supportFAQ,
+                                title: #localize("settings_list_support_title"),
+                                allowsContentJavaScript: true
+                            )),
                             title: #localize("settings_list_support_title"),
-                            allowsContentJavaScript: true
-                        )),
-                        title: #localize("settings_list_support_title"),
-                        symbol: .systemImage("lightbulb.fill")
-                    )
+                            symbol: .systemImage("lightbulb.fill")
+                        )
+                    }
                     if !TargetManager.isOnPrem {
                         (
                             view: uiViewController(SettingsWebViewViewController(

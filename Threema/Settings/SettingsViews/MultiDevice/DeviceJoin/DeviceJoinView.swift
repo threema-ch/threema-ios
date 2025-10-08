@@ -40,13 +40,18 @@ struct DeviceJoinView: View {
             // This should not be switched after the view initially appears, otherwise the navigation stack is reset
             // Thus we store the setting from the settings store in this local state.
             if isMultiDeviceRegistered {
-                DeviceJoinScanQRCodeView(showWizard: $showWizard)
+                DeviceJoinScanQRCodeView(
+                    showWizard: $showWizard,
+                    deviceJoinManager: deviceJoinManager
+                )
             }
             else {
-                DeviceJoinPFSInfoView(showWizard: $showWizard)
+                DeviceJoinPFSInfoView(
+                    showWizard: $showWizard,
+                    deviceJoinManager: deviceJoinManager
+                )
             }
         }
-        .environmentObject(deviceJoinManager)
         .onAppear {
             // Part of the workaround of the reactiveness of this setting
             isMultiDeviceRegistered = settingsStore.isMultiDeviceRegistered

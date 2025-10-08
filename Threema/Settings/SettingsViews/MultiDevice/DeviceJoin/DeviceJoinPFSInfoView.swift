@@ -26,6 +26,7 @@ struct DeviceJoinPFSInfoView: View {
     @Binding var showWizard: Bool
     
     @Environment(\.openURL) private var openURL
+    @ObservedObject var deviceJoinManager: DeviceJoinManager
     
     @State private var showScanQRCodeView = false
         
@@ -60,7 +61,10 @@ struct DeviceJoinPFSInfoView: View {
                 // it, which also disables interaction. This can be resolved if the minimal target is iOS 16 which
                 // provides new programatic navigation APIs.
                 NavigationLink(
-                    destination: DeviceJoinScanQRCodeView(showWizard: $showWizard),
+                    destination: DeviceJoinScanQRCodeView(
+                        showWizard: $showWizard,
+                        deviceJoinManager: deviceJoinManager
+                    ),
                     isActive: $showScanQRCodeView
                 ) {
                     EmptyView()
@@ -102,7 +106,7 @@ struct DeviceJoinPFSInfoView: View {
 struct DeviceJoinPFSInfoView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            DeviceJoinPFSInfoView(showWizard: .constant(true))
+            DeviceJoinPFSInfoView(showWizard: .constant(true), deviceJoinManager: DeviceJoinManager())
         }
     }
 }

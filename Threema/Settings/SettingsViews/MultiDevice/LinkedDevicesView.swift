@@ -50,6 +50,18 @@ struct LinkedDevicesView: View {
         )
         .sheet(isPresented: $showWizard) {
             DeviceJoinView(showWizard: $showWizard)
+                .apply { joinView in
+                    if #available(iOS 16.0, *) {
+                        NavigationStack {
+                            joinView
+                        }
+                    }
+                    else {
+                        NavigationView {
+                            joinView
+                        }
+                    }
+                }
         }
     }
 }

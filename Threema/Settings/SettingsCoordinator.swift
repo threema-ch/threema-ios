@@ -289,7 +289,7 @@ final class SettingsCoordinator: NSObject, Coordinator {
     
     private func showSupportInfo() {
         let vc = SettingsWebViewViewController(
-            url: ThreemaURLProvider.supportFAQ(),
+            url: ThreemaURLProvider.supportFAQ,
             title: #localize("settings_list_support_title"),
             allowsContentJavaScript: true
         )

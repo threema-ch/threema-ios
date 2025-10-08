@@ -114,15 +114,13 @@
         _licensePasswordTextField.enabled = NO;
     }
     
-    if (_licenseStore.onPremConfigUrl != nil) {
-        _serverTextField.text = _licenseStore.onPremConfigUrl;
+    NSString *serverUrl = [BundleUtil objectForInfoDictionaryKey:@"PresetOppfUrl"];
+    if (TargetManagerObjc.isCustomOnPrem && serverUrl != nil) {
+        _serverTextField.text = serverUrl;
+        _serverTextField.userInteractionEnabled = false;
     }
-    else if (TargetManagerObjc.isCustomOnPrem) {
-        NSString *serverUrl = [BundleUtil objectForInfoDictionaryKey:@"PresetOppfUrl"];
-        if (serverUrl != nil) {
-            _serverTextField.text = serverUrl;
-            _serverTextField.userInteractionEnabled = false;
-        }
+    else if (_licenseStore.onPremConfigUrl != nil) {
+        _serverTextField.text = _licenseStore.onPremConfigUrl;
     }
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateLicenseText) name:kNotificationLicenseMissing object:nil];

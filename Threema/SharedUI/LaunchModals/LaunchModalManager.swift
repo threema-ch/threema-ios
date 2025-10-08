@@ -121,6 +121,7 @@ import Foundation
 // TODO: (IOS-3251) Remove
 extension LaunchModalManager: LaunchModalManagerDelegate {
     func didDismiss() {
+        isBeingDisplayed = false
         checkLaunchModals()
     }
 }

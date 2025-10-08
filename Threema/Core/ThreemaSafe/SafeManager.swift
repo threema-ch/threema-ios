@@ -148,7 +148,8 @@ import ThreemaMacros
             retentionDays: nil
         ) { error in
             if let error = error as? NSError {
-                if error.code == ThreemaProtocolError.safePasswordEmpty.rawValue {
+                if error.code == ThreemaProtocolError.safePasswordEmpty.rawValue,
+                   !LaunchModalManager.shared.isBeingDisplayed {
                     Task { @MainActor in
                         LaunchModalManager.shared.checkLaunchModals()
                     }

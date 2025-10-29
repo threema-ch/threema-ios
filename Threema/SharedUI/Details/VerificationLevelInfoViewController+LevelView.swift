@@ -25,6 +25,8 @@ extension VerificationLevelInfoViewController {
     /// Custom view for each level with dots image and description text
     class LevelView: UIView {
         
+        private var level = 0
+        
         private enum Configuration {
             static var levelImageOffsetFromTop: CGFloat {
                 UIFontMetrics(forTextStyle: .body).scaledValue(for: 5)
@@ -59,7 +61,9 @@ extension VerificationLevelInfoViewController {
         init(for level: Int) {
             super.init(frame: .zero)
             
-            configureContent(for: level)
+            self.level = level
+            
+            configureContent()
             configureLayout()
         }
         
@@ -68,7 +72,7 @@ extension VerificationLevelInfoViewController {
             fatalError("init(coder:) has not been implemented")
         }
         
-        private func configureContent(for level: Int) {
+        private func configureContent() {
             if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
                 levelImage.image = StyleKit.verificationImageBig(for: level)
             }
@@ -125,6 +129,16 @@ extension VerificationLevelInfoViewController {
             else {
                 NSLayoutConstraint.activate(defaultConstraints)
             }
+        }
+        
+        override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+            super.traitCollectionDidChange(previousTraitCollection)
+            
+            guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
+                return
+            }
+            
+            configureContent()
         }
     }
 }

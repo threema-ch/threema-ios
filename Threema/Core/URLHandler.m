@@ -45,7 +45,7 @@
 
 + (BOOL)handleURL:(NSURL *)url {
     
-    if ([url.scheme hasPrefix:@"threema"]) {
+    if ([url.scheme hasPrefix:TargetManagerObjc.appURLScheme]) {
         
         if ([url.host isEqualToString:@"link_mobileno"]) {
             NSString *code = [url.query stringByReplacingOccurrencesOfString:@"code=" withString:@""];

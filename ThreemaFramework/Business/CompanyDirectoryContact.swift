@@ -138,7 +138,8 @@ public final class CompanyDirectoryContact: NSObject, Sendable {
     
     public func categoryWithOrganisationString() -> String {
         let catString = categoryString()
-        if let organisationName = org, organisationName != MyIdentityStore.shared().companyName {
+        if let organisationName = org, !organisationName.isEmpty,
+           organisationName != MyIdentityStore.shared().companyName {
             if !catString.isEmpty {
                 return organisationName + ", " + catString
             }

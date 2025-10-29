@@ -260,10 +260,18 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     }
     
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+
         if previousTraitCollection?.verticalSizeClass != traitCollection.verticalSizeClass {
             // This will be called on rotation
             updateHeaderLayout()
         }
+        
+        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
+            return
+        }
+        
+        dataSource.refresh(sections: [.members])
     }
 }
 

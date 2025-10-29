@@ -109,7 +109,6 @@ open class ThemedCodeModernGroupedTableViewController: ThemedViewController {
         view.backgroundColor = Colors.backgroundGroupedViewController
         
         Colors.update(tableView: tableView)
-        tableView.reloadData()
     }
 }
 

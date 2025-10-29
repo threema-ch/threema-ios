@@ -3,7 +3,7 @@
 *To preview this file as DocC select "Editor" -> "Assistant"*
 
 ##
-- Important: Make sure you edit the config files in the directory this manual is in `CustomOnPrem` and not in `ThreemaOnprem`!
+- Important: Make sure you edit the config files in the directory this manual is in `CustomOnPrem` and not in `ThreemaOnPrem`!
 
 ## Xcode
 - Warning: Please construct the CustomOnPrem Application exclusively utilizing Xcode 16.4 (Command Line Tool 16.4 and MacOS Sequoia 15.7.x). Threema has not yet supported the building process with Xcode 26.
@@ -18,15 +18,25 @@ The following suffixes are required for the certificates:
   * `iapp.ShareExtension`
 
 ## Signing & Capabilities
+- Warning: Not following these steps at the beginning might lead to all users loosing their data when changing later.
+
 Fill in information configured beforehand from the developer portal:
 1) Tap on 'Threema' at the top of the navigator on the left
 2) Select target "Custom OnPrem"
 3) Go to "App Groups" and select the group added in AppStore Connect beforehand
-4) Go to "Keychain Sharing" and select the group added in AppStore Connect beforehand
+4) Go to "Keychain Sharing" remove the `com.custom.onprem.iapp` by clicking on the "-". Then click "+", Xcode should suggest your custom reverse domain automatically. \
+⚠️ In the ShareExtension and NotificationExtension the string must be Exactly the same as in app. You might need to remove "ShareExtension" and "NotificationExtension" manually in these targets!
+
 5) Repeat points 3 & 4 for "Custom OnPrem NotificationExtension" and "Custom OnPrem ShareExtension"
 
 ## xconfig Files
 All config files are in the same directory this manual is in. Change the modifiable values according to your needs.
+
+## Strings
+Replace all occurrences of "`Custom OnPrem`" in all languages in the following string catalogs:
+- `Threema/SupportingFiles/CustomOnPrem/InfoPlist.xcstrings`
+- `ThreemaNotificationExtension/SupportingFiles/CustomOnPrem/CustomOnPremNotificationExtension-InfoPlist.xcstrings`
+- `ThreemaShareExtension/SupportingFiles/CustomOnPrem/CustomOnPremShareExtension-InfoPlist.xcstrings`
 
 #### CustomOnPremConfig.xconfig
 Main config file. Other files inherit/reference some of these values.

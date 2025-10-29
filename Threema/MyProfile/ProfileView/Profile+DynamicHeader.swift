@@ -177,10 +177,8 @@ extension ProfileView {
                             }
                         }
                         .onTapGesture {
-                            if !TargetManager.isOnPrem {
-                                UIPasteboard.general.string = model.publicKey.identity
-                                NotificationPresenterWrapper.shared.present(type: .copyIDSuccess)
-                            }
+                            UIPasteboard.general.string = model.publicKey.identity
+                            NotificationPresenterWrapper.shared.present(type: .copyIDSuccess)
                         }
                     }
                     .shadow(color: .gray, radius: state == .expanded ? 6 : 0, x: 0, y: 0)

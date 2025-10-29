@@ -389,10 +389,14 @@ extension MarkupParser {
 
         let parsedWithMentionNames = NSMutableAttributedString(attributedString: parsed)
         
-        parsedWithMentionNames.enumerateAttribute(NSAttributedString.Key.tokenType, in: NSRange(
-            location: 0,
-            length: parsedWithMentionNames.length
-        )) { attribute, range, _ in
+        parsedWithMentionNames.enumerateAttribute(
+            NSAttributedString.Key.tokenType,
+            in: NSRange(
+                location: 0,
+                length: parsedWithMentionNames.length
+            ),
+            options: .longestEffectiveRangeNotRequired
+        ) { attribute, range, _ in
             guard let attribute = attribute as? MarkupParser.TokenType,
                   attribute == TokenType.mention else {
                 return

@@ -252,6 +252,11 @@ static const NSUInteger newMaxLength = 6;
             if ([_delegate respondsToSelector:@selector(didPasscodeEnteredCorrectly:)]) {
                 [_delegate didPasscodeEnteredCorrectly:weakSelf];
             }
+            //------------------ Threema edit begin ---------------------------
+            if ([_delegate respondsToSelector:@selector(didPasscodeViewDismiss:)]) {
+                [_delegate performSelector:@selector(didPasscodeViewDismiss:) withObject:self];
+            }
+            //------------------ Threema edit end ---------------------------
         }];
     });
 }

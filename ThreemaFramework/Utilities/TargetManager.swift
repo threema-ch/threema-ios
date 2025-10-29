@@ -93,6 +93,15 @@ public enum TargetManager {
         return string
     }()
     
+    /// Returns the configured url scheme of the app
+    public static let appURLScheme: String = {
+        guard let string = BundleUtil.object(forInfoDictionaryKey: "AppURLScheme") as? String else {
+            return "threema"
+        }
+        
+        return string
+    }()
+    
     /// Link to open for writing an AppStore review
     public static let rateLink: URL? = {
         guard let string = BundleUtil.object(forInfoDictionaryKey: "ThreemaRateLink") as? String,
@@ -203,6 +212,15 @@ public enum TargetManager {
     @objc public static let localizedAppName: String = {
         guard let string = BundleUtil.object(forInfoDictionaryKey: "LocalizedAppName") as? String else {
             return "Threema"
+        }
+        
+        return string
+    }()
+    
+    /// Returns the configured url scheme of the app
+    @objc public static let appURLScheme: String = {
+        guard let string = BundleUtil.object(forInfoDictionaryKey: "AppURLScheme") as? String else {
+            return "threema"
         }
         
         return string

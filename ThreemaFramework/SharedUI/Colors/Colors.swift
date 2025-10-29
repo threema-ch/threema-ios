@@ -40,6 +40,11 @@ public final class Colors: NSObject {
             UserSettings.shared().darkTheme = theme == .dark
             StyleKit.resetThemedCache()
             Colors.setupAppearance()
+            
+            NotificationCenter.default.post(
+                name: NSNotification.Name(rawValue: kNotificationColorThemeChanged),
+                object: nil
+            )
         }
     }
              

@@ -348,10 +348,19 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     }
     
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+                
         if previousTraitCollection?.verticalSizeClass != traitCollection.verticalSizeClass {
             // This will be called on rotation
             updateHeaderLayout()
         }
+        
+        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
+            return
+        }
+        
+        headerView.profileContentConfiguration = contactEntity.contentConfiguration
+        dataSource.refresh(sections: [.contactInfo])
     }
     
     @objc private func navigationBarColorShouldChange() {

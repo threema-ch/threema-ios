@@ -144,10 +144,11 @@ struct LockedNavigationLink<Content: View, Label: View>: View {
             }
         }
         .sheet(isPresented: shouldShowLockScreen) {
-            LockScreenView {
-                shouldNavigate = false
-                isActive = true
-            } cancelled: { }
+            LockScreenView { } cancelled: { }
+                didDismissAfterSuccess: {
+                    shouldNavigate = false
+                    isActive = true
+                }
                 .ignoresSafeArea(edges: .bottom)
                 .tint(.accentColor)
                 .preferredColorScheme(.dark)

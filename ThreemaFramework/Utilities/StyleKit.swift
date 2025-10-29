@@ -100,6 +100,24 @@ open class StyleKit: NSObject {
         Cache.workIcon = nil
         Cache.houseIcon = nil
         Cache.checkedBackground = nil
+        
+        Cache.verificationSmall0 = nil
+        Cache.verificationSmall1 = nil
+        Cache.verificationSmall2 = nil
+        Cache.verificationSmall3 = nil
+        Cache.verificationSmall4 = nil
+        
+        Cache.verification0 = nil
+        Cache.verification1 = nil
+        Cache.verification2 = nil
+        Cache.verification3 = nil
+        Cache.verification4 = nil
+        
+        Cache.verificationBig0 = nil
+        Cache.verificationBig1 = nil
+        Cache.verificationBig2 = nil
+        Cache.verificationBig3 = nil
+        Cache.verificationBig4 = nil
     }
         
     // MARK: - Debugging

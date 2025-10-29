@@ -172,8 +172,6 @@ struct LockScreenView: UIViewControllerRepresentable {
     }
     
     // enteredIncorrectly doesn't seem to work at all (the delegate is not called)
-    // didDismissAfterSuccess doesn't work as expected when a biometric authentication is used
-    
     private let lockScreen = LockScreen(isLockScreenController: false)
     
     func makeUIViewController(context: Context) -> some UIViewController {

@@ -565,10 +565,6 @@ static UserSettings *instance;
     darkTheme = newDarkTheme;
     [defaults setBool:darkTheme forKey:@"DarkTheme"];
     [defaults synchronize];
-    
-    [StyleKit resetThemedCache];
-
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationColorThemeChanged object:nil];
 }
 
 - (void)setUseSystemTheme:(BOOL)newUseSystemTheme {

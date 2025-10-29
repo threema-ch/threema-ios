@@ -82,6 +82,8 @@
 	<false/>
 	<key>LocalizedAppName</key>
 	<string>$(LOCALIZED_APP_NAME)</string>
+	<key>AppURLScheme</key>
+	<string>$(APP_URL_SCHEME)</string>
 	<key>NSCameraUsageDescription</key>
 	<string>$(PRIVACY_DESCRIPTION_CAMERA)</string>
 	<key>NSContactsUsageDescription</key>

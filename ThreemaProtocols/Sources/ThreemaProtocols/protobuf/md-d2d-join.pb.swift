@@ -411,7 +411,7 @@ public struct Join_EssentialData: @unchecked Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// User's identity data
-  public struct IdentityData: @unchecked Sendable {
+  public struct IdentityData: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -434,7 +434,7 @@ public struct Join_EssentialData: @unchecked Sendable {
   }
 
   /// Device group data
-  public struct DeviceGroupData: @unchecked Sendable {
+  public struct DeviceGroupData: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -573,9 +573,7 @@ fileprivate let _protobuf_package = "join"
 
 extension Join_NdToEd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".NdToEd"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "registered"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}registered\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -621,11 +619,7 @@ extension Join_NdToEd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
 
 extension Join_EdToNd: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EdToNd"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "begin"),
-    2: .standard(proto: "blob_data"),
-    3: .standard(proto: "essential_data"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}begin\0\u{3}blob_data\0\u{3}essential_data\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -728,22 +722,7 @@ extension Join_Begin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
 
 extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EssentialData"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(
-      reservedNames: [],
-      reservedRanges: [1..<2],
-      numberNameMappings: [
-        2: .standard(proto: "identity_data"),
-        12: .standard(proto: "work_credentials"),
-        3: .standard(proto: "device_group_data"),
-        4: .standard(proto: "user_profile"),
-        5: .same(proto: "settings"),
-        6: .standard(proto: "mdm_parameters"),
-        7: .same(proto: "contacts"),
-        8: .same(proto: "groups"),
-        9: .standard(proto: "distribution_lists"),
-        10: .standard(proto: "csp_hashed_nonces"),
-        11: .standard(proto: "d2d_hashed_nonces"),
-  ])
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{4}\u{2}identity_data\0\u{3}device_group_data\0\u{3}user_profile\0\u{1}settings\0\u{3}mdm_parameters\0\u{1}contacts\0\u{1}groups\0\u{3}distribution_lists\0\u{3}csp_hashed_nonces\0\u{3}d2d_hashed_nonces\0\u{3}work_credentials\0\u{c}\u{1}\u{1}")
 
   fileprivate class _StorageClass {
     var _identityData: Join_EssentialData.IdentityData? = nil
@@ -883,12 +862,7 @@ extension Join_EssentialData: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
 extension Join_EssentialData.IdentityData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Join_EssentialData.protoMessageName + ".IdentityData"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "identity"),
-    2: .same(proto: "ck"),
-    3: .standard(proto: "csp_device_cookie"),
-    4: .standard(proto: "csp_server_group"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{1}ck\0\u{3}csp_device_cookie\0\u{3}csp_server_group\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -933,9 +907,7 @@ extension Join_EssentialData.IdentityData: SwiftProtobuf.Message, SwiftProtobuf.
 
 extension Join_EssentialData.DeviceGroupData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Join_EssentialData.protoMessageName + ".DeviceGroupData"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "dgk"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}dgk\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -965,10 +937,7 @@ extension Join_EssentialData.DeviceGroupData: SwiftProtobuf.Message, SwiftProtob
 
 extension Join_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Join_EssentialData.protoMessageName + ".AugmentedContact"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "contact"),
-    2: .standard(proto: "last_update_at"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}contact\0\u{3}last_update_at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1007,10 +976,7 @@ extension Join_EssentialData.AugmentedContact: SwiftProtobuf.Message, SwiftProto
 
 extension Join_EssentialData.AugmentedGroup: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Join_EssentialData.protoMessageName + ".AugmentedGroup"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "group"),
-    2: .standard(proto: "last_update_at"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}group\0\u{3}last_update_at\0")
 
   fileprivate class _StorageClass {
     var _group: Sync_Group? = nil
@@ -1087,10 +1053,7 @@ extension Join_EssentialData.AugmentedGroup: SwiftProtobuf.Message, SwiftProtobu
 
 extension Join_EssentialData.AugmentedDistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Join_EssentialData.protoMessageName + ".AugmentedDistributionList"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "distribution_list"),
-    2: .standard(proto: "last_update_at"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list\0\u{3}last_update_at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

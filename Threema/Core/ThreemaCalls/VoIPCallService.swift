@@ -1015,7 +1015,7 @@ extension VoIPCallService {
                     }
                     else {
                         DDLogWarn(
-                            "VoipCallService: [cid=\(answer.callID.callID)]: Answer contact (\(answer.contactIdentity ?? "?") is different to current call contact (\(identity)"
+                            "VoipCallService: [cid=\(answer.callID.callID)]: Answer contact (\(answer.contactIdentity ?? "?")) is different to current call contact (\(identity))"
                         )
                     }
                     completion()
@@ -1054,9 +1054,16 @@ extension VoIPCallService {
                 }
             }
             else {
-                DDLogWarn(
-                    "VoipCallService: [cid=\(ringing.callID.callID)]: Ringing contact (\(ringing.contactIdentity ?? "?") is different to current call contact (\(identity)"
-                )
+                if identity == ringing.contactIdentity {
+                    DDLogWarn(
+                        "VoipCallService: [cid=\(ringing.callID.callID)]: CallId is different to \(callID?.callID ?? 0) to handle ringing message"
+                    )
+                }
+                else {
+                    DDLogWarn(
+                        "VoipCallService: [cid=\(ringing.callID.callID)]: Ringing contact (\(ringing.contactIdentity ?? "?")) is different to current call contact (\(identity))"
+                    )
+                }
             }
         }
         else {
@@ -1110,9 +1117,17 @@ extension VoIPCallService {
             }
             else {
                 addUnknownCallIcecandidatesMessages(message: ice)
-                DDLogNotice(
-                    "VoipCallService: [cid=\(ice.callID.callID)]: ICE candidates contact (\(ice.contactIdentity ?? "?") is different to current call contact (\(identity)"
-                )
+                if identity == ice.contactIdentity {
+                    DDLogWarn(
+                        "VoipCallService: [cid=\(ice.callID.callID)]: CallId is different to \(callID?.callID ?? 0) to handle ICE candidates"
+                    )
+                }
+                else {
+                    DDLogWarn(
+                        "VoipCallService: [cid=\(ice.callID.callID)]: ICE candidates contact (\(ice.contactIdentity ?? "?")) is different to current call contact (\(identity))"
+                    )
+                }
+                
                 completion()
             }
         }
@@ -1152,9 +1167,16 @@ extension VoIPCallService {
                 }
             }
             else {
-                DDLogNotice(
-                    "VoipCallService: [cid=\(hangup.callID.callID)]: Hangup contact (\(hangup.contactIdentity ?? "?") is different to current call contact (\(identity)"
-                )
+                if identity == hangup.contactIdentity {
+                    DDLogWarn(
+                        "VoipCallService: [cid=\(hangup.callID.callID)]: CallId is different to \(callID?.callID ?? 0) to handle hangup message"
+                    )
+                }
+                else {
+                    DDLogWarn(
+                        "VoipCallService: [cid=\(hangup.callID.callID)]: Hangup contact (\(hangup.contactIdentity ?? "?")) is different to current call contact (\(identity))"
+                    )
+                }
             }
         }
         else {
@@ -1569,7 +1591,9 @@ extension VoIPCallService {
         // remove peerConnection
         
         func reset() {
+            audioPlayer?.pause()
             peerConnectionClient.close()
+            
             contactIdentity = nil
             callID = nil
             threemaVideoCallAvailable = false
@@ -1582,16 +1606,6 @@ extension VoIPCallService {
             incomingOffer = nil
             localRenderer = nil
             remoteRenderer = nil
-            audioPlayer?.pause()
-            
-            do {
-                RTCAudioSession.sharedInstance().lockForConfiguration()
-                try RTCAudioSession.sharedInstance().setActive(false)
-                RTCAudioSession.sharedInstance().unlockForConfiguration()
-            }
-            catch {
-                DDLogError("Could not set shared session to not active. Error: \(error)")
-            }
             
             DispatchQueue.main.async {
                 NavigationBarPromptHandler.isCallActiveInBackground = false
@@ -2553,7 +2567,7 @@ extension VoIPCallService {
     
     private func callCantCreateOffer(error: Error?) {
         DDLogNotice(
-            "VoipCallService: [cid=\(callID?.callID ?? 0)]: Can't create offer (\(error?.localizedDescription ?? "error is missing")"
+            "VoipCallService: [cid=\(callID?.callID ?? 0)]: Can't create offer (\(error?.localizedDescription ?? "error is missing"))"
         )
         NotificationPresenterWrapper.shared.present(type: .callCreationError)
         invalidateCallFailedTimer()

@@ -44,10 +44,10 @@ extension FileMessageEntity {
     
     override public func additionalExportInfo() -> String? {
         
-        var info = "\(#localize("file")): \(logFileName())"
-        
+        var info = "\(#localize("file")) (\(logFileName(useExportName: true)))"
+                
         if let caption {
-            let cap = " \(#localize("caption")) \(caption)"
+            let cap = ", \(#localize("caption")): \(caption)"
             info += cap
         }
         
@@ -60,8 +60,8 @@ extension FileMessageEntity {
         }
     #endif
     
-    private func logFileName() -> String {
-        let name = blobFilename
+    private func logFileName(useExportName: Bool = false) -> String {
+        let name = useExportName ? blobExportFilename : blobFilename
         if var name, blobData == nil {
             name += " \(#localize("fileNotDownloaded"))"
         }

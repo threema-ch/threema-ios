@@ -112,7 +112,7 @@ public enum D2d_ProtocolVersion: SwiftProtobuf.Enum, Swift.CaseIterable {
 }
 
 /// Data shared across all devices and transmitted during the handshake.
-public struct D2d_SharedDeviceData: @unchecked Sendable {
+public struct D2d_SharedDeviceData: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -129,7 +129,7 @@ public struct D2d_SharedDeviceData: @unchecked Sendable {
 }
 
 /// Metadata about a device, determined by the device itself.
-public struct D2d_DeviceInfo: @unchecked Sendable {
+public struct D2d_DeviceInfo: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -484,7 +484,7 @@ public struct D2d_ConversationId: Sendable {
 ///
 /// ¹: For contacts and distribution lists, there will be exactly one nonce. For
 /// groups, there will be as many nonces as there are group members minus one.
-public struct D2d_OutgoingMessage: @unchecked Sendable {
+public struct D2d_OutgoingMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -637,7 +637,7 @@ public struct D2d_OutgoingMessageUpdate: Sendable {
 /// 2. If a message with the same `message_id` exists within the associated
 ///    `conversation`, discard the message and abort these steps.
 /// 3. [...]
-public struct D2d_IncomingMessage: @unchecked Sendable {
+public struct D2d_IncomingMessage: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1285,20 +1285,12 @@ public struct D2d_MdmParameterSync: Sendable {
 fileprivate let _protobuf_package = "d2d"
 
 extension D2d_ProtocolVersion: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UNSPECIFIED"),
-    1: .same(proto: "V0_1"),
-    2: .same(proto: "V0_2"),
-    3: .same(proto: "V0_3"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}V0_1\0\u{1}V0_2\0\u{1}V0_3\0")
 }
 
 extension D2d_SharedDeviceData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SharedDeviceData"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "padding"),
-    2: .same(proto: "version"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}version\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1333,13 +1325,7 @@ extension D2d_SharedDeviceData: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 
 extension D2d_DeviceInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DeviceInfo"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "padding"),
-    2: .same(proto: "platform"),
-    3: .standard(proto: "platform_details"),
-    4: .standard(proto: "app_version"),
-    5: .same(proto: "label"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}platform\0\u{3}platform_details\0\u{3}app_version\0\u{1}label\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1388,20 +1374,12 @@ extension D2d_DeviceInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
 }
 
 extension D2d_DeviceInfo.Platform: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UNSPECIFIED"),
-    1: .same(proto: "ANDROID"),
-    2: .same(proto: "IOS"),
-    3: .same(proto: "DESKTOP"),
-    4: .same(proto: "WEB"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{1}ANDROID\0\u{1}IOS\0\u{1}DESKTOP\0\u{1}WEB\0")
 }
 
 extension D2d_TransactionScope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".TransactionScope"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "scope"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}scope\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1430,35 +1408,12 @@ extension D2d_TransactionScope: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 }
 
 extension D2d_TransactionScope.Scope: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "USER_PROFILE_SYNC"),
-    1: .same(proto: "CONTACT_SYNC"),
-    2: .same(proto: "GROUP_SYNC"),
-    3: .same(proto: "DISTRIBUTION_LIST_SYNC"),
-    4: .same(proto: "SETTINGS_SYNC"),
-    5: .same(proto: "MDM_PARAMETER_SYNC"),
-    6: .same(proto: "NEW_DEVICE_SYNC"),
-    7: .same(proto: "DROP_DEVICE"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0USER_PROFILE_SYNC\0\u{1}CONTACT_SYNC\0\u{1}GROUP_SYNC\0\u{1}DISTRIBUTION_LIST_SYNC\0\u{1}SETTINGS_SYNC\0\u{1}MDM_PARAMETER_SYNC\0\u{1}NEW_DEVICE_SYNC\0\u{1}DROP_DEVICE\0")
 }
 
 extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Envelope"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "padding"),
-    13: .standard(proto: "device_id"),
-    3: .standard(proto: "protocol_version"),
-    2: .standard(proto: "outgoing_message"),
-    10: .standard(proto: "outgoing_message_update"),
-    4: .standard(proto: "incoming_message"),
-    11: .standard(proto: "incoming_message_update"),
-    5: .standard(proto: "user_profile_sync"),
-    6: .standard(proto: "contact_sync"),
-    7: .standard(proto: "group_sync"),
-    8: .standard(proto: "distribution_list_sync"),
-    9: .standard(proto: "settings_sync"),
-    12: .standard(proto: "mdm_parameter_sync"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{3}outgoing_message\0\u{3}protocol_version\0\u{3}incoming_message\0\u{3}user_profile_sync\0\u{3}contact_sync\0\u{3}group_sync\0\u{3}distribution_list_sync\0\u{3}settings_sync\0\u{3}outgoing_message_update\0\u{3}incoming_message_update\0\u{3}mdm_parameter_sync\0\u{3}device_id\0")
 
   fileprivate class _StorageClass {
     var _padding: Data = Data()
@@ -1717,11 +1672,7 @@ extension D2d_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
 
 extension D2d_ConversationId: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ConversationId"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "contact"),
-    2: .standard(proto: "distribution_list"),
-    3: .same(proto: "group"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}contact\0\u{3}distribution_list\0\u{1}group\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1795,15 +1746,7 @@ extension D2d_ConversationId: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
 extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".OutgoingMessage"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "conversation"),
-    2: .standard(proto: "message_id"),
-    6: .standard(proto: "thread_message_id"),
-    3: .standard(proto: "created_at"),
-    4: .same(proto: "type"),
-    5: .same(proto: "body"),
-    7: .same(proto: "nonces"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}conversation\0\u{3}message_id\0\u{3}created_at\0\u{1}type\0\u{1}body\0\u{3}thread_message_id\0\u{1}nonces\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1867,9 +1810,7 @@ extension D2d_OutgoingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
 
 extension D2d_OutgoingMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".OutgoingMessageUpdate"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "updates"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}updates\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1918,11 +1859,7 @@ extension D2d_OutgoingMessageUpdate.Sent: SwiftProtobuf.Message, SwiftProtobuf._
 
 extension D2d_OutgoingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_OutgoingMessageUpdate.protoMessageName + ".Update"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "conversation"),
-    2: .standard(proto: "message_id"),
-    3: .same(proto: "sent"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}conversation\0\u{3}message_id\0\u{1}sent\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1978,17 +1915,7 @@ extension D2d_OutgoingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf
 
 extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".IncomingMessage"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(
-      reservedNames: [],
-      reservedRanges: [4..<5],
-      numberNameMappings: [
-        1: .standard(proto: "sender_identity"),
-        2: .standard(proto: "message_id"),
-        3: .standard(proto: "created_at"),
-        5: .same(proto: "type"),
-        6: .same(proto: "body"),
-        7: .same(proto: "nonce"),
-  ])
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}sender_identity\0\u{3}message_id\0\u{3}created_at\0\u{2}\u{2}type\0\u{1}body\0\u{1}nonce\0\u{c}\u{4}\u{1}")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2043,9 +1970,7 @@ extension D2d_IncomingMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
 
 extension D2d_IncomingMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".IncomingMessageUpdate"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "updates"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}updates\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2075,9 +2000,7 @@ extension D2d_IncomingMessageUpdate: SwiftProtobuf.Message, SwiftProtobuf._Messa
 
 extension D2d_IncomingMessageUpdate.Read: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_IncomingMessageUpdate.protoMessageName + ".Read"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "at"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2107,11 +2030,7 @@ extension D2d_IncomingMessageUpdate.Read: SwiftProtobuf.Message, SwiftProtobuf._
 
 extension D2d_IncomingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_IncomingMessageUpdate.protoMessageName + ".Update"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "conversation"),
-    2: .standard(proto: "message_id"),
-    3: .same(proto: "read"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}conversation\0\u{3}message_id\0\u{1}read\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2167,9 +2086,7 @@ extension D2d_IncomingMessageUpdate.Update: SwiftProtobuf.Message, SwiftProtobuf
 
 extension D2d_UserProfileSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".UserProfileSync"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "update"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}update\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2215,9 +2132,7 @@ extension D2d_UserProfileSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
 
 extension D2d_UserProfileSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_UserProfileSync.protoMessageName + ".Update"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "user_profile"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}user_profile\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2251,10 +2166,7 @@ extension D2d_UserProfileSync.Update: SwiftProtobuf.Message, SwiftProtobuf._Mess
 
 extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ContactSync"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "create"),
-    2: .same(proto: "update"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}create\0\u{1}update\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2321,9 +2233,7 @@ extension D2d_ContactSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 
 extension D2d_ContactSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_ContactSync.protoMessageName + ".Create"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "contact"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}contact\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2357,9 +2267,7 @@ extension D2d_ContactSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 
 extension D2d_ContactSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_ContactSync.protoMessageName + ".Update"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "contact"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}contact\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2393,11 +2301,7 @@ extension D2d_ContactSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 
 extension D2d_GroupSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GroupSync"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "create"),
-    2: .same(proto: "update"),
-    3: .same(proto: "delete"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}create\0\u{1}update\0\u{1}delete\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2481,9 +2385,7 @@ extension D2d_GroupSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
 
 extension D2d_GroupSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_GroupSync.protoMessageName + ".Create"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "group"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}group\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2517,10 +2419,7 @@ extension D2d_GroupSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 
 extension D2d_GroupSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_GroupSync.protoMessageName + ".Update"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "group"),
-    2: .standard(proto: "member_state_changes"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}group\0\u{3}member_state_changes\0")
 
   fileprivate class _StorageClass {
     var _group: Sync_Group? = nil
@@ -2596,18 +2495,12 @@ extension D2d_GroupSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 }
 
 extension D2d_GroupSync.Update.MemberStateChange: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ADDED"),
-    1: .same(proto: "KICKED"),
-    2: .same(proto: "LEFT"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ADDED\0\u{1}KICKED\0\u{1}LEFT\0")
 }
 
 extension D2d_GroupSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_GroupSync.protoMessageName + ".Delete"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "group_identity"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}group_identity\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2641,11 +2534,7 @@ extension D2d_GroupSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 
 extension D2d_DistributionListSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DistributionListSync"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "create"),
-    2: .same(proto: "update"),
-    3: .same(proto: "delete"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}create\0\u{1}update\0\u{1}delete\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2729,9 +2618,7 @@ extension D2d_DistributionListSync: SwiftProtobuf.Message, SwiftProtobuf._Messag
 
 extension D2d_DistributionListSync.Create: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_DistributionListSync.protoMessageName + ".Create"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "distribution_list"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2765,9 +2652,7 @@ extension D2d_DistributionListSync.Create: SwiftProtobuf.Message, SwiftProtobuf.
 
 extension D2d_DistributionListSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_DistributionListSync.protoMessageName + ".Update"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "distribution_list"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2801,9 +2686,7 @@ extension D2d_DistributionListSync.Update: SwiftProtobuf.Message, SwiftProtobuf.
 
 extension D2d_DistributionListSync.Delete: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_DistributionListSync.protoMessageName + ".Delete"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "distribution_list_id"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list_id\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2833,9 +2716,7 @@ extension D2d_DistributionListSync.Delete: SwiftProtobuf.Message, SwiftProtobuf.
 
 extension D2d_SettingsSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".SettingsSync"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "update"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}update\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2881,9 +2762,7 @@ extension D2d_SettingsSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
 
 extension D2d_SettingsSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_SettingsSync.protoMessageName + ".Update"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "settings"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}settings\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2917,9 +2796,7 @@ extension D2d_SettingsSync.Update: SwiftProtobuf.Message, SwiftProtobuf._Message
 
 extension D2d_MdmParameterSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".MdmParameterSync"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "update"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}update\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2965,9 +2842,7 @@ extension D2d_MdmParameterSync: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 
 extension D2d_MdmParameterSync.Update: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = D2d_MdmParameterSync.protoMessageName + ".Update"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "parameters"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}parameters\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

@@ -482,11 +482,24 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     }
     
     private func isPrivate(content: UserNotificationContent) -> Bool {
-        if let senderID = content.senderID,
-           let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: senderID) {
-            return conversation.conversationCategory == .private
+        if content.isGroupMessage {
+            if let groupIDString = content.groupID,
+               let groupID = Data(base64Encoded: groupIDString),
+               let groupCreator = content.groupCreator,
+               let conversation = entityManager.entityFetcher.conversationEntity(for: groupID, creator: groupCreator) {
+                conversation.conversationCategory == .private
+            }
+            else {
+                false
+            }
         }
-        return false
+        else if let senderID = content.senderID,
+                let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: senderID) {
+            conversation.conversationCategory == .private
+        }
+        else {
+            false
+        }
     }
     
     private func addAttachment(for pendingUserNotification: PendingUserNotification) -> (name: String?, url: URL?)? {

@@ -26,7 +26,7 @@ extension VideoMessageEntity {
         var seconds = duration.intValue
         let minutes: Int = seconds / 60
         seconds = seconds - minutes * 60
-        return "\(#localize("video")) (\(minutes):\(seconds),\(blobFilename ?? "nil")"
+        return "\(#localize("video")) (\(minutes):\(seconds),\(blobExportFilename ?? "nil")"
     }
     
     #if !DEBUG

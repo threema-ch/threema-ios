@@ -176,10 +176,10 @@ extension VideoMessageEntity: BlobData {
         "\(id.hexString).\(MEDIA_EXTENSION_VIDEO)"
     }
     
-    public var blobWebFilename: String {
-        "threema-\(DateFormatter.getDateForFilename(date))-video.\(MEDIA_EXTENSION_VIDEO)"
+    public var blobExportFilename: String {
+        "\(DateFormatter.getDateForFilename(date))-video.\(MEDIA_EXTENSION_VIDEO)"
     }
-    
+       
     public var blobExternalFilename: String? {
         video?.getFilename()
     }

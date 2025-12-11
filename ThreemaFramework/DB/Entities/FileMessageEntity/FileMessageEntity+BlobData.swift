@@ -176,13 +176,13 @@ extension FileMessageEntity: BlobData {
     }
     
     public var blobFilename: String? {
-        "\(id.hexString)-\(fileName ?? "")"
+        "\(id.hexString)-\(fileName ?? "unknown-file-name")"
     }
     
-    public var blobWebFilename: String {
-        fileName ?? "unknown-file-name"
+    public var blobExportFilename: String {
+        "\(DateFormatter.getDateForFilename(date))-file-\(fileName ?? "unknown-file-name")"
     }
-    
+        
     public var blobExternalFilename: String? {
         data?.getFilename()
     }

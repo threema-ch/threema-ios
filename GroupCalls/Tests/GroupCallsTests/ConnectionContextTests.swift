@@ -36,7 +36,8 @@ final class ConnectionContextTests: XCTestCase {
         let sessionParameters = SessionParameters(
             participantID: ParticipantID(id: 0),
             iceParameters: IceParameters(usernameFragment: "", password: ""),
-            dtlsParameters: DtlsParameters(fingerprint: [])
+            dtlsParameters: DtlsParameters(fingerprint: []),
+            rtpHeaderExtensionIDs: RTPHeaderExtensionIDs()
         )
         
         let mockCryptoAdapter = MockGroupCallFrameCryptoAdapter()
@@ -66,7 +67,8 @@ final class ConnectionContextTests: XCTestCase {
         let sessionParameters = SessionParameters(
             participantID: ParticipantID(id: 0),
             iceParameters: IceParameters(usernameFragment: "", password: ""),
-            dtlsParameters: DtlsParameters(fingerprint: [])
+            dtlsParameters: DtlsParameters(fingerprint: []),
+            rtpHeaderExtensionIDs: RTPHeaderExtensionIDs()
         )
         
         let dependencies = MockDependencies().create()
@@ -101,7 +103,8 @@ final class ConnectionContextTests: XCTestCase {
         let sessionParameters = SessionParameters(
             participantID: ParticipantID(id: 0),
             iceParameters: IceParameters(usernameFragment: "", password: ""),
-            dtlsParameters: DtlsParameters(fingerprint: [])
+            dtlsParameters: DtlsParameters(fingerprint: []),
+            rtpHeaderExtensionIDs: RTPHeaderExtensionIDs()
         )
         
         let dependencies = MockDependencies().create()
@@ -145,7 +148,8 @@ final class ConnectionContextTests: XCTestCase {
         let sessionParameters = SessionParameters(
             participantID: ParticipantID(id: 0),
             iceParameters: IceParameters(usernameFragment: "", password: ""),
-            dtlsParameters: DtlsParameters(fingerprint: [])
+            dtlsParameters: DtlsParameters(fingerprint: []),
+            rtpHeaderExtensionIDs: RTPHeaderExtensionIDs()
         )
         
         let dependencies = MockDependencies().create()
@@ -211,7 +215,8 @@ final class ConnectionContextTests: XCTestCase {
         let sessionParameters = SessionParameters(
             participantID: ParticipantID(id: 0),
             iceParameters: IceParameters(usernameFragment: "", password: ""),
-            dtlsParameters: DtlsParameters(fingerprint: [])
+            dtlsParameters: DtlsParameters(fingerprint: []),
+            rtpHeaderExtensionIDs: RTPHeaderExtensionIDs()
         )
         
         let dependencies = MockDependencies().create()

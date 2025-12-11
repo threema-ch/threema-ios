@@ -584,7 +584,8 @@ struct WebBlob {
         if let imageMessageData = imageMessageEntity.image?.data {
             self.blob = imageMessageData
         }
-        self.name = imageMessageEntity.blobWebFilename
+        /// We must utilize the `blobExportFilename`, as Threema Web requires a unique file name.
+        self.name = imageMessageEntity.blobExportFilename
         self.type = "image/\(MEDIA_EXTENSION_IMAGE)"
     }
     
@@ -592,13 +593,15 @@ struct WebBlob {
         if let videoMessageData = videoMessageEntity.video?.data {
             self.blob = videoMessageData
         }
-        self.name = videoMessageEntity.blobWebFilename
+        /// We must utilize the `blobExportFilename`, as Threema Web requires a unique file name.
+        self.name = videoMessageEntity.blobExportFilename
         self.type = "video/\(MEDIA_EXTENSION_VIDEO)"
     }
     
     init(audioMessageEntity: AudioMessageEntity) {
         self.blob = audioMessageEntity.audio?.data
-        self.name = audioMessageEntity.blobWebFilename
+        /// We must utilize the `blobExportFilename`, as Threema Web requires a unique file name.
+        self.name = audioMessageEntity.blobExportFilename
         self.type = "audio/\(MEDIA_EXTENSION_VIDEO)"
     }
     
@@ -606,7 +609,8 @@ struct WebBlob {
         if let fileMessageData = fileMessageEntity.data?.data {
             self.blob = fileMessageData
         }
-        self.name = fileMessageEntity.blobWebFilename
+        /// We must utilize the `blobExportFilename`, as Threema Web requires a unique file name.
+        self.name = fileMessageEntity.blobExportFilename
         if fileMessageEntity.renderType == .voiceMessage {
             self.type = "audio/\(MEDIA_EXTENSION_VIDEO)"
         }

@@ -387,6 +387,7 @@ extension DeleteContactAction {
     }
     
     private func excludeContact(with id: String) {
-        UserSettings.shared()?.syncExclusionList.append(id)
+        let settingsStore = businessInjector.settingsStore as! SettingsStore
+        settingsStore.syncExclusionList.append(id)
     }
 }

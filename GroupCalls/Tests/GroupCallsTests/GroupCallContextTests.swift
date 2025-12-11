@@ -37,7 +37,8 @@ final class GroupCallContextTests: XCTestCase {
         let sessionParameters = SessionParameters(
             participantID: ParticipantID(id: 0),
             iceParameters: IceParameters(usernameFragment: "", password: ""),
-            dtlsParameters: DtlsParameters(fingerprint: [])
+            dtlsParameters: DtlsParameters(fingerprint: []),
+            rtpHeaderExtensionIDs: RTPHeaderExtensionIDs()
         )
         
         let dependencies = MockDependencies().create()
@@ -102,7 +103,8 @@ final class GroupCallContextTests: XCTestCase {
         let sessionParameters = SessionParameters(
             participantID: ParticipantID(id: 0),
             iceParameters: IceParameters(usernameFragment: "", password: ""),
-            dtlsParameters: DtlsParameters(fingerprint: [])
+            dtlsParameters: DtlsParameters(fingerprint: []),
+            rtpHeaderExtensionIDs: RTPHeaderExtensionIDs()
         )
         
         let dependencies = MockDependencies().create()
@@ -193,7 +195,8 @@ final class GroupCallContextTests: XCTestCase {
                 let sessionParameters = SessionParameters(
                     participantID: ParticipantID(id: 0),
                     iceParameters: IceParameters(usernameFragment: "", password: ""),
-                    dtlsParameters: DtlsParameters(fingerprint: [])
+                    dtlsParameters: DtlsParameters(fingerprint: []),
+                    rtpHeaderExtensionIDs: RTPHeaderExtensionIDs()
                 )
             
                 let dependencies = MockDependencies().create()

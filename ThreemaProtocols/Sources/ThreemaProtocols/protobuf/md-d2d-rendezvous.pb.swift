@@ -250,7 +250,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 /// 5. On each successful direct or relayed connection made in the background,
 ///    forward an event to the upper-layer protocol in order for it to select one
 ///    of the paths for nomination.
-public struct Rendezvous_RendezvousInit: @unchecked Sendable {
+public struct Rendezvous_RendezvousInit: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -439,7 +439,7 @@ public struct Rendezvous_Handshake: Sendable {
 
     /// Initial message from RRD containing its authentication challenge,
     /// encrypted by RRD's encryption scheme with RRDAK.
-    public struct Hello: @unchecked Sendable {
+    public struct Hello: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -463,7 +463,7 @@ public struct Rendezvous_Handshake: Sendable {
     /// 1. If the challenge `response` from RRD does not match the challenge sent
     ///    by RID, close the connection with a protocol error (WS: `4000`) and
     ///    abort these steps.
-    public struct Auth: @unchecked Sendable {
+    public struct Auth: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -496,7 +496,7 @@ public struct Rendezvous_Handshake: Sendable {
     /// 1. If the challenge `response` from RID does not match the challenge sent
     ///    by RRD, close the connection with a protocol error (WS: `4000`) and
     ///    abort these steps.
-    public struct AuthHello: @unchecked Sendable {
+    public struct AuthHello: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -549,12 +549,7 @@ fileprivate let _protobuf_package = "rendezvous"
 
 extension Rendezvous_RendezvousInit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".RendezvousInit"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "version"),
-    2: .same(proto: "ak"),
-    3: .standard(proto: "relayed_web_socket"),
-    4: .standard(proto: "direct_tcp_server"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}version\0\u{1}ak\0\u{3}relayed_web_socket\0\u{3}direct_tcp_server\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -602,26 +597,16 @@ extension Rendezvous_RendezvousInit: SwiftProtobuf.Message, SwiftProtobuf._Messa
 }
 
 extension Rendezvous_RendezvousInit.Version: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "V1_0"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0V1_0\0")
 }
 
 extension Rendezvous_RendezvousInit.NetworkCost: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UNKNOWN"),
-    1: .same(proto: "UNMETERED"),
-    2: .same(proto: "METERED"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNKNOWN\0\u{1}UNMETERED\0\u{1}METERED\0")
 }
 
 extension Rendezvous_RendezvousInit.RelayedWebSocket: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Rendezvous_RendezvousInit.protoMessageName + ".RelayedWebSocket"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "path_id"),
-    2: .standard(proto: "network_cost"),
-    3: .same(proto: "url"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}path_id\0\u{3}network_cost\0\u{1}url\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -661,10 +646,7 @@ extension Rendezvous_RendezvousInit.RelayedWebSocket: SwiftProtobuf.Message, Swi
 
 extension Rendezvous_RendezvousInit.DirectTcpServer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Rendezvous_RendezvousInit.protoMessageName + ".DirectTcpServer"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "port"),
-    2: .standard(proto: "ip_addresses"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}port\0\u{3}ip_addresses\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -699,11 +681,7 @@ extension Rendezvous_RendezvousInit.DirectTcpServer: SwiftProtobuf.Message, Swif
 
 extension Rendezvous_RendezvousInit.DirectTcpServer.IpAddress: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Rendezvous_RendezvousInit.DirectTcpServer.protoMessageName + ".IpAddress"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "path_id"),
-    2: .standard(proto: "network_cost"),
-    3: .same(proto: "ip"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}path_id\0\u{3}network_cost\0\u{1}ip\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -781,10 +759,7 @@ extension Rendezvous_Handshake.RrdToRid: SwiftProtobuf.Message, SwiftProtobuf._M
 
 extension Rendezvous_Handshake.RrdToRid.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Rendezvous_Handshake.RrdToRid.protoMessageName + ".Hello"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "challenge"),
-    2: .same(proto: "etk"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}challenge\0\u{1}etk\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -819,9 +794,7 @@ extension Rendezvous_Handshake.RrdToRid.Hello: SwiftProtobuf.Message, SwiftProto
 
 extension Rendezvous_Handshake.RrdToRid.Auth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Rendezvous_Handshake.RrdToRid.protoMessageName + ".Auth"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "response"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}response\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -870,11 +843,7 @@ extension Rendezvous_Handshake.RidToRrd: SwiftProtobuf.Message, SwiftProtobuf._M
 
 extension Rendezvous_Handshake.RidToRrd.AuthHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Rendezvous_Handshake.RidToRrd.protoMessageName + ".AuthHello"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "response"),
-    2: .same(proto: "challenge"),
-    3: .same(proto: "etk"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}response\0\u{1}challenge\0\u{1}etk\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

@@ -143,10 +143,10 @@ extension AudioMessageEntity: BlobData {
         "\(id.hexString).\(MEDIA_EXTENSION_AUDIO)"
     }
     
-    public var blobWebFilename: String {
-        "threema-\(DateFormatter.getDateForFilename(date))-audio.\(MEDIA_EXTENSION_AUDIO)"
+    public var blobExportFilename: String {
+        "\(DateFormatter.getDateForFilename(date))-audio.\(MEDIA_EXTENSION_AUDIO)"
     }
-    
+            
     public var blobExternalFilename: String? {
         audio?.getFilename()
     }

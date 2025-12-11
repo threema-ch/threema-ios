@@ -28,7 +28,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 /// Metadata sent within a CSP payload `message-with-metadata-box` struct.
-public struct CspE2e_MessageMetadata: @unchecked Sendable {
+public struct CspE2e_MessageMetadata: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -123,8 +123,12 @@ public struct CspE2e_MessageMetadata: @unchecked Sendable {
 ///
 /// 1. If the sender or the receiver do not have `EDIT_MESSAGE_SUPPORT`, disallow
 ///    editing and abort these steps.
-/// 2. Run the _Common Edit Message Enter Steps_.
-/// 3. Allow the user to edit the referred message.
+/// 2. Let `message` be the referred message.
+/// 3. If the user is not the original sender of `message`, disallow editing and
+///    abort these steps.
+/// 4. If `message` has been sent (`sent-at`) more than 6 hours ago, disallow
+///    editing and abort these steps.¹
+/// 5. Allow the user to edit the referred message.
 ///
 /// The following steps must be invoked when the user wants to edit a group
 /// message:
@@ -132,18 +136,15 @@ public struct CspE2e_MessageMetadata: @unchecked Sendable {
 /// 1. If the group is marked as _left_, disallow editing and abort these steps.
 /// 2. If the sender or all of the group members do not have
 ///    `EDIT_MESSAGE_SUPPORT`, disallow editing and abort these steps.
-/// 3. Run the _Common Edit Message Enter Steps_.
-/// 4. If any of the group members do not have `EDIT_MESSAGE_SUPPORT`, notify the
-///    user that the affected contacts will not receive the edited content.
-/// 5. Allow the user to edit the referred message.
-///
-/// The following steps are defined as the _Common Edit Message Enter Steps_:
-///
-/// 1. Let `message` be the referred message.
-/// 2. If the user is not the original sender of `message`, disallow editing and
+/// 3. Let `message` be the referred message.
+/// 4. If the user is not the original sender of `message`, disallow editing and
 ///    abort these steps.
-/// 3. If `message` has been sent (`sent-at`) more than 6 hours ago, disallow
-///    editing and abort these steps.¹
+/// 5. If the group is not a _notes_ group:
+///    1. If `message` has been sent (`sent-at`) more than 6 hours ago, disallow
+///       editing and abort these steps.¹
+/// 6. If any of the group members do not have `EDIT_MESSAGE_SUPPORT`, notify the
+///    user that the affected contacts will not receive the edited content.
+/// 7. Allow the user to edit the referred message.
 ///
 /// The following steps must be invoked when the user wants to submit an edited
 /// 1:1 message.
@@ -302,13 +303,17 @@ public struct CspE2e_EditMessage: Sendable {
 ///
 /// 1. If the sender or the receiver do not have `DELETE_MESSAGE_SUPPORT`,
 ///    disallow removal and abort these steps.
-/// 2. Run the _Common Delete Message Preflight Steps_.
-/// 3. Let `deleted-at` be the current timestamp.
-/// 4. Run the _1:1 Messages Submit Steps_ with `messages` set from the following
+/// 2. Let `message` be the referred message.
+/// 3. If the user is not the original sender of `message`, disallow removal and
+///    abort these steps.
+/// 4. If `message` has been sent (`sent-at`) more than 6 hours ago, disallow
+///    removal and abort these steps.¹
+/// 5. Let `deleted-at` be the current timestamp.
+/// 6. Run the _1:1 Messages Submit Steps_ with `messages` set from the following
 ///    properties:
 ///    - `created-at` set to `deleted-at`,
 ///    - to construct a `DeleteMessage` message.
-/// 5. Replace the referred message with a message informing the user that the
+/// 7. Replace the referred message with a message informing the user that the
 ///    referred message of the user has been removed at `deleted-at`.²
 ///
 /// The following steps must be invoked when the user wants to delete a group
@@ -317,26 +322,22 @@ public struct CspE2e_EditMessage: Sendable {
 /// 1. If the group is marked as _left_, disallow removal and abort these steps.
 /// 2. If the sender or all of the group members do not have
 ///    `DELETE_MESSAGE_SUPPORT`, disallow removal and abort these steps.
-/// 3. Run the _Common Delete Message Preflight Steps_.
-/// 4. If any of the group members do not have `DELETE_MESSAGE_SUPPORT`, notify
+/// 3. Let `message` be the referred message.
+/// 4. If the user is not the original sender of `message`, disallow removal and
+///    abort these steps.
+/// 5. If the group is not a _notes_ group:
+///    1. If `message` has been sent (`sent-at`) more than 6 hours ago, disallow
+///       removal and abort these steps.¹
+/// 6. Let `deleted-at` be the current timestamp.
+/// 7. If any of the group members do not have `DELETE_MESSAGE_SUPPORT`, notify
 ///    the user that the affected contacts will continue to see the message.
-/// 5. Let `deleted-at` be the current timestamp.
-/// 6. Run the _Group Messages Submit Steps_ with `messages` set from the
+/// 8. Run the _Group Messages Submit Steps_ with `messages` set from the
 ///    following properties:
 ///    - `created-at` set to `deleted-at`,
 ///    - to construct a `DeleteMessage` message (wrapped by
 ///      [`group-member-container`](ref:e2e.group-member-container)).
-/// 7. Replace the referred message with a message informing the user that the
+/// 9. Replace the referred message with a message informing the user that the
 ///    referred message of the user has been removed at `deleted-at`.²
-///
-/// The following steps are defined as the _Common Delete Message Preflight
-/// Steps_:
-///
-/// 1. Let `message` be the referred message.
-/// 2. If the user is not the original sender of `message`, disallow removal and
-///    abort these steps.
-/// 3. If `message` has been sent (`sent-at`) more than 6 hours ago, disallow
-///    removal and abort these steps.¹
 ///
 /// When reflected from another device as an incoming or outgoing 1:1 message:
 ///
@@ -452,7 +453,7 @@ public struct CspE2e_DeleteMessage: Sendable {
 ///
 /// ²: This ensures that the user automatically switches to the chosen call if it
 /// is currently participating in a group call of this group.
-public struct CspE2e_GroupCallStart: @unchecked Sendable {
+public struct CspE2e_GroupCallStart: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -654,7 +655,7 @@ public struct CspE2e_GroupCallStart: @unchecked Sendable {
 /// individual code sequences still have individual display buckets.
 ///
 /// [emoji-test.txt]: https://www.unicode.org/Public/emoji/latest/emoji-test.txt
-public struct CspE2e_Reaction: @unchecked Sendable {
+public struct CspE2e_Reaction: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -686,7 +687,7 @@ public struct CspE2e_Reaction: @unchecked Sendable {
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   /// A single emoji reaction to be applied or withdrawn.
-  public enum OneOf_Action: Equatable, @unchecked Sendable {
+  public enum OneOf_Action: Equatable, Sendable {
     /// Apply a new emoji reaction.
     case apply(Data)
     /// Withdraw a specific emoji reaction.
@@ -745,7 +746,7 @@ public struct CspE2e_Reaction: @unchecked Sendable {
 /// 8. Send an accept response.
 /// 9. Add the sender of the group invitation request to the group and follow the
 ///    group protocol from there.
-public struct CspE2e_GroupJoinRequest: @unchecked Sendable {
+public struct CspE2e_GroupJoinRequest: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -802,7 +803,7 @@ public struct CspE2e_GroupJoinRequest: @unchecked Sendable {
 ///    the given response type.
 /// 4. If the group join request has been accepted, remember the group id in
 ///    order to be able to map an incoming `group-setup` to the group.
-public struct CspE2e_GroupJoinResponse: @unchecked Sendable {
+public struct CspE2e_GroupJoinResponse: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -910,12 +911,7 @@ fileprivate let _protobuf_package = "csp_e2e"
 
 extension CspE2e_MessageMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".MessageMetadata"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "padding"),
-    3: .standard(proto: "message_id"),
-    4: .standard(proto: "created_at"),
-    2: .same(proto: "nickname"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}nickname\0\u{3}message_id\0\u{3}created_at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -964,10 +960,7 @@ extension CspE2e_MessageMetadata: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 
 extension CspE2e_EditMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".EditMessage"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "message_id"),
-    2: .same(proto: "text"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}message_id\0\u{1}text\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1002,9 +995,7 @@ extension CspE2e_EditMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 
 extension CspE2e_DeleteMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DeleteMessage"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "message_id"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}message_id\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1034,11 +1025,7 @@ extension CspE2e_DeleteMessage: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 
 extension CspE2e_GroupCallStart: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GroupCallStart"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "protocol_version"),
-    2: .same(proto: "gck"),
-    3: .standard(proto: "sfu_base_url"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}protocol_version\0\u{1}gck\0\u{3}sfu_base_url\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1078,11 +1065,7 @@ extension CspE2e_GroupCallStart: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
 
 extension CspE2e_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Reaction"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "message_id"),
-    2: .same(proto: "apply"),
-    3: .same(proto: "withdraw"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}message_id\0\u{1}apply\0\u{1}withdraw\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1144,11 +1127,7 @@ extension CspE2e_Reaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 
 extension CspE2e_GroupJoinRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GroupJoinRequest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "token"),
-    2: .standard(proto: "group_name"),
-    3: .same(proto: "message"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}token\0\u{3}group_name\0\u{1}message\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1188,10 +1167,7 @@ extension CspE2e_GroupJoinRequest: SwiftProtobuf.Message, SwiftProtobuf._Message
 
 extension CspE2e_GroupJoinResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GroupJoinResponse"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "token"),
-    2: .same(proto: "response"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}token\0\u{1}response\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1230,12 +1206,7 @@ extension CspE2e_GroupJoinResponse: SwiftProtobuf.Message, SwiftProtobuf._Messag
 
 extension CspE2e_GroupJoinResponse.Response: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = CspE2e_GroupJoinResponse.protoMessageName + ".Response"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "accept"),
-    2: .same(proto: "expired"),
-    3: .standard(proto: "group_full"),
-    4: .same(proto: "reject"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}accept\0\u{1}expired\0\u{3}group_full\0\u{1}reject\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1336,9 +1307,7 @@ extension CspE2e_GroupJoinResponse.Response: SwiftProtobuf.Message, SwiftProtobu
 
 extension CspE2e_GroupJoinResponse.Response.Accept: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = CspE2e_GroupJoinResponse.Response.protoMessageName + ".Accept"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "group_id"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}group_id\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

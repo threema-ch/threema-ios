@@ -54,12 +54,12 @@ class ZipFileContainer: NSObject {
     }
     
     func addMediaData(mediaData: BlobData) -> Bool {
-        guard let blobData = mediaData.blobData, let blobFilename = mediaData.blobFilename else {
+        guard let blobData = mediaData.blobData else {
             DDLogError("[Conversation Export] Media data has no filename or blob data.")
             return false
         }
         
-        return addData(data: blobData, filename: blobFilename)
+        return addData(data: blobData, filename: mediaData.blobExportFilename)
     }
     
     func deleteFile() {

@@ -157,7 +157,7 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
             chatViewTableViewCellDelegate?.clearCellHeightCache(for: locationMessage.objectID)
         }
         
-        if let poiName = locationMessage?.poiName {
+        if let poiName = locationMessage?.poiName, poiName.isEmpty == false {
             messageTextView.text = poiName
             messageTextView.isHidden = false
         }
@@ -166,7 +166,7 @@ final class ChatViewLocationMessageTableViewCell: ChatViewBaseTableViewCell, Mea
             messageTextView.isHidden = true
         }
                 
-        if let poiAddress = locationMessage?.poiAddress {
+        if let poiAddress = locationMessage?.poiAddress, poiAddress.isEmpty == false {
             messageSecondaryTextLabel.text = poiAddress
         }
         else {

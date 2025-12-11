@@ -176,10 +176,10 @@ extension ImageMessageEntity: BlobData {
         "\(id.hexString).\(MEDIA_EXTENSION_IMAGE)"
     }
     
-    public var blobWebFilename: String {
-        "threema-\(DateFormatter.getDateForFilename(date))-image.\(MEDIA_EXTENSION_IMAGE)"
+    public var blobExportFilename: String {
+        "\(DateFormatter.getDateForFilename(date))-image.\(MEDIA_EXTENSION_IMAGE)"
     }
-    
+        
     public var blobExternalFilename: String? {
         image?.getFilename()
     }

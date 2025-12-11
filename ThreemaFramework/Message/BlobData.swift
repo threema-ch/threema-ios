@@ -35,7 +35,7 @@ import Foundation
     var blobProgress: NSNumber? { get set }
     var blobError: Bool { get set }
     var blobFilename: String? { get }
-    var blobWebFilename: String { get }
+    var blobExportFilename: String { get }
     var blobExternalFilename: String? { get }
     var blobThumbnailExternalFilename: String? { get }
     var deletedAt: Date? { get }

@@ -2309,47 +2309,28 @@ public struct Sync_Settings: Sendable {
 fileprivate let _protobuf_package = "sync"
 
 extension Sync_ReadReceiptPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "SEND_READ_RECEIPT"),
-    1: .same(proto: "DONT_SEND_READ_RECEIPT"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0SEND_READ_RECEIPT\0\u{1}DONT_SEND_READ_RECEIPT\0")
 }
 
 extension Sync_TypingIndicatorPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "SEND_TYPING_INDICATOR"),
-    1: .same(proto: "DONT_SEND_TYPING_INDICATOR"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0SEND_TYPING_INDICATOR\0\u{1}DONT_SEND_TYPING_INDICATOR\0")
 }
 
 extension Sync_NotificationSoundPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "MUTED"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0MUTED\0")
 }
 
 extension Sync_ConversationVisibility: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "NORMAL"),
-    1: .same(proto: "ARCHIVED"),
-    2: .same(proto: "PINNED"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NORMAL\0\u{1}ARCHIVED\0\u{1}PINNED\0")
 }
 
 extension Sync_ConversationCategory: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "DEFAULT"),
-    1: .same(proto: "PROTECTED"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0DEFAULT\0\u{1}PROTECTED\0")
 }
 
 extension Sync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".MdmParameters"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "external_parameters"),
-    2: .standard(proto: "threema_parameters"),
-    3: .standard(proto: "parameter_precedence"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}external_parameters\0\u{3}threema_parameters\0\u{3}parameter_precedence\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2388,19 +2369,12 @@ extension Sync_MdmParameters: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 }
 
 extension Sync_MdmParameters.ParameterPrecedence: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "THREEMA"),
-    1: .same(proto: "EXTERNAL"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0THREEMA\0\u{1}EXTERNAL\0")
 }
 
 extension Sync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_MdmParameters.protoMessageName + ".Parameter"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "string_value"),
-    3: .standard(proto: "integer_value"),
-    2: .standard(proto: "boolean_value"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}string_value\0\u{3}boolean_value\0\u{3}integer_value\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2469,10 +2443,7 @@ extension Sync_MdmParameters.Parameter: SwiftProtobuf.Message, SwiftProtobuf._Me
 
 extension Sync_ThreemaWorkCredentials: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".ThreemaWorkCredentials"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "username"),
-    2: .same(proto: "password"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}username\0\u{1}password\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2507,12 +2478,7 @@ extension Sync_ThreemaWorkCredentials: SwiftProtobuf.Message, SwiftProtobuf._Mes
 
 extension Sync_UserProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".UserProfile"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "nickname"),
-    2: .standard(proto: "profile_picture"),
-    3: .standard(proto: "profile_picture_share_with"),
-    4: .standard(proto: "identity_links"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}nickname\0\u{3}profile_picture\0\u{3}profile_picture_share_with\0\u{3}identity_links\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2561,11 +2527,7 @@ extension Sync_UserProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImpleme
 
 extension Sync_UserProfile.ProfilePictureShareWith: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_UserProfile.protoMessageName + ".ProfilePictureShareWith"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "nobody"),
-    2: .same(proto: "everyone"),
-    3: .standard(proto: "allow_list"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}nobody\0\u{1}everyone\0\u{3}allow_list\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2649,9 +2611,7 @@ extension Sync_UserProfile.ProfilePictureShareWith: SwiftProtobuf.Message, Swift
 
 extension Sync_UserProfile.IdentityLinks: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_UserProfile.protoMessageName + ".IdentityLinks"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "links"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}links\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2681,11 +2641,7 @@ extension Sync_UserProfile.IdentityLinks: SwiftProtobuf.Message, SwiftProtobuf._
 
 extension Sync_UserProfile.IdentityLinks.IdentityLink: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_UserProfile.IdentityLinks.protoMessageName + ".IdentityLink"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "phone_number"),
-    2: .same(proto: "email"),
-    3: .same(proto: "description"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}phone_number\0\u{1}email\0\u{1}description\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2747,29 +2703,7 @@ extension Sync_UserProfile.IdentityLinks.IdentityLink: SwiftProtobuf.Message, Sw
 
 extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Contact"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "identity"),
-    2: .standard(proto: "public_key"),
-    3: .standard(proto: "created_at"),
-    4: .standard(proto: "first_name"),
-    5: .standard(proto: "last_name"),
-    6: .same(proto: "nickname"),
-    7: .standard(proto: "verification_level"),
-    21: .standard(proto: "work_verification_level"),
-    8: .standard(proto: "identity_type"),
-    9: .standard(proto: "acquaintance_level"),
-    10: .standard(proto: "activity_state"),
-    18: .standard(proto: "feature_mask"),
-    13: .standard(proto: "sync_state"),
-    16: .standard(proto: "read_receipt_policy_override"),
-    17: .standard(proto: "typing_indicator_policy_override"),
-    19: .standard(proto: "notification_trigger_policy_override"),
-    20: .standard(proto: "notification_sound_policy_override"),
-    14: .standard(proto: "contact_defined_profile_picture"),
-    15: .standard(proto: "user_defined_profile_picture"),
-    11: .standard(proto: "conversation_category"),
-    12: .standard(proto: "conversation_visibility"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{3}public_key\0\u{3}created_at\0\u{3}first_name\0\u{3}last_name\0\u{1}nickname\0\u{3}verification_level\0\u{3}identity_type\0\u{3}acquaintance_level\0\u{3}activity_state\0\u{3}conversation_category\0\u{3}conversation_visibility\0\u{3}sync_state\0\u{3}contact_defined_profile_picture\0\u{3}user_defined_profile_picture\0\u{3}read_receipt_policy_override\0\u{3}typing_indicator_policy_override\0\u{3}feature_mask\0\u{3}notification_trigger_policy_override\0\u{3}notification_sound_policy_override\0\u{3}work_verification_level\0")
 
   fileprivate class _StorageClass {
     var _identity: String = String()
@@ -2978,56 +2912,32 @@ extension Sync_Contact: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
 }
 
 extension Sync_Contact.VerificationLevel: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UNVERIFIED"),
-    1: .same(proto: "SERVER_VERIFIED"),
-    2: .same(proto: "FULLY_VERIFIED"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNVERIFIED\0\u{1}SERVER_VERIFIED\0\u{1}FULLY_VERIFIED\0")
 }
 
 extension Sync_Contact.WorkVerificationLevel: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "NONE"),
-    1: .same(proto: "WORK_SUBSCRIPTION_VERIFIED"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NONE\0\u{1}WORK_SUBSCRIPTION_VERIFIED\0")
 }
 
 extension Sync_Contact.IdentityType: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "REGULAR"),
-    1: .same(proto: "WORK"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0REGULAR\0\u{1}WORK\0")
 }
 
 extension Sync_Contact.AcquaintanceLevel: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "DIRECT"),
-    1: .same(proto: "GROUP_OR_DELETED"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0DIRECT\0\u{1}GROUP_OR_DELETED\0")
 }
 
 extension Sync_Contact.ActivityState: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ACTIVE"),
-    1: .same(proto: "INACTIVE"),
-    2: .same(proto: "INVALID"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ACTIVE\0\u{1}INACTIVE\0\u{1}INVALID\0")
 }
 
 extension Sync_Contact.SyncState: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "INITIAL"),
-    1: .same(proto: "IMPORTED"),
-    2: .same(proto: "CUSTOM"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0INITIAL\0\u{1}IMPORTED\0\u{1}CUSTOM\0")
 }
 
 extension Sync_Contact.ReadReceiptPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_Contact.protoMessageName + ".ReadReceiptPolicyOverride"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "default"),
-    2: .same(proto: "policy"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3089,10 +2999,7 @@ extension Sync_Contact.ReadReceiptPolicyOverride: SwiftProtobuf.Message, SwiftPr
 
 extension Sync_Contact.TypingIndicatorPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_Contact.protoMessageName + ".TypingIndicatorPolicyOverride"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "default"),
-    2: .same(proto: "policy"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3154,10 +3061,7 @@ extension Sync_Contact.TypingIndicatorPolicyOverride: SwiftProtobuf.Message, Swi
 
 extension Sync_Contact.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_Contact.protoMessageName + ".NotificationTriggerPolicyOverride"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "default"),
-    2: .same(proto: "policy"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3224,10 +3128,7 @@ extension Sync_Contact.NotificationTriggerPolicyOverride: SwiftProtobuf.Message,
 
 extension Sync_Contact.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_Contact.NotificationTriggerPolicyOverride.protoMessageName + ".Policy"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "policy"),
-    2: .standard(proto: "expires_at"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}policy\0\u{3}expires_at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3265,17 +3166,12 @@ extension Sync_Contact.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.M
 }
 
 extension Sync_Contact.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "NEVER"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NEVER\0")
 }
 
 extension Sync_Contact.NotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_Contact.protoMessageName + ".NotificationSoundPolicyOverride"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "default"),
-    2: .same(proto: "policy"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3337,18 +3233,7 @@ extension Sync_Contact.NotificationSoundPolicyOverride: SwiftProtobuf.Message, S
 
 extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Group"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "group_identity"),
-    2: .same(proto: "name"),
-    3: .standard(proto: "created_at"),
-    6: .standard(proto: "user_state"),
-    7: .standard(proto: "profile_picture"),
-    8: .standard(proto: "member_identities"),
-    9: .standard(proto: "notification_trigger_policy_override"),
-    10: .standard(proto: "notification_sound_policy_override"),
-    4: .standard(proto: "conversation_category"),
-    5: .standard(proto: "conversation_visibility"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}group_identity\0\u{1}name\0\u{3}created_at\0\u{3}conversation_category\0\u{3}conversation_visibility\0\u{3}user_state\0\u{3}profile_picture\0\u{3}member_identities\0\u{3}notification_trigger_policy_override\0\u{3}notification_sound_policy_override\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3426,19 +3311,12 @@ extension Sync_Group: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
 }
 
 extension Sync_Group.UserState: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "MEMBER"),
-    1: .same(proto: "KICKED"),
-    2: .same(proto: "LEFT"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0MEMBER\0\u{1}KICKED\0\u{1}LEFT\0")
 }
 
 extension Sync_Group.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_Group.protoMessageName + ".NotificationTriggerPolicyOverride"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "default"),
-    2: .same(proto: "policy"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3505,10 +3383,7 @@ extension Sync_Group.NotificationTriggerPolicyOverride: SwiftProtobuf.Message, S
 
 extension Sync_Group.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_Group.NotificationTriggerPolicyOverride.protoMessageName + ".Policy"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "policy"),
-    2: .standard(proto: "expires_at"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}policy\0\u{3}expires_at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3546,18 +3421,12 @@ extension Sync_Group.NotificationTriggerPolicyOverride.Policy: SwiftProtobuf.Mes
 }
 
 extension Sync_Group.NotificationTriggerPolicyOverride.Policy.NotificationTriggerPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "MENTIONED"),
-    1: .same(proto: "NEVER"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0MENTIONED\0\u{1}NEVER\0")
 }
 
 extension Sync_Group.NotificationSoundPolicyOverride: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Sync_Group.protoMessageName + ".NotificationSoundPolicyOverride"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "default"),
-    2: .same(proto: "policy"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}default\0\u{1}policy\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3619,14 +3488,7 @@ extension Sync_Group.NotificationSoundPolicyOverride: SwiftProtobuf.Message, Swi
 
 extension Sync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DistributionList"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "distribution_list_id"),
-    2: .same(proto: "name"),
-    3: .standard(proto: "created_at"),
-    6: .standard(proto: "member_identities"),
-    4: .standard(proto: "conversation_category"),
-    5: .standard(proto: "conversation_visibility"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}distribution_list_id\0\u{1}name\0\u{3}created_at\0\u{3}conversation_category\0\u{3}conversation_visibility\0\u{3}member_identities\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3685,20 +3547,7 @@ extension Sync_DistributionList: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
 
 extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Settings"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "contact_sync_policy"),
-    2: .standard(proto: "unknown_contact_policy"),
-    3: .standard(proto: "read_receipt_policy"),
-    4: .standard(proto: "typing_indicator_policy"),
-    5: .standard(proto: "o2o_call_policy"),
-    6: .standard(proto: "o2o_call_connection_policy"),
-    12: .standard(proto: "o2o_call_video_policy"),
-    11: .standard(proto: "group_call_policy"),
-    7: .standard(proto: "screenshot_policy"),
-    8: .standard(proto: "keyboard_data_collection_policy"),
-    9: .standard(proto: "blocked_identities"),
-    10: .standard(proto: "exclude_from_sync_identities"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}contact_sync_policy\0\u{3}unknown_contact_policy\0\u{3}read_receipt_policy\0\u{3}typing_indicator_policy\0\u{3}o2o_call_policy\0\u{3}o2o_call_connection_policy\0\u{3}screenshot_policy\0\u{3}keyboard_data_collection_policy\0\u{3}blocked_identities\0\u{3}exclude_from_sync_identities\0\u{3}group_call_policy\0\u{3}o2o_call_video_policy\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3786,57 +3635,33 @@ extension Sync_Settings: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
 }
 
 extension Sync_Settings.ContactSyncPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "NOT_SYNCED"),
-    1: .same(proto: "SYNC"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NOT_SYNCED\0\u{1}SYNC\0")
 }
 
 extension Sync_Settings.UnknownContactPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_UNKNOWN"),
-    1: .same(proto: "BLOCK_UNKNOWN"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_UNKNOWN\0\u{1}BLOCK_UNKNOWN\0")
 }
 
 extension Sync_Settings.O2oCallPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_O2O_CALL"),
-    1: .same(proto: "DENY_O2O_CALL"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_O2O_CALL\0\u{1}DENY_O2O_CALL\0")
 }
 
 extension Sync_Settings.O2oCallConnectionPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_DIRECT_CONNECTION"),
-    1: .same(proto: "REQUIRE_RELAYED_CONNECTION"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_DIRECT_CONNECTION\0\u{1}REQUIRE_RELAYED_CONNECTION\0")
 }
 
 extension Sync_Settings.O2oCallVideoPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_VIDEO"),
-    1: .same(proto: "DENY_VIDEO"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_VIDEO\0\u{1}DENY_VIDEO\0")
 }
 
 extension Sync_Settings.GroupCallPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_GROUP_CALL"),
-    1: .same(proto: "DENY_GROUP_CALL"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_GROUP_CALL\0\u{1}DENY_GROUP_CALL\0")
 }
 
 extension Sync_Settings.ScreenshotPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_SCREENSHOT"),
-    1: .same(proto: "DENY_SCREENSHOT"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_SCREENSHOT\0\u{1}DENY_SCREENSHOT\0")
 }
 
 extension Sync_Settings.KeyboardDataCollectionPolicy: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALLOW_DATA_COLLECTION"),
-    1: .same(proto: "DENY_DATA_COLLECTION"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALLOW_DATA_COLLECTION\0\u{1}DENY_DATA_COLLECTION\0")
 }

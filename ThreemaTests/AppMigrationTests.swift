@@ -66,6 +66,7 @@ class AppMigrationTests: XCTestCase {
         setupDataForMigrationVersion6_2()
         setupDataForMigrationVersion6_2_1()
         try setupDataForMigrationVersion6_6()
+        setupDataForMigrationVersion6_8_8()
 
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
@@ -295,6 +296,9 @@ class AppMigrationTests: XCTestCase {
 
         // Check for 6.8 migration
         XCTAssertEqual(keychainHelperMock.migrateToDowngradeCalls, 0)
+        
+        // Check for 6.8.8 migration
+        XCTAssertEqual(["ABCDEFGH", "BCDEFGHI", "CDEFGHIJ"], userSettingsMock.profilePictureContactList as! [String])
     }
 
     private func setupDataForMigrationVersion4_8() {
@@ -640,5 +644,9 @@ class AppMigrationTests: XCTestCase {
                 ),
             ]
         }
+    }
+    
+    private func setupDataForMigrationVersion6_8_8() {
+        userSettingsMock.profilePictureContactList = ["Optional(\"ABCDEFGH\")", "Optional(\"BCDEFGHI\")", "CDEFGHIJ"]
     }
 }

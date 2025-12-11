@@ -700,7 +700,14 @@ import ThreemaMacros
             }
             else if !profilePicRelease.isEmpty {
                 userSettings.sendProfilePicture = SendProfilePictureContacts
-                userSettings.profilePictureContactList = profilePicRelease as [Any]
+                var profilePicReleaseArray = [String]()
+                for picReleaseIdentity in profilePicRelease {
+                    if let identity = picReleaseIdentity,
+                       identity.count == kIdentityLen {
+                        profilePicReleaseArray.append(identity)
+                    }
+                }
+                userSettings.profilePictureContactList = profilePicReleaseArray
             }
             else {
                 userSettings.sendProfilePicture = SendProfilePictureNone

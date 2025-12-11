@@ -57,17 +57,30 @@ public class VoIPCallSender {
             msg.toIdentity = answer.contactIdentity
             msg.fromIdentity = myIdentityStore.identity
             msg.isUserInteraction = answer.isUserInteraction
-                        
-            DDLogNotice(
-                "VoipCallService: [cid=\(answer.callID.callID)]: Call answer enqueued to \(answer.contactIdentity ?? "?")"
-            )
+                                    
+            let logString =
+                "VoipCallService: [cid=\(answer.callID.callID)]: Call answer enqueued to \(answer.contactIdentity ?? "?"): \(answer.action.description())"
+            if answer.action == .call {
+                DDLogNotice(logString)
+            }
+            else {
+                DDLogNotice(logString + "/\(answer.rejectReason?.description() ?? "unknown")")
+            }
 
             messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
         }
         catch {
-            DDLogError(
-                "VoipCallService: [cid=\(answer.callID.callID)]: Can't send answer message to \(answer.contactIdentity ?? "?") -> \(error.localizedDescription)"
-            )
+            let logString =
+                "VoipCallService: [cid=\(answer.callID.callID)]: Can't send answer message to \(answer.contactIdentity ?? "?"): \(answer.action.description())"
+            if answer.action == .call {
+                DDLogError(logString + " -> \(error.localizedDescription)")
+            }
+            else {
+                DDLogError(
+                    logString +
+                        "/\(answer.rejectReason?.description() ?? "unknown")  -> \(error.localizedDescription)"
+                )
+            }
         }
     }
 
@@ -79,7 +92,7 @@ public class VoIPCallSender {
             msg.fromIdentity = myIdentityStore.identity
             
             DDLogNotice(
-                "VoipCallService: [cid=\(iceCandidates.callID.callID)]: Call ICE candidate message enqueued to \(iceCandidates.contactIdentity ?? "?") (\(iceCandidates.candidates.count) candidates"
+                "VoipCallService: [cid=\(iceCandidates.callID.callID)]: Call ICE candidate message enqueued to \(iceCandidates.contactIdentity ?? "?") (\(iceCandidates.candidates.count) candidates)"
             )
             
             for candidate in iceCandidates.candidates {

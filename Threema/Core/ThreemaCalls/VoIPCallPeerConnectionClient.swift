@@ -254,6 +254,15 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
     func close() {
         peerConnection?.close()
         peerConnection = nil
+        
+        do {
+            RTCAudioSession.sharedInstance().lockForConfiguration()
+            try RTCAudioSession.sharedInstance().setActive(false)
+            RTCAudioSession.sharedInstance().unlockForConfiguration()
+        }
+        catch {
+            DDLogError("Could not set shared session to not active. Error: \(error)")
+        }
     }
 }
 

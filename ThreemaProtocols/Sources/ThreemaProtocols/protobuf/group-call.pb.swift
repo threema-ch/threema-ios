@@ -373,12 +373,13 @@
 //       previous PCMK.
 // 5. Send `pending-pcmk` to all authenticated participants via a _rekey_
 //    message.
-// 6. Schedule a task to run the following steps after 2s:
-//   1. Apply `pending-pcmk` for media encryption. This means that
-//      `pending-pcmk` now replaces the _applied_ PCMK and is no longer
-//      _pending_.
-//   2. If `pending-pcmk` is marked as _stale_, run the parent steps from the
-//      beginning.
+// 6. Schedule a volatile task bound to the call to run the following steps
+//    after 2s:
+//    1. Apply `pending-pcmk` for media encryption. This means that
+//       `pending-pcmk` now replaces the _applied_ PCMK and is no longer
+//       _pending_.
+//    2. If `pending-pcmk` is marked as _stale_, run the parent steps from the
+//       beginning.
 //
 // When a participant receives a _rekey_ message from another participant.
 //
@@ -430,11 +431,50 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
+/// Supported feature (to be used as a bitmask).
+public enum Groupcall_SupportedFeature: SwiftProtobuf.Enum, Swift.CaseIterable {
+  public typealias RawValue = Int
+
+  /// Base feature support (always present).
+  case base // = 0
+
+  /// Support for screen sharing.
+  case screenShare // = 1
+  case UNRECOGNIZED(Int)
+
+  public init() {
+    self = .base
+  }
+
+  public init?(rawValue: Int) {
+    switch rawValue {
+    case 0: self = .base
+    case 1: self = .screenShare
+    default: self = .UNRECOGNIZED(rawValue)
+    }
+  }
+
+  public var rawValue: Int {
+    switch self {
+    case .base: return 0
+    case .screenShare: return 1
+    case .UNRECOGNIZED(let i): return i
+    }
+  }
+
+  // The compiler won't synthesize support with the UNRECOGNIZED case.
+  public static let allCases: [Groupcall_SupportedFeature] = [
+    .base,
+    .screenShare,
+  ]
+
+}
+
 /// Current call state as announced by the designated client.
 ///
 /// Note: The `CallState` accurateness must not be relied upon as it can be out
 ///       of date and can be replayed by the SFU.
-public struct Groupcall_CallState: @unchecked Sendable {
+public struct Groupcall_CallState: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -562,7 +602,7 @@ public struct Groupcall_SfuHttpRequest: Sendable {
   ///    with status code `404` and abort these steps.
   /// 5. Respond with status code `200` and an encoded `SfuHttpResponse.Peek`
   ///    message as body.
-  public struct Peek: @unchecked Sendable {
+  public struct Peek: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -608,7 +648,7 @@ public struct Groupcall_SfuHttpRequest: Sendable {
   ///    participant ID is no longer reserved for the client and the group call
   ///    must be teared down if no other participant started joining this group
   ///    call.
-  public struct Join: @unchecked Sendable {
+  public struct Join: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -649,7 +689,7 @@ public struct Groupcall_SfuHttpResponse: Sendable {
   ///
   /// Note: The included `CallState` information may not be accurate and should
   /// not be relied upon.
-  public struct Peek: @unchecked Sendable {
+  public struct Peek: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -691,7 +731,7 @@ public struct Groupcall_SfuHttpResponse: Sendable {
   /// When receiving this response, initiate the WebRTC connection to the SFU and
   /// consider the connection established when the `SfuToParticipant.Hello`
   /// message has been received on the associated data channel.
-  public struct Join: @unchecked Sendable {
+  public struct Join: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -725,6 +765,18 @@ public struct Groupcall_SfuHttpResponse: Sendable {
     /// Note: This is the authentication anchor for the WebRTC connection towards
     ///       the SFU.
     public var dtlsFingerprint: Data = Data()
+
+    public var rtpHeaderExtensionIds: Groupcall_SfuHttpResponse.Join.RtpHeaderExtensionIds {
+      get {return _rtpHeaderExtensionIds ?? Groupcall_SfuHttpResponse.Join.RtpHeaderExtensionIds()}
+      set {_rtpHeaderExtensionIds = newValue}
+    }
+    /// Returns true if `rtpHeaderExtensionIds` has been explicitly set.
+    public var hasRtpHeaderExtensionIds: Bool {return self._rtpHeaderExtensionIds != nil}
+    /// Clears the value of `rtpHeaderExtensionIds`. Subsequent reads from it will return its default value.
+    public mutating func clearRtpHeaderExtensionIds() {self._rtpHeaderExtensionIds = nil}
+
+    /// Supported features bitmask (see `SupportedFeature`).
+    public var supportedFeatures: UInt64 = 0
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -778,7 +830,44 @@ public struct Groupcall_SfuHttpResponse: Sendable {
       public init() {}
     }
 
+    /// RTP header extension ID mapping.
+    ///
+    /// Note: The same ID is applied for header extensions used for both microphone and
+    /// camera/screen.
+    public struct RtpHeaderExtensionIds: Sendable {
+      // SwiftProtobuf.Message conformance is added in an extension below. See the
+      // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+      // methods supported on all messages.
+
+      /// urn:ietf:params:rtp-hdrext:sdes:mid
+      public var mid: UInt32 = 0
+
+      /// urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+      public var rtpStreamID: UInt32 = 0
+
+      /// urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+      public var repairedRtpStreamID: UInt32 = 0
+
+      /// http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+      public var absoluteSendTime: UInt32 = 0
+
+      /// http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
+      public var transportWideCongestionControl01: UInt32 = 0
+
+      /// urn:3gpp:video-orientation
+      public var videoOrientation: UInt32 = 0
+
+      /// urn:ietf:params:rtp-hdrext:toffset
+      public var timeOffset: UInt32 = 0
+
+      public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+      public init() {}
+    }
+
     public init() {}
+
+    fileprivate var _rtpHeaderExtensionIds: Groupcall_SfuHttpResponse.Join.RtpHeaderExtensionIds? = nil
   }
 
   public init() {}
@@ -806,7 +895,7 @@ public struct Groupcall_SfuToParticipant: Sendable {
   /// IMPORTANT: The format of the `SfuToParticipant.Envelope` and
   /// `ParticipantToSfu.Envelope` must be compatible for the relay case, so the
   /// SFU can forward the data without having to re-encode.
-  public struct Envelope: @unchecked Sendable {
+  public struct Envelope: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -973,7 +1062,7 @@ public struct Groupcall_ParticipantToSfu: Sendable {
   /// IMPORTANT: The format of the `SfuToParticipant.Envelope` and
   /// `ParticipantToSfu.Envelope` must be compatible for the relay case, so the
   /// SFU can forward the data without having to re-encode.
-  public struct Envelope: @unchecked Sendable {
+  public struct Envelope: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1072,7 +1161,7 @@ public struct Groupcall_ParticipantToSfu: Sendable {
   /// 2. Start a timer to purge the call state after 30s. Subsequent
   ///    `UpdateCallState` messages will update the call state and reset the
   ///    timer.
-  public struct UpdateCallState: @unchecked Sendable {
+  public struct UpdateCallState: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1246,6 +1335,9 @@ public struct Groupcall_ParticipantToSfu: Sendable {
 
   /// Subscribe or unsubscribe to a participant's screen feed.
   ///
+  /// Availability: If the SFU announced support for
+  /// `SupportedFeature.SCREEN_SHARE`.
+  ///
   /// When receiving this message:
   ///
   /// 1. If the `participant_id` refers to the sender's participant ID or an
@@ -1361,7 +1453,7 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
   ///      `Handshake.HelloEnvelope`.
   ///    - `await-auth`: Expect a `Handshake.AuthEnvelope`.
   ///    - `done`: Expect a post-auth `Envelope`.
-  public struct OuterEnvelope: @unchecked Sendable {
+  public struct OuterEnvelope: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1394,7 +1486,7 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
     /// The first message (`HelloEnvelope(Hello)` or `HelloEnvelope(GuestHello)`)
     /// of both sides is always encrypted by `GCHK`, prefixed with a
     /// random nonce.
-    public struct HelloEnvelope: @unchecked Sendable {
+    public struct HelloEnvelope: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1476,7 +1568,7 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
     ///    abort these steps.
     /// 2. If both sides initiated the (normal) handshake, expect `auth` to be
     ///    set. If `auth` is not set, log a warning and abort these steps.
-    public struct AuthEnvelope: @unchecked Sendable {
+    public struct AuthEnvelope: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1549,7 +1641,7 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
     ///    3. Set the participant's _handshake state_ to `await-auth` and abort
     ///       these steps.
     /// 5. Log a warning and abort these steps.
-    public struct Hello: @unchecked Sendable {
+    public struct Hello: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1586,7 +1678,7 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
     /// 3. If the repeated `pcck` does not equal the local `PCCK` used towards
     ///    this participant, log a warning and abort these steps.
     /// 4. Set the participant's _handshake state_ to `done`.
-    public struct Auth: @unchecked Sendable {
+    public struct Auth: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1642,7 +1734,7 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
     ///    3. Set the participant's _handshake state_ to `await-guest-auth` and
     ///       abort these steps.
     /// 5. Log a warning and abort these steps.
-    public struct GuestHello: @unchecked Sendable {
+    public struct GuestHello: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1677,7 +1769,7 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
     /// 3. If the repeated `pcck` does not equal the local `PCCK` used towards
     ///    this participant, log a warning and abort these steps.
     /// 4. Set the participant's _handshake state_ to `done`.
-    public struct GuestAuth: @unchecked Sendable {
+    public struct GuestAuth: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -1732,7 +1824,7 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
   /// 1. If the participant's _handshake state_ is not `done`, log a warning and
   ///    abort these steps.
   /// 2. Handle the message according to the content.
-  public struct Envelope: @unchecked Sendable {
+  public struct Envelope: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -1780,7 +1872,7 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public enum OneOf_Content: Equatable, @unchecked Sendable {
+    public enum OneOf_Content: Equatable, Sendable {
       /// An `Admin.Envelope`, encrypted as described by that message.
       case encryptedAdminEnvelope(Data)
       /// Announces new media keys a participant will apply soon.
@@ -1906,7 +1998,7 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
     ///    (including the sender who promoted the user to an admin).
     /// 4. Notify the user of its admin status and enable administration
     ///    functionality in the UI.
-    public struct PromoteToAdmin: @unchecked Sendable {
+    public struct PromoteToAdmin: Sendable {
       // SwiftProtobuf.Message conformance is added in an extension below. See the
       // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
       // methods supported on all messages.
@@ -2037,7 +2129,7 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
   ///
   /// Will be sent towards new and existing participants as described by the
   /// _Join/Leave_ section.
-  public struct MediaKey: @unchecked Sendable {
+  public struct MediaKey: Sendable {
     // SwiftProtobuf.Message conformance is added in an extension below. See the
     // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
     // methods supported on all messages.
@@ -2304,14 +2396,13 @@ public struct Groupcall_ParticipantToParticipant: Sendable {
 
 fileprivate let _protobuf_package = "groupcall"
 
+extension Groupcall_SupportedFeature: SwiftProtobuf._ProtoNameProviding {
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0BASE\0\u{1}SCREEN_SHARE\0")
+}
+
 extension Groupcall_CallState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".CallState"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "padding"),
-    2: .standard(proto: "state_created_by"),
-    3: .standard(proto: "state_created_at"),
-    4: .same(proto: "participants"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{3}state_created_by\0\u{3}state_created_at\0\u{1}participants\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2356,13 +2447,7 @@ extension Groupcall_CallState: SwiftProtobuf.Message, SwiftProtobuf._MessageImpl
 
 extension Groupcall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_CallState.protoMessageName + ".Participant"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(
-      reservedNames: [],
-      reservedRanges: [1..<2],
-      numberNameMappings: [
-        2: .same(proto: "threema"),
-        3: .same(proto: "guest"),
-  ])
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\u{2}threema\0\u{1}guest\0\u{c}\u{1}\u{1}")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2429,10 +2514,7 @@ extension Groupcall_CallState.Participant: SwiftProtobuf.Message, SwiftProtobuf.
 
 extension Groupcall_CallState.Participant.Normal: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_CallState.Participant.protoMessageName + ".Normal"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "identity"),
-    2: .same(proto: "nickname"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{1}nickname\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2467,9 +2549,7 @@ extension Groupcall_CallState.Participant.Normal: SwiftProtobuf.Message, SwiftPr
 
 extension Groupcall_CallState.Participant.Guest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_CallState.Participant.protoMessageName + ".Guest"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "name"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2518,9 +2598,7 @@ extension Groupcall_SfuHttpRequest: SwiftProtobuf.Message, SwiftProtobuf._Messag
 
 extension Groupcall_SfuHttpRequest.Peek: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_SfuHttpRequest.protoMessageName + ".Peek"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "call_id"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}call_id\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2550,11 +2628,7 @@ extension Groupcall_SfuHttpRequest.Peek: SwiftProtobuf.Message, SwiftProtobuf._M
 
 extension Groupcall_SfuHttpRequest.Join: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_SfuHttpRequest.protoMessageName + ".Join"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "call_id"),
-    2: .standard(proto: "protocol_version"),
-    3: .standard(proto: "dtls_fingerprint"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}call_id\0\u{3}protocol_version\0\u{3}dtls_fingerprint\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2613,11 +2687,7 @@ extension Groupcall_SfuHttpResponse: SwiftProtobuf.Message, SwiftProtobuf._Messa
 
 extension Groupcall_SfuHttpResponse.Peek: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_SfuHttpResponse.protoMessageName + ".Peek"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "started_at"),
-    2: .standard(proto: "max_participants"),
-    3: .standard(proto: "encrypted_call_state"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}started_at\0\u{3}max_participants\0\u{3}encrypted_call_state\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2661,15 +2731,7 @@ extension Groupcall_SfuHttpResponse.Peek: SwiftProtobuf.Message, SwiftProtobuf._
 
 extension Groupcall_SfuHttpResponse.Join: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_SfuHttpResponse.protoMessageName + ".Join"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "started_at"),
-    2: .standard(proto: "max_participants"),
-    3: .standard(proto: "participant_id"),
-    4: .same(proto: "addresses"),
-    5: .standard(proto: "ice_username_fragment"),
-    6: .standard(proto: "ice_password"),
-    7: .standard(proto: "dtls_fingerprint"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}started_at\0\u{3}max_participants\0\u{3}participant_id\0\u{1}addresses\0\u{3}ice_username_fragment\0\u{3}ice_password\0\u{3}dtls_fingerprint\0\u{3}supported_features\0\u{3}rtp_header_extension_ids\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2684,12 +2746,18 @@ extension Groupcall_SfuHttpResponse.Join: SwiftProtobuf.Message, SwiftProtobuf._
       case 5: try { try decoder.decodeSingularStringField(value: &self.iceUsernameFragment) }()
       case 6: try { try decoder.decodeSingularStringField(value: &self.icePassword) }()
       case 7: try { try decoder.decodeSingularBytesField(value: &self.dtlsFingerprint) }()
+      case 8: try { try decoder.decodeSingularUInt64Field(value: &self.supportedFeatures) }()
+      case 9: try { try decoder.decodeSingularMessageField(value: &self._rtpHeaderExtensionIds) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.startedAt != 0 {
       try visitor.visitSingularUInt64Field(value: self.startedAt, fieldNumber: 1)
     }
@@ -2711,6 +2779,12 @@ extension Groupcall_SfuHttpResponse.Join: SwiftProtobuf.Message, SwiftProtobuf._
     if !self.dtlsFingerprint.isEmpty {
       try visitor.visitSingularBytesField(value: self.dtlsFingerprint, fieldNumber: 7)
     }
+    if self.supportedFeatures != 0 {
+      try visitor.visitSingularUInt64Field(value: self.supportedFeatures, fieldNumber: 8)
+    }
+    try { if let v = self._rtpHeaderExtensionIds {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 9)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -2722,6 +2796,8 @@ extension Groupcall_SfuHttpResponse.Join: SwiftProtobuf.Message, SwiftProtobuf._
     if lhs.iceUsernameFragment != rhs.iceUsernameFragment {return false}
     if lhs.icePassword != rhs.icePassword {return false}
     if lhs.dtlsFingerprint != rhs.dtlsFingerprint {return false}
+    if lhs._rtpHeaderExtensionIds != rhs._rtpHeaderExtensionIds {return false}
+    if lhs.supportedFeatures != rhs.supportedFeatures {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -2729,11 +2805,7 @@ extension Groupcall_SfuHttpResponse.Join: SwiftProtobuf.Message, SwiftProtobuf._
 
 extension Groupcall_SfuHttpResponse.Join.Address: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_SfuHttpResponse.Join.protoMessageName + ".Address"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "protocol"),
-    2: .same(proto: "port"),
-    3: .same(proto: "ip"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}protocol\0\u{1}port\0\u{1}ip\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2772,9 +2844,67 @@ extension Groupcall_SfuHttpResponse.Join.Address: SwiftProtobuf.Message, SwiftPr
 }
 
 extension Groupcall_SfuHttpResponse.Join.Address.ProtocolEnum: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UDP"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UDP\0")
+}
+
+extension Groupcall_SfuHttpResponse.Join.RtpHeaderExtensionIds: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = Groupcall_SfuHttpResponse.Join.protoMessageName + ".RtpHeaderExtensionIds"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}mid\0\u{3}rtp_stream_id\0\u{3}repaired_rtp_stream_id\0\u{3}absolute_send_time\0\u{3}transport_wide_congestion_control_01\0\u{3}video_orientation\0\u{3}time_offset\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularUInt32Field(value: &self.mid) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.rtpStreamID) }()
+      case 3: try { try decoder.decodeSingularUInt32Field(value: &self.repairedRtpStreamID) }()
+      case 4: try { try decoder.decodeSingularUInt32Field(value: &self.absoluteSendTime) }()
+      case 5: try { try decoder.decodeSingularUInt32Field(value: &self.transportWideCongestionControl01) }()
+      case 6: try { try decoder.decodeSingularUInt32Field(value: &self.videoOrientation) }()
+      case 7: try { try decoder.decodeSingularUInt32Field(value: &self.timeOffset) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.mid != 0 {
+      try visitor.visitSingularUInt32Field(value: self.mid, fieldNumber: 1)
+    }
+    if self.rtpStreamID != 0 {
+      try visitor.visitSingularUInt32Field(value: self.rtpStreamID, fieldNumber: 2)
+    }
+    if self.repairedRtpStreamID != 0 {
+      try visitor.visitSingularUInt32Field(value: self.repairedRtpStreamID, fieldNumber: 3)
+    }
+    if self.absoluteSendTime != 0 {
+      try visitor.visitSingularUInt32Field(value: self.absoluteSendTime, fieldNumber: 4)
+    }
+    if self.transportWideCongestionControl01 != 0 {
+      try visitor.visitSingularUInt32Field(value: self.transportWideCongestionControl01, fieldNumber: 5)
+    }
+    if self.videoOrientation != 0 {
+      try visitor.visitSingularUInt32Field(value: self.videoOrientation, fieldNumber: 6)
+    }
+    if self.timeOffset != 0 {
+      try visitor.visitSingularUInt32Field(value: self.timeOffset, fieldNumber: 7)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Groupcall_SfuHttpResponse.Join.RtpHeaderExtensionIds, rhs: Groupcall_SfuHttpResponse.Join.RtpHeaderExtensionIds) -> Bool {
+    if lhs.mid != rhs.mid {return false}
+    if lhs.rtpStreamID != rhs.rtpStreamID {return false}
+    if lhs.repairedRtpStreamID != rhs.repairedRtpStreamID {return false}
+    if lhs.absoluteSendTime != rhs.absoluteSendTime {return false}
+    if lhs.transportWideCongestionControl01 != rhs.transportWideCongestionControl01 {return false}
+    if lhs.videoOrientation != rhs.videoOrientation {return false}
+    if lhs.timeOffset != rhs.timeOffset {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
 }
 
 extension Groupcall_SfuToParticipant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
@@ -2798,14 +2928,7 @@ extension Groupcall_SfuToParticipant: SwiftProtobuf.Message, SwiftProtobuf._Mess
 
 extension Groupcall_SfuToParticipant.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_SfuToParticipant.protoMessageName + ".Envelope"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "padding"),
-    2: .same(proto: "relay"),
-    3: .same(proto: "hello"),
-    6: .standard(proto: "timestamp_response"),
-    4: .standard(proto: "participant_joined"),
-    5: .standard(proto: "participant_left"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}relay\0\u{1}hello\0\u{3}participant_joined\0\u{3}participant_left\0\u{3}timestamp_response\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2928,9 +3051,7 @@ extension Groupcall_SfuToParticipant.Envelope: SwiftProtobuf.Message, SwiftProto
 
 extension Groupcall_SfuToParticipant.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_SfuToParticipant.protoMessageName + ".Hello"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "participant_ids"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_ids\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2960,9 +3081,7 @@ extension Groupcall_SfuToParticipant.Hello: SwiftProtobuf.Message, SwiftProtobuf
 
 extension Groupcall_SfuToParticipant.ParticipantJoined: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_SfuToParticipant.protoMessageName + ".ParticipantJoined"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "participant_id"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -2992,9 +3111,7 @@ extension Groupcall_SfuToParticipant.ParticipantJoined: SwiftProtobuf.Message, S
 
 extension Groupcall_SfuToParticipant.ParticipantLeft: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_SfuToParticipant.protoMessageName + ".ParticipantLeft"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "participant_id"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3024,9 +3141,7 @@ extension Groupcall_SfuToParticipant.ParticipantLeft: SwiftProtobuf.Message, Swi
 
 extension Groupcall_SfuToParticipant.Timestamp: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_SfuToParticipant.protoMessageName + ".Timestamp"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "ms"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}ms\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3075,15 +3190,7 @@ extension Groupcall_ParticipantToSfu: SwiftProtobuf.Message, SwiftProtobuf._Mess
 
 extension Groupcall_ParticipantToSfu.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToSfu.protoMessageName + ".Envelope"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "padding"),
-    2: .same(proto: "relay"),
-    3: .standard(proto: "update_call_state"),
-    7: .standard(proto: "request_timestamp"),
-    6: .standard(proto: "request_participant_microphone"),
-    4: .standard(proto: "request_participant_camera"),
-    5: .standard(proto: "request_participant_screen"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}relay\0\u{3}update_call_state\0\u{3}request_participant_camera\0\u{3}request_participant_screen\0\u{3}request_participant_microphone\0\u{3}request_timestamp\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3242,9 +3349,7 @@ extension Groupcall_ParticipantToSfu.RequestTimestamp: SwiftProtobuf.Message, Sw
 
 extension Groupcall_ParticipantToSfu.UpdateCallState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToSfu.protoMessageName + ".UpdateCallState"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "encrypted_call_state"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}encrypted_call_state\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3274,11 +3379,7 @@ extension Groupcall_ParticipantToSfu.UpdateCallState: SwiftProtobuf.Message, Swi
 
 extension Groupcall_ParticipantToSfu.ParticipantMicrophone: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToSfu.protoMessageName + ".ParticipantMicrophone"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "participant_id"),
-    2: .same(proto: "subscribe"),
-    3: .same(proto: "unsubscribe"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0\u{1}subscribe\0\u{1}unsubscribe\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3388,11 +3489,7 @@ extension Groupcall_ParticipantToSfu.ParticipantMicrophone.Unsubscribe: SwiftPro
 
 extension Groupcall_ParticipantToSfu.ParticipantCamera: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToSfu.protoMessageName + ".ParticipantCamera"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "participant_id"),
-    2: .same(proto: "subscribe"),
-    3: .same(proto: "unsubscribe"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0\u{1}subscribe\0\u{1}unsubscribe\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3464,10 +3561,7 @@ extension Groupcall_ParticipantToSfu.ParticipantCamera: SwiftProtobuf.Message, S
 
 extension Groupcall_ParticipantToSfu.ParticipantCamera.Subscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToSfu.ParticipantCamera.protoMessageName + ".Subscribe"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "desired_resolution"),
-    2: .standard(proto: "desired_fps"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}desired_resolution\0\u{3}desired_fps\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3525,11 +3619,7 @@ extension Groupcall_ParticipantToSfu.ParticipantCamera.Unsubscribe: SwiftProtobu
 
 extension Groupcall_ParticipantToSfu.ParticipantScreen: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToSfu.protoMessageName + ".ParticipantScreen"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "participant_id"),
-    2: .same(proto: "subscribe"),
-    3: .same(proto: "unsubscribe"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0\u{1}subscribe\0\u{1}unsubscribe\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3601,10 +3691,7 @@ extension Groupcall_ParticipantToSfu.ParticipantScreen: SwiftProtobuf.Message, S
 
 extension Groupcall_ParticipantToSfu.ParticipantScreen.Subscribe: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToSfu.ParticipantScreen.protoMessageName + ".Subscribe"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "desired_resolution"),
-    2: .standard(proto: "desired_fps"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}desired_resolution\0\u{3}desired_fps\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3681,11 +3768,7 @@ extension Groupcall_ParticipantToParticipant: SwiftProtobuf.Message, SwiftProtob
 
 extension Groupcall_ParticipantToParticipant.OuterEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.protoMessageName + ".OuterEnvelope"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "sender"),
-    2: .same(proto: "receiver"),
-    4: .standard(proto: "encrypted_data"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}sender\0\u{1}receiver\0\u{4}\u{2}encrypted_data\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3744,11 +3827,7 @@ extension Groupcall_ParticipantToParticipant.Handshake: SwiftProtobuf.Message, S
 
 extension Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.Handshake.protoMessageName + ".HelloEnvelope"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "padding"),
-    2: .same(proto: "hello"),
-    3: .standard(proto: "guest_hello"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}hello\0\u{3}guest_hello\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3820,11 +3899,7 @@ extension Groupcall_ParticipantToParticipant.Handshake.HelloEnvelope: SwiftProto
 
 extension Groupcall_ParticipantToParticipant.Handshake.AuthEnvelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.Handshake.protoMessageName + ".AuthEnvelope"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "padding"),
-    2: .same(proto: "auth"),
-    3: .standard(proto: "guest_auth"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{1}auth\0\u{3}guest_auth\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3896,12 +3971,7 @@ extension Groupcall_ParticipantToParticipant.Handshake.AuthEnvelope: SwiftProtob
 
 extension Groupcall_ParticipantToParticipant.Handshake.Hello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.Handshake.protoMessageName + ".Hello"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "identity"),
-    2: .same(proto: "nickname"),
-    3: .same(proto: "pck"),
-    4: .same(proto: "pcck"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identity\0\u{1}nickname\0\u{1}pck\0\u{1}pcck\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3946,11 +4016,7 @@ extension Groupcall_ParticipantToParticipant.Handshake.Hello: SwiftProtobuf.Mess
 
 extension Groupcall_ParticipantToParticipant.Handshake.Auth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.Handshake.protoMessageName + ".Auth"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "pck"),
-    2: .same(proto: "pcck"),
-    3: .standard(proto: "media_keys"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}pck\0\u{1}pcck\0\u{3}media_keys\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -3990,11 +4056,7 @@ extension Groupcall_ParticipantToParticipant.Handshake.Auth: SwiftProtobuf.Messa
 
 extension Groupcall_ParticipantToParticipant.Handshake.GuestHello: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.Handshake.protoMessageName + ".GuestHello"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "name"),
-    2: .same(proto: "pck"),
-    3: .same(proto: "pcck"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}name\0\u{1}pck\0\u{1}pcck\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4034,11 +4096,7 @@ extension Groupcall_ParticipantToParticipant.Handshake.GuestHello: SwiftProtobuf
 
 extension Groupcall_ParticipantToParticipant.Handshake.GuestAuth: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.Handshake.protoMessageName + ".GuestAuth"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "pck"),
-    2: .same(proto: "pcck"),
-    3: .standard(proto: "media_keys"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}pck\0\u{1}pcck\0\u{3}media_keys\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4078,13 +4136,7 @@ extension Groupcall_ParticipantToParticipant.Handshake.GuestAuth: SwiftProtobuf.
 
 extension Groupcall_ParticipantToParticipant.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.protoMessageName + ".Envelope"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "padding"),
-    2: .standard(proto: "encrypted_admin_envelope"),
-    3: .same(proto: "rekey"),
-    4: .standard(proto: "capture_state"),
-    5: .standard(proto: "hold_state"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{3}encrypted_admin_envelope\0\u{1}rekey\0\u{3}capture_state\0\u{3}hold_state\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4204,13 +4256,7 @@ extension Groupcall_ParticipantToParticipant.Admin: SwiftProtobuf.Message, Swift
 
 extension Groupcall_ParticipantToParticipant.Admin.Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.Admin.protoMessageName + ".Envelope"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "report_as_admin"),
-    2: .standard(proto: "promote_to_admin"),
-    3: .standard(proto: "force_leave"),
-    4: .standard(proto: "force_capture_state_off"),
-    5: .standard(proto: "force_focus"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}report_as_admin\0\u{3}promote_to_admin\0\u{3}force_leave\0\u{3}force_capture_state_off\0\u{3}force_focus\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4347,9 +4393,7 @@ extension Groupcall_ParticipantToParticipant.Admin.ReportAsAdmin: SwiftProtobuf.
 
 extension Groupcall_ParticipantToParticipant.Admin.PromoteToAdmin: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.Admin.protoMessageName + ".PromoteToAdmin"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "gcak"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}gcak\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4398,9 +4442,7 @@ extension Groupcall_ParticipantToParticipant.Admin.ForceLeave: SwiftProtobuf.Mes
 
 extension Groupcall_ParticipantToParticipant.Admin.ForceCaptureStateOff: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.Admin.protoMessageName + ".ForceCaptureStateOff"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "device"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}device\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4429,19 +4471,12 @@ extension Groupcall_ParticipantToParticipant.Admin.ForceCaptureStateOff: SwiftPr
 }
 
 extension Groupcall_ParticipantToParticipant.Admin.ForceCaptureStateOff.Device: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "ALL"),
-    1: .same(proto: "MICROPHONE"),
-    2: .same(proto: "CAMERA"),
-    3: .same(proto: "SCREEN"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0ALL\0\u{1}MICROPHONE\0\u{1}CAMERA\0\u{1}SCREEN\0")
 }
 
 extension Groupcall_ParticipantToParticipant.Admin.ForceFocus: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.Admin.protoMessageName + ".ForceFocus"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "participant_id"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}participant_id\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4471,11 +4506,7 @@ extension Groupcall_ParticipantToParticipant.Admin.ForceFocus: SwiftProtobuf.Mes
 
 extension Groupcall_ParticipantToParticipant.MediaKey: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.protoMessageName + ".MediaKey"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "epoch"),
-    2: .standard(proto: "ratchet_counter"),
-    3: .same(proto: "pcmk"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}epoch\0\u{3}ratchet_counter\0\u{1}pcmk\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4515,11 +4546,7 @@ extension Groupcall_ParticipantToParticipant.MediaKey: SwiftProtobuf.Message, Sw
 
 extension Groupcall_ParticipantToParticipant.CaptureState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.protoMessageName + ".CaptureState"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "microphone"),
-    2: .same(proto: "camera"),
-    3: .same(proto: "screen"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}microphone\0\u{1}camera\0\u{1}screen\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4603,10 +4630,7 @@ extension Groupcall_ParticipantToParticipant.CaptureState: SwiftProtobuf.Message
 
 extension Groupcall_ParticipantToParticipant.CaptureState.Microphone: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.CaptureState.protoMessageName + ".Microphone"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "on"),
-    2: .same(proto: "off"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}on\0\u{1}off\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4673,10 +4697,7 @@ extension Groupcall_ParticipantToParticipant.CaptureState.Microphone: SwiftProto
 
 extension Groupcall_ParticipantToParticipant.CaptureState.Camera: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.CaptureState.protoMessageName + ".Camera"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "on"),
-    2: .same(proto: "off"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}on\0\u{1}off\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4743,10 +4764,7 @@ extension Groupcall_ParticipantToParticipant.CaptureState.Camera: SwiftProtobuf.
 
 extension Groupcall_ParticipantToParticipant.CaptureState.Screen: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.CaptureState.protoMessageName + ".Screen"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "on"),
-    2: .same(proto: "off"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}on\0\u{1}off\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -4813,9 +4831,7 @@ extension Groupcall_ParticipantToParticipant.CaptureState.Screen: SwiftProtobuf.
 
 extension Groupcall_ParticipantToParticipant.CaptureState.Screen.On: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Groupcall_ParticipantToParticipant.CaptureState.Screen.protoMessageName + ".On"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "started_at"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}started_at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

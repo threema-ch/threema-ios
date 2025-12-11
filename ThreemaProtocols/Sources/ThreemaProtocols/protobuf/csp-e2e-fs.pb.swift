@@ -573,7 +573,7 @@ public struct CspE2eFs_VersionRange: Sendable {
 ///    `content` is `Encapsulated`, return the inner message type as
 ///    `inner-type`, the decapsulated message as `inner-message` and the
 ///    `fs-commit-fn` function.
-public struct CspE2eFs_Envelope: @unchecked Sendable {
+public struct CspE2eFs_Envelope: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -652,7 +652,7 @@ public struct CspE2eFs_Envelope: @unchecked Sendable {
 /// 6. Send an `Accept` and await acknowledgement of the `Accept` message.
 /// 7. _Acknowledge_ the message that contained this variant.
 /// 8. Commit the R24 session to storage.
-public struct CspE2eFs_Init: @unchecked Sendable {
+public struct CspE2eFs_Init: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -691,7 +691,7 @@ public struct CspE2eFs_Init: @unchecked Sendable {
 /// 4. [...]
 /// 5. _Acknowledge_ the message that contained this variant.
 /// 6. Commit the session transition to L44 to storage.
-public struct CspE2eFs_Accept: @unchecked Sendable {
+public struct CspE2eFs_Accept: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1080,7 +1080,7 @@ public struct CspE2eFs_Terminate: Sendable {
 ///
 /// ¹: This an exception to the silent ping rule which ensures that FS sessions
 /// are updated to use the highest available version ASAP.
-public struct CspE2eFs_Encapsulated: @unchecked Sendable {
+public struct CspE2eFs_Encapsulated: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -1181,20 +1181,12 @@ public struct CspE2eFs_Encapsulated: @unchecked Sendable {
 fileprivate let _protobuf_package = "csp_e2e_fs"
 
 extension CspE2eFs_Version: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UNSPECIFIED"),
-    256: .same(proto: "V1_0"),
-    257: .same(proto: "V1_1"),
-    258: .same(proto: "V1_2"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNSPECIFIED\0\u{2}@\u{4}V1_0\0\u{1}V1_1\0\u{1}V1_2\0")
 }
 
 extension CspE2eFs_VersionRange: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".VersionRange"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "min"),
-    2: .same(proto: "max"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}min\0\u{1}max\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1229,14 +1221,7 @@ extension CspE2eFs_VersionRange: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
 
 extension CspE2eFs_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Envelope"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "session_id"),
-    2: .same(proto: "init"),
-    3: .same(proto: "accept"),
-    4: .same(proto: "reject"),
-    5: .same(proto: "terminate"),
-    6: .same(proto: "encapsulated"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}session_id\0\u{1}init\0\u{1}accept\0\u{1}reject\0\u{1}terminate\0\u{1}encapsulated\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1359,10 +1344,7 @@ extension CspE2eFs_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
 
 extension CspE2eFs_Init: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Init"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    2: .standard(proto: "supported_version"),
-    1: .same(proto: "fssk"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}fssk\0\u{3}supported_version\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1401,10 +1383,7 @@ extension CspE2eFs_Init: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
 
 extension CspE2eFs_Accept: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Accept"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    2: .standard(proto: "supported_version"),
-    1: .same(proto: "fssk"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}fssk\0\u{3}supported_version\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1443,11 +1422,7 @@ extension CspE2eFs_Accept: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 
 extension CspE2eFs_Reject: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Reject"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "message_id"),
-    3: .standard(proto: "group_identity"),
-    2: .same(proto: "cause"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}message_id\0\u{1}cause\0\u{3}group_identity\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1490,18 +1465,12 @@ extension CspE2eFs_Reject: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 }
 
 extension CspE2eFs_Reject.Cause: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "STATE_MISMATCH"),
-    1: .same(proto: "UNKNOWN_SESSION"),
-    2: .same(proto: "DISABLED_BY_LOCAL"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0STATE_MISMATCH\0\u{1}UNKNOWN_SESSION\0\u{1}DISABLED_BY_LOCAL\0")
 }
 
 extension CspE2eFs_Terminate: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Terminate"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "cause"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}cause\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1530,24 +1499,12 @@ extension CspE2eFs_Terminate: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 }
 
 extension CspE2eFs_Terminate.Cause: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "UNKNOWN_SESSION"),
-    1: .same(proto: "RESET"),
-    2: .same(proto: "DISABLED_BY_LOCAL"),
-    3: .same(proto: "DISABLED_BY_REMOTE"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0UNKNOWN_SESSION\0\u{1}RESET\0\u{1}DISABLED_BY_LOCAL\0\u{1}DISABLED_BY_REMOTE\0")
 }
 
 extension CspE2eFs_Encapsulated: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Encapsulated"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "dh_type"),
-    2: .same(proto: "counter"),
-    4: .standard(proto: "offered_version"),
-    5: .standard(proto: "applied_version"),
-    6: .standard(proto: "group_identity"),
-    3: .standard(proto: "encrypted_inner"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}dh_type\0\u{1}counter\0\u{3}encrypted_inner\0\u{3}offered_version\0\u{3}applied_version\0\u{3}group_identity\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1605,8 +1562,5 @@ extension CspE2eFs_Encapsulated: SwiftProtobuf.Message, SwiftProtobuf._MessageIm
 }
 
 extension CspE2eFs_Encapsulated.DHType: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "TWODH"),
-    1: .same(proto: "FOURDH"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0TWODH\0\u{1}FOURDH\0")
 }

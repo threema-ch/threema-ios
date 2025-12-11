@@ -47,6 +47,7 @@ public enum AppMigrationVersion: Int, Comparable, CaseIterable {
     case v6_3 = 27
     case v6_6 = 28
     case v6_8 = 29
+    case v6_8_8 = 30
     // Add new version for app migration here...
 
     public private(set) static var isAppVersionDowngraded = false

@@ -62,10 +62,13 @@ struct Connecting: GroupCallState {
         )
         let dtlsParameters = DtlsParameters(fingerprint: Array(joinResponse.dtlsFingerprint))
         
+        let rtpHeaderExtensionIDs = try RTPHeaderExtensionIDs(joinResponse)
+        
         let sessionParameters = SessionParameters(
             participantID: participantID,
             iceParameters: iceParameters,
-            dtlsParameters: dtlsParameters
+            dtlsParameters: dtlsParameters,
+            rtpHeaderExtensionIDs: rtpHeaderExtensionIDs
         )
         
         let groupCallDescription = groupCallActor.groupCallBaseState

@@ -91,7 +91,7 @@ final class GroupCallSessionDescription: Sendable {
             type: .local,
             kind: .audio,
             active: true,
-            extensions: GroupCallSessionDescription.MICROPHONE_HEADER_EXTENSIONS,
+            extensions: descriptionInit.parameters.rtpHeaderExtensionIDs.microphone,
             codecs: GroupCallSessionDescription.MICROPHONE_CODECS,
             mid: mids.microphone
         )
@@ -100,7 +100,7 @@ final class GroupCallSessionDescription: Sendable {
             type: .local,
             kind: .video,
             active: true,
-            extensions: GroupCallSessionDescription.CAMERA_HEADER_EXTENSIONS,
+            extensions: descriptionInit.parameters.rtpHeaderExtensionIDs.cameraAndScreen,
             codecs: GroupCallSessionDescription.CAMERA_CODECS,
             mid: mids.camera,
             simulcast: GroupCallSessionDescription.CAMERA_SEND_ENCODINGS
@@ -125,7 +125,7 @@ final class GroupCallSessionDescription: Sendable {
                 type: .remote,
                 kind: .audio,
                 active: active,
-                extensions: GroupCallSessionDescription.MICROPHONE_HEADER_EXTENSIONS,
+                extensions: descriptionInit.parameters.rtpHeaderExtensionIDs.microphone,
                 codecs: GroupCallSessionDescription.MICROPHONE_CODECS,
                 mid: mids.microphone
             )
@@ -134,7 +134,7 @@ final class GroupCallSessionDescription: Sendable {
                 type: .remote,
                 kind: .video,
                 active: active,
-                extensions: GroupCallSessionDescription.CAMERA_HEADER_EXTENSIONS,
+                extensions: descriptionInit.parameters.rtpHeaderExtensionIDs.cameraAndScreen,
                 codecs: GroupCallSessionDescription.CAMERA_CODECS,
                 mid: mids.camera
             )
@@ -302,24 +302,6 @@ extension GroupCallSessionDescription {
             feedback: nil,
             fmtp: ["apt=96"]
         ),
-    ]
-
-    fileprivate static let MICROPHONE_HEADER_EXTENSIONS: [UInt: String] = [
-        1: "urn:ietf:params:rtp-hdrext:sdes:mid",
-        4: "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",
-        5: "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
-        // TODO(SE-257): Disabled until we can use cryptex
-        // 10: "urn:ietf:params:rtp-hdrext:ssrc-audio-level",
-    ]
-
-    fileprivate static let CAMERA_HEADER_EXTENSIONS: [UInt: String] = [
-        1: "urn:ietf:params:rtp-hdrext:sdes:mid",
-        2: "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id",
-        3: "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id",
-        4: "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time",
-        5: "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01",
-        11: "urn:3gpp:video-orientation",
-        12: "urn:ietf:params:rtp-hdrext:toffset",
     ]
 
     static let CAMERA_SEND_ENCODINGS: [SendEncoding] = [

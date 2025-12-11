@@ -24,7 +24,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 /// Root signaling message
-public struct Callsignaling_Envelope: @unchecked Sendable {
+public struct Callsignaling_Envelope: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -247,11 +247,7 @@ fileprivate let _protobuf_package = "callsignaling"
 
 extension Callsignaling_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Envelope"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "padding"),
-    2: .standard(proto: "video_quality_profile"),
-    3: .standard(proto: "capture_state_change"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}padding\0\u{3}video_quality_profile\0\u{3}capture_state_change\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -323,12 +319,7 @@ extension Callsignaling_Envelope: SwiftProtobuf.Message, SwiftProtobuf._MessageI
 
 extension Callsignaling_VideoQualityProfile: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".VideoQualityProfile"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "profile"),
-    2: .standard(proto: "max_bitrate_kbps"),
-    3: .standard(proto: "max_resolution"),
-    4: .standard(proto: "max_fps"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}profile\0\u{3}max_bitrate_kbps\0\u{3}max_resolution\0\u{3}max_fps\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -376,19 +367,12 @@ extension Callsignaling_VideoQualityProfile: SwiftProtobuf.Message, SwiftProtobu
 }
 
 extension Callsignaling_VideoQualityProfile.QualityProfile: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "MAX"),
-    1: .same(proto: "HIGH"),
-    2: .same(proto: "LOW"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0MAX\0\u{1}HIGH\0\u{1}LOW\0")
 }
 
 extension Callsignaling_CaptureState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".CaptureState"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "state"),
-    2: .same(proto: "device"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}state\0\u{1}device\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -422,16 +406,9 @@ extension Callsignaling_CaptureState: SwiftProtobuf.Message, SwiftProtobuf._Mess
 }
 
 extension Callsignaling_CaptureState.Mode: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "OFF"),
-    1: .same(proto: "ON"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0OFF\0\u{1}ON\0")
 }
 
 extension Callsignaling_CaptureState.CaptureDevice: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "CAMERA"),
-    1: .same(proto: "RESERVED_FOR_SCREEN_SHARE"),
-    2: .same(proto: "MICROPHONE"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0CAMERA\0\u{1}RESERVED_FOR_SCREEN_SHARE\0\u{1}MICROPHONE\0")
 }

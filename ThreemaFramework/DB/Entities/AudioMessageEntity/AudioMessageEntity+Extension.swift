@@ -27,7 +27,7 @@ extension AudioMessageEntity {
         var seconds = duration.intValue
         let minutes: Int = seconds / 60
         seconds = seconds - minutes * 60
-        return "\(#localize("file_message_voice")) (\(minutes):\(seconds),\(blobFilename ?? "nil")"
+        return "\(#localize("file_message_voice")) (\(minutes):\(seconds),\(blobExportFilename ?? "nil")"
     }
     
     #if !DEBUG

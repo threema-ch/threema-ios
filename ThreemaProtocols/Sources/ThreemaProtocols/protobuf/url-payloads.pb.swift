@@ -47,7 +47,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 /// ```text
 /// https://threema.group/join#CghFQ0hPRUNITxIQaNbxfd3QsToW0c_668fXUhobQSBuaWNlIGxpdHRsZSBUaHJlZW1hIGdyb3Vw
 /// ```
-public struct Url_GroupInvite: @unchecked Sendable {
+public struct Url_GroupInvite: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -247,12 +247,7 @@ fileprivate let _protobuf_package = "url"
 
 extension Url_GroupInvite: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GroupInvite"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "admin_identity"),
-    2: .same(proto: "token"),
-    3: .standard(proto: "confirmation_mode"),
-    4: .standard(proto: "group_name"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}admin_identity\0\u{1}token\0\u{3}confirmation_mode\0\u{3}group_name\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -296,20 +291,12 @@ extension Url_GroupInvite: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 }
 
 extension Url_GroupInvite.ConfirmationMode: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "AUTOMATIC"),
-    1: .same(proto: "MANUAL"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0AUTOMATIC\0\u{1}MANUAL\0")
 }
 
 extension Url_DeviceGroupJoinRequestOrOffer: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DeviceGroupJoinRequestOrOffer"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "version"),
-    4: .standard(proto: "d2d_protocol_version"),
-    2: .same(proto: "variant"),
-    3: .standard(proto: "rendezvous_init"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}version\0\u{1}variant\0\u{3}rendezvous_init\0\u{3}d2d_protocol_version\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -357,17 +344,12 @@ extension Url_DeviceGroupJoinRequestOrOffer: SwiftProtobuf.Message, SwiftProtobu
 }
 
 extension Url_DeviceGroupJoinRequestOrOffer.Version: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "V1_0"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0V1_0\0")
 }
 
 extension Url_DeviceGroupJoinRequestOrOffer.Variant: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = Url_DeviceGroupJoinRequestOrOffer.protoMessageName + ".Variant"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "request_to_join"),
-    2: .standard(proto: "offer_to_join"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}request_to_join\0\u{3}offer_to_join\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

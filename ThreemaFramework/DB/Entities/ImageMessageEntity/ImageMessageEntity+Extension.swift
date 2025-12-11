@@ -23,7 +23,7 @@ import ThreemaMacros
 
 extension ImageMessageEntity {
     override public func additionalExportInfo() -> String? {
-        var info = "\(#localize("image")) (\(blobFilename ?? ""))"
+        var info = "\(#localize("image")) (\(blobExportFilename ?? ""))"
         if let caption = image?.caption() {
             info = info + ", \(#localize("caption")): \(caption)"
         }

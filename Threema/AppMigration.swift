@@ -198,6 +198,10 @@ import ThreemaMacros
                 try migrateTo6_8()
                 migratedTo = .v6_8
             }
+            if migratedTo < .v6_8_8 {
+                try migrateTo6_8_8()
+                migratedTo = .v6_8_8
+            }
 
             // Add here a check if migration is necessary for a particular version...
         }
@@ -837,5 +841,35 @@ import ThreemaMacros
 
         os_signpost(.end, log: osPOILog, name: "6.8 migration")
         DDLogNotice("[AppMigration] App migration to version 6.8 successfully finished")
+    }
+    
+    /// Migrate to version 6.8.8:
+    /// - Migrate profilePictureContactList if there are Threema ID's with "Optional"
+    private func migrateTo6_8_8() throws {
+        DDLogNotice("[AppMigration] App migration to version 6.8.8 started")
+        os_signpost(.begin, log: osPOILog, name: "6.8.8 migration")
+
+        var profilePictureContactList: [String] = []
+        var foundOptionalString = false
+        
+        for identity in businessInjector.userSettings.profilePictureContactList as? [String] ?? [] {
+            if identity.starts(with: "Optional(") {
+                let startIndex = identity.index(identity.startIndex, offsetBy: 10)
+                let endIndex = identity.index(identity.endIndex, offsetBy: -3)
+                let substring = identity[startIndex...endIndex]
+                profilePictureContactList.append(String(substring))
+                foundOptionalString = true
+            }
+            else {
+                profilePictureContactList.append(identity)
+            }
+        }
+        
+        if foundOptionalString {
+            businessInjector.userSettings.profilePictureContactList = profilePictureContactList
+        }
+        
+        os_signpost(.end, log: osPOILog, name: "6.8.8 migration")
+        DDLogNotice("[AppMigration] App migration to version 6.8.8 successfully finished")
     }
 }

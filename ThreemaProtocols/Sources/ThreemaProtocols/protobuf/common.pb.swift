@@ -461,7 +461,7 @@ public struct Common_Unit: Sendable {
 }
 
 /// Threema Blob to be uploaded/downloaded from the Blob server.
-public struct Common_Blob: @unchecked Sendable {
+public struct Common_Blob: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -486,7 +486,7 @@ public struct Common_Blob: @unchecked Sendable {
 }
 
 /// Inline Blob data.
-public struct Common_BlobData: @unchecked Sendable {
+public struct Common_BlobData: Sendable {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -670,71 +670,11 @@ public struct Common_Resolution: Sendable {
 fileprivate let _protobuf_package = "common"
 
 extension Common_CspFeatureMaskFlag: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "NONE"),
-    1: .same(proto: "VOICE_MESSAGE_SUPPORT"),
-    2: .same(proto: "GROUP_SUPPORT"),
-    4: .same(proto: "POLL_SUPPORT"),
-    8: .same(proto: "FILE_MESSAGE_SUPPORT"),
-    16: .same(proto: "O2O_AUDIO_CALL_SUPPORT"),
-    32: .same(proto: "O2O_VIDEO_CALL_SUPPORT"),
-    64: .same(proto: "FORWARD_SECURITY_SUPPORT"),
-    128: .same(proto: "GROUP_CALL_SUPPORT"),
-    256: .same(proto: "EDIT_MESSAGE_SUPPORT"),
-    512: .same(proto: "DELETE_MESSAGE_SUPPORT"),
-    1024: .same(proto: "REACTION_SUPPORT"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0NONE\0\u{1}VOICE_MESSAGE_SUPPORT\0\u{1}GROUP_SUPPORT\0\u{2}\u{2}POLL_SUPPORT\0\u{2}\u{4}FILE_MESSAGE_SUPPORT\0\u{2}\u{8}O2O_AUDIO_CALL_SUPPORT\0\u{2}\u{10}O2O_VIDEO_CALL_SUPPORT\0\u{2} FORWARD_SECURITY_SUPPORT\0\u{2}@\u{1}GROUP_CALL_SUPPORT\0\u{2}@\u{2}EDIT_MESSAGE_SUPPORT\0\u{2}@\u{4}DELETE_MESSAGE_SUPPORT\0\u{2}@\u{8}REACTION_SUPPORT\0")
 }
 
 extension Common_CspE2eMessageType: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "_INVALID_TYPE"),
-    1: .same(proto: "TEXT"),
-    2: .same(proto: "DEPRECATED_IMAGE"),
-    16: .same(proto: "LOCATION"),
-    19: .same(proto: "DEPRECATED_VIDEO"),
-    20: .same(proto: "DEPRECATED_AUDIO"),
-    21: .same(proto: "POLL_SETUP"),
-    22: .same(proto: "POLL_VOTE"),
-    23: .same(proto: "FILE"),
-    24: .same(proto: "CONTACT_SET_PROFILE_PICTURE"),
-    25: .same(proto: "CONTACT_DELETE_PROFILE_PICTURE"),
-    26: .same(proto: "CONTACT_REQUEST_PROFILE_PICTURE"),
-    65: .same(proto: "GROUP_TEXT"),
-    66: .same(proto: "GROUP_LOCATION"),
-    67: .same(proto: "GROUP_IMAGE"),
-    68: .same(proto: "GROUP_VIDEO"),
-    69: .same(proto: "GROUP_AUDIO"),
-    70: .same(proto: "GROUP_FILE"),
-    74: .same(proto: "GROUP_SETUP"),
-    75: .same(proto: "GROUP_NAME"),
-    76: .same(proto: "GROUP_LEAVE"),
-    77: .same(proto: "GROUP_JOIN_REQUEST"),
-    78: .same(proto: "GROUP_JOIN_RESPONSE"),
-    79: .same(proto: "GROUP_CALL_START"),
-    80: .same(proto: "GROUP_SET_PROFILE_PICTURE"),
-    81: .same(proto: "GROUP_SYNC_REQUEST"),
-    82: .same(proto: "GROUP_POLL_SETUP"),
-    83: .same(proto: "GROUP_POLL_VOTE"),
-    84: .same(proto: "GROUP_DELETE_PROFILE_PICTURE"),
-    96: .same(proto: "CALL_OFFER"),
-    97: .same(proto: "CALL_ANSWER"),
-    98: .same(proto: "CALL_ICE_CANDIDATE"),
-    99: .same(proto: "CALL_HANGUP"),
-    100: .same(proto: "CALL_RINGING"),
-    128: .same(proto: "DELIVERY_RECEIPT"),
-    129: .same(proto: "GROUP_DELIVERY_RECEIPT"),
-    130: .same(proto: "REACTION"),
-    131: .same(proto: "GROUP_REACTION"),
-    144: .same(proto: "TYPING_INDICATOR"),
-    145: .same(proto: "EDIT_MESSAGE"),
-    146: .same(proto: "DELETE_MESSAGE"),
-    147: .same(proto: "GROUP_EDIT_MESSAGE"),
-    148: .same(proto: "GROUP_DELETE_MESSAGE"),
-    160: .same(proto: "FORWARD_SECURITY_ENVELOPE"),
-    252: .same(proto: "EMPTY"),
-    254: .same(proto: "WEB_SESSION_RESUME"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0_INVALID_TYPE\0\u{1}TEXT\0\u{1}DEPRECATED_IMAGE\0\u{2}\u{e}LOCATION\0\u{2}\u{3}DEPRECATED_VIDEO\0\u{1}DEPRECATED_AUDIO\0\u{1}POLL_SETUP\0\u{1}POLL_VOTE\0\u{1}FILE\0\u{1}CONTACT_SET_PROFILE_PICTURE\0\u{1}CONTACT_DELETE_PROFILE_PICTURE\0\u{1}CONTACT_REQUEST_PROFILE_PICTURE\0\u{2}'GROUP_TEXT\0\u{1}GROUP_LOCATION\0\u{1}GROUP_IMAGE\0\u{1}GROUP_VIDEO\0\u{1}GROUP_AUDIO\0\u{1}GROUP_FILE\0\u{2}\u{4}GROUP_SETUP\0\u{1}GROUP_NAME\0\u{1}GROUP_LEAVE\0\u{1}GROUP_JOIN_REQUEST\0\u{1}GROUP_JOIN_RESPONSE\0\u{1}GROUP_CALL_START\0\u{1}GROUP_SET_PROFILE_PICTURE\0\u{1}GROUP_SYNC_REQUEST\0\u{1}GROUP_POLL_SETUP\0\u{1}GROUP_POLL_VOTE\0\u{1}GROUP_DELETE_PROFILE_PICTURE\0\u{2}\u{c}CALL_OFFER\0\u{1}CALL_ANSWER\0\u{1}CALL_ICE_CANDIDATE\0\u{1}CALL_HANGUP\0\u{1}CALL_RINGING\0\u{2}\u{1c}DELIVERY_RECEIPT\0\u{1}GROUP_DELIVERY_RECEIPT\0\u{1}REACTION\0\u{1}GROUP_REACTION\0\u{2}\u{d}TYPING_INDICATOR\0\u{1}EDIT_MESSAGE\0\u{1}DELETE_MESSAGE\0\u{1}GROUP_EDIT_MESSAGE\0\u{1}GROUP_DELETE_MESSAGE\0\u{2}\u{c}FORWARD_SECURITY_ENVELOPE\0\u{2}\\\u{1}EMPTY\0\u{2}\u{2}WEB_SESSION_RESUME\0")
 }
 
 extension Common_Unit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
@@ -758,12 +698,7 @@ extension Common_Unit: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
 
 extension Common_Blob: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Blob"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "id"),
-    2: .same(proto: "nonce"),
-    3: .same(proto: "key"),
-    4: .standard(proto: "uploaded_at"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}nonce\0\u{1}key\0\u{3}uploaded_at\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -808,10 +743,7 @@ extension Common_Blob: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
 
 extension Common_BlobData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".BlobData"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "id"),
-    2: .same(proto: "data"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{1}data\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -846,10 +778,7 @@ extension Common_BlobData: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 
 extension Common_Image: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Image"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "type"),
-    2: .same(proto: "blob"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}type\0\u{1}blob\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -887,17 +816,12 @@ extension Common_Image: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
 }
 
 extension Common_Image.TypeEnum: SwiftProtobuf._ProtoNameProviding {
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    0: .same(proto: "JPEG"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{2}\0JPEG\0")
 }
 
 extension Common_GroupIdentity: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GroupIdentity"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .standard(proto: "group_id"),
-    2: .standard(proto: "creator_identity"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}group_id\0\u{3}creator_identity\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -932,10 +856,7 @@ extension Common_GroupIdentity: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 
 extension Common_DeltaImage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".DeltaImage"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "removed"),
-    2: .same(proto: "updated"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}removed\0\u{1}updated\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1002,10 +923,7 @@ extension Common_DeltaImage: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
 
 extension Common_Timespan: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Timespan"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "from"),
-    2: .same(proto: "to"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}from\0\u{1}to\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1040,9 +958,7 @@ extension Common_Timespan: SwiftProtobuf.Message, SwiftProtobuf._MessageImplemen
 
 extension Common_Identities: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Identities"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "identities"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}identities\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -1072,10 +988,7 @@ extension Common_Identities: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
 
 extension Common_Resolution: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Resolution"
-  public static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "width"),
-    2: .same(proto: "height"),
-  ]
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}width\0\u{1}height\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {

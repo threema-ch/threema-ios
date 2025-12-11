@@ -1464,6 +1464,10 @@
 		2D07EAA3240D5659001C35F6 /* GroupSetPhotoMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D78718B17FEF5FC0099075C /* GroupSetPhotoMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2D07EAA4240D5CB5001C35F6 /* TypingIndicatorMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D627298165553360048F332 /* TypingIndicatorMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2D08982E24C98984006A70E1 /* ThreemaShareStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AE435671C636AE800E1ECC8 /* ThreemaShareStoryboard.storyboard */; };
+		2D08A62E2EC1B49B005C4234 /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = 2D08A62D2EC1B49B005C4234 /* JDStatusBarNotification */; };
+		2D08A6302EC1B4A4005C4234 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 2D08A62F2EC1B4A4005C4234 /* SDWebImage */; };
+		2D08A6322EC1B519005C4234 /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2D08A6312EC1B519005C4234 /* TrustKit */; };
+		2D08A6342EC1B66F005C4234 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 2D08A6332EC1B66F005C4234 /* Ed25519 */; };
 		2D0ABBCC255BCDFA00481A31 /* BlobURLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0ABBCB255BCDFA00481A31 /* BlobURLTests.swift */; };
 		2D0C309623A77D2300783D13 /* MediatorMessageProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0C309523A77D2300783D13 /* MediatorMessageProcessorTests.swift */; };
 		2D0CAC412186F6B700571DAD /* bad_passwords.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D0CAC392186F6B700571DAD /* bad_passwords.txt */; };
@@ -2028,6 +2032,30 @@
 		2DDB9E2C2577DDEB0032B7CB /* MessageProcessor.h in Headers */ = {isa = PBXBuildFile; fileRef = 2DDB9E2A2577DDEB0032B7CB /* MessageProcessor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2DDD43F22383C421006C04CC /* UserSettings.h in Headers */ = {isa = PBXBuildFile; fileRef = 4DBC84861658013E00550FC2 /* UserSettings.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2DDEDF6C2615F2EE0049231C /* UnreadMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DDEDF6B2615F2EE0049231C /* UnreadMessages.swift */; };
+		2DE09A8E2EC1BC6E00BE1D1D /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09A8D2EC1BC6E00BE1D1D /* Ed25519 */; };
+		2DE09A902EC1BC7600BE1D1D /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09A8F2EC1BC7600BE1D1D /* TrustKit */; };
+		2DE09A922EC1BC8200BE1D1D /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09A912EC1BC8200BE1D1D /* Ed25519 */; };
+		2DE09A942EC1BC9100BE1D1D /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09A932EC1BC9100BE1D1D /* TrustKit */; };
+		2DE09A962EC1C38E00BE1D1D /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09A952EC1C38E00BE1D1D /* Ed25519 */; };
+		2DE09A982EC1C3A200BE1D1D /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09A972EC1C3A200BE1D1D /* JDStatusBarNotification */; };
+		2DE09A9A2EC1C3AC00BE1D1D /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09A992EC1C3AC00BE1D1D /* SDWebImage */; };
+		2DE09A9C2EC1C3B900BE1D1D /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09A9B2EC1C3B900BE1D1D /* TrustKit */; };
+		2DE09A9E2EC1C7F500BE1D1D /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09A9D2EC1C7F500BE1D1D /* Ed25519 */; };
+		2DE09AA02EC1C7FE00BE1D1D /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09A9F2EC1C7FE00BE1D1D /* JDStatusBarNotification */; };
+		2DE09AA22EC1C80700BE1D1D /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AA12EC1C80700BE1D1D /* SDWebImage */; };
+		2DE09AA42EC1C81200BE1D1D /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AA32EC1C81200BE1D1D /* TrustKit */; };
+		2DE09AA62EC1C9D900BE1D1D /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AA52EC1C9D900BE1D1D /* Ed25519 */; };
+		2DE09AA82EC1C9EC00BE1D1D /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AA72EC1C9EC00BE1D1D /* JDStatusBarNotification */; };
+		2DE09AAA2EC1C9F400BE1D1D /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AA92EC1C9F400BE1D1D /* SDWebImage */; };
+		2DE09AAC2EC1C9FF00BE1D1D /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AAB2EC1C9FF00BE1D1D /* TrustKit */; };
+		2DE09AAE2EC1CBB300BE1D1D /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AAD2EC1CBB300BE1D1D /* Ed25519 */; };
+		2DE09AB02EC1CBBB00BE1D1D /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AAF2EC1CBBB00BE1D1D /* JDStatusBarNotification */; };
+		2DE09AB22EC1CBC400BE1D1D /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AB12EC1CBC400BE1D1D /* SDWebImage */; };
+		2DE09AB42EC1CBD000BE1D1D /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AB32EC1CBD000BE1D1D /* TrustKit */; };
+		2DE09AB62EC1CE3100BE1D1D /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AB52EC1CE3100BE1D1D /* Ed25519 */; };
+		2DE09AB82EC1CE3900BE1D1D /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AB72EC1CE3900BE1D1D /* JDStatusBarNotification */; };
+		2DE09ABA2EC1CE4200BE1D1D /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09AB92EC1CE4200BE1D1D /* SDWebImage */; };
+		2DE09ABC2EC1CE4D00BE1D1D /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE09ABB2EC1CE4D00BE1D1D /* TrustKit */; };
 		2DE1BE962109A3AF0058D7FF /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE19614F1E262C46009937C3 /* XCTest.framework */; };
 		2DE1BEA8210EDC730058D7FF /* SafeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BEA7210EDC730058D7FF /* SafeTests.swift */; };
 		2DE1BED0210EEDDD0058D7FF /* Scrypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BEC3210EEDDD0058D7FF /* Scrypt.c */; };
@@ -3423,7 +3451,6 @@
 		4D088B89255C141E002F3129 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 4D088B88255C141E002F3129 /* Ed25519 */; };
 		4D088BA7255C1501002F3129 /* ThreemaShareStoryboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0AE435671C636AE800E1ECC8 /* ThreemaShareStoryboard.storyboard */; };
 		4D088C4C255C163D002F3129 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 4D088C4B255C163D002F3129 /* Ed25519 */; };
-		4D088C4E255C1640002F3129 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 4D088C4D255C1640002F3129 /* Ed25519 */; };
 		4D088C50255C1643002F3129 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 4D088C4F255C1643002F3129 /* Ed25519 */; };
 		4D088C66255C1680002F3129 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DEC5530250A6AA000B9826D /* NotificationService.swift */; };
 		4D088C68255C1680002F3129 /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = 4D088C63255C1680002F3129 /* Ed25519 */; };
@@ -3860,11 +3887,9 @@
 		7EC0228A2B89068A005024AE /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC022892B89068A005024AE /* TrustKit */; };
 		7EC0228C2B8906A4005024AE /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC0228B2B8906A4005024AE /* TrustKit */; };
 		7EC0228E2B8906B0005024AE /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC0228D2B8906B0005024AE /* TrustKit */; };
-		7EC022902B8906BA005024AE /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC0228F2B8906BA005024AE /* TrustKit */; };
 		7EC022922B8906CC005024AE /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC022912B8906CC005024AE /* TrustKit */; };
 		7EC022942B8906D9005024AE /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC022932B8906D9005024AE /* TrustKit */; };
 		7EC022962B8906E6005024AE /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC022952B8906E6005024AE /* TrustKit */; };
-		7EC022982B8906EF005024AE /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC022972B8906EF005024AE /* TrustKit */; };
 		7EC0229A2B8906F9005024AE /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC022992B8906F9005024AE /* TrustKit */; };
 		7EC0229C2B890707005024AE /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC0229B2B890707005024AE /* TrustKit */; };
 		7EC0229E2B890A3D005024AE /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7EC0229D2B890A3D005024AE /* TrustKit */; };
@@ -4764,7 +4789,6 @@
 		CE7D4B86221D9135007FE158 /* PPAssetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE10D8F51EA8FA0300802355 /* PPAssetManager.swift */; };
 		CE7E001E25FA563D0054373A /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = CE7E001D25FA563D0054373A /* Ed25519 */; };
 		CE7E002025FA56420054373A /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = CE7E001F25FA56420054373A /* Ed25519 */; };
-		CE7E002225FA56470054373A /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = CE7E002125FA56470054373A /* Ed25519 */; };
 		CE7E002425FA564B0054373A /* Ed25519 in Frameworks */ = {isa = PBXBuildFile; productRef = CE7E002325FA564B0054373A /* Ed25519 */; };
 		CE7E005525FA576B0054373A /* CopyLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A95B8FE256BD8E600C3D938 /* CopyLabel.swift */; };
 		CE7E006625FA576C0054373A /* CopyLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A95B8FE256BD8E600C3D938 /* CopyLabel.swift */; };
@@ -9428,6 +9452,7 @@
 				0A7DF7FA1C9FDBDE002D4DC3 /* CoreMotion.framework in Frameworks */,
 				0A7DF7FB1C9FDBDE002D4DC3 /* LocalAuthentication.framework in Frameworks */,
 				0A7DF7FC1C9FDBDE002D4DC3 /* QuickLook.framework in Frameworks */,
+				2DE09AA82EC1C9EC00BE1D1D /* JDStatusBarNotification in Frameworks */,
 				0A7DF7FD1C9FDBDE002D4DC3 /* CoreImage.framework in Frameworks */,
 				941735132C4FD884008534FC /* AsyncAlgorithms in Frameworks */,
 				0A7DF7FF1C9FDBDE002D4DC3 /* ThreemaFramework.framework in Frameworks */,
@@ -9437,7 +9462,9 @@
 				0A7DF8031C9FDBDE002D4DC3 /* Social.framework in Frameworks */,
 				0A7DF8041C9FDBDE002D4DC3 /* MediaPlayer.framework in Frameworks */,
 				4A30E8802A0B9D15008E039C /* ThreemaProtocols in Frameworks */,
+				2DE09AAA2EC1C9F400BE1D1D /* SDWebImage in Frameworks */,
 				0A7DF8051C9FDBDE002D4DC3 /* CoreLocation.framework in Frameworks */,
+				2DE09AA62EC1C9D900BE1D1D /* Ed25519 in Frameworks */,
 				0A7DF8061C9FDBDE002D4DC3 /* MapKit.framework in Frameworks */,
 				0A7DF8071C9FDBDE002D4DC3 /* MessageUI.framework in Frameworks */,
 				0A7DF8081C9FDBDE002D4DC3 /* ImageIO.framework in Frameworks */,
@@ -9463,6 +9490,7 @@
 				0A7DF8181C9FDBDE002D4DC3 /* Security.framework in Frameworks */,
 				0A7DF8191C9FDBDE002D4DC3 /* UIKit.framework in Frameworks */,
 				8D965B40271E9C5E009A4E4C /* WebRTC.xcframework in Frameworks */,
+				2DE09AAC2EC1C9FF00BE1D1D /* TrustKit in Frameworks */,
 				4AA64BFA29B79F8F00F66543 /* GroupCalls in Frameworks */,
 				0A7DF81B1C9FDBDE002D4DC3 /* CoreGraphics.framework in Frameworks */,
 			);
@@ -9583,6 +9611,7 @@
 				2D5A1EDE24C9B5DF00F87DD0 /* QuickLook.framework in Frameworks */,
 				2D5A1EDF24C9B5DF00F87DD0 /* CoreImage.framework in Frameworks */,
 				8DBF271C27108D550008045E /* Sentry in Frameworks */,
+				2DE09A982EC1C3A200BE1D1D /* JDStatusBarNotification in Frameworks */,
 				2D5A1EE124C9B5DF00F87DD0 /* CoreTelephony.framework in Frameworks */,
 				941735192C4FD89C008534FC /* AsyncAlgorithms in Frameworks */,
 				2D5A1EE224C9B5DF00F87DD0 /* AssetsLibrary.framework in Frameworks */,
@@ -9592,7 +9621,9 @@
 				4A9029E82892D989007604D8 /* DSWaveformImage in Frameworks */,
 				2D5A1EE524C9B5DF00F87DD0 /* MediaPlayer.framework in Frameworks */,
 				24D02F372A56EF700074ABE4 /* ThreemaEssentials in Frameworks */,
+				2DE09A9A2EC1C3AC00BE1D1D /* SDWebImage in Frameworks */,
 				8DBF270F27108A0E0008045E /* SnapKit in Frameworks */,
+				2DE09A962EC1C38E00BE1D1D /* Ed25519 in Frameworks */,
 				2D5A1EE624C9B5DF00F87DD0 /* CoreLocation.framework in Frameworks */,
 				2D5A1EE724C9B5DF00F87DD0 /* MapKit.framework in Frameworks */,
 				4A30E8842A0B9D27008E039C /* ThreemaProtocols in Frameworks */,
@@ -9618,6 +9649,7 @@
 				2D5A1EFC24C9B5DF00F87DD0 /* CFNetwork.framework in Frameworks */,
 				2D5A1EFD24C9B5DF00F87DD0 /* Security.framework in Frameworks */,
 				8DDCF7C727107CF0000CB4F6 /* MarqueeLabel in Frameworks */,
+				2DE09A9C2EC1C3B900BE1D1D /* TrustKit in Frameworks */,
 				2D5A1EFE24C9B5DF00F87DD0 /* UIKit.framework in Frameworks */,
 				2D5A1F0024C9B5DF00F87DD0 /* CoreGraphics.framework in Frameworks */,
 			);
@@ -9661,9 +9693,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D088C4E255C1640002F3129 /* Ed25519 in Frameworks */,
-				7EC022982B8906EF005024AE /* TrustKit in Frameworks */,
+				2DE09A922EC1BC8200BE1D1D /* Ed25519 in Frameworks */,
 				24B820012B32CE6500E8D13E /* CocoaLumberjackSwift in Frameworks */,
+				2DE09A942EC1BC9100BE1D1D /* TrustKit in Frameworks */,
 				7EACDD792B0CE33800D9BC27 /* ThreemaEssentials in Frameworks */,
 				242083B52CBCDC970079D9B8 /* ThreemaMacros in Frameworks */,
 				24EFCD952B31E98A00DD7C66 /* MBProgressHUD in Frameworks */,
@@ -9696,12 +9728,14 @@
 				2DEDB36524C9903400FC9099 /* Photos.framework in Frameworks */,
 				422AEAFD2A459A3D008A054B /* CodeScanner in Frameworks */,
 				2DEDB36624C9903400FC9099 /* CoreMotion.framework in Frameworks */,
+				2D08A6322EC1B519005C4234 /* TrustKit in Frameworks */,
 				2DEDB36724C9903400FC9099 /* LocalAuthentication.framework in Frameworks */,
 				8DDCF7D52710818D000CB4F6 /* ZipArchive in Frameworks */,
 				2DEDB36824C9903400FC9099 /* QuickLook.framework in Frameworks */,
 				2DEDB36924C9903400FC9099 /* CoreImage.framework in Frameworks */,
 				2DEDB36A24C9903400FC9099 /* ThreemaFramework.framework in Frameworks */,
 				2DEDB36B24C9903400FC9099 /* CoreTelephony.framework in Frameworks */,
+				2D08A6302EC1B4A4005C4234 /* SDWebImage in Frameworks */,
 				2DEDB36C24C9903400FC9099 /* AssetsLibrary.framework in Frameworks */,
 				941735172C4FD894008534FC /* AsyncAlgorithms in Frameworks */,
 				2DEDB36D24C9903400FC9099 /* Social.framework in Frameworks */,
@@ -9717,6 +9751,7 @@
 				4AA64BFE29B79FA000F66543 /* GroupCalls in Frameworks */,
 				2DEDB37924C9903400FC9099 /* CoreData.framework in Frameworks */,
 				24EFCD872B31E92A00DD7C66 /* MBProgressHUD in Frameworks */,
+				2D08A62E2EC1B49B005C4234 /* JDStatusBarNotification in Frameworks */,
 				2DEDB37B24C9903400FC9099 /* AddressBook.framework in Frameworks */,
 				8DDCF7C527107CE1000CB4F6 /* MarqueeLabel in Frameworks */,
 				2DEDB37C24C9903400FC9099 /* CoreMedia.framework in Frameworks */,
@@ -9733,6 +9768,7 @@
 				2DEDB38324C9903400FC9099 /* SystemConfiguration.framework in Frameworks */,
 				94913A9E2B2CB62A00336FC9 /* DSWaveformImageViews in Frameworks */,
 				2DEDB38424C9903400FC9099 /* QuartzCore.framework in Frameworks */,
+				2D08A6342EC1B66F005C4234 /* Ed25519 in Frameworks */,
 				2DEDB38524C9903400FC9099 /* CFNetwork.framework in Frameworks */,
 				2DEDB38624C9903400FC9099 /* Security.framework in Frameworks */,
 				8DDCF7AC271077F5000CB4F6 /* Gzip in Frameworks */,
@@ -9765,13 +9801,13 @@
 			files = (
 				24B81FF32B32CE3E00E8D13E /* CocoaLumberjack in Frameworks */,
 				24DB324D28AE48B200B37182 /* JDStatusBarNotification in Frameworks */,
-				7EC022902B8906BA005024AE /* TrustKit in Frameworks */,
 				7E0A4BCD2AD68EA700C38A25 /* PromiseKit in Frameworks */,
 				242083BF2CBCDCB80079D9B8 /* ThreemaMacros in Frameworks */,
 				24EFCD8F2B31E95300DD7C66 /* MBProgressHUD in Frameworks */,
+				2DE09A902EC1BC7600BE1D1D /* TrustKit in Frameworks */,
 				24B81FF52B32CE3E00E8D13E /* CocoaLumberjackSwift in Frameworks */,
+				2DE09A8E2EC1BC6E00BE1D1D /* Ed25519 in Frameworks */,
 				D73A95BE27AD0628003E847C /* SDWebImage in Frameworks */,
-				CE7E002225FA56470054373A /* Ed25519 in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -9803,6 +9839,7 @@
 				4D088A95255C0CD4002F3129 /* QuickLook.framework in Frameworks */,
 				8DBF270B271089F80008045E /* SnapKit in Frameworks */,
 				4D088A96255C0CD4002F3129 /* CoreImage.framework in Frameworks */,
+				2DE09AB02EC1CBBB00BE1D1D /* JDStatusBarNotification in Frameworks */,
 				4D088A97255C0CD4002F3129 /* ThreemaFramework.framework in Frameworks */,
 				941735152C4FD88B008534FC /* AsyncAlgorithms in Frameworks */,
 				4D088A98255C0CD4002F3129 /* CoreTelephony.framework in Frameworks */,
@@ -9812,7 +9849,9 @@
 				4D088A9C255C0CD4002F3129 /* MediaPlayer.framework in Frameworks */,
 				4D088A9D255C0CD4002F3129 /* CoreLocation.framework in Frameworks */,
 				4D088A9E255C0CD4002F3129 /* MapKit.framework in Frameworks */,
+				2DE09AB22EC1CBC400BE1D1D /* SDWebImage in Frameworks */,
 				4A30E8822A0B9D1D008E039C /* ThreemaProtocols in Frameworks */,
+				2DE09AAE2EC1CBB300BE1D1D /* Ed25519 in Frameworks */,
 				4D088A9F255C0CD4002F3129 /* MessageUI.framework in Frameworks */,
 				4D088AA1255C0CD4002F3129 /* ImageIO.framework in Frameworks */,
 				4D088AA5255C0CD4002F3129 /* CoreText.framework in Frameworks */,
@@ -9838,6 +9877,7 @@
 				8DDCF7C327107CD0000CB4F6 /* MarqueeLabel in Frameworks */,
 				4D088AB5255C0CD4002F3129 /* UIKit.framework in Frameworks */,
 				8D965B42271E9C6D009A4E4C /* WebRTC.xcframework in Frameworks */,
+				2DE09AB42EC1CBD000BE1D1D /* TrustKit in Frameworks */,
 				4AA64BFC29B79F9900F66543 /* GroupCalls in Frameworks */,
 				4D088AB7255C0CD4002F3129 /* CoreGraphics.framework in Frameworks */,
 			);
@@ -9917,6 +9957,7 @@
 				4A7AE40229B732C10093BB85 /* GroupCalls in Frameworks */,
 				4D0FC68719E3F33900CF7BB5 /* QuickLook.framework in Frameworks */,
 				8DDCF7A5271077BE000CB4F6 /* Gzip in Frameworks */,
+				2DE09AA02EC1C7FE00BE1D1D /* JDStatusBarNotification in Frameworks */,
 				4D08BF13190FB04800458BC4 /* CoreImage.framework in Frameworks */,
 				941735112C4FD819008534FC /* AsyncAlgorithms in Frameworks */,
 				0A677B971C6250CA0019B361 /* ThreemaFramework.framework in Frameworks */,
@@ -9926,7 +9967,9 @@
 				4DA38C87178AF5D100937DD7 /* Social.framework in Frameworks */,
 				4AD3502B28886518002B37C8 /* DSWaveformImage in Frameworks */,
 				9456B5DC2B03CA29000E3B30 /* SwiftUIIntrospect in Frameworks */,
+				2DE09AA22EC1C80700BE1D1D /* SDWebImage in Frameworks */,
 				4DD55132168C681700B19DF8 /* MediaPlayer.framework in Frameworks */,
+				2DE09A9E2EC1C7F500BE1D1D /* Ed25519 in Frameworks */,
 				4D22601716677EC2003C5691 /* CoreLocation.framework in Frameworks */,
 				24D02F3F2A56EF8E0074ABE4 /* ThreemaEssentials in Frameworks */,
 				4D22601516677A56003C5691 /* MapKit.framework in Frameworks */,
@@ -9952,6 +9995,7 @@
 				4DF773171630AA7A001808D3 /* CFNetwork.framework in Frameworks */,
 				4DF773151630A858001808D3 /* Security.framework in Frameworks */,
 				4DD01F6D14C1CCA900EF7690 /* UIKit.framework in Frameworks */,
+				2DE09AA42EC1C81200BE1D1D /* TrustKit in Frameworks */,
 				4DD01F7114C1CCA900EF7690 /* CoreGraphics.framework in Frameworks */,
 				8DBF271427108D260008045E /* Sentry in Frameworks */,
 			);
@@ -10030,6 +10074,7 @@
 				F2EAFEB62D6CC9C400DFFD48 /* QuickLook.framework in Frameworks */,
 				F2EAFEB72D6CC9C400DFFD48 /* SnapKit in Frameworks */,
 				F2EAFEB82D6CC9C400DFFD48 /* CoreImage.framework in Frameworks */,
+				2DE09AB82EC1CE3900BE1D1D /* JDStatusBarNotification in Frameworks */,
 				F2EAFEB92D6CC9C400DFFD48 /* ThreemaFramework.framework in Frameworks */,
 				F2EAFEBA2D6CC9C400DFFD48 /* AsyncAlgorithms in Frameworks */,
 				F2EAFEBB2D6CC9C400DFFD48 /* CoreTelephony.framework in Frameworks */,
@@ -10039,7 +10084,9 @@
 				F2EAFEBF2D6CC9C400DFFD48 /* MediaPlayer.framework in Frameworks */,
 				F2EAFEC02D6CC9C400DFFD48 /* CoreLocation.framework in Frameworks */,
 				F2EAFEC12D6CC9C400DFFD48 /* MapKit.framework in Frameworks */,
+				2DE09ABA2EC1CE4200BE1D1D /* SDWebImage in Frameworks */,
 				F2EAFEC22D6CC9C400DFFD48 /* ThreemaProtocols in Frameworks */,
+				2DE09AB62EC1CE3100BE1D1D /* Ed25519 in Frameworks */,
 				F2EAFEC32D6CC9C400DFFD48 /* MessageUI.framework in Frameworks */,
 				F2EAFEC42D6CC9C400DFFD48 /* ImageIO.framework in Frameworks */,
 				F2EAFEC52D6CC9C400DFFD48 /* CoreText.framework in Frameworks */,
@@ -10065,6 +10112,7 @@
 				F2EAFED92D6CC9C400DFFD48 /* MarqueeLabel in Frameworks */,
 				F2EAFEDA2D6CC9C400DFFD48 /* UIKit.framework in Frameworks */,
 				F2EAFEDB2D6CC9C400DFFD48 /* WebRTC.xcframework in Frameworks */,
+				2DE09ABC2EC1CE4D00BE1D1D /* TrustKit in Frameworks */,
 				F2EAFEDC2D6CC9C400DFFD48 /* GroupCalls in Frameworks */,
 				F2EAFEDD2D6CC9C400DFFD48 /* CoreGraphics.framework in Frameworks */,
 			);
@@ -15220,6 +15268,10 @@
 				941735122C4FD884008534FC /* AsyncAlgorithms */,
 				242083A62CBCDC550079D9B8 /* ThreemaMacros */,
 				244F24D02D92898F004CC9D7 /* Coordinator */,
+				2DE09AA52EC1C9D900BE1D1D /* Ed25519 */,
+				2DE09AA72EC1C9EC00BE1D1D /* JDStatusBarNotification */,
+				2DE09AA92EC1C9F400BE1D1D /* SDWebImage */,
+				2DE09AAB2EC1C9FF00BE1D1D /* TrustKit */,
 			);
 			productName = Threema;
 			productReference = 0A7DF9461C9FDBDE002D4DC3 /* Threema Work.app */;
@@ -15451,6 +15503,10 @@
 				941735182C4FD89C008534FC /* AsyncAlgorithms */,
 				242083AC2CBCDC690079D9B8 /* ThreemaMacros */,
 				244F24D82D9289AA004CC9D7 /* Coordinator */,
+				2DE09A952EC1C38E00BE1D1D /* Ed25519 */,
+				2DE09A972EC1C3A200BE1D1D /* JDStatusBarNotification */,
+				2DE09A992EC1C3AC00BE1D1D /* SDWebImage */,
+				2DE09A9B2EC1C3B900BE1D1D /* TrustKit */,
 			);
 			productName = Threema;
 			productReference = 2D5A1F5924C9B5DF00F87DD0 /* Threema Blue.app */;
@@ -15531,7 +15587,6 @@
 			);
 			name = "Threema Green NotificationExtension";
 			packageProductDependencies = (
-				4D088C4D255C1640002F3129 /* Ed25519 */,
 				D73A95BF27AD0672003E847C /* SDWebImage */,
 				24DB324428AE489100B37182 /* JDStatusBarNotification */,
 				7E0A4BD42AD68F1600C38A25 /* PromiseKit */,
@@ -15539,8 +15594,9 @@
 				24EFCD942B31E98A00DD7C66 /* MBProgressHUD */,
 				24B81FFE2B32CE6500E8D13E /* CocoaLumberjack */,
 				24B820002B32CE6500E8D13E /* CocoaLumberjackSwift */,
-				7EC022972B8906EF005024AE /* TrustKit */,
 				242083B42CBCDC970079D9B8 /* ThreemaMacros */,
+				2DE09A912EC1BC8200BE1D1D /* Ed25519 */,
+				2DE09A932EC1BC9100BE1D1D /* TrustKit */,
 			);
 			productName = ThreemaNotificationExtension;
 			productReference = 2DEC5529250A5F6F00B9826D /* Threema Green NotificationExtension.appex */;
@@ -15591,6 +15647,10 @@
 				941735162C4FD894008534FC /* AsyncAlgorithms */,
 				242083AA2CBCDC620079D9B8 /* ThreemaMacros */,
 				244F24D62D9289A3004CC9D7 /* Coordinator */,
+				2D08A62D2EC1B49B005C4234 /* JDStatusBarNotification */,
+				2D08A62F2EC1B4A4005C4234 /* SDWebImage */,
+				2D08A6312EC1B519005C4234 /* TrustKit */,
+				2D08A6332EC1B66F005C4234 /* Ed25519 */,
 			);
 			productName = Threema;
 			productReference = 2DEDB3E124C9903400FC9099 /* Threema Green.app */;
@@ -15641,15 +15701,15 @@
 			);
 			name = "Threema Green ShareExtension";
 			packageProductDependencies = (
-				CE7E002125FA56470054373A /* Ed25519 */,
 				D73A95BD27AD0628003E847C /* SDWebImage */,
 				24DB324C28AE48B200B37182 /* JDStatusBarNotification */,
 				7E0A4BCC2AD68EA700C38A25 /* PromiseKit */,
 				24EFCD8E2B31E95300DD7C66 /* MBProgressHUD */,
 				24B81FF22B32CE3E00E8D13E /* CocoaLumberjack */,
 				24B81FF42B32CE3E00E8D13E /* CocoaLumberjackSwift */,
-				7EC0228F2B8906BA005024AE /* TrustKit */,
 				242083BE2CBCDCB80079D9B8 /* ThreemaMacros */,
+				2DE09A8D2EC1BC6E00BE1D1D /* Ed25519 */,
+				2DE09A8F2EC1BC7600BE1D1D /* TrustKit */,
 			);
 			productName = ThreemaShareExtension;
 			productReference = 2DF99C5524C970CC003AAB74 /* Threema Green ShareExtension.appex */;
@@ -15700,6 +15760,10 @@
 				941735142C4FD88B008534FC /* AsyncAlgorithms */,
 				242083A82CBCDC5C0079D9B8 /* ThreemaMacros */,
 				244F24D22D928995004CC9D7 /* Coordinator */,
+				2DE09AAD2EC1CBB300BE1D1D /* Ed25519 */,
+				2DE09AAF2EC1CBBB00BE1D1D /* JDStatusBarNotification */,
+				2DE09AB12EC1CBC400BE1D1D /* SDWebImage */,
+				2DE09AB32EC1CBD000BE1D1D /* TrustKit */,
 			);
 			productName = Threema;
 			productReference = 4D088B15255C0CD4002F3129 /* Threema OnPrem.app */;
@@ -15834,6 +15898,10 @@
 				941735102C4FD819008534FC /* AsyncAlgorithms */,
 				242083A42CBCDC4B0079D9B8 /* ThreemaMacros */,
 				244F24CE2D928988004CC9D7 /* Coordinator */,
+				2DE09A9D2EC1C7F500BE1D1D /* Ed25519 */,
+				2DE09A9F2EC1C7FE00BE1D1D /* JDStatusBarNotification */,
+				2DE09AA12EC1C80700BE1D1D /* SDWebImage */,
+				2DE09AA32EC1C81200BE1D1D /* TrustKit */,
 			);
 			productName = Threema;
 			productReference = 4DD01F6814C1CCA900EF7690 /* Threema.app */;
@@ -15972,6 +16040,10 @@
 				F2EAFBE42D6CC9C400DFFD48 /* AsyncAlgorithms */,
 				F2EAFBE62D6CC9C400DFFD48 /* ThreemaMacros */,
 				244F24D42D92899C004CC9D7 /* Coordinator */,
+				2DE09AB52EC1CE3100BE1D1D /* Ed25519 */,
+				2DE09AB72EC1CE3900BE1D1D /* JDStatusBarNotification */,
+				2DE09AB92EC1CE4200BE1D1D /* SDWebImage */,
+				2DE09ABB2EC1CE4D00BE1D1D /* TrustKit */,
 			);
 			productName = Threema;
 			productReference = F2EAFF3E2D6CC9C400DFFD48 /* Custom OnPrem.app */;
@@ -25597,6 +25669,7 @@
 				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = DL5SR3PBJC;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = DL5SR3PBJC;
 				ENABLE_BITCODE = NO;
 				ENABLE_MODULE_VERIFIER = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -25629,6 +25702,7 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "Threema App Store Profile";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Threema App Store Profile";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) THREEMA_CUSTOMER";
 				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$PROJECT_DIR/Threema/Threema-Bridging-Header.h";
@@ -29213,6 +29287,7 @@
 				CURRENT_PROJECT_VERSION = "$(BUILD_NUMBER)";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = DL5SR3PBJC;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = DL5SR3PBJC;
 				ENABLE_BITCODE = NO;
 				ENABLE_MODULE_VERIFIER = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -29248,6 +29323,7 @@
 				);
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "Threema App Store Profile";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Threema App Store Profile";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) THREEMA_CUSTOMER";
 				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$PROJECT_DIR/Threema/Threema-Bridging-Header.h";
@@ -32430,7 +32506,7 @@
 			repositoryURL = "https://github.com/apple/swift-protobuf";
 			requirement = {
 				kind = exactVersion;
-				version = 1.30.0;
+				version = 1.33.3;
 			};
 		};
 		8DDCF7CD27108162000CB4F6 /* XCRemoteSwiftPackageReference "ZipArchive" */ = {
@@ -33250,6 +33326,146 @@
 			package = 24FD0C4D2B31E5BC0086892A /* XCRemoteSwiftPackageReference "MBProgressHUD" */;
 			productName = MBProgressHUD;
 		};
+		2D08A62D2EC1B49B005C4234 /* JDStatusBarNotification */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24CCB0D528AE23D300545893 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */;
+			productName = JDStatusBarNotification;
+		};
+		2D08A62F2EC1B4A4005C4234 /* SDWebImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
+			productName = SDWebImage;
+		};
+		2D08A6312EC1B519005C4234 /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
+		2D08A6332EC1B66F005C4234 /* Ed25519 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
+			productName = Ed25519;
+		};
+		2DE09A8D2EC1BC6E00BE1D1D /* Ed25519 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
+			productName = Ed25519;
+		};
+		2DE09A8F2EC1BC7600BE1D1D /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
+		2DE09A912EC1BC8200BE1D1D /* Ed25519 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
+			productName = Ed25519;
+		};
+		2DE09A932EC1BC9100BE1D1D /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
+		2DE09A952EC1C38E00BE1D1D /* Ed25519 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
+			productName = Ed25519;
+		};
+		2DE09A972EC1C3A200BE1D1D /* JDStatusBarNotification */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24CCB0D528AE23D300545893 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */;
+			productName = JDStatusBarNotification;
+		};
+		2DE09A992EC1C3AC00BE1D1D /* SDWebImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
+			productName = SDWebImage;
+		};
+		2DE09A9B2EC1C3B900BE1D1D /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
+		2DE09A9D2EC1C7F500BE1D1D /* Ed25519 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
+			productName = Ed25519;
+		};
+		2DE09A9F2EC1C7FE00BE1D1D /* JDStatusBarNotification */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24CCB0D528AE23D300545893 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */;
+			productName = JDStatusBarNotification;
+		};
+		2DE09AA12EC1C80700BE1D1D /* SDWebImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
+			productName = SDWebImage;
+		};
+		2DE09AA32EC1C81200BE1D1D /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
+		2DE09AA52EC1C9D900BE1D1D /* Ed25519 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
+			productName = Ed25519;
+		};
+		2DE09AA72EC1C9EC00BE1D1D /* JDStatusBarNotification */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24CCB0D528AE23D300545893 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */;
+			productName = JDStatusBarNotification;
+		};
+		2DE09AA92EC1C9F400BE1D1D /* SDWebImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
+			productName = SDWebImage;
+		};
+		2DE09AAB2EC1C9FF00BE1D1D /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
+		2DE09AAD2EC1CBB300BE1D1D /* Ed25519 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
+			productName = Ed25519;
+		};
+		2DE09AAF2EC1CBBB00BE1D1D /* JDStatusBarNotification */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24CCB0D528AE23D300545893 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */;
+			productName = JDStatusBarNotification;
+		};
+		2DE09AB12EC1CBC400BE1D1D /* SDWebImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
+			productName = SDWebImage;
+		};
+		2DE09AB32EC1CBD000BE1D1D /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
+		2DE09AB52EC1CE3100BE1D1D /* Ed25519 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
+			productName = Ed25519;
+		};
+		2DE09AB72EC1CE3900BE1D1D /* JDStatusBarNotification */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 24CCB0D528AE23D300545893 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */;
+			productName = JDStatusBarNotification;
+		};
+		2DE09AB92EC1CE4200BE1D1D /* SDWebImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
+			productName = SDWebImage;
+		};
+		2DE09ABB2EC1CE4D00BE1D1D /* TrustKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
+			productName = TrustKit;
+		};
 		421024182A2E09370037CC91 /* CodeScanner */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 421024172A2E09370037CC91 /* XCRemoteSwiftPackageReference "CodeScanner" */;
@@ -33367,11 +33583,6 @@
 			productName = Ed25519;
 		};
 		4D088C4B255C163D002F3129 /* Ed25519 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
-			productName = Ed25519;
-		};
-		4D088C4D255C1640002F3129 /* Ed25519 */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
 			productName = Ed25519;
@@ -33515,11 +33726,6 @@
 			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
 			productName = TrustKit;
 		};
-		7EC0228F2B8906BA005024AE /* TrustKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
-			productName = TrustKit;
-		};
 		7EC022912B8906CC005024AE /* TrustKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
@@ -33531,11 +33737,6 @@
 			productName = TrustKit;
 		};
 		7EC022952B8906E6005024AE /* TrustKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
-			productName = TrustKit;
-		};
-		7EC022972B8906EF005024AE /* TrustKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
 			productName = TrustKit;
@@ -33816,11 +34017,6 @@
 			productName = Ed25519;
 		};
 		CE7E001F25FA56420054373A /* Ed25519 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
-			productName = Ed25519;
-		};
-		CE7E002125FA56470054373A /* Ed25519 */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4D088B2E255C1287002F3129 /* XCRemoteSwiftPackageReference "ed25519" */;
 			productName = Ed25519;

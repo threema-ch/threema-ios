@@ -21,7 +21,7 @@
 import ThreemaFramework
 import UIKit
 
-class ContactListNavigationItem: UINavigationItem {
+final class ContactListNavigationItem: UINavigationItem {
     
     // MARK: - Properties
 

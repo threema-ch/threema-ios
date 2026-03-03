@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="6252" systemVersion="13F34" minimumToolsVersion="Xcode 4.3" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="AudioData" representedClassName="AudioData" syncable="YES">
+        <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
+    </entity>
+    <entity name="AudioMessage" representedClassName="AudioMessage" parentEntity="Message" syncable="YES">
+        <attribute name="audioBlobId" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="audioSize" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="duration" attributeType="Float" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="encryptionKey" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="progress" optional="YES" transient="YES" attributeType="Float" syncable="YES"/>
+        <relationship name="audio" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="AudioData" syncable="YES"/>
+    </entity>
+    <entity name="Ballot" representedClassName="Ballot" syncable="YES">
+        <attribute name="assessmentType" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="choicesType" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="createDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="creatorId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="id" attributeType="Binary" indexed="YES" syncable="YES"/>
+        <attribute name="modifyDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="state" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="title" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="type" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="unreadUpdateCount" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <relationship name="choices" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="BallotChoice" inverseName="ballot" inverseEntity="BallotChoice" syncable="YES"/>
+        <relationship name="conversation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="ballots" inverseEntity="Conversation" syncable="YES"/>
+        <relationship name="message" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="BallotMessage" inverseName="ballot" inverseEntity="BallotMessage" syncable="YES"/>
+        <relationship name="participants" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" syncable="YES"/>
+    </entity>
+    <entity name="BallotChoice" representedClassName="BallotChoice" syncable="YES">
+        <attribute name="createDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="id" attributeType="Integer 32" defaultValueString="0" indexed="YES" syncable="YES"/>
+        <attribute name="modifyDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="orderPosition" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <relationship name="ballot" maxCount="1" deletionRule="Nullify" destinationEntity="Ballot" inverseName="choices" inverseEntity="Ballot" syncable="YES"/>
+        <relationship name="result" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="BallotResult" inverseName="ballotChoice" inverseEntity="BallotResult" syncable="YES"/>
+    </entity>
+    <entity name="BallotMessage" representedClassName="BallotMessage" parentEntity="Message" syncable="YES">
+        <attribute name="ballotState" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <relationship name="ballot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Ballot" inverseName="message" inverseEntity="Ballot" syncable="YES"/>
+    </entity>
+    <entity name="BallotResult" representedClassName="BallotResult" syncable="YES">
+        <attribute name="createDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="modifyDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="participantId" attributeType="String" syncable="YES"/>
+        <attribute name="value" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <relationship name="ballotChoice" maxCount="1" deletionRule="Nullify" destinationEntity="BallotChoice" inverseName="result" inverseEntity="BallotChoice" syncable="YES"/>
+    </entity>
+    <entity name="Contact" representedClassName="Contact" syncable="YES">
+        <attribute name="abRecordId" optional="YES" attributeType="Integer 32" indexed="YES" syncable="YES"/>
+        <attribute name="featureLevel" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="firstName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="identity" attributeType="String" indexed="YES" syncable="YES"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="lastName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="publicKey" attributeType="Binary" syncable="YES"/>
+        <attribute name="publicNickname" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="sortIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" indexed="YES" syncable="YES"/>
+        <attribute name="sortInitial" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="state" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="verificationLevel" attributeType="Integer 16" syncable="YES"/>
+        <attribute name="verifiedEmail" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="verifiedMobileNo" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="conversations" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Conversation" inverseName="contact" inverseEntity="Conversation" syncable="YES"/>
+        <relationship name="groupConversations" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Conversation" inverseName="members" inverseEntity="Conversation" syncable="YES"/>
+        <relationship name="messages" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Message" inverseName="sender" inverseEntity="Message" syncable="YES"/>
+    </entity>
+    <entity name="Conversation" representedClassName="Conversation" syncable="YES">
+        <attribute name="groupId" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="groupImageSetDate" optional="YES" transient="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="groupMyIdentity" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="groupName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="lastTypingStart" optional="YES" transient="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="typing" transient="YES" attributeType="Boolean" defaultValueString="NO" syncable="YES"/>
+        <attribute name="unreadMessageCount" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <relationship name="ballots" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="Ballot" inverseName="conversation" inverseEntity="Ballot" syncable="YES"/>
+        <relationship name="contact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact" inverseName="conversations" inverseEntity="Contact" syncable="YES"/>
+        <relationship name="groupImage" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="ImageData" syncable="YES"/>
+        <relationship name="lastMessage" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Message" syncable="YES"/>
+        <relationship name="members" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Contact" inverseName="groupConversations" inverseEntity="Contact" syncable="YES"/>
+        <relationship name="messages" optional="YES" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="Message" inverseName="conversation" inverseEntity="Message" syncable="YES"/>
+    </entity>
+    <entity name="DeletedGroupInfo" representedClassName="DeletedGroupInfo" syncable="YES">
+        <attribute name="groupCreator" attributeType="String" indexed="YES" syncable="YES"/>
+        <attribute name="groupId" attributeType="Binary" indexed="YES" syncable="YES"/>
+    </entity>
+    <entity name="ImageData" representedClassName="ImageData" syncable="YES">
+        <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
+        <attribute name="height" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="width" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+    </entity>
+    <entity name="ImageMessage" representedClassName="ImageMessage" parentEntity="Message" syncable="YES">
+        <attribute name="encryptionKey" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="imageBlobId" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="imageNonce" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="imageSize" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="progress" optional="YES" transient="YES" attributeType="Float" syncable="YES"/>
+        <relationship name="image" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="ImageData" syncable="YES"/>
+        <relationship name="thumbnail" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="ImageData" syncable="YES"/>
+    </entity>
+    <entity name="LastGroupSyncRequest" representedClassName="LastGroupSyncRequest" syncable="YES">
+        <attribute name="groupCreator" attributeType="String" indexed="YES" syncable="YES"/>
+        <attribute name="groupId" attributeType="Binary" indexed="YES" syncable="YES"/>
+        <attribute name="lastSyncRequest" attributeType="Date" syncable="YES"/>
+    </entity>
+    <entity name="LocationMessage" representedClassName="LocationMessage" parentEntity="Message" syncable="YES">
+        <attribute name="accuracy" optional="YES" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="latitude" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="longitude" attributeType="Double" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="poiName" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="reverseGeocodingResult" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="Message" representedClassName="BaseMessage" isAbstract="YES" syncable="YES">
+        <attribute name="date" attributeType="Date" indexed="YES" syncable="YES"/>
+        <attribute name="delivered" attributeType="Boolean" syncable="YES"/>
+        <attribute name="deliveryDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="id" attributeType="Binary" indexed="YES" syncable="YES"/>
+        <attribute name="isOwn" attributeType="Boolean" indexed="YES" syncable="YES"/>
+        <attribute name="read" attributeType="Boolean" indexed="YES" syncable="YES"/>
+        <attribute name="readDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="remoteSentDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="sendFailed" optional="YES" attributeType="Boolean" syncable="YES"/>
+        <attribute name="sent" attributeType="Boolean" syncable="YES"/>
+        <attribute name="userack" attributeType="Boolean" syncable="YES"/>
+        <attribute name="userackDate" optional="YES" attributeType="Date" syncable="YES"/>
+        <relationship name="conversation" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Conversation" inverseName="messages" inverseEntity="Conversation" syncable="YES"/>
+        <relationship name="sender" optional="YES" minCount="1" maxCount="1" deletionRule="Nullify" destinationEntity="Contact" inverseName="messages" inverseEntity="Contact" syncable="YES"/>
+    </entity>
+    <entity name="SystemMessage" representedClassName="SystemMessage" parentEntity="Message" syncable="YES">
+        <attribute name="arg" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="type" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+    </entity>
+    <entity name="TextMessage" representedClassName="TextMessage" parentEntity="Message" syncable="YES">
+        <attribute name="text" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="VideoData" representedClassName="VideoData" syncable="YES">
+        <attribute name="data" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
+    </entity>
+    <entity name="VideoMessage" representedClassName="VideoMessage" parentEntity="Message" syncable="YES">
+        <attribute name="duration" attributeType="Float" defaultValueString="0.0" syncable="YES"/>
+        <attribute name="encryptionKey" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="progress" optional="YES" transient="YES" attributeType="Float" syncable="YES"/>
+        <attribute name="videoBlobId" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="videoSize" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <relationship name="thumbnail" minCount="1" maxCount="1" deletionRule="Cascade" destinationEntity="ImageData" syncable="YES"/>
+        <relationship name="video" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="VideoData" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="AudioData" positionX="-54" positionY="129" width="128" height="60"/>
+        <element name="AudioMessage" positionX="-9" positionY="234" width="128" height="135"/>
+        <element name="Ballot" positionX="367" positionY="216" width="128" height="255"/>
+        <element name="BallotChoice" positionX="529" positionY="201" width="128" height="150"/>
+        <element name="BallotMessage" positionX="214" positionY="-93" width="128" height="75"/>
+        <element name="BallotResult" positionX="466" positionY="6" width="128" height="120"/>
+        <element name="Contact" positionX="-234" positionY="441" width="128" height="300"/>
+        <element name="Conversation" positionX="36" positionY="489" width="128" height="240"/>
+        <element name="DeletedGroupInfo" positionX="-261" positionY="-270" width="128" height="75"/>
+        <element name="ImageData" positionX="682" positionY="621" width="128" height="90"/>
+        <element name="ImageMessage" positionX="405" positionY="885" width="128" height="150"/>
+        <element name="LastGroupSyncRequest" positionX="-261" positionY="-387" width="128" height="90"/>
+        <element name="LocationMessage" positionX="394" positionY="735" width="128" height="120"/>
+        <element name="Message" positionX="205" positionY="723" width="128" height="255"/>
+        <element name="SystemMessage" positionX="495" positionY="546" width="128" height="75"/>
+        <element name="TextMessage" positionX="-27" positionY="-108" width="128" height="60"/>
+        <element name="VideoData" positionX="-342" positionY="-72" width="128" height="60"/>
+        <element name="VideoMessage" positionX="405" positionY="1125" width="128" height="150"/>
+    </elements>
+</model>

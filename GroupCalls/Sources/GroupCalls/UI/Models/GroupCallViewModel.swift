@@ -47,7 +47,7 @@ public final class GroupCallViewModel: Sendable {
                 return
             }
             
-            guard AVAudioSession.sharedInstance().recordPermission == .granted else {
+            guard AVAudioApplication.shared.recordPermission == .granted else {
                 return
             }
             
@@ -401,9 +401,9 @@ public final class GroupCallViewModel: Sendable {
         }
         
         // Check if we have permission
-        switch AVAudioSession.sharedInstance().recordPermission {
+        switch AVAudioApplication.shared.recordPermission {
         case .undetermined:
-            await AVAudioSession.sharedInstance().requestRecordPermission()
+            await AVAudioApplication.requestRecordPermission()
             await handleOwnAudioMuteStateChange(newState: newState)
             
         case .denied:
@@ -592,15 +592,5 @@ extension GroupCallViewModel {
         }
         
         localParticipant = nil
-    }
-}
-
-extension AVAudioSession {
-    func requestRecordPermission() async {
-        await withCheckedContinuation { continuation in
-            requestRecordPermission { _ in
-                continuation.resume()
-            }
-        }
     }
 }

@@ -18,8 +18,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
+
 @testable import ThreemaFramework
 
 class MediatorSyncableContactsTests: XCTestCase {
@@ -31,7 +33,6 @@ class MediatorSyncableContactsTests: XCTestCase {
     private var blobDict = [Data: Data]()
     
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
@@ -43,10 +44,10 @@ class MediatorSyncableContactsTests: XCTestCase {
         let taskManagerMock = TaskManagerMock()
 
         let mediatorSyncableContacts = MediatorSyncableContacts(
-            UserSettingsMock(enableMultiDevice: true),
-            PushSettingManagerMock(),
-            taskManagerMock,
-            EntityManager(databaseContext: databaseBackgroundCnx, myIdentityStore: MyIdentityStoreMock())
+            userSettings: UserSettingsMock(enableMultiDevice: true),
+            pushSettingManager: PushSettingManagerMock(),
+            taskManager: taskManagerMock,
+            entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
         )
 
         let noContacts = 500
@@ -76,10 +77,10 @@ class MediatorSyncableContactsTests: XCTestCase {
             let taskManagerMock = TaskManagerMock()
             
             let mediatorSyncableContacts = MediatorSyncableContacts(
-                UserSettingsMock(enableMultiDevice: true),
-                PushSettingManagerMock(),
-                taskManagerMock,
-                EntityManager(databaseContext: databaseBackgroundCnx)
+                userSettings: UserSettingsMock(enableMultiDevice: true),
+                pushSettingManager: PushSettingManagerMock(),
+                taskManager: taskManagerMock,
+                entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
             )
             for _ in 0..<contactCount {
                 let contact = getMinimalContact()
@@ -166,10 +167,10 @@ class MediatorSyncableContactsTests: XCTestCase {
         for test in table {
             let taskManagerMock = TaskManagerMock()
             let mediatorSyncableContacts = MediatorSyncableContacts(
-                userSettingsMock,
-                PushSettingManagerMock(),
-                taskManagerMock,
-                EntityManager(databaseContext: databaseBackgroundCnx)
+                userSettings: userSettingsMock,
+                pushSettingManager: PushSettingManagerMock(),
+                taskManager: taskManagerMock,
+                entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
             )
             
             let expec =
@@ -321,10 +322,10 @@ class MediatorSyncableContactsTests: XCTestCase {
         contactEntity.readReceipt = .default
         
         let mediatorSyncableContacts = MediatorSyncableContacts(
-            UserSettingsMock(),
-            PushSettingManagerMock(),
-            TaskManagerMock(),
-            EntityManager(databaseContext: databaseBackgroundCnx)
+            userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            taskManager: TaskManagerMock(),
+            entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
         )
         
         let allSyncableContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
@@ -342,10 +343,10 @@ class MediatorSyncableContactsTests: XCTestCase {
         contactEntity.readReceipt = .doNotSend
         
         let mediatorSyncableContacts = MediatorSyncableContacts(
-            UserSettingsMock(),
-            PushSettingManagerMock(),
-            TaskManagerMock(),
-            EntityManager(databaseContext: databaseBackgroundCnx)
+            userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            taskManager: TaskManagerMock(),
+            entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
         )
         
         let allSyncableContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
@@ -366,10 +367,10 @@ class MediatorSyncableContactsTests: XCTestCase {
         contactEntity.readReceipt = .send
         
         let mediatorSyncableContacts = MediatorSyncableContacts(
-            UserSettingsMock(),
-            PushSettingManagerMock(),
-            TaskManagerMock(),
-            EntityManager()
+            userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            taskManager: TaskManagerMock(),
+            entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
         )
         
         let allSyncableContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
@@ -423,8 +424,8 @@ class MediatorSyncableContactsTests: XCTestCase {
             let image = UIImage(data: imageData)!
             let contactImage: ImageDataEntity = databasePreparer.createImageDataEntity(
                 data: imageData,
-                height: Int(image.size.height),
-                width: Int(image.size.width)
+                height: Int16(image.size.height),
+                width: Int16(image.size.width)
             )
 
             contact.createdAt = Date()
@@ -443,8 +444,8 @@ class MediatorSyncableContactsTests: XCTestCase {
                 }
             )
             contact.publicNickname = "Nickname"
-            contact.setFirstName(to: "John")
-            contact.setLastName(to: "Appleseed")
+            contact.setFirstName(to: "John", sortOrderFirstName: true)
+            contact.setLastName(to: "Appleseed", sortOrderFirstName: true)
             contact.imageData = setProfilePicture ? imageData : nil
             contact.contactImage = setContactProfilePicture ? contactImage : nil
             contact.readReceipt = .send

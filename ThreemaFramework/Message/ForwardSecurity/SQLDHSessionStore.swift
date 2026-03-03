@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import SQLite
 import ThreemaMacros
@@ -29,9 +30,9 @@ public protocol SQLDHSessionStoreErrorHandler: AnyObject {
 }
 
 public class SQLDHSessionStore: DHSessionStoreProtocol {
-    private static let databaseName = "threema-fs.db"
+    static let databaseName = "threema-fs.db"
     private static let databasePath = (
-        FileUtility.shared.appDataDirectory?
+        FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())?
             .appendingPathComponent(SQLDHSessionStore.databaseName).path
     )!
     
@@ -123,7 +124,7 @@ public class SQLDHSessionStore: DHSessionStoreProtocol {
         guard let pathAsURL = URL(string: SQLDHSessionStore.databasePath) else {
             return
         }
-        FileUtility.shared.delete(at: pathAsURL)
+        FileUtility.shared.deleteIfExists(at: pathAsURL)
     }
     
     func upgradeIfNecessary() throws {

@@ -55,7 +55,6 @@ struct ThreemaWebDesktopInfoBannerView: View {
         .padding()
         .background(Color.accentColor)
         .cornerRadius(10)
-        .padding()
         .background(Colors.backgroundView.color)
         .onTapGesture {
             onTap()

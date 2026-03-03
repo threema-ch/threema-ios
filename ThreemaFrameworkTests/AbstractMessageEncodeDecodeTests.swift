@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -76,7 +77,33 @@ class AbstractMessageEncodeDecodeTests: XCTestCase {
         let unarchiver = try NSKeyedUnarchiver(forReadingFrom: archiver.encodedData)
         return try unarchiver.decodeTopLevelObject(of: T.self, forKey: "message")
     }
-    
+
+    func testNSNumberBoolToNSDataAndBack() {
+        var number = NSNumber(booleanLiteral: true)
+
+        let data = NSData(bytes: &number, length: MemoryLayout<NSNumber>.size)
+
+        var result = NSNumber(booleanLiteral: false)
+        data.getBytes(&result, length: MemoryLayout<NSNumber>.size)
+
+        XCTAssertEqual(result, number)
+        XCTAssertTrue(number.boolValue)
+        XCTAssertTrue(result.boolValue)
+    }
+
+    func testNSNumberIntToNSDataAndBack() {
+        var number = NSNumber(integerLiteral: 2_353_245)
+
+        let data = NSData(bytes: &number, length: MemoryLayout<NSNumber>.size)
+
+        var result = NSNumber(integerLiteral: 0)
+        data.getBytes(&result, length: MemoryLayout<NSNumber>.size)
+
+        XCTAssertEqual(result, number)
+        print(number.intValue)
+        print(result.intValue)
+    }
+
     func testAllAbstractMessagesWithoutOwnProperties() throws {
         func testAbstractMessage<T: AbstractMessage>() throws -> T {
             let msg: T = abstractMessage(

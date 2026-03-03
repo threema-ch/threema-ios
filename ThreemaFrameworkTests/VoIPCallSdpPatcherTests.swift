@@ -26,7 +26,9 @@ class VoIPCallSdpPatcherTests: XCTestCase {
     override func setUp() {
         super.setUp()
         
-        // necessary for ValidationLogger
+        // We clear static state in `RtpExtensionReplayer` before each test
+        VoIPCallSdpPatcher.RtpExtensionReplayer.clearExtensionsForTesting()
+        
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
     }
     
@@ -46,8 +48,10 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "a=rtpmap:111 opus/48000/2\r\n" +
             "a=fmtp:111 minptime=10;useinbandfec=1;stereo=0;sprop-stereo=0;cbr=1\r\n"
         
-        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual))
         XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_ANSWER, sdp: actual))
     }
     
     /// If the fmtp line contains parameters without an '=' sign, nothing should break.
@@ -63,8 +67,10 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "a=rtpmap:111 opus/48000/2\r\n" +
             "a=fmtp:111 minptime=10;cbr0;useinbandfec=1;stereo=0;sprop-stereo=0;cbr=1\r\n"
         
-        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual))
         XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_ANSWER, sdp: actual))
     }
     
     /// Non-Opus fmtp lines should be dropped.
@@ -80,8 +86,10 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "a=rtpmap:111 opus/48000/2\r\n" +
             "a=fmtp:111 minptime=10;useinbandfec=1;stereo=0;sprop-stereo=0;cbr=1\r\n"
         
-        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual))
         XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_ANSWER, sdp: actual))
     }
     
     /// We always require Opus, so it should throw an exception if it's not present.
@@ -91,7 +99,14 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "a=rtpmap:111 popus/48000/2\r\n" +
             "a=urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\n" +
             "a=fmtp:111 minptime=10;cbr0;useinbandfec=1\r\n"
-        XCTAssertThrowsError(try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: sdp), "") { error in
+       
+        XCTAssertThrowsError(try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER, sdp: sdp), "") { error in
+            let sdpError = error as! VoIPCallSdpPatcher.SdpError
+            XCTAssertEqual(sdpError.type, VoIPCallSdpPatcher.SdpErrorType.invalidSdp)
+            XCTAssertEqual(sdpError.description, "a=rtpmap: [...] opus not found")
+        }
+        
+        XCTAssertThrowsError(try VoIPCallSdpPatcher().patch(type: .REMOTE_ANSWER, sdp: sdp), "") { error in
             let sdpError = error as! VoIPCallSdpPatcher.SdpError
             XCTAssertEqual(sdpError.type, VoIPCallSdpPatcher.SdpErrorType.invalidSdp)
             XCTAssertEqual(sdpError.description, "a=rtpmap: [...] opus not found")
@@ -111,6 +126,12 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             XCTAssertEqual(sdpError.type, VoIPCallSdpPatcher.SdpErrorType.invalidSdp)
             XCTAssertEqual(sdpError.description, "a=rtpmap: [...] opus not found")
         }
+        
+        XCTAssertThrowsError(try VoIPCallSdpPatcher().patch(type: .REMOTE_OFFER, sdp: sdp), "") { error in
+            let sdpError = error as! VoIPCallSdpPatcher.SdpError
+            XCTAssertEqual(sdpError.type, VoIPCallSdpPatcher.SdpErrorType.invalidSdp)
+            XCTAssertEqual(sdpError.description, "a=rtpmap: [...] opus not found")
+        }
     }
     
     /// It should throw an exception if the Opus payload type cannot be found in the RTP map.
@@ -119,7 +140,12 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "m=audio 9 UDP/TLS/RTP/SAVPF 1337\r\n" +
             "a=rtpmap:111 opus/48000/2\r\n"
         
-        XCTAssertThrowsError(try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: sdp), "") { error in
+        XCTAssertThrowsError(try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER, sdp: sdp), "") { error in
+            let sdpError = error as! VoIPCallSdpPatcher.SdpError
+            XCTAssertEqual(sdpError.type, VoIPCallSdpPatcher.SdpErrorType.invalidSdp)
+            XCTAssertEqual(sdpError.description, "a=rtpmap: [...] opus not found")
+        }
+        XCTAssertThrowsError(try VoIPCallSdpPatcher().patch(type: .REMOTE_ANSWER, sdp: sdp), "") { error in
             let sdpError = error as! VoIPCallSdpPatcher.SdpError
             XCTAssertEqual(sdpError.type, VoIPCallSdpPatcher.SdpErrorType.invalidSdp)
             XCTAssertEqual(sdpError.description, "a=rtpmap: [...] opus not found")
@@ -133,6 +159,11 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "a=rtpmap:111 opus/48000/2\r\n"
         
         XCTAssertThrowsError(try VoIPCallSdpPatcher().patch(type: .LOCAL_OFFER, sdp: sdp), "") { error in
+            let sdpError = error as! VoIPCallSdpPatcher.SdpError
+            XCTAssertEqual(sdpError.type, VoIPCallSdpPatcher.SdpErrorType.invalidSdp)
+            XCTAssertEqual(sdpError.description, "a=rtpmap: [...] opus not found")
+        }
+        XCTAssertThrowsError(try VoIPCallSdpPatcher().patch(type: .REMOTE_OFFER, sdp: sdp), "") { error in
             let sdpError = error as! VoIPCallSdpPatcher.SdpError
             XCTAssertEqual(sdpError.type, VoIPCallSdpPatcher.SdpErrorType.invalidSdp)
             XCTAssertEqual(sdpError.description, "a=rtpmap: [...] opus not found")
@@ -158,8 +189,10 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "m=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n" +
             "a=sctp-port:5000\r\n"
         
-        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual))
         XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_ANSWER, sdp: actual))
     }
     
     /// Ensure data channel sections aren't stripped.
@@ -170,8 +203,10 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "m=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n" +
             "a=sctp-port:5000\r\n"
         
-        XCTAssertEqual(sdp, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: sdp))
         XCTAssertEqual(sdp, try VoIPCallSdpPatcher().patch(type: .LOCAL_OFFER, sdp: sdp))
+        XCTAssertEqual(sdp, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER, sdp: sdp))
+        XCTAssertEqual(sdp, try VoIPCallSdpPatcher().patch(type: .REMOTE_OFFER, sdp: sdp))
+        XCTAssertEqual(sdp, try VoIPCallSdpPatcher().patch(type: .REMOTE_ANSWER, sdp: sdp))
     }
     
     /// When RTP header extensions have been disabled, ensure the lines are stripped.
@@ -199,9 +234,14 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "a=rtpmap:111 opus/48000/2\r\n"
         
         XCTAssertEqual(expected, try VoIPCallSdpPatcher(.DISABLE).patch(type: .LOCAL_OFFER, sdp: actual))
-        XCTAssertEqual(expected, try VoIPCallSdpPatcher(.DISABLE).patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher(.DISABLE).patch(type: .LOCAL_ANSWER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher(.DISABLE).patch(type: .REMOTE_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher(.DISABLE).patch(type: .REMOTE_ANSWER, sdp: actual))
+        
         XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_OFFER, sdp: actual))
-        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_ANSWER, sdp: actual))
     }
     
     /// When local offer, in one-byte header mode, RTP header extension IDs should be reassigned in the range from 1-14.
@@ -209,20 +249,20 @@ class VoIPCallSdpPatcherTests: XCTestCase {
         let actual = "v=0\r\n" +
             "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
             "a=rtpmap:111 opus/48000/2\r\n" +
-            "a=extmap:6 urn:ietf:params:rtp-hdrext:encrypt 6-1\r\n" +
-            "a=extmap:6 urn:ietf:params:rtp-hdrext:encrypt 6-2\r\n" +
-            "a=extmap:5 urn:ietf:params:rtp-hdrext:encrypt 5\r\n" +
-            "a=extmap:3 urn:ietf:params:rtp-hdrext:encrypt 3\r\n" +
-            "a=extmap:1 urn:ietf:params:rtp-hdrext:encrypt 1\r\n" +
-            "a=extmap:7 urn:ietf:params:rtp-hdrext:encrypt 7\r\n" +
-            "a=extmap:8 urn:ietf:params:rtp-hdrext:encrypt 8\r\n" +
-            "a=extmap:9 urn:ietf:params:rtp-hdrext:encrypt 9\r\n" +
-            "a=extmap:11 urn:ietf:params:rtp-hdrext:encrypt 11\r\n" +
-            "a=extmap:10 urn:ietf:params:rtp-hdrext:encrypt 10\r\n" +
-            "a=extmap:12 urn:ietf:params:rtp-hdrext:encrypt 12\r\n" +
-            "a=extmap:15 urn:ietf:params:rtp-hdrext:encrypt 15\r\n" +
-            "a=extmap:19 urn:ietf:params:rtp-hdrext:encrypt 19\r\n" +
-            "a=extmap:1337387126438213678123681273618 urn:ietf:params:rtp-hdrext:encrypt 1337387126438213678123681273618\r\n"
+            "a=extmap:6 6-1\r\n" +
+            "a=extmap:6 6-2\r\n" +
+            "a=extmap:5 5\r\n" +
+            "a=extmap:3 3\r\n" +
+            "a=extmap:1 1\r\n" +
+            "a=extmap:7 7\r\n" +
+            "a=extmap:8 8\r\n" +
+            "a=extmap:9 9\r\n" +
+            "a=extmap:11 11\r\n" +
+            "a=extmap:10 10\r\n" +
+            "a=extmap:12 12\r\n" +
+            "a=extmap:15 15\r\n" +
+            "a=extmap:19 19\r\n" +
+            "a=extmap:1337387126438213678123681273618 1337387126438213678123681273618\r\n"
         
         let expected = "v=0\r\n" +
             "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
@@ -253,21 +293,21 @@ class VoIPCallSdpPatcherTests: XCTestCase {
         let sdp = "v=0\r\n" +
             "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
             "a=rtpmap:111 opus/48000/2\r\n" +
-            "a=extmap:6 urn:ietf:params:rtp-hdrext:encrypt 6-1\r\n" +
-            "a=extmap:6 urn:ietf:params:rtp-hdrext:encrypt 6-2\r\n" +
-            "a=extmap:5 urn:ietf:params:rtp-hdrext:encrypt 5\r\n" +
-            "a=extmap:3 urn:ietf:params:rtp-hdrext:encrypt 3\r\n" +
-            "a=extmap:1 urn:ietf:params:rtp-hdrext:encrypt 1\r\n" +
-            "a=extmap:7 urn:ietf:params:rtp-hdrext:encrypt 7\r\n" +
-            "a=extmap:8 urn:ietf:params:rtp-hdrext:encrypt 8\r\n" +
-            "a=extmap:9 urn:ietf:params:rtp-hdrext:encrypt 9\r\n" +
-            "a=extmap:11 urn:ietf:params:rtp-hdrext:encrypt 11\r\n" +
-            "a=extmap:10 urn:ietf:params:rtp-hdrext:encrypt 10\r\n" +
-            "a=extmap:12 urn:ietf:params:rtp-hdrext:encrypt 12\r\n" +
-            "a=extmap:15 urn:ietf:params:rtp-hdrext:encrypt 15\r\n" +
-            "a=extmap:19 urn:ietf:params:rtp-hdrext:encrypt 19\r\n" +
-            "a=extmap:20 urn:ietf:params:rtp-hdrext:encrypt 20\r\n" +
-            "a=extmap:1337387126438213678123681273618 urn:ietf:params:rtp-hdrext:encrypt 1337387126438213678123681273618\r\n"
+            "a=extmap:6 6-1\r\n" +
+            "a=extmap:6 6-2\r\n" +
+            "a=extmap:5 5\r\n" +
+            "a=extmap:3 3\r\n" +
+            "a=extmap:1 1\r\n" +
+            "a=extmap:7 7\r\n" +
+            "a=extmap:8 8\r\n" +
+            "a=extmap:9 9\r\n" +
+            "a=extmap:11 11\r\n" +
+            "a=extmap:10 10\r\n" +
+            "a=extmap:12 12\r\n" +
+            "a=extmap:15 15\r\n" +
+            "a=extmap:19 19\r\n" +
+            "a=extmap:20 20\r\n" +
+            "a=extmap:1337387126438213678123681273618 1337387126438213678123681273618\r\n"
         
         XCTAssertThrowsError(
             try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY).patch(type: .LOCAL_OFFER, sdp: sdp),
@@ -285,6 +325,7 @@ class VoIPCallSdpPatcherTests: XCTestCase {
         let sdp = "v=0\r\n" +
             "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
             "a=rtpmap:111 opus/48000/2\r\n" +
+            "a=mid:0\r\n" +
             "a=extmap:6 urn:ietf:params:rtp-hdrext:encrypt 6-1\r\n" +
             "a=extmap:6 urn:ietf:params:rtp-hdrext:encrypt 6-2\r\n" +
             "a=extmap:5 urn:ietf:params:rtp-hdrext:encrypt 5\r\n" +
@@ -304,7 +345,13 @@ class VoIPCallSdpPatcherTests: XCTestCase {
         XCTAssertEqual(
             sdp,
             try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY)
-                .patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: sdp)
+                .patch(type: .REMOTE_OFFER, sdp: sdp)
+        )
+        
+        XCTAssertEqual(
+            sdp,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY)
+                .patch(type: .REMOTE_ANSWER, sdp: sdp)
         )
     }
     
@@ -341,7 +388,7 @@ class VoIPCallSdpPatcherTests: XCTestCase {
         XCTAssertEqual(ids.count, 254)
         
         for (index, currentID) in ids.enumerated() {
-            actual.append(String(format: "a=extmap:%i urn:ietf:params:rtp-hdrext:encrypt %i\r\n", currentID, index))
+            actual.append(String(format: "a=extmap:%i %i\r\n", currentID, index))
             var id = index + 1
             if id >= 15 {
                 id += 1
@@ -383,7 +430,7 @@ class VoIPCallSdpPatcherTests: XCTestCase {
         XCTAssertEqual(ids.count, 257)
         
         for (index, currentID) in ids.enumerated() {
-            sdp.append(String(format: "a=extmap:%i urn:ietf:params:rtp-hdrext:encrypt %i\r\n", currentID, index))
+            sdp.append(String(format: "a=extmap:%i %i\r\n", currentID, index))
         }
         
         XCTAssertThrowsError(
@@ -395,6 +442,8 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             XCTAssertEqual(sdpError.description, "a=rtpmap: [...] opus not found")
         }
     }
+    
+    func testPatchWithRtpMixedModeHeaderMoreThan254AnswerOrRemote() { }
     
     /// Ensure the `a=extmap-allow-mixed` attribute is stripped when talking to legacy apps.
     func testPatchMixedRtpHeaderStrippedTowardsLegacy() {
@@ -421,14 +470,26 @@ class VoIPCallSdpPatcherTests: XCTestCase {
         XCTAssertEqual(
             expected,
             try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY)
-                .patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual)
+                .patch(type: .LOCAL_OFFER, sdp: actual)
         )
         XCTAssertEqual(
             expected,
-            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY).patch(type: .LOCAL_OFFER, sdp: actual)
+            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY).patch(type: .LOCAL_ANSWER, sdp: actual)
         )
-        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual))
+        XCTAssertEqual(
+            expected,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY)
+                .patch(type: .REMOTE_OFFER, sdp: actual)
+        )
+        XCTAssertEqual(
+            expected,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY).patch(type: .REMOTE_ANSWER, sdp: actual)
+        )
+        
         XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .LOCAL_ANSWER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_OFFER, sdp: actual))
+        XCTAssertEqual(expected, try VoIPCallSdpPatcher().patch(type: .REMOTE_ANSWER, sdp: actual))
     }
     
     ///  Ensure the `a=extmap-allow-mixed` attribute is not stripped when talking to non-legacy apps.
@@ -459,92 +520,79 @@ class VoIPCallSdpPatcherTests: XCTestCase {
         XCTAssertEqual(
             expected,
             try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER)
-                .patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual)
+                .patch(type: .LOCAL_OFFER, sdp: actual)
         )
         XCTAssertEqual(
             expected,
-            try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER).patch(type: .LOCAL_OFFER, sdp: actual)
+            try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER).patch(type: .LOCAL_ANSWER, sdp: actual)
         )
-    }
-    
-    /// All non-encrypted RTP header extensions should be stripped.
-    func testPatchWitRtpHeaderUnencrypted() {
-        let actual = "v=0\r\n" +
-            "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
-            "a=rtpmap:111 opus/48000/2\r\n" +
-            "a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid\r\n" +
-            "a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id\r\n" +
-            "a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id\r\n" +
-            "a=extmap:7 duck-noises\r\n" +
-            "a=extmap:8 urn:ietf:params:rtp-hdrext:encrypt encrypted-duck-noises\r\n"
         
-        var expected = "v=0\r\n" +
-            "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
-            "a=rtpmap:111 opus/48000/2\r\n" +
-            "a=extmap:8 urn:ietf:params:rtp-hdrext:encrypt encrypted-duck-noises\r\n"
         XCTAssertEqual(
             expected,
             try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER)
-                .patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual)
+                .patch(type: .REMOTE_OFFER, sdp: actual)
         )
-        
-        expected = "v=0\r\n" +
-            "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
-            "a=rtpmap:111 opus/48000/2\r\n" +
-            "a=extmap:1 urn:ietf:params:rtp-hdrext:encrypt encrypted-duck-noises\r\n"
         XCTAssertEqual(
             expected,
-            try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER).patch(type: .LOCAL_OFFER, sdp: actual)
-        )
-        
-        expected = "v=0\r\n" +
-            "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
-            "a=rtpmap:111 opus/48000/2\r\n" +
-            "a=extmap:8 urn:ietf:params:rtp-hdrext:encrypt encrypted-duck-noises\r\n"
-        XCTAssertEqual(
-            expected,
-            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY)
-                .patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual)
-        )
-        
-        expected = "v=0\r\n" +
-            "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
-            "a=rtpmap:111 opus/48000/2\r\n" +
-            "a=extmap:1 urn:ietf:params:rtp-hdrext:encrypt encrypted-duck-noises\r\n"
-        XCTAssertEqual(
-            expected,
-            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY).patch(type: .LOCAL_OFFER, sdp: actual)
+            try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER).patch(type: .REMOTE_ANSWER, sdp: actual)
         )
     }
     
-    /// All encrypted RTP header extensions should be left as-is (apart from ID remapping).
-    func testPatchWithRtpHeaderEncrypted() {
+    /// All non-encrypted RTP header extensions should be promoted (local offer) or stripped (anything else).
+    func testPatchWitRtpHeader() {
         let actual = "v=0\r\n" +
             "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
             "a=rtpmap:111 opus/48000/2\r\n" +
+            "a=mid:0\r\n" +
             "a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid\r\n" +
             "a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id\r\n" +
             "a=extmap:6 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id\r\n" +
             "a=extmap:7 duck-noises\r\n" +
             "a=extmap:8 urn:ietf:params:rtp-hdrext:encrypt encrypted-duck-noises\r\n"
         
-        var expected = "v=0\r\n" +
+        var expectedLocalOffer = "v=0\r\n" +
             "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
             "a=rtpmap:111 opus/48000/2\r\n" +
+            "a=mid:0\r\n" +
+            "a=extmap:1 urn:ietf:params:rtp-hdrext:encrypt urn:ietf:params:rtp-hdrext:sdes:mid\r\n" +
+            "a=extmap:2 urn:ietf:params:rtp-hdrext:encrypt urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id\r\n" +
+            "a=extmap:3 urn:ietf:params:rtp-hdrext:encrypt urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id\r\n" +
+            "a=extmap:4 urn:ietf:params:rtp-hdrext:encrypt duck-noises\r\n"
+       
+        var expectedLocalAnswerOrRemote = "v=0\r\n" +
+            "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
+            "a=rtpmap:111 opus/48000/2\r\n" +
+            "a=mid:0\r\n" +
             "a=extmap:8 urn:ietf:params:rtp-hdrext:encrypt encrypted-duck-noises\r\n"
+        
         XCTAssertEqual(
-            expected,
-            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY)
-                .patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual)
+            expectedLocalAnswerOrRemote,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER)
+                .patch(type: .REMOTE_OFFER, sdp: actual)
+        )
+        XCTAssertEqual(
+            expectedLocalAnswerOrRemote,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER).patch(type: .REMOTE_ANSWER, sdp: actual)
+        )
+        XCTAssertEqual(
+            expectedLocalOffer,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER)
+                .patch(type: .LOCAL_OFFER, sdp: actual)
         )
         
-        expected = "v=0\r\n" +
-            "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
-            "a=rtpmap:111 opus/48000/2\r\n" +
-            "a=extmap:1 urn:ietf:params:rtp-hdrext:encrypt encrypted-duck-noises\r\n"
         XCTAssertEqual(
-            expected,
-            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY).patch(type: .LOCAL_OFFER, sdp: actual)
+            expectedLocalAnswerOrRemote,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY)
+                .patch(type: .REMOTE_OFFER, sdp: actual)
+        )
+        XCTAssertEqual(
+            expectedLocalAnswerOrRemote,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY).patch(type: .REMOTE_ANSWER, sdp: actual)
+        )
+        XCTAssertEqual(
+            expectedLocalOffer,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_LEGACY_ONE_BYTE_HEADER_ONLY)
+                .patch(type: .LOCAL_OFFER, sdp: actual)
         )
     }
     
@@ -592,7 +640,7 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "a=ssrc:2080079676 mslabel:3MACALL\r\n" +
             "a=ssrc:2080079676 label:3MACALLa0\r\n"
         
-        var expected = "v=0\r\n" +
+        let expectedLocalAnswerOrRemote = "v=0\r\n" +
             "o=- 8329341859617817285 2 IN IP4 127.0.0.1\r\n" +
             "s=-\r\n" +
             "t=0 0\r\n" +
@@ -616,33 +664,49 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "a=ssrc:2080079676 msid:3MACALL 3MACALLa0\r\n" +
             "a=ssrc:2080079676 mslabel:3MACALL\r\n" +
             "a=ssrc:2080079676 label:3MACALLa0\r\n"
-        XCTAssertEqual(expected, try VoIPCallSdpPatcher(.DISABLE).patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual))
+       
+        XCTAssertEqual(
+            expectedLocalAnswerOrRemote,
+            try VoIPCallSdpPatcher(.DISABLE).patch(type: .LOCAL_ANSWER, sdp: actual)
+        )
         
-        expected = "v=0\r\n" +
-            "o=- 8329341859617817285 2 IN IP4 127.0.0.1\r\n" +
-            "s=-\r\n" +
-            "t=0 0\r\n" +
-            "a=group:BUNDLE audio\r\n" +
-            "a=msid-semantic: WMS 3MACALL\r\n" +
-            "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
-            "c=IN IP4 0.0.0.0\r\n" +
-            "a=rtcp:9 IN IP4 0.0.0.0\r\n" +
-            "a=ice-ufrag:hFGR\r\n" +
-            "a=ice-pwd:HPszOFM6RDZWdhZ3PpPQ7w1H\r\n" +
-            "a=ice-options:renomination\r\n" +
-            "a=fingerprint:sha-256 F7:3A:7C:0C:A0:1E:EA:C5:2E:33:ED:90:61:55:0E:DF:59:8E:EA:EF:A6:E3:01:6E:A5:9E:34:78:5E:E3:8E:44\r\n" +
-            "a=setup:active\r\n" +
-            "a=mid:audio\r\n" +
-            "a=sendrecv\r\n" +
-            "a=rtcp-mux\r\n" +
-            "a=rtpmap:111 opus/48000/2\r\n" +
-            "a=rtcp-fb:111 transport-cc\r\n" +
-            "a=fmtp:111 minptime=10;useinbandfec=1;stereo=0;sprop-stereo=0;cbr=1\r\n" +
-            "a=ssrc:2080079676 cname:Jb5aR24iJnFDp6OS\r\n" +
-            "a=ssrc:2080079676 msid:3MACALL 3MACALLa0\r\n" +
-            "a=ssrc:2080079676 mslabel:3MACALL\r\n" +
-            "a=ssrc:2080079676 label:3MACALLa0\r\n"
-        XCTAssertEqual(expected, try VoIPCallSdpPatcher(.DISABLE).patch(type: .LOCAL_OFFER, sdp: actual))
+        XCTAssertEqual(
+            expectedLocalAnswerOrRemote,
+            try VoIPCallSdpPatcher(.DISABLE).patch(type: .REMOTE_OFFER, sdp: actual)
+        )
+        
+        XCTAssertEqual(
+            expectedLocalAnswerOrRemote,
+            try VoIPCallSdpPatcher(.DISABLE).patch(type: .REMOTE_ANSWER, sdp: actual)
+        )
+        
+        XCTAssertEqual(
+            "v=0\r\n" +
+                "o=- 8329341859617817285 2 IN IP4 127.0.0.1\r\n" +
+                "s=-\r\n" +
+                "t=0 0\r\n" +
+                "a=group:BUNDLE audio\r\n" +
+                "a=msid-semantic: WMS 3MACALL\r\n" +
+                "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n" +
+                "c=IN IP4 0.0.0.0\r\n" +
+                "a=rtcp:9 IN IP4 0.0.0.0\r\n" +
+                "a=ice-ufrag:hFGR\r\n" +
+                "a=ice-pwd:HPszOFM6RDZWdhZ3PpPQ7w1H\r\n" +
+                "a=ice-options:renomination\r\n" +
+                "a=fingerprint:sha-256 F7:3A:7C:0C:A0:1E:EA:C5:2E:33:ED:90:61:55:0E:DF:59:8E:EA:EF:A6:E3:01:6E:A5:9E:34:78:5E:E3:8E:44\r\n" +
+                "a=setup:active\r\n" +
+                "a=mid:audio\r\n" +
+                "a=sendrecv\r\n" +
+                "a=rtcp-mux\r\n" +
+                "a=rtpmap:111 opus/48000/2\r\n" +
+                "a=rtcp-fb:111 transport-cc\r\n" +
+                "a=fmtp:111 minptime=10;useinbandfec=1;stereo=0;sprop-stereo=0;cbr=1\r\n" +
+                "a=ssrc:2080079676 cname:Jb5aR24iJnFDp6OS\r\n" +
+                "a=ssrc:2080079676 msid:3MACALL 3MACALLa0\r\n" +
+                "a=ssrc:2080079676 mslabel:3MACALL\r\n" +
+                "a=ssrc:2080079676 label:3MACALLa0\r\n",
+            try VoIPCallSdpPatcher(.DISABLE).patch(type: .LOCAL_OFFER, sdp: actual)
+        )
     }
     
     /// Video and audio
@@ -887,10 +951,26 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "a=mid:2\r\n" +
             "a=sctp-port:5000\r\n" +
             "a=max-message-size:262144\r\n"
+        
         XCTAssertEqual(
             expected,
             try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER)
-                .patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: actual)
+                .patch(type: .REMOTE_OFFER, sdp: actual)
+        )
+        XCTAssertEqual(
+            expected,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER)
+                .patch(type: .LOCAL_ANSWER, sdp: actual)
+        )
+        XCTAssertEqual(
+            expected,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER)
+                .patch(type: .REMOTE_OFFER, sdp: actual)
+        )
+        XCTAssertEqual(
+            expected,
+            try VoIPCallSdpPatcher(.ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER)
+                .patch(type: .REMOTE_ANSWER, sdp: actual)
         )
         
         expected = "v=0\r\n" +
@@ -909,8 +989,8 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "a=fingerprint:sha-256 AE:86:73:4B:8A:55:BE:F1:2F:A2:8E:AA:98:8D:42:A4:D6:F8:2D:1C:CC:CD:12:C5:8E:14:BD:34:62:DA:35:8E\r\n" +
             "a=setup:actpass\r\n" +
             "a=mid:0\r\n" +
-            "a=extmap:1 urn:ietf:params:rtp-hdrext:encrypt http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n" +
-            "a=extmap:2 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n" +
+            "a=extmap:1 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n" +
+            "a=extmap:2 urn:ietf:params:rtp-hdrext:encrypt http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n" +
             "a=extmap:3 urn:ietf:params:rtp-hdrext:encrypt urn:ietf:params:rtp-hdrext:sdes:mid\r\n" +
             "a=extmap:4 urn:ietf:params:rtp-hdrext:encrypt urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id\r\n" +
             "a=extmap:5 urn:ietf:params:rtp-hdrext:encrypt urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id\r\n" +
@@ -933,17 +1013,17 @@ class VoIPCallSdpPatcherTests: XCTestCase {
             "a=fingerprint:sha-256 AE:86:73:4B:8A:55:BE:F1:2F:A2:8E:AA:98:8D:42:A4:D6:F8:2D:1C:CC:CD:12:C5:8E:14:BD:34:62:DA:35:8E\r\n" +
             "a=setup:actpass\r\n" +
             "a=mid:1\r\n" +
-            "a=extmap:6 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/color-space\r\n" +
+            "a=extmap:6 urn:ietf:params:rtp-hdrext:encrypt urn:ietf:params:rtp-hdrext:toffset\r\n" +
+            "a=extmap:1 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n" +
+            "a=extmap:7 urn:ietf:params:rtp-hdrext:encrypt urn:3gpp:video-orientation\r\n" +
+            "a=extmap:2 urn:ietf:params:rtp-hdrext:encrypt http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n" +
+            "a=extmap:8 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/playout-delay\r\n" +
+            "a=extmap:9 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/video-timing\r\n" +
+            "a=extmap:10 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/color-space\r\n" +
             "a=extmap:3 urn:ietf:params:rtp-hdrext:encrypt urn:ietf:params:rtp-hdrext:sdes:mid\r\n" +
-            "a=extmap:7 urn:ietf:params:rtp-hdrext:encrypt urn:ietf:params:rtp-hdrext:toffset\r\n" +
-            "a=extmap:2 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n" +
-            "a=extmap:8 urn:ietf:params:rtp-hdrext:encrypt urn:3gpp:video-orientation\r\n" +
-            "a=extmap:1 urn:ietf:params:rtp-hdrext:encrypt http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\r\n" +
-            "a=extmap:9 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/playout-delay\r\n" +
-            "a=extmap:10 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/video-content-type\r\n" +
-            "a=extmap:11 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/video-timing\r\n" +
             "a=extmap:4 urn:ietf:params:rtp-hdrext:encrypt urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id\r\n" +
             "a=extmap:5 urn:ietf:params:rtp-hdrext:encrypt urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id\r\n" +
+            "a=extmap:11 urn:ietf:params:rtp-hdrext:encrypt http://www.webrtc.org/experiments/rtp-hdrext/video-content-type\r\n" +
             "a=sendrecv\r\n" +
             "a=msid:3MACALL 3MACALLv0\r\n" +
             "a=rtcp-mux\r\n" +

@@ -47,7 +47,7 @@ extension ContactListDataSource {
 
 // MARK: - ContactListDataSource
 
-class ContactListDataSource<
+final class ContactListDataSource<
     CellType: ContactListCellProviderProtocol.ContactListCellType,
     BusinessEntity: NSObject,
     Provider: ContactListDataSourceProviderProtocol<NSManagedObjectID, BusinessEntity>,
@@ -162,8 +162,8 @@ class ContactListDataSource<
         sectionIndexEnabled: Bool = true,
         contentUnavailableConfiguration: ThreemaTableContentUnavailableView.Configuration
     ) {
-        self.tableView = tableView
         self.sourceType = sourceType
+        self.tableView = tableView
         self.sectionIndexEnabled = sectionIndexEnabled
         self.contentUnavailableConfiguration = contentUnavailableConfiguration
         
@@ -205,7 +205,7 @@ class ContactListDataSource<
             didUpdate(snapshot: snapshot)
         }
     }
-    
+
     // MARK: - Private functions
     
     private func didUpdate(snapshot: Provider.ContactListSnapshot) {

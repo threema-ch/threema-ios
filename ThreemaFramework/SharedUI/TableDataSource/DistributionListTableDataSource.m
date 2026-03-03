@@ -20,8 +20,6 @@
 
 #import "DistributionListTableDataSource.h"
 #import <CoreData/CoreData.h>
-#import "EntityCreator.h"
-#import "EntityFetcher.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #ifdef DEBUG
@@ -91,7 +89,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)setupFetchedResultsControllerWithDelegate:(id<NSFetchedResultsControllerDelegate>)delegate {
     
-    NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForDistributionLists];
+    NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForDistributionListEntities];
     fetchedResultsController.delegate = delegate;
     _fetchedResultsController = fetchedResultsController;
     
@@ -103,7 +101,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 
-- (DistributionList *)distributionListAtIndexPath:(NSIndexPath *)indexPath {
+- (DistributionListEntity *)distributionListAtIndexPath:(NSIndexPath *)indexPath {
     DistributionListEntity *entity;
     if (_filteredDistributionLists) {
         entity = [_filteredDistributionLists objectAtIndex:indexPath.row];
@@ -132,7 +130,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 -(void)filterByWords:(NSArray *)words {
     if (words) {
-        _filteredDistributionLists = [_entityManager.entityFetcher distributionListsFilteredByWords:words];
+        _filteredDistributionLists = [_entityManager.entityFetcher filteredDistributionListEntitiesBy:words];
     } else {
         _filteredDistributionLists= nil;
     }

@@ -32,6 +32,7 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
     // MARK: - Local
 
     /// Updates local feature mask and sends it to server
+    @available(swift, obsoleted: 1.0, renamed: "updateLocal()", message: "Only use from Objective-C")
     @objc public static func updateLocalObjc() {
         FeatureMask.updateLocal()
     }
@@ -39,11 +40,7 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
     /// Updates local feature mask and sends it to server
     public static func updateLocal(completion: (() -> Void)? = nil, onError: ((Error) -> Void)? = nil) {
 
-        guard let identityStore = MyIdentityStore.shared() else {
-            DDLogError("Update local feature mask failed, identityStore was nil.")
-            completion?()
-            return
-        }
+        let identityStore = MyIdentityStore.shared()
 
         let defaults = AppGroup.userDefaults()
         
@@ -132,10 +129,10 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
     /// - Parameter identities: Identities to update Feature Mask for
     @MainActor
     public static func updateFeatureMask(for identities: [ThreemaIdentity]) async throws {
-        let featureMasks = try await FeatureMask.getFeatureMask(for: identities.map(\.string))
+        let featureMasks = try await FeatureMask.getFeatureMask(for: identities.map(\.rawValue))
 
         let mediatorSyncableContacts = MediatorSyncableContacts()
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
 
         await entityManager.performSave {
             for featureMask in featureMasks {
@@ -143,7 +140,7 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
                     continue
                 }
 
-                guard let contactEntity = entityManager.entityFetcher.contact(for: featureMask.key) else {
+                guard let contactEntity = entityManager.entityFetcher.contactEntity(for: featureMask.key) else {
                     continue
                 }
 
@@ -182,7 +179,7 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
                 force: false
             )
 
-            completion(unsupported.map(\.string))
+            completion(unsupported.map(\.rawValue))
         }
     }
     
@@ -200,12 +197,12 @@ public class FeatureMask: NSObject, FeatureMaskProtocol {
     ) async -> [ThreemaIdentity] {
 
         func filterUnsupported(identities: any Sequence<ThreemaIdentity>, for mask: Int) async -> [ThreemaIdentity] {
-            let entityManager = EntityManager()
+            let entityManager = BusinessInjector.ui.entityManager
             return await entityManager.perform {
                 // Load contacts to check feature mask
                 var contacts: Set<ContactEntity> = []
                 for identity in identities {
-                    guard let contact = entityManager.entityFetcher.contact(for: identity.string) else {
+                    guard let contact = entityManager.entityFetcher.contactEntity(for: identity.rawValue) else {
                         continue
                     }
                     contacts.insert(contact)

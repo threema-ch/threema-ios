@@ -19,7 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
+import Keychain
 
 public class DeleteRevokeIdentityManager: NSObject {
     
@@ -27,6 +29,7 @@ public class DeleteRevokeIdentityManager: NSObject {
         case revocationFailed
     }
 
+    @available(swift, obsoleted: 1.0, renamed: "deleteLocalData()", message: "Only use from Objective-C")
     @objc static func deleteLocalDataObjC(completion: @escaping () -> Void) {
         Task { @MainActor in
             await deleteLocalData()
@@ -35,6 +38,16 @@ public class DeleteRevokeIdentityManager: NSObject {
     }
     
     static func deleteLocalData() async {
+        // Stop RS monitoring to prevent any monitoring error crashing during deletion
+        do {
+            try KeychainManager.deleteRemoteSecret()
+            await AppLaunchManager.remoteSecretManager.stopMonitoring()
+        }
+        catch {
+            DDLogError("Stopping RS monitoring failed: \(error)")
+        }
+        
+        // Multi device
         do {
             let multiDeviceManager = MultiDeviceManager()
             try await multiDeviceManager.disableMultiDevice(runForwardSecurityRefreshSteps: false)
@@ -43,6 +56,7 @@ public class DeleteRevokeIdentityManager: NSObject {
             DDLogError("Disabling multi-device: \(error)")
         }
 
+        // My identity
         MyIdentityStore.shared().destroy()
         UserReminder.markIdentityAsDeleted()
 
@@ -52,7 +66,8 @@ public class DeleteRevokeIdentityManager: NSObject {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: BusinessInjector.ui.groupManager
+            groupManager: BusinessInjector.ui.groupManager,
+            myIdentityStore: BusinessInjector.ui.myIdentityStore
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -62,9 +77,14 @@ public class DeleteRevokeIdentityManager: NSObject {
         safeManager.setBackupReminder()
 
         // DB & Files
-        FileUtility.shared.removeItemsInAllDirectories()
+        FileUtility.shared.removeItemsInAllDirectories(appGroupID: AppGroup.groupID())
+        UserDefaults.resetStandardUserDefaults()
         AppGroup.resetUserDefaults()
-        DatabaseManager().eraseDB()
+        try? PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).databaseManager.eraseDB()
 
         await MainActor.run {
             UIApplication.shared.unregisterForRemoteNotifications()
@@ -77,8 +97,16 @@ public class DeleteRevokeIdentityManager: NSObject {
             // Delete the license when we delete the ID, to give the user a chance to use a new license.
             // The license may have been supplied by MDM, so we load it again.
             LicenseStore.shared().deleteLicense()
-            let mdmSetup = MDMSetup(setup: false)
+            let mdmSetup = MDMSetup()
             mdmSetup?.deleteThreemaMdm()
+        }
+
+        // Keychain
+        do {
+            try KeychainManager.deleteAllItems()
+        }
+        catch {
+            DDLogError("Not all Keychain items could be deleted: \(error)")
         }
     }
 
@@ -88,7 +116,8 @@ public class DeleteRevokeIdentityManager: NSObject {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: BusinessInjector.ui.groupManager
+            groupManager: BusinessInjector.ui.groupManager,
+            myIdentityStore: BusinessInjector.ui.myIdentityStore
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -98,7 +127,12 @@ public class DeleteRevokeIdentityManager: NSObject {
         safeManager.deactivate()
 
         // Delete ID Export
-        IdentityBackupStore.deleteIdentityBackup()
+        do {
+            try IdentityBackupStore.deleteIdentityBackup()
+        }
+        catch {
+            NotificationPresenterWrapper.shared.present(type: .deleteIdentityBackupFailed)
+        }
     }
 
     static func revokeIdentity() async throws {

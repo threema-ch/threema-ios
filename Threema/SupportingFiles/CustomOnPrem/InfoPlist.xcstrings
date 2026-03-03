@@ -931,20 +931,20 @@
       "localizations" : {
         "bg" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Микрофонът се използва за обаждания и за запис на гласови съобщения."
           }
         },
         "cs" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Mikrofon slouží k nahrávání zvukových zpráv."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Mikrofon wird für Anrufe und die Aufnahme von Sprachnachrichten verwendet."
+            "state" : "needs_review",
+            "value" : "Für Funktionen wie Sprachanrufen, Sprachnachrichten und Videoanrufen benötigt die App Zugriff auf Ihr Mikrofon. Bitte erlauben Sie den Zugriff, um diese Funktionen nutzen zu können."
           }
         },
         "en" : {
@@ -955,49 +955,49 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "El micrófono se utiliza para grabar mensajes de audio."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Le microphone est utilisé pour enregistrer des messages audio."
           }
         },
         "gsw-CH" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "S’Mikrofon wird bruucht für Aarüef und zum Sprachnachrichte ufneh."
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Il microfono viene utilizzato per registrare messaggi audio."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "マイクは音声メッセージを録音するために使用されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "마이크는 오디오 메시지를 녹음하는 데 사용됩니다."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "De microfoon wordt gebruikt om audioberichten op te nemen."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Mikrofon służy do nagrywania wiadomości audio."
           }
         },
@@ -1009,7 +1009,7 @@
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "O microfone é utilizado para gravar mensagens em áudio."
           }
         },
@@ -1021,37 +1021,37 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Микрофон используется для записи аудиосообщений."
           }
         },
         "sk" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Mikforón sa používa na nahrávanie zvukových správ."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Mikrofon sesli mesajları kaydetmek için kullanılır."
           }
         },
         "uk" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Мікрофон потрібен для запису аудіоповідомлень."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "麦克风权限用于录制音频消息。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "麥克風權限用於錄製音訊訊息。"
           }
         }

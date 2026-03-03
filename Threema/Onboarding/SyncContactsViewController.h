@@ -21,6 +21,7 @@
 #import <UIKit/UIKit.h>
 #import "IDCreationPageViewController.h"
 #import "MoreView.h"
+#import "Threema-Swift.h"
 
 @interface SyncContactsViewController : IDCreationPageViewController
 
@@ -33,5 +34,7 @@
 @property (weak, nonatomic) IBOutlet UISwitch *syncContactsSwitch;
 
 - (IBAction)syncContactSwitchChanged:(id)sender;
+
+@property (strong, nonatomic) SetupConfiguration *setupConfiguration;
 
 @end

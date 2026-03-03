@@ -14,6 +14,7 @@
 #import "MWGridCell.h"
 #import "MWPhotoBrowserPrivate.h"
 #import "MWCommon.h"
+#import <ThreemaFramework/ThreemaFramework-Swift.h>
 
 @interface MWGridViewController () {
     

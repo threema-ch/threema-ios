@@ -37,7 +37,7 @@ class MentionableIdentity: Hashable {
         case .all:
             return #localize("all").lowercased()
         case let ContactKind.contact(identity):
-            guard let contact = entityFetcher.contact(for: identity) else {
+            guard let contact = entityFetcher.contactEntity(for: identity) else {
                 DDLogError("Created MentionableIdentity for a contact that doesn't exist")
                 return ""
             }
@@ -50,7 +50,7 @@ class MentionableIdentity: Hashable {
         case .all:
             return #localize("all")
         case let ContactKind.contact(identity):
-            guard let contact = entityFetcher.contact(for: identity) else {
+            guard let contact = entityFetcher.contactEntity(for: identity) else {
                 DDLogError("Created MentionableIdentity for a contact that doesn't exist")
                 return ""
             }
@@ -78,7 +78,10 @@ class MentionableIdentity: Hashable {
         }
     }()
     
-    init(identity: String? = nil, entityFetcher: EntityFetcher = EntityManager().entityFetcher) {
+    init(
+        identity: String? = nil,
+        entityFetcher: EntityFetcher = BusinessInjector.ui.entityManager.entityFetcher
+    ) {
         if let identity {
             self.contactKind = .contact(identity)
         }

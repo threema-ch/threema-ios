@@ -20,7 +20,7 @@
 
 #import "CaptionView.h"
 #import "MediaBrowserFile.h"
-#import "RectUtil.h"
+#import "Threema-Swift.h"
 
 static const CGFloat labelPadding = 10.0;
 static const CGFloat defaultCustomViewHeight = 24.0;
@@ -45,15 +45,15 @@ static const CGFloat defaultCustomViewHeight = 24.0;
             _customView = [self customViewInRect:customViewRect];
             [self addSubview:_customView];
             
-            CGRect timeLabelRect = [RectUtil setYPositionOf:customViewRect y:CGRectGetMaxY(customViewRect) + labelPadding];
+            CGRect timeLabelRect = CGRectMake(customViewRect.origin.x, CGRectGetMaxY(customViewRect) + labelPadding, customViewRect.size.width, customViewRect.size.height);
             _timeLabel = [self createLabelInRect:timeLabelRect];
             [_timeLabel setText: [DateFormatter shortStyleDateTime:_message.remoteSentDate]];
             [self addSubview:_timeLabel];
             
             // adapt to height of resulting custom view
             if (_customView.frame.size.height != defaultCustomViewHeight) {
-                _timeLabel.frame = [RectUtil setYPositionOf:_timeLabel.frame y:CGRectGetMaxY(_customView.frame)];
-                self.frame = [RectUtil setHeightOf:self.frame height:CGRectGetMaxY(_timeLabel.frame)];
+                _timeLabel.frame = CGRectMake(_timeLabel.frame.origin.x, CGRectGetMaxY(_customView.frame), _timeLabel.frame.size.width, _timeLabel.frame.size.height);
+                self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, self.frame.size.width, CGRectGetMaxY(_timeLabel.frame));
             }
         }
     }

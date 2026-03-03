@@ -125,7 +125,8 @@ class MediatorMessageProcessor: NSObject {
 
                     var deviceInfo = D2d_DeviceInfo()
                     deviceInfo.label = UIDevice().name
-                    deviceInfo.appVersion = "\(AppInfo.appVersion.version ?? "-") (\(AppInfo.appVersion.build ?? "-"))"
+                    deviceInfo.appVersion =
+                        "\(AppVersionInfo.appVersion.version ?? "-") (\(AppVersionInfo.appVersion.build ?? "-"))"
                     deviceInfo.platform = .ios
                     deviceInfo.platformDetails = UIDevice.modelName
 

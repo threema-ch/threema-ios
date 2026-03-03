@@ -27,7 +27,7 @@ import ThreemaMacros
 /// Show unobtrusive notifications in pill-shape
 ///
 /// Use `shared` to do so.
-@objc public class NotificationPresenterWrapper: NSObject {
+public final class NotificationPresenterWrapper: NSObject {
     
     /// Shared wrapper to be used
     @objc public static var shared = NotificationPresenterWrapper()
@@ -124,17 +124,8 @@ import ThreemaMacros
     @objc public func dismissAllPresentedNotifications() {
         NotificationPresenterWrapper.presenter.dismiss()
     }
-    
-    @available(*, deprecated, message: "Do not use from Obj-C anymore")
-    @objc public func presentIDVerified() {
-        let type = NotificationPresenterType(
-            notificationText: #localize("id_verified_title"),
-            notificationStyle: .success
-        )
-        present(type: type)
-    }
-    
-    @available(*, deprecated, message: "Do not use from Obj-C anymore")
+
+    @available(*, deprecated, message: "Only use from Objective-C")
     @objc public func presentUpdateWorkDataError() {
         present(type: .updateWorkDataFailed)
     }

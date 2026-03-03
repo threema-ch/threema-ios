@@ -21,6 +21,7 @@
 import SwiftUI
 import ThreemaFramework
 
+@available(*, deprecated, message: "Do not use anymore.")
 struct ListItem: View {
     var title: String
     var subTitle: String? = nil

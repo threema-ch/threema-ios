@@ -21,6 +21,7 @@
 #import <UIKit/UIKit.h>
 #import "IDCreationPageViewController.h"
 #import "MoreView.h"
+#import "Threema-Swift.h"
 
 @interface LinkIDViewController : IDCreationPageViewController
 
@@ -50,5 +51,7 @@
 
 @property (weak, nonatomic) IBOutlet UIButton *selectedCountryButton;
 - (IBAction)selectedCountryAction:(id)sender;
+
+@property (strong, nonatomic) SetupConfiguration *setupConfiguration;
 
 @end

@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
 
 @testable import ThreemaFramework
@@ -31,7 +32,6 @@ class GroupTests: XCTestCase {
     private var ddLoggerMock: DDLoggerMock!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
@@ -77,8 +77,7 @@ class GroupTests: XCTestCase {
             )
             conversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = expectedGroupID
+                    conversation.groupID = expectedGroupID
                     conversation.groupMyIdentity = myIdentityStoreMock.identity
                     conversation.members?.formUnion([member01, member02])
                 }
@@ -87,6 +86,7 @@ class GroupTests: XCTestCase {
         let group = Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -107,14 +107,16 @@ class GroupTests: XCTestCase {
 
         let dateNow = Date()
 
-        let entityManager = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         entityManager.performAndWaitSave {
-            let imageData = entityManager.entityCreator.imageDataEntity()
-            imageData?.data = Data([0])
+            let imageData = entityManager.entityCreator.imageDataEntity(data: Data([0]), size: .zero)
 
-            let message = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)
-            message?.text = "123"
-            message?.date = dateNow
+            let message = entityManager.entityCreator.textMessageEntity(
+                text: "123",
+                in: conversation,
+                setLastUpdate: true
+            )
+            message.date = dateNow
 
             groupEntity.lastPeriodicSync = dateNow
             conversation.groupName = "Test group 123"
@@ -152,8 +154,7 @@ class GroupTests: XCTestCase {
             )
             conversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = expectedGroupID
+                    conversation.groupID = expectedGroupID
                     conversation.groupMyIdentity = myIdentityStoreMock.identity
                 }
         }
@@ -161,6 +162,7 @@ class GroupTests: XCTestCase {
         let group = Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -168,29 +170,27 @@ class GroupTests: XCTestCase {
 
         // Check group properties before changing
         XCTAssertEqual(group.groupIdentity.id, expectedGroupID)
-        XCTAssertEqual(group.groupIdentity.creator.string, myIdentityStoreMock.identity)
+        XCTAssertEqual(group.groupIdentity.creator.rawValue, myIdentityStoreMock.identity)
 
         // Change group property `GroupEntity.groupId` in DB
-        let entityManager = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         entityManager.performAndWaitSave {
-            // swiftformat:disable:next acronyms
-            groupEntity.groupId = MockData.generateGroupID()
+            groupEntity.groupID = MockData.generateGroupID()
         }
 
         // Check changed group properties
         XCTAssertEqual(group.groupIdentity.id, expectedGroupID)
-        XCTAssertEqual(group.groupIdentity.creator.string, myIdentityStoreMock.identity)
+        XCTAssertEqual(group.groupIdentity.creator.rawValue, myIdentityStoreMock.identity)
         XCTAssertTrue(ddLoggerMock.exists(message: "Group identity mismatch"))
 
         // Change group property `Conversation.groupID` in DB
         entityManager.performAndWaitSave {
-            // swiftformat:disable:next acronyms
-            conversation.groupId = MockData.generateGroupID()
+            conversation.groupID = MockData.generateGroupID()
         }
 
         // Check changed group properties
         XCTAssertEqual(group.groupIdentity.id, expectedGroupID)
-        XCTAssertEqual(group.groupIdentity.creator.string, myIdentityStoreMock.identity)
+        XCTAssertEqual(group.groupIdentity.creator.rawValue, myIdentityStoreMock.identity)
         XCTAssertTrue(ddLoggerMock.exists(message: "Group ID mismatch"))
     }
 
@@ -208,28 +208,28 @@ class GroupTests: XCTestCase {
                 publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER01"
             )
-            member01.setLastName(to: "Muster")
-            member01.setFirstName(to: "Hans")
-            
+            member01.setLastName(to: "Muster", sortOrderFirstName: true)
+            member01.setFirstName(to: "Hans", sortOrderFirstName: true)
+
             let member02 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER02"
             )
-            member02.setLastName(to: "Xmen")
-            member02.setFirstName(to: "Amy")
+            member02.setLastName(to: "Xmen", sortOrderFirstName: true)
+            member02.setFirstName(to: "Amy", sortOrderFirstName: true)
 
             let member03 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER03"
             )
-            member03.setLastName(to: "Weber")
+            member03.setLastName(to: "Weber", sortOrderFirstName: true)
 
             let member04 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER04"
             )
-            member04.setFirstName(to: "Fritzli")
-            
+            member04.setFirstName(to: "Fritzli", sortOrderFirstName: true)
+
             let member05 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER05"
@@ -243,13 +243,13 @@ class GroupTests: XCTestCase {
                 publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER07"
             )
-            member07.setLastName(to: "Weber 2")
+            member07.setLastName(to: "Weber 2", sortOrderFirstName: true)
 
             let member08 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER08"
             )
-            member08.setFirstName(to: "Fritzli 2")
+            member08.setFirstName(to: "Fritzli 2", sortOrderFirstName: true)
             
             let groupID = MockData.generateGroupID()
 
@@ -270,8 +270,7 @@ class GroupTests: XCTestCase {
                         member07,
                         member08,
                     ])
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = groupID
+                    conversation.groupID = groupID
                 }
             )
         }
@@ -305,6 +304,7 @@ class GroupTests: XCTestCase {
         let groupSortedFirstName = Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -316,7 +316,7 @@ class GroupTests: XCTestCase {
         for (expectedContactID, actualContact) in zip(expectedOrderFirstName, sortedContactsFirstName) {
             switch actualContact {
             case let .contact(contact):
-                XCTAssertEqual(expectedContactID, contact.identity.string)
+                XCTAssertEqual(expectedContactID, contact.identity.rawValue)
             default:
                 XCTFail("Unexpected contact in sorted contacts")
             }
@@ -328,6 +328,7 @@ class GroupTests: XCTestCase {
         let groupSortedLastName = Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -339,7 +340,7 @@ class GroupTests: XCTestCase {
         for (expectedContactID, actualContact) in zip(expectedOrderLastName, sortedContactsLastName) {
             switch actualContact {
             case let .contact(contact):
-                XCTAssertEqual(expectedContactID, contact.identity.string)
+                XCTAssertEqual(expectedContactID, contact.identity.rawValue)
             default:
                 XCTFail("Unexpected contact in sorted contacts")
             }
@@ -360,30 +361,30 @@ class GroupTests: XCTestCase {
                 publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER01"
             )
-            member01.setFirstName(to: "Em")
-            member01.setLastName(to: "il")
-            
+            member01.setFirstName(to: "Em", sortOrderFirstName: true)
+            member01.setLastName(to: "il", sortOrderFirstName: true)
+
             let member02 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER02"
             )
-            member02.setFirstName(to: "Emi")
-            member02.setLastName(to: "ly")
+            member02.setFirstName(to: "Emi", sortOrderFirstName: true)
+            member02.setLastName(to: "ly", sortOrderFirstName: true)
 
             let member03 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER03"
             )
-            member03.setFirstName(to: "Emi")
-            member03.setLastName(to: "l")
+            member03.setFirstName(to: "Emi", sortOrderFirstName: true)
+            member03.setLastName(to: "l", sortOrderFirstName: true)
             member03.publicNickname = "Should not matter"
 
             let member04 = dbPreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
                 identity: "MEMBER04"
             )
-            member04.setFirstName(to: "Em")
-            member04.setLastName(to: "ily")
+            member04.setFirstName(to: "Em", sortOrderFirstName: true)
+            member04.setLastName(to: "ily", sortOrderFirstName: true)
 
             let groupID = MockData.generateGroupID()
 
@@ -395,8 +396,7 @@ class GroupTests: XCTestCase {
                 complete: { conversation in
                     conversation.contact = member03
                     conversation.members?.formUnion([member01, member02, member03, member04])
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = groupID
+                    conversation.groupID = groupID
                     conversation.groupMyIdentity = myIdentityStoreMock.identity
                 }
             )
@@ -414,6 +414,7 @@ class GroupTests: XCTestCase {
         let group = Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -427,7 +428,7 @@ class GroupTests: XCTestCase {
             case .me:
                 XCTAssertEqual(expectedContactID, myIdentityStoreMock.identity)
             case let .contact(contact):
-                XCTAssertEqual(expectedContactID, contact.identity.string)
+                XCTAssertEqual(expectedContactID, contact.identity.rawValue)
             default:
                 XCTFail("Unexpected contact in sorted contacts: \(actualContact)")
             }
@@ -450,25 +451,27 @@ class GroupTests: XCTestCase {
             publicKey: MockData.generatePublicKey(),
             identity: "MEMBER01"
         )
-        member01.setLastName(to: "Muster")
-        member01.setFirstName(to: "Hans")
+        member01.setLastName(to: "Muster", sortOrderFirstName: true)
+        member01.setFirstName(to: "Hans", sortOrderFirstName: true)
         members.append(member01)
 
         let member02 = dbPreparer.createContact(
             publicKey: MockData.generatePublicKey(),
             identity: "MEMBER02"
         )
-        member02.setLastName(to: "Xmen")
-        member02.setFirstName(to: "Amy")
+        member02.setLastName(to: "Xmen", sortOrderFirstName: true)
+        member02.setFirstName(to: "Amy", sortOrderFirstName: true)
         members.append(member02)
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettings,
-            EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettings,
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                groupPhotoSenderMock
+            }
         )
 
         let groupIdentity = GroupIdentity(
@@ -505,7 +508,7 @@ class GroupTests: XCTestCase {
             case .me:
                 XCTAssertEqual(expectedContactID, myIdentityStoreMock.identity)
             case let .contact(contact):
-                XCTAssertEqual(expectedContactID, contact.identity.string)
+                XCTAssertEqual(expectedContactID, contact.identity.rawValue)
             default:
                 XCTFail("Unexpected contact in sorted contacts")
             }
@@ -529,25 +532,27 @@ class GroupTests: XCTestCase {
             publicKey: MockData.generatePublicKey(),
             identity: "MEMBER01"
         )
-        member01.setLastName(to: "Muster")
-        member01.setFirstName(to: "Hans")
+        member01.setLastName(to: "Muster", sortOrderFirstName: true)
+        member01.setFirstName(to: "Hans", sortOrderFirstName: true)
         members.append(member01)
 
         let member02 = dbPreparer.createContact(
             publicKey: MockData.generatePublicKey(),
             identity: "MEMBER02"
         )
-        member02.setLastName(to: "Xmen")
-        member02.setFirstName(to: "Amy")
+        member02.setLastName(to: "Xmen", sortOrderFirstName: true)
+        member02.setFirstName(to: "Amy", sortOrderFirstName: true)
         members.append(member02)
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettings,
-            EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettings,
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                groupPhotoSenderMock
+            }
         )
 
         let groupIdentity = GroupIdentity(
@@ -585,7 +590,7 @@ class GroupTests: XCTestCase {
             case .me:
                 XCTAssertEqual(expectedContactID, myIdentityStoreMock.identity)
             case let .contact(contact):
-                XCTAssertEqual(expectedContactID, contact.identity.string)
+                XCTAssertEqual(expectedContactID, contact.identity.rawValue)
             default:
                 XCTFail("Unexpected contact in sorted contacts")
             }
@@ -637,6 +642,7 @@ class GroupTests: XCTestCase {
         let g1 = Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity1,
             conversation: conversation1,
             lastSyncRequest: nil
@@ -645,6 +651,7 @@ class GroupTests: XCTestCase {
         let g2 = Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity2,
             conversation: conversation2,
             lastSyncRequest: nil
@@ -653,6 +660,7 @@ class GroupTests: XCTestCase {
         let g3 = Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity3,
             conversation: conversation3,
             lastSyncRequest: nil
@@ -661,6 +669,7 @@ class GroupTests: XCTestCase {
         let g4 = Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity3,
             conversation: conversation3,
             lastSyncRequest: nil
@@ -695,6 +704,7 @@ class GroupTests: XCTestCase {
         let group = Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -702,7 +712,7 @@ class GroupTests: XCTestCase {
 
         XCTAssertFalse(group.willBeDeleted)
 
-        let em = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
+        let em = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         em.performAndWait {
             em.entityDestroyer.delete(groupEntity: groupEntity)
         }
@@ -740,6 +750,7 @@ class GroupTests: XCTestCase {
         let group = Group(
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -747,7 +758,7 @@ class GroupTests: XCTestCase {
 
         XCTAssertFalse(group.willBeDeleted)
 
-        let em = EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock)
+        let em = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         em.performAndWait {
             em.entityDestroyer.delete(conversation: conversation)
         }
@@ -775,8 +786,7 @@ class GroupTests: XCTestCase {
             groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: nil)
             conversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = groupID
+                    conversation.groupID = groupID
                     conversation.groupMyIdentity = myIdentity
                     conversation.members?.formUnion(members)
                 }

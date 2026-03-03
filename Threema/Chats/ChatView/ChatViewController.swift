@@ -20,9 +20,11 @@
 
 import CocoaLumberjackSwift
 import Combine
+import FileUtility
 import GroupCalls
 import OSLog
 import PDFKit
+import SwiftUI
 import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
@@ -203,11 +205,6 @@ final class ChatViewController: ThemedViewController {
     
     // MARK: Header
     
-    public lazy var chatViewActionsHelper = ChatViewControllerActionsHelper(
-        conversation: self.conversation,
-        chatViewController: self
-    )
-    
     private lazy var chatProfileView = ChatProfileView(
         for: conversation,
         entityManager: entityManager
@@ -372,7 +369,6 @@ final class ChatViewController: ThemedViewController {
     
     lazy var chatBarCoordinator = ChatBarCoordinator(
         conversation: conversation,
-        chatViewControllerActionsHelper: chatViewActionsHelper,
         chatViewController: self,
         chatBarCoordinatorDelegate: self,
         chatViewTableViewVoiceMessageCellDelegate: chatViewTableViewVoiceMessageCellDelegate,
@@ -663,6 +659,20 @@ final class ChatViewController: ThemedViewController {
         DDLogVerbose("\(#function)")
         
         chatBarCoordinator.updateSettings()
+        
+        // Send notification (e.g. for hiding toasts that apply to this conversation)
+        if let groupID = conversation.groupID {
+            NotificationCenter.default.post(
+                name: NSNotification.Name(rawValue: kNotificationOpenedConversation),
+                object: groupID.hexEncodedString()
+            )
+        }
+        else if let contact = conversation.contact {
+            NotificationCenter.default.post(
+                name: NSNotification.Name(rawValue: kNotificationOpenedConversation),
+                object: contact.identity
+            )
+        }
         
         // This and the opposite in `viewWillDisappear` is needed to make a search controller work that is added in a
         // child view controller using the same navigation bar. See ChatSearchController for details.
@@ -1062,7 +1072,7 @@ final class ChatViewController: ThemedViewController {
         let wallpaperStore = businessInjector.settingsStore.wallpaperStore
         // If we use the default item, we have to create the pattern and apply it as color
         if !wallpaperStore.hasCustomWallpaper(for: conversation.objectID),
-           wallpaperStore.defaultIsThreemaWallpaper() {
+           wallpaperStore.wallpaperType() == .threema {
             backgroundView.image = nil
             backgroundView
                 .backgroundColor = UIColor(patternImage: businessInjector.settingsStore.wallpaperStore.defaultWallPaper)
@@ -1075,6 +1085,9 @@ final class ChatViewController: ThemedViewController {
                     toSize: UIScreen.main.bounds.size,
                     scale: UIScreen.main.scale
                 )
+            }
+            else {
+                backgroundView.image = nil
             }
         }
     }
@@ -1174,15 +1187,15 @@ extension ChatViewController {
     ///
     /// If count goes to 0 it disappears or if goes above 0 it (re)appears
     ///
-    /// As it is complicated to observe ballot changes we just call this function on every instance creation of the view
-    /// or new (ballot) message received.
+    /// As it is complicated to observe ballot changes we just call this function on every instance creation of the
+    /// view, when a new (ballot) message received or when the ballot list gets dismissed.
     private func updateOpenBallotsButton() {
         
         guard conversation.isGroup, userInterfaceMode == .default else {
             return
         }
         
-        let numberOfOpenBallots = entityManager.entityFetcher.countOpenBallots(for: conversation)
+        let numberOfOpenBallots = entityManager.entityFetcher.openBallotEntitiesCount(for: conversation)
         
         // Only show ballots icon if we have open polls
         if numberOfOpenBallots > 0 {
@@ -1191,6 +1204,9 @@ extension ChatViewController {
             if navigationItem.rightBarButtonItems == nil {
                 navigationItem.rightBarButtonItems = ballotBarButton.rightBarButtonItems
             }
+        }
+        else if !businessInjector.userSettings.enableThreemaGroupCalls {
+            navigationItem.rightBarButtonItems = nil
         }
     }
     
@@ -1261,21 +1277,11 @@ extension ChatViewController {
     }
     
     @objc private func showBallots() {
-        guard let ballotViewController = BallotListTableViewController
-            .ballotListViewController(forConversation: conversation)
-        else {
-            UIAlertTemplate.showAlert(
-                owner: self,
-                title: #localize("ballot_load_error"),
-                message: nil
-            )
-            return
+        let view = ListPollView(conversation: conversation) { [weak self] in
+            self?.updateOpenBallotsButton()
         }
-        
-        // Encapsulate the `BallotListTableViewController` inside a navigation controller for modal
-        // presentation
-        let navigationController = ThemedNavigationController(rootViewController: ballotViewController)
-        present(navigationController, animated: true)
+        let pollListController = UIHostingController(rootView: view)
+        present(pollListController, animated: true)
     }
     
     @objc private func showDeleteMessagesAlert() {
@@ -1716,7 +1722,7 @@ extension ChatViewController {
     ) {
         guard let message = entityManager.entityFetcher.message(
             with: messageID,
-            conversation: conversation
+            in: conversation
         ) else {
             DDLogWarn(
                 "Unable to load message (\(messageID.hexString)) to jump to. It doesn't exist or is not in this conversation."
@@ -1771,7 +1777,7 @@ extension ChatViewController {
                 if let newestUnreadMessage = self.unreadMessagesSnapshot.unreadMessagesState?
                     .oldestConsecutiveUnreadMessage,
                     let message = self.entityManager.entityFetcher
-                    .getManagedObject(by: newestUnreadMessage) as? BaseMessageEntity {
+                    .managedObject(with: newestUnreadMessage) as? BaseMessageEntity {
                     // We either succeed right away or do this on the next snapshot apply
                     let messageID = message.id
                     DDLogVerbose("willEnterForegroundCompletion setup")
@@ -1897,8 +1903,7 @@ extension ChatViewController: UITableViewDelegate {
             DDLogVerbose("ChatViewController duration init to first cell shown \(endTime - initTime) s")
         }
         
-        if #available(iOS 17, *),
-           dataSource.initialSetupCompleted,
+        if dataSource.initialSetupCompleted,
            let baseCell = cell as? ChatViewBaseTableViewCell,
            !chatViewShowsEmojiLongPressInfoTip,
            let reactionsManager = baseCell.reactionsManager,
@@ -2331,8 +2336,8 @@ extension ChatViewController: ChatViewDataSourceDelegate {
     func lastMessageChanged(messageIdentifier: NSManagedObjectID) {
         DDLogVerbose("\(#function)")
         DispatchQueue.main.async {
-            guard let message = self.entityManager.entityFetcher.getManagedObject(
-                by: messageIdentifier
+            guard let message = self.entityManager.entityFetcher.managedObject(
+                with: messageIdentifier
             ) as? BaseMessageEntity,
                 message.isOwnMessage else {
                 return
@@ -2359,7 +2364,6 @@ extension ChatViewController: ChatViewDataSourceDelegate {
     
     func checkToShowReactionsTip() {
         guard !ProcessInfoHelper.isRunningForScreenshots,
-              #available(iOS 17, *),
               !chatViewShowsEmojiLongPressInfoTip else {
             return
         }
@@ -3032,12 +3036,12 @@ extension ChatViewController {
     
     private func chatViewDataSourceLoadAround() -> Date? {
         if let globalSearchMessageID = showConversationInformation?.messageObjectID,
-           let message = entityManager.entityFetcher.getManagedObject(by: globalSearchMessageID) as? BaseMessageEntity {
+           let message = entityManager.entityFetcher.managedObject(with: globalSearchMessageID) as? BaseMessageEntity {
             message.date
         }
         else if let newestUnreadMessage = unreadMessagesSnapshot.unreadMessagesState?.oldestConsecutiveUnreadMessage,
                 let message = entityManager.entityFetcher
-                .getManagedObject(by: newestUnreadMessage) as? BaseMessageEntity {
+                .managedObject(with: newestUnreadMessage) as? BaseMessageEntity {
             message.date
         }
         else {
@@ -3117,9 +3121,7 @@ extension ChatViewController: VNDocumentCameraViewControllerDelegate {
             }
             pdfDocument.insert(pdfPage, at: i)
         }
-        
-        guard let sendMediaAction = SendMediaAction(for: chatViewActionsHelper),
-              let pdfData = pdfDocument.dataRepresentation()
+        guard let pdfData = pdfDocument.dataRepresentation()
         else {
             let message = "Could not create SendMediaAction in \(#function)"
             assertionFailure(message)
@@ -3127,6 +3129,7 @@ extension ChatViewController: VNDocumentCameraViewControllerDelegate {
         }
         
         controller.dismiss(animated: true)
-        sendMediaAction.showPreview(forAssets: [PhotosAccessHelper.storePDFToTmpDir(pdfData: pdfData)])
+        let sendMediaAction = SendMediaAction(chatViewController: self)
+        sendMediaAction.showPreviewForAssets(assets: [PhotosAccessHelper.storePDFToTmpDir(pdfData: pdfData)])
     }
 }

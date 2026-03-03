@@ -254,13 +254,13 @@ import UIKit
         
         let identityStore = MyIdentityStore.shared()
         
-        if let pictureData = identityStore?.profilePicture?["ProfilePicture"] as? Data,
+        if let pictureData = identityStore.profilePicture?["ProfilePicture"] as? Data,
            let picture = UIImage(data: pictureData) {
             setAndClip(image: picture)
             return
         }
         
-        let color = identityStore?.idColor ?? .primary
+        let color = identityStore.idColor
         setAndClip(image: ProfilePictureGenerator.generateImage(for: .me, color: color))
     }
     

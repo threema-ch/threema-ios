@@ -73,8 +73,12 @@ class CallViewController: UIViewController {
     
     var contactIdentity: String? {
         didSet {
-            let entityManager = EntityManager()
-            contact = entityManager.entityFetcher.contact(for: contactIdentity)
+            if let contactIdentity {
+                contact = BusinessInjector.ui.entityManager.entityFetcher.contactEntity(for: contactIdentity)
+            }
+            else {
+                contact = nil
+            }
         }
     }
 
@@ -360,12 +364,9 @@ class CallViewController: UIViewController {
             didRotateDevice = false
             updateGradientBackground()
 
-            #if arch(arm64)
-                if let rR = VoIPCallStateManager.shared.remoteVideoRenderer(),
-                   let remoteRenderer = rR as? RTCMTLVideoView {
-                    updateRemoteVideoContentMode(videoView: remoteRenderer)
-                }
-            #endif
+            if let remoteRenderer = VoIPCallStateManager.shared.remoteVideoRenderer() as? RTCMTLVideoView {
+                updateRemoteVideoContentMode(videoView: remoteRenderer)
+            }
         }
     }
         
@@ -882,15 +883,10 @@ extension CallViewController {
         DispatchQueue.main.async {
             self.profilePictureView.isHidden = true
             
-            #if arch(arm64)
-                // Using metal (arm64 only)
-                let localRenderer = RTCMTLVideoView(frame: self.localVideoView?.frame ?? CGRect.zero)
-                localRenderer.videoContentMode = .scaleAspectFill
-            #else
-                // Using OpenGLES for the rest
-                let localRenderer = RTCEAGLVideoView(frame: self.localVideoView?.frame ?? CGRect.zero)
-            #endif
+            let localRenderer = RTCMTLVideoView(frame: self.localVideoView?.frame ?? CGRect.zero)
+            localRenderer.videoContentMode = .scaleAspectFill
             localRenderer.delegate = self
+            
             VoIPCallStateManager.shared.startCaptureLocalVideo(
                 renderer: localRenderer,
                 useBackCamera: useBackCamera,
@@ -966,6 +962,8 @@ extension CallViewController {
             remoteRenderer.videoContentMode = .scaleAspectFill
             remoteRenderer.delegate = self
             VoIPCallStateManager.shared.renderRemoteVideo(to: remoteRenderer)
+            
+            DDLogNotice("[Call Debug] Starting remote video with frame: \(remoteVideoView?.frame ?? .zero)")
             return remoteRenderer
         }
         
@@ -1451,25 +1449,22 @@ extension CallViewController {
     }
     
     private func updateRemoteVideoContentMode(videoView: RTCVideoRenderer) {
-        #if arch(arm64)
-            if let rR = VoIPCallStateManager.shared.remoteVideoRenderer(),
-               let remoteRenderer = rR as? RTCMTLVideoView,
-               remoteRenderer.isEqual(videoView) {
-                if UIApplication.shared.statusBarOrientation.isPortrait,
-                   isRemoteVideoPortrait {
+        if let remoteRenderer = VoIPCallStateManager.shared.remoteVideoRenderer() as? RTCMTLVideoView,
+           remoteRenderer.isEqual(videoView) {
+            if UIApplication.shared.statusBarOrientation.isPortrait,
+               isRemoteVideoPortrait {
+                remoteRenderer.videoContentMode = .scaleAspectFill
+            }
+            else {
+                if UIApplication.shared.statusBarOrientation.isLandscape,
+                   !isRemoteVideoPortrait {
                     remoteRenderer.videoContentMode = .scaleAspectFill
                 }
                 else {
-                    if UIApplication.shared.statusBarOrientation.isLandscape,
-                       !isRemoteVideoPortrait {
-                        remoteRenderer.videoContentMode = .scaleAspectFill
-                    }
-                    else {
-                        remoteRenderer.videoContentMode = .scaleAspectFit
-                    }
+                    remoteRenderer.videoContentMode = .scaleAspectFit
                 }
             }
-        #endif
+        }
     }
     
     private func updateAccessibilityLabels() {
@@ -1731,7 +1726,11 @@ extension CallViewController: RTCVideoViewDelegate {
     func videoView(_ videoView: RTCVideoRenderer, didChangeVideoSize size: CGSize) {
         isRemoteVideoPortrait = size.height > size.width
         updateRemoteVideoContentMode(videoView: videoView)
-
+        
+        if let remoteRenderer = VoIPCallStateManager.shared.remoteVideoRenderer() as? RTCMTLVideoView,
+           remoteRenderer.isEqual(videoView) {
+            DDLogNotice("[Call Debug] Remote Video view did change size: \(size))")
+        }
         if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer(),
            localRenderer.isEqual(videoView) {
             updateConstraintsAfterRotation(size: size)

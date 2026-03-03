@@ -35,7 +35,7 @@ class WebCreateGroupResponse: WebAbstractMessage {
     }
     
     func addGroup(completion: @escaping () -> Void) {
-        let mdmSetup = MDMSetup(setup: false)!
+        let mdmSetup = MDMSetup()!
         if mdmSetup.disableCreateGroup() {
             createErrorResponse(errorDescription: "disabledByPolicy", completion: completion)
             return

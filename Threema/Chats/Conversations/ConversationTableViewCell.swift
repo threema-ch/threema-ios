@@ -258,10 +258,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
-        
-        if #available(iOS 17, *) {
-            imageView.addSymbolEffect(.variableColor.cumulative.dimInactiveLayers)
-        }
+        imageView.addSymbolEffect(.variableColor.cumulative.dimInactiveLayers)
         
         imageView.setContentCompressionResistancePriority(.required, for: .horizontal)
         imageView.setContentHuggingPriority(.required, for: .horizontal)
@@ -815,7 +812,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         
         if let draft = MessageDraftStore.shared.previewForDraft(
             for: conversation,
-            textStyle: Configuration.dateDraftTextStyle,
+            textStyle: Configuration.previewTextStyle,
             tint: .secondaryLabel
         ) {
             updateColorsForDateDraftLabel(isDraft: true)
@@ -835,7 +832,10 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             if conversation.conversationCategory != .private {
                 if let previewableMessage = lastMessage as? PreviewableMessage {
                     previewLabel.attributedText = previewableMessage
-                        .previewAttributedText(for: PreviewableMessageConfiguration.conversationCell)
+                        .previewAttributedText(
+                            for: PreviewableMessageConfiguration.conversationCell,
+                            settingsStore: businessInjector.settingsStore
+                        )
                 }
             }
             else {
@@ -1323,7 +1323,10 @@ extension ConversationTableViewCell {
             // another thread will cause CD concurrency issues.
             .receive(on: DispatchQueue.main)
             .filter { [weak self] in
-                self?.currentConversationIsEqualTo(group: $0.groupIdentity.id, $0.groupIdentity.creator.string) ?? false
+                self?.currentConversationIsEqualTo(
+                    group: $0.groupIdentity.id,
+                    $0.groupIdentity.creator.rawValue
+                ) ?? false
             }
             .debounce(for: .milliseconds(Configuration.debounceInMilliseconds), scheduler: DispatchQueue.main)
             .sink(receiveValue: { [weak self] _ in

@@ -298,6 +298,7 @@ struct VoiceMessageRecorderView: View {
     
     private func send() {
         model.sendRecording {
+            model.willDismissView()
             delegate?.willDismissRecorder()
         }
     }

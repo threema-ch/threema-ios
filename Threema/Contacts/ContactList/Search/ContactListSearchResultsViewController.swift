@@ -24,11 +24,16 @@ import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
+protocol ContactListSearchResultsDelegate: AnyObject {
+    func present(for destination: ContactsCoordinator.InternalDestination)
+}
+
 final class ContactListSearchResultsViewController: ThemedViewController {
     
     // MARK: - Private properties
         
-    private let businessInjector: BusinessInjector
+    private let businessInjector: BusinessInjectorProtocol
+    private weak var delegate: ContactListSearchResultsDelegate?
     
     private weak var searchController: UISearchController?
    
@@ -53,8 +58,12 @@ final class ContactListSearchResultsViewController: ThemedViewController {
     
     // MARK: - Lifecycle
 
-    init(businessInjector: BusinessInjector) {
+    init(
+        businessInjector: BusinessInjectorProtocol,
+        delegate: ContactListSearchResultsDelegate? = nil
+    ) {
         self.businessInjector = businessInjector
+        self.delegate = delegate
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -102,12 +111,9 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-        guard let identifier = dataSource.itemIdentifier(for: indexPath),
-              let navigationController = parent?.presentingViewController?.navigationController else {
+        guard let identifier = dataSource.itemIdentifier(for: indexPath) else {
             return
         }
-        
-        let entityManager = businessInjector.entityManager
         
         switch identifier {
         case let .token(token):
@@ -117,62 +123,33 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
             
             let currentTokenCount = searchController.searchBar.searchTextField.tokens.count
             searchController.searchBar.searchTextField.insertToken(token.searchToken, at: currentTokenCount)
-            searchController.searchBar.text = ""
+            searchController.searchBar.text = " "
             
         case let .contact(contactID):
-            let contactEntity = entityManager.performAndWait {
-                entityManager.entityFetcher.existingObject(with: contactID) as? ContactEntity
-            }
-            guard let contactEntity else {
-                return
-            }
-            
-            navigationController.pushViewController(
-                SingleDetailsViewController(for: Contact(contactEntity: contactEntity), displayStyle: .default),
-                animated: true
-            )
+            delegate?.present(for: .contact(objectID: contactID))
 
         case let .group(conversationID):
-            let conversationEntity = entityManager.performAndWait {
-                entityManager.entityFetcher.existingObject(with: conversationID) as? ConversationEntity
-            }
-            guard let conversationEntity,
-                  let group = businessInjector.groupManager.getGroup(conversation: conversationEntity) else {
-                return
-            }
-            
-            navigationController.pushViewController(
-                GroupDetailsViewController(for: group, displayStyle: .default),
-                animated: true
-            )
+            delegate?.present(for: .group(objectID: conversationID))
 
         case let .distributionList(distributionListID):
-            let distributionListEntity = entityManager.performAndWait {
-                entityManager.entityFetcher.existingObject(with: distributionListID) as? DistributionListEntity
-            }
-            guard let distributionListEntity else {
-                return
-            }
-            
-            navigationController.pushViewController(
-                DistributionListDetailsViewController(
-                    for: DistributionList(distributionListEntity: distributionListEntity),
-                    displayStyle: .default
-                ),
-                animated: true
-            )
+            delegate?.present(for: .distributionList(objectID: distributionListID))
 
         case let .directoryContact(directoryContact):
-            addDirectoryContact(directoryContact) { contact in
+            addDirectoryContact(directoryContact) { [weak self] contact in
                 guard let contact else {
                     return
                 }
                 
                 Task { @MainActor in
-                    navigationController.pushViewController(
-                        SingleDetailsViewController(for: contact, displayStyle: .default),
-                        animated: true
-                    )
+                    let entityFetcher = self?.businessInjector.entityManager.entityFetcher
+                    guard let self,
+                          let contactEntity = entityFetcher?.contactEntity(
+                              for: contact.identity.rawValue
+                          ) else {
+                        return
+                    }
+                    
+                    self.delegate?.present(for: .contact(objectID: contactEntity.objectID))
                 }
             }
 
@@ -191,7 +168,7 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
         }
         
         let contact = businessInjector.entityManager.performAndWait {
-            self.businessInjector.entityManager.entityFetcher.contact(for: directoryContact.id)
+            self.businessInjector.entityManager.entityFetcher.contactEntity(for: directoryContact.id)
         }
         
         guard contact == nil else {
@@ -272,8 +249,11 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
         _ directoryContact: CompanyDirectoryContact,
         completion: @escaping (Contact?) -> Void
     ) {
-        guard let contact = ContactStore.shared()
-            .updateAcquaintanceLevelToDirect(for: ThreemaIdentity(directoryContact.id)) else {
+        guard let contact = businessInjector.contactStore
+            .updateAcquaintanceLevelToDirect(
+                for: ThreemaIdentity(directoryContact.id),
+                entityManager: businessInjector.entityManager
+            ) else {
             businessInjector.contactStore.addWorkContact(
                 with: directoryContact.id,
                 publicKey: directoryContact.pk,
@@ -283,7 +263,12 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
                 jobTitle: directoryContact.jobTitle,
                 department: directoryContact.department,
                 acquaintanceLevel: .direct
-            ) { contactEntity in
+            ) { addedContactEntity in
+                guard let contactEntity = addedContactEntity as? ContactEntity else {
+                    DDLogError("Add work contact failed")
+                    completion(nil)
+                    return
+                }
                 NotificationPresenterWrapper.shared.present(type: .directoryContactAdded)
                 completion(Contact(contactEntity: contactEntity))
             } onError: { error in
@@ -307,7 +292,9 @@ extension ContactListSearchResultsViewController: UISearchControllerDelegate, UI
         searchController.searchBar.showsScopeBar = searchController.isActive
         
         // Update the results depending on current values
-        let searchText = searchController.searchBar.text ?? ""
+        let searchText = searchController.searchBar.text?.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ) ?? ""
         let selectedTokens = searchController.searchBar.searchTextField.tokens
             .compactMap { $0.representedObject as? ContactListSearchToken }
         
@@ -337,7 +324,11 @@ extension ContactListSearchResultsViewController: UISearchControllerDelegate, UI
         }
         
         // Update results via data source
-        Task.detached(priority: .background) { [self] in
+        Task.detached(priority: .background) { [weak self] in
+            guard let self else {
+                return
+            }
+            
             await dataSource.updateSearchResults(for: searchText, with: selectedTokens)
         }
     }

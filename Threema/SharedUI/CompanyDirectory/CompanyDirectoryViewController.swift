@@ -58,7 +58,7 @@ import ThreemaMacros
         noEntriesFoundTitleLabel.text = #localize("companydirectory_noentries_title")
         noEntriesFoundDescriptionLabel.text = #localize("companydirectory_noentries_description")
         
-        title = MyIdentityStore.shared()?.companyName
+        title = MyIdentityStore.shared().companyName
         
         noEntriesFoundDescriptionLabel.textColor = .secondaryLabel
     }
@@ -213,7 +213,7 @@ import ThreemaMacros
     }
     
     private func loadMore(cell: UITableViewCell) {
-        let activityView = UIActivityIndicatorView(style: Colors.activityIndicatorViewStyle)
+        let activityView = UIActivityIndicatorView(style: .medium)
         activityView.startAnimating()
         cell.accessoryView = activityView
         ServerAPIConnector().search(
@@ -477,17 +477,21 @@ extension CompanyDirectoryViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if nextPage > 0, indexPath.section == sectionTitles.count {
             let cell = tableView.cellForRow(at: indexPath)
-            let activityIndicator = UIActivityIndicatorView(style: Colors.activityIndicatorViewStyle)
+            let activityIndicator = UIActivityIndicatorView(style: .medium)
             activityIndicator.startAnimating()
             cell?.accessoryView = activityIndicator
             loadMore(cell: cell!)
         }
         else {
             let directoryContact = contactsWithSections[indexPath.section][indexPath.row]
-            
-            guard let contact = ContactStore.shared()
-                .updateAcquaintanceLevelToDirect(for: ThreemaIdentity(directoryContact.id)) else {
-                ContactStore.shared().addWorkContact(
+
+            let businessInjector = BusinessInjector.ui
+            guard let contact = businessInjector.contactStore
+                .updateAcquaintanceLevelToDirect(
+                    for: ThreemaIdentity(directoryContact.id),
+                    entityManager: businessInjector.entityManager
+                ) else {
+                businessInjector.contactStore.addWorkContact(
                     with: directoryContact.id,
                     publicKey: directoryContact.pk,
                     firstname: directoryContact.first,
@@ -497,8 +501,13 @@ extension CompanyDirectoryViewController: UITableViewDelegate {
                     department: directoryContact.department,
                     acquaintanceLevel: .direct
                 ) { addedContactEntity in
+                    guard let contactEntity = addedContactEntity as? ContactEntity
+                    else {
+                        DDLogError("Add work contact failed")
+                        return
+                    }
                     // show chat
-                    self.showChat(contactIdentity: ThreemaIdentity(addedContactEntity.identity))
+                    self.showChat(contactIdentity: ThreemaIdentity(contactEntity.identity))
                 } onError: { error in
                     DDLogError("Add work contact failed \(error)")
                 }
@@ -512,7 +521,7 @@ extension CompanyDirectoryViewController: UITableViewDelegate {
     private func showChat(contactIdentity: ThreemaIdentity) {
         Task { @MainActor in
             self.navigationController?.dismiss(animated: true) {
-                let info = [kKeyContactIdentity: contactIdentity.string, kKeyForceCompose: true] as [String: Any]
+                let info = [kKeyContactIdentity: contactIdentity.rawValue, kKeyForceCompose: true] as [String: Any]
                 NotificationCenter.default.post(
                     name: NSNotification.Name(rawValue: kNotificationShowConversation),
                     object: nil,
@@ -574,7 +583,7 @@ class SearchBarWithoutCancelButton: UISearchBar {
         } set {
             if newValue {
                 if activityIndicator == nil {
-                    let newActivityIndicator = UIActivityIndicatorView(style: Colors.activityIndicatorViewStyle)
+                    let newActivityIndicator = UIActivityIndicatorView(style: .medium)
                     newActivityIndicator.backgroundColor = .clear
                     newActivityIndicator.startAnimating()
                     textField?.leftView?.addSubview(newActivityIndicator)

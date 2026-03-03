@@ -242,7 +242,7 @@ func run(
     }
 
     let buildTargetsCommand = """
-        cargo build -F uniffi -p \(libraryName) --release \
+        cargo build --locked -F uniffi -p \(libraryName) --release \
         --target-dir \(rustTargetBuildPath.path) \
         \(targetFlags.joined(separator: " "))
         """
@@ -270,7 +270,7 @@ func run(
     // Generate UniFFI bindings...
     
     let generateUniFFIBindingsCommand = """
-        cargo run --target-dir \(rustTargetBuildPath.path) -p uniffi-bindgen generate \
+        cargo run --locked --target-dir \(rustTargetBuildPath.path) -p uniffi-bindgen generate \
         --library \(libraryPaths.first!) \
         --language swift --out-dir \(uniFFIBuildPath.path) \
         --no-format

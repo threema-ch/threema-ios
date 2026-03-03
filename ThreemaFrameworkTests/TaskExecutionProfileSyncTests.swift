@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 import XCTest
@@ -31,7 +32,6 @@ class TaskExecutionProfileSyncTests: XCTestCase {
     private let timeout: Double = 600
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
@@ -148,8 +148,8 @@ class TaskExecutionProfileSyncTests: XCTestCase {
 
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
-                deviceID: MockData.deviceID,
-                deviceGroupKeys: MockData.deviceGroupKeys
+                deviceID: MockMultiDevice.deviceID,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys
             )
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
@@ -194,12 +194,12 @@ class TaskExecutionProfileSyncTests: XCTestCase {
             }
 
             let frameworkInjectorMock = BusinessInjectorMock(
-                entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+                entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
                 myIdentityStore: test.initialConfig.identityStore,
                 userSettings: test.initialConfig.userSettings,
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(
-                    deviceGroupKeys: MockData.deviceGroupKeys,
+                    deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                     returnValues: [
                         MediatorMessageProtocolMock
                             .ReflectData(
@@ -326,7 +326,7 @@ class TaskExecutionProfileSyncTests: XCTestCase {
         }
 
         if initialConfig.identityStore.pushFromName != secondConfig.identityStore.pushFromName {
-            syncUserProfile.nickname = secondConfig.identityStore.pushFromName
+            syncUserProfile.nickname = secondConfig.identityStore.pushFromName ?? ""
         }
 
         if initialConfig.userSettings.sendProfilePicture != secondConfig.userSettings.sendProfilePicture {

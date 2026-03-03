@@ -38,7 +38,8 @@ class WebDeleteGroupRequest: WebAbstractMessage {
     func deleteOrLeave() {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
         let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
-        guard let conversation = backgroundBusinessInjector.entityManager.entityFetcher.legacyConversation(for: id)
+        guard let conversation = backgroundBusinessInjector.entityManager.entityFetcher
+            .legacyConversationEntity(for: id)
         else {
             ack!.success = false
             ack!.error = "invalidGroup"
@@ -69,6 +70,7 @@ class WebDeleteGroupRequest: WebAbstractMessage {
                 backgroundBusinessInjector.groupManager.dissolve(groupID: group.groupID, to: nil)
 
                 backgroundBusinessInjector.entityManager.performAndWaitSave {
+                    MessageDraftStore.shared.deleteDraft(for: conversation)
                     backgroundBusinessInjector.entityManager.entityDestroyer.delete(conversation: conversation)
                 }
                 

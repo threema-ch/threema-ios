@@ -29,13 +29,7 @@ extension Emoji {
     // MARK: - Picker Search
     
     public static var searchIndex: SearchIndex? = {
-        let languageCode: (any ExpressibleByStringLiteral)? =
-            if #available(iOS 16, *) {
-                Locale.current.language.languageCode
-            }
-            else {
-                Locale.current.languageCode
-            }
+        let languageCode: (any ExpressibleByStringLiteral)? = Locale.current.language.languageCode
         
         guard let languageCode,
               "\(languageCode)" != "en" else {
@@ -90,11 +84,8 @@ extension Emoji {
     }
     
     public var isAvailable: Bool {
-        // All pre iOS 16 are availabe due to our minimum target
-        if version < 15.0 {
-            true
-        }
-        else if version == 15.0, #available(iOS 16.4, *) {
+        // All pre iOS 17 are availabe due to our minimum target
+        if version < 15.1 {
             true
         }
         else if version == 15.1, #available(iOS 17.4, *) {

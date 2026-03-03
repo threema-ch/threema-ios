@@ -21,8 +21,8 @@
 import ThreemaFramework
 import UIKit
 
-class IDColorDebugViewController: UIViewController {
-    
+final class IDColorDebugViewController: UIViewController {
+
     private let labelText = "Emily Yeung"
     
     private lazy var debugStackView: UIStackView = {
@@ -76,7 +76,9 @@ class IDColorDebugViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        view.backgroundColor = .systemBackground
+
         let scrollView = UIScrollView()
         scrollView.addSubview(containerStack)
         view.addSubview(scrollView)

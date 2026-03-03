@@ -20,7 +20,6 @@
 
 import CocoaLumberjackSwift
 import Foundation
-import ThreemaProtocols
 
 public struct GroupIdentity: Equatable, Hashable, CustomStringConvertible, Sendable, Codable {
     public enum Error: Swift.Error {
@@ -46,30 +45,9 @@ public struct GroupIdentity: Equatable, Hashable, CustomStringConvertible, Senda
         self.id = id
         self.creator = creator
     }
-
-    // MARK: - Common_GroupIdentity helper
     
-    /// Create new group identity from `Common_GroupIdentity`
-    /// - Parameter commonGroupIdentity: Common Group Identity to use
-    /// - Throws: `GroupIdentity.Error` if `commonGroupIdentity` is not a valid group identity
-    public init(commonGroupIdentity: Common_GroupIdentity) throws {
-        // `commonGroupIdentity.groupID` will always be valid, also if it is 0
-        
-        guard commonGroupIdentity.creatorIdentity.count == ThreemaIdentity.stringLength else {
-            throw Error.invalidCreatorIdentityLength
-        }
-        
-        self.init(
-            id: commonGroupIdentity.groupID.littleEndianData,
-            creator: ThreemaIdentity(commonGroupIdentity.creatorIdentity)
-        )
-    }
-    
-    public var asCommonGroupIdentity: Common_GroupIdentity {
-        var commonGroupIdentity = Common_GroupIdentity()
-        commonGroupIdentity.groupID = id.paddedLittleEndian()
-        commonGroupIdentity.creatorIdentity = creator.string
-        return commonGroupIdentity
+    public init(id: Data, creatorID: String) {
+        self.init(id: id, creator: ThreemaIdentity(creatorID))
     }
 
     // MARK: - CustomStringConvertible

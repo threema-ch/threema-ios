@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 
 protocol BlobUploaderProtocol {
     func upload(

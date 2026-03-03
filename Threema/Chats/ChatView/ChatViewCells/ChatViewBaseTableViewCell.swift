@@ -204,7 +204,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         equalTo: contentView.bottomAnchor,
         constant: -ChatViewConfiguration.ChatBubble.defaultTopBottomInset
     )
-    
+
     // MARK: - Internal state
     
     private let debugColors = false
@@ -384,13 +384,14 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     private var swipeHandler: ChatViewTableViewCellHorizontalSwipeHandler?
         
     // MARK: - Configuration
-    
+
     override func configureCell() {
         super.configureCell()
         
         configureBackgrounds()
         configureViewsAndLayout()
-        
+        setupTraitRegistration()
+
         // For a default configuration without missing constraints
         setLayoutForOtherMessage()
         
@@ -818,7 +819,19 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         NSLayoutConstraint.deactivate(otherMessageNoProfilePictureConstraints)
         NSLayoutConstraint.activate(otherMessageProfilePictureConstraints)
     }
-    
+
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitUserInterfaceStyle.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                highlightCompleteCell(isSelected)
+            }
+        }
+    }
+
     // MARK: Name label
     
     private func showNameLabel() {
@@ -943,7 +956,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     }
     
     public func showReactionsTip() {
-        guard #available(iOS 17, *), !UIAccessibility.isVoiceOverRunning else {
+        guard !UIAccessibility.isVoiceOverRunning else {
             return
         }
         
@@ -1299,16 +1312,6 @@ extension ChatViewBaseTableViewCell {
         chatViewTableViewCellDelegate?.didTap(message: message, in: self)
         chatViewTableViewCellDelegate?.didAccessibilityTapOnCell()
         return true
-    }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
-            return
-        }
-        
-        highlightCompleteCell(isSelected)
     }
 }
 

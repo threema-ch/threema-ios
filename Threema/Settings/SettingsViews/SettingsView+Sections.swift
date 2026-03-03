@@ -33,25 +33,14 @@ extension SettingsView {
         var body: some View {
             Section {
                 if model.displayFeedback {
-                    if #available(iOS 17, *) {
-                        SectionItem(
-                            action: {
-                                model.giveFeedback()
-                            },
-                            title: #localize("settings_feedback"),
-                            image: .systemImage("ant.fill")
-                        )
-                        .popoverTip(TipKitManager.ThreemaBetaFeedbackTip())
-                    }
-                    else {
-                        SectionItem(
-                            action: {
-                                model.giveFeedback()
-                            },
-                            title: #localize("settings_feedback"),
-                            image: .systemImage("ant.fill")
-                        )
-                    }
+                    SectionItem(
+                        action: {
+                            model.giveFeedback()
+                        },
+                        title: #localize("settings_feedback"),
+                        image: .systemImage("ant.fill")
+                    )
+                    .popoverTip(TipKitManager.ThreemaBetaFeedbackTip())
                 }
                 if model.displayDevSettings {
                     SectionItem(
@@ -83,7 +72,7 @@ extension SettingsView {
                         symbol: .systemImage("hand.raised.fill")
                     )
                     (
-                        view: AppearanceSettingsViewControllerRepresentable(),
+                        view: AppearanceSettingsView(),
                         title: #localize("settings_list_appearance_title"),
                         symbol: .systemImage("paintbrush.fill")
                     )
@@ -138,7 +127,7 @@ extension SettingsView {
     
     struct DesktopSection: View {
         
-        private let mdm = MDMSetup(setup: false)
+        private let mdm = MDMSetup()
         @State private var disableWeb = false
         @State private var disableMultiDevice = false
 
@@ -176,21 +165,7 @@ extension SettingsView {
         }
         
         var threemaWeb: some View {
-            ThreemaWebViewControllerRepresentable()
-                .applyIf(!disableWeb, apply: { view in
-                    view.toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button(action: {
-                                ThreemaWebQRCodeScanner.shared.scan()
-                            }, label: {
-                                Image(systemName: "qrcode.viewfinder")
-                            })
-                            .accessibilityLabel(#localize("webClientSession_add"))
-                        }
-                    }
-                    .asAnyView
-                })
-                .threemaNavigationBar(#localize("settings_list_threema_web_title"))
+            ThreemaWebSettingsView()
         }
         
         private func checkDesktopWebDisabled() {
@@ -213,6 +188,9 @@ extension SettingsView {
                 version
                 if TargetManager.isBusinessApp {
                     license
+                }
+                if AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled {
+                    remoteSecret
                 }
             }
         }
@@ -248,6 +226,15 @@ extension SettingsView {
                 cellTitle: #localize("settings_list_settings_license_username_title"),
                 accessoryText: LicenseStore.shared().licenseUsername
             )
+        }
+
+        private var remoteSecret: some View {
+            HStack {
+                Text("settings_list_remote_secret_title")
+                Spacer()
+                Text("settings_list_remote_secret_active")
+                    .foregroundColor(.secondary)
+            }
         }
         
         private func didChange(_ connectionState: ConnectionState = ServerConnector.shared().connectionState) {
@@ -286,6 +273,20 @@ extension SettingsView {
                     }
                 }
             }
+            if (TargetManager.current == .threema && UserSettings.shared().showWorkReferral) || UserSettings
+                .shared().showWorkReferral {
+                Section {
+                    NavigationLink {
+                        WorkReferralView()
+                    } label: {
+                        WorkReferralCellView()
+                    }
+                    .listRowBackground(
+                        UIColor.primaryColorWork
+                            .resolvedColor(with: UITraitCollection(userInterfaceStyle: .light)).color
+                    )
+                }
+            }
         }
         
         private var title: String {
@@ -319,11 +320,9 @@ extension SettingsView {
                         image: .systemImage("star.fill")
                     )
                 }
-                SectionItem(
-                    action: inviteFriends,
-                    title: #localize("settings_list_invite_a_friend_title"),
-                    image: .systemImage("person.2.wave.2.fill")
-                )
+                
+                buildShareLink()
+                
                 SectionItem(
                     action: {
                         topViewController.map { AddThreemaChannelAction.run(in: $0) }
@@ -337,16 +336,36 @@ extension SettingsView {
             }
         }
         
-        private func inviteFriends() {
-            _ = topViewController.map { currentVC in
-                InviteController().then {
-                    $0.parentViewController = currentVC
-                    $0.shareViewController = currentVC
-                    $0.actionSheetViewController = currentVC
-                    $0.rect = .zero
-                    $0.invite()
+        @ViewBuilder
+        private func buildShareLink() -> some View {
+            let shareText = String.localizedStringWithFormat(
+                #localize("invite_sms_body"),
+                TargetManager.appName,
+                TargetManager.localizedAppName,
+                BusinessInjector.ui.profileStore.profile.myIdentity.rawValue
+            )
+            
+            ShareLink(item: shareText) {
+                HStack {
+                    Label {
+                        Text(#localize("add_contact_invite_friend"))
+                            .foregroundStyle(.primary)
+                    } icon: {
+                    
+                        Image(systemName: "person.2.wave.2.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .foregroundColor(.white)
+                            .padding(5)
+                            .frame(width: 28, height: 28, alignment: .center)
+                            .background(.gray)
+                            .cornerRadius(5)
+                    }
+                    Spacer()
                 }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
         }
     }
     

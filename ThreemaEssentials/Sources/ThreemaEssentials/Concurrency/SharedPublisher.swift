@@ -21,7 +21,6 @@
 import CocoaLumberjackSwift
 import Combine
 import Foundation
-import ThreemaProtocols
 
 public final class SharedPublisher<Output: Any>: @unchecked Sendable {
     public lazy var pub = source.share()

@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "A63BA151-3087-4DEC-A486-DBFDB724243F",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "FileUtilityTests",
+        "name" : "FileUtilityTests"
+      }
+    }
+  ],
+  "version" : 1
+}

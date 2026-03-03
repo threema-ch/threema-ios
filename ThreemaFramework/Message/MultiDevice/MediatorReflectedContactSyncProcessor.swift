@@ -47,7 +47,7 @@ class MediatorReflectedContactSyncProcessor {
     private func create(contact syncContact: Sync_Contact) -> Promise<Void> {
         Promise { seal in
             guard self.frameworkInjector.entityManager.entityFetcher
-                .contact(for: syncContact.identity) == nil else {
+                .contactEntity(for: syncContact.identity) == nil else {
                 seal
                     .reject(
                         MediatorReflectedProcessorError
@@ -64,15 +64,14 @@ class MediatorReflectedContactSyncProcessor {
                 return
             }
 
-            frameworkInjector.entityManager.performAndWaitSave {
-                guard let contact = self.frameworkInjector.entityManager.entityCreator.contact() else {
-                    seal.reject(MediatorReflectedProcessorError.createContactFailed(identity: syncContact.identity))
-                    return
-                }
+            try frameworkInjector.entityManager.performAndWaitSave {
+                let contact = try self.frameworkInjector.entityManager.getOrCreateContact(
+                    identity: syncContact.identity,
+                    publicKey: syncContact.publicKey,
+                    sortOrderFirstName: self.frameworkInjector.userSettings.sortOrderFirstName
+                )
 
-                // Mandatory fields
-                contact.setIdentity(to: syncContact.identity)
-                contact.publicKey = syncContact.publicKey
+                // Update mandatory fields
                 if syncContact.hasCreatedAt {
                     contact.createdAt = syncContact.createdAtNullable?.date
                 }
@@ -93,7 +92,7 @@ class MediatorReflectedContactSyncProcessor {
         Promise { seal in
             frameworkInjector.entityManager.performAndWaitSave {
                 guard self.frameworkInjector.entityManager.entityFetcher
-                    .contact(for: syncContact.identity) != nil else {
+                    .contactEntity(for: syncContact.identity) != nil else {
                     seal
                         .reject(
                             MediatorReflectedProcessorError
@@ -159,7 +158,7 @@ class MediatorReflectedContactSyncProcessor {
                         let identity = await self.frameworkInjector.entityManager
                             .performSave { [self] () -> ThreemaIdentity? in
                                 guard let contactEntity = frameworkInjector.entityManager.entityFetcher
-                                    .contact(for: syncContact.identity) else {
+                                    .contactEntity(for: syncContact.identity) else {
                                     seal
                                         .reject(
                                             MediatorReflectedProcessorError
@@ -178,7 +177,9 @@ class MediatorReflectedContactSyncProcessor {
 
                                 if contactEntity.isHidden {
                                     frameworkInjector.entityManager.entityDestroyer
-                                        .deleteOneToOneConversation(for: contactEntity)
+                                        .deleteOneToOneConversation(for: contactEntity) { conversationEntity in
+                                            MessageDraftStore.shared.deleteDraft(for: conversationEntity)
+                                        }
                                 }
                                 else {
                                     // Save on main thread (main DB context), otherwise observer of `Conversation` will

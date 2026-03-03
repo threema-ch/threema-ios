@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import ThreemaFramework
 
@@ -43,7 +44,6 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
     var session: WCSession?
     
     override init(message: WebAbstractMessage) {
-        
         self.type = message.args!["type"] as! String
         if type == "contact" {
             self.id = message.args!["id"] as? String
@@ -119,17 +119,17 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
     
     func sendMessage(completion: @escaping () -> Void) {
         var conversation: ConversationEntity?
-        let entityManager = EntityManager()
-        if type == "contact" {
-            let contact = entityManager.entityFetcher.contact(for: id)
-            if contact == nil {
+        let entityManager = BusinessInjector.ui.entityManager
+        if type == "contact", let id {
+            let contact = entityManager.entityFetcher.contactEntity(for: id)
+            guard let contact else {
                 baseMessage = nil
                 tmpError = "internalError"
                 completion()
                 return
             }
 
-            conversation = entityManager.entityFetcher.conversation(for: contact)
+            conversation = entityManager.entityFetcher.conversationEntity(for: contact.identity)
             if conversation == nil {
                 entityManager.performAndWaitSave {
                     conversation = entityManager.entityCreator.conversationEntity()
@@ -138,7 +138,7 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
             }
         }
         else {
-            conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
+            conversation = entityManager.entityFetcher.legacyConversationEntity(for: groupID)
         }
         
         if conversation != nil {
@@ -185,29 +185,37 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
             BackgroundTaskManager.shared.newBackgroundTask(
                 key: backgroundIdentifier!,
                 timeout: Int(kAppSendingBackgroundTaskTime)
-            ) {
-                if !self.sendAsFile,
-                   self.fileType == "image/jpeg" || self.fileType == "image/pjpeg" || self
-                   .fileType == "image/png" || self.fileType == "image/x-png" || UTIConverter
-                   .isGifMimeType(self.fileType) {
+            ) { [weak self] in
+                guard let self else {
+                    return
+                }
+                
+                if !sendAsFile,
+                   fileType == "image/jpeg" ||
+                   fileType == "image/pjpeg" ||
+                   fileType == "image/png" ||
+                   fileType == "image/x-png" ||
+                   UTIConverter.isGifMimeType(fileType) {
                     let imageSender = ImageURLSenderItemCreator()
-                    guard let uti = UTIConverter.uti(fromMimeType: self.fileType) else {
+                    guard let uti = UTIConverter.uti(fromMimeType: fileType) else {
                         DDLogError("Image does not have proper UTI")
                         return
                     }
-                    guard let item = imageSender.senderItem(from: self.fileData!, uti: uti) else {
+                    guard let fileData,
+                          let item = imageSender.senderItem(from: fileData, uti: uti) else {
                         DDLogError("Could not create URLSenderItem from image")
                         return
                     }
-                    item.caption = self.caption
+                    item.caption = caption
                     let sender = Old_FileMessageSender()
-                    self.sendMessage(sender: sender, item: item, conversation: conversation, completion: completion)
+                    sendMessage(sender: sender, item: item, conversation: conversation, completion: completion)
                 }
-                else if !self.sendAsFile,
-                        self.fileType == "video/mp4" || self.fileType == "video/mpeg4" || self
-                        .fileType == "video/x-m4v" {
+                else if !sendAsFile,
+                        fileType == "video/mp4" ||
+                        fileType == "video/mpeg4" ||
+                        fileType == "video/x-m4v" {
                     let creator = VideoURLSenderItemCreator()
-                    guard let data = self.fileData else {
+                    guard let data = fileData else {
                         return
                     }
                     guard let videoURL = VideoURLSenderItemCreator.writeToTemporaryDirectory(data: data) else {
@@ -217,32 +225,45 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
                         return
                     }
                     let fileSender = Old_FileMessageSender()
-                    self.sendMessage(sender: fileSender, item: senderItem, conversation: conversation, completion: {
-                        do {
-                            try FileManager.default.removeItem(at: videoURL)
-                        }
-                        catch {
-                            DDLogError("Could not clear temporary directory \(error)")
-                        }
+                    sendMessage(
+                        sender: fileSender,
+                        item: senderItem,
+                        conversation: conversation,
+                        completion: { [weak self] in
+                            guard let self else {
+                                return
+                            }
+                            
+                            do {
+                                try FileUtility.shared.delete(at: videoURL)
+                            }
+                            catch {
+                                DDLogError("Could not clear temporary directory \(error)")
+                            }
 
-                        completion()
-                    })
+                            completion()
+                        }
+                    )
                 }
                 // Note: Audio files are always sent as file messages except when they are recorded voice
                 // messages inside the app. Thus we don't have a special case for them here.
                 else {
-                    DispatchQueue.main.async {
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self else {
+                            return
+                        }
+                        
                         let blobSender = Old_FileMessageSender()
-                        blobSender.fileNameFromWeb = self.name
+                        blobSender.fileNameFromWeb = name
                         let item = URLSenderItem(
-                            data: self.fileData,
+                            data: fileData,
                             fileName: blobSender.fileNameFromWeb,
-                            type: UTIConverter.uti(fromMimeType: self.fileType),
+                            type: UTIConverter.uti(fromMimeType: fileType),
                             renderType: 0,
                             sendAsFile: true
                         )
-                        item?.caption = self.caption
-                        self.sendMessage(
+                        item?.caption = caption
+                        sendMessage(
                             sender: blobSender,
                             item: item,
                             conversation: conversation,
@@ -266,13 +287,24 @@ public class WebCreateFileMessageRequest: WebAbstractMessage {
         conversation: ConversationEntity?,
         completion: @escaping () -> Void
     ) {
-        ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
-            sender.send(item, in: conversation, requestID: self.requestID)
-            completion()
-            if let conversation,
-               conversation.conversationVisibility == .archived {
-                conversation.changeVisibility(to: .default)
+        ServerConnectorHelper.connectAndWaitUntilConnected(
+            initiator: .threemaWeb,
+            timeout: 10
+        ) { [weak self, weak sender, weak item, weak conversation] in
+            guard let self,
+                  let sender,
+                  let item else {
+                return
             }
+            
+            sender.send(item, in: conversation, requestID: requestID)
+            completion()
+            
+            guard let conversation,
+                  conversation.conversationVisibility == .archived else {
+                return
+            }
+            conversation.changeVisibility(to: .default)
         } onTimeout: {
             DDLogError("Sending file message timed out")
             completion()

@@ -20,6 +20,7 @@
 
 import SwiftUI
 
+@available(*, deprecated, message: "Do not use anymore.")
 struct AnyViewDestination: ViewDestinationRepresentable {
     let id: UUID
     private let _view: () -> AnyView
@@ -48,12 +49,14 @@ struct AnyViewDestination: ViewDestinationRepresentable {
 }
 
 extension View {
+    @available(*, deprecated, message: "Do not use anymore.")
     var anyViewDestination: AnyViewDestination {
         .init(self)
     }
 }
 
 extension ViewDestinationRepresentable {
+    @available(*, deprecated, message: "Do not use anymore.")
     var anyViewDestination: AnyViewDestination {
         .init(self)
     }

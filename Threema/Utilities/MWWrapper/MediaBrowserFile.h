@@ -22,12 +22,19 @@
 
 #import "MWPhoto.h"
 
-@class MediaBrowserFile;
+@class MediaBrowserFile, FileMessageEntity;
 
 @protocol MWFileDelegate
 
--(void)showFile:(FileMessageEntity *)fileMessageEntity;
--(void)playFileVideo:(FileMessageEntity *)fileMessageEntity;
+/**
+ @param fileMessageEntity Must be type of `FileMessageEntity`
+ */
+-(void)showFile:(nonnull FileMessageEntity *)fileMessageEntity;
+
+/**
+ @param fileMessageEntity Must be type of `FileMessageEntity`
+ */
+-(void)playFileVideo:(nonnull FileMessageEntity *)fileMessageEntity;
 -(void)toggleControls;
 
 @end
@@ -41,6 +48,9 @@
 
 @property (nonatomic) BOOL isUtiPreview;
 
+/**
+ @param fileMessageEntity Must be type of `FileMessageEntity` or nil
+ */
 + (instancetype)fileWithFileMessageEntity:(FileMessageEntity *)fileMessageEntity thumbnail:(BOOL)thumbnail;
 
 - (id)sourceReference;

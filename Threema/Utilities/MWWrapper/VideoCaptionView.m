@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "VideoCaptionView.h"
-#import "RectUtil.h"
+#import "Threema-Swift.h"
 
 @implementation VideoCaptionView
 
@@ -32,7 +32,7 @@
     UIImageView *imageView = [[UIImageView alloc] initWithImage:cameraImage];
     imageView.tintColor = [UIColor whiteColor];
 
-    imageView.frame = [RectUtil rect:imageView.frame centerVerticalIn:rect];
+    imageView.frame = [self rect:imageView.frame centerVerticalIn:rect round:NO];
     [view addSubview:imageView];
     
     UILabel *label = [self createLabelInRect:rect];
@@ -45,11 +45,24 @@
     label.text = [NSString stringWithFormat:@"%d:%02d", minutes, seconds];
     
     [label sizeToFit];
-    label.frame = [RectUtil rect:label.frame centerVerticalIn:rect round:YES];
-    label.frame = [RectUtil setXPositionOf:label.frame x:rect.size.width - label.frame.size.width];
+    label.frame = [self rect:label.frame centerVerticalIn:rect round:YES];
+    label.frame = CGRectMake(rect.size.width - label.frame.size.width, label.frame.origin.y, label.frame.size.width, label.frame.size.height);
+    
     [view addSubview:label];
 
     return view;
+}
+
+- (CGRect)rect:(CGRect)rect centerVerticalIn:(CGRect)outerRect round:(BOOL)round {
+    CGFloat innerHeight = rect.size.height;
+    CGFloat outerHeight = outerRect.size.height;
+    
+    CGFloat x = rect.origin.x;
+    CGFloat y = (outerHeight - innerHeight) / 2.0;
+    if (round)
+        y = roundf(y);
+    
+    return CGRectMake(x, y, rect.size.width, rect.size.height);
 }
 
 @end

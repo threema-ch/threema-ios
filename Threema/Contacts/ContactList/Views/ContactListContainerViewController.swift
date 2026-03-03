@@ -19,25 +19,31 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import SwiftUI
 import ThreemaMacros
 
-class ContactListContainerViewController: UIViewController {
+final class ContactListContainerViewController: UIViewController {
     
     // MARK: - Properties
 
-    private var currentViewController: UIViewController?
+    private var currentViewController: ContactListBaseViewController?
     
-    private lazy var contacts = ContactListViewController(itemsDelegate: self)
-    private lazy var groups = GroupListViewController(itemsDelegate: self)
-    private lazy var distributionList = DistributionListViewController(itemsDelegate: self)
+    private let contactListViewController: () -> ContactListViewController
+    private lazy var contacts = contactListViewController()
+
+    private let groupListViewController: () -> GroupListViewController
+    private lazy var groups = groupListViewController()
     
-    private lazy var work = WorkContactListViewController(itemsDelegate: self)
+    private let distributionListViewController: () -> DistributionListViewController
+    private lazy var distributionList = distributionListViewController()
     
-    private var workContactsEnabled = false
+    private let workContactListViewController: () -> WorkContactListViewController
+    private(set) lazy var work = workContactListViewController()
     
-    private lazy var internalNavItem = ContactListNavigationItem(delegate: self)
+    private(set) var workContactsEnabled = false
     
-    override var navigationItem: ContactListNavigationItem { internalNavItem }
+    private let contactListNavigationItem: ContactListNavigationItem
+    override var navigationItem: ContactListNavigationItem { contactListNavigationItem }
     
     private lazy var searchController: UISearchController = {
         var controller = UISearchController(searchResultsController: contactListSearchResultsController)
@@ -49,10 +55,10 @@ class ContactListContainerViewController: UIViewController {
         return controller
     }()
     
-    private lazy var contactListSearchResultsController =
-        ContactListSearchResultsViewController(businessInjector: BusinessInjector.ui)
+    private let searchResultsController: () -> ContactListSearchResultsViewController
+    private lazy var contactListSearchResultsController = searchResultsController()
     
-    var viewControllers: [UIViewController] {
+    var viewControllers: [ContactListBaseViewController] {
         if TargetManager.isWork {
             [contacts, groups, distributionList, work]
         }
@@ -65,6 +71,42 @@ class ContactListContainerViewController: UIViewController {
     }
     
     // MARK: - Lifecycle
+    
+    init(
+        contactListViewController: @escaping () -> ContactListViewController,
+        groupListViewController: @escaping () -> GroupListViewController,
+        distributionListViewController: @escaping () -> DistributionListViewController,
+        workContactListViewController: @escaping () -> WorkContactListViewController,
+        searchResultsController: @escaping () -> ContactListSearchResultsViewController,
+        navigationItem: ContactListNavigationItem
+    ) {
+        self.contactListViewController = contactListViewController
+        self.groupListViewController = groupListViewController
+        self.distributionListViewController = distributionListViewController
+        self.workContactListViewController = workContactListViewController
+        self.searchResultsController = searchResultsController
+        self.contactListNavigationItem = navigationItem
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        /// Needed to make the search bar appear the first time without scrolling
+        navigationItem.hidesSearchBarWhenScrolling = false
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        /// Resetting to the correct value, since it has already appeared
+        navigationItem.hidesSearchBarWhenScrolling = true
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -91,67 +133,66 @@ class ContactListContainerViewController: UIViewController {
         }
     }
     
-    init() {
-        super.init(nibName: nil, bundle: nil)
+    // MARK: - Updates
+    
+    public func updateSelection(for destination: ContactsCoordinator.InternalDestination) {
+        
+        switch destination {
+        case .contact:
+            guard let index = viewControllers.firstIndex(where: {
+                $0 is ContactListViewController
+            }) else {
+                break
+            }
+            switchToViewController(at: index)
+
+        case .workContact:
+            guard let index = viewControllers.firstIndex(where: {
+                $0 is WorkContactListViewController
+            }) else {
+                break
+            }
+            switchToViewController(at: index)
+
+        case .group:
+            guard let index = viewControllers.firstIndex(where: {
+                $0 is GroupListViewController
+            }) else {
+                break
+            }
+            switchToViewController(at: index)
+
+        case .distributionList:
+            guard let index = viewControllers.firstIndex(where: {
+                $0 is DistributionListViewController
+            }) else {
+                break
+            }
+            switchToViewController(at: index)
+        }
+        
+        currentViewController?.updateSelection()
     }
     
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    // MARK: - Helpers
+    
+    func workContactsEnabled(_ enabled: Bool) {
+        workContactsEnabled = enabled
     }
-    
-    // MARK: - Private functions
-    
+
     func switchToViewController(at index: Int) {
+        if let currentViewController, index == viewControllers.firstIndex(of: currentViewController) {
+            return
+        }
+        
+        let newViewController = viewControllers[index]
         currentViewController?.willMove(toParent: nil)
         currentViewController?.view.removeFromSuperview()
         currentViewController?.removeFromParent()
-        addChild(viewControllers[index])
-        view.addSubview(viewControllers[index].view)
-        viewControllers[index].didMove(toParent: self)
-        currentViewController = viewControllers[index]
-        viewControllers[index].view.frame = view.bounds
-    }
-}
-
-// MARK: - ContactListActionDelegate
-
-extension ContactListContainerViewController: ContactListActionDelegate {
-    func add(_ item: ContactListAddItem) {
-        {
-            switch item {
-            case .contacts:
-                AppDelegate
-                    .getMainStoryboard()
-                    .instantiateViewController(withIdentifier: "AddContactNavigationController")
-            case .groups:
-                UIStoryboard(name: "CreateGroup", bundle: nil).instantiateInitialViewController()
-            case .distributionLists:
-                UINavigationController(rootViewController: DistributionListCreateEditViewController())
-            }
-        }().map { present($0, animated: true) }
-    }
-    
-    func filterChanged(_ item: ContactListFilterItem) {
-        if TargetManager.isWork {
-            
-            navigationItem.shouldShowWorkButton = item == .contacts
-            
-            guard let workIndex = viewControllers.firstIndex(of: work), workContactsEnabled, item == .contacts else {
-                return switchToViewController(at: item.rawValue)
-            }
-            switchToViewController(at: workIndex)
-        }
-        else {
-            switchToViewController(at: item.rawValue)
-        }
-    }
-    
-    func didToggleWorkContacts(_ isTurnedOn: Bool) {
-        workContactsEnabled = isTurnedOn
-        switchToViewController(
-            at: isTurnedOn ? ContactListFilterItem.allCases.count : ContactListFilterItem.contacts
-                .rawValue
-        )
+        addChild(newViewController)
+        view.addSubview(newViewController.view)
+        newViewController.didMove(toParent: self)
+        currentViewController = newViewController
+        newViewController.view.frame = view.bounds
     }
 }

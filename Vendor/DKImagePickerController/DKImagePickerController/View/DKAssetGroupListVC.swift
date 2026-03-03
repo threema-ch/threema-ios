@@ -62,7 +62,7 @@ class DKAssetGroupCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        self.selectedBackgroundView = self.customSelectedBackgroundView(DKImageResource.blueTickImage().withTint(.tintColor))
+        self.selectedBackgroundView = self.customSelectedBackgroundView(DKImageResource.blueTickImage().withTintColor(.tintColor))
         
         self.isAccessibilityElement = true;
         

@@ -40,7 +40,10 @@ class ConversationActionsTest: XCTestCase {
         dbPreparer = DatabasePreparer(context: dbMainCnx)
 
         let entityManager =
-            EntityManager(databaseContext: DatabaseContext(mainContext: dbMainCnx, backgroundContext: nil))
+            EntityManager(
+                databaseContext: DatabaseContext(mainContext: dbMainCnx, backgroundContext: nil),
+                isRemoteSecretEnabled: false
+            )
         businessInjectorMock = BusinessInjectorMock(
             conversationStore: ConversationStore(
                 userSettings: UserSettingsMock(),
@@ -53,7 +56,10 @@ class ConversationActionsTest: XCTestCase {
         )
 
         let backgroundEntityManager =
-            EntityManager(databaseContext: DatabaseContext(mainContext: dbMainCnx, backgroundContext: dbBackgroundCnx))
+            EntityManager(
+                databaseContext: DatabaseContext(mainContext: dbMainCnx, backgroundContext: dbBackgroundCnx),
+                isRemoteSecretEnabled: false
+            )
         backgroundBusinessInjectorMock = BusinessInjectorMock(
             conversationStore: ConversationStore(
                 userSettings: UserSettingsMock(),

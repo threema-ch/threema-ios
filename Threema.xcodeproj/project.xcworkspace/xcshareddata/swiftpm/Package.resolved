@@ -1,27 +1,27 @@
 {
+  "originHash" : "af6643294407dd99d2e4a1cf11c2179b7b63b15579834dcfeaee9fd71a8d48e9",
   "pins" : [
+    {
+      "identity" : "chunked-dc-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/saltyrtc/chunked-dc-swift.git",
+      "state" : {
+        "revision" : "04dab1bc3349b744b819061d2fa1f0bc13b750ca"
+      }
+    },
     {
       "identity" : "cocoalumberjack",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/CocoaLumberjack/CocoaLumberjack.git",
+      "location" : "https://github.com/CocoaLumberjack/CocoaLumberjack",
       "state" : {
         "revision" : "4b8714a7fb84d42393314ce897127b3939885ec3",
         "version" : "3.8.5"
       }
     },
     {
-      "identity" : "codescanner",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/twostraws/CodeScanner",
-      "state" : {
-        "revision" : "5e886430238944c7200fc9e10dbf2d9550dba865",
-        "version" : "2.5.2"
-      }
-    },
-    {
       "identity" : "dswaveformimage",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/dmrschmidt/DSWaveformImage.git",
+      "location" : "https://github.com/dmrschmidt/DSWaveformImage",
       "state" : {
         "revision" : "4c56578ee10128ee2b2c04c9c5aa73812de722db",
         "version" : "14.2.2"
@@ -30,10 +30,19 @@
     {
       "identity" : "ed25519",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/AndrewBarba/ed25519.git",
+      "location" : "https://github.com/AndrewBarba/ed25519",
       "state" : {
         "revision" : "77bf751b603c573d50e45e2adb2e06776af219ae",
         "version" : "1.1.0"
+      }
+    },
+    {
+      "identity" : "flanimatedimage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Flipboard/FLAnimatedImage",
+      "state" : {
+        "revision" : "d4f07b6f164d53c1212c3e54d6460738b1981e9f",
+        "version" : "1.0.17"
       }
     },
     {
@@ -66,9 +75,17 @@
     {
       "identity" : "mbprogresshud",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jdg/MBProgressHUD.git",
+      "location" : "https://github.com/jdg/MBProgressHUD",
       "state" : {
         "revision" : "18c442d57398cee5ef57f852df10fc5ff65f0763"
+      }
+    },
+    {
+      "identity" : "notificationbanner",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/threema-matteo/NotificationBanner.git",
+      "state" : {
+        "revision" : "7b2269f7ca3503f9a50590ffad6760b715235742"
       }
     },
     {
@@ -76,8 +93,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/hamcrest/OCHamcrest",
       "state" : {
-        "revision" : "e46f5f52698428a8335704233268980fdd0471af",
-        "version" : "9.0.3"
+        "revision" : "52a1567677f620fe51834d8fb7209797a7b71eb3",
+        "version" : "9.1.1"
       }
     },
     {
@@ -118,7 +135,7 @@
     {
       "identity" : "rskimagecropper",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ruslanskorb/RSKImageCropper.git",
+      "location" : "https://github.com/ruslanskorb/RSKImageCropper",
       "state" : {
         "revision" : "87506690345d0f666bfdabdd8790144c7992589c",
         "version" : "5.0.1"
@@ -153,7 +170,7 @@
     {
       "identity" : "sqlite.swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/stephencelis/SQLite.swift.git",
+      "location" : "https://github.com/stephencelis/SQLite.swift",
       "state" : {
         "revision" : "a95fc6df17d108bd99210db5e8a9bac90fe984b8",
         "version" : "0.15.3"
@@ -173,17 +190,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-async-algorithms",
       "state" : {
-        "revision" : "6ae9a051f76b81cc668305ceed5b0e0a7fd93d20",
-        "version" : "1.0.1"
+        "revision" : "042e1c4d9d19748c9c228f8d4ebc97bb1e339b0b",
+        "version" : "1.0.4"
       }
     },
     {
       "identity" : "swift-collections",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-collections.git",
+      "location" : "https://github.com/apple/swift-collections",
       "state" : {
-        "revision" : "3d2dc41a01f9e49d84f0a3925fb858bed64f702d",
-        "version" : "1.1.2"
+        "revision" : "7b847a3b7008b2dc2f47ca3110d8c782fb2e5c7e",
+        "version" : "1.3.0"
       }
     },
     {
@@ -250,5 +267,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

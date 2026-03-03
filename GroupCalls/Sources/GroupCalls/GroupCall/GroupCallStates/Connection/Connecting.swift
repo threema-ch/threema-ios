@@ -152,7 +152,7 @@ struct Connecting: GroupCallState {
         /// **Protocol Step: Group Call Join Steps**
         /// 6. If the `hello.participants` contains less than 4 items, set the initial
         ///   capture state of the microphone to _on_.
-        if participantIDs.count < 4, AVAudioSession.sharedInstance().recordPermission == .granted {
+        if participantIDs.count < 4, AVAudioApplication.shared.recordPermission == .granted {
             await groupCallActor.toggleOwnAudio(false)
         }
                 

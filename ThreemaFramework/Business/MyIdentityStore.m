@@ -30,35 +30,33 @@
 #import "ThreemaError.h"
 #import "AppGroup.h"
 #import "UserSettings.h"
-#import "ValidationLogger.h"
 #import "BundleUtil.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
+
+@import FileUtility;
+@import Keychain;
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 #else
   static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #endif
-static const NSString *keychainLabel = @"Threema identity 1";
 
-@implementation MyIdentityStore {
-    NSData *secretKey;
-    BOOL secretKeyInKeychain;
-    BOOL keychainLocked;
-}
+@implementation MyIdentityStore
 
 @synthesize identity;
 @synthesize serverGroup;
 @synthesize publicKey;
+@synthesize clientKey;
 
 static MyIdentityStore *instance;
 
 + (MyIdentityStore*)sharedMyIdentityStore {
-	@synchronized (self) {
-		if (!instance)
-			instance = [[MyIdentityStore alloc] init];
-	}
-	
+    @synchronized (self) {
+        if (!instance)
+            instance = [[MyIdentityStore alloc] init];
+    }
+
 	return instance;
 }
 
@@ -69,223 +67,26 @@ static MyIdentityStore *instance;
 - (id)init
 {
     self = [super init];
-    if (self) {
-        OSStatus status = [self loadFromKeychain];
-        
-        if (identity == nil) {
-            if (status == errSecInteractionNotAllowed) {
-                keychainLocked = YES;
-            } else if (status == errSecItemNotFound) {
-                /* This can happen when a backup is restored to a new phone, and we have our NSUserDefaults
-                 but no keychain item. Make sure the identity-specific defaults are wiped to avoid confusion
-                 later on */
-                DDLogVerbose(@"No identity - clearing identity-specific user defaults");
-                [self removeIdentityUserDefaults];
-            }
-        }
-        
+    if (self) {        
         [self migrateProfilePicture];
     }
     return self;
 }
 
-- (BOOL)isKeychainLocked {
-    return keychainLocked;
-}
-
 - (BOOL)isValidIdentity {
-    return identity != nil && publicKey != nil && serverGroup != nil && (secretKey != nil || secretKeyInKeychain);
+    return identity != nil && publicKey != nil && serverGroup != nil && clientKey != nil;
 }
 
 - (void)generateKeyPairWithSeed:(NSData*)seed {
-    NSData *newPublicKey, *newSecretKey;
+    NSData *newPublicKey;
+    NSData *newClientKey;
     
     DDLogInfo(@"Generating key pair");
-    [[NaClCrypto sharedCrypto] generateKeyPairPublicKey:&newPublicKey secretKey:&newSecretKey withSeed:seed];
+    [[NaClCrypto sharedCrypto] generateKeyPairPublicKey:&newPublicKey secretKey:&newClientKey withSeed:seed];
     identity = nil;
     serverGroup = nil;
     publicKey = newPublicKey;
-    secretKey = newSecretKey;
-    secretKeyInKeychain = NO;
-}
-
-- (OSStatus)loadFromKeychain {
-    NSMutableDictionary *keychainDict = [NSMutableDictionary dictionary];
-    
-    [keychainDict setObject:(__bridge id)kSecClassGenericPassword forKey:(__bridge id)kSecClass];
-    [keychainDict setObject:(__bridge id)kCFBooleanTrue forKey:(__bridge id)kSecReturnAttributes];
-    [keychainDict setObject:keychainLabel forKey:(__bridge id)kSecAttrLabel];
-
-    CFDictionaryRef resultRef;
-    OSStatus status = SecItemCopyMatching((__bridge CFDictionaryRef)(keychainDict), (CFTypeRef *)&resultRef);
-
-    if (status == noErr) {
-        NSDictionary *result = (__bridge_transfer NSDictionary *)resultRef;
-        
-        /* sanity check on identity and public key; backup/restore to a new iPhone can produce
-           strange results */
-        NSString *tmpIdentity = [result objectForKey:(__bridge id)(kSecAttrAccount)];
-        NSData *tmpPublicKey = [result objectForKey:(__bridge id)(kSecAttrGeneric)];
-        
-        if (tmpIdentity.length != kIdentityLen || tmpPublicKey.length != kNaClCryptoPubKeySize) {
-            DDLogError(@"Got bad identity or key from keychain; ignoring");
-            return status;
-        }
-        
-        identity = tmpIdentity;
-        publicKey = tmpPublicKey;
-        serverGroup = [result objectForKey:(__bridge id)(kSecAttrService)];
-        secretKey = nil;
-        secretKeyInKeychain = YES;
-        
-        DDLogInfo(@"Loaded identity %@ from keychain", identity);
-    } else {
-        if (status != errSecItemNotFound) {
-            [[ValidationLogger sharedValidationLogger] logString:[NSString stringWithFormat:@"Keychain: Error accessing keychain, status: %i", (int)status]];
-            DDLogError(@"Error accessing keychain, status: %i", (int)status);
-        }
-    }
-    return status;
-}
-
-- (void)storeInKeychain {
-    
-    if (identity == nil || publicKey == nil || secretKey == nil || serverGroup == nil) {
-        DDLogError(@"Not enough data to store in keychain");
-        return;
-    }
-    
-    NSMutableDictionary *queryDict = [NSMutableDictionary dictionary];
-    [queryDict setObject:(__bridge id)kSecClassGenericPassword forKey:(__bridge id)kSecClass];
-    [queryDict setObject:keychainLabel forKey:(__bridge id)kSecAttrLabel];
-    
-    /* check if we already have a keychain item and need to update */
-    CFDictionaryRef resultRef;
-    if (SecItemCopyMatching((__bridge CFDictionaryRef)(queryDict), (CFTypeRef *)&resultRef) == noErr) {
-        if (SecItemDelete((__bridge CFDictionaryRef)(queryDict)) != noErr) {
-            DDLogError(@"Couldn't delete keychain item");
-        }
-    }
-    
-    /* add new item */
-    NSMutableDictionary *addDict = [NSMutableDictionary dictionary];
-    [addDict setObject:(__bridge id)kSecClassGenericPassword forKey:(__bridge id)kSecClass];
-    [addDict setObject:(__bridge id)kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly forKey:(__bridge id)kSecAttrAccessible];
-    [addDict setObject:publicKey forKey:(__bridge id)kSecAttrGeneric];
-    [addDict setObject:identity forKey:(__bridge id)kSecAttrAccount];
-    [addDict setObject:serverGroup forKey:(__bridge id)kSecAttrService];
-    [addDict setObject:keychainLabel forKey:(__bridge id)kSecAttrLabel];
-    [addDict setObject:secretKey forKey:(__bridge id)kSecValueData];
-    if (SecItemAdd((__bridge CFDictionaryRef)(addDict), NULL) != noErr) {
-        DDLogError(@"Couldn't add keychain item");
-    } else {
-        secretKey = nil;
-        secretKeyInKeychain = YES;
-    }
-    
-    self.privateIdentityInfoLastUpdate = [NSDate date];
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationCreatedIdentity object:nil];    
-}
-
-- (void)updateConnectionRights {
-    OSStatus status = [self loadFromKeychain];
-    if (status != errSecInteractionNotAllowed) {
-        secretKey = [self _obtainSecretKey];
-        if (secretKey != nil) {
-            [self deleteFromKeychain];
-            [self storeInKeychain];
-        }
-    }
-}
-
-- (void)deleteFromKeychain {
-    NSMutableDictionary *queryDict = [NSMutableDictionary dictionary];
-    [queryDict setObject:(__bridge id)kSecClassGenericPassword forKey:(__bridge id)kSecClass];
-    [queryDict setObject:keychainLabel forKey:(__bridge id)kSecAttrLabel];
-    if (SecItemDelete((__bridge CFDictionaryRef)(queryDict)) != noErr) {
-        DDLogError(@"Couldn't delete keychain item");
-    }
-    secretKeyInKeychain = NO;
-}
-
-- (void)destroy {
-    [self deleteFromKeychain];
-
-    DeviceGroupKeyManager *deviceGroupKeyManager = [[DeviceGroupKeyManager alloc] initWithMyIdentityStore:self];
-    [deviceGroupKeyManager destroy];
-    
-    [self removeIdentityUserDefaults];
-    [[UserSettings sharedUserSettings] setPushDecrypt:NO];
-    [[UserSettings sharedUserSettings] setAskedForPushDecryption:NO];
-    [[UserSettings sharedUserSettings] setSafeConfig:nil];
-    self.tempSafePassword = nil;
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationDestroyedIdentity object:nil];
-}
-
-- (void)destroyDeviceOnlyKeychainItems {
-    if ([ThreemaEnvironment env] == EnvironmentTypeXcode) {
-        [[KeychainKeyWrapper new] deleteWrappingKey];
-        [DeviceCookieManager deleteDeviceCookie];
-        
-        [self deleteFromKeychain];
-        
-        DeviceGroupKeyManager *deviceGroupKeyManager = [[DeviceGroupKeyManager alloc] initWithMyIdentityStore:self];
-        [deviceGroupKeyManager destroy];
-    }
-    else {
-        DDLogWarn(@"destroyDeviceOnlyKeychainItems is for testing only");
-    }
-}
-
-- (void)removeIdentityUserDefaults {
-    [[KeychainKeyWrapper new] deleteWrappingKey];
-    [DeviceCookieManager deleteDeviceCookie];
-    
-    [[AppGroup userDefaults] removeObjectForKey:@"PushFromName"];
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if ([fileManager fileExistsAtPath:[self profilePicturePath]]) {
-        NSError *error;
-        [fileManager removeItemAtPath:[self profilePicturePath] error:&error];
-        if (error) {
-        }
-    }
-    [[AppGroup userDefaults] removeObjectForKey:@"ProfilePicture"];
-    [[AppGroup userDefaults] removeObjectForKey:kWallpaperKey];
-    [[AppGroup userDefaults] removeObjectForKey:@"LinkedEmail"];
-    [[AppGroup userDefaults] removeObjectForKey:@"LinkEmailPending"];
-    [[AppGroup userDefaults] removeObjectForKey:@"LinkedMobileNo"];
-    [[AppGroup userDefaults] removeObjectForKey:@"LinkMobileNoPending"];
-    [[AppGroup userDefaults] removeObjectForKey:@"LinkMobileNoVerificationId"];
-    [[AppGroup userDefaults] removeObjectForKey:@"LinkMobileNoStartDate"];
-    [[AppGroup userDefaults] removeObjectForKey:@"PrivateIdentityInfoLastUpdate"];
-    [[AppGroup userDefaults] removeObjectForKey:@"LastSentFeatureMask"];
-    [[AppGroup userDefaults] removeObjectForKey:@"RevocationPasswordSetDate"];
-    [[AppGroup userDefaults] removeObjectForKey:@"RevocationPasswordLastCheck"];
-    [[AppGroup userDefaults] removeObjectForKey:@"CreateIDEmail"];
-    [[AppGroup userDefaults] removeObjectForKey:@"CreateIDPhone"];
-    [[AppGroup userDefaults] removeObjectForKey:@"FirstName"];
-    [[AppGroup userDefaults] removeObjectForKey:@"LastName"];
-    [[AppGroup userDefaults] removeObjectForKey:@"CSI"];
-    [[AppGroup userDefaults] removeObjectForKey:@"JobTitle"];
-    [[AppGroup userDefaults] removeObjectForKey:@"Department"];
-    [[AppGroup userDefaults] removeObjectForKey:@"Category"];
-    [[AppGroup userDefaults] removeObjectForKey:@"CompanyName"];
-    [[AppGroup userDefaults] removeObjectForKey:@"DirectoryCategories"];
-    [[AppGroup userDefaults] removeObjectForKey:@"LastWorkUpdateRequestHash"];
-    [[AppGroup userDefaults] removeObjectForKey:@"LastWorkUpdateDate"];
-    [[AppGroup userDefaults] removeObjectForKey:@"MessageDrafts"];
-    [[AppGroup userDefaults] removeObjectForKey:@"PushNotificationEncryptionKey"];
-    [[AppGroup userDefaults] removeObjectForKey:@"MatchToken"];
-    
-    // Should be already removed in app migration
-    [[AppGroup userDefaults] removeObjectForKey:@"LastWorkUpdateRequest"];
-    
-    // Reset app setup state. See `AppSetup` for usage of this key
-    [[AppGroup userDefaults] removeObjectForKey:kAppSetupStateKey];
-
-    [[AppGroup userDefaults] synchronize];
+    clientKey = newClientKey;
 }
 
 - (NSString *)pushFromName {
@@ -305,10 +106,10 @@ static MyIdentityStore *instance;
 - (void)setProfilePicture:(NSMutableDictionary *)profilePicture {
     if (!profilePicture) {
         [[AppGroup userDefaults] removeObjectForKey:@"ProfilePicture"];
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        if ([fileManager fileExistsAtPath:[self profilePicturePath]]) {
+        FileUtility *fileUtility = [FileUtility new];
+        if ([fileUtility fileExistsAtPath:[self profilePicturePath]]) {
             NSError *error;
-            [fileManager removeItemAtPath:[self profilePicturePath] error:&error];
+            [fileUtility deleteAtPath:[self profilePicturePath] error:&error];
             if (error) {
             }
         }
@@ -486,7 +287,7 @@ static MyIdentityStore *instance;
     [[AppGroup userDefaults] synchronize];
 }
 
-- (NSString * _Nonnull)displayName {
+- (nonnull NSString *)displayName {
     
     NSString *name = [ContactUtil nameFromFirstname:[self firstName] lastname:[self lastName]];
     
@@ -621,14 +422,9 @@ static MyIdentityStore *instance;
     [[AppGroup userDefaults] synchronize];
 }
 
-- (NSData*)keySecret {
-    NSData *mySecretKey = [self _obtainSecretKey];
-    return mySecretKey;
-}
-
 - (NSData*)encryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)_publicKey {
 
-    NSData *mySecretKey = [self _obtainSecretKey];
+    NSData *mySecretKey = [self clientKey];
     
     if (mySecretKey == nil) {
         DDLogError(@"Cannot encrypt: no secret key");
@@ -646,7 +442,7 @@ static MyIdentityStore *instance;
 
 - (NSData*)decryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)_publicKey {
     
-    NSData *mySecretKey = [self _obtainSecretKey];
+    NSData *mySecretKey = [self clientKey];
     
     if (mySecretKey == nil) {
         DDLogError(@"Cannot decrypt: no secret key");
@@ -663,7 +459,7 @@ static MyIdentityStore *instance;
 }
 
 - (NSData*)sharedSecretWithPublicKey:(NSData*)publicKey {
-    NSData *mySecretKey = [self _obtainSecretKey];
+    NSData *mySecretKey = [self clientKey];
     if (mySecretKey == nil) {
         DDLogError(@"Cannot calculate shared secret: no secret key");
         return nil;
@@ -672,27 +468,12 @@ static MyIdentityStore *instance;
 }
 
 - (NSData*)mySharedSecret {
-    NSData *mySecretKey = [self _obtainSecretKey];
+    NSData *mySecretKey = [self clientKey];
     if (mySecretKey == nil) {
         DDLogError(@"Cannot calculate shared secret: no secret key");
         return nil;
     }
     return [[NaClCrypto sharedCrypto] sharedSecretForPublicKey:publicKey secretKey:mySecretKey];
-}
-
-- (NSData*)_obtainSecretKey {
-    NSData *mySecretKey = secretKey;
-    if (mySecretKey == nil && secretKeyInKeychain) {
-        NSMutableDictionary *queryDict = [NSMutableDictionary dictionary];
-        [queryDict setObject:(__bridge id)kSecClassGenericPassword forKey:(__bridge id)kSecClass];
-        [queryDict setObject:keychainLabel forKey:(__bridge id)kSecAttrLabel];
-        [queryDict setObject:(__bridge id)kCFBooleanTrue forKey:(__bridge id)kSecReturnData];
-        CFDataRef resultRef;
-        if (SecItemCopyMatching((__bridge CFDictionaryRef)(queryDict), (CFTypeRef *)&resultRef) == noErr) {
-            mySecretKey = (__bridge_transfer NSData*)resultRef;
-        }
-    }
-    return mySecretKey;
 }
 
 - (NSString*)backupIdentityWithPassword:(NSString*)password {
@@ -721,7 +502,7 @@ static MyIdentityStore *instance;
     if (keyData == nil)
         return nil;
     
-    NSData *mySecretKey = [self _obtainSecretKey];
+    NSData *mySecretKey = [self clientKey];
     NSMutableData *idData = [NSMutableData dataWithCapacity:(mySecretKey.length + kIdentityLen + 2)];
     [idData appendData:[identity dataUsingEncoding:NSASCIIStringEncoding]];
     [idData appendData:mySecretKey];
@@ -765,7 +546,7 @@ static MyIdentityStore *instance;
     NSData *backupDecoded = [NSData dataWithBase32String:backup];
     if (backupDecoded.length != 50) {
         DDLogError(@"Invalid decoded backup length: %lu", (unsigned long)backupDecoded.length);
-        onError([ThreemaError threemaError:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"bad_identity_backup"], TargetManagerObjc.localizedAppName]]);
+        onError([ThreemaError threemaError:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"bad_identity_backup"], TargetManagerObjC.localizedAppName]]);
         return;
     }
     
@@ -774,7 +555,7 @@ static MyIdentityStore *instance;
     NSData *keyData = [self deriveBackupKeyFromPassword:password salt:salt];
     if (keyData == nil) {
         DDLogError(@"Invalid password");
-        onError([ThreemaError threemaError:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"bad_identity_backup"], TargetManagerObjc.localizedAppName]]);
+        onError([ThreemaError threemaError:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"bad_identity_backup"], TargetManagerObjC.localizedAppName]]);
         return;
     }
     
@@ -795,28 +576,27 @@ static MyIdentityStore *instance;
     
     if (memcmp(digest, backupDataDecrypted.bytes + 40, 2) != 0) {
         DDLogWarn(@"Digest mismatch in decrypted identity backup");
-        onError([ThreemaError threemaError:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"bad_identity_backup"], TargetManagerObjc.localizedAppName]]);
+        onError([ThreemaError threemaError:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"bad_identity_backup"], TargetManagerObjC.localizedAppName]]);
         return;
     }
     
     identity = [[NSString alloc] initWithData:[NSData dataWithBytes:backupDataDecrypted.bytes length:kIdentityLen] encoding:NSASCIIStringEncoding];
-    secretKey = [NSData dataWithBytes:(backupDataDecrypted.bytes + 8) length:kNaClCryptoSecKeySize];
+    clientKey = [NSData dataWithBytes:(backupDataDecrypted.bytes + 8) length:kNaClCryptoSecKeySize];
     
-    [self restoreFromBackup:identity withSecretKey:secretKey onCompletion:onCompletion onError:onError];
+    [self restoreFromBackup:identity withSecretKey:clientKey onCompletion:onCompletion onError:onError];
 }
 
 - (void)restoreFromBackup:(NSString*)myIdentity withSecretKey:(NSData*)mySecretKey onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
     identity = [[NSString alloc]  initWithString:myIdentity];
-    secretKey = [NSData dataWithBytes:(mySecretKey.bytes) length:kNaClCryptoSecKeySize];
+    clientKey = [NSData dataWithBytes:(mySecretKey.bytes) length:kNaClCryptoSecKeySize];
 
     /* derive public key and store everything */
-    publicKey = [[NaClCrypto sharedCrypto] derivePublicKeyFromSecretKey:secretKey];
+    publicKey = [[NaClCrypto sharedCrypto] derivePublicKeyFromSecretKey:clientKey];
     if (publicKey == nil) {
         /* should never happen, even if the data is invalid */
         onError([ThreemaError threemaError:@"Public key derivation failed"]);
         return;
     }
-    secretKeyInKeychain = NO;
     serverGroup = nil;
     DDLogInfo(@"Restored identity %@ from backup", identity);
     

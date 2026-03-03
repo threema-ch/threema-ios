@@ -27,7 +27,7 @@ import WebRTC
         case reject
         case call
         
-        /// Return the string of the current action for the ValidationLogger
+        /// Return the string of the current action for the debug log
         /// - Returns: String of the current action
         
         public func description() -> String {
@@ -46,7 +46,7 @@ import WebRTC
         case disabled
         case offHours
         
-        /// Return the string of the current reject reason for the ValidationLogger
+        /// Return the string of the current reject reason for the debug log
         /// - Returns: String of the current reject reason
         public func description() -> String {
             switch self {
@@ -173,7 +173,7 @@ extension VoIPCallAnswerMessage: VoIPCallMessageProtocol {
                     .kAnswerKey: [
                         VoIPCallAnswerMessage.kRTCSessionDescriptionTypeKey: stringForType(),
                         VoIPCallAnswerMessage.kRTCSessionDescriptionSdpKey: VoIPCallSdpPatcher(extensionConfig)
-                            .patch(type: .LOCAL_ANSWER_OR_REMOTE_SDP, sdp: answer!.sdp),
+                            .patch(type: .LOCAL_ANSWER, sdp: answer!.sdp),
                     ],
                 VoIPCallAnswerMessage.kRejectReasonKey: rejectReason ?? 0,
             ]

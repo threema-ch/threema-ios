@@ -26,6 +26,7 @@
 @property (readonly) NSURL *url;
 @property (readonly) BOOL sendAsFile;
 @property (nonatomic, readwrite) NSString *caption;
+@property (nonatomic, readwrite) NSNumber *duration;
 @property (readonly) NSNumber *renderType;
 
 +(instancetype)itemWithUrl:(NSURL *)url type:(NSString *)type renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile;

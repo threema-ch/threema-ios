@@ -22,14 +22,14 @@ import Foundation
 import XCTest
 @testable import ThreemaFramework
 
-class VideoConversationHelperTests: XCTestCase {
+final class VideoConversationHelperTests: XCTestCase {
 
     func testGetEstimatedVideoFileSize() throws {
         let testBundle = Bundle(for: VideoConversationHelperTests.self)
         let testVideoURL = try XCTUnwrap(testBundle.url(forResource: "Video-1", withExtension: "mp4"))
 
         let userSettingsMock = UserSettingsMock(videoQuality: "original")
-        let videoConversionHelper = VideoConversionHelper(userSettings: userSettingsMock)
+        let videoConversionHelper = makeSUT(userSettings: userSettingsMock)
 
         let size = try XCTUnwrap(videoConversionHelper.getEstimatedVideoFileSize(for: testVideoURL))
 
@@ -42,7 +42,7 @@ class VideoConversationHelperTests: XCTestCase {
         let asset = AVAsset(url: testVideoURL)
         
         let userSettingsMock = UserSettingsMock(videoQuality: "original")
-        let videoConversionHelper = VideoConversionHelper(userSettings: userSettingsMock)
+        let videoConversionHelper = makeSUT(userSettings: userSettingsMock)
 
         let exportSession = videoConversionHelper.getAVAssetExportSession(
             from: asset,
@@ -58,7 +58,7 @@ class VideoConversationHelperTests: XCTestCase {
         let asset = AVAsset(url: testVideoURL)
         
         let userSettingsMock = UserSettingsMock(videoQuality: "low")
-        let videoConversionHelper = VideoConversionHelper(userSettings: userSettingsMock)
+        let videoConversionHelper = makeSUT(userSettings: userSettingsMock)
 
         let exportSession = videoConversionHelper.getAVAssetExportSession(
             from: asset,
@@ -74,7 +74,7 @@ class VideoConversationHelperTests: XCTestCase {
         let asset = AVAsset(url: testVideoURL)
         
         let userSettingsMock = UserSettingsMock(videoQuality: "high")
-        let videoConversionHelper = VideoConversionHelper(userSettings: userSettingsMock)
+        let videoConversionHelper = makeSUT(userSettings: userSettingsMock)
 
         let exportSession = videoConversionHelper.getAVAssetExportSession(
             from: asset,
@@ -82,5 +82,17 @@ class VideoConversationHelperTests: XCTestCase {
         )
         
         XCTAssertEqual(exportSession?.presetName, "AVAssetExportPresetMediumQuality")
+    }
+    
+    // MARK: - Helpers
+    
+    private func makeSUT(
+        userSettings: UserSettingsProtocol,
+        outputDirectoryURL: URL = FileManager.default.temporaryDirectory
+    ) -> VideoConversionHelper {
+        VideoConversionHelper(
+            userSettings: userSettings,
+            outputDirectoryURL: outputDirectoryURL
+        )
     }
 }

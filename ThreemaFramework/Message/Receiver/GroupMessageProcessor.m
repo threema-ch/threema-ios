@@ -25,7 +25,6 @@
 #import "GroupPhotoSender.h"
 #import "MyIdentityStore.h"
 #import "ContactStore.h"
-#import "EntityFetcher.h"
 #import "UserSettings.h"
 #import "ThreemaError.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"

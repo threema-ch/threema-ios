@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import ThreemaMacros
 
@@ -36,6 +37,9 @@ import ThreemaMacros
     }
  
     public func saveDraft(_ draft: Draft, for conversation: ConversationEntity) {
+        guard !AppLaunchManager.isRemoteSecretEnabled else {
+            return
+        }
         @MessageDraftCoordinator(conversation: conversation) var oldDraft
         oldDraft = draft
     }
@@ -46,13 +50,13 @@ import ThreemaMacros
             return
         }
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         entityManager.performAndWait {
             var drafts: [Draft.Key: [String: String]] =
                 Dictionary(uniqueKeysWithValues: zip(Draft.Key.allCases, Draft.Key.allCases.map { _ in
                     [String: String]()
                 }))
-            for contact in entityManager.entityFetcher.allContacts() as? [ContactEntity] ?? [] {
+            for contact in entityManager.entityFetcher.contactEntities() ?? [] {
                 for conv in contact.conversations ?? Set<ConversationEntity>() {
                     @MessageDraftCoordinator(conversation: conv) var mdc
                     guard let mdc, let storeKey = $mdc.storeKey else {
@@ -178,7 +182,7 @@ public enum Draft {
                     return
                 }
                 
-                FileUtility.shared.delete(at: draft)
+                FileUtility.shared.deleteIfExists(at: draft)
             default:
                 // Text is not stored on disk, future drafts might
                 break
@@ -192,7 +196,7 @@ public enum Draft {
             draft.isEmpty
             
         case let .audio(draft):
-            !FileUtility.shared.isExists(fileURL: draft)
+            !FileUtility.shared.fileExists(at: draft)
             
         case let .json(subtype):
             switch subtype {
@@ -284,15 +288,20 @@ extension Draft: Equatable {
     }
     
     fileprivate var storeKey: String? {
-        if conversation.isGroup, let hexStr = conversation.groupID?.hexString {
-            let creator = conversation.contact?.identity ?? "*"
-            return "\(creator)-\(hexStr)"
-        }
-        else {
-            return conversation.contact?.identity
+        let managedObjectContext: NSManagedObjectContext = conversation.managedObjectContext ?? BusinessInjector.ui
+            .entityManager.dbContext.current
+
+        return managedObjectContext.performAndWait {
+            if conversation.isGroup, let hexStr = conversation.groupID?.hexString {
+                let creator = conversation.contact?.identity ?? "*"
+                return "\(creator)-\(hexStr)"
+            }
+            else {
+                return conversation.contact?.identity
+            }
         }
     }
-    
+
     private func post() {
         NotificationCenter.default.post(
             name: Notification.Name(rawValue: kNotificationUpdateDraftForCell),

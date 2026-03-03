@@ -34,7 +34,7 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
     
     private static let defaultValue = -1
     
-    private let mdm = MDMSetup(setup: false)
+    private let mdm = MDMSetup()
     
     public var isMDM: Bool {
         (mdm?.keepMessagesDays() as? Int) != nil
@@ -81,6 +81,7 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
         guard keepMessagesDays > 0, let deletionDate = deletionDate(keepMessagesDays) else {
             return
         }
+        DDLogNotice("[Message Retention] Deleting messages older than \(deletionDate)")
         await entityManager.entityDestroyer.deleteMessagesForMessageRetention(
             olderThan: deletionDate,
             for: conversations().map(\.objectID)
@@ -128,7 +129,7 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
     
     /// Computes the Conversations to be affected by the deletion
     private func conversations() -> [ConversationEntity] {
-        let convs = (entityManager.entityFetcher.allConversations() as? [ConversationEntity]) ?? []
+        let convs = entityManager.entityFetcher.conversationEntities() ?? []
         return convs.filter {
             // note groups are excluded
             !(groupManager.getGroup(conversation: $0)?.isNoteGroup ?? false)
@@ -137,7 +138,7 @@ public final class MessageRetentionManagerModel: MessageRetentionManagerModelPro
     
     private func computeUnread() {
         if let conversations = entityManager.entityFetcher
-            .notArchivedConversations() as? [ConversationEntity] {
+            .notArchivedConversationEntities() {
             unreadMessages.totalCount(doCalcUnreadMessagesCountOf: Set(conversations))
         }
     }

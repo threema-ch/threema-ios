@@ -96,7 +96,7 @@ final class BlobMessageSender {
         else if let receiverIdentity {
             let taskDefinition = TaskDefinitionSendBaseMessage(
                 messageID: messageID,
-                receiverIdentity: receiverIdentity.string,
+                receiverIdentity: receiverIdentity.rawValue,
                 sendContactProfilePicture: false
             )
             
@@ -115,7 +115,11 @@ final class BlobMessageSender {
     private func isMessageReadyToSend(with objectID: NSManagedObjectID) -> Bool {
         // Due to the business injector entity manager having outdated info about the object belonging to the ID passed
         // in here, we create a new one.
-        let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
+        let entityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).backgroundEntityManager
         var isReady = false
         
         entityManager.performAndWait {

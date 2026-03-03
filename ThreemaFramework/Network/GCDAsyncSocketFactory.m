@@ -22,12 +22,11 @@
 #import "GCDAsyncSocket.h"
 #import "GCDAsyncHTTPSProxySocket.h"
 #import "GCDAsyncSOCKSProxySocket.h"
-#import "ValidationLogger.h"
 
 #ifdef DEBUG
-static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
+static const DDLogLevel ddLogLevel = DDLogLevelAll;
 #else
-static const DDLogLevel ddLogLevel = DDLogLevelWarning;
+static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 #endif
 
 @implementation GCDAsyncSocketFactory
@@ -42,7 +41,7 @@ struct AutoConfigLoadStatus {
 + (GCDAsyncSocket*)proxyAwareAsyncSocketForHost:(NSString*)host port:(NSNumber*)port delegate:(nullable id<GCDAsyncSocketDelegate>)delegate delegateQueue:(nullable dispatch_queue_t)delegateQueue { 
     NSDictionary *systemProxies = (__bridge NSDictionary*)CFNetworkCopySystemProxySettings();
     NSURL *targetUrl = [NSURL URLWithString:[NSString stringWithFormat:@"https://%@:%@", host, port]];
-    NSArray *urlProxies = (__bridge NSArray*)CFNetworkCopyProxiesForURL((__bridge CFURLRef _Nonnull)targetUrl, (__bridge CFDictionaryRef _Nonnull)(systemProxies));
+    NSArray *urlProxies = (__bridge_transfer NSArray*)CFNetworkCopyProxiesForURL((__bridge CFURLRef _Nonnull)targetUrl, (__bridge CFDictionaryRef _Nonnull)systemProxies);
     
     return [GCDAsyncSocketFactory proxyAwareAsyncSocketForProxyList:urlProxies targetUrl:targetUrl delegate:delegate delegateQueue:delegateQueue];
 }
@@ -55,7 +54,7 @@ struct AutoConfigLoadStatus {
             NSNumber *port = proxy[(NSString*)kCFProxyPortNumberKey];
             NSString *username = proxy[(NSString*)kCFProxyUsernameKey];
             NSString *password = proxy[(NSString*)kCFProxyPasswordKey];
-            [[ValidationLogger sharedValidationLogger] logString:[NSString stringWithFormat:@"Using SOCKS proxy %@:%@", host, port]];
+            DDLogNotice(@"Using SOCKS proxy %@:%@", host, port);
             GCDAsyncSOCKSProxySocket *proxySocket = [[GCDAsyncSOCKSProxySocket alloc] initWithDelegate:delegate delegateQueue:delegateQueue];
             [proxySocket setProxyHost:host port:port.intValue version:GCDAsyncSocketSOCKSVersion5];
             if (username && password) {
@@ -65,13 +64,13 @@ struct AutoConfigLoadStatus {
         } else if ([proxy[(NSString*)kCFProxyTypeKey] isEqualToString:(NSString*)kCFProxyTypeHTTPS]) {
             NSString *host = proxy[(NSString*)kCFProxyHostNameKey];
             NSNumber *port = proxy[(NSString*)kCFProxyPortNumberKey];
-            [[ValidationLogger sharedValidationLogger] logString:[NSString stringWithFormat:@"Using HTTPS proxy %@:%@", host, port]];
+            DDLogNotice(@"Using HTTPS proxy %@:%@", host, port);
             GCDAsyncHTTPSProxySocket *proxySocket = [[GCDAsyncHTTPSProxySocket alloc] initWithDelegate:delegate delegateQueue:delegateQueue];
             [proxySocket setProxyHost:host port:port.intValue];
             return proxySocket;
         } else if ([proxy[(NSString*)kCFProxyTypeKey] isEqualToString:(NSString*)kCFProxyTypeAutoConfigurationURL]) {
             NSURL *autoConfigUrl = proxy[(NSString*)kCFProxyAutoConfigurationURLKey];
-            [[ValidationLogger sharedValidationLogger] logString:[NSString stringWithFormat:@"Loading proxy auto config from %@", autoConfigUrl]];
+            DDLogNotice(@"Loading proxy auto config from %@", autoConfigUrl);
             struct AutoConfigLoadStatus status;
             status.finished = false;
             CFStreamClientContext ctxt = { 0, &status, NULL, NULL, NULL };

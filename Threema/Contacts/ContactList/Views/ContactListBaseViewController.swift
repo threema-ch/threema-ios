@@ -27,17 +27,32 @@ import ThreemaMacros
     
     // MARK: - Properties
     
+    private let currentDestinationFetcher: () -> ContactsCoordinator.InternalDestination?
+    private let shouldAllowAutoDeselection: () -> Bool
     weak var itemsDelegate: ContactListActionDelegate?
-    var businessInjector: BusinessInjectorProtocol = BusinessInjector.ui
+    let businessInjector: BusinessInjectorProtocol
     
     // MARK: - Lifecycle
     
-    init(itemsDelegate: ContactListActionDelegate? = nil) {
+    init(
+        currentDestinationFetcher: @escaping () -> ContactsCoordinator.InternalDestination?,
+        shouldAllowAutoDeselection: @escaping () -> Bool,
+        businessInjector: BusinessInjectorProtocol = BusinessInjector.ui,
+        itemsDelegate: ContactListActionDelegate? = nil
+    ) {
+        self.currentDestinationFetcher = currentDestinationFetcher
+        self.shouldAllowAutoDeselection = shouldAllowAutoDeselection
+        self.businessInjector = businessInjector
         self.itemsDelegate = itemsDelegate
         super.init(nibName: nil, bundle: nil)
         
         // This fixes the inset for the footer
         additionalSafeAreaInsets.bottom = 0
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     override func viewDidLoad() {
@@ -52,10 +67,35 @@ import ThreemaMacros
         // This fixes transparency issues with the navigation bar
         tableView.setContentOffset(CGPoint(x: 0, y: -tableView.adjustedContentInset.top + 2), animated: true)
     }
+    
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
+        
+        updateSelection()
+    }
+    
+    // MARK: - Updates
+    
+    func updateSelection() {
+        if shouldAllowAutoDeselection() {
+            tableView?.indexPathsForSelectedRows?.forEach {
+                tableView?.deselectRow(at: $0, animated: false)
+            }
+        }
+        else {
+            guard let destination = currentDestinationFetcher(),
+                  case let .contact(objectID) = destination,
+                  let objectID,
+                  let dataSource = tableView.dataSource as? UITableViewDiffableDataSource<
+                      String,
+                      NSManagedObjectID
+                  >,
+                  let indexPath = dataSource.indexPath(for: objectID) else {
+                return
+            }
 
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+            tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
+        }
     }
     
     // MARK: - Pull to refresh

@@ -37,6 +37,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (nullable id)objectForInfoDictionaryKey:(NSString *)key;
 
++ (id)objectForThreemaFrameworkConfigurationKey:(NSString *)key;
+
 + (nullable NSString *)pathForResource:(nullable NSString *)resource ofType:(nullable NSString *)type;
 
 + (nullable NSURL *)URLForResource:(nullable NSString *)resourceName withExtension:(nullable NSString *)extension;

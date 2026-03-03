@@ -20,18 +20,20 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import Keychain
+import RemoteSecretProtocol
 import ThreemaEssentials
 
-/// If your code is run in the notification extension (`NotificationService`) you should in general use already created
-/// instance of business injector.
+/// If your code is run in the notification extension (`NotificationService`) you should generally
+/// use the already created instance of business injector.
 /// Otherwise inconsistencies might occur in the database.
 public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
-    
+
     /// Shared instance to be used for everything in the UI (MainThread)
-    public static let ui = BusinessInjector()
+    @objc public static let ui = BusinessInjector()
     
     // This must be initialized lazy, because `BusinessInjector` is used in `AppMigration` and
-    // the migration of files (see `AppFileMigration.run()`) must be completed before the `TaskManager`
+    // the migration of files (see `AppFilesMigration.run()`) must be completed before the `TaskManager`
     // is initialized!
     private lazy var taskManager: TaskManagerProtocol = TaskManager(
         backgroundEntityManager: backgroundEntityManager,
@@ -41,14 +43,29 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     private let backgroundEntityManager: EntityManager
 
     @objc required init(entityManager: EntityManager) {
+        // This `assert` would be nice, than the `BusinessInjector` can only be used when My Identity is present.
+        // But in the moment the assert throws if unit tests are running, because e.g.
+        // `ContactEntity.setFeatureMask(...` uses an instance of `BusinessInjector`, this should be mocked.
+        // There are many issues of this kind!
+        // assert(MyIdentityStore.shared().identity != nil, "My identity should be set when using business injector")
+
         self.runsInBackground = entityManager.hasBackgroundChildContext
         self.entityManager = entityManager
+
+        let persistenceManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        )
+
+        self.databaseManagerObjC = persistenceManager.databaseManager
+        self.dirtyObjectManagerObjC = persistenceManager.dirtyObjectManager
 
         if entityManager.hasBackgroundChildContext {
             self.backgroundEntityManager = entityManager
         }
         else {
-            self.backgroundEntityManager = EntityManager(withChildContextForBackgroundProcess: true)
+            self.backgroundEntityManager = persistenceManager.backgroundEntityManager
         }
     }
 
@@ -56,24 +73,34 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     ///
     /// - Parameter forBackgroundProcess: Use this only for special cases (like Notification Extension), in general use
     /// the functions `runInBackground` and `runInBackgroundAndWait` for background threads
-    public convenience init(forBackgroundProcess: Bool) {
+    @objc public convenience init(forBackgroundProcess: Bool) {
+        let persistenceManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        )
+
         if forBackgroundProcess {
-            self.init(entityManager: EntityManager(withChildContextForBackgroundProcess: true))
+            self.init(entityManager: persistenceManager.backgroundEntityManager)
         }
         else {
-            self.init(entityManager: EntityManager())
+            self.init(entityManager: persistenceManager.entityManager)
         }
     }
 
     @objc override public convenience init() {
         self.init(forBackgroundProcess: false)
     }
-
+    
     // MARK: BusinessInjectorProtocol
 
     public let runsInBackground: Bool
+    
+    public private(set) lazy var profileStore: any ProfileStoreProtocol = ThreemaFramework
+        .ProfileStore(myIdentity: ThreemaIdentity(self.myIdentityStore.identity))
 
-    public private(set) lazy var contactStore: ContactStoreProtocol = ContactStore.shared()
+    // Do not mark as lazy, to prevent blocking thread when calling singleton init
+    public private(set) var contactStore: ContactStoreProtocol = ContactStore.shared()
 
     public private(set) lazy var conversationStore: any ConversationStoreProtocol = ConversationStore(
         userSettings: userSettings,
@@ -92,31 +119,42 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         taskManager: taskManager
     )
 
+    @available(*, deprecated, message: "Only use from Objective-C")
+    @objc public let databaseManagerObjC: DatabaseManagerProtocolObjc
+
+    @available(*, deprecated, message: "Only use from Objective-C")
+    @objc public let dirtyObjectManagerObjC: DirtyObjectManager
+
     @objc public let entityManager: EntityManager
 
     public private(set) lazy var groupManager: GroupManagerProtocol = GroupManager(
-        myIdentityStore,
-        contactStore,
-        taskManager,
-        userSettings,
-        entityManager,
-        GroupPhotoSender()
+        myIdentityStore: myIdentityStore,
+        contactStore: contactStore,
+        taskManager: taskManager,
+        userSettings: userSettings,
+        entityManager: entityManager,
+        groupPhotoSender: {
+            GroupPhotoSender()
+        }
     )
 
     @available(*, deprecated, message: "Only use from Objective-C", renamed: "groupManager")
     @objc public private(set) lazy var groupManagerObjC = GroupManager(
-        myIdentityStore,
-        contactStore,
-        taskManager,
-        userSettings,
-        entityManager,
-        GroupPhotoSender()
+        myIdentityStore: myIdentityStore,
+        contactStore: contactStore,
+        taskManager: taskManager,
+        userSettings: userSettings,
+        entityManager: entityManager,
+        groupPhotoSender: {
+            GroupPhotoSender()
+        }
     )
     
     public private(set) lazy var distributionListManager: DistributionListManagerProtocol =
         DistributionListManager(entityManager: entityManager)
 
-    public private(set) lazy var licenseStore = LicenseStore.shared()
+    // Do not mark as lazy, to prevent blocking thread when calling singleton init
+    public private(set) var licenseStore = LicenseStore.shared()
 
     public private(set) lazy var messageSender: MessageSenderProtocol = MessageSender(
         serverConnector: serverConnector,
@@ -146,7 +184,8 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
             entityManager: entityManager
         )
 
-    @objc public private(set) lazy var myIdentityStore: MyIdentityStoreProtocol = MyIdentityStore.shared()
+    // Do not mark as lazy, to prevent blocking thread when calling singleton init
+    @objc public private(set) var myIdentityStore: MyIdentityStoreProtocol = MyIdentityStore.shared()
 
     public lazy var unreadMessages: UnreadMessagesProtocol = UnreadMessages(
         entityManager: entityManager,
@@ -167,7 +206,8 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
             entityManager: entityManager
         )
 
-    @objc public private(set) lazy var userSettings: UserSettingsProtocol = UserSettings.shared()
+    // Do not mark as lazy, to prevent blocking thread when calling singleton init
+    @objc public private(set) var userSettings: UserSettingsProtocol = UserSettings.shared()
 
     public private(set) lazy var settingsStore: any SettingsStoreProtocol = SettingsStore(
         serverConnector: serverConnector,
@@ -177,18 +217,29 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         taskManager: taskManager
     )
     
-    public private(set) lazy var serverConnector: ServerConnectorProtocol = ServerConnector.shared()
+    // Do not mark as lazy, to prevent blocking thread when calling singleton init
+    public private(set) var serverConnector: ServerConnectorProtocol = ServerConnector.shared()
 
     public private(set) lazy var pushSettingManager: PushSettingManagerProtocol = PushSettingManager(
-        userSettings,
-        groupManager,
-        entityManager,
-        taskManager,
-        TargetManager.isBusinessApp
+        userSettings: userSettings,
+        groupManager: groupManager,
+        entityManager: entityManager,
+        markupParser: MarkupParser(),
+        taskManager: taskManager,
+        isWorkApp: TargetManager.isBusinessApp
     )
 
-    public private(set) lazy var keychainHelper: any KeychainHelperProtocol =
-        KeychainHelper(identity: ThreemaIdentity(MyIdentityStore.shared().identity))
+    public private(set) lazy var keychainManager: any KeychainManagerProtocol = KeychainManager(
+        remoteSecretManager: AppLaunchManager.remoteSecretManager
+    )
+
+    @available(
+        *,
+        deprecated,
+        message: "Only use from Objective-C",
+        renamed: "keychainManager"
+    )
+    @objc public private(set) lazy var keychainManagerObjC: KeychainManager = keychainManager as! KeychainManager
 
     public func runInBackground<T>(
         _ block: @escaping (BusinessInjectorProtocol) async throws -> T
@@ -235,12 +286,14 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
             messageProcessorInstance = MessageProcessor(
                 serverConnector,
                 groupManager: GroupManager(
-                    myIdentityStore,
-                    contactStore,
-                    taskManager,
-                    userSettings,
-                    backgroundEntityManager,
-                    GroupPhotoSender()
+                    myIdentityStore: myIdentityStore,
+                    contactStore: contactStore,
+                    taskManager: taskManager,
+                    userSettings: userSettings,
+                    entityManager: backgroundEntityManager,
+                    groupPhotoSender: {
+                        GroupPhotoSender()
+                    }
                 ),
                 entityManager: backgroundEntityManager,
                 fsmp: fsmp,

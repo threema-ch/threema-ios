@@ -13,9 +13,6 @@
 //
 
 #import <UIKit/UIKit.h>
-/***** BEGIN THREEMA MODIFICATION: Import TTTAttributedLabel *********/
-#import "TTTAttributedLabel.h"
-/***** END THREEMA MODIFICATION: Import TTTAttributedLabel *********/
 
 @class ZSWTappableLabel;
 
@@ -158,9 +155,7 @@ extern NSAttributedStringKey const ZSWTappableLabelTappableRegionAttributeName
 @end
 
 #pragma mark - Primary class
-/***** BEGIN THREEMA MODIFICATION: Subclass from TTTAttributedLabel *********/
-@interface ZSWTappableLabel : TTTAttributedLabel
-/***** END THREEMA MODIFICATION: Subclass from TTTAttributedLabel *********/
+@interface ZSWTappableLabel : UILabel
 
 #pragma mark - Configuration
 

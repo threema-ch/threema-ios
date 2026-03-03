@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import MBProgressHUD
 import ThreemaMacros
 import UIKit
@@ -55,7 +56,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     var mediaData: [MediaPreviewItem] = []
     
     @objc public var backIsCancel = false
-    @objc var showKeyboard = false
+    @objc public var showKeyboard = false
     
     var completion: (([Any], Bool, [String]) -> Void)?
     public var optionsEnabled = true
@@ -93,14 +94,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         }
         
         updateTextForIndex(indexPath: currentItem, animated: false)
-        
-        // There seems to be an issue in iOS 13 where the content view of an UINavigationBar can have the wrong height.
-        // The issue still persists in an iOS 13.7 Simulator.
-        // Source for the fix: DaleOne in the Apple Developer Forums (https://developer.apple.com/forums/thread/121861)
-        if ProcessInfo().operatingSystemVersion.majorVersion == 13 {
-            navigationController?.navigationBar.setNeedsLayout()
-        }
-        
+               
         view.backgroundColor = .systemBackground
         middleStackView.backgroundColor = .secondarySystemBackground
         stackView.backgroundColor = .secondarySystemBackground
@@ -251,11 +245,11 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             stackViewToolbar.backgroundColor = .clear
         }
         trashButton.setImage(
-            UIImage(systemName: "trash")?.applying(symbolWeight: .regular, symbolScale: .large).withTint(.primary),
+            UIImage(systemName: "trash")?.applying(symbolWeight: .regular, symbolScale: .large).withTintColor(.primary),
             for: .normal
         )
         previewButton.setImage(
-            UIImage(systemName: "eye")?.applying(symbolWeight: .regular, symbolScale: .large).withTint(.primary),
+            UIImage(systemName: "eye")?.applying(symbolWeight: .regular, symbolScale: .large).withTintColor(.primary),
             for: .normal
         )
     }
@@ -387,7 +381,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         resetMediaTo(dataArray: dataArray, reloadData: false)
     }
     
-    @objc func resetMediaTo(dataArray: [Any], reloadData: Bool) {
+    @objc public func resetMediaTo(dataArray: [Any], reloadData: Bool) {
         guard let itemDelegate else {
             fatalError("ItemDelegate must be set")
         }
@@ -647,7 +641,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         }
     }
     
-    @objc static func isURLItem(item: MediaPreviewItem) -> Bool {
+    @objc public static func isURLItem(item: MediaPreviewItem) -> Bool {
         item.originalAsset == nil && item.itemURL != nil
     }
     

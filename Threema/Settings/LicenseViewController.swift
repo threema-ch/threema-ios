@@ -23,13 +23,18 @@ import ThreemaMacros
 class LicenseViewController: SettingsWebViewViewController {
 
     private let licenseFileName = "license"
-    
+
     // MARK: - Lifecycle
     
     init() {
         super.init(title: #localize("settings_list_license_title"))
     }
-    
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupTraitRegistration()
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
@@ -40,20 +45,22 @@ class LicenseViewController: SettingsWebViewViewController {
             webView.loadHTMLString(myHtml, baseURL: baseURL)
         }
     }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
-            return
-        }
-         
-        let baseURL = URL(fileURLWithPath: Bundle.main.bundlePath)
-        if let myHtml = loadHTML() {
-            webView.loadHTMLString(myHtml, baseURL: baseURL)
+
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitUserInterfaceStyle.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                let baseURL = URL(fileURLWithPath: Bundle.main.bundlePath)
+                if let myHtml = loadHTML() {
+                    webView.loadHTMLString(myHtml, baseURL: baseURL)
+                }
+            }
         }
     }
-    
+
     // MARK: - Helper Methods
     
     private func loadHTML() -> String? {

@@ -67,10 +67,14 @@ import ThreemaMacros
 ///  │exclusion list│       └──────────┘
 ///  └──────────────┘
 /// ```
-class DeleteContactAction: NSObject {
+final class DeleteContactAction: NSObject {
+    
+    /// Called before the deletion starts after the user approves it
+    typealias WillDeleteHandler = () -> Void
     
     /// Called at the end of execution
-    /// - Parameter didDelete: `true` when the deletion happened, `false` otherwise
+    /// - Parameter didDelete: `true` when the deletion happened (in this case `WillDeleteHandler` should also have been
+    ///                        called before this), `false` otherwise
     typealias CompletionHandler = (_ didDelete: Bool) -> Void
     
     // MARK: Private properties
@@ -92,16 +96,19 @@ class DeleteContactAction: NSObject {
     ///
     /// Depending on the state one or multiple sheets/alerts are shown to confirm the action.
     ///
-    ///  - Parameter view: Origin view of action (used as anchor point for sheets)
-    ///  - Parameter viewController: View controller to show sheets and alerts on
-    ///  - Parameter completion: Called at the end of execution
+    /// - Parameters:
+    ///   - view: Origin view of action (used as anchor point for sheets)
+    ///   - viewController: View controller to show sheets and alerts on
+    ///   - willDelete: Called before deletions starts if the deletion is not canceled
+    ///   - completion: Called at the end of execution
     @objc
     func execute(
         in view: UIView,
         of viewController: UIViewController,
+        willDelete: WillDeleteHandler? = nil,
         completion: CompletionHandler? = nil
     ) {
-        let isGroupMember = businessInjector.entityManager.entityFetcher.groupConversations(for: contact) != nil
+        let isGroupMember = businessInjector.entityManager.entityFetcher.conversationEntities(for: contact) != nil
 
         // Does contact have an existing 1:1 chat conversation?
         if let conversations = contact.conversations,
@@ -112,6 +119,7 @@ class DeleteContactAction: NSObject {
                 of: viewController,
                 with: contact.displayName,
                 isGroupMember: isGroupMember,
+                willDelete: willDelete,
                 completion: completion
             )
         }
@@ -123,12 +131,19 @@ class DeleteContactAction: NSObject {
                     in: view,
                     of: viewController,
                     isGroupMember: isGroupMember,
+                    willDelete: willDelete,
                     completion: completion
                 )
             }
             else {
                 // Delete contact?
-                showDeleteSheet(in: view, of: viewController, isGroupMember: isGroupMember, completion: completion)
+                showDeleteSheet(
+                    in: view,
+                    of: viewController,
+                    isGroupMember: isGroupMember,
+                    willDelete: willDelete,
+                    completion: completion
+                )
             }
         }
     }
@@ -143,13 +158,14 @@ extension DeleteContactAction {
         of viewController: UIViewController,
         with contactName: String,
         isGroupMember: Bool,
+        willDelete: WillDeleteHandler?,
         completion: CompletionHandler?
     ) {
         let deleteAlertAction = UIAlertAction(
             title: #localize("delete_contact_existing_conversation_button"),
             style: .destructive
         ) { _ in
-            self.deleteContact(exclude: nil, completion: completion)
+            self.deleteContact(exclude: nil, willDelete: willDelete, completion: completion)
         }
         
         let sheetTitle =
@@ -180,6 +196,7 @@ extension DeleteContactAction {
         in view: UIView,
         of viewController: UIViewController,
         isGroupMember: Bool,
+        willDelete: WillDeleteHandler?,
         completion: CompletionHandler?
     ) {
         let localizedMessage =
@@ -201,14 +218,14 @@ extension DeleteContactAction {
             title: #localize("delete_contact_button"),
             style: .destructive
         ) { _ in
-            self.deleteContact(exclude: false, completion: completion)
+            self.deleteContact(exclude: false, willDelete: willDelete, completion: completion)
         }
         
         let deleteWithExclusionAction = UIAlertAction(
             title: #localize("delete_contact_confirmation_with_exclusion_button"),
             style: .destructive
         ) { _ in
-            self.deleteContact(exclude: true, completion: completion)
+            self.deleteContact(exclude: true, willDelete: willDelete, completion: completion)
         }
         
         UIAlertTemplate.showSheet(
@@ -225,6 +242,7 @@ extension DeleteContactAction {
         in view: UIView,
         of viewController: UIViewController,
         isGroupMember: Bool,
+        willDelete: WillDeleteHandler?,
         completion: CompletionHandler?
     ) {
         let localizedMessage: String? =
@@ -243,7 +261,7 @@ extension DeleteContactAction {
             title: #localize("delete_contact_button"),
             style: .destructive
         ) { _ in
-            self.deleteContact(exclude: false, completion: completion)
+            self.deleteContact(exclude: false, willDelete: willDelete, completion: completion)
         }
         
         UIAlertTemplate.showSheet(
@@ -258,8 +276,13 @@ extension DeleteContactAction {
     /// Delete contact
     ///
     /// - Parameter exclude: Add to exclusion list depending on flag, if it's `nil` the user is asked
+    /// - Parameter willDelete: Called before deletion starts
     /// - Parameter completion: Completion handler
-    private func deleteContact(exclude: Bool?, completion: CompletionHandler?) {
+    private func deleteContact(
+        exclude: Bool?,
+        willDelete: WillDeleteHandler?,
+        completion: CompletionHandler?
+    ) {
         
         // Temporarily store some contact information before it is destroyed
         var tempContactCouldBeExcluded = false
@@ -268,13 +291,7 @@ extension DeleteContactAction {
         
         // Delete Contact
         
-        // Remove left drafts
-        if let conversations = contact.conversations {
-            for conversation in conversations {
-                MessageDraftStore.shared.deleteDraft(for: conversation)
-                WallpaperStore.shared.deleteWallpaper(for: conversation.objectID)
-            }
-        }
+        willDelete?()
         
         // Remove INInteractions
         SettingsStore.removeINInteractions(for: contact.objectID)
@@ -296,7 +313,13 @@ extension DeleteContactAction {
             tempContactIdentity = self.contact.identity
             tempContactDisplayName = self.contact.displayName
 
-            self.businessInjector.entityManager.entityDestroyer.deleteOneToOneConversation(for: self.contact)
+            self.businessInjector.entityManager.entityDestroyer.deleteOneToOneConversation(
+                for: self.contact
+            ) { conversationEntity in
+                // Remove draft & wallpaper before conversation is deleted
+                MessageDraftStore.shared.deleteDraft(for: conversationEntity)
+                WallpaperStore.shared.deleteWallpaper(for: conversationEntity.objectID)
+            }
 
             if let tempContactIdentity {
                 Task {
@@ -371,8 +394,7 @@ extension DeleteContactAction {
     }
     
     private var contactCouldBeExcluded: Bool {
-        // swiftformat:disable:next acronyms
-        let isLinked = contact.cnContactId != nil
+        let isLinked = contact.cnContactID != nil
         
         let contactIdentity = contact.identity
         let isAlreadyOnExclusionList = UserSettings.shared()?.syncExclusionList.contains(where: { anyID in

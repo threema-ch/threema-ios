@@ -49,10 +49,10 @@ class WebUpdateConversationRequest: WebAbstractMessage {
     func updateConversation() {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
         DispatchQueue.main.sync {
-            let entityManager = EntityManager()
+            let entityManager = BusinessInjector.ui.entityManager
             
             if groupID != nil {
-                let conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
+                let conversation = entityManager.entityFetcher.legacyConversationEntity(for: groupID)
                 
                 if conversation == nil {
                     ack!.success = false
@@ -72,8 +72,8 @@ class WebUpdateConversationRequest: WebAbstractMessage {
                 
                 self.ack!.success = true
             }
-            else if identity != nil {
-                let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: identity!)
+            else if let identity {
+                let conversation = entityManager.entityFetcher.conversationEntity(for: identity)
                 if conversation == nil {
                     ack!.success = false
                     ack!.error = "invalidConversation"

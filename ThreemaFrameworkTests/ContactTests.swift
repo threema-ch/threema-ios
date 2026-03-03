@@ -19,9 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaMacros
 import ThreemaProtocols
 import XCTest
+
 @testable import ThreemaFramework
 
 class ContactTests: XCTestCase {
@@ -32,7 +34,6 @@ class ContactTests: XCTestCase {
     private var ddLoggerMock: DDLoggerMock!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
@@ -58,12 +59,12 @@ class ContactTests: XCTestCase {
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
                 publicKey: expectedPublicKey,
-                identity: expectedIdentity.string,
+                identity: expectedIdentity.rawValue,
                 verificationLevel: .unverified
             )
             contactEntity.publicNickname = "fritzberg"
-            contactEntity.setFirstName(to: "Fritz")
-            contactEntity.setLastName(to: "Berg")
+            contactEntity.setFirstName(to: "Fritz", sortOrderFirstName: true)
+            contactEntity.setLastName(to: "Berg", sortOrderFirstName: true)
             contactEntity.contactState = .inactive
             contactEntity.workContact = NSNumber(booleanLiteral: true)
         }
@@ -82,10 +83,10 @@ class ContactTests: XCTestCase {
 
         // Change contact entity properties in DB
 
-        let entityManager = EntityManager(databaseContext: dbMainCnx, myIdentityStore: MyIdentityStoreMock())
+        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         entityManager.performAndWaitSave {
-            contactEntity.setFirstName(to: "Fritzli")
-            contactEntity.setLastName(to: "Bergli")
+            contactEntity.setFirstName(to: "Fritzli", sortOrderFirstName: true)
+            contactEntity.setLastName(to: "Bergli", sortOrderFirstName: true)
             contactEntity.publicNickname = "fritzlibergli"
             contactEntity.contactVerificationLevel = .serverVerified
             contactEntity.contactState = .active
@@ -113,7 +114,7 @@ class ContactTests: XCTestCase {
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
                 publicKey: expectedPublicKey,
-                identity: expectedIdentity.string,
+                identity: expectedIdentity.rawValue,
                 verificationLevel: .unverified
             )
         }
@@ -127,9 +128,9 @@ class ContactTests: XCTestCase {
 
         // Change contact entity properties in DB
 
-        let entityManager = EntityManager(databaseContext: dbMainCnx, myIdentityStore: MyIdentityStoreMock())
+        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         entityManager.performAndWaitSave {
-            contactEntity.setIdentity(to: "CONTACT1")
+            contactEntity.setIdentity(to: "CONTACT1", sortOrderFirstName: true)
         }
 
         // Check changed contact properties
@@ -151,8 +152,8 @@ class ContactTests: XCTestCase {
                 verificationLevel: .fullyVerified
             )
             contact1.publicNickname = "#1"
-            contact1.setFirstName(to: "first name one")
-            contact1.setLastName(to: "last name one")
+            contact1.setFirstName(to: "first name one", sortOrderFirstName: true)
+            contact1.setLastName(to: "last name one", sortOrderFirstName: true)
             contact1.contactState = .inactive
             contact1.workContact = NSNumber(booleanLiteral: true)
 
@@ -161,8 +162,8 @@ class ContactTests: XCTestCase {
                 identity: "CONTACT2"
             )
             contact2.publicNickname = "#2"
-            contact2.setFirstName(to: "first name second")
-            contact2.setLastName(to: "last name second")
+            contact2.setFirstName(to: "first name second", sortOrderFirstName: true)
+            contact2.setLastName(to: "last name second", sortOrderFirstName: true)
             contact2.contactState = .inactive
             contact2.workContact = NSNumber(booleanLiteral: false)
 
@@ -171,8 +172,8 @@ class ContactTests: XCTestCase {
                 identity: "CONTACT3"
             )
             contact3.publicNickname = "#3"
-            contact3.setFirstName(to: "first name third")
-            contact3.setLastName(to: "last name third")
+            contact3.setFirstName(to: "first name third", sortOrderFirstName: true)
+            contact3.setLastName(to: "last name third", sortOrderFirstName: true)
             contact3.contactState = .inactive
             contact3.workContact = NSNumber(booleanLiteral: false)
         }
@@ -247,8 +248,8 @@ class ContactTests: XCTestCase {
                 XCTAssertEqual(contactEntity.displayName, c.displayName)
             }
 
-            // make sure we are at default settings
-            UserSettings.shared().setSortOrderFirstName(true, displayOrderFirstName: true)
+            // Sort order first name is true
+            UserSettings.shared().displayOrderFirstName = true
 
             assertDisplayNameEquals("CONTACT1")
 
@@ -258,23 +259,24 @@ class ContactTests: XCTestCase {
             contactEntity.publicNickname = "🙂"
             assertDisplayNameEquals("~🙂")
 
-            contactEntity.setFirstName(to: "First")
+            contactEntity.setFirstName(to: "First", sortOrderFirstName: UserSettings.shared().displayOrderFirstName)
             assertDisplayNameEquals("First")
 
-            contactEntity.setLastName(to: "Last Name")
+            contactEntity.setLastName(to: "Last Name", sortOrderFirstName: UserSettings.shared().displayOrderFirstName)
             assertDisplayNameEquals("First Last Name")
 
-            contactEntity.setFirstName(to: nil)
+            contactEntity.setFirstName(to: nil, sortOrderFirstName: UserSettings.shared().displayOrderFirstName)
             assertDisplayNameEquals("Last Name")
 
-            UserSettings.shared().setSortOrderFirstName(false, displayOrderFirstName: false)
+            // Sort order first name is false
+            UserSettings.shared().displayOrderFirstName = false
 
-            contactEntity.setFirstName(to: "First")
-            contactEntity.setLastName(to: "Last Name")
+            contactEntity.setFirstName(to: "First", sortOrderFirstName: UserSettings.shared().displayOrderFirstName)
+            contactEntity.setLastName(to: "Last Name", sortOrderFirstName: UserSettings.shared().displayOrderFirstName)
             assertDisplayNameEquals("Last Name First")
             
             // reset to default in case of further tests depending on the default
-            UserSettings.shared().setSortOrderFirstName(true, displayOrderFirstName: true)
+            UserSettings.shared().displayOrderFirstName = true
         }
     }
 
@@ -283,11 +285,11 @@ class ContactTests: XCTestCase {
             self.dbPreparer.createContact(identity: "ECHOECHO")
         }
 
-        let em = EntityManager(databaseContext: dbMainCnx)
+        let em = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
 
         for flag in ThreemaProtocols.Common_CspFeatureMaskFlag.allCases {
             let contactEntity = await em.performSave {
-                let contactEntity = em.entityFetcher.contact(for: "ECHOECHO")
+                let contactEntity = em.entityFetcher.contactEntity(for: "ECHOECHO")
                 contactEntity?.setFeatureMask(to: flag.rawValue)
                 return contactEntity
             }

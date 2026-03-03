@@ -101,7 +101,7 @@ class EditProfilePictureView: UIStackView {
     
     private lazy var deleteButtonConstraints: [NSLayoutConstraint] = [
         deleteButton.topAnchor.constraint(equalTo: profilePictureView.topAnchor),
-        deleteButton.trailingAnchor.constraint(equalTo: profilePictureView.trailingAnchor),
+        deleteButton.trailingAnchor.constraint(equalTo: profilePictureView.trailingAnchor, constant: -8),
     ]
 
     private lazy var deleteButton = OpaqueDeleteButton(action: deleteAction)

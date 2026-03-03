@@ -27,7 +27,12 @@ final class SettingsViewController: UIViewController {
     
     weak var coordinator: SettingsCoordinator?
     
-    private lazy var collectionView = SettingsCollectionView(coordinator: coordinator)
+    private lazy var collectionView = SettingsCollectionView { [weak self] in
+        self?.coordinator?.currentDestination
+    } shouldAllowAutoDeselection: { [weak self] in
+        let traitCollection = self?.presentationController?.traitCollection
+        return traitCollection?.horizontalSizeClass == .compact
+    }
 
     private lazy var dataSource = SettingsCollectionViewDataSource(
         collectionView: collectionView,
@@ -53,9 +58,9 @@ final class SettingsViewController: UIViewController {
         dataSource.configureData()
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        coordinator?.checkDetailVC()
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
+        updateSelection()
     }
 
     // MARK: - Configuration
@@ -75,6 +80,6 @@ final class SettingsViewController: UIViewController {
     // MARK: - Updates
     
     func updateSelection() {
-        collectionView.updateSelection(for: coordinator?.horizontalSizeClass ?? .unspecified)
+        collectionView.updateSelection(for: traitCollection.horizontalSizeClass)
     }
 }

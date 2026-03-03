@@ -191,7 +191,10 @@ final class MessageEditedMessageStackView: UIStackView {
             titleAndEditMessageStackView.spacing = 0
         }
         
-        editMessageLabel.attributedText = editedMessage.previewAttributedText(for: .default)
+        editMessageLabel.attributedText = editedMessage.previewAttributedText(
+            for: .default,
+            settingsStore: BusinessInjector.ui.settingsStore
+        )
 
         // We need to set the font explicitly to make the label set its height correctly
         editMessageLabel.font = PreviewableMessageConfiguration.default.font

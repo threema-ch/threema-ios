@@ -33,152 +33,58 @@ protocol EditNameTableViewCellDelegate: AnyObject {
     func editNameTableViewCell(_ editNameTableViewCell: EditNameTableViewCell, didChangeTextTo newText: String?)
 }
 
-// MARK: - EditNameTableViewCell.Configuration
-
-extension EditNameTableViewCell {
-    private struct Configuration: DetailsConfiguration { }
-}
-
 /// Cell with a textfield to edit a person's first or last name or a group name
 class EditNameTableViewCell: ThemedCodeTableViewCell {
     
-    // MARK: - Types
-    
-    enum NameType {
-        case firstName
-        case lastName
-        case groupName
-        case distributionListName
-    }
-    
-    // MARK: - Public properties
-    
-    /// Type of name in this cell
-    var nameType: NameType = .firstName {
-        didSet {
-            switch nameType {
-            case .firstName:
-                nameTextField.placeholder = #localize("first_name_placeholder")
-                nameTextField.textContentType = .givenName
-                maxNumberOfUTF8Bytes = kMaxFirstOrLastNameLength
-            case .lastName:
-                nameTextField.placeholder = #localize("last_name_placeholder")
-                nameTextField.textContentType = .familyName
-                maxNumberOfUTF8Bytes = kMaxFirstOrLastNameLength
-            case .groupName:
-                nameTextField.placeholder = #localize("group_name_placeholder")
-                nameTextField.textContentType = .none
-                maxNumberOfUTF8Bytes = kMaxGroupNameLength
-            case .distributionListName:
-                nameTextField.placeholder = #localize("distribution_list_name_placeholder")
-                nameTextField.textContentType = .none
-                maxNumberOfUTF8Bytes = kMaxGroupNameLength
-            }
-        }
-    }
-    
-    /// Set to initially shown name
-    var name: String? {
-        get {
-            nameTextField.text
-        }
-        
-        set {
-            nameTextField.text = newValue
-        }
-    }
-    
-    /// Get updates when name changed
     weak var delegate: EditNameTableViewCellDelegate?
     
-    // MARK: - Private properties
-    
-    private var maxNumberOfUTF8Bytes: Int?
-    
-    private let configuration = Configuration()
-    
-    // MARK: Subview
-    
-    private lazy var nameTextField: UITextField = {
-        let textField = UITextField()
-        
-        textField.font = configuration.nameFont
-        textField.adjustsFontSizeToFitWidth = true
-        textField.minimumFontSize = UIFont.preferredFont(forTextStyle: .body).pointSize
-        
-        textField.becomeFirstResponder()
-        textField.autocapitalizationType = .words
-        textField.clearButtonMode = .whileEditing
-        
-        textField.textColor = .label
-        
-        textField.delegate = self
-        
-        return textField
-    }()
-    
-    // MARK: - Configuration
+    private let nameInputView = EditNameInputView()
     
     override func configureCell() {
         super.configureCell()
         
         selectionStyle = .none
         
-        contentView.addSubview(nameTextField)
-        nameTextField.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(nameInputView)
+        nameInputView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            nameTextField.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-            nameTextField.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            nameTextField.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
-            nameTextField.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            nameInputView.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            nameInputView.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            nameInputView.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
+            nameInputView.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
         ])
+        
+        nameInputView.onTextChanged = { [weak self] text in
+            guard let self else {
+                return
+            }
+            delegate?.editNameTableViewCell(self, didChangeTextTo: text)
+        }
     }
     
-    // MARK: - Responder chain
-    
-    override var canBecomeFirstResponder: Bool {
-        true
+    var nameType: EditNameInputView.NameType {
+        get {
+            nameInputView.nameType
+        }
+        set {
+            nameInputView.nameType = newValue
+        }
     }
+    
+    var name: String? {
+        get {
+            nameInputView.name
+        }
+        set {
+            nameInputView.name = newValue
+        }
+    }
+    
+    override var canBecomeFirstResponder: Bool { true }
     
     override func becomeFirstResponder() -> Bool {
-        nameTextField.becomeFirstResponder()
-    }
-}
-
-// MARK: - UITextFieldDelegate
-
-extension EditNameTableViewCell: UITextFieldDelegate {
-    
-    func textField(
-        _ textField: UITextField,
-        shouldChangeCharactersIn range: NSRange,
-        replacementString string: String
-    ) -> Bool {
-        // Limit number of UTF-8 bytes if there is any limit
-        guard let maxNumberOfUTF8Bytes else {
-            return true
-        }
-        
-        let currentText = textField.text ?? ""
-        guard let rangeToBeReplaced = Range(range, in: currentText) else {
-            return false
-        }
-        let newText = currentText.replacingCharacters(in: rangeToBeReplaced, with: string)
-        
-        return newText.utf8.count <= maxNumberOfUTF8Bytes
-    }
-    
-    func textFieldDidChangeSelection(_ textField: UITextField) {
-        // Just calling this from `textField(_:shouldChangeCharactersIn:replacementString:)`
-        // would miss the changes due to the custom clear button.
-        delegate?.editNameTableViewCell(self, didChangeTextTo: textField.text)
-    }
-    
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        // Hide keyboard on return
-        textField.resignFirstResponder()
-        return true
+        nameInputView.becomeFirstResponder()
     }
 }
 

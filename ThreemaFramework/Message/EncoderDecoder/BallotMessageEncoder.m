@@ -31,8 +31,10 @@
 #endif
 @implementation BallotMessageEncoder
 
-+ (BoxBallotVoteMessage *)encodeVoteMessageForBallot:(BallotEntity *)ballot {
-    
++ (BoxBallotVoteMessage *)encodeVoteMessageForBallot:(NSObject *)ballotEntityObject {
+    NSAssert(ballotEntityObject == nil || [ballotEntityObject isKindOfClass:[BallotEntity class]], @"Parameter ballotEntityObject must be type of BallotEntity");
+    BallotEntity *ballot = (BallotEntity*)ballotEntityObject;
+
     NSData *jsonData = [self jsonVoteDataFor:ballot];
 
     BoxBallotVoteMessage *voteMessage = [[BoxBallotVoteMessage alloc] init];
@@ -45,7 +47,10 @@
     return voteMessage;
 }
 
-+ (BoxBallotCreateMessage *)encodeCreateMessageForBallot:(BallotEntity *)ballot {
++ (BoxBallotCreateMessage *)encodeCreateMessageForBallot:(NSObject *)ballotEntityObject {
+    NSAssert(ballotEntityObject == nil || [ballotEntityObject isKindOfClass:[BallotEntity class]], @"Parameter ballotEntityObject must be type of BallotEntity");
+    BallotEntity *ballot = (BallotEntity*)ballotEntityObject;
+
     NSData *jsonData = [self jsonCreateDataFor:ballot];
     
     BoxBallotCreateMessage *boxMessage = [[BoxBallotCreateMessage alloc] init];
@@ -132,7 +137,7 @@
         
         NSMutableArray *resultArray = [NSMutableArray array];
         
-        BallotResultEntity *ownResult = [choice getResultForLocalIdentity];
+        BallotResultEntity *ownResult = [choice getResultForIdentity: [MyIdentityStore.sharedMyIdentityStore identity]];
         if (ownResult) {
             [resultArray addObject: choice.id];
             [resultArray addObject: ownResult.value];
@@ -190,7 +195,10 @@
 
 /// Checks whether the given ballot passes a basic sanity check and can be encoded
 /// @param ballot The ballot that should be checked for sanity
-+ (BOOL)passesSanityCheck:(nullable BallotEntity *) ballot {
++ (BOOL)passesSanityCheck:(nullable NSObject *)ballotEntityObject {
+    NSAssert(ballotEntityObject == nil || [ballotEntityObject isKindOfClass:[BallotEntity class]], @"Parameter ballotEntityObject must be type of BallotEntity");
+    BallotEntity *ballot = (BallotEntity*)ballotEntityObject;
+
     if (ballot == nil) {
         DDLogError(@"Ballot is nil.");
         return false;

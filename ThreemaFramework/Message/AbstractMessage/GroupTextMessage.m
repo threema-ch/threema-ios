@@ -20,7 +20,7 @@
 
 #import "GroupTextMessage.h"
 #import "ProtocolDefines.h"
-#import "QuoteUtil.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 @implementation GroupTextMessage
 
@@ -61,7 +61,7 @@
 }
 
 - (NSData *)quotedBody {
-    NSString *quotedText = self.quotedMessageId != nil ? [QuoteUtil generateText:self.text quotedId:self.quotedMessageId] : self.text;
+    NSString *quotedText = self.quotedMessageId != nil ? [QuoteUtil generateText:self.text quotedID:self.quotedMessageId] : self.text;
 
     NSMutableData *body = [NSMutableData dataWithData:[self.groupCreator dataUsingEncoding:NSASCIIStringEncoding]];
     [body appendData:self.groupId];

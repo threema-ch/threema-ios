@@ -21,8 +21,6 @@
 #import <Foundation/Foundation.h>
 #import "Old_BlobUploadDelegate.h"
 
-@class ConversationEntity, Contact;
-
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol GroupPhotoSenderProtocol <NSObject>

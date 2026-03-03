@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "IDCreationPageViewController.h"
-#import "RectUtil.h"
 #import "AppDelegate.h"
 
 @interface IDCreationPageViewController ()
@@ -33,27 +32,16 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    if (SYSTEM_IS_IPAD) {
-        CGRect mainRect = _mainContentView.frame;
-        
-        if ([AppDelegate hasBottomSafeAreaInsets]) {
-            mainRect.size.height -= 20.0;
-        }
-        
-        // stick to lower left corner of main view
-        CGRect rect = [RectUtil setPositionOf:_moreView.frame x:CGRectGetMinX(mainRect) y:CGRectGetMaxY(mainRect)];
-        _moreView.frame = rect;
-    } else {
-        if ([self shouldAdaptToSmallScreen]) {
-            // e.g. iPhone 4 etc
-            [self adaptToSmallScreen];
-        }
-        
-        if ([AppDelegate hasBottomSafeAreaInsets]) {
-            _moreView.frame = CGRectMake(_moreView.frame.origin.x, _moreView.frame.origin.y - 20.0, _moreView.frame.size.width, _moreView.frame.size.height);
-        }
+    CGRect mainRect = _mainContentView.frame;
+    
+    if ([AppDelegate hasBottomSafeAreaInsets]) {
+        mainRect.size.height -= 20.0;
     }
     
+    // stick to lower left corner of main view
+    CGRect rect = CGRectMake(CGRectGetMinX(mainRect), CGRectGetMaxY(mainRect), _moreView.frame.size.width, _moreView.frame.size.height);
+    _moreView.frame = rect;
+
     UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedMoreMessage:)];
     [_moreView addGestureRecognizer:tapGesture];
     _moreView.userInteractionEnabled = YES;
@@ -63,30 +51,19 @@
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
     
-    if (SYSTEM_IS_IPAD) {
-        CGRect mainRect = _mainContentView.frame;
-        
-        if ([AppDelegate hasBottomSafeAreaInsets]) {
-            mainRect.size.height -= 20.0;
-        }
-        
-        // stick to lower left corner of main view
-        CGRect rect = [RectUtil setPositionOf:_moreView.frame x:CGRectGetMinX(mainRect) y:CGRectGetMaxY(mainRect)];
-        _moreView.frame = rect;
-    } else {
-        if ([self shouldAdaptToSmallScreen]) {
-            // e.g. iPhone 4 etc
-            [self adaptToSmallScreen];
-        }
-        
-        if ([AppDelegate hasBottomSafeAreaInsets]) {
-            _moreView.frame = CGRectMake(_moreView.frame.origin.x, _moreView.frame.origin.y - 20.0, _moreView.frame.size.width, _moreView.frame.size.height);
-        }
+    CGRect mainRect = _mainContentView.frame;
+    
+    if ([AppDelegate hasBottomSafeAreaInsets]) {
+        mainRect.size.height -= 20.0;
     }
+    
+    // stick to lower left corner of main view
+    CGRect rect = CGRectMake(CGRectGetMinX(mainRect), CGRectGetMaxY(mainRect), _moreView.frame.size.width, _moreView.frame.size.height);
+    _moreView.frame = rect;
 }
 
 - (void)adaptToSmallScreen {
-    CGRect rect = [RectUtil offsetRect:self.view.frame byX:0.0 byY:-28.0];
+    CGRect rect = CGRectMake(self.view.frame.origin.x, self.view.frame.origin.y - 28.0, self.view.frame.size.width, self.view.frame.size.height);
     self.view.frame = rect;
 }
 

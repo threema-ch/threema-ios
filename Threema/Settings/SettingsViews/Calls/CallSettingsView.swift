@@ -26,7 +26,7 @@ struct CallSettingsView: View {
     
     @EnvironmentObject var settingsVM: SettingsStore
 
-    let mdmSetup = MDMSetup(setup: false)
+    let mdmSetup = MDMSetup()
 
     var body: some View {
         List {

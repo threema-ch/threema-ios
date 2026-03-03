@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import ThreemaFramework
 
@@ -183,7 +184,7 @@ final class ChatViewTableViewVoiceMessageCellDelegate: NSObject, ChatViewTableVi
         /// This can occur often if a user plays back the same voice messages lots of times
         /// If this fails, the temporary directory is cleaned up regularly by the app and on deinit of the
         /// ChatViewController
-        FileUtility.shared.delete(at: currentlyPlayingURL)
+        FileUtility.shared.deleteIfExists(at: currentlyPlayingURL)
     }
     
     // MARK: - ChatViewTableViewVoiceMessageCellDelegateProtocol Implementation

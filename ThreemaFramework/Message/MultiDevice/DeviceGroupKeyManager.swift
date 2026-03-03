@@ -20,30 +20,26 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import Keychain
 import ThreemaEssentials
 
 protocol DeviceGroupKeyManagerProtocol {
     var dgk: Data? { get }
     func load() -> Data?
-    func destroy() -> Bool
+    /// This function is static, since we must be able to delete the key in setup
+    static func destroy() -> Bool
     func store(dgk: Data) -> Bool
 }
 
 public class DeviceGroupKeyManager: NSObject, DeviceGroupKeyManagerProtocol {
-    private let keychainLabel = "Threema Device Group Key 1"
+    private let keychainManager: KeychainManagerProtocol
 
-    private let myIdentityStore: MyIdentityStoreProtocol
-
-    var keychainHelper: KeychainHelper? {
-        guard let identity = myIdentityStore.identity else {
-            return nil
-        }
-
-        return KeychainHelper(identity: ThreemaIdentity(identity))
+    @objc override public convenience init() {
+        self.init(keychainManager: KeychainManager(remoteSecretManager: AppLaunchManager.remoteSecretManager))
     }
 
-    @objc public required init(myIdentityStore: MyIdentityStoreProtocol) {
-        self.myIdentityStore = myIdentityStore
+    public required init(keychainManager: KeychainManagerProtocol) {
+        self.keychainManager = keychainManager
     }
 
     /// Device Group Key stored in keychain.
@@ -53,7 +49,7 @@ public class DeviceGroupKeyManager: NSObject, DeviceGroupKeyManagerProtocol {
 
     /// Create new DGK and store it (override) in keychain.
     public func create() -> Data? {
-        guard let key = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen)) else {
+        guard let key = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceGroupKeyLength) else {
             return nil
         }
         guard store(dgk: key) else {
@@ -65,26 +61,24 @@ public class DeviceGroupKeyManager: NSObject, DeviceGroupKeyManagerProtocol {
     /// Load DGK from Keychain
     /// - Returns: DGK or nil if not found
     public func load() -> Data? {
-        guard let keychainHelper else {
+        do {
+            return try keychainManager.loadMultiDeviceGroupKey()
+        }
+        catch {
+            DDLogError("Couldn't load device group key from Keychain: \(error)")
             return nil
         }
-
-        let (key, _, _) = keychainHelper.load(item: .deviceGroupKey)
-        return key
     }
 
     /// Destroy DGK from Keychain.
     /// - Returns: True if key founded and destroyed
-    @discardableResult @objc public func destroy() -> Bool {
-        guard let keychainHelper else {
-            return false
-        }
-
+    @discardableResult @objc public static func destroy() -> Bool {
         do {
-            try keychainHelper.destroy(item: .deviceGroupKey)
+            try KeychainManager.deleteMultiDeviceGroupKey()
             return true
         }
         catch {
+            DDLogError("Couldn't delete device group key in Keychain: \(error)")
             return false
         }
     }
@@ -93,15 +87,12 @@ public class DeviceGroupKeyManager: NSObject, DeviceGroupKeyManagerProtocol {
     /// - Parameter dgk: Device Group Key
     /// - Returns: True DGK stored successfully
     @discardableResult public func store(dgk: Data) -> Bool {
-        guard let keychainHelper else {
-            return false
-        }
-
         do {
-            try keychainHelper.store(password: dgk, item: .deviceGroupKey)
+            try keychainManager.storeMultiDeviceGroupKey(key: dgk)
             return true
         }
         catch {
+            DDLogError("Couldn't store device group key in Keychain: \(error)")
             return false
         }
     }

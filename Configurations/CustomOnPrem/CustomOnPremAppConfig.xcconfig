@@ -32,7 +32,4 @@ APP_URL_TYPE_IDENTIFIER = $(BUNDLE_BASE_IDENTIFIER).urlscheme
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
 ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO
 
-/// Launch Story Board Name
-INFOPLIST_KEY_UILaunchStoryboardName = CustomOnPremLaunchScreen
-
 PRIVACY_DESCRIPTION_CONTACTS = The address book is used to find other users when contact synchronization is on.

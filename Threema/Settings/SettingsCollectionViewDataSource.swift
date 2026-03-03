@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import SwiftUI
 import ThreemaMacros
 
 class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
@@ -36,7 +37,7 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
         
         switch item {
             
-        case .betaFeedback, .developer, .privacy, .appearance, .noftifications, .chat, .media, .storage, .passcode,
+        case .betaFeedback, .developer, .privacy, .appearance, .notifications, .chat, .media, .storage, .passcode,
              .calls, .desktop, .web, .rate, .invite, .channel, .support, .policy, .tos, .license, .advanced:
             let cell: SettingsCollectionViewCell = collectionView.dequeueCell(for: indexPath)
             cell.rowType = item
@@ -52,12 +53,35 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
             var content = cell.defaultContentConfiguration()
             content.text = #localize("settings_threema_work")
             content.secondaryText = #localize("settings_threema_work_subtitle")
-            content.image = UIImage(resource: .threemaWorkSettings)
+           
+            let image = UIImage(resource: .threemaWorkSettings)
+            content.imageProperties.cornerRadius = 8
+            content.imageProperties.maximumSize = CGSize(width: 45, height: 45)
+            content.image = image
+            
             cell.contentConfiguration = content
             cell.accessories = [.disclosureIndicator()]
             return cell
         
-        case .network, .version, .workLicense:
+        case .workReferral:
+            guard let cell: UICollectionViewListCell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: "Default",
+                for: indexPath
+            ) as? UICollectionViewListCell else {
+                return nil
+            }
+           
+            let hostingConfiguration = UIHostingConfiguration {
+                WorkReferralCellView()
+            }
+            .background {
+                UIColor.primaryColorWork.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light)).color
+            }
+            
+            cell.contentConfiguration = hostingConfiguration
+            return cell
+            
+        case .network, .version, .workLicense, .remoteSecretState:
             guard let cell: UICollectionViewListCell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: "Default",
                 for: indexPath
@@ -81,6 +105,9 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
             }
             else if case .workLicense = item {
                 cell.accessories = [.label(text: BusinessInjector.ui.licenseStore.licenseUsername ?? "")]
+            }
+            else if case .remoteSecretState = item {
+                cell.accessories = [.label(text: #localize("settings_list_remote_secret_active"))]
             }
 
             return cell
@@ -141,6 +168,12 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
             snapshot.appendItems(Section.workAdvertising.rows)
         }
         
+        // Work Referral
+        if !Section.workReferral.rows.isEmpty {
+            snapshot.appendSections([.workReferral])
+            snapshot.appendItems(Section.workReferral.rows)
+        }
+        
         // Social
         if !Section.social.rows.isEmpty {
             snapshot.appendSections([.social])
@@ -192,8 +225,8 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
         case .appearance:
             coordinator.show(.appearance)
             
-        case .noftifications:
-            coordinator.show(.noftifications)
+        case .notifications:
+            coordinator.show(.notifications)
             
         case .chat:
             coordinator.show(.chat)
@@ -225,6 +258,9 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
         case .workLicense:
             break
             
+        case .remoteSecretState:
+            break
+            
         case .rate:
             rateSelected()
             
@@ -239,6 +275,9 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
             
         case .workAd:
             workAdSelected()
+            
+        case .workReferral:
+            coordinator.show(.workReferral)
             
         case .support:
             coordinator.show(.support)
@@ -282,8 +321,10 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
 
 extension SettingsCollectionViewDataSource: ConnectionStateDelegate {
     func changed(connectionState state: ConnectionState) {
-        var snapshot = snapshot()
-        snapshot.reconfigureItems([.network])
-        apply(snapshot)
+        Task { @MainActor in
+            var snapshot = snapshot()
+            snapshot.reconfigureItems([.network])
+            apply(snapshot)
+        }
     }
 }

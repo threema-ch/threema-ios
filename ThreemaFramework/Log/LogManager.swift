@@ -19,29 +19,43 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import libthreemaSwift
 
 @objc public class LogManager: NSObject {
-    
+
+    static let debugLogFileName = "debug_log.txt"
+    static let validationLogFileName = "validation_log.txt"
+    static let dbMigrationLogFileName = "db-migration.log"
+    static let safeRestoreLogFileName = "safe-restore.log"
+    static let appSetupStepsLogFileName = "app-setup-steps.log"
+    static let appLaunchLogFileName = "app-launch.log"
+
     private static var isDebug = false
-    @objc public static let validationLogFile: URL? = FileUtility.shared.appDataDirectory?
-        .appendingPathComponent("validation_log.txt")
-    @objc public static let debugLogFile: URL? = FileUtility.shared.appDataDirectory?
-        .appendingPathComponent("debug_log.txt")
-    
+    @objc public static let validationLogFile: URL? = FileUtility.shared
+        .appDataDirectory(appGroupID: AppGroup.groupID())?
+        .appendingPathComponent(validationLogFileName)
+    @objc public static let debugLogFile: URL? = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())?
+        .appendingPathComponent(debugLogFileName)
+
     // Setup logs that should be accessible though Finder/iTunes (document directory) as they are helpful if setup fails
-    @objc public static let dbMigrationLogFile: URL? = FileUtility.shared.appDocumentsDirectory?.appendingPathComponent(
-        "db-migration.log"
-    )
+    @objc public static let dbMigrationLogFile: URL? =
+        FileUtility.shared.appDocumentsDirectory?.appendingPathComponent(
+            dbMigrationLogFileName
+        )
     public static let safeRestoreLogFile: URL? = FileUtility.shared.appDocumentsDirectory?.appendingPathComponent(
-        "safe-restore.log"
+        safeRestoreLogFileName
     )
     @objc public static let appSetupStepsLogFile: URL? = FileUtility.shared.appDocumentsDirectory?
         .appendingPathComponent(
-            "app-setup-steps.log"
+            appSetupStepsLogFileName
         )
-    
+    @objc public static let appLaunchLogFile: URL? = FileUtility.shared.appDocumentsDirectory?.appendingPathComponent(
+        appLaunchLogFileName
+    )
+
+    private static var libthreemaLogDispatcherInitialized = false
     private static let libthreemaLogDispatcher = LibthreemaLogDispatcher()
             
     /// Log levels definition for Swift. Includes new Notice Log level at the end, to not break the standard Log levels
@@ -58,8 +72,8 @@ import libthreemaSwift
     @objc public static func initializeGlobalLogger(debug: Bool) {
         isDebug = debug
         if isDebug {
-            DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
-            DDLog.add(DDTTYLogger.sharedInstance!, with: LogManager.logLevel())
+            DDOSLogger.sharedInstance.logFormatter = LogFormatterCustom()
+            DDLog.add(DDOSLogger.sharedInstance, with: LogManager.logLevel())
         }
 
         // Add Debug Logger is enabled by user
@@ -73,14 +87,19 @@ import libthreemaSwift
         }
         
         // libthreema logging
-        // .trace should only be used to closely debug something
-      
-        // TODO: (IOS-5283) See ticket
-//        let libthreemaMinLogLevel: LogLevel = debug ? .debug : .info
-//        libthreemaSwift.initialize(
-//            minLogLevel: libthreemaMinLogLevel,
-//            logDispatcher: libthreemaLogDispatcher
-//        )
+        
+        // Workaround: This should only be initialized once, however this function is called for every received
+        // notification in the notification extension
+        // TODO: (IOS-5355) Only initialize libthreema once
+        if !libthreemaLogDispatcherInitialized {
+            // .trace should only be used to closely debug something
+            let libthreemaMinLogLevel: LogLevel = debug ? .debug : .info
+            libthreemaSwift.initialize(
+                minLogLevel: libthreemaMinLogLevel,
+                logDispatcher: libthreemaLogDispatcher
+            )
+            libthreemaLogDispatcherInitialized = true
+        }
     }
 
     @objc public static func addFileLogger(_ logFile: URL?) {
@@ -108,7 +127,7 @@ import libthreemaSwift
     }
     
     @objc public static func deleteLogFile(_ logFile: URL?) {
-        FileUtility.shared.delete(at: logFile)
+        FileUtility.shared.deleteIfExists(at: logFile)
     }
     
     @objc public static func logFileSize(_ logFile: URL?) -> Int64 {

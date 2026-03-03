@@ -33,6 +33,14 @@ public enum Destination: Equatable {
         case profile
         case settings
         
+        public enum ContactsDestination: Equatable {
+            case todo
+        }
+        
+        public enum ConversationsDestination: Equatable {
+            case todo
+        }
+        
         public enum ProfileDestination: Equatable {
             case todo
         }
@@ -44,8 +52,8 @@ public enum Destination: Equatable {
 }
 
 /// Style describing how a view controller should be shown
-public indirect enum CordinatorNavigationStyle {
+public indirect enum CoordinatorNavigationStyle {
     case show
-    case modal(stlye: UIModalPresentationStyle = .automatic, transition: UIModalTransitionStyle = .coverVertical)
-    case passcode(style: CordinatorNavigationStyle)
+    case modal(style: UIModalPresentationStyle = .automatic, transition: UIModalTransitionStyle = .coverVertical)
+    case passcode(style: CoordinatorNavigationStyle)
 }

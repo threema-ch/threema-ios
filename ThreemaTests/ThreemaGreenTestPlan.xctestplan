@@ -45,7 +45,7 @@
   },
   "testTargets" : [
     {
-      "parallelizable" : true,
+      "enabled" : false,
       "target" : {
         "containerPath" : "container:Threema.xcodeproj",
         "identifier" : "2412D2AD2DA639DC008823F5",

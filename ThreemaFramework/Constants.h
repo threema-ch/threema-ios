@@ -50,13 +50,11 @@
 
 #define kNotificationShowConversation @"ThreemaShowConversation"
 #define kNotificationDeletedConversation @"ThreemaDeletedConversation"
+#define kNotificationOpenedConversation @"ThreemaConversationOpened"
 
 #define kNotificationShowContact @"ThreemaShowContact"
 #define kNotificationDeletedContact @"ThreemaDeletedContact"
 #define kNotificationBlockedContact @"ThreemaBlockedContact"
-
-#define kNotificationBatchDeletedAllConversationMessages @"ThreemaBatchDeletedAllConversationMessages"
-#define kNotificationBatchDeletedOldMessages @"ThreemaBatchDeletedOldMessages"
 
 #define kNotificationShowGroup @"ThreemaShowGroup"
 #define kNotificationShowDistributionList @"ThreemaShowDistributionList"
@@ -67,6 +65,7 @@
 
 #define kNotificationCreatedIdentity @"ThreemaCreatedIdentity"
 #define kNotificationDestroyedIdentity @"ThreemaDestroyedIdentity"
+#define kNotificationShowProfile @"ThreemaShowProfile"
 
 #define kNotificationLicenseMissing @"ThreemaLicenseMissing"
 #define kNotificationLicenseCheckSuccess @"ThreemaLicenseCeckSuccess"
@@ -92,9 +91,6 @@
 #define kNotificationErrorConnectionFailed @"ThreemaErrorConnectionFailed"
 #define kNotificationErrorPublicKeyMismatch @"ThreemaErrorPublicKeyMismatch"
 #define kNotificationErrorRogueDevice @"ThreemaErrorRogueDevice"
-
-#define kNotificationDBRefreshedDirtyObject @"ThreemaDBRefreshedDirtyObject"
-#define kNotificationDBRefreshedDirtyObjects @"ThreemaDBRefreshedDirtyObjects"
 
 #define kNotificationRefreshWorkContactTableView @"RefreshWorkContactTableView"
 #define kNotificationAddressbookSyncronized @"AddressbookSyncronized"
@@ -154,9 +150,6 @@ static NSString * const kNotificationMediatorMessageAck = @"MediatorMessageAck";
 #define kKeyUnread @"unread"
 #define kKeyTitle @"title"
 
-#define kKeyObjectID @"objectID"
-#define kKeyObjectIDs @"objectIDs"
-
 // Also update Constants.cnContactKeys
 #define kCNContactKeys @[CNContactFamilyNameKey, CNContactGivenNameKey, CNContactMiddleNameKey, CNContactOrganizationNameKey, CNContactPhoneNumbersKey, CNContactEmailAddressesKey, CNContactImageDataKey, CNContactImageDataAvailableKey, CNContactThumbnailImageDataKey, [CNContactFormatter descriptorForRequiredKeysForStyle:CNContactFormatterStyleFullName]]
 
@@ -164,7 +157,7 @@ static NSString * const kNotificationMediatorMessageAck = @"MediatorMessageAck";
 
 #define kWebPageSize 50
 
-#pragma mark - ThreemaSAFE
+#pragma mark - ThreemaSafe
 
 static NSString * const kSafeBackupTrigger = @"ThreemaSafeBackupTrigger";
 static NSString * const kSafeBackupUIRefresh = @"ThreemaSafeBackupUIRefresh";
@@ -217,44 +210,4 @@ static NSInteger const kMaxNicknameLength = 32;
 
 static NSString * const kBetaFeedbackIdentity = @"*BETAFBK";
 
-#pragma mark - System Message Keys
-enum {
-    kSystemMessageRenameGroup = 1, // The admin has renamed the group
-    kSystemMessageGroupMemberLeave = 2, // Another member has left the group
-    kSystemMessageGroupMemberAdd = 3, // The admin has added a member to the group
-    kSystemMessageGroupMemberForcedLeave = 4, // Another member was removed from the group
-    kSystemMessageGroupSelfAdded = 5, // I was added to the group
-    kSystemMessageGroupSelfRemoved = 6, // I was removed from the group
-    kSystemMessageGroupSelfLeft = 16, // I have left the group
-    kSystemMessageGroupCreatorLeft = 19, // Creator has left the group
-    kSystemMessageStartNoteGroupInfo = 17, // This is a note group without members
-    kSystemMessageEndNoteGroupInfo = 18, // This is no note group anymore
-    kSystemMessageVote = 20,
-    kSystemMessageVoteUpdated = 30,
-    kSystemMessageCallMissed = 7,
-    kSystemMessageCallRejected = 8,
-    kSystemMessageCallRejectedBusy = 9,
-    kSystemMessageCallRejectedTimeout = 10,
-    kSystemMessageCallEnded = 11,
-    kSystemMessageCallRejectedDisabled = 12,
-    kSystemMessageCallRejectedUnknown = 13,
-    kSystemMessageContactOtherAppInfo = 14,
-    kSystemMessageCallRejectedOffHours = 15,
-    kSystemMessageFsMessageWithoutForwardSecurity = 21,
-    kSystemMessageFsSessionEstablished = 22,
-    kSystemMessageFsSessionEstablishedRcvd = 23, // As of version 1.1. this status is not created anymore
-    kSystemMessageFsMessagesSkipped = 24,
-    kSystemMessageFsSessionReset = 25,
-    kSystemMessageFsOutOfOrder = 26,
-    kSystemMessageFsEnabledOutgoing = 27,
-    kSystemMessageFsDisabledOutgoing = 28,
-    kSystemMessageFsNotSupportedAnymore = 29,
-    kSystemMessageUnsupportedType = 31,
-    kSystemMessageGroupProfilePictureChanged = 32,
-    kSystemMessageGroupCallStartedBy = 33,
-    kSystemMessageGroupCallStarted = 34,
-    kSystemMessageGroupCallEnded = 35,
-    kFsDebugMessage = 36,
-    kSystemMessageFsIllegalSessionState = 37,
-};
 #endif

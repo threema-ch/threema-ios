@@ -23,7 +23,8 @@
 typedef enum : int {
     AppGroupTypeApp,
     AppGroupTypeShareExtension,
-    AppGroupTypeNotificationExtension
+    AppGroupTypeNotificationExtension,
+    AppGroupTypeNone,
 } AppGroupType;
 
 @interface AppGroup : NSObject
@@ -42,7 +43,13 @@ typedef enum : int {
 
 + (NSString *)getCurrentTypeString;
 
++ (void)setMeActive;
+
++ (void)setMeInactive;
+
 + (BOOL)amIActive;
+
++ (BOOL)areOthersActive;
 
 + (NSUserDefaults *)userDefaults;
 

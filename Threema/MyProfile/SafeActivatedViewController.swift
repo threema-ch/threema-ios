@@ -52,7 +52,7 @@ class SafeActivatedViewController: ThemedTableViewController {
     private var mdmSetup: MDMSetup
     
     required init?(coder aDecoder: NSCoder) {
-        self.mdmSetup = MDMSetup(setup: false)
+        self.mdmSetup = MDMSetup()
         
         super.init(coder: aDecoder)
     }
@@ -134,7 +134,8 @@ class SafeActivatedViewController: ThemedTableViewController {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: BusinessInjector.ui.groupManager
+            groupManager: BusinessInjector.ui.groupManager,
+            myIdentityStore: BusinessInjector.ui.myIdentityStore
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -199,7 +200,8 @@ class SafeActivatedViewController: ThemedTableViewController {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: BusinessInjector.ui.groupManager
+            groupManager: BusinessInjector.ui.groupManager,
+            myIdentityStore: BusinessInjector.ui.myIdentityStore
         )
         let safeManager = SafeManager(
             safeConfigManager: safeConfigManager,

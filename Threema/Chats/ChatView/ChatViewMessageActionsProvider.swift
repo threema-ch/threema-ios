@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import ThreemaFramework
 import ThreemaMacros
@@ -50,9 +51,7 @@ enum ChatViewMessageActionsProvider {
             switch sectionType {
             case .horizontalInline:
                 let menu = UIMenu(options: .displayInline, children: actions.map(\.contextMenuAction))
-                if #available(iOS 16.0, *) {
-                    menu.preferredElementSize = .small
-                }
+                menu.preferredElementSize = .small
                 return menu
                 
             case .inline:
@@ -138,7 +137,7 @@ enum ChatViewMessageActionsProvider {
         editHandler: DefaultHandler? = nil,
         saveHandler: DefaultHandler? = nil,
         copyHandler: @escaping DefaultHandler,
-        shareItems: [Any],
+        shareHandler: @escaping () -> [Any],
         speakText: String,
         detailsHandler: @escaping DefaultHandler,
         selectHandler: @escaping DefaultHandler,
@@ -203,7 +202,7 @@ enum ChatViewMessageActionsProvider {
         }
         
         if message.supportsSharing {
-            let share = shareAction(view: activityViewAnchor, shareItems: shareItems)
+            let share = shareAction(view: activityViewAnchor, shareHandler: shareHandler)
             shareActions.append(share)
         }
         
@@ -355,15 +354,17 @@ enum ChatViewMessageActionsProvider {
     /// Provides action that handles sharing a message through the share sheet
     /// - Parameter shareItems: Array of items to be shared with UIActivityViewController
     /// - Returns: MessageAction
-    private static func shareAction(view: UIView, shareItems: [Any]) -> MessageAction {
+    private static func shareAction(view: UIView, shareHandler: @escaping () -> [Any]) -> MessageAction {
         MessageAction(
             title: #localize("share_menu"),
             image: UIImage(systemName: "square.and.arrow.up")
         ) {
-            
-            for item in shareItems {
+
+            let items = shareHandler()
+
+            for item in items {
                 if (item as? BlobData) != nil {
-                    guard !MDMSetup(setup: false).disableShareMedia() else {
+                    guard !MDMSetup().disableShareMedia() else {
                         DDLogWarn(
                             "[ChatViewMessageActionsProvider] Tried to share media, even though MDM disabled it."
                         )
@@ -372,8 +373,20 @@ enum ChatViewMessageActionsProvider {
                 }
             }
             
-            let activityVC = UIActivityViewController(activityItems: shareItems, applicationActivities: nil)
-            
+            let activityVC = UIActivityViewController(activityItems: items, applicationActivities: nil)
+            activityVC.completionWithItemsHandler = { _, _, _, error in
+                if let error {
+                    DDLogError("An error has occurred while sharing media: \(error)")
+                }
+
+                // Cleanup temporary files
+                for item in items {
+                    if let itemSource = item as? MessageUIActivityItemSource {
+                        FileUtility.shared.deleteIfExists(at: itemSource.content.exportURL)
+                    }
+                }
+            }
+
             // Show
             ModalPresenter.present(
                 activityVC,
@@ -475,7 +488,7 @@ enum ChatViewMessageActionsProvider {
                                 // If the contact has a gateway ID and is the creator of
                                 // the group the message is sent in…
                                 if unsupportedContact.hasGatewayID,
-                                   unsupportedContact.identity.string == group.groupCreatorIdentity {
+                                   unsupportedContact.identity.rawValue == group.groupCreatorIdentity {
                                     // … we only send the message to it, if it is a message storing gateway group.
                                     if group.isMessageStoringGatewayGroup {
                                         filteredUnsupportedContact.append(unsupportedContact)
@@ -563,7 +576,7 @@ enum ChatViewMessageActionsProvider {
             image: UIImage(systemName: "square.and.arrow.down")
         ) {
             
-            guard !MDMSetup(setup: false).disableShareMedia() else {
+            guard !MDMSetup().disableShareMedia() else {
                 DDLogError(
                     "[ChatViewMessageActionsProvider] Tried to save media, even though MDM disabled it."
                 )

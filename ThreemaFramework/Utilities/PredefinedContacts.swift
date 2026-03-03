@@ -36,13 +36,13 @@ enum PredefinedContacts: String {
     /// - Parameter rawValue: Identity string
     init(rawValue: String) {
         switch rawValue.uppercased() {
-        case PredefinedContacts.threema.identity?.string: self = .threema
-        case PredefinedContacts.threemaWork.identity?.string: self = .threemaWork
-        case PredefinedContacts.support.identity?.string: self = .support
-        case PredefinedContacts.myThreemaData.identity?.string: self = .myThreemaData
-        case PredefinedContacts.betaFeedback.identity?.string: self = .betaFeedback
-        case PredefinedContacts.threemaPush.identity?.string: self = .threemaPush
-        case PredefinedContacts.threemaToken.identity?.string: self = .threemaToken
+        case PredefinedContacts.threema.identity?.rawValue: self = .threema
+        case PredefinedContacts.threemaWork.identity?.rawValue: self = .threemaWork
+        case PredefinedContacts.support.identity?.rawValue: self = .support
+        case PredefinedContacts.myThreemaData.identity?.rawValue: self = .myThreemaData
+        case PredefinedContacts.betaFeedback.identity?.rawValue: self = .betaFeedback
+        case PredefinedContacts.threemaPush.identity?.rawValue: self = .threemaPush
+        case PredefinedContacts.threemaToken.identity?.rawValue: self = .threemaToken
         default: self = .unknown
         }
     }
@@ -139,9 +139,9 @@ enum PredefinedContacts: String {
     }
 }
 
-@available(*, deprecated, message: "Only use this from obj-c.")
 /// Verify whether this contact is predefined by default
-@objc class PredefinedContactsObjc: NSObject {
+@available(swift, obsoleted: 1.0, renamed: "PredefinedContacts", message: "Only use from Objective-C")
+final class PredefinedContactsObjC: NSObject {
     /// Verify whether this contact is predefined by default.
     /// - Parameters:
     ///   - identity: Identity string
@@ -156,14 +156,6 @@ enum PredefinedContacts: String {
     /// - Returns: Boolean indicating whether the identity disregards the block’s unknown status..
     @objc static func ignoreBlockUnknown(identity: String) -> Bool {
         PredefinedContacts(rawValue: identity).ignoreBlockUnknown
-    }
-    
-    /// Special contacts, akin to Threema Push, require unique handling. Incoming messages from these contacts should
-    /// not be stored in the database and necessitate special processing.
-    /// - Parameter identity: Identity string
-    /// - Returns: A boolean flag indicating whether the contact is a special contact.
-    @objc static func isSpecialContact(identity: String) -> Bool {
-        PredefinedContacts(rawValue: identity).isSpecialContact
     }
     
     /// Verify whether the provided identity is indeed '*3MAPUSH*'.

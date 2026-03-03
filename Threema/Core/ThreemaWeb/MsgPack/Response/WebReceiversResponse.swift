@@ -90,7 +90,8 @@ struct WebContact {
         self.isWork = contact.workContact == NSNumber(value: true)
         self.identityType = UserSettings.shared().workIdentities.contains(contact.identity) ? 1 : 0
         
-        if let conversation = EntityManager().entityFetcher.conversation(for: contact) {
+        if let conversation = BusinessInjector.ui.entityManager.entityFetcher
+            .conversationEntity(for: contact.identity) {
             self.locked = conversation.conversationCategory == .private
             self
                 .visible = !(UserSettings.shared().hidePrivateChats && conversation.conversationCategory == .private)
@@ -105,8 +106,8 @@ struct WebContact {
         
         self.isBlocked = UserSettings.shared().blacklist.contains(contact.identity)
         
-        let entityManager = EntityManager()
-        let groups = entityManager.entityFetcher.groupConversations(for: contact)
+        let entityManager = BusinessInjector.ui.entityManager
+        let groups = entityManager.entityFetcher.conversationEntities(for: contact)
         let canDelete = groups?.count == 0 ? true : false
         var canChangeFirstName = true
         var canChangeLastName = true
@@ -211,7 +212,7 @@ struct WebGroup {
         self.disabled = false
         self.members = group.members.filter { member -> Bool in
             member.state != .invalid
-        }.map(\.identity.string)
+        }.map(\.identity.rawValue)
         // Add myself to members list if isSelfMember
         if group.isSelfMember {
             members.append(MyIdentityStore.shared().identity)

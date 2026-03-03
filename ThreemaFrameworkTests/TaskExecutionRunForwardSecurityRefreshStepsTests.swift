@@ -19,7 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
+
 @testable import ThreemaFramework
 
 final class TaskExecutionRunForwardSecurityRefreshStepsTests: XCTestCase {
@@ -28,14 +30,16 @@ final class TaskExecutionRunForwardSecurityRefreshStepsTests: XCTestCase {
     private var backgroundEntityManager: EntityManager!
     
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema")
 
         let (_, mainContext, childContext) = DatabasePersistentContext
             .devNullContext(withChildContextForBackgroundProcess: true)
         let databaseBackgroundContext = DatabaseContext(mainContext: mainContext, backgroundContext: childContext)
         databasePreparer = DatabasePreparer(context: mainContext)
-        backgroundEntityManager = EntityManager(databaseContext: databaseBackgroundContext)
+        backgroundEntityManager = EntityManager(
+            databaseContext: databaseBackgroundContext,
+            isRemoteSecretEnabled: false
+        )
     }
 
     func testExecuteGroupTextMessageResendToRejectedByContacts() async throws {
@@ -77,7 +81,7 @@ final class TaskExecutionRunForwardSecurityRefreshStepsTests: XCTestCase {
         databasePreparer.save {
             databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: noFSSupportIdentity.string
+                identity: noFSSupportIdentity.rawValue
             )
         }
         
@@ -93,7 +97,7 @@ final class TaskExecutionRunForwardSecurityRefreshStepsTests: XCTestCase {
         try sessionStore.storeDHSession(session: notInvolvedSession)
         
         // We should have 5 stored contacts
-        XCTAssertEqual(5, backgroundEntityManager.entityFetcher.allContacts().count)
+        XCTAssertEqual(5, backgroundEntityManager.entityFetcher.contactEntities()!.count)
         
         // There should now be 3 sessions
         XCTAssertEqual(3, sessionStore.dhSessionList.count)
@@ -135,7 +139,7 @@ final class TaskExecutionRunForwardSecurityRefreshStepsTests: XCTestCase {
         databasePreparer.save {
             let contact = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: identity.string
+                identity: identity.rawValue
             )
             contact.setFeatureMask(to: 255)
             return contact

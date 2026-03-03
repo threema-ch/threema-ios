@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-#import "ScanBackupController.h"
 #import "IDCreationPageViewController.h"
 
 @protocol RestoreIdentityViewControllerDelegate <NSObject>
@@ -29,7 +28,7 @@
 
 @end
 
-@interface RestoreIdentityViewController : IDCreationPageViewController <UITextViewDelegate, UITextFieldDelegate, ScanBackupControllerDelegate>
+@interface RestoreIdentityViewController : IDCreationPageViewController <UITextViewDelegate, UITextFieldDelegate>
 
 @property (weak, nonatomic) IBOutlet UILabel *titleLabel;
 

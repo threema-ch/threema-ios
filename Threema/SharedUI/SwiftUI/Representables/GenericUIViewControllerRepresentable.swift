@@ -22,6 +22,7 @@ import SwiftUI
 import ThreemaFramework
 
 extension UIViewController {
+    @available(*, deprecated, message: "Do not use anymore.")
     fileprivate struct WrapperView<V: UIViewController>: UIViewControllerRepresentable {
         typealias CreateViewController = () -> (V?)
         

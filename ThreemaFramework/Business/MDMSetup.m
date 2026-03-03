@@ -22,7 +22,7 @@
 #import "LicenseStore.h"
 #import "UserSettings.h"
 #import "MyIdentityStore.h"
-#import <ThreemaFramework/ThreemaFramework-Swift.h>
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelAll;
@@ -84,6 +84,8 @@ NSString * const MDM_KEY_SAFE_PASSWORD_MESSAGE = @"th_safe_password_message"; //
 
 NSString * const MDM_KEY_ONPREM_SERVER = @"th_onprem_server"; // String
 
+NSString * const MDM_KEY_ENABLE_REMOTE_SECRET = @"th_enable_remote_secret"; // Bool
+
 NSString * const MDM_KEY_THREEMA_CONFIGURATION = @"mdm";
 NSString * const MDM_KEY_THREEMA_OVERRIDE = @"override";
 NSString * const MDM_KEY_THREEMA_PARAMS = @"params";
@@ -91,28 +93,77 @@ NSString * const MDM_KEY_THREEMA_PARAMS = @"params";
 static NSDictionary *_mdmCache;
 static NSDictionary *_mdmCacheSetup;
 
-@implementation MDMSetup
+@implementation MDMSetup {
+    /// Check if app can handle MDM
+    BOOL isBusinessApp;
 
-- (MDMSetup*)initWithSetup:(BOOL)setup {
+    /// Check is OnPrem App to handle Remote Secret
+    BOOL isOnPrem;
+
+    BOOL isSetup;
+    dispatch_queue_t queue;
+}
+
+- (MDMSetup*)init {
+    return [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetup.state];
+}
+
+- (MDMSetup*)initWithAppSetupStateRawValue:(NSInteger)appSetupStateRawValue {
     self = [super init];
     if (self) {
-        isSetup = setup;
-        isLicenseRequired = TargetManagerObjc.isBusinessApp;
-        
+        AppSetupState state = [self appSetupStateFromRawValue:appSetupStateRawValue];
+        isSetup = state != AppSetupStateComplete;
+        isBusinessApp = TargetManagerObjC.isBusinessApp;
+        isOnPrem = TargetManagerObjC.isOnPrem;
+
+        if (!isSetup) {
+            NSError *error;
+            _businessInjector = [[AppLaunchManager shared] businessForBackgroundProcess:YES error:&error];
+
+            if (error) {
+                DDLogError(@"Error while getting BusinessInjector: %@", error.description);
+            }
+        }
+
         queue = dispatch_queue_create("ch.threema.MdmConfiguration", NULL);
     }
     return self;
 }
 
-- (MDMSetup*)initMockupWithIsBusinessApp:(BOOL)isBusinessApp setup:(BOOL)setup {
+#if DEBUG
+- (MDMSetup*)initWithAppSetupStateRawValue:(NSInteger)appSetupStateRawValue isBusinessApp:(BOOL)businessApp {
+    return [[MDMSetup alloc] initWithAppSetupStateRawValue:appSetupStateRawValue isBusinessApp:businessApp isOnPrem:NO];
+}
+
+- (MDMSetup*)initWithAppSetupStateRawValue:(NSInteger)appSetupStateRawValue isBusinessApp:(BOOL)businessApp isOnPrem:(BOOL)onPrem {
     self = [super init];
     if (self) {
-        isSetup = setup;
-        isLicenseRequired = isBusinessApp;
-        
+        AppSetupState state = [self appSetupStateFromRawValue:appSetupStateRawValue];
+        isSetup = state != AppSetupStateComplete;
+        isBusinessApp = businessApp;
+        isOnPrem = onPrem;
+
         queue = dispatch_queue_create("ch.threema.MdmConfiguration", NULL);
     }
     return self;
+}
+#endif
+
+- (AppSetupState)appSetupStateFromRawValue:(NSInteger)rawValue {
+    switch (rawValue) {
+        case 10:
+            return AppSetupStateNotSetup;
+        case 20:
+            return AppSetupStateIdentityAdded;
+        case 30:
+            return AppSetupStateIdentitySetupComplete;
+        case 40:
+            return AppSetupStateComplete;
+
+        default:
+            [NSException raise:@"Invalid raw value for AppSetupState" format:@"raw value %ld is invalid", (long)rawValue];
+            return AppSetupStateNotSetup;
+    }
 }
 
 + (void)clearMdmCache {
@@ -193,7 +244,7 @@ static NSDictionary *_mdmCacheSetup;
     return [self disableWeb];
 }
 
-- (NSString *)webHosts {
+- (nullable NSString *)webHosts {
     NSString *webHosts = [self getMdmConfigurationValueForKey:MDM_KEY_WEB_HOSTS];
     return [webHosts isKindOfClass:[NSString class]] && webHosts.length > 0 ? webHosts : nil;
 }
@@ -228,27 +279,27 @@ static NSDictionary *_mdmCacheSetup;
     return [disableHideInactiveIds isKindOfClass:[NSNumber class]] ? YES : NO;
 }
 
-- (NSNumber*)safeEnable {
+- (nullable NSNumber*)safeEnable {
     NSNumber *safeEnable = [self getMdmConfigurationBoolForKey:MDM_KEY_SAFE_ENABLE];
     return [safeEnable isKindOfClass:[NSNumber class]] ? safeEnable : nil;
 }
 
-- (NSString*)safePassword {
+- (nullable NSString *)safePassword {
     NSString *safePassword = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_PASSWORD];
     return [safePassword isKindOfClass:[NSString class]] && safePassword.length > 0 ? safePassword : nil;
 }
 
-- (NSString*)safeServerUrl {
+- (nullable NSString *)safeServerUrl {
     NSString *safeServerUrl = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_SERVER_URL];
     return [safeServerUrl isKindOfClass:[NSString class]] && safeServerUrl.length > 0 ? safeServerUrl : nil;
 }
 
-- (NSString*)safeServerUsername {
+- (nullable NSString *)safeServerUsername {
     NSString *safeServerUsername = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_SERVER_USERNAME];
     return [safeServerUsername isKindOfClass:[NSString class]] && safeServerUsername.length > 0 ? safeServerUsername : nil;
 }
 
-- (NSString*)safeServerPassword {
+- (nullable NSString *)safeServerPassword {
     NSString *safeServerPassword = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_SERVER_PASSWORD];
     return [safeServerPassword isKindOfClass:[NSString class]] && safeServerPassword.length > 0 ? safeServerPassword : nil;
 }
@@ -258,19 +309,39 @@ static NSDictionary *_mdmCacheSetup;
     return [safeRestoreEnable isKindOfClass:[NSNumber class]] ? safeRestoreEnable.boolValue : YES;
 }
 
-- (NSString*)safeRestoreId {
+- (nullable NSString *)safeRestoreId {
     NSString *safeRestoreId = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_RESTORE_ID];
     return [safeRestoreId isKindOfClass:[NSString class]] && safeRestoreId.length > 0 ? safeRestoreId : nil;
 }
 
-- (NSString *)safePasswordPattern {
+- (nullable NSString *)safePasswordPattern {
     NSString *safePasswordPattern = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_PASSWORD_PATTERN];
     return [safePasswordPattern isKindOfClass:[NSString class]] && safePasswordPattern.length > 0 ? safePasswordPattern : nil;
 }
 
-- (NSString *)safePasswordMessage {
+- (nullable NSString *)safePasswordMessage {
     NSString *safePasswordMessage = [self getMdmConfigurationValueForKey:MDM_KEY_SAFE_PASSWORD_MESSAGE];
     return [safePasswordMessage isKindOfClass:[NSString class]] && safePasswordMessage.length > 0 ? safePasswordMessage : nil;
+}
+
+- (nullable NSString *)nickname {
+    NSString *nickname = [self getMdmConfigurationValueForKey:MDM_KEY_NICKNAME];
+    return [nickname isKindOfClass:[NSString class]] && nickname.length > 0 ? nickname : nil;
+}
+
+- (nullable NSString *)linkEmail {
+    NSString *linkEmail = [self getMdmConfigurationValueForKey:MDM_KEY_LINKED_EMAIL];
+    return [linkEmail isKindOfClass:[NSString class]] && linkEmail.length > 0 ? linkEmail : nil;
+}
+
+- (nullable NSString *)linkPhoneNumber {
+    NSString *linkPhoneNumber = [self getMdmConfigurationValueForKey:MDM_KEY_LINKED_PHONE];
+    return [linkPhoneNumber isKindOfClass:[NSString class]] && linkPhoneNumber.length > 0 ? linkPhoneNumber : nil;
+}
+
+- (BOOL)contactSync {
+    NSNumber *contactSync = [self getMdmConfigurationBoolForKey:MDM_KEY_CONTACT_SYNC];
+    return [contactSync isKindOfClass:[NSNumber class]] ? contactSync.boolValue : NO;
 }
 
 - (nullable NSNumber *)keepMessagesDays {
@@ -282,6 +353,18 @@ static NSDictionary *_mdmCacheSetup;
     NSString *onPremConfigUrl = [self getMdmConfigurationValueForKey:MDM_KEY_ONPREM_SERVER];
     return [onPremConfigUrl isKindOfClass:[NSString class]] && onPremConfigUrl.length > 0 ? onPremConfigUrl : nil;
 }
+
+/// This function determines whether the remote secret is enabled. This feature is currently only available on OnPrem environments; all other targets return false.
+- (BOOL)enableRemoteSecret {
+    NSNumber *enableRemoteSecret = [self getMdmConfigurationBoolForKey:MDM_KEY_ENABLE_REMOTE_SECRET];
+    if (isOnPrem) {
+        return [enableRemoteSecret isKindOfClass:[NSNumber class]] ? enableRemoteSecret.boolValue : NO;
+    }
+    else {
+        return NO;
+    }
+}
+
 
 // MARK: Threema Safe status
 
@@ -324,7 +407,7 @@ static NSDictionary *_mdmCacheSetup;
 // MARK: apply MDM to user settings, identity
 
 - (void)loadRenewableValues {
-    if (!isLicenseRequired) {
+    if (!isBusinessApp) {
         return;
     }
 
@@ -408,7 +491,7 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (void)loadLicenseInfo {
-    if (!isLicenseRequired) {
+    if (!isBusinessApp) {
         return;
     }
     
@@ -431,7 +514,7 @@ static NSDictionary *_mdmCacheSetup;
 - (void)loadIDCreationValues {
     // We should set firstname, lastname, csi and category when mdm is empty
     // Do nothing for consumer
-    if (!isLicenseRequired) {
+    if (!isBusinessApp) {
         return;
     }
     
@@ -556,7 +639,7 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (BOOL)hasIDBackup {
-    if (!isLicenseRequired) {
+    if (!isBusinessApp) {
         return NO;
     }
     
@@ -570,7 +653,7 @@ static NSDictionary *_mdmCacheSetup;
     return YES;
 }
 
-- (void)restoreIDBackupOnCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError {
+- (void)restoreIDBackupOnCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)(NSError *error))onError {
     if ([self hasIDBackup] == NO) {
         return;
     }
@@ -581,11 +664,7 @@ static NSDictionary *_mdmCacheSetup;
         ServerAPIConnector *apiConnector = [[ServerAPIConnector alloc] init];
         /* Obtain server group from server */
         [apiConnector updateMyIdentityStore:identityStore onCompletion:^{
-            
-            [identityStore storeInKeychain];
-            
-            [AppSetup setState:AppSetupStateIdentityAdded];
-            
+
             [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
             
             onCompletion();
@@ -597,7 +676,7 @@ static NSDictionary *_mdmCacheSetup;
     }];
 }
 
-- (NSString *)supportDescriptionString {
+- (nullable NSString *)supportDescriptionString {
     NSString *supportDescriptionString;
     
     if ([[self getThreemaMDM] valueForKey:MDM_KEY_THREEMA_PARAMS] != nil && [[[self getThreemaMDM] valueForKey:MDM_KEY_THREEMA_PARAMS] allKeys].count > 0) {
@@ -615,7 +694,7 @@ static NSDictionary *_mdmCacheSetup;
     return supportDescriptionString;
 }
 
-- (BOOL)existsMdmKey:(NSString*)mdmKey {
+- (BOOL)existsMdmKey:(nonnull NSString*)mdmKey {
     NSDictionary *mdm = [self getMdmConfiguration];
     return [[mdm allKeys] containsObject:mdmKey];
 }
@@ -634,10 +713,10 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (void)applyThreemaMdm:(NSDictionary *)workData sendForce:(BOOL)sendForce {
-    if (!isLicenseRequired) {
+    if (!isBusinessApp) {
         return;
     }
-
+    
     dispatch_sync(queue, ^{
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
         NSDictionary *threemaMdm = nil;
@@ -689,15 +768,20 @@ static NSDictionary *_mdmCacheSetup;
     [self syncSettingCalls];
 }
 
-- (NSDictionary*)getCompanyMDM {
+/// Obtain the company’s MDM
+///
+/// If you intend to simulate the company directory, you can directly return a custom dictionary.
+///
+/// *Example to fake the company MDM*
+///
+///     return @{MDM_KEY_SAFE_PASSWORD: @"pw123456", MDM_KEY_SAFE_SERVER_USERNAME: @"user"};
+///
+- (nullable NSDictionary*)getCompanyMDM {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     return [defaults dictionaryForKey:MDM_CONFIGURATION_KEY];
-    
-    // Fake company MDM parameters here
-   // return @{MDM_KEY_SAFE_PASSWORD: @"pw123456", MDM_KEY_SAFE_SERVER_USERNAME: @"user"};
 }
 
-- (NSDictionary*)getThreemaMDM {
+- (nullable NSDictionary*)getThreemaMDM {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     return [defaults dictionaryForKey:MDM_THREEMA_CONFIGURATION_KEY];
 }
@@ -705,7 +789,7 @@ static NSDictionary *_mdmCacheSetup;
 - (NSDictionary*)getMdmConfiguration {
     __block NSDictionary *mdm;
     dispatch_sync(queue, ^{
-        if (isLicenseRequired) {
+        if (isBusinessApp) {
             if (!isSetup) {
                 if (_mdmCache == nil) {
                     _mdmCache = [self getMDMParameters:[self getCompanyMDM] threemaMDM:[self getThreemaMDM]];
@@ -770,12 +854,13 @@ static NSDictionary *_mdmCacheSetup;
 
 - (NSDictionary*)applyMdmParameters:(NSDictionary*)destination source:(NSDictionary*)source override:(BOOL)override {
     NSMutableDictionary *mdmParameters = [[NSMutableDictionary alloc] initWithDictionary:destination];
-    
+   
     // Apply parameter if is override and renewable or missing
     [[source allKeys] enumerateObjectsUsingBlock:^(NSString *key, NSUInteger idx, BOOL * _Nonnull stop) {
         if ([self shouldDiscardInThreemaMDM:key]) {
             return;
         }
+        
         if (override == YES && [self isRenewable:key]) {
             if ([[mdmParameters allKeys] containsObject:key]) {
                 [mdmParameters setValue:source[key] forKey:key];
@@ -805,7 +890,7 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (BOOL)isRenewable:(NSString *)mdmKey {
-    NSArray *renewableKeys = @[MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_DISABLE_MULTIDEVICE, MDM_KEY_WEB_HOSTS, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_PASSWORD, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_ONPREM_SERVER, MDM_KEY_KEEP_MESSAGE_DAYS];
+    NSArray *renewableKeys = @[MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_DISABLE_MULTIDEVICE, MDM_KEY_WEB_HOSTS, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_PASSWORD, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_ONPREM_SERVER, MDM_KEY_KEEP_MESSAGE_DAYS, MDM_KEY_ENABLE_REMOTE_SECRET];
     return [renewableKeys containsObject:mdmKey];
 }
 

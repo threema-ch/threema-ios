@@ -19,7 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-
+import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -31,7 +32,6 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
     private let timeout: Double = 60
     
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
@@ -41,7 +41,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
     
     func testNoDeviceGroupPathKey() {
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainCnx)
+            entityManager: EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
         )
 
         let task = TaskDefinitionSettingsSync(syncSettings: Sync_Settings())
@@ -72,11 +72,11 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
     func testConnectionStateDisconnected() {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .disconnected,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock
         )
@@ -213,8 +213,8 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
 
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
-                deviceID: MockData.deviceID,
-                deviceGroupKeys: MockData.deviceGroupKeys
+                deviceID: MockMultiDevice.deviceID,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys
             )
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
@@ -251,12 +251,12 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
 
             let deviceGroupKeys = try XCTUnwrap(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
             let framworkInjectorMock = BusinessInjectorMock(
-                entityManager: EntityManager(databaseContext: databaseMainCnx),
+                entityManager: EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false),
                 myIdentityStore: test.initialConfig.identityStore,
                 userSettings: test.initialConfig.userSettings,
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(
-                    deviceGroupKeys: MockData.deviceGroupKeys,
+                    deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                     returnValues: [
                         MediatorMessageProtocolMock
                             .ReflectData(

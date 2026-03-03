@@ -22,6 +22,8 @@ import CocoaLumberjackSwift
 import Combine
 import MBProgressHUD
 import PromiseKit
+import SwiftUI
+import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
@@ -54,8 +56,21 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     private weak var singleDetailsViewController: SingleDetailsViewController?
     private weak var tableView: UITableView?
     private let linkedContactManager: LinkedContactManager
-    
+    private let deviceCapabilitiesManager: DeviceCapabilitiesManager
+
     private lazy var businessInjector = BusinessInjector.ui
+    private lazy var conversationExporter: ConversationExporter? = {
+        guard let singleDetailsViewController,
+              case let .conversationDetails(_, conversation) = state else {
+            return nil
+        }
+        
+        return ConversationExporter(
+            viewController: singleDetailsViewController,
+            conversationObjectID: conversation.objectID,
+            withMedia: false
+        )
+    }()
 
     var settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
     private var cancellables = Set<AnyCancellable>()
@@ -87,13 +102,15 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
         state: SingleDetails.State,
         singleDetailsViewController: SingleDetailsViewController,
         tableView: UITableView,
-        linkedContactManager: LinkedContactManager
+        linkedContactManager: LinkedContactManager,
+        deviceCapabilitiesManager: DeviceCapabilitiesManager
     ) {
         self.singleDetailsViewController = singleDetailsViewController
         self.tableView = tableView
         self.state = state
         self.linkedContactManager = linkedContactManager
-        
+        self.deviceCapabilitiesManager = deviceCapabilitiesManager
+
         switch state {
         case let .contactDetails(contact):
             self.contact = contact
@@ -427,7 +444,12 @@ extension SingleDetailsDataSource {
         var conversationDetailsQuickActions = [QuickAction]()
         
         conversationDetailsQuickActions.append(doNotDisturbQuickAction(in: viewController))
-        conversationDetailsQuickActions.append(contentsOf: searchChatQuickAction(in: viewController, for: conversation))
+        if !AppLaunchManager.isRemoteSecretEnabled {
+            conversationDetailsQuickActions.append(contentsOf: searchChatQuickAction(
+                in: viewController,
+                for: conversation
+            ))
+        }
         conversationDetailsQuickActions.append(contentsOf: callQuickAction(in: viewController))
         conversationDetailsQuickActions.append(contentsOf: scanIdentityQuickAction(in: viewController))
         
@@ -550,10 +572,17 @@ extension SingleDetailsDataSource {
         }
         return [quickAction]
     }
-    
+
+    private var topViewController: UIViewController {
+        AppDelegate.shared().currentTopViewController() ?? .init()
+    }
+
     private func scanIdentityQuickAction(in viewController: UIViewController) -> [QuickAction] {
         // If not fully verified and camera is available: show scan quick action
-        guard ScanIdentityController.canScan(), contact.contactVerificationLevel != .fullyVerified else {
+        guard
+            deviceCapabilitiesManager.supportsRecordingVideo,
+            contact.contactVerificationLevel != .fullyVerified
+        else {
             return []
         }
         
@@ -561,30 +590,79 @@ extension SingleDetailsDataSource {
             imageName: "qrcode.viewfinder",
             title: #localize("scan"),
             accessibilityIdentifier: "SingleDetailsDataSourceScanQuickActionButton"
-        ) { [weak self, weak viewController] quickAction in
-            guard let strongSelf = self,
-                  let strongViewController = viewController
-            else {
+        ) { [weak self, weak viewController] quickActionUpdate in
+            guard let self, let strongViewController = viewController else {
                 return
             }
-            
-            let scanController = ScanIdentityController()
-            scanController.containingViewController = strongViewController
-            scanController.expectedIdentity = strongSelf.contact.identity
-            
-            scanController.completion = { isFullyVerified in
-                guard isFullyVerified else {
-                    return
+
+            let model = QRCodeScannerViewModel(
+                mode: .identity,
+                audioSessionManager: AudioSessionManager(),
+                systemFeedbackManager: SystemFeedbackManager(
+                    deviceCapabilitiesManager: DeviceCapabilitiesManager(),
+                    settingsStore: BusinessInjector.ui.settingsStore
+                ),
+                systemPermissionsManager: SystemPermissionsManager()
+            )
+            let rootView = QRCodeScannerView(model: model)
+            let viewController = UIHostingController(rootView: rootView)
+            let nav = PortraitNavigationController(rootViewController: viewController)
+            model.onCompletion = { [weak self, nav] result in
+                switch result {
+                case let .identityContact(identity: id, publicKey: key, expirationDate: date):
+                    self?.handleIdentityContact(
+                        navC: nav,
+                        identity: id,
+                        publicKey: key,
+                        date: date,
+                        quickActionUpdate: quickActionUpdate
+                    )
+
+                case let .identityLink(url: url):
+                    nav.dismiss(animated: true) {
+                        URLHandler.handleThreemaDotIDURL(url, hideAppChooser: true)
+                    }
+
+                default:
+                    break
                 }
-                
-                quickAction.hide()
-                // The header height will automatically update, because the verification level changed
             }
-            
-            scanController.startScan()
+            model.onCancel = { [weak self] in
+                self?.topViewController.dismiss(animated: true)
+            }
+            strongViewController.present(nav, animated: true)
         }
-        
         return [quickAction]
+    }
+
+    func handleIdentityContact(
+        navC: UINavigationController,
+        identity: ThreemaIdentity,
+        publicKey: Data,
+        date: Date?,
+        quickActionUpdate: QuickActionUpdate
+    ) {
+        let viewModel = ContactIdentityProcessingViewModel(
+            expectedIdentity: contact.threemaIdentity,
+            scannedIdentity: identity,
+            scannedPublicKey: publicKey,
+            scannedExpirationDate: date,
+            systemFeedbackManager: SystemFeedbackManager(
+                deviceCapabilitiesManager: DeviceCapabilitiesManager(),
+                settingsStore: BusinessInjector.ui.settingsStore
+            )
+        )
+        let rootView = ContactIdentityProcessingView(model: viewModel)
+        let viewController = UIHostingController(rootView: rootView)
+        navC.pushViewController(viewController, animated: true)
+
+        viewModel.onCompletion = { verifiedContact in
+            navC.dismiss(animated: true) { [quickActionUpdate] in
+                if verifiedContact != nil {
+                    quickActionUpdate.hide()
+                }
+            }
+        }
     }
 }
 
@@ -612,7 +690,7 @@ extension SingleDetailsDataSource {
         }
         
         businessInjector.entityManager.performAndWait {
-            if self.businessInjector.entityManager.entityFetcher.countBallots(for: conversation) > 0 {
+            if self.businessInjector.entityManager.entityFetcher.ballotEntitiesCount(for: conversation) > 0 {
                 quickActions.append(contentsOf: self.ballotsQuickAction(for: conversation, in: viewController))
             }
         }
@@ -621,12 +699,12 @@ extension SingleDetailsDataSource {
     }
     
     private func hasMedia(for conversation: ConversationEntity) -> Bool {
-        businessInjector.entityManager.entityFetcher.countMediaMessages(for: conversation) > 0
+        businessInjector.entityManager.entityFetcher.mediaMessageCount(for: conversation) > 0
     }
     
     private func hasStarred(in conversation: ConversationEntity) -> Bool {
         businessInjector.entityManager.performAndWait {
-            self.businessInjector.entityManager.entityFetcher.countStarredMessages(in: conversation) > 0
+            self.businessInjector.entityManager.entityFetcher.starredMessageCount(for: conversation) > 0
         }
     }
     
@@ -660,25 +738,12 @@ extension SingleDetailsDataSource {
             title: localizedBallotsString,
             accessibilityIdentifier: "SingleDetailsDataSourceBallotQuickActionButton"
         ) { [weak conversation, weak viewController] _ in
-            guard let weakViewController = viewController else {
+            guard let weakViewController = viewController, let weakConversation = conversation else {
                 return
             }
             
-            guard let ballotViewController = BallotListTableViewController
-                .ballotListViewController(forConversation: conversation)
-            else {
-                UIAlertTemplate.showAlert(
-                    owner: weakViewController,
-                    title: #localize("ballot_load_error"),
-                    message: nil
-                )
-                return
-            }
-            
-            // Encapsulate the `BallotListTableViewController` inside a navigation controller for modal
-            // presentation
-            let navigationController = ThemedNavigationController(rootViewController: ballotViewController)
-            weakViewController.present(navigationController, animated: true)
+            let pollListController = UIHostingController(rootView: ListPollView(conversation: weakConversation))
+            weakViewController.present(pollListController, animated: true)
         }]
     }
     
@@ -706,9 +771,9 @@ extension SingleDetailsDataSource {
             let exportConversationAction = Details.Action(
                 title: localizedExportConversationActionTitle,
                 imageName: "square.and.arrow.up"
-            ) { [weak singleDetailsViewController, weak conversation] view in
-                guard let strongSingleDetailsViewController = singleDetailsViewController,
-                      let conversation
+            ) { [weak self] view in
+                guard let self,
+                      let singleDetailsViewController
                 else {
                     return
                 }
@@ -718,17 +783,20 @@ extension SingleDetailsDataSource {
                 let localizedIncludeMediaTitle = #localize("include_media")
                 let localizedExcludeMediaTitle = #localize("without_media")
                 
-                func exportMediaAction(includeMedia: Bool) -> ((UIAlertAction) -> Void) {{ _ in
-                    let exporter = ConversationExporter(
-                        viewController: strongSingleDetailsViewController,
-                        conversationObjectID: conversation.objectID,
-                        withMedia: includeMedia
-                    )
-                    exporter.exportConversation()
-                }}
+                func exportMediaAction(includeMedia: Bool) -> ((UIAlertAction) -> Void) {
+                    { [weak self] _ in
+                        guard let self,
+                              let conversationExporter else {
+                            return
+                        }
+                        
+                        conversationExporter.updateWithMedia(to: includeMedia)
+                        conversationExporter.exportConversation()
+                    }
+                }
                 
                 UIAlertTemplate.showSheet(
-                    owner: strongSingleDetailsViewController,
+                    owner: singleDetailsViewController,
                     popOverSource: view,
                     title: localizedTitle,
                     message: localizedMessage,
@@ -1207,7 +1275,13 @@ extension SingleDetailsDataSource {
             }
             
             let action = DeleteContactAction(for: strongSelf.contact)
-            action.execute(in: view, of: strongSingleDetailsViewController)
+            action.execute(
+                in: view,
+                of: strongSingleDetailsViewController,
+                willDelete: { [weak singleDetailsViewController] in
+                    singleDetailsViewController?.willDeleteAllMessages()
+                }
+            )
         }
         
         var actions: [SingleDetails.Row] = []
@@ -1302,7 +1376,7 @@ extension SingleDetailsDataSource {
             .compactMap(businessInjector.groupManager.getGroup(conversation:))
         
         if groups == nil {
-            groups = [Group]()
+            groups = [ThreemaFramework.Group]()
         }
         
         let groupsTableViewController = GroupsTableViewController(groups: groups!)

@@ -243,7 +243,7 @@ class MediatorReflectedOutgoingMessageProcessor {
     ) -> Promise<Void> {
         frameworkInjector.entityManager.performAndWaitSave {
             let contact = self.frameworkInjector.entityManager.entityFetcher
-                .contact(for: amsg.toIdentity)
+                .contactEntity(for: amsg.toIdentity)
             contact?.profilePictureBlobID = amsg.blobID.base64EncodedString(options: .endLineWithLineFeed)
             contact?.profilePictureUpload = Date(timeIntervalSince1970: TimeInterval(omsg.createdAt))
         }
@@ -601,7 +601,7 @@ class MediatorReflectedOutgoingMessageProcessor {
     private func getReceiverIdentity(for omsg: D2d_OutgoingMessage) throws -> String {
         try frameworkInjector.entityManager.performAndWait {
             guard let receiverIdentity = self.frameworkInjector.entityManager.entityFetcher
-                .contact(for: omsg.conversation.contact)?.identity else {
+                .contactEntity(for: omsg.conversation.contact)?.identity else {
                 throw MediatorReflectedProcessorError.outgoingMessageReceiverNotFound(message: omsg.loggingDescription)
             }
             

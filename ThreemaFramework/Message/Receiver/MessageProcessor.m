@@ -52,11 +52,9 @@
 #import "ProtocolDefines.h"
 #import "UserSettings.h"
 #import "MyIdentityStore.h"
-#import "ValidationLogger.h"
 #import "BallotMessageDecoder.h"
 #import "GroupMessageProcessor.h"
 #import "ThreemaError.h"
-#import "DatabaseManager.h"
 #import "FileMessageDecoder.h"
 #import "UTIConverter.h"
 #import "BoxVoIPCallIceCandidatesMessage.h"
@@ -111,7 +109,7 @@
     [messageProcessorDelegate beforeDecode];
     
     /* *3MAPush? */
-    if ([PredefinedContactsObjc is3MAPushWithIdentity:boxedMessage.fromIdentity]) {
+    if ([PredefinedContactsObjC is3MAPushWithIdentity:boxedMessage.fromIdentity]) {
         DDLogWarn(@"Discard message from %@", boxedMessage.fromIdentity);
         
         // Do not process message, send server ack
@@ -156,11 +154,7 @@
             // Validation logging
             if ([amsg isContentValid] == NO) {
                 NSString *errorDescription = @"Ignore invalid content";
-                if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
-                    [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxedMessage isIncoming:YES description:errorDescription];
-                } else {
-                    [[ValidationLogger sharedValidationLogger] logSimpleMessage:amsg isIncoming:YES description:errorDescription];
-                }
+                [DebugLog logAbstractMessage:amsg isIncoming:YES errorDescription:errorDescription];
 
                 // Do not process message, send server ack
                 [messageProcessorDelegate incomingMessageFailed:boxedMessage];
@@ -169,22 +163,14 @@
             } else {
                 if ([nonceGuard isProcessedWithMessage:amsg]) {
                     NSString *errorDescription = @"Nonce already in database";
-                    if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
-                        [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxedMessage isIncoming:YES description:errorDescription];
-                    } else {
-                        [[ValidationLogger sharedValidationLogger] logSimpleMessage:amsg isIncoming:YES description:errorDescription];
-                    }
+                    [DebugLog logAbstractMessage:amsg isIncoming:YES errorDescription:errorDescription];
 
                     // Do not process message, send server ack
                     [messageProcessorDelegate incomingMessageFailed:boxedMessage];
                     onCompletion(nil, nil);
                     return;
                 } else {
-                    if ([amsg isKindOfClass:[BoxTextMessage class]] || [amsg isKindOfClass:[GroupTextMessage class]]) {
-                        [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxedMessage isIncoming:YES description:nil];
-                    } else {
-                        [[ValidationLogger sharedValidationLogger] logSimpleMessage:amsg isIncoming:YES description:nil];
-                    }
+                    [DebugLog logAbstractMessage:amsg isIncoming:YES];
                 }
             }
 
@@ -203,7 +189,7 @@
             }];
         }];
     } onError:^(NSError *error) {
-        [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxedMessage isIncoming:YES description:@"PublicKey from Threema-ID not found"];
+        [DebugLog logBoxedMessage:boxedMessage isIncoming:YES errorDescription:@"PublicKey from Threema-ID not found"];
         // Failed to process message, try it later
         onError(error, nil);
     }];
@@ -227,7 +213,7 @@
     __block NSData *senderPublicKey;
     __block NSError *fetchContactError;
     [entityManager performBlockAndWait:^{
-        ContactEntity *contact = [entityManager.entityFetcher contactForId: amsg.fromIdentity];
+        ContactEntity *contact = [entityManager.entityFetcher contactEntityFor: amsg.fromIdentity];
         if (contact) {
             senderPublicKey = contact.publicKey;
         }
@@ -352,15 +338,15 @@
 /**
 Process incoming message.
 
-@param amsg: Incoming Abstract Message
-@param onCompletion: Completion handler with MessageProcessorDelegate, use it when calling MessageProcessorDelegate in completion block of processVoIPCall, to prevent blocking of dispatch queue 'ServerConnector.registerMessageProcessorDelegateQueue')
-@param onError: Error handler
+@param amsg Incoming abstract message
+@param onCompletion Completion handler with parameter of type `MessageProcessorDelegate`
+@param onError Error handler with parameter of type `NSError` and `MessageProcessorDelegate`
 */
-- (void)processIncomingMessage:(AbstractMessage*)amsg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError *err, id<MessageProcessorDelegate> _Nullable))onError {
+- (void)processIncomingMessage:(AbstractMessage*)amsg onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable delegate))onCompletion onError:(void(^ _Nonnull)(NSError *, id<MessageProcessorDelegate> _Nullable))onError {
 
     ContactEntity *sender;
     ContactEntity *receiver;
-    __block ConversationEntity *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver];
+    __block ConversationEntity *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver myIdentity:[[MyIdentityStore sharedMyIdentityStore] identity]];
 
     if (sender == nil) {
         onError([ThreemaError threemaError:@"Sender not found as contact"], nil);
@@ -387,7 +373,7 @@ Process incoming message.
     }
 
     if ([amsg isKindOfClass:[BoxTextMessage class]]) {
-        [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessageEntity *message) {
+        [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity *message) {
             [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 onCompletion(nil);
             }];
@@ -407,7 +393,7 @@ Process incoming message.
             onError(error, nil);
         }];
     } else if ([amsg isKindOfClass:[BoxLocationMessage class]]) {
-        [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessageEntity *message) {
+        [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity *message) {
             LocationMessageEntity *locationMessage = (LocationMessageEntity *)message;
             [self finalizeMessage:locationMessage inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 [self resolveAddressFor:locationMessage onCompletion:^{
@@ -418,7 +404,7 @@ Process incoming message.
             onError(error, nil);
         }];
     } else if ([amsg isKindOfClass:[BoxAudioMessage class]]) {
-        [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessageEntity *message) {
+        [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity *message) {
             [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 onCompletion(nil);
             }];
@@ -436,7 +422,10 @@ Process incoming message.
         onCompletion(nil);
     } else if ([amsg isKindOfClass:[BoxBallotCreateMessage class]]) {
         BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
-        [decoder decodeCreateBallotFromBox:(BoxBallotCreateMessage *)amsg sender:sender conversation:conversation onCompletion:^(BallotMessageEntity *message) {
+        [decoder decodeCreateBallotFromBox:(BoxBallotCreateMessage *)amsg sender:sender conversation:conversation onCompletion:^(NSObject *messageObject) {
+            NSAssert(messageObject == nil || [messageObject isKindOfClass:[BallotMessageEntity class]], @"Parameter messageObject must be type of BallotMessageEntity");
+            BallotMessageEntity *message = (BallotMessageEntity*)messageObject;
+
             [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 onCompletion(nil);
             }];
@@ -451,7 +440,10 @@ Process incoming message.
             onError(error, nil);
         }];
     } else if ([amsg isKindOfClass:[BoxFileMessage class]]) {
-        [FileMessageDecoder decodeMessageFromBox:(BoxFileMessage *)amsg sender:sender conversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessageEntity *message) {
+        [FileMessageDecoder decodeMessageFromBox:(BoxFileMessage *)amsg sender:sender conversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(NSObject *messageObject) {
+            NSAssert(messageObject == nil || [messageObject isKindOfClass:[BaseMessageEntity class]], @"Parameter messageObject must be type of BaseMessageEntity");
+            BaseMessageEntity *message = (BaseMessageEntity*)messageObject;
+
             // Do not download blob when message will processed via Notification Extension,
             // to keep notifications fast and because option automatically save to photos gallery
             // doesn't work from Notification Extension
@@ -495,18 +487,25 @@ Process incoming message.
     } else if ([amsg isKindOfClass:[UnknownTypeMessage class]]) {
         onError([ThreemaError threemaError:[NSString stringWithFormat:@"Unknown message type (ID: %@)", amsg.messageId] withCode:ThreemaProtocolErrorUnknownMessageType], nil);
     } else if ([amsg isKindOfClass:[DeleteMessage class]]) {
+        // Get related objectID's to mark as dirty objects
+        NSSet<NSManagedObjectID *> *relatedObjectIDs = [entityManager relatedObjectIDsForAbstractDeleteMessage:(DeleteMessage *)amsg in:conversation];
+
         // On error case `onError` will be called and message is `nil`
-        BaseMessageEntity *message = [entityManager deleteMessageFor:amsg conversation:conversation onError:^(NSError * _Nonnull error) {
+        BaseMessageEntity *message = [entityManager deleteMessageFor:amsg conversation:conversation myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onError:^(NSError * _Nonnull error) {
             onError(error, nil);
         }];
         if (message) {
+            for (NSManagedObjectID *objectID in relatedObjectIDs) {
+                [messageProcessorDelegate changedManagedObjectID:objectID];
+            }
+
             [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                 onCompletion(nil);
             }];
         }
     } else if ([amsg isKindOfClass:[EditMessage class]]) {
         // On error case `onError` will be called and message is `nil`
-        BaseMessageEntity *message = [entityManager editMessageFor:amsg conversation:conversation onError:^(NSError * _Nonnull error) {
+        BaseMessageEntity *message = [entityManager editMessageFor:amsg conversation:conversation myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onError:^(NSError * _Nonnull error) {
             onError(error, nil);
         }];
         if (message) {
@@ -516,7 +515,7 @@ Process incoming message.
         }
     } else if ([amsg isKindOfClass:[ReactionMessage class]]) {
         ReactionMessage *newMsg = (ReactionMessage *) amsg;
-        ReactionsMessageProcessor *manager = [[ReactionsMessageProcessor alloc]initWithEntityManager:entityManager];
+        ReactionsMessageProcessor *manager = [[ReactionsMessageProcessor alloc]initWithEntityManager:entityManager messageProcessorDelegate:messageProcessorDelegate];
         BaseMessageEntity *message = [manager handleMessageWithAbstractMessage: newMsg conversation:conversation];
 
         if (message) {
@@ -545,7 +544,7 @@ Process incoming message.
         // messages not handled by GroupProcessor, e.g. messages that can be processed after delayed group create
         ContactEntity *sender;
         ContactEntity *receiver;
-        ConversationEntity *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver];
+        ConversationEntity *conversation = [entityManager existingConversationSenderReceiverFor:amsg sender:&sender receiver:&receiver myIdentity:[[MyIdentityStore sharedMyIdentityStore] identity]];
 
         if (sender == nil) {
             onError([ThreemaError threemaError:@"Sender not found as contact"]);
@@ -593,11 +592,11 @@ Process incoming message.
                 }
             }];
         } else if ([amsg isKindOfClass:[GroupTextMessage class]]) {
-            [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessageEntity *message) {
+            [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity *message) {
                 [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
             } onError:onError];
         } else if ([amsg isKindOfClass:[GroupLocationMessage class]]) {
-            [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessageEntity *message) {
+            [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity *message) {
                 [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:^{
                     [self resolveAddressFor:(LocationMessageEntity*)message onCompletion:onCompletion];
                 }];
@@ -607,12 +606,15 @@ Process incoming message.
         } else if ([amsg isKindOfClass:[GroupVideoMessage class]]) {
             [self processIncomingVideoMessage:(GroupVideoMessage*)amsg sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupAudioMessage class]]) {
-            [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessageEntity *message) {
+            [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity *message) {
                 [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
             } onError:onError];
         } else if ([amsg isKindOfClass:[GroupBallotCreateMessage class]]) {
             BallotMessageDecoder *decoder = [[BallotMessageDecoder alloc] initWith:entityManager];
-            [decoder decodeCreateBallotFromGroupBox:(GroupBallotCreateMessage *)amsg sender:sender conversation:conversation onCompletion:^(BallotMessageEntity *message) {
+            [decoder decodeCreateBallotFromGroupBox:(GroupBallotCreateMessage *)amsg sender:sender conversation:conversation onCompletion:^(NSObject *messageObject) {
+                NSAssert(messageObject == nil || [messageObject isKindOfClass:[BallotMessageEntity class]], @"Parameter messageObject must be type of BallotMessageEntity");
+                BallotMessageEntity *message = (BallotMessageEntity*)messageObject;
+
                 [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
             } onError:^(NSError *error) {
                 onError(error);
@@ -621,7 +623,10 @@ Process incoming message.
             // TODO: This could be generate duplicate system messages, if message will processed multiple (race condition)
             [self processIncomingGroupBallotVoteMessage:(GroupBallotVoteMessage*)amsg onCompletion:onCompletion onError:onError];
         } else if ([amsg isKindOfClass:[GroupFileMessage class]]) {
-            [FileMessageDecoder decodeGroupMessageFromBox:(GroupFileMessage *)amsg sender:sender conversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(BaseMessageEntity *message) {
+            [FileMessageDecoder decodeGroupMessageFromBox:(GroupFileMessage *)amsg sender:sender conversation:conversation isReflectedMessage:NO timeoutDownloadThumbnail:timeoutDownloadThumbnail entityManager:entityManager onCompletion:^(NSObject *messageObject) {
+                NSAssert(messageObject == nil || [messageObject isKindOfClass:[BaseMessageEntity class]], @"Parameter messageObject must be type of BaseMessageEntity");
+                BaseMessageEntity *message = (BaseMessageEntity*)messageObject;
+
                 [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
             } onError:^(NSError *error) {
                 onError(error);
@@ -637,20 +642,27 @@ Process incoming message.
                 });
             }];
         } else if ([amsg isKindOfClass:[DeleteGroupMessage class]]) {
+            // Get related objectID's to mark as dirty objects
+            NSSet<NSManagedObjectID *> *relatedObjectIDs = [entityManager relatedObjectIDsForAbstractDeleteMessage:(DeleteGroupMessage *)amsg in:conversation];
+
             // On error case `onError` will be called and message is `nil`
-            BaseMessageEntity *message = [entityManager deleteMessageFor:amsg conversation:conversation onError:onError];
+            BaseMessageEntity *message = [entityManager deleteMessageFor:amsg conversation:conversation myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onError:onError];
             if (message) {
+                for (NSManagedObjectID *objectID in relatedObjectIDs) {
+                    [messageProcessorDelegate changedManagedObjectID:objectID];
+                }
+
                 [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
             }
         } else if ([amsg isKindOfClass:[EditGroupMessage class]]) {
             // On error case `onError` will be called and message is `nil`
-            BaseMessageEntity *message = [entityManager editMessageFor:amsg conversation:conversation onError:onError];
+            BaseMessageEntity *message = [entityManager editMessageFor:amsg conversation:conversation myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onError:onError];
             if (message) {
                 [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
             }
         } else if ([amsg isKindOfClass:[GroupReactionMessage class]]) {
             GroupReactionMessage *newMsg = (GroupReactionMessage *) amsg;
-            ReactionsMessageProcessor *manager = [[ReactionsMessageProcessor alloc]initWithEntityManager:entityManager];
+            ReactionsMessageProcessor *manager = [[ReactionsMessageProcessor alloc]initWithEntityManager:entityManager messageProcessorDelegate:messageProcessorDelegate];
             BaseMessageEntity *message = [manager handleGroupMessageWithAbstractMessage:newMsg conversation:conversation];
             if (message) {
                 [self finalizeMessage:message inConversation:conversation fromBoxMessage:amsg onCompletion:onCompletion];
@@ -681,12 +693,12 @@ Process incoming message.
 }
 
 - (void)finalizeMessage:(BaseMessageEntity*)message inConversation:(ConversationEntity*)conversation fromBoxMessage:(AbstractMessage*)boxMessage onCompletion:(void(^_Nonnull)(void))onCompletion {
-    [messageProcessorDelegate incomingMessageChanged:boxMessage baseMessage:message];
+    [messageProcessorDelegate incomingMessageChanged:boxMessage baseMessageEntity:message];
     onCompletion();
 }
 
 - (void)conditionallyStartLoadingFileFromMessage:(FileMessageEntity*)message {
-    BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+    BlobManagerObjCWrapper *manager = [[BlobManagerObjCWrapper alloc] init];
     [manager autoSyncBlobsFor:message.objectID];
 }
 
@@ -700,10 +712,10 @@ Process incoming message.
     }
 
     BOOL isGroupMessage = [amsg isKindOfClass:[GroupImageMessage class]];
-    [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessageEntity *message) {
+    [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:nil myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity *message) {
         ImageMessageEntity *imageMessageEntity = (ImageMessageEntity*)message;
 
-        [messageProcessorDelegate incomingMessageChanged:amsg baseMessage:imageMessageEntity];
+        [messageProcessorDelegate incomingMessageChanged:amsg baseMessageEntity:imageMessageEntity];
 
         dispatch_queue_t downloadQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 
@@ -731,10 +743,10 @@ Process incoming message.
         return;
     }
 
-    [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:[UIImage imageNamed:@"threema.video.fill"] onCompletion:^(BaseMessageEntity *message) {
+    [entityManager getOrCreateMessageFor:amsg sender:sender conversation:conversation thumbnail:[UIImage imageNamed:@"threema.video.fill"] myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity *message) {
         VideoMessageEntity *videoMessageEntity = (VideoMessageEntity *)message;
 
-        [messageProcessorDelegate incomingMessageChanged:amsg baseMessage:videoMessageEntity];
+        [messageProcessorDelegate incomingMessageChanged:amsg baseMessageEntity:videoMessageEntity];
 
         BOOL isGroupMessage = [amsg isKindOfClass:[GroupVideoMessage class]];
 
@@ -788,7 +800,7 @@ Process incoming message.
 
 - (void)processIncomingDeliveryReceipt:(DeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     [entityManager performAsyncBlockAndSafe:^{
-        ConversationEntity *conversation = [[entityManager entityFetcher] conversationEntityForIdentity:[msg fromIdentity]];
+        ConversationEntity *conversation = [[entityManager entityFetcher] conversationEntityFor:[msg fromIdentity]];
 
         for (NSData *receiptMessageId in msg.receiptMessageIds) {
             if (conversation == nil) {
@@ -797,7 +809,7 @@ Process incoming message.
             }
 
             /* Fetch message from DB */
-            BaseMessageEntity *dbmsg = [entityManager.entityFetcher ownMessageWithId: receiptMessageId conversationEntity:conversation];
+            BaseMessageEntity *dbmsg = [entityManager.entityFetcher ownMessageWith: receiptMessageId in:conversation];
             if (dbmsg == nil) {
                 /* This can happen if the user deletes the message before the receipt comes in */
                 DDLogError(@"Cannot find message ID %@ (delivery receipt from %@)", receiptMessageId, msg.fromIdentity);
@@ -815,7 +827,7 @@ Process incoming message.
                 dbmsg.readDate = msg.date;
                 dbmsg.read = [NSNumber numberWithBool:YES];
             } else if (msg.receiptType == ReceiptTypeAck || msg.receiptType == ReceiptTypeDecline) {
-                ReactionsMessageProcessor * reactionProcessor = [[ReactionsMessageProcessor alloc]initWithEntityManager:entityManager];
+                ReactionsMessageProcessor * reactionProcessor = [[ReactionsMessageProcessor alloc]initWithEntityManager:entityManager messageProcessorDelegate:messageProcessorDelegate];
                 NSError *error = nil;
                 [reactionProcessor handleLegacyReactionWithAck:msg.receiptType == ReceiptTypeAck date:msg.date messageID:dbmsg.objectID sender:msg.fromIdentity error: &error];
                 if(error) {
@@ -827,12 +839,6 @@ Process incoming message.
             }
 
             [messageProcessorDelegate changedManagedObjectID:dbmsg.objectID];
-
-            if ((msg.receiptType == ReceiptTypeAck || msg.receiptType == ReceiptTypeDecline) && dbmsg.reactions != nil) {
-                for (MessageReactionEntity *reaction in dbmsg.reactions) {
-                    [messageProcessorDelegate changedManagedObjectID:reaction.objectID];
-                }
-            }
         }
         
         onCompletion();
@@ -841,7 +847,7 @@ Process incoming message.
 
 - (void)processIncomingGroupDeliveryReceipt:(GroupDeliveryReceiptMessage*)msg onCompletion:(void(^ _Nonnull)(void))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
     [entityManager performAsyncBlockAndSafe:^{
-        ConversationEntity *conversation = [entityManager.entityFetcher conversationEntityForGroupId:msg.groupId creator:msg.groupCreator];
+        ConversationEntity *conversation = [entityManager.entityFetcher groupConversationEntityFor:msg.groupId creatorID:msg.groupCreator myIdentity:[[MyIdentityStore sharedMyIdentityStore] identity]];
 
         for (NSData *receiptMessageId in msg.receiptMessageIds) {
             if (conversation == nil) {
@@ -850,7 +856,7 @@ Process incoming message.
             }
 
             /* Fetch message from DB */
-            BaseMessageEntity *dbmsg = [entityManager.entityFetcher messageWithId:receiptMessageId conversationEntity:conversation];
+            BaseMessageEntity *dbmsg = [entityManager.entityFetcher messageObjCWith:receiptMessageId in:conversation];
             if (dbmsg == nil) {
                 /* This can happen if the user deletes the message before the receipt comes in */
                 DDLogWarn(@"Cannot find message ID %@ (delivery receipt from %@)", receiptMessageId, msg.fromIdentity);
@@ -858,7 +864,7 @@ Process incoming message.
             }
             
             if (msg.receiptType == ReceiptTypeAck || msg.receiptType == ReceiptTypeDecline) {
-                ReactionsMessageProcessor * reactionProcessor = [[ReactionsMessageProcessor alloc] initWithEntityManager:entityManager];
+                ReactionsMessageProcessor * reactionProcessor = [[ReactionsMessageProcessor alloc] initWithEntityManager:entityManager messageProcessorDelegate:messageProcessorDelegate];
                 NSError *error = nil;
                 [reactionProcessor handleLegacyReactionWithAck:msg.receiptType == ReceiptTypeAck date:msg.date messageID:dbmsg.objectID sender:msg.fromIdentity error: &error];
                 
@@ -872,12 +878,6 @@ Process incoming message.
             }
             
             [messageProcessorDelegate changedManagedObjectID:dbmsg.objectID];
-
-            if ((msg.receiptType == ReceiptTypeAck || msg.receiptType == ReceiptTypeDecline) && dbmsg.reactions != nil) {
-                for (MessageReactionEntity *reaction in dbmsg.reactions) {
-                    [messageProcessorDelegate changedManagedObjectID:reaction.objectID];
-                }
-            }
         }
         
         onCompletion();
@@ -1093,7 +1093,7 @@ Process incoming message.
 
 -  (void)changedBallotWithID:(NSData * _Nonnull)ID {
     [entityManager performBlockAndWait:^{
-        BallotEntity *ballot = [[entityManager entityFetcher] ballotEntityForBallotId:ID];
+        BallotEntity *ballot = [[entityManager entityFetcher] ballotEntityFor:ID];
         if (ballot) {
             [messageProcessorDelegate changedManagedObjectID:ballot.objectID];
         }
@@ -1102,7 +1102,7 @@ Process incoming message.
 
 - (void)changedContactWithIdentity:(NSString * _Nonnull)identity {
     [entityManager performBlockAndWait:^{
-        ContactEntity *contact = [entityManager.entityFetcher contactForId:identity];
+        ContactEntity *contact = [entityManager.entityFetcher contactEntityFor:identity];
         if (contact) {
             [messageProcessorDelegate changedManagedObjectID:contact.objectID];
         }
@@ -1111,11 +1111,11 @@ Process incoming message.
 
 - (void)changedConversationAndGroupEntityWithGroupID:(NSData * _Nonnull)groupID groupCreatorIdentity:(NSString * _Nonnull)groupCreatorIdentity {
     [entityManager performBlockAndWait:^{
-        ConversationEntity *conversation = [entityManager.entityFetcher conversationEntityForGroupId:groupID creator:groupCreatorIdentity];
+        ConversationEntity *conversation = [entityManager.entityFetcher groupConversationEntityFor:groupID creatorID:groupCreatorIdentity myIdentity:[[MyIdentityStore sharedMyIdentityStore] identity]];
         if (conversation) {
             [messageProcessorDelegate changedManagedObjectID:conversation.objectID];
 
-            GroupEntity *groupEntity = [[entityManager entityFetcher] groupEntityForConversationEntity:conversation];
+            GroupEntity *groupEntity = [[entityManager entityFetcher] groupEntityFor:conversation];
             if (groupEntity) {
                 [messageProcessorDelegate changedManagedObjectID:groupEntity.objectID];
             }

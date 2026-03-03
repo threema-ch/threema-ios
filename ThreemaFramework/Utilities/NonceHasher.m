@@ -29,10 +29,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 @implementation NonceHasher
 
-+ (NSData *)hashedNonce:(NSData *)nonce myIdentityStore:(id<MyIdentityStoreProtocol>)myIdentityStore {
++ (NSData *)hashedNonce:(NSData *)nonce myIdentity:(nullable NSString *)myIdentity {
     /* Hash nonce with HMAC-SHA256 using the identity as the key if available.
        This serves to make it impossible to correlate the nonce DBs of users to determine whether they have been communicating. */
-    NSData *identity = [[myIdentityStore identity] dataUsingEncoding:NSASCIIStringEncoding];
+    NSData *identity = [myIdentity dataUsingEncoding:NSASCIIStringEncoding];
     if (identity == nil) {
         // This should never be called
         DDLogError(@"Nonces should only be processed if my identity exists");

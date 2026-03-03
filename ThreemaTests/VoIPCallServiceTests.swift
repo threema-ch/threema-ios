@@ -20,6 +20,7 @@
 
 import XCTest
 @testable import Threema
+@testable import ThreemaFramework
 
 final class VoIPCallServiceTests: XCTestCase {
 
@@ -27,7 +28,6 @@ final class VoIPCallServiceTests: XCTestCase {
     private var dbBackgroundCnx: DatabaseContext!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
@@ -40,7 +40,7 @@ final class VoIPCallServiceTests: XCTestCase {
 
         let voIPCallService = VoIPCallService(
             businessInjector: BusinessInjectorMock(
-                entityManager: EntityManager(databaseContext: dbMainCnx)
+                entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
             ),
             peerConnectionClient: voIPCallPeerConnectionClientMock
         )

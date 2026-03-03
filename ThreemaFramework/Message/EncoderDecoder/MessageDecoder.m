@@ -58,9 +58,7 @@
 #import "BoxVoIPCallIceCandidatesMessage.h"
 #import "BoxVoIPCallHangupMessage.h"
 #import "BoxVoIPCallRingingMessage.h"
-#import "ValidationLogger.h"
 #import "GroupDeletePhotoMessage.h"
-#import "QuoteUtil.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -73,7 +71,7 @@
 + (AbstractMessage*)decodeFromBoxed:(BoxedMessage*)boxmsg withPublicKey:(NSData*)publicKey {
     if (![boxmsg.toIdentity isEqualToString:[MyIdentityStore sharedMyIdentityStore].identity]) {
         DDLogError(@"Message is not for my identity - cannot decode");
-        [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:@"Message is not for my identity - cannot decode"];
+        [DebugLog logBoxedMessage:boxmsg isIncoming:YES errorDescription:@"Message is not for my identity - cannot decode"];
         return nil;
     }
     
@@ -81,13 +79,13 @@
     NSData *data = [[MyIdentityStore sharedMyIdentityStore] decryptData:boxmsg.box withNonce:boxmsg.nonce publicKey:publicKey];
     if (data == nil) {
         DDLogError(@"Decryption of message from %@ failed", boxmsg.fromIdentity);
-        [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:@"Decryption of message failed"];
+        [DebugLog logBoxedMessage:boxmsg isIncoming:YES errorDescription:@"Decryption of message failed"];
         return nil;
     }
     
     if (data.length < 1) {
         DDLogError(@"Empty message received");
-        [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:@"Empty message received"];
+        [DebugLog logBoxedMessage:boxmsg isIncoming:YES errorDescription:@"Empty message received"];
         return nil;
     }
     
@@ -96,7 +94,7 @@
     int realDataLength = (int)data.length - padbytes;
     if (realDataLength < 1) {
         DDLogError(@"Bad message padding");
-        [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:@"Bad message padding"];
+        [DebugLog logBoxedMessage:boxmsg isIncoming:YES errorDescription:@"Bad message padding"];
         return nil;
     }
     DDLogVerbose(@"Effective data length is %d", realDataLength);
@@ -108,7 +106,7 @@
         metadata = [[MetadataCoder new] decodeWithNonce:boxmsg.nonce box:boxmsg.metadataBox publicKey:publicKey error:&err];
         if (err != nil) {
             DDLogError(@"Metadata decryption failed: %@", err);
-            [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:@"Metadata decryption failed"];
+            [DebugLog logBoxedMessage:boxmsg isIncoming:YES errorDescription:@"Metadata decryption failed"];
             return nil;
         }
         
@@ -116,7 +114,7 @@
         if (metadata.messageID != nil) {
             if (![boxmsg.messageId isEqual:metadata.messageID]) {
                 DDLogError(@"Metadata message ID does not match envelope message ID");
-                [[ValidationLogger sharedValidationLogger] logBoxedMessage:boxmsg isIncoming:YES description:@"Metadata message ID does not match envelope message ID"];
+                [DebugLog logBoxedMessage:boxmsg isIncoming:YES errorDescription:@"Metadata message ID does not match envelope message ID"];
                 return nil;
             }
         }
@@ -517,11 +515,10 @@
             textmsg.groupId = [NSData dataWithBytes:(body.bytes + kIdentityLen) length:kGroupIdLen];
             textmsg.text = [[NSString alloc] initWithData:[NSData dataWithBytes:(body.bytes + kIdentityLen + kGroupIdLen) length:([body length] - kIdentityLen - kGroupIdLen)] encoding:NSUTF8StringEncoding];
             
-            NSString *remainingBody = nil;
-            NSData *quotedMessageId = [QuoteUtil parseQuoteV2FromMessage:textmsg.text remainingBody:&remainingBody];
-            if (quotedMessageId != nil) {
-                textmsg.text = remainingBody;
-                textmsg.quotedMessageId = quotedMessageId;
+            QuoteParseV2Result* result = [QuoteUtil parseQuoteV2From:textmsg.text];
+            if (result != nil) {
+                textmsg.text = result.remainingBody;
+                textmsg.quotedMessageId = result.messageID;
             }
             
             msg = textmsg;
@@ -636,12 +633,10 @@
             BoxTextMessage *textmsg = [[BoxTextMessage alloc] init];
             textmsg.text = [[NSString alloc] initWithData:[NSData dataWithBytes:body.bytes length:[body length]] encoding:NSUTF8StringEncoding];
             
-            NSString *remainingBody = nil;
-            NSData *quotedMessageId = [QuoteUtil parseQuoteV2FromMessage:textmsg.text remainingBody:&remainingBody];
-            
-            if (quotedMessageId != nil) {
-                textmsg.text = remainingBody;
-                textmsg.quotedMessageId = quotedMessageId;
+            QuoteParseV2Result* result = [QuoteUtil parseQuoteV2From:textmsg.text];
+            if (result != nil) {
+                textmsg.text = result.remainingBody;
+                textmsg.quotedMessageId = result.messageID;
             }
             msg = textmsg;
             break;

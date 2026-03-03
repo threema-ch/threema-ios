@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaProtocols
 
 final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
@@ -121,7 +122,7 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
             // Otherwise the contact will be stored into the database before syncing.
             guard (frameworkInjector.entityManager.performAndWait {
                 self.frameworkInjector.entityManager.entityFetcher
-                    .contact(for: delta.syncContact.identity) != nil
+                    .contactEntity(for: delta.syncContact.identity) != nil
             })
             else {
                 return true
@@ -140,12 +141,13 @@ final class TaskExecutionUpdateContactSync: TaskExecutionBlobTransaction {
 
         frameworkInjector.entityManager.performAndWait {
             guard let contact = self.frameworkInjector.entityManager.entityFetcher
-                .contact(for: sContact.identity) else {
+                .contactEntity(for: sContact.identity) else {
                 DDLogInfo("Contact was deleted. Do not sync")
                 return
             }
 
-            let conversation = self.frameworkInjector.entityManager.entityFetcher.conversation(for: contact)
+            let conversation = self.frameworkInjector.entityManager.entityFetcher
+                .conversationEntity(for: contact.identity)
 
             let samePublicKey = (sContact.hasPublicKey && sContact.publicKey == contact.publicKey) || !sContact
                 .hasPublicKey

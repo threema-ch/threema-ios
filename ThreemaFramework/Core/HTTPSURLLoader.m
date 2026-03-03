@@ -110,24 +110,7 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-	[_receivedData appendData:data];
-
-    if ([_delegate respondsToSelector:@selector(httpsLoaderShouldCancel)]) {
-        if ([_delegate httpsLoaderShouldCancel]) {
-            DDLogInfo(@"dowload cancelled");
-            
-            [connection cancel];
-            
-            [ActivityIndicatorProxy stopActivity];
-            _onError([ThreemaError threemaError:@"User cancelled download"]);
-            
-            return;
-        }
-    }
-
-    if ([_delegate respondsToSelector:@selector(httpsLoaderReceivedData:)]) {
-        [_delegate httpsLoaderReceivedData:_receivedData];
-    }
+    [_receivedData appendData:data];
 }
 
 - (NSCachedURLResponse *)connection:(NSURLConnection *)connection willCacheResponse:(NSCachedURLResponse *)cachedResponse {

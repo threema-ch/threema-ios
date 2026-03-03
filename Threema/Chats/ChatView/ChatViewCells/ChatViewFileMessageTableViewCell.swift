@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import ThreemaFramework
 
@@ -249,8 +250,19 @@ extension ChatViewFileMessageTableViewCell: ChatViewMessageActions {
         }
         
         // Share
-        let shareItems = [MessageActivityItem(for: message)]
-        
+        let data = BaseMessageEntityMessageShareContentMapper.mapToContent(
+            from: message,
+            fileUtility: FileUtility.shared
+        )
+        let shareHandler = {
+            if let data {
+                [UIActivityHelperFactory.makeItemSource(type: .messageActivity(data))]
+            }
+            else {
+                []
+            }
+        }
+
         // Speak
         var speakText = "\(message.fileMessageType.localizedDescription), \(message.name)"
         if let caption = message.caption, !caption.isEmpty {
@@ -288,7 +300,7 @@ extension ChatViewFileMessageTableViewCell: ChatViewMessageActions {
             quoteHandler: quoteHandler,
             editHandler: editHandler,
             copyHandler: copyHandler,
-            shareItems: shareItems,
+            shareHandler: shareHandler,
             speakText: speakText,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,

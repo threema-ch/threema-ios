@@ -22,18 +22,14 @@ import SwiftUI
 import ThreemaMacros
 
 struct DeviceJoinPFSInfoView: View {
-    
     @Binding var showWizard: Bool
-    
-    @Environment(\.openURL) private var openURL
     @ObservedObject var deviceJoinManager: DeviceJoinManager
-    
     @State private var showScanQRCodeView = false
         
     var body: some View {
         VStack {
             ScrollView {
-                DeviceJoinHeaderView(
+                DeviceJoinHeaderViewWithURL(
                     title: String.localizedStringWithFormat(
                         #localize("settings_list_threema_desktop_title"),
                         TargetManager.appName
@@ -44,14 +40,8 @@ struct DeviceJoinPFSInfoView: View {
                     )
                 )
                 .padding([.horizontal, .top], 24)
-                .accessibilityAction(named: Text(String.localizedStringWithFormat(
-                    #localize("accessibility_action_open_link"),
-                    ThreemaURLProvider.multiDeviceLimit.absoluteString
-                ))) {
-                    openURL(ThreemaURLProvider.multiDeviceLimit)
-                }
             }
-            
+
             Spacer()
             
             ZStack {
@@ -98,6 +88,26 @@ struct DeviceJoinPFSInfoView: View {
                         .symbolRenderingMode(.hierarchical)
                         .foregroundColor(.secondary)
                 }
+            }
+        }
+    }
+
+    struct DeviceJoinHeaderViewWithURL: View {
+        @Environment(\.openURL) private var openURL
+
+        let title: String
+        let description: String
+
+        var body: some View {
+            DeviceJoinHeaderView(
+                title: title,
+                description: description
+            )
+            .accessibilityAction(named: Text(String.localizedStringWithFormat(
+                #localize("accessibility_action_open_link"),
+                ThreemaURLProvider.multiDeviceLimit.absoluteString
+            ))) {
+                openURL(ThreemaURLProvider.multiDeviceLimit)
             }
         }
     }

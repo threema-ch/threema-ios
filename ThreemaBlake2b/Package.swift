@@ -1,4 +1,4 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 6.1
 
 //  _____ _
 // |_   _| |_  _ _ ___ ___ _ __  __ _

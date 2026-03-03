@@ -24,6 +24,8 @@
 
 + (BOOL)handleURL:(NSURL *)url;
 
++ (void)handleLicenseUrl:(NSURL *)url;
+
 + (BOOL)handleShortCutItem:(UIApplicationShortcutItem *)shortCutItem;
 
 + (void)handleThreemaDotIdUrl:(NSURL*)url hideAppChooser:(BOOL)hideAppChooser

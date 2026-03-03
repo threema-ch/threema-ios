@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import PromiseKit
 
@@ -33,7 +34,8 @@ import PromiseKit
     }
     
     private enum ItemLoaderError: Error {
-        case UnknownType
+        case unknownType
+        case loadItemFailed
     }
     
     public var itemsToSend: Set<IntermediateItem> = Set()
@@ -69,13 +71,14 @@ import PromiseKit
     private static func getTemporaryDirectory() -> URL {
         var url: URL
         var exists = true
+        let fileUtility = FileUtility.shared!
         repeat {
-            url = FileManager.default.temporaryDirectory.appendingPathComponent("\(Int.random(in: 0...32768))")
-            exists = FileManager.default.fileExists(atPath: url.absoluteString)
+            url = fileUtility.appTemporaryUnencryptedDirectory.appendingPathComponent("\(Int.random(in: 0...32768))")
+            exists = fileUtility.fileExists(at: url)
         }
         while exists
         do {
-            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
+            try fileUtility.mkDir(at: url, withIntermediateDirectories: true, attributes: nil)
         }
         catch {
             DDLogError("Error occured while creating temporary directory. Error: \(error)")
@@ -86,7 +89,7 @@ import PromiseKit
     
     public func deleteTempDir() {
         do {
-            try FileManager.default.removeItem(at: tmpDirURL)
+            try FileUtility.shared.delete(at: tmpDirURL)
         }
         catch {
             DDLogError("Could not remove temporary directory!")
@@ -202,7 +205,7 @@ import PromiseKit
     
     private func copyItem(at: URL, to: URL) -> (Bool, Error?) {
         do {
-            try FileManager.default.copyItem(at: at, to: to)
+            try FileUtility.shared.copy(from: at, to: to)
         }
         catch {
             return (false, error)
@@ -257,17 +260,6 @@ import PromiseKit
         return loadGeneralURLItem(intermediateItem)
     }
     
-    private func loadDataRepresentation(_ intermediateItem: IntermediateItem, type: String, seal: Resolver<Any>) {
-        intermediateItem.itemProvider.loadDataRepresentation(forTypeIdentifier: type) { item, error in
-            if let error {
-                seal.reject(error)
-            }
-            if let dataItem = item {
-                self.loadDataItem(dataItem: dataItem, type: type, seal: seal)
-            }
-        }
-    }
-    
     private func loadGeneralURLItem(_ intermediateItem: IntermediateItem) -> Promise<Any> {
         let type = checkSecondaryType(intermediateItem)
         return Promise { seal in
@@ -297,7 +289,7 @@ import PromiseKit
                 }
                 else {
                     DDLogError("Item could not be loaded.")
-                    seal.reject(ItemLoaderError.UnknownType)
+                    seal.reject(ItemLoaderError.unknownType)
                 }
             }
         )
@@ -314,10 +306,14 @@ import PromiseKit
             .pathExtension
         fileOperationQueue.sync {
             let ogFilename = urlItem.deletingPathExtension().lastPathComponent
-            let filename = FileUtility.shared.getUniqueFilename(from: ogFilename, directoryURL: url, pathExtension: ext)
+            let filename = FileUtility.shared.getUniqueFilename(
+                from: ogFilename,
+                directoryURL: url,
+                pathExtension: ext
+            )
             let fileURL = url.appendingPathComponent(filename).appendingPathExtension(ext)
             do {
-                try FileManager.default.copyItem(at: urlItem, to: fileURL)
+                try FileUtility.shared.copy(from: urlItem, to: fileURL)
             }
             catch {
                 seal.reject(error)
@@ -333,21 +329,22 @@ import PromiseKit
         fileOperationQueue.sync {
             guard let ext = UTIConverter.preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: type))
             else {
-                seal.reject(ItemLoaderError.UnknownType)
+                seal.reject(ItemLoaderError.unknownType)
                 return
             }
-            let filename = FileUtility.shared.getTemporarySendableFileName(
+            let fileUtility = FileUtility.shared!
+            let filename = fileUtility.getTemporarySendableFileName(
                 base: "file",
                 directoryURL: url,
                 pathExtension: ext
             )
             let fileURL = url.appendingPathComponent(filename).appendingPathExtension(ext)
-            do {
-                try dataItem.write(to: fileURL)
+            
+            guard fileUtility.write(contents: dataItem, to: fileURL) else {
+                seal.reject(ItemLoaderError.loadItemFailed)
+                return
             }
-            catch {
-                seal.reject(error)
-            }
+            
             seal.fulfill(fileURL)
         }
     }
@@ -374,23 +371,26 @@ import PromiseKit
         
         let url = tmpDirURL
         fileOperationQueue.sync {
-            let jpegExt = UTIConverter
-                .preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: UTType.jpeg.identifier))!
-            let pngExt = UTIConverter
-                .preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: UTType.png.identifier))!
+            let jpegExt = UTIConverter.preferredFileExtension(
+                forMimeType: UTIConverter.mimeType(fromUTI: UTType.jpeg.identifier)
+            )!
+            let pngExt = UTIConverter.preferredFileExtension(
+                forMimeType: UTIConverter.mimeType(fromUTI: UTType.png.identifier)
+            )!
             let ext = isSticker ? pngExt : jpegExt
-            let filename = FileUtility.shared.getTemporarySendableFileName(
+            let fileUtility = FileUtility.shared!
+            let filename = fileUtility.getTemporarySendableFileName(
                 base: "image",
                 directoryURL: url,
                 pathExtension: ext
             )
             let fileURL = url.appendingPathComponent(filename).appendingPathExtension(ext)
-            do {
-                try dataItem.write(to: fileURL)
+            
+            guard fileUtility.write(contents: dataItem, to: fileURL) else {
+                seal.reject(ItemLoaderError.loadItemFailed)
+                return
             }
-            catch {
-                seal.reject(error)
-            }
+            
             seal.fulfill(fileURL)
         }
     }

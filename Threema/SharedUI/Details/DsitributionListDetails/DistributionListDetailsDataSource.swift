@@ -41,7 +41,7 @@ final class DistributionListDetailsDataSource: UITableViewDiffableDataSource<
     
     private lazy var businessInjector = BusinessInjector.ui
     private lazy var settingsStore = businessInjector.settingsStore as! SettingsStore
-    private lazy var mdmSetup = MDMSetup(setup: false)
+    private lazy var mdmSetup = MDMSetup()
     
     private static let contentConfigurationCellIdentifier = "contentConfigurationCellIdentifier"
     
@@ -58,8 +58,8 @@ final class DistributionListDetailsDataSource: UITableViewDiffableDataSource<
         self.distributionListDetailsViewController = distributionListDetailsViewController
         self.tableView = tableView
 
-        let em = EntityManager()
-        self.conversation = em.entityFetcher.conversation(for: distributionList.distributionListID as NSNumber)!
+        let em = BusinessInjector.ui.entityManager
+        self.conversation = em.entityFetcher.conversationEntity(for: distributionList.distributionListID)!
 
         super.init(tableView: tableView, cellProvider: cellProvider)
     }
@@ -356,8 +356,8 @@ extension DistributionListDetailsDataSource {
                 cell = strongSelf.tableView?.cellForRow(at: indexPathForSelectedRow)
             }
             
-            ConversationsViewControllerHelper.handleDeletion(
-                of: strongSelf.conversation,
+            DeleteConversationAction.execute(
+                for: strongSelf.conversation,
                 owner: strongDistributionListDetailsViewController,
                 cell: cell,
                 singleFunction: .delete

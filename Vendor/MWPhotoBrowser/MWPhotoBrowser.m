@@ -19,14 +19,12 @@
 ///***** END THREEMA MODIFICATION *********/
 #import "UIImage+MWPhotoBrowser.h"
 ///***** BEGIN THREEMA MODIFICATION: Add AppGroup and utils *********/
-#import "ForwardURLActivity.h"
-#import "ForwardMultipleURLActivity.h"
 #import "AppGroup.h"
 #import "ThreemaUtilityObjC.h"
 #import "Threema-Swift.h"
-#import "ActivityUtil.h"
 #import "ContactGroupPickerViewController.h"
 #import "MediaBrowserFile.h"
+@import FileUtility;
 ///***** END THREEMA MODIFICATION: Add AppGroup and utils *********/
 
 #define PADDING                  10
@@ -205,7 +203,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     // Toolbar
     _toolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]]];
     ///***** BEGIN THREEMA MODIFICATION *********
-    _toolbar.tintColor = [Colors backgroundView];
+    _toolbar.tintColor = UIColor.primary;
     ///***** END THREEMA MODIFICATION *********
     _toolbar.barTintColor = nil;
     [_toolbar setBackgroundImage:nil forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsDefault];
@@ -1394,7 +1392,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
                 } else {
                     if ([_delegate respondsToSelector:@selector(photoBrowser:objectIDAtIndex:)]) {
                        NSManagedObjectID * objectID = [_delegate photoBrowser:self objectIDAtIndex:index];
-                        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+                        BlobManagerObjCWrapper *manager = [[BlobManagerObjCWrapper alloc] init];
                         [manager syncBlobsFor:objectID onCompletion:^(enum BlobManagerObjCResult result){
                             NSAssert(result != BlobManagerObjCResultUploaded, @"We never upload a file in this case");
                             dispatch_async(dispatch_get_main_queue(), ^{
@@ -1858,7 +1856,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 }
 
 - (void)actionMultipleButtonPressed:(id)sender {    
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:false];
+    MDMSetup *mdmSetup = [MDMSetup new];
     if ([mdmSetup disableShareMedia] == true) {
         // do nothing
     } else {
@@ -1876,10 +1874,9 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         if (allSelectedPhotos.count == 0) {
             return;
         }
-        
-        ForwardMultipleURLActivity *forwardUrlActivity = [[ForwardMultipleURLActivity alloc] init];
-        
-        self.activityViewController = [ActivityUtil activityViewControllerWithActivityItems:allSelectedPhotos applicationActivities:@[forwardUrlActivity]];
+
+        ForwardURLsUIActivity *forwardUrlActivity = [UIActivityHelperFactory makeForwardURLsUIActivity];
+        self.activityViewController = [[UIActivityViewController alloc] initWithActivityItems:allSelectedPhotos applicationActivities:@[forwardUrlActivity]];
         
         // Show
         typeof(self) __weak weakSelf = self;
@@ -1974,9 +1971,9 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (void)shareMedia:(MWPhoto *)item {
     
-    /***** BEGIN THREEMA MODIFICATION: use ForwardURLActivity, MDM share restriction *********/
-    
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:false];
+    /***** BEGIN THREEMA MODIFICATION: use UIActivityHelperFactory, MDM share restriction *********/
+
+    MDMSetup *mdmSetup = [MDMSetup new];
     if ([mdmSetup disableShareMedia] == true) {
         ModalNavigationController *navigationController = [ContactGroupPickerViewController pickerFromStoryboardWithDelegate:self];
         ContactGroupPickerViewController *picker = (ContactGroupPickerViewController *)navigationController.topViewController;
@@ -1993,9 +1990,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         }
         NSArray *items = [NSArray arrayWithObject: photoUrl];
         
-        ForwardURLActivity *forwardUrlActivity = [[ForwardURLActivity alloc] init];
-        
-        self.activityViewController = [ActivityUtil activityViewControllerWithActivityItems:items applicationActivities:@[forwardUrlActivity]];
+        ForwardURLsUIActivity *forwardUrlActivity = [UIActivityHelperFactory makeForwardURLsUIActivity];
+        self.activityViewController = [[UIActivityViewController alloc] initWithActivityItems:items applicationActivities:@[forwardUrlActivity]];
                         
         // Show
         typeof(self) __weak weakSelf = self;
@@ -2020,7 +2016,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         [self presentViewController:self.activityViewController animated:YES completion:nil];
     }
     
-    ///***** END THREEMA MODIFICATION: use ForwardURLActivity, MDM share restriction *********/
+    ///***** END THREEMA MODIFICATION: use UIActivityHelperFactory, MDM share restriction *********/
 }
 
 - (void)showAlert:(NSString *)title message:(NSString *)message {
@@ -2035,7 +2031,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)contactPicker:(ContactGroupPickerViewController*)contactPicker didPickConversations:(NSSet *)conversations renderType:(NSNumber *)renderType sendAsFile:(BOOL)sendAsFile {
     id <MWPhoto> photo = [self photoAtIndex:_currentPageIndex];
     if ([self numberOfPhotos] > 0 && [photo underlyingImage]) {
-        NSString *filename = [[FileUtility shared] getTemporarySendableFileNameWithBase:@"image"];
+        NSString *filename = [[FileUtility new] getTemporarySendableFileNameWithBase:@"image"];
         NSURL *photoUrl = [photo urlForExportData:filename];
         
         for (ConversationEntity *conversation in conversations) {

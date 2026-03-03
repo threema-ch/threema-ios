@@ -42,7 +42,7 @@ class WebAvatarResponse: WebAbstractMessage {
         let businessInjector = BusinessInjector.ui
         let entityManager = businessInjector.entityManager
         
-        if type == "contact", let contact = entityManager.entityFetcher.contact(for: id) {
+        if type == "contact", let contact = entityManager.entityFetcher.contactEntity(for: id) {
             let businessContact = Contact(contactEntity: contact)
             self.avatar = businessContact.profilePicture.resizedImage(newSize: CGSize(
                 width: size,
@@ -51,7 +51,7 @@ class WebAvatarResponse: WebAbstractMessage {
         }
         else if type == "group" {
             let groupID = request.id.hexadecimal
-            let conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
+            let conversation = entityManager.entityFetcher.legacyConversationEntity(for: groupID)
             
             if let conversation, let group = businessInjector.groupManager.getGroup(conversation: conversation) {
                 self.avatar = group.profilePicture.resizedImage(newSize: CGSize(width: size, height: size))

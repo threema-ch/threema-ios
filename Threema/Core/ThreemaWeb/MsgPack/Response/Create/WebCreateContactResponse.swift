@@ -35,7 +35,7 @@ class WebCreateContactResponse: WebAbstractMessage {
     }
     
     func addContact(completion: @escaping () -> Void) {
-        let mdmSetup = MDMSetup(setup: false)!
+        let mdmSetup = MDMSetup()!
         if mdmSetup.disableAddContact() {
             ack!.success = false
             ack!.error = "disabledByPolicy"
@@ -77,8 +77,8 @@ class WebCreateContactResponse: WebAbstractMessage {
                         return
                     }
             
-                    self.contact = theContact!
-        
+                    self.contact = theContact as? ContactEntity
+
                     self.ack!.success = true
                     self.args = ["identity": self.identity]
                     let webContact = WebContact(self.contact!)

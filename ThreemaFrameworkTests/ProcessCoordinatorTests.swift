@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Testing
+import ThreemaEssentials
 @testable import ThreemaFramework
 
 final class ProcessCoordinatorTests {
@@ -813,7 +814,7 @@ final class ProcessCoordinatorTests {
             userSettings: UserSettingsMock()
         )
 
-        let state = await processCoordinator.requestAccess()
+        let state = await processCoordinator.requestAccess(pollingTimeout: 700)
 
         #expect(state == .using)
 
@@ -839,7 +840,7 @@ final class ProcessCoordinatorTests {
             ))
         }
 
-        let state = await processCoordinator?.requestAccess()
+        let state = await processCoordinator?.requestAccess(pollingTimeout: 700)
 
         let stateResult = try #require(state)
         #expect(stateResult == .willRelease)
@@ -865,7 +866,7 @@ final class ProcessCoordinatorTests {
             ))
         }
 
-        let state = await processCoordinator.requestAccess()
+        let state = await processCoordinator.requestAccess(pollingTimeout: 700)
 
         let stateResult = try #require(state)
         #expect(stateResult == .willRelease)

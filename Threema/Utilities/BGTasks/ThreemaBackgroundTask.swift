@@ -42,5 +42,5 @@ protocol ThreemaBackgroundTask: Sendable {
     var shouldReschedule: Bool { get }
     
     /// Execute the task
-    func run() async
+    func run() async throws
 }

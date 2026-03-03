@@ -82,24 +82,21 @@ class WebChunkCache: NSObject {
         let offset = Int64(theirSequenceNumber) - Int64(_sequenceNumber.value)
         if offset > 0 {
             // error: Remote travelled through time and acknowledged a chunk which is in the future
-            ValidationLogger.shared()?
-                .logString(
-                    "[Threema Web] Prune Cache Error timeTravelForewards --> their: \(Int64(theirSequenceNumber)) my: \(Int64(_sequenceNumber.value))"
-                )
+            DDLogNotice(
+                "[Threema Web] Prune Cache Error timeTravelForewards --> their: \(Int64(theirSequenceNumber)) my: \(Int64(_sequenceNumber.value))"
+            )
             throw ChunkCacheError.timeTravelForewards
         }
         else if -offset > cache.count {
             // error: Remote travelled back in time and acknowledged a chunk it has already acknowledged
-            ValidationLogger.shared()?
-                .logString(
-                    "[Threema Web] Prune Cache Error timeTravelBackwards --> their: \(Int64(theirSequenceNumber)) my: \(Int64(cache.count))"
-                )
+            DDLogNotice(
+                "[Threema Web] Prune Cache Error timeTravelBackwards --> their: \(Int64(theirSequenceNumber)) my: \(Int64(cache.count))"
+            )
             throw ChunkCacheError.timeTravelBackwards
         }
-        ValidationLogger.shared()?
-            .logString(
-                "[Threema Web] Prune Cache --> their: \(Int64(theirSequenceNumber)) my: \(Int64(_sequenceNumber.value))"
-            )
+        DDLogNotice(
+            "[Threema Web] Prune Cache --> their: \(Int64(theirSequenceNumber)) my: \(Int64(_sequenceNumber.value))"
+        )
         
         let endOffset = Int(Int64(cache.count) + offset)
         

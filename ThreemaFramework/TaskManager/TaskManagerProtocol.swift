@@ -32,7 +32,7 @@ import Foundation
 ///   improved: IOS-4854
 typealias TaskCompletionHandler = (TaskDefinitionProtocol, Error?) -> Void
 
-protocol TaskManagerProtocol: TaskManagerProtocolObjc {
+protocol TaskManagerProtocol {
     /// Add task definition
     /// - Parameter taskDefinition: New task definition to add to queue
     /// - Returns: Cancelable task if task can be canceled
@@ -81,9 +81,4 @@ protocol TaskManagerProtocol: TaskManagerProtocolObjc {
 
     /// Is task queue empty?
     static func isEmpty() -> Bool
-}
-
-@objc protocol TaskManagerProtocolObjc {
-    func addObjc(taskDefinition: AnyObject)
-    func addObjc(taskDefinition: AnyObject, completionHandler: @escaping (AnyObject, Error?) -> Void)
 }

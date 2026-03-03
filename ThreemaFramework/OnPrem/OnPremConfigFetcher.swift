@@ -18,43 +18,109 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
+import FileUtility
 import Foundation
+import Keychain
 
-public class OnPremConfigFetcher {
+public final class OnPremConfigFetcher: OnPremConfigFetcherProtocol {
     private let configURL: URL
     private let trustedPublicKeys: [String]
-    private let queue: DispatchQueue
+    private let cacheURL: URL
     
+    private var currentTask: Task<OnPremConfig, any Error>? = nil
     private var cachedConfig: OnPremConfig?
     
-    public init(configURL: URL, trustedPublicKeys: [String]) {
+    // We intentionally don't use the HTTPClient here, because the initial fetching happens before the business is
+    // ready. At he same time there is no requirement to pin the certificate for this request as the OPPF is validated
+    // by its checksum
+    private lazy var session: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        
+        // Ephemeral sessions will still store a cache in memory. Setting these to `nil` fully disables caching
+        configuration.urlCache = nil
+        configuration.urlCredentialStorage = nil
+        
+        return URLSession(configuration: configuration)
+    }()
+    
+    public init(configURL: URL, trustedPublicKeys: [String], cacheURL: URL) {
         self.configURL = configURL
         self.trustedPublicKeys = trustedPublicKeys
-        self.queue = DispatchQueue(label: "OnPremConfigFetcher")
+        self.cacheURL = cacheURL
     }
     
     public func fetch(completionHandler: @escaping (Swift.Result<OnPremConfig, Error>) -> Void) {
+        DDLogVerbose("[Fetch OPPF] New fetch")
         
-        queue.async {
+        // The cache is never reset. Thus we can take this shortcut if the config is already cached
+        if let cachedConfig {
+            DDLogVerbose("[Fetch OPPF] Getting from cache")
+            completionHandler(.success(cachedConfig))
+            return
+        }
+        
+        // If a task already runs we wait for the result. If no task exists we create a new one and wait on it
+        //
+        // Note: This is intentionally not fully race safe if the fetch task should only be run once. We landed on this
+        // implementation to keep the code more readable and because multiple request to fetch the OPPF are not too
+        // resource intensive. This could be fixed by protecting the access of `currentTask` either by making this class
+        // an actor or using some sort of mutex or queue.
+        Task {
+            let task: Task<OnPremConfig, any Error>
+            if let currentTask {
+                DDLogVerbose("[Fetch OPPF] Load existing fetch task to wait on it")
+                task = currentTask
+            }
+            else {
+                DDLogVerbose("[Fetch OPPF] Create new fetch task")
+                let newTask = Task {
+                    try await self.fetch()
+                }
+                self.currentTask = newTask
+                
+                task = newTask
+            }
+            
+            defer {
+                self.currentTask = nil
+            }
+            
             do {
-                if self.cachedConfig != nil {
-                    completionHandler(.success(self.cachedConfig!))
-                    return
-                }
-                
-                let oppfData = try String(contentsOf: self.configURL)
-                if oppfData == "Unauthorized" {
-                    throw OnPremConfigError.unauthorized
-                }
-                let verifier = OnPremConfigVerifier(trustedPublicKeys: self.trustedPublicKeys)
-                let config = try verifier.verify(oppfData: oppfData)
-                self.cachedConfig = config
-                
+                let config = try await task.value
                 completionHandler(.success(config))
             }
-            catch let err {
-                completionHandler(.failure(err))
+            catch {
+                completionHandler(.failure(error))
             }
         }
+    }
+    
+    private func fetch() async throws -> OnPremConfig {
+        if let cachedConfig {
+            DDLogVerbose("[Fetch OPPF] Getting from cache 2")
+            return cachedConfig
+        }
+        
+        DDLogVerbose("[Fetch OPPF] Fetch from server")
+        let (oppfData, _) = try await session.data(from: configURL)
+        
+        guard let oppfString = String(data: oppfData, encoding: .utf8) else {
+            throw OnPremConfigError.badInputOppfData
+        }
+        
+        if oppfString == "Unauthorized" {
+            throw OnPremConfigError.unauthorized
+        }
+        let verifier = OnPremConfigVerifier(trustedPublicKeys: trustedPublicKeys)
+        let config = try verifier.verify(oppfData: oppfString)
+        cachedConfig = config
+        
+        // TODO: (IOS-5579) Remove last line and reenable full file caching
+        // Cache config file
+        // FileUtility.shared.write(contents: Data(oppfData.utf8), to: cacheURL)
+        OnPremCachedWorkServer.storeURLString(config.work?.url)
+        
+        return config
     }
 }

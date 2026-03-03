@@ -50,9 +50,9 @@ class MentionsTableViewController: ThemedViewController {
         MentionableIdentity
     >(tableView: tableView) { tableView, indexPath, identity in
         let cell: MentionsTableViewCell = tableView.dequeueCell(for: indexPath)
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         entityManager.performAndWait {
-            if let contactEntity = entityManager.entityFetcher.contact(for: identity.identity) {
+            if let contactEntity = entityManager.entityFetcher.contactEntity(for: identity.identity) {
                 cell.profilePictureView.info = .contact(Contact(contactEntity: contactEntity))
             }
             else {

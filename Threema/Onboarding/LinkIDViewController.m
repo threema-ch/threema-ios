@@ -23,14 +23,12 @@
 #import "ServerAPIConnector.h"
 #import "NBMetadataHelper.h"
 #import "LinkIDCountryPickerRowView.h"
-#import "RectUtil.h"
 #import "PhoneNumberNormalizer.h"
 #import "UIDefines.h"
 #import "ThreemaUtilityObjC.h"
 #import "IntroQuestionView.h"
 #import "LicenseStore.h"
 #import "MDMSetup.h"
-#import "UIImage+ColoredImage.h"
 #import "NibUtil.h"
 
 #define COUNTRY_ROW_HEIGHT 44.0
@@ -46,8 +44,6 @@
 @property NSMutableDictionary *country2Region;
 
 @property NSString *currentCountry;
-
-@property MyIdentityStore *identityStore;
 
 @property BOOL didShowEmailWarning;
 @property BOOL didShowPhoneWarning;
@@ -69,7 +65,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    _identityStore = [MyIdentityStore sharedMyIdentityStore];
     [self checkForRestoredLinkData];
     
     [self setup];
@@ -84,16 +79,16 @@
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
 
-    _identityStore.createIDEmail = _emailTextField.text;
+    self.setupConfiguration.linkEmail = _emailTextField.text;
     
     if (_restoredLinkedPhone) {
-        _identityStore.createIDPhone = _phoneTextField.text;
+        self.setupConfiguration.linkPhoneNumber = _phoneTextField.text;
     } else {
         NSString *phoneNumber = [self fullPhoneNumber];
         if (phoneNumber) {
-            _identityStore.createIDPhone = phoneNumber;
+            self.setupConfiguration.linkPhoneNumber = phoneNumber;
         } else {
-            _identityStore.createIDPhone = nil;
+            self.setupConfiguration.linkPhoneNumber = nil;
         }
     }
 
@@ -101,12 +96,14 @@
 }
 
 - (void)checkForRestoredLinkData {
-    if (_identityStore.linkedEmail.length > 0) {
+    MyIdentityStore *identityStore = [MyIdentityStore sharedMyIdentityStore];
+    
+    if (identityStore.linkedEmail.length > 0) {
         _restoredLinkedEmail = YES;
         _emailTextField.userInteractionEnabled = NO;
     }
     
-    if (_identityStore.linkedMobileNo.length > 0) {
+    if (identityStore.linkedMobileNo.length > 0) {
         _restoredLinkedPhone = YES;
         _phoneTextField.userInteractionEnabled = NO;
     }
@@ -198,14 +195,13 @@
     [super adaptToSmallScreen];
     
     CGFloat yOffset = -36.0;
-    _descriptionLabel.frame = [RectUtil offsetRect:_descriptionLabel.frame byX:0.0 byY:yOffset];
-    _emailView.frame = [RectUtil offsetRect:_emailView.frame byX:0.0 byY:yOffset];
-    _phoneView.frame = [RectUtil offsetRect:_phoneView.frame byX:0.0 byY:yOffset];
-    _countryView.frame = [RectUtil offsetRect:_countryView.frame byX:0.0 byY:yOffset];
-    
+    _descriptionLabel.frame = CGRectMake(_descriptionLabel.frame.origin.x, _descriptionLabel.frame.origin.y + yOffset, _descriptionLabel.frame.size.width, _descriptionLabel.frame.size.height);
+    _emailView.frame = CGRectMake(_emailView.frame.origin.x, _emailView.frame.origin.y + yOffset, _emailView.frame.size.width, _emailView.frame.size.height);
+    _phoneView.frame = CGRectMake(_phoneView.frame.origin.x, _phoneView.frame.origin.y + yOffset, _phoneView.frame.size.width, _phoneView.frame.size.height);
+    _countryView.frame = CGRectMake(_countryView.frame.origin.x, _countryView.frame.origin.y + yOffset, _countryView.frame.size.width, _countryView.frame.size.height);
     
     yOffset -= 32.0;
-    _countryPickerView.frame = [RectUtil offsetRect:_countryPickerView.frame byX:0.0 byY:yOffset];
+    _countryPickerView.frame = CGRectMake(_countryPickerView.frame.origin.x, _countryPickerView.frame.origin.y + yOffset, _countryPickerView.frame.size.width, _countryPickerView.frame.size.height);
 }
 
 - (void)setup {
@@ -236,23 +232,23 @@
     _phoneTextField.delegate = self;
     _phoneTextField.accessibilityHint = [BundleUtil localizedStringForKey:@"phone number"];
     
-    if (TargetManagerObjc.isBusinessApp) {
-        _descriptionLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_description_work"], TargetManagerObjc.localizedAppName];
+    if (TargetManagerObjC.isBusinessApp) {
+        _descriptionLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_description_work"], TargetManagerObjC.localizedAppName];
     } else {
-        _descriptionLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_description"], TargetManagerObjc.localizedAppName];
+        _descriptionLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_description"], TargetManagerObjC.localizedAppName];
     }
     
     self.moreView.mainView = self.mainContentView;
-    if (TargetManagerObjc.isBusinessApp) {
+    if (TargetManagerObjC.isBusinessApp) {
         _titleLabel.text = [BundleUtil localizedStringForKey:@"id_link_title_work"];
-        self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_link_id_work"], TargetManagerObjc.appName, TargetManagerObjc.appName];
+        self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_link_id_work"], TargetManagerObjC.appName, TargetManagerObjC.appName];
     } else {
         _titleLabel.text = [BundleUtil localizedStringForKey:@"id_link_title"];
-        self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_link_id"], TargetManagerObjc.appName, TargetManagerObjc.appName];
+        self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_link_id"], TargetManagerObjC.appName, TargetManagerObjC.appName];
     }
     _titleLabel.accessibilityIdentifier = @"id_link_title";
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+    MDMSetup *mdmSetup = [MDMSetup new];
     if ([mdmSetup readonlyProfile]) {
         _emailTextField.enabled = NO;
         _phoneTextField.enabled = NO;
@@ -309,16 +305,16 @@
     if (_restoredLinkedEmail) {
         // A linked email address was restored, but we don't know the actual address (linkedEmail will be "***@***").   
         _emailTextField.text = [BundleUtil localizedStringForKey:@"(linked)"];
-    } else if (_identityStore.createIDEmail) {
-        self.emailTextField.text = _identityStore.createIDEmail;
+    } else if (self.setupConfiguration.linkEmail) {
+        self.emailTextField.text = self.setupConfiguration.linkEmail;
     }
     
     /* linked mobile number */
     if (_restoredLinkedPhone) {
         // A linked phone number was restored, but we don't know the actual number (linkedMobileNo will be "***").        
         _phoneTextField.text = [BundleUtil localizedStringForKey:@"(linked)"];
-    } else if (_identityStore.createIDPhone) {
-        NSString *phoneNumber = _identityStore.createIDPhone;
+    } else if (self.setupConfiguration.linkPhoneNumber) {
+        NSString *phoneNumber = self.setupConfiguration.linkPhoneNumber;
         
         PhoneNumberNormalizer *normalizer = [PhoneNumberNormalizer sharedInstance];
         NSString *region = [normalizer regionForPhoneNumber:phoneNumber];
@@ -460,17 +456,17 @@
     
     if (_questionView == nil) {
         _questionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
-        if (TargetManagerObjc.isBusinessApp) {
-            _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input_work"], TargetManagerObjc.localizedAppName, TargetManagerObjc.appName];
+        if (TargetManagerObjC.isBusinessApp) {
+            _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input_work"], TargetManagerObjC.localizedAppName, TargetManagerObjC.appName];
         } else {
-            _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input"], TargetManagerObjc.localizedAppName, TargetManagerObjc.appName];
+            _questionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_link_no_input"], TargetManagerObjC.localizedAppName, TargetManagerObjC.appName];
         }
         
         [_questionView.noButton setTitle:[BundleUtil localizedStringForKey:@"yes"] forState:UIControlStateNormal];
         [_questionView.yesButton setTitle:[BundleUtil localizedStringForKey:@"no"] forState:UIControlStateNormal];
         
         _questionView.delegate = self;
-        _questionView.frame = [RectUtil rect:_questionView.frame centerIn:self.view.frame round:YES];
+        _questionView.frame = [self rect:_questionView.frame centerIn:self.view.frame round:YES];
         
         [self.view addSubview:_questionView];
     }
@@ -479,7 +475,7 @@
 }
 
 - (void)hideEmailIfNeeded {
-    _emailView.hidden = !TargetManagerObjc.isBusinessApp;
+    _emailView.hidden = !TargetManagerObjC.isBusinessApp;
 }
 
 #pragma mark - IntroQuestionViewDelegate
@@ -631,9 +627,7 @@
         UIViewAnimationOptions options = [ThreemaUtilityObjC animationOptionsFor:notification animationDuration:&animationDuration];
         
         [UIView animateWithDuration:animationDuration delay:0 options:options animations:^{
-            
-            responderView.frame = [RectUtil offsetRect:responderView.frame byX:0.0 byY:diff];
-            
+            responderView.frame = CGRectMake(responderView.frame.origin.x, responderView.frame.origin.y + diff, responderView.frame.size.width, responderView.frame.size.height);   
         } completion:^(BOOL finished) {}];
     }
 }
@@ -645,14 +639,35 @@
     _titleLabel.accessibilityLabel = _titleLabel.text;
 
     [UIView animateWithDuration:animationDuration delay:0 options:options animations:^{
-        _phoneView.frame = [RectUtil setYPositionOf:_phoneView.frame y:_phoneViewYOffset];
-        _countryView.frame = [RectUtil setYPositionOf:_countryView.frame y:_countryViewYOffset];
-        _emailView.frame = [RectUtil setYPositionOf:_emailView.frame y:_emailViewYOffset];
+        _phoneView.frame = CGRectMake(_phoneView.frame.origin.x, _phoneViewYOffset, _phoneView.frame.size.width, _phoneView.frame.size.height);
+        _countryView.frame = CGRectMake(_countryView.frame.origin.x, _countryViewYOffset, _countryView.frame.size.width, _countryView.frame.size.height);
+        _emailView.frame = CGRectMake(_emailView.frame.origin.x, _emailViewYOffset, _emailView.frame.size.width, _emailView.frame.size.height);
     } completion:^(BOOL finished) {
         [self hideEmailIfNeeded];
         _countryView.hidden = NO;
         _phoneView.hidden = NO;
     }];
 }
+
+#pragma mark - RectUtil
+
+- (CGRect)rect:(CGRect)rect centerIn:(CGRect)outerRect round:(BOOL)round {
+    CGFloat innerWidth = rect.size.width;
+    CGFloat outerWidth = outerRect.size.width;
+    
+    CGFloat innerHeight = rect.size.height;
+    CGFloat outerHeight = outerRect.size.height;
+    
+    CGFloat x = (outerWidth - innerWidth) / 2.0;
+    CGFloat y = (outerHeight - innerHeight) / 2.0;
+    
+    if (round) {
+        x = roundf(x);
+        y = roundf(y);
+    }
+    
+    return CGRectMake(x, y, rect.size.width, rect.size.height);
+}
+
 
 @end

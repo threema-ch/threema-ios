@@ -22,6 +22,7 @@ import SwiftUI
 import ThreemaFramework
 
 extension UIView {
+    @available(*, deprecated, message: "Do not use anymore.")
     struct WrapperView<V: UIView>: UIViewRepresentable {
         typealias CreateView = () -> V
         
@@ -38,6 +39,7 @@ extension UIView {
         func updateUIView(_ uiView: V, context: Context) { }
     }
     
+    @available(*, deprecated, message: "Do not use anymore.")
     struct SelfSizingWrappedView: View {
         @State private var targetSize: CGSize = .zero
         

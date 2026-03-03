@@ -70,18 +70,11 @@
 {
     CNContact *contact = [self cnContactForVCardData:data];
     if (contact) {
-        MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:false];
+        MDMSetup *mdmSetup = [MDMSetup new];
         CNContactViewController *controller = [CNContactViewController viewControllerForUnknownContact:contact];
         controller.allowsActions = ![mdmSetup disableShareMedia];
         controller.allowsEditing = NO;
         controller.contactStore = [[CNContactStore alloc] init];
-        if (@available(iOS 17.0, *)) {
-            // do nothing
-        }
-        else {
-            controller.edgesForExtendedLayout = UIRectEdgeNone;
-        }
-
         return controller;
     } else {
         DDLogInfo(@"cannot display person details");

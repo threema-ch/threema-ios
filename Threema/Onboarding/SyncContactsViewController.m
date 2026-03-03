@@ -35,7 +35,7 @@
 {
     self = [super initWithCoder:coder];
     if (self) {
-        mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+        mdmSetup = [MDMSetup new];
    }
     return self;
 }
@@ -53,10 +53,10 @@
     [super viewWillAppear:animated];
     
     if ([mdmSetup existsMdmKey:MDM_KEY_CONTACT_SYNC]) {
-        self.syncContactsSwitch.on = [UserSettings sharedUserSettings].syncContacts;
+        self.syncContactsSwitch.on = [mdmSetup contactSync];
         self.syncContactsSwitch.enabled = false;
     } else {
-        [UserSettings sharedUserSettings].syncContacts = self.syncContactsSwitch.on;
+        self.setupConfiguration.syncContacts = self.syncContactsSwitch.on;
     }
 }
 
@@ -65,21 +65,21 @@
 }
 
 - (IBAction)syncContactSwitchChanged:(id)sender {
-    [UserSettings sharedUserSettings].syncContacts = _syncContactsSwitch.on;
+    self.setupConfiguration.syncContacts = _syncContactsSwitch.on;
 }
 
 - (void)setup {
-    if (TargetManagerObjc.isBusinessApp) {
-        _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_title_work"], TargetManagerObjc.appName];
-        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_description_work"], TargetManagerObjc.appName];
+    if (TargetManagerObjC.isBusinessApp) {
+        _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_title_work"], TargetManagerObjC.appName];
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_description_work"], TargetManagerObjC.appName];
     } else {
-        _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_title"], TargetManagerObjc.appName];
-        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_description"], TargetManagerObjc.appName];
+        _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_title"], TargetManagerObjC.appName];
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_sync_description"], TargetManagerObjC.appName];
     }
     _syncContactsLabel.text = [BundleUtil localizedStringForKey:@"id_sync_contacts"];
 
     self.moreView.mainView = self.mainContentView;
-    self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_sync_contacts"], TargetManagerObjc.appName];
+    self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_sync_contacts"], TargetManagerObjC.appName];
     
     _syncContactsView.layer.cornerRadius = 3;
     _syncContactsView.layer.borderColor = [UIColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:0.1].CGColor;

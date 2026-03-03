@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import ThreemaFramework
 
@@ -75,10 +76,15 @@ class AppLaunchTasks: NSObject {
             }
             AppLaunchTasks.isRunning = true
 
-            // Repairs database integrity only on app start and synchronously,
-            // must be finished before running other tasks and returning to the caller
-            if launchEvent == .didFinishLaunching {
+            switch launchEvent {
+            case .didFinishLaunching:
+                // Repairs database integrity only on app start and synchronously,
+                // must be finished before running other tasks and returning to the caller
                 backgroundBusinessInjector.entityManager.repairDatabaseIntegrity()
+
+                // Delete all files and directories from temporary app directory
+                FileUtility.shared.removeItemsInDirectory(directoryURL: FileUtility.shared.appTemporaryDirectory)
+
                 if AppLaunchTasks.lastLaunchedVersionChanged {
                     Task {
                         do {
@@ -91,6 +97,9 @@ class AppLaunchTasks: NSObject {
                         }
                     }
                 }
+            case .willEnterForeground:
+                // Validate RS if needed (& existing)
+                AppLaunchManager.remoteSecretManager?.checkValidity()
             }
 
             // All other tasks runs in a background thread
@@ -128,7 +137,7 @@ class AppLaunchTasks: NSObject {
 
         await backgroundBusinessInjector.entityManager.performSave {
             guard let conversations = self.backgroundBusinessInjector.entityManager.entityFetcher
-                .allConversations() as? [ConversationEntity] else {
+                .conversationEntities() else {
                 return
             }
 

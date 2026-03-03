@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import FLAnimatedImage
 import ThreemaFramework
 import ThreemaMacros
 import UIKit
@@ -393,10 +394,6 @@ final class MessageAnimatedMediaTapView: UIView {
             highlightingDuration: ChatViewConfiguration.ChatBubble.HighlightedAnimation.highlightedDurationTap,
             highlightingAlpha: ChatViewConfiguration.Thumbnail.highlightingAlpha
         )
-
-        UIView.animate(withDuration: ChatViewConfiguration.ChatBubble.HighlightedAnimation.highlightedDurationTap) {
-            self.animatedMediaView.alpha = highlight ? ChatViewConfiguration.Thumbnail.highlightingAlpha : 1
-        }
     }
     
     func toggleMediaAnimation() {

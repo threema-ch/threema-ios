@@ -65,13 +65,13 @@ import ThreemaProtocols
     init(receiverIdentity: ThreemaIdentity?, group: Group?, deleteMessage: CspE2e_DeleteMessage) {
         self.deleteMessage = deleteMessage
         self.editMessage = nil
-        super.init(receiverIdentity: receiverIdentity?.string, group: group, sendContactProfilePicture: false)
+        super.init(receiverIdentity: receiverIdentity?.rawValue, group: group, sendContactProfilePicture: false)
     }
 
     init(receiverIdentity: ThreemaIdentity?, group: Group?, editMessage: CspE2e_EditMessage) {
         self.deleteMessage = nil
         self.editMessage = editMessage
-        super.init(receiverIdentity: receiverIdentity?.string, group: group, sendContactProfilePicture: false)
+        super.init(receiverIdentity: receiverIdentity?.rawValue, group: group, sendContactProfilePicture: false)
     }
 
     required init(from decoder: Decoder) throws {

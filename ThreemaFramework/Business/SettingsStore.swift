@@ -24,8 +24,8 @@ import Intents
 import PromiseKit
 import ThreemaProtocols
 
-public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol, ObservableObject {
-    
+public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol, ObservableObject {
+
     // MARK: Public Attributes
     
     public lazy var wallpaperStore = WallpaperStore.shared
@@ -62,7 +62,15 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         self.contactStore = contactStore
         self.userSettings = userSettings
         self.taskManager = taskManager
-        
+
+        // Appearance
+        self.displayOrderFirstName = userSettings.displayOrderFirstName
+        self.hideStaleContacts = userSettings.hideStaleContacts
+        self.previewLimit = userSettings.previewLimit
+        self.showGalleryPreview = userSettings.showGalleryPreview
+        self.showProfilePictures = userSettings.showProfilePictures
+        self.useSystemTheme = userSettings.useSystemTheme
+
         // Privacy Settings
         self.syncContacts = userSettings.syncContacts
         self.blacklist = Set<String>(userSettings.blacklist.array as? [String] ?? [])
@@ -90,6 +98,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         // Chat
         self.useBigEmojis = !userSettings.disableBigEmojis
         self.sendMessageFeedback = userSettings.sendMessageFeedback
+        self.wallpaperType = userSettings.wallpaperType
 
         // Media
         self.imageSize = userSettings.imageSize
@@ -109,7 +118,8 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         self.enableIPv6 = userSettings.enableIPv6
         self.validationLogging = userSettings.validationLogging
         self.sentryAppDevice = userSettings.sentryAppDevice
-        
+        self.ipcCommunicationEnabled = userSettings.ipcCommunicationEnabled
+
         // Multi-Device
         self.isMultiDeviceRegistered = userSettings.enableMultiDevice
         
@@ -136,7 +146,61 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     @Published public var isSyncing = false
     @Published public var syncFailed = false
-    
+
+    @Published public var displayOrderFirstName: Bool {
+        didSet {
+            guard userSettings.displayOrderFirstName != displayOrderFirstName else {
+                return
+            }
+            updateUserSettingsAsync()
+        }
+    }
+
+    @Published public var hideStaleContacts: Bool {
+        didSet {
+            guard userSettings.hideStaleContacts != hideStaleContacts else {
+                return
+            }
+            updateUserSettingsAsync()
+        }
+    }
+
+    @Published public var previewLimit: Float {
+        didSet {
+            guard userSettings.previewLimit != previewLimit else {
+                return
+            }
+            updateUserSettingsAsync()
+        }
+    }
+
+    @Published public var showGalleryPreview: Bool {
+        didSet {
+            guard userSettings.showGalleryPreview != showGalleryPreview else {
+                return
+            }
+            updateUserSettingsAsync()
+        }
+    }
+
+    @Published public var showProfilePictures: Bool {
+        didSet {
+            guard userSettings.showProfilePictures != showProfilePictures else {
+                return
+            }
+            updateUserSettingsAsync()
+        }
+    }
+
+    @Published public var useSystemTheme: Bool {
+        didSet {
+            guard userSettings.useSystemTheme != useSystemTheme else {
+                return
+            }
+            updateUserSettingsAsync()
+        }
+    }
+
     // MARK: Privacy Settings
 
     @Published public var syncContacts: Bool {
@@ -180,7 +244,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             userSettings.allowOutgoingDonations = allowOutgoingDonations
             
             // Remove donated INInteractions when being disabled
-            if !allowOutgoingDonations {
+            if !allowOutgoingDonations || AppLaunchManager.isRemoteSecretEnabled {
                 removeINInteractions()
             }
         }
@@ -266,7 +330,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
                 // We only remove the donated Interactions, if the outgoing are disabled.
                 switch self.notificationType {
                 case .restrictive, .balanced:
-                    if !self.allowOutgoingDonations {
+                    if !self.allowOutgoingDonations || AppLaunchManager.isRemoteSecretEnabled {
                         self.removeINInteractions()
                     }
                 case .complete:
@@ -365,6 +429,23 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         }
     }
     
+    @Published public var wallpaperType: WallpaperType {
+        didSet {
+            guard userSettings.wallpaperType != wallpaperType else {
+                return
+            }
+            updateUserSettings()
+            switch wallpaperType {
+            case .empty:
+                wallpaperStore.saveDefaultWallpaper(nil)
+            case .threema:
+                wallpaperStore.saveDefaultWallpaper(nil)
+            case .custom:
+                break
+            }
+        }
+    }
+        
     // MARK: - Media
 
     @Published public var imageSize: String {
@@ -499,7 +580,13 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             updateUserSettingsAsync()
         }
     }
-    
+
+    @Published public var ipcCommunicationEnabled: Bool {
+        didSet {
+            userSettings.ipcCommunicationEnabled = ipcCommunicationEnabled
+        }
+    }
+
     // MARK: - Public Functions
     
     public func flushMessageQueue() {
@@ -760,10 +847,16 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
             completion?()
         }
     }
-    
-    @MainActor
+        
     private func updateUserSettings() {
-       
+        // Appearance
+        compareAndAssign(&userSettings.displayOrderFirstName, displayOrderFirstName)
+        compareAndAssign(&userSettings.hideStaleContacts, hideStaleContacts)
+        compareAndAssign(&userSettings.previewLimit, previewLimit)
+        compareAndAssign(&userSettings.showGalleryPreview, showGalleryPreview)
+        compareAndAssign(&userSettings.showProfilePictures, showProfilePictures)
+        compareAndAssign(&userSettings.useSystemTheme, useSystemTheme)
+
         // Privacy Settings
         compareAndAssign(&userSettings.syncContacts, syncContacts)
 
@@ -802,6 +895,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         // Chat
         compareAndAssign(&userSettings.disableBigEmojis, !useBigEmojis)
         compareAndAssign(&userSettings.sendMessageFeedback, sendMessageFeedback)
+        compareAndAssign(&userSettings.wallpaperType, wallpaperType)
 
         // Media
         compareAndAssign(&userSettings.imageSize, imageSize)
@@ -840,6 +934,14 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
     
     @MainActor
     private func updateLocalValues() {
+        // Appearance Settings
+        compareAndAssign(&displayOrderFirstName, userSettings.displayOrderFirstName)
+        compareAndAssign(&hideStaleContacts, userSettings.hideStaleContacts)
+        compareAndAssign(&previewLimit, userSettings.previewLimit)
+        compareAndAssign(&showGalleryPreview, userSettings.showGalleryPreview)
+        compareAndAssign(&showProfilePictures, userSettings.showProfilePictures)
+        compareAndAssign(&useSystemTheme, userSettings.useSystemTheme)
+
         // Privacy Settings
         compareAndAssign(&syncContacts, userSettings.syncContacts)
         compareAndAssign(&blacklist, Set<String>(userSettings.blacklist.array as? [String] ?? []))
@@ -866,6 +968,7 @@ public class SettingsStore: SettingsStoreInternalProtocol, SettingsStoreProtocol
         // Chat
         compareAndAssign(&useBigEmojis, !userSettings.disableBigEmojis)
         compareAndAssign(&sendMessageFeedback, userSettings.sendMessageFeedback)
+        compareAndAssign(&wallpaperType, userSettings.wallpaperType)
 
         // Media
         compareAndAssign(&userSettings.imageSize, userSettings.imageSize)

@@ -91,15 +91,3 @@ class TaskManagerMock: NSObject, TaskManagerProtocol {
     
     func save() { }
 }
-
-// MARK: - TaskManagerProtocolObjc
-
-extension TaskManagerMock: TaskManagerProtocolObjc {
-    func addObjc(taskDefinition: AnyObject) {
-        // no-op
-    }
-
-    func addObjc(taskDefinition: AnyObject, completionHandler: @escaping (AnyObject, Error?) -> Void) {
-        // no-op
-    }
-}

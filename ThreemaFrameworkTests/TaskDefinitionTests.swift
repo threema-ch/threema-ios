@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -27,7 +28,6 @@ class TaskDefinitionTests: XCTestCase {
     private var dbPreparer: DatabasePreparer!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
@@ -80,6 +80,7 @@ class TaskDefinitionTests: XCTestCase {
         let expectedGroup = Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -142,7 +143,7 @@ class TaskDefinitionTests: XCTestCase {
         ]
         let expectedNonces: [String: Data] = expectedToIdentities
             .reduce(into: [String: Data]()) { partialResult, identity in
-                partialResult[identity.string] = MockData.generateMessageNonce()
+                partialResult[identity.rawValue] = MockData.generateMessageNonce()
             }
 
         let task = TaskDefinitionRunForwardSecurityRefreshSteps(with: expectedToIdentities)
@@ -178,7 +179,7 @@ class TaskDefinitionTests: XCTestCase {
         let decoder = JSONDecoder()
         let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendDeleteEditMessage.self, from: data))
 
-        XCTAssertEqual(result.receiverIdentity, expectedReceiverIdentity.string)
+        XCTAssertEqual(result.receiverIdentity, expectedReceiverIdentity.rawValue)
         XCTAssertNil(result.groupID)
         XCTAssertEqual(result.deleteMessage, expectedDeleteMessage)
         XCTAssertNil(result.editMessage)
@@ -203,7 +204,7 @@ class TaskDefinitionTests: XCTestCase {
         let decoder = JSONDecoder()
         let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendDeleteEditMessage.self, from: data))
 
-        XCTAssertEqual(result.receiverIdentity, expectedReceiverIdentity.string)
+        XCTAssertEqual(result.receiverIdentity, expectedReceiverIdentity.rawValue)
         XCTAssertNil(result.groupID)
         XCTAssertNil(result.deleteMessage)
         XCTAssertEqual(result.editMessage, expectedEditMessage)
@@ -218,7 +219,7 @@ class TaskDefinitionTests: XCTestCase {
 
         let task = TaskDefinitionSendReactionMessage(
             reaction: expectedReactionMessage,
-            receiverIdentity: expectedReceiverIdentity.string
+            receiverIdentity: expectedReceiverIdentity.rawValue
         )
 
         let encoder = JSONEncoder()
@@ -227,7 +228,7 @@ class TaskDefinitionTests: XCTestCase {
         let decoder = JSONDecoder()
         let result = try XCTUnwrap(decoder.decode(TaskDefinitionSendReactionMessage.self, from: data))
 
-        XCTAssertEqual(result.receiverIdentity, expectedReceiverIdentity.string)
+        XCTAssertEqual(result.receiverIdentity, expectedReceiverIdentity.rawValue)
         XCTAssertNil(result.groupID)
         XCTAssertEqual(result.reaction.action, expectedReactionMessage.action)
         XCTAssertEqual(result.reaction.messageID, expectedReactionMessage.messageID)
@@ -334,6 +335,7 @@ class TaskDefinitionTests: XCTestCase {
         let expectedGroup = Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -379,6 +381,7 @@ class TaskDefinitionTests: XCTestCase {
         let expectedGroup = Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -427,6 +430,7 @@ class TaskDefinitionTests: XCTestCase {
         let expectedGroup = Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -477,6 +481,7 @@ class TaskDefinitionTests: XCTestCase {
         let expectedGroup = Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -563,6 +568,7 @@ class TaskDefinitionTests: XCTestCase {
         let expectedGroup = Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -616,6 +622,7 @@ class TaskDefinitionTests: XCTestCase {
         let expectedGroup = Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -773,6 +780,7 @@ class TaskDefinitionTests: XCTestCase {
         let expectedGroup = Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil

@@ -35,12 +35,21 @@ class SettingsCollectionViewCell: UICollectionViewListCell, Reusable {
     // MARK: - Subviews
     
     private lazy var containerStack: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [imageContainerView, textLabel])
+        let stackView = UIStackView(arrangedSubviews: [imageStack, textLabel])
         
         stackView.axis = .horizontal
         stackView.alignment = .leading
         stackView.spacing = 16
         
+        return stackView
+    }()
+    
+    private lazy var imageStack: UIStackView = {
+        let stackView = UIStackView(arrangedSubviews: [UIView(), imageContainerView, UIView()])
+        
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+
         return stackView
     }()
     
@@ -55,7 +64,6 @@ class SettingsCollectionViewCell: UICollectionViewListCell, Reusable {
         view.addSubview(imageView)
        
         NSLayoutConstraint.activate([
-            view.widthAnchor.constraint(equalToConstant: UIFontMetrics(forTextStyle: .body).scaledValue(for: 28)),
             view.heightAnchor.constraint(equalTo: view.widthAnchor),
             imageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             imageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
@@ -67,6 +75,9 @@ class SettingsCollectionViewCell: UICollectionViewListCell, Reusable {
         
         return view
     }()
+    
+    private lazy var imageViewWidthConstraint: NSLayoutConstraint = imageContainerView.widthAnchor
+        .constraint(equalToConstant: UIFontMetrics(forTextStyle: .body).scaledValue(for: 28))
     
     private lazy var imageView: UIImageView = {
         let image = UIImage(systemName: "popcorn.fill")?.withConfiguration(imageConfig)
@@ -92,7 +103,23 @@ class SettingsCollectionViewCell: UICollectionViewListCell, Reusable {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        
         configure()
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        imageStack.isHidden = traitCollection.preferredContentSizeCategory.isAccessibilityCategory
+        imageViewWidthConstraint.isActive = false
+        imageViewWidthConstraint = imageContainerView.widthAnchor
+            .constraint(equalToConstant: UIFontMetrics(forTextStyle: .body).scaledValue(for: 28))
+        imageViewWidthConstraint.isActive = true
     }
     
     private func configure() {
@@ -108,12 +135,8 @@ class SettingsCollectionViewCell: UICollectionViewListCell, Reusable {
             containerStack.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
             containerStack.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
             separatorLayoutGuide.leadingAnchor.constraint(equalTo: textLabel.leadingAnchor),
+            imageViewWidthConstraint,
         ])
-    }
-    
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
     
     private func updateContent() {

@@ -22,6 +22,8 @@ import SwiftUI
 import ThreemaMacros
 
 struct IDExportView: View {
+    @Environment(\.dismiss) private var dismiss
+    
     weak var coordinator: ProfileCoordinator?
     let password: String
     
@@ -29,6 +31,22 @@ struct IDExportView: View {
     @State private var qrImage: Image?
     @State private var includeInBackup = true
     @State private var includeToggleDisabled = true
+    
+    private var subject: String {
+        String.localizedStringWithFormat(
+            #localize("id_export_share_item"),
+            TargetManager.localizedAppName,
+            MyIdentityStore.shared().identity
+        )
+    }
+    
+    private var shareItem: String? {
+        guard let exportString else {
+            return nil
+        }
+        
+        return "\(subject): \(exportString)"
+    }
     
     var body: some View {
         List {
@@ -50,7 +68,6 @@ struct IDExportView: View {
                     VStack {
                         Text(exportString)
                             .font(.system(.title3, design: .monospaced))
-                            .lineLimit(4)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: 350)
                             .padding()
@@ -83,7 +100,16 @@ struct IDExportView: View {
             }
         }
         .toolbar {
+            if let shareItem, let exportString {
+                ToolbarItem(placement: .cancellationAction) {
+                    ShareLink(item: shareItem, subject: Text(shareItem), message: Text(exportString)) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+            }
+            
             ToolbarItem(placement: .confirmationAction) {
+                
                 Button {
                     donePressed()
                 } label: {
@@ -96,7 +122,7 @@ struct IDExportView: View {
     }
     
     private func checkIncludeToggleDisabled() {
-        let mdm = MDMSetup(setup: false)
+        let mdm = MDMSetup()
         if mdm?.disableBackups() ?? false {
             includeToggleDisabled = true
             includeInBackup = false
@@ -119,12 +145,22 @@ struct IDExportView: View {
             fatalError()
         }
         if includeInBackup {
-            IdentityBackupStore.saveIdentityBackup(exportString)
+            do {
+                try IdentityBackupStore.saveIdentityBackup(exportString)
+            }
+            catch {
+                NotificationPresenterWrapper.shared.present(type: .saveIdentityBackupFailed)
+            }
         }
         else {
-            IdentityBackupStore.deleteIdentityBackup()
+            do {
+                try IdentityBackupStore.deleteIdentityBackup()
+            }
+            catch {
+                NotificationPresenterWrapper.shared.present(type: .deleteIdentityBackupFailed)
+            }
         }
-        coordinator?.dismiss()
+        coordinator.map { $0.dismiss() } ?? dismiss()
     }
 }
 

@@ -20,6 +20,7 @@
 
 import SwiftUI
 
+@available(*, deprecated, message: "Do not use anymore.")
 struct EmptyViewDestination: ViewDestinationRepresentable {
     typealias ViewType = EmptyView
     

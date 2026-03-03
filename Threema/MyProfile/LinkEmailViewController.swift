@@ -54,7 +54,7 @@ class LinkEmailViewController: ThemedTableViewController {
         super.viewWillAppear(animated)
         emailTextField.text = MyIdentityStore.shared().linkedEmail
         
-        if let mdmSetup = MDMSetup(setup: false), mdmSetup.readonlyProfile() {
+        if let mdmSetup = MDMSetup(), mdmSetup.readonlyProfile() {
             emailTextField.isEnabled = false
         }
     }

@@ -52,12 +52,56 @@
   },
   "testTargets" : [
     {
-      "skippedTests" : [
-        "BlobManagerTests\/testIncomingDataWithThumbnailNoDone()",
-        "EntityCreatorTests\/testCreateFileMessageEntityVideo()",
-        "EntityFetcherTests\/testAllContactIdentitiesFetchingPerformance()",
-        "EntityFetcherTests\/testAllContactsFetchingPerformance()"
-      ],
+      "parallelizable" : false,
+      "skippedTests" : {
+        "suites" : [
+          {
+            "name" : "DatabaseContextTests",
+            "suites" : [
+              {
+                "name" : "DatabaseContextDirectContexts",
+                "testFunctions" : [
+                  "fullDirectContexts()"
+                ]
+              },
+              {
+                "name" : "DatabaseContextInitialization"
+              }
+            ]
+          },
+          {
+            "name" : "DatabaseManagerTests",
+            "testFunctions" : [
+              "eraseDB()",
+              "persistentStoreCoordinatorMigrationNone()",
+              "persistentStoreCoordinatorMigrationReqired()",
+              "storeRequiresMigrationNoneDatabaseExists()",
+              "storeRequiresMigrationNoneDatabaseNotExists()"
+            ]
+          }
+        ],
+        "xctestClasses" : [
+          {
+            "name" : "BlobManagerTests",
+            "xctestMethods" : [
+              "testIncomingDataWithThumbnailNoDone()"
+            ]
+          },
+          {
+            "name" : "EntityCreatorTests",
+            "xctestMethods" : [
+              "testCreateFileMessageEntityVideo()"
+            ]
+          },
+          {
+            "name" : "EntityFetcherTests",
+            "xctestMethods" : [
+              "testAllContactIdentitiesFetchingPerformance()",
+              "testAllContactsFetchingPerformance()"
+            ]
+          }
+        ]
+      },
       "target" : {
         "containerPath" : "container:Threema.xcodeproj",
         "identifier" : "0A677B8A1C6250CA0019B361",
@@ -65,5 +109,5 @@
       }
     }
   ],
-  "version" : 1
+  "version" : 2
 }

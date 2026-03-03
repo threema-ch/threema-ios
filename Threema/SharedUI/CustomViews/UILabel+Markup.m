@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "UILabel+Markup.h"
-#import "TTTAttributedLabel.h"
 #import "Threema-Swift.h"
 
 @implementation UILabel (Markup)
@@ -106,7 +105,7 @@ typedef enum : int {
 - (void)handleStrikethroughTagsIn:(NSMutableAttributedString *)attributedString {
     NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:@"\\B~[^\\r\\n]+?~\\B" options:0 error:nil];
     
-    NSDictionary *attributes = @{NSBaselineOffsetAttributeName: @0, NSStrikethroughStyleAttributeName: [NSNumber numberWithInt:NSUnderlinePatternSolid | NSUnderlineStyleSingle], kTTTStrikeOutAttributeName: [NSNumber numberWithInt:NSUnderlinePatternSolid | NSUnderlineStyleSingle]};
+    NSDictionary *attributes = @{NSBaselineOffsetAttributeName: @0, NSStrikethroughStyleAttributeName: [NSNumber numberWithInt:NSUnderlinePatternSolid | NSUnderlineStyleSingle]};
 
     [self applyAttributes:attributes on:attributedString matching:regex type:StyleTypeStrikethrough];
 }

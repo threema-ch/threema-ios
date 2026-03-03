@@ -23,8 +23,18 @@ import UIKit
 class ThumbnailCollectionViewCell: UICollectionViewCell {
     @IBOutlet var imageView: UIImageView!
     @IBOutlet var activityIndicator: UIActivityIndicatorView!
-    
+
     var identifier: IndexPath?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupTraitRegistration()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupTraitRegistration()
+    }
     
     override var isSelected: Bool {
         didSet {
@@ -83,14 +93,18 @@ class ThumbnailCollectionViewCell: UICollectionViewCell {
             false
         }
     }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
-            return
+
+    // MARK: - Helpers
+
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitUserInterfaceStyle.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                updateSelectionState()
+            }
         }
-        
-        updateSelectionState()
     }
 }

@@ -18,6 +18,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import RemoteSecretProtocolTestHelper
+import ThreemaEssentialsTestHelper
 import XCTest
 @testable import ThreemaFramework
 
@@ -26,11 +28,14 @@ class ContactStoreTests: XCTestCase {
     private var databaseMainCnx: DatabaseContext!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
         databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
+        
+        // Workaround to ensure remote secret is initialized
+        let remoteSecretManagerMock = RemoteSecretManagerMock()
+        AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManagerMock)
     }
 
     func testAddWorkContactWithIdentity() throws {
@@ -43,7 +48,7 @@ class ContactStoreTests: XCTestCase {
         let expectedDepartment = "Department"
 
         let userSettingsMock = UserSettingsMock()
-        let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
+        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
         let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
 
         let identity = contactStore.addWorkContact(
@@ -61,7 +66,7 @@ class ContactStoreTests: XCTestCase {
         )
 
         XCTAssertEqual(expectedIdentity, identity)
-        let contactEntity = try XCTUnwrap(em.entityFetcher.contact(for: identity))
+        let contactEntity = try XCTUnwrap(em.entityFetcher.contactEntity(for: identity!))
         XCTAssertEqual(expectedPublicKey, contactEntity.publicKey)
         XCTAssertEqual(expectedFirstName, contactEntity.firstName)
         XCTAssertEqual(expectedLastName, contactEntity.lastName)
@@ -76,7 +81,7 @@ class ContactStoreTests: XCTestCase {
         let expectedIdentity = "TESTER01"
 
         let userSettingsMock = UserSettingsMock(blockUnknown: true)
-        let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
+        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
         let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
         
         let expect = expectation(description: "Give time to fetch public key")
@@ -107,14 +112,14 @@ class ContactStoreTests: XCTestCase {
         }
 
         let userSettingsMock = UserSettingsMock(blockUnknown: true)
-        let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
+        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
         let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
         
         let expect = expectation(description: "Give time to fetch public key")
                 
         var receivedPublicKey: Data?
         contactStore.fetchPublicKey(
-            for: specialContact.identity?.string,
+            for: specialContact.identity?.rawValue,
             acquaintanceLevel: .direct,
             entityManager: em,
             ignoreBlockUnknown: false
@@ -143,14 +148,14 @@ class ContactStoreTests: XCTestCase {
         }
 
         let userSettingsMock = UserSettingsMock(blockUnknown: true)
-        let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
+        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
         let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
         
         let expect = expectation(description: "Give time to fetch public key")
                 
         var receivedPublicKey: Data?
         contactStore.fetchPublicKey(
-            for: predefinedContactIdentity.string,
+            for: predefinedContactIdentity.rawValue,
             acquaintanceLevel: .direct,
             entityManager: em,
             ignoreBlockUnknown: false
@@ -179,7 +184,7 @@ class ContactStoreTests: XCTestCase {
             contact.imageData = Data([0])
         }
 
-        let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
+        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
 
         let contactStore = ContactStore(
             userSettings: UserSettingsMock(),
@@ -192,7 +197,7 @@ class ContactStoreTests: XCTestCase {
             lastName: nil
         )
 
-        let contactEntity = try XCTUnwrap(em.entityFetcher.contact(for: expectedIdentity))
+        let contactEntity = try XCTUnwrap(em.entityFetcher.contactEntity(for: expectedIdentity))
         XCTAssertEqual(expectedIdentity, contactEntity.identity)
         XCTAssertEqual(expectedPublicKey, contactEntity.publicKey)
         XCTAssertNil(contactEntity.imageData)
@@ -215,7 +220,7 @@ class ContactStoreTests: XCTestCase {
             )
         }
 
-        let em = EntityManager(databaseContext: databaseMainCnx, myIdentityStore: MyIdentityStoreMock())
+        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
 
         let contactStore = ContactStore(
             userSettings: UserSettingsMock(),
@@ -226,7 +231,7 @@ class ContactStoreTests: XCTestCase {
         
         contactStore.updateStateToActive(for: savedContact!, entityManager: em)
 
-        let contactEntity = try XCTUnwrap(em.entityFetcher.contact(for: expectedIdentity))
+        let contactEntity = try XCTUnwrap(em.entityFetcher.contactEntity(for: expectedIdentity))
         XCTAssertEqual(expectedIdentity, contactEntity.identity)
         XCTAssertEqual(expectedPublicKey, contactEntity.publicKey)
         XCTAssertNil(contactEntity.firstName)

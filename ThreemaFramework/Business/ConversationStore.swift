@@ -60,10 +60,7 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
 
     @objc public func unmarkAllPrivateConversations() {
         entityManager.performAndWaitSave {
-            for conversation in self.entityManager.entityFetcher.privateConversations() {
-                guard let conversation = conversation as? ConversationEntity else {
-                    continue
-                }
+            for conversation in self.entityManager.entityFetcher.privateConversationEntities() ?? [] {
                 self.makeNotPrivate(conversation)
             }
         }
@@ -123,7 +120,7 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
     /// - Parameters:
     ///   - syncContact: Sync contact information
     func updateConversation(withContact syncContact: Sync_Contact) {
-        guard let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: syncContact.identity)
+        guard let conversation = entityManager.entityFetcher.conversationEntity(for: syncContact.identity)
         else {
             DDLogError("Conversation for contact (identity: \(syncContact.identity)) not found")
             return
@@ -147,8 +144,8 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
     func updateConversation(withGroup syncGroup: Sync_Group) {
         guard let groupIdentity = try? GroupIdentity(commonGroupIdentity: syncGroup.groupIdentity),
               let conversation = entityManager.entityFetcher.conversationEntity(
-                  for: groupIdentity.id,
-                  creator: groupIdentity.creator.string
+                  for: groupIdentity,
+                  myIdentity: MyIdentityStore.shared().identity
               ) else {
             DDLogError(
                 "Group identity and conversation for group (\(syncGroup.groupIdentity)) not found"
@@ -228,10 +225,10 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
         // Sync conversation attribute
         if let contactIdentity {
             let syncer = MediatorSyncableContacts(
-                userSettings,
-                pushSettingManager,
-                taskManager,
-                entityManager
+                userSettings: userSettings,
+                pushSettingManager: pushSettingManager,
+                taskManager: taskManager,
+                entityManager: entityManager
             )
             if let conversationCategory = attribute as? ConversationEntity.Category {
                 syncer.updateConversationCategory(identity: contactIdentity, value: conversationCategory)
@@ -244,10 +241,10 @@ public final class ConversationStore: NSObject, ConversationStoreInternalProtoco
         else if let groupIdentity {
             Task {
                 let syncer = MediatorSyncableGroup(
-                    userSettings,
-                    pushSettingManager,
-                    taskManager,
-                    groupManager
+                    userSettings: userSettings,
+                    pushSettingManager: pushSettingManager,
+                    taskManager: taskManager,
+                    groupManager: groupManager
                 )
                 if let conversationCategory = attribute as? ConversationEntity.Category {
                     await syncer.update(identity: groupIdentity, conversationCategory: conversationCategory)

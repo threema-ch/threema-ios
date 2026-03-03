@@ -57,7 +57,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
                 messageID: tmpQuote!["messageId"] as? String
             )
             let messageID = Data(base64Encoded: quote!.messageID!, options: .ignoreUnknownCharacters)!
-            self.text = QuoteUtil.generateText(text, with: messageID)
+            self.text = QuoteUtil.generateText(text, quotedID: messageID)
         }
     }
     
@@ -74,14 +74,14 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
 
         var conversation: ConversationEntity?
         if type == "contact" {
-            guard let contact = entityManager.entityFetcher.contact(for: id) else {
+            guard let id, let contact = entityManager.entityFetcher.contactEntity(for: id) else {
                 baseMessage = nil
                 tmpError = "internalError"
                 completion()
                 return
             }
 
-            conversation = entityManager.entityFetcher.conversation(for: contact)
+            conversation = entityManager.entityFetcher.conversationEntity(for: contact.identity)
             if conversation == nil {
                 entityManager.performAndWaitSave {
                     conversation = entityManager.entityCreator.conversationEntity()
@@ -104,7 +104,7 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
             }
         }
         else {
-            conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
+            conversation = entityManager.entityFetcher.legacyConversationEntity(for: groupID)
 
             guard let conversation,
                   let group = groupManager.getGroup(conversation: conversation)

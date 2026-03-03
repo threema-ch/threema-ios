@@ -25,11 +25,57 @@ import ThreemaFramework
 import ThreemaMacros
 import UIKit
 
-class ConversationsViewController: ThemedTableViewController {
-
+final class ConversationsViewController: ThemedTableViewController {
+    
     // MARK: - Property Declaration
 
-    @IBOutlet var archivedChatsButton: UIButton!
+    private lazy var archivedChatsButton: UIButton = {
+        var configuration = UIButton.Configuration.plain()
+        configuration.title = #localize("archived_chats")
+        configuration.image = UIImage(systemName: "chevron.forward")
+        configuration.imagePlacement = .trailing
+        configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(textStyle: .footnote)
+        configuration.buttonSize = .large
+        
+        let action = UIAction { [weak self] _ in
+            self?.showArchivedConversations()
+        }
+        
+        let button = UIButton(configuration: configuration, primaryAction: action)
+        
+        button.configurationUpdateHandler = { [weak self] button in
+            
+            guard let self, var configuration = button.configuration else {
+                return
+            }
+            
+            // Disable button if no archived chats, hide it if there are no conversations at all
+            let em = businessInjector.entityManager
+            let count = em.performAndWait {
+                em.entityFetcher.archivedConversationEntitiesCount()
+            }
+            
+            if count > 0 {
+                button.isHidden = false
+                configuration.title = #localize("archived_chats")
+                configuration.image = UIImage(systemName: "chevron.forward")
+                button.isEnabled = true
+            }
+            else if !tableView.visibleCells.isEmpty {
+                configuration.title = #localize("no_archived_chats")
+                configuration.image = nil
+                button.isEnabled = false
+                button.isHidden = false
+            }
+            else {
+                button.isHidden = true
+            }
+            
+            button.configuration = configuration
+        }
+        
+        return button
+    }()
     
     private lazy var newChatButton = UIBarButtonItem(
         image: UIImage(systemName: "square.and.pencil"),
@@ -75,16 +121,19 @@ class ConversationsViewController: ThemedTableViewController {
     )
     
     private lazy var menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [
-        UIAction(title: #localize("conversations_menu_read_all"), image: UIImage(systemName: "eye")) { _ in
+        UIAction(title: #localize("conversations_menu_read_all"), image: UIImage(systemName: "eye")) { [weak self] _ in
             Task {
+                guard let self else {
+                    return
+                }
                 await self.utilities.readAll(isAppInBackground: self.viewLoadedInBackground)
             }
         },
         UIAction(
             title: #localize("conversations_menu_select"),
             image: UIImage(systemName: "checkmark.circle")
-        ) { _ in
-            self.showToolbar()
+        ) { [weak self] _ in
+            self?.showToolbar()
         },
     ])
     
@@ -107,7 +156,7 @@ class ConversationsViewController: ThemedTableViewController {
     private lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
         let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = businessInjector.entityManager
             .entityFetcher
-            .fetchedResultsControllerForConversations()
+            .fetchedResultsControllerForConversationEntities(hidePrivateChats: UserSettings.shared().hidePrivateChats)
         
         fetchedResultsController.delegate = self
         
@@ -133,16 +182,17 @@ class ConversationsViewController: ThemedTableViewController {
 
     // MARK: - Lifecycle
     
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
+    init() {
+        super.init(nibName: nil, bundle: nil)
         
         editButton.accessibilityLabel = #localize("edit")
         newChatButton.accessibilityLabel = #localize("new_message_accessibility")
         
         addObservers()
-        // Sets TabBar Title
-        navigationController?.title = #localize("chats_title")
-        title = #localize("chats_title")
+        
+        tabBarItem.title = #localize("chats_title")
+        tabBarItem.image = UIImage(systemName: "bubble.left.and.bubble.right.fill")
+        tabBarItem.selectedImage = UIImage(systemName: "bubble.left.and.bubble.right.fill")
         
         do {
             try fetchedResultsController.performFetch()
@@ -150,6 +200,11 @@ class ConversationsViewController: ThemedTableViewController {
         catch {
             DDLogError("Failed to load conversations: \(error.localizedDescription)")
         }
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     deinit {
@@ -165,10 +220,15 @@ class ConversationsViewController: ThemedTableViewController {
         navigationItem.rightBarButtonItem = newChatButton
         
         tableView.allowsMultipleSelectionDuringEditing = true
-        
+        tableView.delegate = self
         tableView.register(ConversationTableViewCell.self, forCellReuseIdentifier: "ConversationTableViewCell")
         
+        // Sets TabBar Title
+        title = #localize("chats_title")
+        navigationController?.navigationBar.prefersLargeTitles = true
         globalSearchResultsViewController.setSearchController(searchController)
+        
+        tableView.tableFooterView = archivedChatsButton
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -183,10 +243,6 @@ class ConversationsViewController: ThemedTableViewController {
         }
         
         updateArchivedButton()
-        archivedChatsButton.adjustsImageSizeForAccessibilityContentSizeCategory = true
-        archivedChatsButton.titleLabel?.adjustsFontForContentSizeCategory = true
-        archivedChatsButton.titleLabel?.adjustsFontSizeToFitWidth = true
-        updateArchivedButton()
         
         // This and the opposite in `viewWillDisappear` is needed to make a search controller work that is added in a
         // child view controller using the same navigation bar. See ChatSearchController for details.
@@ -196,7 +252,24 @@ class ConversationsViewController: ThemedTableViewController {
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         if navigationItem.searchController == nil {
-            navigationItem.searchController = searchController
+            if !AppLaunchManager.isRemoteSecretEnabled {
+                navigationItem.searchController = searchController
+            }
+        }
+        
+        updateFooterIfNeeded()
+    }
+    
+    func updateFooterIfNeeded() {
+        archivedChatsButton.setNeedsLayout()
+        archivedChatsButton.layoutIfNeeded()
+        
+        let fittingSize = CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height)
+        let targetHeight = archivedChatsButton.systemLayoutSizeFitting(fittingSize).height
+
+        if tableView.tableFooterView?.frame.height != targetHeight {
+            archivedChatsButton.frame = CGRect(x: 0, y: 0, width: tableView.bounds.width, height: targetHeight)
+            tableView.tableFooterView = archivedChatsButton
         }
     }
     
@@ -210,22 +283,18 @@ class ConversationsViewController: ThemedTableViewController {
     }
 }
 
-// MARK: - StoryBoard Button Actions
+// MARK: - Button Actions
 
 extension ConversationsViewController {
     
-    @IBAction func showArchivedConversations(_ sender: Any) {
-        performSegue(withIdentifier: "showArchived", sender: self)
+    @objc func showArchivedConversations() {
+        let controller = ArchivedConversationsViewController()
+        navigationController?.pushViewController(controller, animated: true)
     }
     
     @objc func newMessage() {
-        guard let contactsPickerNavController = storyboard?.instantiateViewController(
-            withIdentifier: "ContactPickerNavigationController"
-        ) else {
-            DDLogError("Could not instantiate ContactPickerNavigationController from Storyboard")
-            return
-        }
-        present(contactsPickerNavController, animated: true, completion: nil)
+        let viewController = UINavigationController(rootViewController: StartChatViewController())
+        present(viewController, animated: true, completion: nil)
     }
 }
 
@@ -369,10 +438,14 @@ extension ConversationsViewController {
         
         // Archive
         
-        let archiveAction = UIContextualAction(style: .normal, title: nil) { _, _, handler in
+        let archiveAction = UIContextualAction(style: .normal, title: nil) { [weak self] _, _, handler in
+            guard let self else {
+                return
+            }
+            
             UserReminder.maybeShowArchiveInfo(on: self)
-            self.utilities.archive(conversation)
-            self.updateArchivedButton()
+            utilities.archive(conversation)
+            updateArchivedButton()
             handler(true)
         }
         
@@ -384,17 +457,21 @@ extension ConversationsViewController {
         // Delete
         
         let cell = tableView.cellForRow(at: indexPath)
-        let deleteAction = UIContextualAction(style: .destructive, title: nil) { _, _, handler in
+        let deleteAction = UIContextualAction(style: .destructive, title: nil) { [weak self] _, _, handler in
+            guard let self else {
+                return
+            }
+            
             // Show private chat delete info
             if conversation.conversationCategory == .private {
                 UserReminder.maybeShowDeletePrivateChatInfoOnViewController(on: self)
             }
             
-            ConversationsViewControllerHelper.handleDeletion(
-                of: conversation,
+            DeleteConversationAction.execute(
+                for: conversation,
                 owner: self,
                 cell: cell,
-                handler: handler
+                onCompletion: handler
             )
         }
         
@@ -421,13 +498,16 @@ extension ConversationsViewController {
                 #localize("pin")
             }
         
-        let pinAction = UIContextualAction(style: .normal, title: nil) { _, _, handler in
+        let pinAction = UIContextualAction(style: .normal, title: nil) { [weak self] _, _, handler in
+            guard let self else {
+                return
+            }
             
             if isPinned {
-                self.businessInjector.conversationStore.unpin(conversation)
+                businessInjector.conversationStore.unpin(conversation)
             }
             else {
-                self.businessInjector.conversationStore.pin(conversation)
+                businessInjector.conversationStore.pin(conversation)
             }
             
             handler(true)
@@ -460,7 +540,10 @@ extension ConversationsViewController {
                 #localize("unread")
             }
         
-        let readAction = UIContextualAction(style: .normal, title: nil) { _, _, handler in
+        let readAction = UIContextualAction(style: .normal, title: nil) { [weak self] _, _, handler in
+            guard let self else {
+                return
+            }
             
             if hasUnread {
                 Task {
@@ -468,7 +551,7 @@ extension ConversationsViewController {
                 }
             }
             else {
-                self.utilities.unread(conversation)
+                utilities.unread(conversation)
             }
             
             handler(true)
@@ -572,7 +655,9 @@ extension ConversationsViewController {
         // Navbar
         navigationItem.leftBarButtonItem = editButton
         navigationItem.rightBarButtonItem = newChatButton
-        navigationItem.searchController = searchController
+        if !AppLaunchManager.isRemoteSecretEnabled {
+            navigationItem.searchController = searchController
+        }
         navigationItem.title = #localize("chats_title")
     }
     
@@ -582,8 +667,8 @@ extension ConversationsViewController {
             at: tableView.indexPathsForSelectedRows,
             fetchedResultsController: fetchedResultsController,
             businessInjector: businessInjector
-        ) {
-            self.hideToolbar()
+        ) { [weak self] in
+            self?.hideToolbar()
         }
     }
     
@@ -593,8 +678,8 @@ extension ConversationsViewController {
             at: tableView.indexPathsForSelectedRows,
             fetchedResultsController: fetchedResultsController,
             businessInjector: businessInjector
-        ) {
-            self.hideToolbar()
+        ) { [weak self] in
+            self?.hideToolbar()
         }
     }
     
@@ -604,8 +689,8 @@ extension ConversationsViewController {
             at: tableView.indexPathsForSelectedRows,
             fetchedResultsController: fetchedResultsController,
             businessInjector: businessInjector
-        ) {
-            self.hideToolbar()
+        ) { [weak self] in
+            self?.hideToolbar()
         }
         updateArchivedButton()
     }
@@ -681,13 +766,10 @@ extension ConversationsViewController {
             return
         }
         
-        for path in selected {
-            guard let conversation = fetchedResultsController.object(at: path) as? ConversationEntity else {
-                continue
-            }
-            if conversation.unreadMessageCount != 0 {
-                return
-            }
+        if selected.contains(where: { path in
+            (fetchedResultsController.object(at: path) as? ConversationEntity)?.unreadMessageCount != 0
+        }) {
+            return
         }
         
         toolbarItems = [toolbarUnreadButton, flexSpace, toolbarArchiveButton]
@@ -755,12 +837,21 @@ extension ConversationsViewController {
     }
     
     private func updateNavigationBarContent() {
-        let navHeight = navigationController!.navigationBar.frame.size.height
-        let textInNavBar = navigationItem.prompt != nil
-        if isEditing {
+        guard !isEditing else {
             hideTitleView()
+            return
         }
-        else if (navHeight <= BrandingUtils.compactNavBarHeight && !textInNavBar) ||
+        
+        // Navigation controller might be nil in this case: App is in split view, top most chat is marked private and
+        // app is launched & passcode for private chat is entered (IOS-5621)
+        guard let navHeight = navigationController?.navigationBar.frame.size.height else {
+            // Do nothing
+            return
+        }
+        
+        let textInNavBar = navigationItem.prompt != nil
+        
+        if (navHeight <= BrandingUtils.compactNavBarHeight && !textInNavBar) ||
             (navHeight <= BrandingUtils.compactPromptNavBarHeight && textInNavBar),
             navigationItem.titleView != nil {
             hideTitleView()
@@ -850,11 +941,7 @@ extension ConversationsViewController {
             return nil
         }
         
-        for object in objects {
-            guard let conversation = object as? ConversationEntity else {
-                continue
-            }
-            
+        for case let conversation as ConversationEntity in objects {
             selectedConversation = conversation
             return conversation
         }
@@ -864,38 +951,7 @@ extension ConversationsViewController {
     
     /// Enables or Disables the ArchiveButton
     private func updateArchivedButton() {
-        Task { @MainActor in
-            await Task.yield()
-            
-            // Disable button if no archived chats, hide it if there are not conversations at all
-            let em = businessInjector.entityManager
-            let count = await em.perform {
-                em.entityFetcher.countArchivedConversations()
-            }
-            
-            if count > 0 {
-                archivedChatsButton.isHidden = false
-                archivedChatsButton.setTitle(
-                    #localize("archived_chats") + " ",
-                    for: .normal
-                )
-                
-                let chevronImage = UIImage(systemName: "chevron.right")?
-                    .applying(symbolWeight: .semibold, symbolScale: .medium)
-                archivedChatsButton.setImage(chevronImage, for: .normal)
-                archivedChatsButton.isEnabled = true
-            }
-            // swiftformat:disable:next isEmpty
-            else if let objects = fetchedResultsController.fetchedObjects as NSArray?, objects.count != 0 {
-                archivedChatsButton.setTitle(#localize("no_archived_chats"), for: .normal)
-                archivedChatsButton.setImage(nil, for: .normal)
-                archivedChatsButton.isEnabled = false
-                archivedChatsButton.isHidden = false
-            }
-            else {
-                archivedChatsButton.isHidden = true
-            }
-        }
+        archivedChatsButton.setNeedsUpdateConfiguration()
     }
     
     @objc public func removeSelectedConversation() {
@@ -922,8 +978,8 @@ extension ConversationsViewController {
         )
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(refreshDirtyObjects),
-            name: NSNotification.Name(rawValue: kNotificationDBRefreshedDirtyObject),
+            selector: #selector(changedManagedObjects),
+            name: DatabaseContext.changedManagedObjects,
             object: nil
         )
         NotificationCenter.default.addObserver(
@@ -969,11 +1025,13 @@ extension ConversationsViewController {
         }
     }
 
-    @objc private func refreshDirtyObjects(notification: NSNotification) {
-        guard let objectID: NSManagedObjectID = notification.userInfo?[kKeyObjectID] as? NSManagedObjectID else {
+    @objc private func changedManagedObjects(_ notification: Notification) {
+        guard let refreshedObjectIDs = notification
+            .userInfo?[DatabaseContext.refreshedObjectIDsKey] as? Set<NSManagedObjectID> else {
             return
         }
-        if objectID.entity == ConversationEntity.entity() {
+
+        if refreshedObjectIDs.contains(where: { $0.entity == ConversationEntity.entity() }) {
             refreshConversationsDelay?.invalidate()
             refreshConversationsDelay = Timer.scheduledTimer(
                 timeInterval: TimeInterval(0.1),
@@ -986,9 +1044,9 @@ extension ConversationsViewController {
     }
 
     @objc private func refreshConversations() {
-        DispatchQueue.main.async {
-            self.refreshData()
-            self.notificationManager.updateUnreadMessagesCount()
+        DispatchQueue.main.async { [weak self] in
+            self?.refreshData()
+            self?.notificationManager.updateUnreadMessagesCount()
         }
     }
     
@@ -1014,8 +1072,8 @@ extension ConversationsViewController {
     }
     
     @objc private func addressBookSynchronized() {
-        DispatchQueue.main.async {
-            self.tableView.reloadData()
+        DispatchQueue.main.async { [weak self] in
+            self?.tableView.reloadData()
         }
     }
     
@@ -1052,13 +1110,17 @@ extension ConversationsViewController {
         change: [NSKeyValueChangeKey: Any]?,
         context: UnsafeMutableRawPointer?
     ) {
-        if keyPath == "blacklist" {
-            DispatchQueue.main.async {
-                for cell in self.tableView.visibleCells {
-                    if let conversationCell = cell as? ConversationTableViewCell {
-                        conversationCell.updateCellTitle()
-                    }
-                }
+        guard keyPath == "blacklist" else {
+            return
+        }
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self else {
+                return
+            }
+            
+            for case let conversationCell as ConversationTableViewCell in self.tableView.visibleCells {
+                conversationCell.updateCellTitle()
             }
         }
     }
@@ -1086,9 +1148,10 @@ extension ConversationsViewController: NSFetchedResultsControllerDelegate {
     ) {
         switch type {
         case .insert:
-            if let indexPath = newIndexPath {
-                tableView.insertRows(at: [indexPath], with: .automatic)
+            guard let indexPath = newIndexPath else {
+                return
             }
+            tableView.insertRows(at: [indexPath], with: .automatic)
             
         case .delete:
             guard let indexPath else {
@@ -1097,10 +1160,11 @@ extension ConversationsViewController: NSFetchedResultsControllerDelegate {
             tableView.deleteRows(at: [indexPath], with: .fade)
             
         case .move:
-            if let indexPath,
-               let newIndexPath {
-                tableView.moveRow(at: indexPath, to: newIndexPath)
+            guard let indexPath,
+                  let newIndexPath else {
+                return
             }
+            tableView.moveRow(at: indexPath, to: newIndexPath)
             
         case .update:
             break

@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
+import ThreemaEssentials
 import ThreemaProtocols
 import WebRTC
 
@@ -68,7 +69,7 @@ struct GroupCallCrypto: GroupCallCryptoProtocol, Sendable {
             return businessInjector.myIdentityStore.mySharedSecret()
         }
         else {
-            guard let contact = businessInjector.entityManager.entityFetcher.contact(for: identity) else {
+            guard let contact = businessInjector.entityManager.entityFetcher.contactEntity(for: identity) else {
                 DDLogError("[GroupCall] Contact not found with id: \(identity)")
                 return nil
             }

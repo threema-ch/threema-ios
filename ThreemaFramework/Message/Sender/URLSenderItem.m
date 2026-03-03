@@ -26,6 +26,8 @@
 #import "MediaConverter.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 
+@import FileUtility;
+
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 #else
@@ -166,14 +168,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (self.url == nil) {
         
         NSString *tmpPath = [NSString stringWithFormat:@"%@video.mp4", NSTemporaryDirectory()];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:tmpPath]) {
+        FileUtility *fileUtility = [FileUtility new];
+        if ([fileUtility fileExistsAtPath:tmpPath]) {
             NSError *error;
-            [[NSFileManager defaultManager] removeItemAtPath:tmpPath error:&error];
+            [fileUtility deleteAtPath:tmpPath error:&error];
             if (error != nil) {
                 DDLogError(@"Can't delete file at path %@", tmpPath);
             }
         }
-        [[NSFileManager defaultManager] createFileAtPath:tmpPath contents:[self getData] attributes:nil];
+        [fileUtility createFileAtPath:tmpPath contents:[self getData] attributes:nil];
         _url = [[NSURL alloc] initFileURLWithPath:tmpPath];
     }
     
@@ -204,6 +207,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (CGFloat)getDuration {
+    if(_duration) {
+        return _duration.floatValue;
+    }
     if ([UTIConverter isRenderingVideoMimeType:[self getMimeType]]) {
         /* Find duration and make thumbnail */
         AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:self.url options:nil];
@@ -213,20 +219,20 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         /* Find duration and make thumbnail */
         NSString *tmpPath = self.url.absoluteString;
         
+        FileUtility *fileUtility = [FileUtility new];
         if (!tmpPath) {
             NSString *type = [UTIConverter preferredFileExtensionForMimeType:[UTIConverter mimeTypeFromUTI:_type]];
-            tmpPath = [NSString stringWithFormat:@"%@%@.%@", NSTemporaryDirectory(), [[FileUtility shared] getTemporarySendableFileNameWithBase:@"audio" directoryURL:[NSURL fileURLWithPath:NSTemporaryDirectory()] pathExtension:type], type];
-            if ([[NSFileManager defaultManager] fileExistsAtPath:tmpPath]) {
+            tmpPath = [NSString stringWithFormat:@"%@%@.%@", NSTemporaryDirectory(), [fileUtility getTemporarySendableFileNameWithBase:@"audio" directoryURL:[NSURL fileURLWithPath:NSTemporaryDirectory()] pathExtension:type], type];
+            if ([fileUtility fileExistsAtPath:tmpPath]) {
                 return 0.0;
             }
 
             [_data writeToFile:tmpPath atomically:true];
         }
-        NSURL *tmpURL = [[NSURL alloc] initFileURLWithPath:tmpPath];
-        AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:tmpURL options:nil];
+        AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:_url options:nil];
         Float64 duration = CMTimeGetSeconds(asset.duration);
         if (!self.url) {
-            [[NSFileManager defaultManager] removeItemAtPath:tmpPath error:nil];
+            [fileUtility deleteAtPath:tmpPath error:nil];
         }
         return duration;
     }

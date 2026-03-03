@@ -30,7 +30,6 @@ protocol ChatBarViewDelegate: AnyObject {
     func canSendText() -> Bool
     func sendText(rawText: String)
     func sendTypingIndicator(startTyping: Bool)
-    @discardableResult
     func sendOrPreviewPastedItem() -> Bool
     @available(iOS 18.0, *)
     func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph)
@@ -58,6 +57,17 @@ final class ChatBarView: UIView {
     private typealias UpdatableConstraint = (constraint: NSLayoutConstraint, offset: CGFloat)
     
     // MARK: - Properties
+    
+    /// The chat bar should *always* be laid out left-to-right, even when using
+    /// a right-to-left language. The convention for messaging apps is for the send
+    /// button to always be to the right of the input field, even in RTL layouts.
+    /// This matches the behavior of e.g. WhatsApp, Telegram, and Messages.
+    /// Set the appropriate `semanticContentAttribute` to ensure horizontal
+    /// stack views layout left-to-right.
+    override var semanticContentAttribute: UISemanticContentAttribute {
+        get { .forceLeftToRight }
+        set { }
+    }
     
     var textBeginningInset: CGFloat {
         chatTextView.textBeginningInset
@@ -102,13 +112,14 @@ final class ChatBarView: UIView {
         
         chatTextView.setContentHuggingPriority(.defaultLow, for: .horizontal)
         chatTextView.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        chatTextView.semanticContentAttribute = .unspecified
         
         return chatTextView
     }()
     
     // MARK: Buttons
     
-    private lazy var plusButton: ChatBarButton = {
+    private(set) lazy var plusButton: ChatBarButton = {
         let imageButton = ChatBarButton(
             sfSymbolName: "plus.circle.fill",
             accessibilityLabel: #localize("compose_bar_attachment_button_accessibility_label"),
@@ -131,7 +142,7 @@ final class ChatBarView: UIView {
         return imageButton
     }()
     
-    private lazy var rightButtonsStackView: UIStackView = {
+    private lazy var trailingButtonsStackView: UIStackView = {
         let stack = UIStackView(arrangedSubviews: [
             cameraButton,
             imagePickerButton,
@@ -146,6 +157,7 @@ final class ChatBarView: UIView {
         stack.alignment = .center
         stack.distribution = .fillProportionally
         stack.spacing = Config.cameraMicSpacing
+        stack.semanticContentAttribute = .forceLeftToRight
         
         stack.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         stack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -160,14 +172,14 @@ final class ChatBarView: UIView {
             defaultColor: { .tintColor },
             customScalableSize: Config.sendButtonSize
         ) { [weak self] _ in
-            
-            guard let strongSelf = self else {
+            guard
+                let self,
+                chatBarViewDelegate?.canSendText() == true
+            else {
                 return
             }
-            
-            if strongSelf.chatBarViewDelegate?.canSendText() ?? false {
-                strongSelf.sendText()
-            }
+
+            sendText()
         }
         
         imageButton.isHidden = true
@@ -185,17 +197,31 @@ final class ChatBarView: UIView {
             accessibilityLabel: #localize("compose_bar_record_button_accessibility_label"),
             defaultColor: { Colors.backgroundChatBarButton }
         ) { [weak self] _ in
-            guard let strongSelf = self else {
+            guard
+                let self,
+                chatBarViewDelegate?.canSendText() == true
+            else {
                 return
             }
             
-            if strongSelf.chatBarViewDelegate?.canSendText() ?? false {
-                strongSelf.chatBarViewDelegate?.startRecording(with: nil)
-            }
+            chatBarViewDelegate?.startRecording(with: nil)
         }
         
+        let layoutDirection = UIView.userInterfaceLayoutDirection(for: semanticContentAttribute)
+        let left = layoutDirection == .leftToRight
+            ? 0
+            : Config.textInputButtonSpacing
+        let right = layoutDirection == .leftToRight
+            ? Config.textInputButtonSpacing
+            : 0
+        
         // This is deprecated but since we're not using UIButtonConfiguration anyways this doesn't matter
-        button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: Config.textInputButtonSpacing)
+        button.contentEdgeInsets = UIEdgeInsets(
+            top: 0,
+            left: left,
+            bottom: 0,
+            right: right
+        )
         
         return button
     }()
@@ -205,37 +231,44 @@ final class ChatBarView: UIView {
         accessibilityLabel: #localize("compose_bar_camera_button_accessibility_label"),
         defaultColor: { Colors.backgroundChatBarButton }
     ) { [weak self] _ in
-        guard let strongSelf = self else {
+        guard
+            let self,
+            chatBarViewDelegate?.canSendText() == true
+        else {
             return
         }
         
-        if strongSelf.chatBarViewDelegate?.canSendText() ?? false {
-            let avCaptureDeviceStatus = AVCaptureDevice.authorizationStatus(for: .video)
-            guard UIImagePickerController.isSourceTypeAvailable(.camera),
-                  avCaptureDeviceStatus != .denied else {
-                // switch camera to image picker icon
-                strongSelf.configureLayout()
-                
-                return
-            }
+        let captureDeviceStatus = AVCaptureDevice.authorizationStatus(for: .video)
+        guard
+            UIImagePickerController.isSourceTypeAvailable(.camera),
+            captureDeviceStatus != .denied
+        else {
+            // switch camera to image picker icon
+            configureLayout()
             
-            if avCaptureDeviceStatus == .authorized {
-                strongSelf.chatBarViewDelegate?.showCamera()
-            }
-            else {
-                AVCaptureDevice.requestAccess(for: .video, completionHandler: { (granted: Bool) in
-                    DispatchQueue.main.async {
-                        if granted {
-                            strongSelf.chatBarViewDelegate?.showCamera()
-                        }
-                        else {
-                            // switch camera to image picker icon
-                            strongSelf.configureLayout()
-                        }
-                    }
-                })
-            }
+            return
         }
+        
+        guard captureDeviceStatus != .authorized else {
+            chatBarViewDelegate?.showCamera()
+            
+            return
+        }
+        
+        AVCaptureDevice.requestAccess(
+            for: .video,
+            completionHandler: { [weak self] granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        self?.chatBarViewDelegate?.showCamera()
+                    }
+                    else {
+                        // switch camera to image picker icon
+                        self?.configureLayout()
+                    }
+                }
+            }
+        )
     }
     
     private lazy var imagePickerButton = ChatBarButton(
@@ -243,13 +276,14 @@ final class ChatBarView: UIView {
         accessibilityLabel: #localize("compose_bar_image_picker_button_accessibility_label"),
         defaultColor: { Colors.backgroundChatBarButton }
     ) { [weak self] _ in
-        guard let strongSelf = self else {
+        guard
+            let self,
+            chatBarViewDelegate?.canSendText() == true
+        else {
             return
         }
         
-        if strongSelf.chatBarViewDelegate?.canSendText() ?? false {
-            strongSelf.chatBarViewDelegate?.showImagePicker()
-        }
+        chatBarViewDelegate?.showImagePicker()
     }
     
     private lazy var bottomHairlineView: UIView = {
@@ -361,27 +395,27 @@ final class ChatBarView: UIView {
         
         // Right buttons
         
-        addSubview(rightButtonsStackView)
+        addSubview(trailingButtonsStackView)
         
-        rightButtonsStackView.translatesAutoresizingMaskIntoConstraints = false
+        trailingButtonsStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        cameraMicButtonConstraint = rightButtonsStackView.leadingAnchor.constraint(
+        cameraMicButtonConstraint = trailingButtonsStackView.leadingAnchor.constraint(
             equalTo: chatTextView.trailingAnchor,
             constant: Config.textInputButtonSpacing
         )
         
         NSLayoutConstraint.activate([
-            rightButtonsStackView.trailingAnchor.constraint(
+            trailingButtonsStackView.trailingAnchor.constraint(
                 equalTo: safeAreaLayoutGuide.trailingAnchor
             ),
             cameraMicButtonConstraint!,
         ])
         
-        let rightButtonsStackViewUpdatableConstraint = rightButtonsStackView.centerYAnchor.constraint(
+        let trailingButtonsStackViewUpdatableConstraint = trailingButtonsStackView.centerYAnchor.constraint(
             equalTo: chatTextView.bottomAnchor,
             constant: -currentSingleLineHeight / 2
         )
-        updatableConstraints.append((rightButtonsStackViewUpdatableConstraint, -1.0))
+        updatableConstraints.append((trailingButtonsStackViewUpdatableConstraint, -1.0))
         
         // SendButton
         
@@ -451,17 +485,24 @@ final class ChatBarView: UIView {
             )
     }
     
+    func toggleBarButtons(enabled: Bool) {
+        plusButton.isEnabled = enabled
+        imagePickerButton.isEnabled = enabled
+        cameraButton.isEnabled = enabled
+        recordButton.isEnabled = enabled
+    }
+    
     // MARK: - Animations
     
     private func showSendButton() {
-        showOrHideRightButtonsStackView(hide: true)
+        showOrHideTrailingButtonsStackView(hide: true)
     }
     
     private func hideSendButton() {
-        showOrHideRightButtonsStackView(hide: false)
+        showOrHideTrailingButtonsStackView(hide: false)
     }
     
-    private func showOrHideRightButtonsStackView(hide: Bool) {
+    private func showOrHideTrailingButtonsStackView(hide: Bool) {
         updateSendButton()
         
         guard recordButton.isHidden != hide else {
@@ -651,9 +692,11 @@ extension ChatBarView: ChatTextViewDelegate {
                 withTimeInterval: TimeInterval(TypingIndicatorManager.typingIndicatorResendInterval()),
                 repeats: false,
                 block: { [weak self] _ in
-                    if let isTyping = self?.isTyping, isTyping {
-                        self?.chatBarViewDelegate?.sendTypingIndicator(startTyping: isTyping)
+                    guard let isTyping = self?.isTyping, isTyping else {
+                        return
                     }
+                    
+                    self?.chatBarViewDelegate?.sendTypingIndicator(startTyping: isTyping)
                 }
             )
         }
@@ -794,8 +837,7 @@ extension ChatBarView {
             withDuration: Config.ShowHideSendButtonAnimation.fadeDuration,
             delay: 0,
             options: [.beginFromCurrentState, .curveEaseInOut]
-        ) {
-            [weak self] in
+        ) { [weak self] in
             self?.voiceMessageController?.view.alpha = 0
             self?.chatTextView.alpha = 1
         } completion: { [weak self] _ in

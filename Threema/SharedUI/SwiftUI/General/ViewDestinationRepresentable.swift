@@ -20,6 +20,7 @@
 
 import SwiftUI
 
+@available(*, deprecated, message: "Do not use anymore.")
 protocol ViewDestinationRepresentable: Hashable {
     associatedtype ViewType: View
     var view: ViewType { get }

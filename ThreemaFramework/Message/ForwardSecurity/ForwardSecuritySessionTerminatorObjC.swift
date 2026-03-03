@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 /// Obj-C wrapper for `ForwardSecuritySessionTerminator`
-@available(*, deprecated, renamed: "ForwardSecuritySessionTerminator", message: "Only use from Objective-C")
+@available(swift, obsoleted: 1.0, renamed: "ForwardSecuritySessionTerminator", message: "Only use from Objective-C")
 class ForwardSecuritySessionTerminatorObjC: NSObject {
     
     /// Terminate all sessions with contact with the reason "disabled by remote"

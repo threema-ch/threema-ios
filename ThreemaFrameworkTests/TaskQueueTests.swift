@@ -20,8 +20,10 @@
 
 import PromiseKit
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
+
 @testable import ThreemaFramework
 
 class TaskQueueTests: XCTestCase {
@@ -49,7 +51,10 @@ class TaskQueueTests: XCTestCase {
     }
     
     func testInterrupt() {
-        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbBackgroundCnx))
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(
+            databaseContext: dbBackgroundCnx,
+            isRemoteSecretEnabled: false
+        ))
 
         let msg = ContactDeletePhotoMessage()
         msg.messageID = MockData.generateMessageID()
@@ -82,7 +87,10 @@ class TaskQueueTests: XCTestCase {
     }
     
     func testInterruptWithExecutingDropOnDisconnectTask() async throws {
-        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbBackgroundCnx))
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(
+            databaseContext: dbBackgroundCnx,
+            isRemoteSecretEnabled: false
+        ))
 
         let msg = ContactDeletePhotoMessage()
         msg.messageID = MockData.generateMessageID()
@@ -148,7 +156,10 @@ class TaskQueueTests: XCTestCase {
     }
 
     func testSpoolServerConnectorDisconnected() {
-        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbBackgroundCnx))
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(
+            databaseContext: dbBackgroundCnx,
+            isRemoteSecretEnabled: false
+        ))
 
         let tq = TaskQueue(
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
@@ -174,7 +185,7 @@ class TaskQueueTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             myIdentityStore: myIdentityStoreMock,
             serverConnector: serverConnectorMock
         )
@@ -223,7 +234,7 @@ class TaskQueueTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             myIdentityStore: myIdentityStoreMock,
             serverConnector: serverConnectorMock
         )
@@ -266,7 +277,7 @@ class TaskQueueTests: XCTestCase {
         let messageProcessorMock = MessageProcessorMock()
         messageProcessorMock.error = expectedError
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             serverConnector: serverConnectorMock,
             messageProcessor: messageProcessorMock
         )
@@ -351,8 +362,8 @@ class TaskQueueTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
 
         let mediatorMessageProtocolMock = try MediatorMessageProtocolMock(
@@ -380,7 +391,7 @@ class TaskQueueTests: XCTestCase {
         }
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
             mediatorReflectedProcessor: mediatorReflectedProcessorMock
@@ -417,11 +428,11 @@ class TaskQueueTests: XCTestCase {
     func testSpoolAndDroppingRacesTask() async throws {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock
         )
@@ -477,11 +488,11 @@ class TaskQueueTests: XCTestCase {
     func testSpoolInterruptAndFailWithNonDroppingError() async throws {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock
         )
@@ -533,7 +544,7 @@ class TaskQueueTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             serverConnector: serverConnectorMock
         )
 
@@ -598,7 +609,7 @@ class TaskQueueTests: XCTestCase {
     func testDiscardMultiDeviceNotActivated() throws {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             serverConnector: serverConnectorMock
         )
 
@@ -632,14 +643,14 @@ class TaskQueueTests: XCTestCase {
     func testSpoolTaskDefinitionMdmParameterSyncReflectFailedWithRetry() {
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             ThreemaError.threemaError("Not logged in", withCode: ThreemaProtocolError.notLoggedIn.rawValue) as? NSError
         }
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock
         )
@@ -848,8 +859,8 @@ class TaskQueueTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         serverConnectorMock.sendMessageClosure = { _ in
             expectedSendMessage
@@ -859,7 +870,7 @@ class TaskQueueTests: XCTestCase {
         messageProcessorMock.error = expectedMessageProcessorError
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             messageProcessor: messageProcessorMock,
@@ -1169,10 +1180,10 @@ class TaskQueueTests: XCTestCase {
         expectedReflectedMessage.append(expectedReflectID)
         try expectedReflectedMessage.append(incomingEnvelop.serializedData())
 
-        let deviceGroupKeys = MockData.deviceGroupKeys
+        let deviceGroupKeys = MockMultiDevice.deviceGroupKeys
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
+            deviceID: MockMultiDevice.deviceID,
             deviceGroupKeys: deviceGroupKeys
         )
 
@@ -1211,7 +1222,7 @@ class TaskQueueTests: XCTestCase {
 
         let nonceGuardMock = NonceGuardMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
@@ -1325,6 +1336,7 @@ class TaskQueueTests: XCTestCase {
         let expectedGroup = Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -1333,7 +1345,10 @@ class TaskQueueTests: XCTestCase {
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER02", "MEMBER03"]
 
-        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbBackgroundCnx))
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(
+            databaseContext: dbBackgroundCnx,
+            isRemoteSecretEnabled: false
+        ))
 
         let tq = TaskQueue(
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
@@ -1740,7 +1755,10 @@ class TaskQueueTests: XCTestCase {
             XCTAssertEqual(expectedGroup.groupCreatorIdentity, task.groupCreatorIdentity)
             XCTAssertEqual(.interrupted, task.state)
             XCTAssertEqual(expectedBaseMessageGroupName, task.groupName)
-            XCTAssertEqual(Set(expectedGroup.members.map(\.identity.string)), try XCTUnwrap(task.receivingGroupMembers))
+            XCTAssertEqual(
+                Set(expectedGroup.members.map(\.identity.rawValue)),
+                try XCTUnwrap(task.receivingGroupMembers)
+            )
             XCTAssertEqual(expectedBaseMessageIsNoteGroup, task.isNoteGroup)
             XCTAssertTrue(expectedBaseMessageID.elementsEqual(task.messageID))
             XCTAssertTrue(task.retry)

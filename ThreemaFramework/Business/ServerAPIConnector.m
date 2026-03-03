@@ -33,6 +33,8 @@
 #import "AppGroup.h"
 #import "ProtocolDefines.h"
 
+@import FileUtility;
+
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
 #else
@@ -52,7 +54,7 @@
     
     // Add App Store receipt if available (but not for Work)
     NSURL *receiptUrl = [[NSBundle mainBundle] appStoreReceiptURL];
-    if (receiptUrl && [[NSFileManager defaultManager] fileExistsAtPath:receiptUrl.path] && !TargetManagerObjc.isBusinessApp) {
+    if (receiptUrl && [[FileUtility new] fileExistsAt:receiptUrl] && !TargetManagerObjC.isBusinessApp) {
         NSData *receiptData = [NSData dataWithContentsOfURL:receiptUrl];
         if (receiptData) {
             request[@"appStoreReceipt"] = [receiptData base64EncodedStringWithOptions:0];
@@ -71,8 +73,6 @@
         [self sendSignedRequestPhase2:request toApiPath:apiPath phase1Response:response forStore:identityStore onCompletion:^(NSDictionary *response) {
             identityStore.identity = response[@"identity"];
             identityStore.serverGroup = response[@"serverGroup"];
-            [identityStore storeInKeychain];
-            [FeatureMask updateLocalObjc];
             
             onCompletion(identityStore);
         } onError:onError];
@@ -145,7 +145,7 @@
     
     NSDictionary *request = @{
         @"identity": identityStore.identity,
-        @"appVariant": TargetManagerObjc.isBusinessApp ? @"work" : @"consumer"
+        @"appVariant": TargetManagerObjC.isBusinessApp ? @"work" : @"consumer"
     };
 
     [self sendSignedRequest:request toApiPath:@"identity/fetch_priv" forStore:identityStore onCompletion:^(id jsonObject) {
@@ -177,13 +177,13 @@
         
         identityStore.serverGroup = serverGroup;
         
-        identityStore.linkedEmail = email;
-        if (identityStore.linkedEmail != nil) {
+        if (email != nil) {
+            identityStore.linkedEmail = email;
             identityStore.linkEmailPending = NO;
         }
         
-        identityStore.linkedMobileNo = mobileNo;
-        if (identityStore.linkedMobileNo != nil) {
+        if (mobileNo != nil) {
+            identityStore.linkedMobileNo = mobileNo;
             identityStore.linkMobileNoPending = NO;
         }
         
@@ -300,7 +300,7 @@
     static NSString *apiPath = @"identity/link_mobileno";
     
     NSString *urlScheme = @"threema";
-    if (TargetManagerObjc.isBusinessApp) {
+    if (TargetManagerObjC.isBusinessApp) {
         urlScheme = @"threemawork";
     }
     

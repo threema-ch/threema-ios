@@ -20,10 +20,11 @@
 
 import CoreData
 import Foundation
+import ThreemaFramework
 
 protocol DatabasePreparerProtocol {
     var persistentStoreCoordinator: NSPersistentStoreCoordinator! { get }
-    var objectContext: NSManagedObjectContext! { get }
+    var objectContext: ThreemaManagedObjectContext! { get }
     
     func prepareDatabase()
 }

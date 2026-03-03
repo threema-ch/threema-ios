@@ -228,8 +228,8 @@ extension ChatViewLocationMessageTableViewCell: ChatViewMessageActions {
         }
         
         // Share
-        let shareItems = [locationSummary as Any]
-        
+        let shareHandler = { [locationSummary as Any] }
+
         // Details
         let detailsHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
@@ -258,7 +258,7 @@ extension ChatViewLocationMessageTableViewCell: ChatViewMessageActions {
             markStarHandler: markStarHandler,
             quoteHandler: quoteHandler,
             copyHandler: copyHandler,
-            shareItems: shareItems,
+            shareHandler: shareHandler,
             speakText: locationSummary,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,

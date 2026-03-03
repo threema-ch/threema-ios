@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
 
 @testable import ThreemaFramework
@@ -91,8 +92,7 @@ class BlobManagerTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+                    conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
                 }
             )
         }
@@ -102,7 +102,7 @@ class BlobManagerTests: XCTestCase {
             backgroundContext: backgroundManagedObjectContext
         )
         
-        entityManager = EntityManager(databaseContext: databaseContext, myIdentityStore: myIdentityStoreMock)
+        entityManager = EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false)
         
         blobManager = BlobManager(
             entityManager: entityManager,
@@ -356,7 +356,7 @@ class BlobManagerTests: XCTestCase {
             )
         }
         
-        entityManager.performSyncBlockAndSafe {
+        entityManager.performAndWaitSave {
             fileMessageEntity.blobError = true
         }
         
@@ -415,8 +415,8 @@ class BlobManagerTests: XCTestCase {
             )
         }
         
-        entityManager.performSyncBlockAndSafe {
-            fileMessageEntity.blobThumbnail = self.testBlobData
+        entityManager.performAndWaitSave {
+            fileMessageEntity.blobThumbnail = self.testThumbnailData
             fileMessageEntity.blobData = self.testBlobData
         }
         
@@ -629,12 +629,14 @@ class BlobManagerTests: XCTestCase {
         )
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            GroupPhotoSenderMock()
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                GroupPhotoSenderMock()
+            }
         )
         
         let grp = try await createOrUpdateDBWait(
@@ -644,8 +646,7 @@ class BlobManagerTests: XCTestCase {
         )
                 
         let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
-            for: grp.groupID,
-            creator: grp.groupIdentity.creator.string
+            for: grp.groupIdentity, myIdentity: myIdentityStoreMock.identity
         ))
         
         // Arrange

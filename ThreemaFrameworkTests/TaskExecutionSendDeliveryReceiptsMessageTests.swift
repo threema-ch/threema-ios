@@ -18,6 +18,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
 @testable import ThreemaFramework
 
@@ -27,7 +29,6 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
     private var dbPreparer: DatabasePreparer!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
@@ -61,7 +62,7 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         let messageSenderMock = MessageSenderMock(doSendReadReceiptContacts: [contactEntity])
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, myIdentityStore: myIdentityStoreMock),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             messageSender: messageSenderMock,
             serverConnector: serverConnectorMock
         )
@@ -137,8 +138,8 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         let messageSenderMock = MessageSenderMock(doSendReadReceiptContacts: [contactEntity])
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -157,12 +158,12 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         }
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, myIdentityStore: myIdentityStoreMock),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             messageSender: messageSenderMock,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupKeys: MockData.deviceGroupKeys,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: messageReflectID,

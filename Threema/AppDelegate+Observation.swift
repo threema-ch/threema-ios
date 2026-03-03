@@ -25,6 +25,13 @@ import ThreemaMacros
 extension AppDelegate {
     
     @objc func registerLifetimeObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(errorWhileProcessingManagedObject(notification:)),
+            name: DatabaseContext.errorWhileProcessingManagedObject,
+            object: nil
+        )
+
         // MARK: ThreemaSafe
 
         NotificationCenter.default.addObserver(
@@ -34,18 +41,28 @@ extension AppDelegate {
             object: nil
         )
     }
-    
+
+    @objc private func errorWhileProcessingManagedObject(notification: Notification) {
+        guard let userInfo = notification.userInfo as? [String: Any],
+              let error = userInfo[DatabaseContext.errorKey] as? Error
+        else {
+            return
+        }
+
+        ErrorHandler.abort(with: error)
+    }
+
     // If a password was provided by the company MDM, or it has changed, we inform the user and pause Threema Safe
     // backups until the user accepts the new password
     @objc private func companyMDMSafePasswordCheck() {
-        
-        let safeManager = SafeManager(groupManager: BusinessInjector.ui.groupManager)
         
         guard AppSetup.isCompleted else {
             return
         }
         
-        let mdmSetup = MDMSetup(setup: false)
+        let safeManager = SafeManager(groupManager: BusinessInjector.ui.groupManager)
+        
+        let mdmSetup = MDMSetup()
         let mdmSafeEnabled = mdmSetup?.safeEnable()?.boolValue ?? false
         let wasSafeActive = safeManager.isActivated || mdmSafeEnabled
 

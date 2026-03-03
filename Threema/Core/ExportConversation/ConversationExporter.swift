@@ -19,13 +19,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import MBProgressHUD
+import SwiftUI
 import ThreemaFramework
 import ThreemaMacros
 import ZipArchive
 
-class ConversationExporter: NSObject, PasswordCallback {
+final class ConversationExporter: NSObject {
     
     enum CreateZipError: Error {
         case notEnoughStorage(storageNeeded: Int64)
@@ -45,7 +47,6 @@ class ConversationExporter: NSObject, PasswordCallback {
     private var emailSubject = ""
     private var timeString: String?
     private var zipFileContainer: ZipFileContainer?
-    private var passwordTrigger: CreatePasswordTrigger?
     
     private lazy var displayName: String = {
         var displayName = ""
@@ -68,7 +69,11 @@ class ConversationExporter: NSObject, PasswordCallback {
     init(
         viewController: UIViewController,
         conversationObjectID: NSManagedObjectID,
-        entityManager: EntityManager = EntityManager(withChildContextForBackgroundProcess: true),
+        entityManager: EntityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).backgroundEntityManager,
         withMedia: Bool
     ) {
         self.viewController = viewController
@@ -82,7 +87,7 @@ class ConversationExporter: NSObject, PasswordCallback {
     /// - Parameter entityManager: EntityManager to load all messages
     /// - Returns: Can the passed conversation be exported?
     static func canExport(conversation: ConversationEntity, entityManager: EntityManager) -> Bool {
-        let mdmSetup = MDMSetup(setup: false)
+        let mdmSetup = MDMSetup()
         
         if let exportDisabled = mdmSetup?.disableExport(), exportDisabled {
             return false
@@ -101,6 +106,10 @@ class ConversationExporter: NSObject, PasswordCallback {
         )
         ZipFileContainer.cleanFiles()
         requestPassword()
+    }
+    
+    func updateWithMedia(to withMedia: Bool) {
+        self.withMedia = withMedia
     }
 }
 
@@ -257,7 +266,7 @@ extension ConversationExporter {
     private func getFreeStorage() -> Int64 {
         var dictionary: [FileAttributeKey: Any]?
         do {
-            dictionary = try FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())
+            dictionary = try FileUtility.shared.attributesOfFileSystem(forPath: NSHomeDirectory())
         }
         catch {
             return -1
@@ -440,11 +449,10 @@ extension ConversationExporter {
         log.append(date)
         log.append(": ")
         
-        // swiftformat:disable:next acronyms
-        if let textMessage = baseMessage as? TextMessageEntity, let quoteID = textMessage.quotedMessageId,
+        if let textMessage = baseMessage as? TextMessageEntity, let quoteID = textMessage.quotedMessageID,
            let quoteMessage = entityManager.entityFetcher.message(
                with: quoteID,
-               conversation: baseMessage.conversation
+               in: baseMessage.conversation
            ) as? PreviewableMessage {
             log.append("[")
             if let displayName = quoteMessage.sender?.displayName {
@@ -460,7 +468,7 @@ extension ConversationExporter {
             log.append("\"\(quoteMessage.previewText)\"] ")
         }
         
-        if let additionalExportInfo = baseMessage.additionalExportInfo() {
+        if let additionalExportInfo = additionalExportInfo(for: baseMessage) {
             log.append(additionalExportInfo)
         }
         
@@ -468,19 +476,82 @@ extension ConversationExporter {
         
         return log
     }
+
+    private func additionalExportInfo(for baseMessageEntity: BaseMessageEntity) -> String? {
+        if let entity = baseMessageEntity as? AudioMessageEntity {
+            var seconds = entity.duration.intValue
+            let minutes: Int = seconds / 60
+            seconds = seconds - minutes * 60
+            return "\(#localize("file_message_voice")) (\(minutes):\(seconds),\(entity.blobExportFilename ?? "nil"))"
+        }
+        else if let entity = baseMessageEntity as? BallotMessageEntity {
+            guard let ballot = entity.ballot else {
+                return nil
+            }
+            var info = "\(#localize("ballot")): \(ballot.title ?? "")"
+
+            for choice in ballot.choicesSortedByOrder {
+                info += "- \(choice.name ?? "")\n"
+            }
+            return info
+        }
+        else if let entity = baseMessageEntity as? FileMessageEntity {
+            var filename = entity.blobExportFilename
+            if entity.blobData == nil {
+                filename += " \(#localize("fileNotDownloaded"))"
+            }
+            
+            var info = "\(#localize("file")) (\(filename))"
+
+            if let caption = entity.caption {
+                let cap = ", \(#localize("caption")): \(caption)"
+                info += cap
+            }
+
+            return info
+        }
+        else if let entity = baseMessageEntity as? ImageMessageEntity {
+            var info = "\(#localize("image")) (\(entity.blobExportFilename ?? ""))"
+
+            if let caption = entity.image?.caption() {
+                info = info + ", \(#localize("caption")): \(caption)"
+            }
+            return info
+        }
+        else if let entity = baseMessageEntity as? LocationMessageEntity {
+            guard let latitude = entity.latitude as? Double, let longitude = entity.longitude as? Double else {
+                return #localize("location")
+            }
+            return "\(String(format: "%.6f", latitude)), \(String(format: "%.6f", longitude))"
+        }
+        else if let entity = baseMessageEntity as? SystemMessageEntity {
+            return switch entity.systemMessageType {
+            case let .systemMessage(type: type):
+                type.localizedMessage
+            case let .callMessage(type: type):
+                type.localizedMessage
+            case let .workConsumerInfo(type: type):
+                type.localizedMessage
+            }
+        }
+        else if let entity = baseMessageEntity as? TextMessageEntity {
+            return entity.text
+        }
+        else if let entity = baseMessageEntity as? VideoMessageEntity {
+            var seconds = entity.duration.intValue
+            let minutes: Int = seconds / 60
+            seconds = seconds - minutes * 60
+            return "\(#localize("video")) (\(minutes):\(seconds),\(entity.blobExportFilename ?? "nil"))"
+        }
+        else {
+            return nil
+        }
+    }
 }
 
 // MARK: - UI Elements
 
 extension ConversationExporter {
-    func passwordResult(_ password: String, from _: UIViewController) {
-        self.password = password
-        MBProgressHUD.showAdded(to: (viewController!.view)!, animated: true)
-        passwordTrigger?.passwordCallback = nil
-        viewController?.dismiss(animated: true) {
-            self.createExport()
-        }
-    }
     
     /// Shows an alert with an error code
     /// - Parameter errorCode: the error code shown in the alert
@@ -508,38 +579,59 @@ extension ConversationExporter {
             needed,
             free
         )
-        
+            
         UIAlertTemplate.showAlert(owner: viewController!, title: title, message: message, actionOk: nil)
     }
     
     /// Presents the password request UI
     func requestPassword() {
-        passwordTrigger = CreatePasswordTrigger(on: viewController)
-        passwordTrigger?.passwordAdditionalText = #localize("password_description_export")
-        passwordTrigger?.passwordCallback = self
+        let passwordCreationView = PasswordCreationView(
+            coordinator: nil,
+            title: #localize("export_chat"),
+            footer: #localize("password_description_export"),
+            passwordCreateButton: #localize("export_chat_button"),
+            onPasswordCreated: { [weak self] password in
+                guard let self else {
+                    return
+                }
+                
+                self.password = password
+                viewController?.presentedViewController?.dismiss(animated: true)
+                createExport()
+            },
+            onDismiss: { [weak self] in
+                guard let self else {
+                    return
+                }
+                
+                viewController?.presentedViewController?.dismiss(animated: true)
+            }
+        )
         
-        passwordTrigger?.presentPasswordUI()
+        let navController = UINavigationController(
+            rootViewController: UIHostingController(
+                rootView: passwordCreationView
+            )
+        )
+        
+        viewController?.present(navController, animated: true)
     }
     
     func createActivityViewController(zipURL: URL) -> UIActivityViewController? {
-        let zipActivity = ZipFileActivityItemProvider(url: zipURL, subject: emailSubject)
-        
-        let activityViewController = ActivityUtil.activityViewController(
-            withActivityItems: [zipActivity],
-            applicationActivities: []
-        )
-        
+        let item = UIActivityHelperFactory.makeItemSource(type: .zipFile(url: zipURL, subject: emailSubject))
+        let activityViewController = UIActivityViewController(activityItems: [item], applicationActivities: nil)
+
         if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {
             let rect = viewController!.view.convert(viewController!.view.frame, to: viewController!.view)
-            activityViewController?.popoverPresentationController?.sourceRect = rect
-            activityViewController?.popoverPresentationController?.sourceView = viewController!.view
+            activityViewController.popoverPresentationController?.sourceRect = rect
+            activityViewController.popoverPresentationController?.sourceView = viewController!.view
         }
         
         let defaults = AppGroup.userDefaults()
         defaults?.set(ThreemaUtilityObjC.systemUptime(), forKey: "UIActivityViewControllerOpenTime")
         defaults?.synchronize()
         
-        activityViewController!.completionWithItemsHandler = { _, _, _, _ in
+        activityViewController.completionWithItemsHandler = { _, _, _, _ in
             let defaults = AppGroup.userDefaults()
             defaults?.removeObject(forKey: "UIActivityViewControllerOpenTime")
             ZipFileContainer.cleanFiles()

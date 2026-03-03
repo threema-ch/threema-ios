@@ -44,8 +44,7 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
                 guard let self else {
                     return
                 }
-                
-                presentFullscreen(image: distributionList.profilePicture)
+                FullscreenImageViewController.present(for: distributionList.profilePicture, on: self)
             },
             quickActions: actions
         )
@@ -63,13 +62,13 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     // Display style of the chosen mode
     private let displayStyle: DetailsDisplayStyle
     
-    private lazy var entityManager = EntityManager()
+    private lazy var entityManager = BusinessInjector.ui.entityManager
     
     private var observers = [NSKeyValueObservation]()
-    
+
     // Backwards compatibility
     
-    @available(*, deprecated, message: "Only use this for old code to keep it working")
+    @available(swift, obsoleted: 1.0, message: "Only use from old Objective-C code to keep it working")
     @objc var _distributionList: DistributionList {
         distributionList
     }
@@ -101,13 +100,11 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         configureTableView()
-        
         addObservers()
-        
         configureHeader()
         dataSource.configureData()
+        setupTraitRegistration()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -127,14 +124,9 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        
         delegate?.detailsDidDisappear()
     }
-    
-    deinit {
-        DDLogDebug("\(#function)")
-    }
-    
+
     // MARK: - Configuration
 
     private func addObservers() {
@@ -215,6 +207,18 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
         observers.append(observer)
     }
 
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitPreferredContentSizeCategory.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.verticalSizeClass != traitCollection.verticalSizeClass {
+                updateHeaderLayout()
+            }
+        }
+    }
+
     // MARK: - Updates
     
     private func updateHeader(animated: Bool = true) {
@@ -225,9 +229,11 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     // MARK: - Actions
     
     @objc private func editButtonTapped() {
-
-        let editGroupViewController = DistributionListCreateEditViewController(distributionList: distributionList)
-        let themedNavigationController = ThemedNavigationController(rootViewController: editGroupViewController)
+        let editDistributionListViewController = CreateEditGroupDistributionViewController(
+            for: .distributionList(.edit(list: distributionList))
+        )
+        let themedNavigationController =
+            ThemedNavigationController(rootViewController: editDistributionListViewController)
         themedNavigationController.modalPresentationStyle = .formSheet
 
         present(themedNavigationController, animated: true)
@@ -241,13 +247,6 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
     
     @objc private func preferredContentSizeCategoryDidChange() {
         updateHeaderLayout()
-    }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        if previousTraitCollection?.verticalSizeClass != traitCollection.verticalSizeClass {
-            // This will be called on rotation
-            updateHeaderLayout()
-        }
     }
 }
 

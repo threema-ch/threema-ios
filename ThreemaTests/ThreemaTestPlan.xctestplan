@@ -46,7 +46,7 @@
   "testTargets" : [
     {
       "skippedTests" : [
-        "AddressBoolLoadTests",
+        "AddressBookLoadTests",
         "AutomaticDeleteTests",
         "ChatProfileViewTests\/testBasicInitialization()",
         "ChatProfileViewTests\/testDoNotObserveRemovedMemberNameChange()",

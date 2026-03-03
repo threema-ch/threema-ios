@@ -36,7 +36,7 @@ extension GroupCallManager {
             
             businessInjector.entityManager.performAndWait {
                 guard let conversation = businessInjector.entityManager.entityFetcher
-                    .getManagedObject(by: groupConversationManagedObjectID) as? ConversationEntity else {
+                    .managedObject(with: groupConversationManagedObjectID) as? ConversationEntity else {
                     continuation.resume(returning: nil)
                     return
                 }

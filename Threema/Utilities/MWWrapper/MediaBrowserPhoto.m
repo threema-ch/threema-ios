@@ -27,9 +27,10 @@
 //
 
 #import "MediaBrowserPhoto.h"
-#import "ImageMessageLoader.h"
 #import "NSString+Hex.h"
 #import "BundleUtil.h"
+#import <ThreemaFramework/Constants.h>
+#import "ThreemaFramework.h"
 
 @interface MediaBrowserPhoto ()
 
@@ -96,7 +97,7 @@
 }
 
 -(NSURL *)urlForExportData:(NSString *)tmpFileName {
-    NSString *fileName = [[self.imageMessageEntity image] getFilename];
+    NSString *fileName = [[_imageMessageEntity image] getFilename];
     if (fileName == nil) {
         fileName = tmpFileName;
     }

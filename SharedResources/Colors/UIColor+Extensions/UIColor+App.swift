@@ -34,7 +34,7 @@ extension UIColor {
         }
     }
     
-    @objc static var primary = UIColor { _ in
+    @objc public static var primary = UIColor { _ in
         switch TargetManager.current {
         case .threema, .green:
             UIColor(resource: .accentColorPrivate)
@@ -84,5 +84,9 @@ extension UIColor {
         case .customOnPrem:
             UIColor(resource: .accentColorCustomOnPrem)
         }
+    }
+    
+    @objc public static var primaryColorWork = UIColor { _ in
+        UIColor(resource: .accentColorWork)
     }
 }

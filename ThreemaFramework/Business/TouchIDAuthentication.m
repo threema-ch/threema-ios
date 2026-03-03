@@ -22,7 +22,7 @@
 #import <LocalAuthentication/LocalAuthentication.h>
 #import "KKPasscodeLock.h"
 #import "BundleUtil.h"
-#import <ThreemaFramework/ThreemaFramework-Swift.h>
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "ThreemaError.h"
 
 #ifdef DEBUG
@@ -39,7 +39,7 @@
     LAContext *context = [LAContext new];
     NSError *error;
     if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error]) {
-        NSString *reason = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"to_unlock_passcode"], TargetManagerObjc.appName];
+        NSString *reason = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"to_unlock_passcode"], TargetManagerObjC.appName];
         [context evaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics localizedReason:reason reply:^(BOOL success, NSError *error) {
             // If we encounter an error, we directly return it.
             if (error != nil) {
@@ -48,23 +48,23 @@
             }
             
             // We safe the policy the first time
-            if ([AppGroup getActiveType] == AppGroupTypeApp && [[UserSettings sharedUserSettings] evaluatedPolicyDomainStateApp] == nil) {
+            if ([AppGroup getCurrentType] == AppGroupTypeApp && [[UserSettings sharedUserSettings] evaluatedPolicyDomainStateApp] == nil) {
                 [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateApp:context.evaluatedPolicyDomainState];
                 callback(success, error, nil);
                 return;
             }
-            else if ([AppGroup getActiveType] == AppGroupTypeShareExtension && [[UserSettings sharedUserSettings] evaluatedPolicyDomainStateShareExtension] == nil) {
+            else if ([AppGroup getCurrentType] == AppGroupTypeShareExtension && [[UserSettings sharedUserSettings] evaluatedPolicyDomainStateShareExtension] == nil) {
                 [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateShareExtension:context.evaluatedPolicyDomainState];
                 callback(success, error, nil);
                 return;
             }
             
-            if ([AppGroup getActiveType] == AppGroupTypeApp && ![[[UserSettings sharedUserSettings] evaluatedPolicyDomainStateApp] isEqualToData: context.evaluatedPolicyDomainState]) {
+            if ([AppGroup getCurrentType] == AppGroupTypeApp && ![[[UserSettings sharedUserSettings] evaluatedPolicyDomainStateApp] isEqualToData: context.evaluatedPolicyDomainState]) {
                 DDLogWarn(@"[Passcode] Biometrics have possibly changed. Passcode needed in App.");
                 callback(nil, [ThreemaError threemaError:@"Biometrics have possibly changed."], context.evaluatedPolicyDomainState);
                 return;
             }
-            else if ([AppGroup getActiveType] == AppGroupTypeShareExtension && ![[[UserSettings sharedUserSettings] evaluatedPolicyDomainStateShareExtension] isEqualToData: context.evaluatedPolicyDomainState]) {
+            else if ([AppGroup getCurrentType] == AppGroupTypeShareExtension && ![[[UserSettings sharedUserSettings] evaluatedPolicyDomainStateShareExtension] isEqualToData: context.evaluatedPolicyDomainState]) {
                 DDLogWarn(@"[Passcode] Biometrics have possibly changed. Passcode needed in ShareExtension.");
                 callback(nil, [ThreemaError threemaError:@"Biometrics have possibly changed."], context.evaluatedPolicyDomainState);
                 return;

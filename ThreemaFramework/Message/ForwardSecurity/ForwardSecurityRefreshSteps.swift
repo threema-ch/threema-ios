@@ -81,8 +81,8 @@ struct ForwardSecurityRefreshSteps {
         // 2. For each `contact` of `contacts`:
         await backgroundBusinessInjector.entityManager.perform {
             for contactIdentity in contactIdentities {
-                guard let contactEntity = backgroundBusinessInjector.entityManager.entityFetcher.contact(
-                    for: contactIdentity.string
+                guard let contactEntity = backgroundBusinessInjector.entityManager.entityFetcher.contactEntity(
+                    for: contactIdentity.rawValue
                 ) else {
                     DDLogError("[ForwardSecurity] Unable to load contact entity for \(contactIdentity)")
                     continue

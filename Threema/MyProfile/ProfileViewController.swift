@@ -25,25 +25,28 @@ final class ProfileViewController: UIViewController {
     
     // MARK: - Properties
     
-    weak var coordinator: ProfileCoordinator?
-    
-    private lazy var collectionView = ProfileCollectionView(coordinator: coordinator)
-
-    private lazy var dataSource = ProfileCollectionViewDataSource(
-        collectionView: collectionView,
-        coordinator: coordinator
-    )
+    let collectionView: ProfileCollectionView
+    let dataSource: ProfileCollectionViewDataSource
     
     // MARK: - Lifecycle
     
-    init(coordinator: ProfileCoordinator) {
-        self.coordinator = coordinator
+    init(
+        collectionView: ProfileCollectionView,
+        dataSource: ProfileCollectionViewDataSource
+    ) {
+        self.collectionView = collectionView
+        self.dataSource = dataSource
         super.init(nibName: nil, bundle: nil)
     }
     
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
+        updateSelection()
     }
     
     override func viewDidLoad() {
@@ -55,7 +58,6 @@ final class ProfileViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        coordinator?.checkDetailVC()
         dataSource.checkRevocationPassword()
         dataSource.checkEmailVerification()
     }
@@ -77,6 +79,6 @@ final class ProfileViewController: UIViewController {
     // MARK: - Updates
     
     func updateSelection() {
-        collectionView.updateSelection(for: coordinator?.horizontalSizeClass ?? .unspecified)
+        collectionView.updateSelection()
     }
 }

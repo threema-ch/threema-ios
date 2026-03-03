@@ -25,7 +25,7 @@ PRIVACY_DESCRIPTION_CONTACTS = The address book is used to find other users when
 PRIVACY_DESCRIPTION_FACEID = You can use Face ID to unlock the app without entering your code.
 PRIVACY_DESCRIPTION_NETWORK = The app uses the local network for call connections.
 PRIVACY_DESCRIPTION_LOCATIONS = Your location is used when you share it in a chat and to display your own location on a map.
-PRIVACY_DESCRIPTION_MICROPHONE = The microphone is used in calls and to record audio messages.
+PRIVACY_DESCRIPTION_MICROPHONE = For features such as voice calls, voice messages, and video calls, the app needs access to your microphone. To use these features, please allow microphone access.
 PRIVACY_DESCRIPTION_PHOTO_ADD = Incoming media can automatically be saved to the photo library.
 PRIVACY_DESCRIPTION_PHOTO_USE = Your photo library is used when you select an image from it and send it in a chat.
 

@@ -31,8 +31,6 @@ public class ThreemaQLPreviewController: QLPreviewController {
     
     private lazy var disableShareNavigationItem = { [self] in
         let navItem = DisableShareUINavigationItem(title: "")
-        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(donePressed))
-        navItem.leftBarButtonItem = doneButton
         return navItem
     }()
     
@@ -56,8 +54,8 @@ public class ThreemaQLPreviewController: QLPreviewController {
         
     var observations: [NSKeyValueObservation] = []
     
-    var mdmSetup = MDMSetup(setup: false)
-    
+    var mdmSetup = MDMSetup()
+
     var disableShareButton = false
     
     override public func viewDidLoad() {
@@ -74,11 +72,7 @@ public class ThreemaQLPreviewController: QLPreviewController {
         super.viewWillAppear(animated)
         removeToolbarItems()
     }
-    
-    @objc private func donePressed() {
-        dismiss(animated: true)
-    }
-    
+        
     private func removeToolbarItems() {
         if mdmSetup?.disableShareMedia() ?? false, let navigationToolbar = navigationController?.toolbar {
             navigationToolbar.isHidden = true

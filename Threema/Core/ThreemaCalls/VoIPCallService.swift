@@ -29,7 +29,7 @@ protocol VoIPCallServiceDelegate: AnyObject {
     func callServiceFinishedProcess()
 }
 
-class VoIPCallService: NSObject {
+final class VoIPCallService: NSObject {
     
     private let voIPCallSender: VoIPCallSender
     
@@ -62,7 +62,7 @@ class VoIPCallService: NSObject {
             self != .idle
         }
         
-        /// Return the string of the current state for the ValidationLogger
+        /// Return the string of the current state for the debug log
         /// - Returns: String of the current state
         func description() -> String {
             switch self {
@@ -169,9 +169,7 @@ class VoIPCallService: NSObject {
     private var videoActive = false
     private var isReceivingVideo = false {
         didSet {
-            if callViewController != nil {
-                callViewController?.isReceivingRemoteVideo = isReceivingVideo
-            }
+            callViewController?.isReceivingRemoteVideo = isReceivingVideo
         }
     }
 
@@ -300,17 +298,25 @@ class VoIPCallService: NSObject {
         }
     }
     
-    deinit {
-        if let observer = audioRouteChangeObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
-    }
-
     override convenience init() {
         self.init(
             businessInjector: BusinessInjector.ui,
             peerConnectionClient: VoIPCallPeerConnectionClient()
         )
+    }
+    
+    convenience init(callKitManager: VoIPCallKitManager) {
+        self.init(
+            businessInjector: BusinessInjector.ui,
+            peerConnectionClient: VoIPCallPeerConnectionClient()
+        )
+        self.callKitManager = callKitManager
+    }
+    
+    deinit {
+        if let observer = audioRouteChangeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 }
 
@@ -508,40 +514,17 @@ extension VoIPCallService {
         peerConnectionClient.activateRTCAudio(speakerActive: speakerActive)
     }
     
-    /// Reports a new call to CallKit with an unknown caller
+    /// Updates the initial call reported from the push kit notification
     /// - Parameters:
-    ///   - identity: Threema ID of the caller
-    ///   - name: Name of the caller. If it's nil, it use the unknown caller string
-    ///   - completion: Completion handler returns true if call successfully reported to CallKit
-    func reportInitialCall(from identity: String, name: String?, completion: @escaping (Bool) -> Void) {
-        
-        guard ThreemaEnvironment.supportsCallKit() else {
-            completion(false)
-            return
+    ///   - manager: `VoIPCallKitManager` used to report the call initially
+    func updateInitialCall(using manager: VoIPCallKitManager) {
+        if let callKitManager, callKitManager.uuid != nil {
+            callKitManager.endCall()
         }
         
-        if let callKitManager {
-            if callKitManager.currentUUID() != nil {
-                callKitManager.endCall()
-            }
-        }
-        else {
-            callKitManager = VoIPCallKitManager()
-        }
-        
-        guard let callKitManager else {
-            // CallKitManager must have been initialized before we continue execution
-            fatalError()
-        }
+        callKitManager = manager
         
         VoIPCallStateManager.shared.preCallHandling = true
-        
-        callKitManager.reportIncomingCall(
-            uuid: UUID(),
-            contactIdentity: identity,
-            contactName: name ?? #localize("identity_not_found_title"),
-            completion: completion
-        )
     }
     
     /// Start capture local video
@@ -602,7 +585,7 @@ extension VoIPCallService {
 }
 
 extension VoIPCallService {
-    // MARK: private functions
+    // MARK: Private functions
     
     /// When the current call state is idle and the permission is granted to the microphone, it will create the peer
     /// client and add the offer.
@@ -621,231 +604,194 @@ extension VoIPCallService {
         )
         
         // Store call in temporary call history
-        Task {
-            if let contactIdentity = offer.contactIdentity {
-                DDLogNotice(
-                    "VoipCallService: [cid=\(offer.callID.callID)]: Start add callID to CallHistory"
-                )
-                await CallHistoryManager(identity: contactIdentity, businessInjector: businessInjector)
-                    .store(callID: offer.callID.callID, date: Date())
-                DDLogNotice(
-                    "VoipCallService: [cid=\(offer.callID.callID)]: End add callID to CallHistory"
-                )
-            }
+        storeCallInTempHistory(offer: offer)
+        
+        guard businessInjector.userSettings.enableThreemaCall else {
+            // Reject call because Threema Calls are disabled or unavailable
+            let action = VoIPCallUserAction(
+                action: .rejectDisabled,
+                contactIdentity: offer.contactIdentity!,
+                callID: offer.callID,
+                completion: offer.completion
+            )
+            
+            rejectCall(action: action)
+            completion()
+            return
         }
         
-        if businessInjector.userSettings.enableThreemaCall {
-            var appRunsInBackground = false
-            DispatchQueue.main.sync {
-                appRunsInBackground = AppDelegate.shared().isAppInBackground()
-            }
+        var appRunsInBackground = false
+        DispatchQueue.main.sync {
+            appRunsInBackground = AppDelegate.shared().isAppInBackground()
+        }
 
-            DDLogNotice(
-                "VoipCallService: [cid=\(offer.callID.callID)]: Update lastUpdate for conversation"
-            )
-            businessInjector.entityManager.performAndWaitSave {
-                if let conversation = self.businessInjector.entityManager.entityFetcher
-                    .conversationEntity(forIdentity: offer.contactIdentity) {
-                    conversation.lastUpdate = Date.now
+        DDLogNotice(
+            "VoipCallService: [cid=\(offer.callID.callID)]: Update lastUpdate for conversation"
+        )
+        
+        businessInjector.entityManager.performAndWaitSave {
+            if let identity = offer.contactIdentity,
+               let conversation = self.businessInjector.entityManager.entityFetcher
+               .conversationEntity(for: identity) {
+                conversation.lastUpdate = Date.now
+            }
+        }
+
+        if state == .idle, !NavigationBarPromptHandler.isGroupCallActive {
+            if !businessInjector.pushSettingManager.canMasterDndSendPush() {
+                DDLogWarn("VoipCallService: [cid=\(offer.callID.callID)]: Master DND active, reject the call")
+                contactIdentity = offer.contactIdentity
+                let action = VoIPCallUserAction(
+                    action: .rejectOffHours,
+                    contactIdentity: offer.contactIdentity!,
+                    callID: offer.callID,
+                    completion: offer.completion
+                )
+                rejectCall(action: action)
+                completion()
+                return
+            }
+                
+            let pushSetting = businessInjector.pushSettingManager
+                .find(forContact: ThreemaIdentity(offer.contactIdentity!))
+            var ringtoneSound: String
+            if pushSetting.canSendPush(), pushSetting.muted == false {
+                ringtoneSound = UserSettings.shared()?.voIPSound ?? "default"
+                if ringtoneSound != "default" {
+                    ringtoneSound = "\(ringtoneSound).caf"
                 }
             }
+            else {
+                ringtoneSound = "silent.mp3"
+            }
+                
+            if ThreemaEnvironment.supportsCallKit(), callKitManager == nil {
+                callKitManager = VoIPCallKitManager()
+            }
+                
+            // If a call was already reported, it was the initial call launched when the app was in background. So
+            // we update the caller.
+            if let uuid = callKitManager?.uuid {
+                DDLogNotice(
+                    "VoipCallService: [cid=\(offer.callID.callID)]: updateReportedIncomingCall"
+                )
+                callKitManager?.updateReportedIncomingCall(
+                    uuid: uuid,
+                    contactIdentity: offer.contactIdentity!,
+                    ringtoneSound: ringtoneSound
+                )
+            }
+            else {
+                DDLogNotice(
+                    "VoipCallService: [cid=\(offer.callID.callID)]: reportIncomingCall"
+                )
+                callKitManager?.reportIncomingCall(
+                    uuid: UUID(),
+                    callID: offer.callID,
+                    contactIdentity: offer.contactIdentity!,
+                    displayName: nil,
+                    ringtoneSound: ringtoneSound,
+                    completion: { succeeded in
+                        if !succeeded {
+                            DDLogError("Report incoming call failed, call is starting anyway")
+                        }
+                    }
+                )
+            }
+            AVAudioApplication.requestRecordPermission { granted in
+                if granted {
+                    self.contactIdentity = offer.contactIdentity
+                    self.alreadyAccepted = false
+                    self.state = .receivedOffer
+                    self.incomingOffer = offer
+                    self.callID = offer.callID
+                    self.videoActive = false
+                    self.isReceivingVideo = false
+                    self.localRenderer = nil
+                    self.remoteRenderer = nil
+                    self.threemaVideoCallAvailable = offer.isVideoAvailable
+                    self.startIncomingCallTimeoutTimer()
+                        
+                    DDLogNotice(
+                        "VoipCallService: [cid=\(offer.callID.callID)]: connectWait"
+                    )
+                        
+                    /// Make sure that the connection is not prematurely disconnected when the app is put into the
+                    /// background
+                    self.businessInjector.serverConnector.connectWait(initiator: .threemaCall)
 
-            if state == .idle, !NavigationBarPromptHandler.isGroupCallActive {
-                if !businessInjector.pushSettingManager.canMasterDndSendPush() {
-                    DDLogWarn("VoipCallService: [cid=\(offer.callID.callID)]: Master DND active, reject the call")
-                    contactIdentity = offer.contactIdentity
+                    DDLogNotice(
+                        "VoipCallService: [cid=\(offer.callID.callID)]: Send ringing message"
+                    )
+                        
+                    // New Call
+                    // Send ringing message
+                    let ringingMessage = VoIPCallRingingMessage(
+                        contactIdentity: offer.contactIdentity!,
+                        callID: offer.callID,
+                        completion: nil
+                    )
+                    self.voIPCallSender.sendVoIPCallRinging(ringingMessage: ringingMessage)
+                        
+                    self.state = .incomingRinging
+                        
+                    // Prefetch ICE/TURN servers so they're likely to be already available when the user accepts the
+                    // call
+                    VoIPIceServerSource.prefetchIceServers()
+                        
+                    if !ThreemaEnvironment.supportsCallKit() {
+                        self.presentCallView(
+                            contactIdentity: offer.contactIdentity!,
+                            alreadyAccepted: false,
+                            isCallInitiator: false,
+                            isThreemaVideoCallAvailable: self.threemaVideoCallAvailable,
+                            videoActive: false,
+                            receivingVideo: false,
+                            viewWasHidden: false,
+                            completion: completion
+                        )
+                    }
+                    else {
+                        completion()
+                    }
+                }
+                else {
+                    DDLogWarn("VoipCallService: [cid=\(offer.callID.callID)]: Audio is not granted")
+                    self.contactIdentity = offer.contactIdentity
+                    self.state = .microphoneDisabled
+                    // reject call because there is no permission for the microphone
+                    self.state = .rejectedDisabled
                     let action = VoIPCallUserAction(
-                        action: .rejectOffHours,
+                        action: .rejectUnknown,
                         contactIdentity: offer.contactIdentity!,
                         callID: offer.callID,
                         completion: offer.completion
                     )
-                    rejectCall(action: action, closeCallView: true)
+                    self.rejectCall(action: action, closeCallView: false)
+                    
+                    // show notification that incoming call can't connect because mic is not granted
+                    NotificationManager
+                        .sendMicrophonePermissionErrorLocalNotification(
+                            entityManager: self.businessInjector
+                                .entityManager
+                        )
+                    self.disconnectPeerConnection()
                     completion()
-                    return
-                }
-                
-                if ThreemaEnvironment.supportsCallKit(), callKitManager == nil {
-                    callKitManager = VoIPCallKitManager()
-                }
-                
-                // If a call was already reported, it was the initial call launched when the app was in background. So
-                // we update the caller.
-                if let uuid = callKitManager?.currentUUID() {
-                    DDLogNotice(
-                        "VoipCallService: [cid=\(offer.callID.callID)]: updateReportedIncomingCall"
-                    )
-                    callKitManager?.updateReportedIncomingCall(
-                        uuid: uuid,
-                        contactIdentity: offer.contactIdentity!
-                    )
-                }
-                else {
-                    DDLogNotice(
-                        "VoipCallService: [cid=\(offer.callID.callID)]: reportIncomingCall"
-                    )
-                    callKitManager?.reportIncomingCall(
-                        uuid: UUID(),
-                        contactIdentity: offer.contactIdentity!,
-                        contactName: nil,
-                        completion: { succeeded in
-                            if !succeeded {
-                                DDLogError("Report incoming call failed, call is starting anyway")
-                            }
-                        }
-                    )
-                }
-                
-                AVAudioSession.sharedInstance().requestRecordPermission { granted in
-                    if granted {
-                        self.contactIdentity = offer.contactIdentity
-                        self.alreadyAccepted = false
-                        self.state = .receivedOffer
-                        self.incomingOffer = offer
-                        self.callID = offer.callID
-                        self.videoActive = false
-                        self.isReceivingVideo = false
-                        self.localRenderer = nil
-                        self.remoteRenderer = nil
-                        self.threemaVideoCallAvailable = offer.isVideoAvailable
-                        self.startIncomingCallTimeoutTimer()
-                        
-                        DDLogNotice(
-                            "VoipCallService: [cid=\(offer.callID.callID)]: connectWait"
-                        )
-                        
-                        /// Make sure that the connection is not prematurely disconnected when the app is put into the
-                        /// background
-                        self.businessInjector.serverConnector.connectWait(initiator: .threemaCall)
-
-                        DDLogNotice(
-                            "VoipCallService: [cid=\(offer.callID.callID)]: Send ringing message"
-                        )
-                        
-                        // New Call
-                        // Send ringing message
-                        let ringingMessage = VoIPCallRingingMessage(
-                            contactIdentity: offer.contactIdentity!,
-                            callID: offer.callID,
-                            completion: nil
-                        )
-                        self.voIPCallSender.sendVoIPCallRinging(ringingMessage: ringingMessage)
-                        
-                        self.state = .incomingRinging
-                        
-                        // Prefetch ICE/TURN servers so they're likely to be already available when the user accepts the
-                        // call
-                        VoIPIceServerSource.prefetchIceServers()
-                        
-                        if !ThreemaEnvironment.supportsCallKit() {
-                            self.presentCallView(
-                                contactIdentity: offer.contactIdentity!,
-                                alreadyAccepted: false,
-                                isCallInitiator: false,
-                                isThreemaVideoCallAvailable: self.threemaVideoCallAvailable,
-                                videoActive: false,
-                                receivingVideo: false,
-                                viewWasHidden: false,
-                                completion: completion
-                            )
-                        }
-                        else {
-                            completion()
-                        }
-                    }
-                    else {
-                        DDLogWarn("VoipCallService: [cid=\(offer.callID.callID)]: Audio is not granted")
-                        self.contactIdentity = offer.contactIdentity
-                        self.state = .microphoneDisabled
-                        // reject call because there is no permission for the microphone
-                        self.state = .rejectedDisabled
-                        let action = VoIPCallUserAction(
-                            action: .rejectUnknown,
-                            contactIdentity: offer.contactIdentity!,
-                            callID: offer.callID,
-                            completion: offer.completion
-                        )
-                        self.rejectCall(action: action, closeCallView: false)
-                        
-                        if appRunsInBackground {
-                            // show notification that incoming call can't connect because mic is not granted
-                            NotificationManager.showNoMicrophonePermissionNotification()
-                            self.disconnectPeerConnection()
-                            completion()
-                        }
-                        else {
-                            self.presentCallView(
-                                contactIdentity: offer.contactIdentity!,
-                                alreadyAccepted: false,
-                                isCallInitiator: false,
-                                isThreemaVideoCallAvailable: self.threemaVideoCallAvailable,
-                                videoActive: false,
-                                receivingVideo: false,
-                                viewWasHidden: false,
-                                completion: {
-                                    
-                                    // No access to microphone, stop call
-                                    let rootVC = self.callViewController != nil ? self
-                                        .callViewController! : AppDelegate.keyWindow?.rootViewController
-                                    
-                                    guard let rootVC else {
-                                        completion()
-                                        return
-                                    }
-                                    
-                                    DispatchQueue.main.async {
-                                        UIAlertTemplate.showOpenSettingsAlert(
-                                            owner: rootVC,
-                                            noAccessAlertType: .microphone
-                                        ) {
-                                            self.dismissCallView()
-                                            self.disconnectPeerConnection()
-                                        } actionCancel: {
-                                            self.dismissCallView()
-                                            self.disconnectPeerConnection()
-                                        }
-                                    }
-                                    
-                                    completion()
-                                }
-                            )
-                        }
-                    }
                 }
             }
-            else {
-                DDLogWarn(
-                    "VoipCallService: [cid=\(offer.callID.callID)]: Current state is not IDLE (\(state.description()))"
-                )
-                if contactIdentity == offer.contactIdentity, state == .incomingRinging {
-                    DDLogNotice("Threema call: handleOfferMessage -> same contact as the current call")
-                    if !businessInjector.pushSettingManager.canMasterDndSendPush(), appRunsInBackground {
-                        DDLogNotice(
-                            "Threema call: handleOfferMessage -> Master DND active -> reject call from \(String(describing: offer.contactIdentity))"
-                        )
-                        let action = VoIPCallUserAction(
-                            action: .rejectOffHours,
-                            contactIdentity: offer.contactIdentity!,
-                            callID: offer.callID,
-                            completion: offer.completion
-                        )
-                        rejectCall(action: action, closeCallView: true)
-                        completion()
-                    }
-                    else {
-                        DDLogWarn(
-                            "VoipCallService: [cid=\(offer.callID.callID)]: Same contact as the current call ((\(offer.contactIdentity ?? "?")), Master DND inactive, set the offer"
-                        )
-                        disconnectPeerConnection()
-                        handleOfferMessage(offer: offer, completion: completion)
-                    }
-                }
-                else {
-                    // reject call because it's the wrong state
-                    let reason: VoIPCallUserAction.Action = contactIdentity == offer
-                        .contactIdentity ? .rejectUnknown : .rejectBusy
+        }
+        else {
+            DDLogWarn(
+                "VoipCallService: [cid=\(offer.callID.callID)]: Current state is not IDLE (\(state.description()))"
+            )
+            if contactIdentity == offer.contactIdentity, state == .incomingRinging {
+                DDLogNotice("Threema call: handleOfferMessage -> same contact as the current call")
+                if !businessInjector.pushSettingManager.canMasterDndSendPush(), appRunsInBackground {
+                    DDLogNotice(
+                        "Threema call: handleOfferMessage -> Master DND active -> reject call from \(String(describing: offer.contactIdentity))"
+                    )
                     let action = VoIPCallUserAction(
-                        action: reason,
+                        action: .rejectOffHours,
                         contactIdentity: offer.contactIdentity!,
                         callID: offer.callID,
                         completion: offer.completion
@@ -853,18 +799,27 @@ extension VoIPCallService {
                     rejectCall(action: action)
                     completion()
                 }
+                else {
+                    DDLogWarn(
+                        "VoipCallService: [cid=\(offer.callID.callID)]: Same contact as the current call ((\(offer.contactIdentity ?? "?")), Master DND inactive, set the offer"
+                    )
+                    disconnectPeerConnection()
+                    handleOfferMessage(offer: offer, completion: completion)
+                }
             }
-        }
-        else {
-            // reject call because Threema Calls are disabled or unavailable
-            let action = VoIPCallUserAction(
-                action: .rejectDisabled,
-                contactIdentity: offer.contactIdentity!,
-                callID: offer.callID,
-                completion: offer.completion
-            )
-            rejectCall(action: action)
-            completion()
+            else {
+                // reject call because it's the wrong state
+                let reason: VoIPCallUserAction.Action = contactIdentity == offer
+                    .contactIdentity ? .rejectUnknown : .rejectBusy
+                let action = VoIPCallUserAction(
+                    action: reason,
+                    contactIdentity: offer.contactIdentity!,
+                    callID: offer.callID,
+                    completion: offer.completion
+                )
+                rejectCall(action: action)
+                completion()
+            }
         }
     }
     
@@ -1015,7 +970,7 @@ extension VoIPCallService {
                     }
                     else {
                         DDLogWarn(
-                            "VoipCallService: [cid=\(answer.callID.callID)]: Answer contact (\(answer.contactIdentity ?? "?")) is different to current call contact (\(identity))"
+                            "VoipCallService: [cid=\(answer.callID.callID)]: Answer contact (\(answer.contactIdentity ?? "?") is different to current call contact (\(identity)"
                         )
                     }
                     completion()
@@ -1054,16 +1009,9 @@ extension VoIPCallService {
                 }
             }
             else {
-                if identity == ringing.contactIdentity {
-                    DDLogWarn(
-                        "VoipCallService: [cid=\(ringing.callID.callID)]: CallId is different to \(callID?.callID ?? 0) to handle ringing message"
-                    )
-                }
-                else {
-                    DDLogWarn(
-                        "VoipCallService: [cid=\(ringing.callID.callID)]: Ringing contact (\(ringing.contactIdentity ?? "?")) is different to current call contact (\(identity))"
-                    )
-                }
+                DDLogWarn(
+                    "VoipCallService: [cid=\(ringing.callID.callID)]: Ringing contact (\(ringing.contactIdentity ?? "?") is different to current call contact (\(identity)"
+                )
             }
         }
         else {
@@ -1117,17 +1065,9 @@ extension VoIPCallService {
             }
             else {
                 addUnknownCallIcecandidatesMessages(message: ice)
-                if identity == ice.contactIdentity {
-                    DDLogWarn(
-                        "VoipCallService: [cid=\(ice.callID.callID)]: CallId is different to \(callID?.callID ?? 0) to handle ICE candidates"
-                    )
-                }
-                else {
-                    DDLogWarn(
-                        "VoipCallService: [cid=\(ice.callID.callID)]: ICE candidates contact (\(ice.contactIdentity ?? "?")) is different to current call contact (\(identity))"
-                    )
-                }
-                
+                DDLogNotice(
+                    "VoipCallService: [cid=\(ice.callID.callID)]: ICE candidates contact (\(ice.contactIdentity ?? "?") is different to current call contact (\(identity)"
+                )
                 completion()
             }
         }
@@ -1167,16 +1107,9 @@ extension VoIPCallService {
                 }
             }
             else {
-                if identity == hangup.contactIdentity {
-                    DDLogWarn(
-                        "VoipCallService: [cid=\(hangup.callID.callID)]: CallId is different to \(callID?.callID ?? 0) to handle hangup message"
-                    )
-                }
-                else {
-                    DDLogWarn(
-                        "VoipCallService: [cid=\(hangup.callID.callID)]: Hangup contact (\(hangup.contactIdentity ?? "?")) is different to current call contact (\(identity))"
-                    )
-                }
+                DDLogNotice(
+                    "VoipCallService: [cid=\(hangup.callID.callID)]: Hangup contact (\(hangup.contactIdentity ?? "?") is different to current call contact (\(identity)"
+                )
             }
         }
         else {
@@ -1213,7 +1146,7 @@ extension VoIPCallService {
         if UserSettings.shared().enableThreemaCall {
             RTCAudioSession.sharedInstance().useManualAudio = true
             if state == .idle {
-                AVAudioSession.sharedInstance().requestRecordPermission { granted in
+                AVAudioApplication.requestRecordPermission { granted in
                     if granted {
                         self.callInitiator = true
                         
@@ -1221,13 +1154,15 @@ extension VoIPCallService {
                         
                         entityManager.performAndWaitSave {
                             if let conversation = entityManager.entityFetcher
-                                .conversationEntity(forIdentity: action.contactIdentity) {
+                                .conversationEntity(for: action.contactIdentity) {
                                 conversation.lastUpdate = Date.now
                             }
                         }
                         
                         self.contactIdentity = action.contactIdentity
-                        self.businessInjector.serverConnector.connect(initiator: .threemaCall) { _ in
+                        ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaCall, timeout: 20) {
+                            self.createPeerConnectionForInitiator(action: action, completion: completion)
+                        } onTimeout: {
                             // No special handling required. If there is no connection and peer connection
                             // cannot be established, a toast message is displayed to the user.
                             self.createPeerConnectionForInitiator(action: action, completion: completion)
@@ -1280,7 +1215,19 @@ extension VoIPCallService {
                 self.state = .sendAnswer
                 self.presentCallViewController()
                 
-                self.peerConnectionClient.answer(completion: { sdp in
+                self.peerConnectionClient.answer(completion: { sdp, sdpError in
+                    if sdpError != nil {
+                        let action = VoIPCallUserAction(
+                            action: .reject,
+                            contactIdentity: action.contactIdentity,
+                            callID: action.callID,
+                            completion: action.completion
+                        )
+                        self.rejectCall(action: action)
+                        completion()
+                        return
+                    }
+                    
                     if self.threemaVideoCallAvailable, UserSettings.shared().enableVideoCall {
                         self.threemaVideoCallAvailable = true
                         self.callViewController?.enableThreemaVideoCall()
@@ -1353,7 +1300,7 @@ extension VoIPCallService {
         let entityManager = businessInjector.entityManager
         entityManager.performBlock {
             guard let contactIdentity = self.contactIdentity,
-                  let contact = entityManager.entityFetcher.contact(for: self.contactIdentity) else {
+                  let contact = entityManager.entityFetcher.contactEntity(for: contactIdentity) else {
                 completion()
                 return
             }
@@ -1408,6 +1355,7 @@ extension VoIPCallService {
 
                 self.peerConnectionClient.initialize(
                     contactIdentity: contactIdentity,
+                    isInitiator: true,
                     callID: self.callID,
                     peerConnectionParameters: peerConnectionParameters,
                     delegate: self
@@ -1424,7 +1372,7 @@ extension VoIPCallService {
                     }
 
                     self.peerConnectionClient.offer { sdp, sdpError in
-                        if let error = sdpError {
+                        if sdpError != nil {
                             self.callID = nil
                             self.callCantCreateOffer(error: error)
                             completion()
@@ -1528,11 +1476,12 @@ extension VoIPCallService {
             
             guard let offer = self.incomingOffer,
                   let identity = offer.contactIdentity,
-                  let contact = entityManager.entityFetcher.contact(for: identity) else {
+                  let contact = entityManager.entityFetcher.contactEntity(for: identity) else {
                 self.state = .idle
                 completion()
                 return
             }
+            
             FeatureMask.check(identities: Set([identity]), for: Int(FEATURE_MASK_VOIP_VIDEO)) { _ in
                 if self.incomingOffer?.isVideoAvailable ?? false && UserSettings.shared().enableVideoCall {
                     self.threemaVideoCallAvailable = true
@@ -1557,6 +1506,7 @@ extension VoIPCallService {
 
                 self.peerConnectionClient.initialize(
                     contactIdentity: identity,
+                    isInitiator: false,
                     callID: offer.callID,
                     peerConnectionParameters: peerConnectionParameters,
                     delegate: self
@@ -1846,7 +1796,7 @@ extension VoIPCallService {
             }
         }
         else {
-            addRejectedMessageToConversation(contactIdentity: action.contactIdentity, reason: kSystemMessageCallMissed)
+            addRejectedMessageToConversation(contactIdentity: action.contactIdentity, reason: .callMissed)
         }
     }
     
@@ -2207,8 +2157,8 @@ extension VoIPCallService {
             let notificationType = self.businessInjector.settingsStore.notificationType
             var contact: ContactEntity?
             
-            self.businessInjector.entityManager.performAndWaitSave {
-                contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.contactIdentity)
+            self.businessInjector.entityManager.performAndWait {
+                contact = self.businessInjector.entityManager.entityFetcher.contactEntity(for: identity)
             }
             guard let contact else {
                 return
@@ -2345,8 +2295,10 @@ extension VoIPCallService {
                     return
                 }
                 
-                systemMessage = entityManager.entityCreator.systemMessageEntity(for: conversation)
-                systemMessage?.type = NSNumber(value: kSystemMessageCallEnded)
+                systemMessage = entityManager.entityCreator.systemMessageEntity(
+                    for: .callEnded,
+                    in: conversation
+                )
                 
                 var callInfo = [
                     "DateString": DateFormatter.shortStyleTimeNoDate(Date()),
@@ -2366,9 +2318,8 @@ extension VoIPCallService {
                     let callInfoData = try JSONSerialization.data(withJSONObject: callInfo, options: .prettyPrinted)
                     systemMessage?.arg = callInfoData
                     systemMessage?.isOwn = NSNumber(booleanLiteral: self.isCallInitiator())
-                    systemMessage?.conversation = conversation
                     
-                    if let contact = entityManager.entityFetcher.contact(for: identity) {
+                    if let contact = entityManager.entityFetcher.contactEntity(for: identity) {
                         let cont = Contact(contactEntity: contact)
                         systemMessage?.forwardSecurityMode = NSNumber(value: cont.forwardSecurityMode.rawValue)
                     }
@@ -2377,7 +2328,7 @@ extension VoIPCallService {
                         systemMessage?.read = NSNumber(booleanLiteral: true)
                         systemMessage?.readDate = Date()
                     }
-                    conversation.lastMessage = systemMessage
+
                     utilities.unarchive(conversation)
                 }
                 catch {
@@ -2399,7 +2350,7 @@ extension VoIPCallService {
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
                     return
                 }
-                self.addRejectedMessageToConversation(contactIdentity: identity, reason: kSystemMessageCallRejected)
+                self.addRejectedMessageToConversation(contactIdentity: identity, reason: .callRejected)
                 utilities.unarchive(conversation)
             }
         case .rejectedTimeout:
@@ -2409,7 +2360,8 @@ extension VoIPCallService {
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
                     return
                 }
-                let reason = self.isCallInitiator() ? kSystemMessageCallRejectedTimeout : kSystemMessageCallMissed
+                let reason: SystemMessageEntity.SystemMessageEntityType = self
+                    .isCallInitiator() ? .callRejectedTimeout : .callMissed
                 self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
                 utilities.unarchive(conversation)
             }
@@ -2420,7 +2372,8 @@ extension VoIPCallService {
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
                     return
                 }
-                let reason = self.isCallInitiator() ? kSystemMessageCallRejectedBusy : kSystemMessageCallMissed
+                let reason: SystemMessageEntity.SystemMessageEntityType = self
+                    .isCallInitiator() ? .callRejectedBusy : .callMissed
                 self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
                 utilities.unarchive(conversation)
             }
@@ -2431,7 +2384,8 @@ extension VoIPCallService {
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
                     return
                 }
-                let reason = self.isCallInitiator() ? kSystemMessageCallRejectedOffHours : kSystemMessageCallMissed
+                let reason: SystemMessageEntity.SystemMessageEntityType = self
+                    .isCallInitiator() ? .callRejectedOffHours : .callMissed
                 self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
                 utilities.unarchive(conversation)
             }
@@ -2442,7 +2396,8 @@ extension VoIPCallService {
                       let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
                     return
                 }
-                let reason = self.isCallInitiator() ? kSystemMessageCallRejectedUnknown : kSystemMessageCallMissed
+                let reason: SystemMessageEntity.SystemMessageEntityType = self
+                    .isCallInitiator() ? .callRejectedUnknown : .callMissed
                 self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
                 utilities.unarchive(conversation)
             }
@@ -2456,7 +2411,7 @@ extension VoIPCallService {
                     }
                     self.addRejectedMessageToConversation(
                         contactIdentity: identity,
-                        reason: kSystemMessageCallRejectedDisabled
+                        reason: .callRejectedDisabled
                     )
                     utilities.unarchive(conversation)
                 }
@@ -2472,15 +2427,20 @@ extension VoIPCallService {
         }
     }
     
-    private func addRejectedMessageToConversation(contactIdentity: String, reason: Int) {
+    private func addRejectedMessageToConversation(
+        contactIdentity: String,
+        reason: SystemMessageEntity.SystemMessageEntityType
+    ) {
         var systemMessage: SystemMessageEntity?
         
         let entityManager = businessInjector.entityManager
         entityManager.performAndWaitSave {
             if let conversation = entityManager.conversation(for: contactIdentity, createIfNotExisting: true),
-               let contact = entityManager.entityFetcher.contact(for: contactIdentity) {
-                systemMessage = entityManager.entityCreator.systemMessageEntity(for: conversation)
-                systemMessage?.type = NSNumber(value: reason)
+               let contact = entityManager.entityFetcher.contactEntity(for: contactIdentity) {
+                systemMessage = entityManager.entityCreator.systemMessageEntity(
+                    for: reason,
+                    in: conversation
+                )
                 let callInfo = [
                     "DateString": DateFormatter.shortStyleTimeNoDate(Date()),
                     "CallInitiator": NSNumber(booleanLiteral: self.isCallInitiator()),
@@ -2489,20 +2449,19 @@ extension VoIPCallService {
                     let callInfoData = try JSONSerialization.data(withJSONObject: callInfo, options: .prettyPrinted)
                     systemMessage?.arg = callInfoData
                     systemMessage?.isOwn = NSNumber(booleanLiteral: self.isCallInitiator())
-                    systemMessage?.conversation = conversation
                     
                     let cont = Contact(contactEntity: contact)
                     systemMessage?.forwardSecurityMode = NSNumber(value: cont.forwardSecurityMode.rawValue)
                     
-                    conversation.lastMessage = systemMessage
-                    if reason == kSystemMessageCallMissed || reason == kSystemMessageCallRejectedBusy || reason ==
-                        kSystemMessageCallRejectedTimeout || reason == kSystemMessageCallRejectedDisabled { }
-                    else {
+                    if reason != .callMissed,
+                       reason != .callRejectedBusy,
+                       reason != .callRejectedTimeout,
+                       reason != .callRejectedDisabled {
                         systemMessage?.read = true
                         systemMessage?.readDate = Date()
                     }
                     
-                    if reason == kSystemMessageCallMissed {
+                    if reason == .callMissed {
                         conversation.lastUpdate = Date.now
                     }
                 }
@@ -2514,8 +2473,8 @@ extension VoIPCallService {
                 DDLogNotice("Threema Calls: Can't add rejected message because conversation is nil")
             }
         }
-        if reason == kSystemMessageCallMissed || reason == kSystemMessageCallRejectedBusy || reason ==
-            kSystemMessageCallRejectedTimeout || reason == kSystemMessageCallRejectedDisabled {
+        if reason == .callMissed || reason == .callRejectedBusy || reason ==
+            .callRejectedTimeout || reason == .callRejectedDisabled {
             DispatchQueue.main.async {
                 let notificationManager = NotificationManager()
                 notificationManager.updateUnreadMessagesCount(baseMessage: systemMessage)
@@ -2567,7 +2526,7 @@ extension VoIPCallService {
     
     private func callCantCreateOffer(error: Error?) {
         DDLogNotice(
-            "VoipCallService: [cid=\(callID?.callID ?? 0)]: Can't create offer (\(error?.localizedDescription ?? "error is missing"))"
+            "VoipCallService: [cid=\(callID?.callID ?? 0)]: Can't create offer (\(error?.localizedDescription ?? "error is missing")"
         )
         NotificationPresenterWrapper.shared.present(type: .callCreationError)
         invalidateCallFailedTimer()
@@ -2782,6 +2741,21 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         }
         
         debugPrint(threemaVideoCallSignalingMessage)
+    }
+    
+    private func storeCallInTempHistory(offer: VoIPCallOfferMessage) {
+        Task {
+            if let contactIdentity = offer.contactIdentity {
+                DDLogNotice(
+                    "VoipCallService: [cid=\(offer.callID.callID)]: Start add callID to CallHistory"
+                )
+                await CallHistoryManager(identity: contactIdentity, businessInjector: businessInjector)
+                    .store(callID: offer.callID.callID, date: Date())
+                DDLogNotice(
+                    "VoipCallService: [cid=\(offer.callID.callID)]: End add callID to CallHistory"
+                )
+            }
+        }
     }
 }
 

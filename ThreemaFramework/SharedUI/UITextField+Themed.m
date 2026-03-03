@@ -20,8 +20,7 @@
 
 #import "UITextField+Themed.h"
 #import "BundleUtil.h"
-#import "UIImage+ColoredImage.h"
-#import "ThreemaFramework/ThreemaFramework-swift.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 @implementation UITextField (UITextField)
 

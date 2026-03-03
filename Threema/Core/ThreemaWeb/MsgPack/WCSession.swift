@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ChunkedDC
 import CocoaLumberjackSwift
 import Foundation
 
@@ -81,7 +82,7 @@ extension WCSession {
             }
             
             let oldConnection = connection
-            ValidationLogger.shared().logString("[Threema Web] Close old session")
+            DDLogNotice("[Threema Web] Close old session")
             oldConnection?.close(close: false, forget: false, sendDisconnect: false, reason: .replace)
         }
         connection = newConnection
@@ -178,7 +179,7 @@ extension WCSession {
 // MARK: - MessageCompleteDelegate
 
 extension WCSession: MessageCompleteDelegate {
-    func messageComplete(message: Data) {
+    public func messageComplete(message: Data) {
         do {
             let object = try message.unpack() as! [AnyHashable: Any?]
             

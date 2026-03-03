@@ -52,7 +52,7 @@ class SafeServerViewController: IDCreationPageViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         overrideUserInterfaceStyle = .dark
         
         cancelSegueID = isServerForRestore ? "CancelRestoreSafeServer" : "CancelSafeServer"
@@ -100,12 +100,11 @@ class SafeServerViewController: IDCreationPageViewController {
     // MARK: - Controlling the Keyboard
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-
         true
     }
     
     func validateServer(completion: @escaping (Bool) -> Void) {
-        if serverSwitch.isOn {
+        guard !serverSwitch.isOn else {
             customServer = nil
             server = nil
             serverUsername = nil
@@ -115,51 +114,40 @@ class SafeServerViewController: IDCreationPageViewController {
             completion(true)
             return
         }
-        else {
-            let safeConfigManager = SafeConfigManager()
-            let safeStore = SafeStore(
-                safeConfigManager: safeConfigManager,
-                serverApiConnector: ServerAPIConnector(),
-                groupManager: BusinessInjector.ui.groupManager
-            )
-            
-            if let customServer = serverField.text,
-               let customServerURL = URL(string: customServer) {
-
-                let safeManager = SafeManager(
-                    safeConfigManager: safeConfigManager,
-                    safeStore: safeStore,
-                    safeApiService: SafeApiService()
-                )
-                DispatchQueue.main.async {
-                    MBProgressHUD.showAdded(to: self.view, animated: true)
+       
+        guard let customServer = serverField.text,
+              let customServerURL = URL(string: customServer) else {
+            let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
+            alert.showAlert(SafeError.RestoreError.invalidInput.description, title: #localize("safe_test_server"))
+            return
+        }
+        
+        DispatchQueue.main.async {
+            MBProgressHUD.showAdded(to: self.view, animated: true)
+        }
+        
+        SafeManager.testServer(
+            serverURL: customServerURL,
+            user: serverUsernameField.text,
+            password: serverPasswordField.text
+        ) { errorMessage, maxBackupBytes, retentionDays in
+            DispatchQueue.main.async {
+                MBProgressHUD.hide(for: self.view, animated: true)
+                
+                if let errorMessage {
+                    let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
+                    alert.showAlert(errorMessage, title: #localize("safe_test_server"))
+                    completion(false)
+                    return
                 }
-                safeManager.testServer(
-                    serverURL: customServerURL,
-                    user: serverUsernameField.text,
-                    password: serverPasswordField.text
-                ) { errorMessage, maxBackupBytes, retentionDays in
-                    DispatchQueue.main.async {
-                        MBProgressHUD.hide(for: self.view, animated: true)
-                        
-                        if let errorMessage {
-                            let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
-                            alert.showAlert(errorMessage, title: #localize("safe_test_server"))
-                            completion(false)
-                            return
-                        }
-                        else {
-                            self.customServer = customServer
-                            self.server = customServerURL.absoluteString
-                            self.serverUsername = self.serverUsernameField.text
-                            self.serverPassword = self.serverPasswordField.text
-                            self.maxBackupBytes = maxBackupBytes
-                            self.retentionDays = retentionDays
-                            completion(true)
-                            return
-                        }
-                    }
-                }
+                
+                self.customServer = customServer
+                self.server = customServerURL.absoluteString
+                self.serverUsername = self.serverUsernameField.text
+                self.serverPassword = self.serverPasswordField.text
+                self.maxBackupBytes = maxBackupBytes
+                self.retentionDays = retentionDays
+                completion(true)
             }
         }
     }

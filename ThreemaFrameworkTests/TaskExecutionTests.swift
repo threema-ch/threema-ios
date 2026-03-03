@@ -19,7 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import PromiseKit
+import ThreemaEssentialsTestHelper
 import XCTest
+
 @testable import ThreemaFramework
 
 class TaskExecutionTests: XCTestCase {
@@ -35,7 +37,6 @@ class TaskExecutionTests: XCTestCase {
     private var frameworkInjectorMock: BusinessInjectorMock!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
@@ -50,13 +51,13 @@ class TaskExecutionTests: XCTestCase {
         userSettingsMock = UserSettingsMock()
         serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         myIdentityStoreMock = MyIdentityStoreMock()
         frameworkInjectorMock = BusinessInjectorMock(
             contactStore: ContactStoreMock(callOnCompletion: true),
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, myIdentityStore: myIdentityStoreMock),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock

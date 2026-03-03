@@ -19,6 +19,14 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "BundleUtil.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
+
+#ifdef DEBUG
+static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
+#else
+static const DDLogLevel ddLogLevel = DDLogLevelWarning;
+#endif
+
 
 @implementation BundleUtil
 
@@ -68,6 +76,30 @@
     if (value == nil) {
         // fall back to main bundle
         value = [[NSBundle mainBundle] objectForInfoDictionaryKey:key];
+    }
+
+    return value;
+}
+
++ (id)objectForThreemaFrameworkConfigurationKey:(NSString *)key {
+    NSString *fileName = nil;
+    switch (TargetManagerObjC.current) {
+        case TargetManagerThreema:
+        case TargetManagerWork:
+        case TargetManagerOnPrem:
+        case TargetManagerCustomOnPrem:
+            fileName = @"ThreemaFrameworkConfiguration";
+            break;
+        case TargetManagerGreen:
+        case TargetManagerBlue:
+            fileName = @"ThreemaFrameworkConfiguration-Sandbox";
+        default:
+            break;
+    }
+    NSDictionary *config = [NSDictionary dictionaryWithContentsOfFile:[[self frameworkBundle] pathForResource:fileName ofType:@"plist"]];
+    id value = [config objectForKey:key];
+    if (value == nil) {
+        DDAssertionFailure(@"Can't find configuration value");
     }
 
     return value;

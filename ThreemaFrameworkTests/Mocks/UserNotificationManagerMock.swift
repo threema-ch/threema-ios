@@ -22,7 +22,7 @@ import Foundation
 import ThreemaMacros
 @testable import ThreemaFramework
 
-class UserNotificationManagerMock: UserNotificationManagerProtocol {
+final class UserNotificationManagerMock: UserNotificationManagerProtocol {
     
     private var returnUserNotificationContent: UserNotificationContent?
     
@@ -49,9 +49,9 @@ class UserNotificationManagerMock: UserNotificationManagerProtocol {
     }
     
     func applyContent(
-        _ from: UserNotificationContent,
-        _ to: inout UNMutableNotificationContent,
-        _ silent: Bool,
-        _ baseMessage: BaseMessageEntity?
+        from: UserNotificationContent,
+        to: inout UNMutableNotificationContent,
+        silent: Bool,
+        baseMessage: BaseMessageEntity?
     ) { }
 }

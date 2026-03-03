@@ -49,14 +49,14 @@
 }
 
 - (void)setup {
-    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], TargetManagerObjc.appName];
+    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], TargetManagerObjC.appName];
 
-    if (TargetManagerObjc.isBusinessApp) {
-        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_confirm_description_work"], TargetManagerObjc.localizedAppName];
+    if (TargetManagerObjC.isBusinessApp) {
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_confirm_description_work"], TargetManagerObjC.localizedAppName];
     } else {
-        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_confirm_description"], TargetManagerObjc.localizedAppName];
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_confirm_description"], TargetManagerObjC.localizedAppName];
     }
-    _yourIdLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_confirm_your_id"], TargetManagerObjc.localizedAppName];
+    _yourIdLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_confirm_your_id"], TargetManagerObjC.localizedAppName];
 
     self.moreView.mainView = self.mainContentView;
     self.moreView.moreMessageText = [BundleUtil localizedStringForKey:@"more_information_confirm_id"];

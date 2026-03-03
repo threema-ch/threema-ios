@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import FileUtility
 import MBProgressHUD
 import SwiftUI
 import ThreemaFramework
@@ -71,7 +72,7 @@ extension StorageManagementConversationView {
                     self.group = group
                 }
                 else if let contactID = conversation.contact?.identity,
-                        let contact = businessInjector.entityManager.entityFetcher.contact(for: contactID) {
+                        let contact = businessInjector.entityManager.entityFetcher.contactEntity(for: contactID) {
                     self.contact = Contact(contactEntity: contact)
                 }
             }
@@ -198,6 +199,13 @@ extension StorageManagementConversationView {
             }
         }
         
+        func deleteDraft() {
+            guard let conversation else {
+                return
+            }
+            MessageDraftStore.shared.deleteDraft(for: conversation)
+        }
+        
         // MARK: - Private Helper
         
         /// Get the recalculated total number of messages and media within a set of conversations
@@ -249,7 +257,7 @@ extension StorageManagementConversationView {
             guard let conversation else {
                 return Set(
                     backgroundEntityManager.entityFetcher
-                        .notArchivedConversations() as? [ConversationEntity] ?? []
+                        .notArchivedConversationEntities() ?? []
                 )
             }
             

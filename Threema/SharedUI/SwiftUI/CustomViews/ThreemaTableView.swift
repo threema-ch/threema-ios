@@ -23,6 +23,7 @@ import SwiftUI
 import ThreemaFramework
 @_spi(Advanced) import SwiftUIIntrospect
 
+@available(*, deprecated, message: "Do not use anymore.")
 struct ThreemaTableView<Content: View>: View {
     
     var content: () -> Content

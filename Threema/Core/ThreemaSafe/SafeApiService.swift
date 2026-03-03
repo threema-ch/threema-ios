@@ -25,7 +25,6 @@ import Foundation
     enum SafeApiError: Error {
         case invalidServerURL
         case requestFailed(message: String)
-        case uploadTempFileCouldNotBeSaved(error: NSError)
     }
     
     func testServer(
@@ -98,7 +97,9 @@ import Foundation
                     completionHandler { responseData }
                 }
                 if let responseErrorMessage = result.errorMessage {
-                    completionHandler { throw SafeApiError.requestFailed(message: responseErrorMessage) }
+                    completionHandler {
+                        throw SafeApiError.requestFailed(message: responseErrorMessage)
+                    }
                 }
             }
         }

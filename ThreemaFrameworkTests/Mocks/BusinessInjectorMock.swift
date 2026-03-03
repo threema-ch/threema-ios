@@ -19,9 +19,15 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import Keychain
+import KeychainTestHelper
+import RemoteSecretProtocol
+import RemoteSecretProtocolTestHelper
+import ThreemaEssentials
 @testable import ThreemaFramework
 
 class BusinessInjectorMock: FrameworkInjectorProtocol {
+
     func runInBackground<T>(
         _ block: @escaping (ThreemaFramework.BusinessInjectorProtocol) async throws
             -> T
@@ -36,6 +42,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     // MARK: BusinessInjectorProtocol
 
     var runsInBackground: Bool
+    
+    var remoteSecretManager: any RemoteSecretManagerProtocol
 
     var contactStore: ContactStoreProtocol
 
@@ -55,6 +63,8 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
 
     var myIdentityStore: MyIdentityStoreProtocol
 
+    var profileStore: any ThreemaFramework.ProfileStoreProtocol
+
     var unreadMessages: UnreadMessagesProtocol
 
     var userSettings: UserSettingsProtocol
@@ -65,7 +75,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     
     var pushSettingManager: ThreemaFramework.PushSettingManagerProtocol
 
-    var keychainHelper: any ThreemaFramework.KeychainHelperProtocol
+    var keychainManager: any Keychain.KeychainManagerProtocol
 
     // MARK: BusinessInternalInjectorProtocol
 
@@ -92,6 +102,7 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
     var messageRetentionManager: any MessageRetentionManagerModelProtocol
 
     init(
+        remoteSecretManager: any RemoteSecretManagerProtocol = RemoteSecretManagerMock(),
         contactStore: ContactStoreProtocol = ContactStoreMock(),
         conversationStore: ConversationStoreProtocol & ConversationStoreInternalProtocol = ConversationStoreMock(),
         entityManager: EntityManager,
@@ -101,12 +112,13 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         messageSender: MessageSenderProtocol = MessageSenderMock(),
         multiDeviceManager: MultiDeviceManagerProtocol = MultiDeviceManagerMock(),
         myIdentityStore: MyIdentityStoreProtocol = MyIdentityStoreMock(),
+        profileStore: ProfileStoreProtocol = ProfileStoreMock(),
         unreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
         userSettings: UserSettingsProtocol = UserSettingsMock(),
         settingsStore: SettingsStoreInternalProtocol & SettingsStoreProtocol = SettingsStoreMock(),
         serverConnector: ServerConnectorProtocol = ServerConnectorMock(),
         pushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock(),
-        keychainHelper: KeychainHelperProtocol = KeychainHelperMock(),
+        keychainManager: KeychainManagerProtocol = KeychainManagerMock(),
         mediatorMessageProtocol: MediatorMessageProtocolProtocol = MediatorMessageProtocolMock(),
         mediatorReflectedProcessor: MediatorReflectedProcessorProtocol = MediatorReflectedProcessorMock(),
         messageProcessor: MessageProcessorProtocol = MessageProcessorMock(),
@@ -114,9 +126,10 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         userNotificationCenterManager: UserNotificationCenterManagerProtocol = UserNotificationCenterManagerMock(),
         nonceGuard: NonceGuardProtocol = NonceGuardMock(),
         blobUploader: BlobUploaderProtocol = BlobUploaderMock(),
-        messageRetentionManager: MessageRetentionManagerModelProtocol = MessageRetentionManagerModelMock()
+        messageRetentionManager: MessageRetentionManagerModelProtocol = MessageRetentionManagerModelMock(),
     ) {
         self.runsInBackground = entityManager.hasBackgroundChildContext
+        self.remoteSecretManager = remoteSecretManager
         self.contactStore = contactStore
         self.conversationStore = conversationStore
         self.entityManager = entityManager
@@ -126,11 +139,12 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.messageSender = messageSender
         self.multiDeviceManager = multiDeviceManager
         self.myIdentityStore = myIdentityStore
+        self.profileStore = profileStore
         self.unreadMessages = unreadMessages
         self.userSettings = userSettings
         self.serverConnector = serverConnector
         self.pushSettingManager = pushSettingManager
-        self.keychainHelper = keychainHelper
+        self.keychainManager = keychainManager
         self.mediatorMessageProtocol = mediatorMessageProtocol
         self.mediatorReflectedProcessor = mediatorReflectedProcessor
         self.messageProcessor = messageProcessor
@@ -148,5 +162,6 @@ class BusinessInjectorMock: FrameworkInjectorProtocol {
         self.nonceGuard = nonceGuard
         self.blobUploader = blobUploader
         self.messageRetentionManager = messageRetentionManager
+        self.keychainManager = keychainManager
     }
 }

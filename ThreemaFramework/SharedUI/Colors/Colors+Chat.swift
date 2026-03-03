@@ -62,56 +62,7 @@ extension Colors {
     public class var messageFailed: UIColor {
         .systemRed
     }
-    
-    @objc public class var fillMicrophoneButton: UIColor {
-        switch theme {
-        case .light, .undefined:
-            UIColor(resource: .gray600)
-        case .dark:
-            UIColor(resource: .gray400)
-        }
-    }
-    
-    @objc public class var ballotHighestVote: UIColor {
-        .primary
-    }
-    
-    @objc public class var ballotRowLight: UIColor {
-        switch theme {
-        case .light, .undefined:
-            UIColor(resource: .gray200)
-        case .dark:
-            UIColor(resource: .gray700)
-        }
-    }
-    
-    @objc public class var ballotRowDark: UIColor {
-        switch theme {
-        case .light, .undefined:
-            UIColor(resource: .gray300)
-        case .dark:
-            UIColor(resource: .gray800)
-        }
-    }
         
-    public class var backgroundThumbnailCollectionView: UIColor {
-        switch theme {
-        case .light, .undefined:
-            .white
-        case .dark:
-            UIColor(resource: .gray900)
-        }
-    }
-    
-    public class var backgroundPreviewCollectionViewCell: UIColor {
-        switch theme {
-        case .light, .undefined:
-            UIColor(resource: .gray200)
-        case .dark:
-            .black
-        }
-    }
-
     public class var thumbnailProgressViewColor: UIColor {
         switch theme {
         case .light, .undefined:

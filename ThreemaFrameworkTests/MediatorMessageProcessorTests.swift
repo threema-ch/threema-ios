@@ -18,6 +18,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -29,17 +31,16 @@ class MediatorMessageProcessorTests: XCTestCase {
     private var taskManagerMock: TaskManagerMock!
 
     override func setUpWithError() throws {
-        // necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         taskManagerMock = TaskManagerMock()
 
         deviceGroupKeys = DeviceGroupKeys(
-            dgpk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgpk: MockData.generateDeviceGroupKey(),
             dgrk: Data(base64Encoded: "BivETNngWPWYxad+ogDb8Q4ZWha1piBk/TLGsW5zojs=")!,
-            dgdik: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgsddk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
-            dgtsk: BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!,
+            dgdik: MockData.generateDeviceGroupKey(),
+            dgsddk: MockData.generateDeviceGroupKey(),
+            dgtsk: MockData.generateDeviceGroupKey(),
             deviceGroupIDFirstByteHex: "a1"
         )
 
@@ -192,17 +193,25 @@ extension MediatorMessageProcessorTests: SocketProtocolDelegate {
 // MARK: - MessageProcessorDelegate
 
 extension MediatorMessageProcessorTests: MessageProcessorDelegate {
-    func beforeDecode() { }
+    func beforeDecode() {
+        // no-op
+    }
 
     func changedManagedObjectID(_ objectID: NSManagedObjectID) {
         // no-op
     }
     
-    func incomingMessageStarted(_ message: AbstractMessage) { }
+    func incomingMessageStarted(_ message: AbstractMessage) {
+        // no-op
+    }
     
-    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessageEntity) { }
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessageEntity baseMessageEntityObject: NSObject) {
+        // no-op
+    }
 
-    func incomingMessageFinished(_ message: AbstractMessage) { }
+    func incomingMessageFinished(_ message: AbstractMessage) {
+        // no-op
+    }
     
     func incomingMessageFailed(_ message: BoxedMessage) {
         // no-op
@@ -216,19 +225,29 @@ extension MediatorMessageProcessorTests: MessageProcessorDelegate {
         // no-op
     }
 
-    func outgoingMessageFinished(_ message: AbstractMessage) { }
-
-    func readMessage(inConversations: Set<ConversationEntity>?) {
+    func outgoingMessageFinished(_ message: AbstractMessage) {
         // no-op
     }
 
-    func taskQueueEmpty() { }
+    func readMessage(inConversations: Set<AnyHashable>?) {
+        // no-op
+    }
+
+    func taskQueueEmpty() {
+        // no-op
+    }
     
-    func chatQueueDry() { }
+    func chatQueueDry() {
+        // no-op
+    }
     
-    func reflectionQueueDry() { }
+    func reflectionQueueDry() {
+        // no-op
+    }
         
-    func processTypingIndicator(_ message: TypingIndicatorMessage) { }
+    func processTypingIndicator(_ message: TypingIndicatorMessage) {
+        // no-op
+    }
     
     func processVoIPCall(
         _ message: NSObject,

@@ -35,7 +35,7 @@ class WebClientInfoResponse: WebAbstractMessage {
         self.device = UIDevice.current.name
         self.os = "ios"
         self.osVersion = UIDevice.current.systemVersion
-        self.appVersion = AppInfo.appVersion.version ?? "-"
+        self.appVersion = AppVersionInfo.appVersion.version ?? "-"
         self.isWork = TargetManager.isBusinessApp
         let tmpPushToken = AppGroup.userDefaults().object(forKey: kPushNotificationDeviceToken) as? Data
         if tmpPushToken != nil {
@@ -157,7 +157,7 @@ struct WebClientInfoMdmRestrictions {
     var readonlyProfile: Bool
     
     init() {
-        let mdmSetup = MDMSetup(setup: false)!
+        let mdmSetup = MDMSetup()!
         self.disableAddContact = mdmSetup.disableAddContact()
         self.disableCreateGroup = mdmSetup.disableCreateGroup()
         self.disableSaveToGallery = mdmSetup.disableSaveToGallery()

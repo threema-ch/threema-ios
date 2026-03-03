@@ -154,7 +154,7 @@ final class ChatViewBallotMessageTableViewCell: ChatViewBaseTableViewCell, Measu
     }
     
     private lazy var defaultSymbol = UIImage(systemName: "chart.pie.fill")?.withRenderingMode(.alwaysOriginal)
-        .withTint(.label)
+        .withTintColor(.label)
 
     private lazy var iconView: UIImageView = {
         let imageView = UIImageView(image: defaultSymbol)

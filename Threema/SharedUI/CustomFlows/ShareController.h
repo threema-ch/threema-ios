@@ -20,6 +20,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class ContactEntity;
+
 @interface ShareController : NSObject
 
 @property (nonatomic, strong) NSString *text;

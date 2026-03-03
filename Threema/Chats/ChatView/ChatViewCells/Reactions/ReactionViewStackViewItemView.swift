@@ -44,7 +44,7 @@ class ReactionViewStackViewItemView: UIView {
     }
     
     private let reactionsManager: ReactionsManager
-    
+
     // MARK: - Subviews
     
     private let topBottomBubbleInset = config.itemTopBottomInset
@@ -143,8 +143,9 @@ class ReactionViewStackViewItemView: UIView {
         super.init(frame: .zero)
         
         configureView()
+        setupTraitRegistration()
     }
-    
+
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -182,14 +183,16 @@ class ReactionViewStackViewItemView: UIView {
         
         subview.updateColors()
     }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
-            return
+
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitUserInterfaceStyle.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                updateColors()
+            }
         }
-        
-        updateColors()
     }
 }

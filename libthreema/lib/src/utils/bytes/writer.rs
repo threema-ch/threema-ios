@@ -3,7 +3,7 @@ use core::ptr;
 
 use duplicate::duplicate_item;
 
-/// An error occurred while writing while using a [`ByteWriter`].
+/// An error occurred while writing bytes.
 #[derive(Clone, Debug, thiserror::Error)]
 pub enum ByteWriterError {
     /// Provided relative offset would move the writer offset out of bounds.

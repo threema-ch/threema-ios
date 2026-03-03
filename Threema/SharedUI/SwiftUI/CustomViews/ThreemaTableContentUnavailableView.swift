@@ -24,58 +24,36 @@ import SwiftUI
 ///
 /// This view supports both iOS 17+ using the new `ContentUnavailableView` and older versions using a custom `View`
 /// which looks exactly the same.
+@available(*, deprecated, message: "Do not use anymore. Use `ContentUnavailableView` instead.")
 struct ThreemaTableContentUnavailableView: View {
     let configuration: Configuration
 
     var body: some View {
-        if #available(iOS 17, *) {
-            ContentUnavailableView(label: {
-                Label(configuration.title, systemImage: configuration.systemImage)
-            }, description: {
-                Text(configuration.description)
-            }, actions: {
-                ForEach(configuration.actions) { action in
-                    if configuration.actions.first?.title == action.title {
-                        Button(action: action.block) {
-                            Text(action.title)
-                                .padding(6)
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.borderedProminent)
+        ContentUnavailableView(label: {
+            Label(configuration.title, systemImage: configuration.systemImage)
+        }, description: {
+            Text(configuration.description)
+        }, actions: {
+            ForEach(configuration.actions) { action in
+                if configuration.actions.first?.title == action.title {
+                    Button(action: action.block) {
+                        Text(action.title)
+                            .padding(6)
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
                     }
-                    else {
-                        Button(action: action.block) {
-                            Text(action.title)
-                                .padding(6)
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                    }
+                    .buttonStyle(.borderedProminent)
                 }
-            })
-        }
-        else {
-            VStack(alignment: .center) {
-                header
-                Text(configuration.description)
-                    .foregroundStyle(.secondary)
-                    .font(.subheadline)
-                    .padding(.horizontal)
-                    .multilineTextAlignment(.center)
-                ForEach(configuration.actions) { action in
-                    if configuration.actions.first?.title == action.title {
-                        button(for: action)
-                            .buttonStyle(.borderedProminent)
+                else {
+                    Button(action: action.block) {
+                        Text(action.title)
+                            .padding(6)
+                            .frame(maxWidth: .infinity)
                     }
-                    else {
-                        button(for: action)
-                            .buttonStyle(.bordered)
-                    }
+                    .buttonStyle(.bordered)
                 }
             }
-            .padding()
-        }
+        })
     }
     
     private var header: some View {

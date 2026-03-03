@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import Sentry
 import ThreemaFramework
@@ -128,9 +129,12 @@ import ThreemaMacros
                 style: .default,
                 handler: { _ in
                     if let textField = confirm.textFields?.first,
-                       let text = textField.text {
-                        let sentryMessage = SentryMessage(formatted: text)
-                        event.message = sentryMessage
+                       let text = textField.text,
+                       text.isEmpty == false {
+                        // swiftformat:disable:next acronyms
+                        let userFeedback = UserFeedback(eventId: event.eventId)
+                        userFeedback.comments = text
+                        SentrySDK.capture(userFeedback: userFeedback)
                     }
                     send = true
                     dispatch.leave()
@@ -184,11 +188,11 @@ import ThreemaMacros
         
         var linesArray = exceptionDescription.linesArray
         
-        let em = EntityManager()
+        let em = BusinessInjector.ui.entityManager
         var idList: Set<String> = []
         
         em.performAndWait {
-            guard let contacts = em.entityFetcher.allContacts() as? [ContactEntity] else {
+            guard let contacts = em.entityFetcher.contactEntities() else {
                 return
             }
             
@@ -220,6 +224,6 @@ import ThreemaMacros
     /// - Returns: true -> start Sentry crash handler
     private static func isEnabled() -> Bool {
         !FileUtility.shared
-            .isExists(fileURL: FileUtility.shared.appDocumentsDirectory?.appendingPathComponent(sentryNotEnabled))
+            .fileExists(at: FileUtility.shared.appDocumentsDirectory?.appendingPathComponent(sentryNotEnabled))
     }
 }

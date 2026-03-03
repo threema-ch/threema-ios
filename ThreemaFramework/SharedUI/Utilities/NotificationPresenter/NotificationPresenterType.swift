@@ -54,9 +54,8 @@ public enum NotificationPresenterStyle: Identifiable {
             return nil
             
         case .success:
-            let image = UIImage(systemName: "checkmark.circle.fill")
+            let image = UIImage(systemName: "checkmark.circle.fill")?.applying(paletteColors: [.white, .systemGreen])
             view.image = image
-            view.tintColor = .systemGreen
             
         case .error:
             let image = UIImage(systemName: "exclamationmark.circle.fill")
@@ -303,6 +302,10 @@ public struct NotificationPresenterType {
         notificationText: #localize("notification_threema_id_wrong_length"),
         notificationStyle: .error
     )
+    public static let idVerified = NotificationPresenterType(
+        notificationText: #localize("id_verified_title"),
+        notificationStyle: .success
+    )
     public static let emojisReset = NotificationPresenterType(
         notificationText: #localize("notification_emojis_reset"),
         notificationStyle: .success
@@ -355,6 +358,24 @@ public struct NotificationPresenterType {
     public static let verificationEmailSent = NotificationPresenterType(
         notificationText: #localize("link_email_sent_title"),
         notificationStyle: .success
+    )
+    
+    public static let createFailed = NotificationPresenterType(
+        notificationText: #localize("notification_create_failed"),
+        notificationStyle: .error
+    )
+    
+    public static let meNotAllowed = NotificationPresenterType(
+        notificationText: #localize("me_not_allowed"),
+        notificationStyle: .warning
+    )
+    public static let saveIdentityBackupFailed = NotificationPresenterType(
+        notificationText: #localize("notification_save_identity_backup_failed"),
+        notificationStyle: .error
+    )
+    public static let deleteIdentityBackupFailed = NotificationPresenterType(
+        notificationText: #localize("notification_delete_identity_backup_failed"),
+        notificationStyle: .error
     )
 }
 

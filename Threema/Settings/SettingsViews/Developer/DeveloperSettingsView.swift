@@ -19,7 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Intents
+import Keychain
 import SwiftUI
 import ThreemaEssentials
 import ThreemaFramework
@@ -32,16 +34,16 @@ struct DeveloperSettingsView: View {
     @State private var showDebugDeviceJoin = false
     
     // Feature Flags
-    @State var contactList2 = UserSettings.shared().contactList2
-    @State var ipcCommunicationEnabled = UserSettings.shared().ipcCommunicationEnabled
     @State var newNavigationEnabled = UserSettings.shared().newNavigationEnabled
-
+    @State var showWorkReferral = UserSettings.shared().showWorkReferral
+    
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
     
     // Confirm deletion
     @State private var showDeleteKeychainItemsConfirmation = false
     @State private var showDeleteAllDataConfirmation = false
+    @State private var showDeleteAllKeychainItemsConfirmation = false
 
     var body: some View {
         List {
@@ -89,6 +91,36 @@ struct DeveloperSettingsView: View {
                     LaunchModalSettingsView()
                 } label: {
                     Text(verbatim: "Launch Modals")
+                }
+
+                NavigationLink {
+                    NotificationsAndAlertsView()
+                } label: {
+                    Text(verbatim: "Notifications / Alerts")
+                }
+                
+                Button {
+                    AppDelegate.shared().window
+                        .rootViewController =
+                        UIHostingController(
+                            rootView: RemoteSecretActivateDeactivateView(
+                                viewModel: RemoteSecretActivateDeactivateViewModel(type: .activate)
+                            )
+                        )
+                } label: {
+                    Text(verbatim: "RS Activate")
+                }
+                
+                Button {
+                    AppDelegate.shared().window
+                        .rootViewController =
+                        UIHostingController(
+                            rootView: RemoteSecretActivateDeactivateView(
+                                viewModel: RemoteSecretActivateDeactivateViewModel(type: .deactivate)
+                            )
+                        )
+                } label: {
+                    Text(verbatim: "RS Deactivate")
                 }
                 
                 Button {
@@ -141,21 +173,6 @@ struct DeveloperSettingsView: View {
             }
             
             Section {
-                Toggle(isOn: $contactList2) {
-                    Text(verbatim: "Enable Contact List 2.0")
-                }
-                .onChange(of: contactList2) { newValue in
-                    UserSettings.shared().contactList2 = newValue
-                    exit(1)
-                }
-                
-                Toggle(isOn: $ipcCommunicationEnabled) {
-                    Text(verbatim: "IPC Communication")
-                }
-                .onChange(of: ipcCommunicationEnabled) { newValue in
-                    UserSettings.shared().ipcCommunicationEnabled = newValue
-                }
-                
                 Toggle(isOn: $newNavigationEnabled) {
                     Text(verbatim: "Enable new Navigation")
                 }
@@ -163,18 +180,16 @@ struct DeveloperSettingsView: View {
                     UserSettings.shared().newNavigationEnabled = newValue
                     exit(1)
                 }
+                Toggle(isOn: $showWorkReferral) {
+                    Text(verbatim: "Show Work Referral")
+                }
+                .onChange(of: showWorkReferral) { newValue in
+                    UserSettings.shared().showWorkReferral = newValue
+                    exit(1)
+                }
             }
             header: {
                 Text(verbatim: "Feature Flags")
-            }
-            
-            Section {
-                // TODO: (IOS-5275) Remove after libthreema is used somewhere in our codebase
-                libthreemaIntegrationTestView()
-            } header: {
-                Text(verbatim: "libthreema")
-            } footer: {
-                Text(verbatim: "This will block the UI for a short time")
             }
             
             Section {
@@ -196,7 +211,7 @@ struct DeveloperSettingsView: View {
                     
                     businessInjector.entityManager.performAndWaitSave {
                         for contact in businessInjector.entityManager.entityFetcher
-                            .allContacts() as? [ContactEntity] ?? [] {
+                            .contactEntities() ?? [] {
                             _ = try! terminator.terminateAllSessions(with: contact, cause: .reset)
                         }
                     }
@@ -210,7 +225,7 @@ struct DeveloperSettingsView: View {
                     
                     businessInjector.entityManager.performAndWait {
                         for contact in businessInjector.entityManager.entityFetcher
-                            .allContacts() as? [ContactEntity] ?? [] {
+                            .contactEntities() ?? [] {
                             try! terminator.deleteAllSessions(with: contact)
                         }
                     }
@@ -233,7 +248,7 @@ struct DeveloperSettingsView: View {
                     Button {
                         showDeleteKeychainItemsConfirmation = true
                     } label: {
-                        Text(verbatim: "🚨 Simulate Restore (Delete Keychain)")
+                        Text(verbatim: "🚨 Simulate Restore (Delete relevant Keychain items)")
                     }
                     .confirmationDialog(
                         Text(verbatim: "To restore your ID, you will need an ID Backup or a Threema Safe Backup."),
@@ -241,15 +256,24 @@ struct DeveloperSettingsView: View {
                         titleVisibility: .visible
                     ) {
                         Button {
-                            MyIdentityStore.shared().destroyDeviceOnlyKeychainItems()
-
-                            if let identity = MyIdentityStore.shared().identity {
-                                let keychainHelper = KeychainHelper(identity: ThreemaIdentity(identity))
-                                try? keychainHelper.destroy(item: .threemaSafeKey)
-                                try? keychainHelper.destroy(item: .threemaSafeServer)
+                            if ThreemaEnvironment.env() == .xcode {
+                                let keychainManager = KeychainManager(
+                                    remoteSecretManager: AppLaunchManager.remoteSecretManager
+                                )
+                                
+                                try? keychainManager.deleteIdentity()
+                                try? keychainManager.deleteDeviceCookie()
+                                try? KeychainManager.deleteMultiDeviceGroupKey()
+                                try? keychainManager.deleteMultiDeviceID()
+                                try? keychainManager.deleteForwardSecurityKey()
+                                try? keychainManager.deleteThreemaSafeKey()
+                                try? keychainManager.deleteThreemaSafeServer()
+                                
+                                exit(1)
                             }
-
-                            exit(0)
+                            else {
+                                DDLogWarn("Delete Keychain Items is for testing only")
+                            }
                         } label: {
                             Text(verbatim: "Delete Keychain Items")
                         }
@@ -257,7 +281,7 @@ struct DeveloperSettingsView: View {
                     message: {
                         Text(
                             verbatim:
-                            "ID private key, device group key and further items will be deleted. This simulates restoring a Finder/iTunes/iCloud backup to a new device (or Quick Start)."
+                            "Client key, device group key and further items will be deleted. This simulates restoring a Finder/iTunes/iCloud backup to a new device (or Quick Start)."
                         )
                     }
                     
@@ -272,9 +296,13 @@ struct DeveloperSettingsView: View {
                     ) {
                         Button {
                             // DB & Files
-                            FileUtility.shared.removeItemsInAllDirectories()
+                            FileUtility.shared.removeItemsInAllDirectories(appGroupID: AppGroup.groupID())
                             AppGroup.resetUserDefaults()
-                            DatabaseManager().eraseDB()
+                            try? PersistenceManager(
+                                appGroupID: AppGroup.groupID(),
+                                userDefaults: AppGroup.userDefaults(),
+                                remoteSecretManager: AppLaunchManager.remoteSecretManager
+                            ).databaseManager.eraseDB()
                             exit(0)
                         } label: {
                             Text(verbatim: "Delete Everything")
@@ -294,11 +322,55 @@ struct DeveloperSettingsView: View {
             } header: {
                 Text(verbatim: "Crash")
             }
+
+            #if DEBUG
+                Section {
+                    Button {
+                        KeychainManager.printKeychainItems()
+                    } label: {
+                        Text(verbatim: "Print all Keychain items")
+                    }
+                    Button {
+                        showDeleteAllKeychainItemsConfirmation = true
+                    } label: {
+                        Text(verbatim: "🚨🚨🚨 Delete all Keychain items")
+                    }
+                    .confirmationDialog(
+                        Text(
+                            verbatim: "Are you sure you want to delete all Keychain items of the type kSecClass: kSecClassGenericPassword?"
+                        ),
+                        isPresented: $showDeleteAllKeychainItemsConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button {
+                            KeychainManager.deleteKeychainItemsExceptIdentity()
+
+                            exit(0)
+                        } label: {
+                            Text(verbatim: "Delete all Keychain items")
+                        }
+                    }
+                } header: {
+                    Text(verbatim: "Keychain")
+                }
+            #endif
         }
         .navigationBarTitle(Text(verbatim: "Developer Settings"), displayMode: .inline)
         .tint(.accentColor)
         .sheet(isPresented: $showDebugDeviceJoin) {
-            DebugDeviceJoinView()
+            NavigationStack {
+                DebugDeviceJoinView(
+                    model: QRCodeScannerViewModel(
+                        mode: .multiDeviceLink,
+                        audioSessionManager: AudioSessionManager(),
+                        systemFeedbackManager: SystemFeedbackManager(
+                            deviceCapabilitiesManager: DeviceCapabilitiesManager(),
+                            settingsStore: BusinessInjector.ui.settingsStore
+                        ),
+                        systemPermissionsManager: SystemPermissionsManager()
+                    )
+                )
+            }
         }
     }
 }
@@ -317,9 +389,7 @@ private struct UIComponentsView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
     
     func makeUIViewController(context: Context) -> some UIViewController {
-        let storyboard = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
-        let vc = storyboard.instantiateViewController(identifier: "ComponentsVC")
-        return vc
+        UIComponentsViewController()
     }
 }
 
@@ -327,9 +397,7 @@ private struct StyleKitView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
     
     func makeUIViewController(context: Context) -> some UIViewController {
-        let storyboard = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
-        let vc = storyboard.instantiateViewController(identifier: "StyleKitVC")
-        return vc
+        StyleKitDebugViewController()
     }
 }
 
@@ -337,8 +405,6 @@ private struct IDColorsView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
     
     func makeUIViewController(context: Context) -> some UIViewController {
-        let storyboard = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
-        let vc = storyboard.instantiateViewController(identifier: "IDColorsVC")
-        return vc
+        IDColorDebugViewController()
     }
 }

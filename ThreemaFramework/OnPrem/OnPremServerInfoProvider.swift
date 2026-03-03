@@ -21,6 +21,7 @@
 // swiftformat:disable acronyms
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 
 class OnPremServerInfoProvider: ServerInfoProvider {
@@ -100,7 +101,20 @@ class OnPremServerInfoProvider: ServerInfoProvider {
                 }
             }
         case let .failure(err):
-            completionHandler(nil, err)
+            // TODO: (IOS-5579) Remove this workaround
+            // A missing configuration URL means it is protected by RS. In this case we try to load a cached work
+            // server URL
+            if let onPremError = err as? OnPremConfigError, onPremError == OnPremConfigError.missingConfigurationURL {
+                if let cachedURL = OnPremCachedWorkServer.urlString {
+                    completionHandler(WorkServerInfo(url: cachedURL), nil)
+                }
+                else {
+                    completionHandler(nil, OnPremConfigError.missingWorkConfig)
+                }
+            }
+            else {
+                completionHandler(nil, err)
+            }
         }
     }
 
@@ -257,7 +271,16 @@ class OnPremServerInfoProvider: ServerInfoProvider {
                 }
             }
         case let .failure(err):
-            completionHandler(nil, err)
+            // TODO: (IOS-5579) Remove this workaround
+            // A missing configuration URL means it is protected by RS. In this case we just apply the default pins
+            // After the configuration URL and credentials are decrypted and set a `resetSSLCAHelperCache` notification
+            // should be posted to reload the pinned certificates.
+            if let onPremError = err as? OnPremConfigError, onPremError == OnPremConfigError.missingConfigurationURL {
+                completionHandler(Domain.defaultConfig, nil)
+            }
+            else {
+                completionHandler(nil, err)
+            }
         }
     }
     
@@ -294,40 +317,73 @@ class OnPremServerInfoProvider: ServerInfoProvider {
         }
     }
     
-    private var onPremConfigFetcher: OnPremConfigFetcher?
+    private var onPremConfigFetcher: OnPremConfigFetcherProtocol?
 
     private var lastConfigURLAuth: URL?
+    
+    private let cachedConfigURL = FileUtility.shared.appDataDirectory(
+        appGroupID: AppGroup.groupID()
+    )!.appendingPathComponent("config.oppf")
 
-    private func prepareConfigFetcher() -> Swift.Result<OnPremConfigFetcher, Error> {
-        if let onPremConfigURL = LicenseStore.shared().onPremConfigURL {
-            if let configURLAuth = makeURLWithUsernamePassword(
-                url: onPremConfigURL,
-                username: LicenseStore.shared().licenseUsername!,
-                password: LicenseStore.shared().licensePassword!
-            ) {
-                if onPremConfigFetcher != nil {
-                    // Check if the config URL has changed in the meantime
-                    if configURLAuth == lastConfigURLAuth {
-                        return .success(onPremConfigFetcher!)
-                    }
-                }
+    private func prepareConfigFetcher() -> Swift.Result<OnPremConfigFetcherProtocol, Error> {
+        
+        guard let onPremConfigURL = LicenseStore.shared().onPremConfigURL else {
+            return .failure(OnPremConfigError.missingConfigurationURL)
 
-                onPremConfigFetcher = OnPremConfigFetcher(
-                    configURL: configURLAuth,
-                    trustedPublicKeys: BundleUtil.object(forInfoDictionaryKey: "ThreemaOnPremPublicKeys") as! [String]
-                )
-                lastConfigURLAuth = configURLAuth
-                return .success(onPremConfigFetcher!)
-            }
-            else {
-                DDLogError("Invalid config URL \(LicenseStore.shared().onPremConfigURL!)")
-                return .failure(OnPremConfigError.invalidConfigUrl)
+            // TODO: (IOS-5579) For full OPPF caching we might want to reenable that
+//            guard FileUtility.shared.fileExists(at: cachedConfigURL),
+//                  let threemaOnPremPublicKeys = BundleUtil
+//                  .object(forThreemaFrameworkConfigurationKey: "ThreemaOnPremPublicKeys") as? [String] else {
+//                DDLogError(
+//                    "OnPrem configuration url not accessible and no cached config found. Public keys maybe missing."
+//                )
+//            return .failure(OnPremConfigError.configurationMissing)
+//            }
+//
+//            let configFetcher = OnPremCachedConfigFetcher(
+//                trustedPublicKeys: threemaOnPremPublicKeys,
+//                cacheURL: cachedConfigURL
+//            )
+//            onPremConfigFetcher = configFetcher
+//
+//            return .success(configFetcher)
+        }
+        
+        guard let username = LicenseStore.shared().licenseUsername,
+              let password = LicenseStore.shared().licensePassword else {
+            DDLogError("Missing license username or password")
+            return .failure(OnPremConfigError.missingLicenseInfo)
+        }
+        
+        guard let configURLAuth = makeURLWithUsernamePassword(
+            url: onPremConfigURL,
+            username: username,
+            password: password
+        ) else {
+            DDLogError("Invalid config URL \(onPremConfigURL)")
+            return .failure(OnPremConfigError.invalidConfigUrl)
+        }
+        
+        if let onPremConfigFetcher {
+            // Check if the config URL has changed in the meantime
+            if configURLAuth == lastConfigURLAuth {
+                return .success(onPremConfigFetcher)
             }
         }
-        else {
-            DDLogError("OnPrem configuration missing")
-            return .failure(OnPremConfigError.configurationMissing)
+        
+        guard let threemaOnPremPublicKeys = BundleUtil
+            .object(forThreemaFrameworkConfigurationKey: "ThreemaOnPremPublicKeys") as? [String] else {
+            DDLogError("Missing config public keys")
+            return .failure(OnPremConfigError.missingPublicKeys)
         }
+        
+        onPremConfigFetcher = OnPremConfigFetcher(
+            configURL: configURLAuth,
+            trustedPublicKeys: threemaOnPremPublicKeys,
+            cacheURL: cachedConfigURL
+        )
+        lastConfigURLAuth = configURLAuth
+        return .success(onPremConfigFetcher!)
     }
 
     private func makeURLWithUsernamePassword(url: String, username: String, password: String) -> URL? {
@@ -341,4 +397,8 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             return nil
         }
     }
+}
+
+protocol OnPremConfigFetcherProtocol {
+    func fetch(completionHandler: @escaping (Result<OnPremConfig, Error>) -> Void)
 }

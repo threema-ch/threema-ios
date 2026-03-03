@@ -18,10 +18,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import RemoteSecretProtocolTestHelper
+import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaFramework
 import XCTest
 
 @testable import Threema
+@testable import ThreemaFramework
 
 class HttpClientUploadSafeTests: XCTestCase {
     var receivedData: Data?
@@ -29,8 +33,11 @@ class HttpClientUploadSafeTests: XCTestCase {
     override func setUp() {
         super.setUp()
 
-        // necessary for ValidationLogger
-        AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
+        AppGroup.setGroupID("group.ch.threema")
+        
+        // Workaround to ensure remote secret is initialized
+        let remoteSecretManagerMock = RemoteSecretManagerMock()
+        AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManagerMock)
     }
     
     override func tearDown() {
@@ -39,13 +46,16 @@ class HttpClientUploadSafeTests: XCTestCase {
     }
     
     func testSafeHttpClientUploadWithCompletionHandler() {
+        let myIdentityStoreMock = MyIdentityStoreMock(identity: "ECHOECHO", secretKey: MockData.generatePublicKey())
         let store = SafeStore(
             safeConfigManager: SafeConfigManager(),
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
+            groupManager: GroupManagerMock(),
+            myIdentityStore: myIdentityStoreMock
         )
-        if let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
-           let backupID = store.getBackupID(key: key) {
+                
+        if let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
+           let backupID = SafeStore.getBackupID(key: key) {
             if let data = store.backupData() {
                 let encryptedData = try! store.encryptBackupData(key: key, data: data)
                 
@@ -79,14 +89,17 @@ class HttpClientUploadSafeTests: XCTestCase {
 
     func testHttpSafeClientUploadWithDelegate() {
         receivedData = Data()
-        
+        let myIdentityStoreMock = MyIdentityStoreMock()
+
         let store = SafeStore(
             safeConfigManager: SafeConfigManager(),
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
+            groupManager: GroupManagerMock(),
+            myIdentityStore: myIdentityStoreMock
         )
-        if let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
-           let backupID = store.getBackupID(key: key) {
+        
+        if let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
+           let backupID = SafeStore.getBackupID(key: key) {
             if let data = store.backupData() {
                 let encryptedData = try! store.encryptBackupData(key: key, data: data)
                 
@@ -119,6 +132,7 @@ class HttpClientUploadSafeTests: XCTestCase {
             }
             else {
                 print("backup failed: missing private key")
+                XCTAssert(false)
             }
         }
     }

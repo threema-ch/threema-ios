@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import ThreemaFramework
 import ThreemaMacros
@@ -641,7 +642,7 @@ extension ChatViewVoiceMessageTableViewCell {
             // Set the consumed date for the voice message
             let em = BusinessInjector.ui.entityManager
             em.performAndWaitSave {
-                if let vm = em.entityFetcher.getManagedObject(by: voiceMessage.objectID) as? FileMessageEntity {
+                if let vm = em.entityFetcher.managedObject(with: voiceMessage.objectID) as? FileMessageEntity {
                     vm.consumed = Date()
                 }
             }
@@ -778,8 +779,19 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
         }
         
         // Share
-        let shareItems = [MessageActivityItem(for: message)]
-        
+        let data = BaseMessageEntityMessageShareContentMapper.mapToContent(
+            from: message,
+            fileUtility: FileUtility.shared
+        )
+        let shareHandler = {
+            if let data {
+                [UIActivityHelperFactory.makeItemSource(type: .messageActivity(data))]
+            }
+            else {
+                []
+            }
+        }
+
         // Speak
         let speakText = message.fileMessageType.localizedDescription
         
@@ -813,7 +825,7 @@ extension ChatViewVoiceMessageTableViewCell: ChatViewMessageActions {
             downloadHandler: downloadHandler,
             quoteHandler: quoteHandler,
             copyHandler: copyHandler,
-            shareItems: shareItems,
+            shareHandler: shareHandler,
             speakText: speakText,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,

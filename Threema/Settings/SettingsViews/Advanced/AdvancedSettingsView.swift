@@ -19,8 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import MBProgressHUD
 import SwiftUI
+import ThreemaFramework
 import ThreemaMacros
 
 struct AdvancedSettingsView: View {
@@ -60,9 +62,13 @@ struct AdvancedSettingsView: View {
                 .onChange(of: settingsVM.validationLogging) { newValue in
                     if newValue {
                         LogManager.addFileLogger(LogManager.debugLogFile)
-                        DDLogNotice("Start logging \(ThreemaUtility.clientVersionWithMDM)")
+                        DDLogNotice("Logging started")
+
+                        DebugLog.logAppVersion()
+                        DebugLog.logAppConfiguration()
                     }
                     else {
+                        DDLogNotice("Logging stopped")
                         LogManager.removeFileLogger(LogManager.debugLogFile)
                     }
                 }
@@ -151,6 +157,12 @@ struct AdvancedSettingsView: View {
             // MARK: Other settings
             
             Section {
+                if SettingsBundleHelper.safeMode {
+                    Toggle(isOn: $settingsVM.ipcCommunicationEnabled) {
+                        Text(verbatim: "IPC Communication")
+                    }
+                }
+
                 NavigationLink {
                     CallDiagnosticViewControllerRepresentable()
                         .ignoresSafeArea(.all)
@@ -160,8 +172,7 @@ struct AdvancedSettingsView: View {
                 }
                 
                 NavigationLink {
-                    OrphanedFilesCleanupViewControllerRepresentable()
-                        .ignoresSafeArea(.all)
+                    orphanedFilesView()
                         .navigationBarTitle("settings_advanced_orphaned_files_cleanup", displayMode: .inline)
                 } label: {
                     Text(#localize("settings_advanced_orphaned_files_cleanup"))
@@ -198,7 +209,8 @@ struct AdvancedSettingsView: View {
                             batch.resultType = .statusOnlyResultType
                             batch.predicate = NSPredicate(format: "read == false && isOwn == false")
                             batch.propertiesToUpdate = ["read": true]
-                            if let batchResult = businessInjector.entityManager.entityFetcher.execute(batch) {
+                            if let batchResult = businessInjector.entityManager.entityFetcher
+                                .execute(batchUpdateRequest: batch) {
                                 if let success = batchResult.result as? Bool,
                                    success {
                                     DDLogNotice("[Advanced Support Mode] Succeeded to set all unread messages to read.")
@@ -217,7 +229,7 @@ struct AdvancedSettingsView: View {
                                                         
                             if let allConversations = NSSet(
                                 array: businessInjector.entityManager
-                                    .entityFetcher.allConversations()
+                                    .entityFetcher.conversationEntities() ?? []
                             ) as? Set<ConversationEntity> {
                                 businessInjector.unreadMessages.totalCount(
                                     doCalcUnreadMessagesCountOf: allConversations,
@@ -226,7 +238,7 @@ struct AdvancedSettingsView: View {
                                 for conversation in allConversations {
                                     // print all unread messages after set all to read
                                     let unreadMessagesCount = businessInjector.entityManager.entityFetcher
-                                        .countUnreadMessages(for: conversation)
+                                        .unreadMessageCount(for: conversation)
                                     DDLogNotice(
                                         "[Advanced Support Mode] Conversation \(conversation.displayName) has \(unreadMessagesCount) unread messages. Unread message state on conversation is \(conversation.unreadMessageCount)"
                                     )
@@ -271,13 +283,30 @@ struct AdvancedSettingsView: View {
         }
         .navigationBarTitle(#localize("settings_advanced"), displayMode: .inline)
         .tint(.accentColor)
-        .onAppear {
-            logMIME()
-        }
     }
     
     // MARK: - Private Functions
-    
+
+    @ViewBuilder
+    private func orphanedFilesView() -> some View {
+        let fileUtility = FileUtility.shared!
+        let entityDestroyer = BusinessInjector.ui.entityManager.entityDestroyer
+        let validationLoggingEnabled = BusinessInjector.ui.settingsStore.validationLogging
+
+        let loggingFilesManager = LoggingFilesManager(fileUtility: fileUtility)
+        let orphanedFilesManager = OrphanedFilesManager(entityDestroyer: entityDestroyer)
+        let trashBinManager = TrashBinManager(fileUtility: fileUtility)
+
+        let model = OrphanedFilesViewModel(
+            loggingFilesManager: loggingFilesManager,
+            orphanedFilesManager: orphanedFilesManager,
+            trashBinManager: trashBinManager,
+            validationLoggingEnabled: validationLoggingEnabled
+        )
+
+        OrphanedFilesView(model: model)
+    }
+
     private func hasDebugLog() -> Bool {
         if let debugLogFile = LogManager.debugLogFile {
             return LogManager.logFileSize(debugLogFile) > 0
@@ -298,11 +327,8 @@ struct AdvancedSettingsView: View {
             return
         }
         
-        if let activityViewController = ActivityUtil.activityViewController(
-            withActivityItems: [debugLogFile],
-            applicationActivities: nil
-        ),
-            let currentWindow = AppDelegate.shared().currentTopViewController() {
+        let activityViewController = UIActivityViewController(activityItems: [debugLogFile], applicationActivities: nil)
+        if let currentWindow = AppDelegate.shared().currentTopViewController() {
             
             if UIDevice.current.userInterfaceIdiom == .pad {
                 activityViewController.popoverPresentationController?.sourceView = currentWindow.view
@@ -339,13 +365,6 @@ struct AdvancedSettingsView: View {
     
     private func flushMessageQueue() {
         settingsVM.flushMessageQueue()
-    }
-    
-    private func logMIME() {
-        let entityManager = BusinessInjector.ui.entityManager
-        DDLogNotice(
-            "There are \(entityManager.entityFetcher.countFileMessagesWithNoMIMEType()) file messages with no MIME type"
-        )
     }
 }
 

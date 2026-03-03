@@ -44,7 +44,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
                     return
                 }
                 
-                presentFullscreen(image: contact.profilePicture)
+                FullscreenImageViewController.present(for: contact.profilePicture, on: self)
             },
             quickActions: quickActions,
             mediaAndPollsQuickActions: mediaStarredAndPollActions()
@@ -55,7 +55,8 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         state: state,
         singleDetailsViewController: self,
         tableView: tableView,
-        linkedContactManager: linkedContactManager
+        linkedContactManager: linkedContactManager,
+        deviceCapabilitiesManager: DeviceCapabilitiesManager()
     )
     
     private let contactEntity: ContactEntity
@@ -68,10 +69,10 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     private var entityManager: EntityManager
     
     private var observers = [NSKeyValueObservation]()
-    
+
     // Backwards compatibility
     
-    @available(*, deprecated, message: "Only use this for old code to keep it working")
+    @available(swift, obsoleted: 1.0, message: "Only use from old Objective-C code to keep it working")
     @objc var _contact: ContactEntity {
         contactEntity
     }
@@ -94,7 +95,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         guard let contactEntity = conversation.contact else {
             fatalError("No linked contact for this conversations. This only supports single contacts conversations.")
         }
-        self.entityManager = EntityManager()
+        self.entityManager = BusinessInjector.ui.entityManager
         self.state = .conversationDetails(contact: contactEntity, conversation: conversation)
         self.contactEntity = contactEntity
         self.contact = Contact(contactEntity: contactEntity)
@@ -118,10 +119,10 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         displayStyle: DetailsDisplayStyle = .default
     ) {
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         self.entityManager = entityManager
         self.contactEntity = entityManager.performAndWait {
-            guard let contactEntity = entityManager.entityFetcher.contact(for: contact.identity.string) else {
+            guard let contactEntity = entityManager.entityFetcher.contactEntity(for: contact.identity.rawValue) else {
                 fatalError()
             }
             return contactEntity
@@ -132,6 +133,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         self.displayStyle = displayStyle
         
         super.init()
+        setupTraitRegistration()
     }
 
     override func viewDidLoad() {
@@ -163,10 +165,9 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         // Shows Threema type tip if it was never shown before
         headerView.showThreemaTypeTip()
     }
-    
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
         publicKeyView.close()
     }
     
@@ -183,11 +184,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
             removeObservers()
         }
     }
-    
-    deinit {
-        DDLogDebug("\(#function)")
-    }
-    
+
     // MARK: - Configuration
     
     private func addObservers() {
@@ -320,7 +317,23 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         
         observers.append(observer)
     }
-    
+
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitUserInterfaceStyle.self, UITraitPreferredContentSizeCategory.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+                updateHeaderLayout()
+            }
+            if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                headerView.profileContentConfiguration = contactEntity.contentConfiguration
+                dataSource.refresh(sections: [.contactInfo])
+            }
+        }
+    }
+
     // MARK: - Updates
     
     private func updateHeader(animated: Bool = true) {
@@ -346,23 +359,7 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
     @objc private func preferredContentSizeCategoryDidChange() {
         updateHeaderLayout()
     }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-                
-        if previousTraitCollection?.verticalSizeClass != traitCollection.verticalSizeClass {
-            // This will be called on rotation
-            updateHeaderLayout()
-        }
-        
-        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
-            return
-        }
-        
-        headerView.profileContentConfiguration = contactEntity.contentConfiguration
-        dataSource.refresh(sections: [.contactInfo])
-    }
-    
+
     @objc private func navigationBarColorShouldChange() {
         if NavigationBarPromptHandler.shouldShowPrompt() {
             navigationBarTitleAppearanceOffset = 158
@@ -644,7 +641,7 @@ extension SingleDetailsViewController: UITableViewDelegate {
         case .publicKey:
             publicKeyView.show()
             
-        case .value(label: _, value: contact.identity.string):
+        case .value(label: _, value: contact.identity.rawValue):
             dataSource.showDebugInfoTapCounter += 1
             
         case .linkedContact:

@@ -93,8 +93,8 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
 
         guard task.syncAction != .delete else {
             guard let groupEntity = frameworkInjector.entityManager.entityFetcher.groupEntity(
-                for: groupIdentity.id,
-                with: groupIdentity.creator.string
+                for: groupIdentity,
+                myIdentity: frameworkInjector.myIdentityStore.identity
             ) else {
                 return true
             }
@@ -103,7 +103,7 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
 
         guard let group = frameworkInjector.groupManager.getGroup(
             groupIdentity.id,
-            creator: groupIdentity.creator.string
+            creator: groupIdentity.creator.rawValue
         ) else {
             DDLogWarn("Group was deleted. Do not sync")
             return false
@@ -150,10 +150,11 @@ final class TaskExecutionGroupSync: TaskExecutionBlobTransaction {
         var category: ConversationEntity.Category?
         var visibility: ConversationEntity.Visibility?
         frameworkInjector.entityManager.performAndWaitSave {
-            let conversation = self.frameworkInjector.entityManager.entityFetcher.conversationEntity(
-                for: group.groupID,
-                creator: group.groupCreatorIdentity
-            )
+            let conversation = self.frameworkInjector.entityManager.entityFetcher
+                .conversationEntity(
+                    for: group.groupIdentity,
+                    myIdentity: self.frameworkInjector.myIdentityStore.identity
+                )
             category = conversation?.conversationCategory
             visibility = conversation?.conversationVisibility
         }

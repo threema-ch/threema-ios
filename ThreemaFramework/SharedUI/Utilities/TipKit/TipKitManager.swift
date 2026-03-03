@@ -22,7 +22,6 @@ import CocoaLumberjackSwift
 import Foundation
 import TipKit
 
-@available(iOS 17.0, *)
 @objc public class TipKitManager: NSObject {
  
     // MARK: - Lifecycle

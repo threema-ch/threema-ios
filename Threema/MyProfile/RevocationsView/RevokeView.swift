@@ -32,7 +32,7 @@ struct RevokeView: View {
     @State private var enteredText = ""
     
     // Workaround: TextField has the wrong color
-    @State private var textFieldColor: Color = .black
+    @State private var textFieldColor: Color = .white
     
     var body: some View {
         GeometryReader { proxy in

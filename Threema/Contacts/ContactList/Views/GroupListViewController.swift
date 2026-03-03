@@ -68,12 +68,13 @@ import ThreemaMacros
     // MARK: - TableView
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
 
-        guard let group = group(for: indexPath) else {
+        guard let objectID = dataSource.itemIdentifier(for: indexPath) else {
+            tableView.deselectRow(at: indexPath, animated: true)
             return
         }
-        show(GroupDetailsViewController(for: group, displayStyle: .default), sender: self)
+        
+        itemsDelegate?.didSelect(.group(objectID: objectID))
     }
     
     override func tableView(
@@ -88,7 +89,7 @@ import ThreemaMacros
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
         
-        let action = UIContextualAction(style: .destructive, title: #localize("delete")) { [weak self] _, _, _ in
+        let action = DeleteActionFactory { [weak self] in
             guard let self,
                   let group = group(for: indexPath),
                   let cell = tableView.cellForRow(at: indexPath)
@@ -99,20 +100,20 @@ import ThreemaMacros
             let conversation: ConversationEntity? = businessInjector.entityManager.performAndWait {
                 self.businessInjector.groupManager.getConversation(for: group.groupIdentity)
             }
-            guard let conversation,
-                  let deleteAction = DeleteConversationAction.delete(forConversation: conversation) else {
+            guard let conversation else {
                 return
             }
             
-            deleteAction.presentingViewController = self
-            deleteAction.presentingRect = cell.convert(cell.bounds, to: tableView)
-            deleteAction.execute { didDelete in
+            DeleteConversationAction.execute(
+                for: conversation,
+                owner: self,
+                cell: cell,
+            ) { didDelete in
                 if didDelete {
                     tableView.reloadData()
                 }
             }
-        }
-        action.image = UIImage(systemName: "trash")
+        }.make()
        
         let swipeAction = UISwipeActionsConfiguration(actions: [action])
         swipeAction.performsFirstActionWithFullSwipe = false
@@ -124,49 +125,22 @@ import ThreemaMacros
             return []
         }
         
-        let conversation: ConversationEntity? = businessInjector.entityManager.performAndWait {
-            self.businessInjector.groupManager.getConversation(for: group.groupIdentity)
+        let entityManager = businessInjector.entityManager
+        let conversation: ConversationEntity? = entityManager.performAndWait { [weak self] in
+            self?.businessInjector.groupManager.getConversation(for: group.groupIdentity)
         }
         
         guard let conversation else {
             return []
         }
         
-        let messageAction = UIContextualAction(
-            style: .normal,
-            title: ""
-        ) { _, _, handler in
-            NotificationCenter.default.post(
-                name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                object: nil,
-                userInfo: [
-                    kKeyConversation: conversation,
-                    kKeyForceCompose: true,
-                ]
-            )
-            handler(true)
-        }
-        
-        messageAction.image = UIImage(resource: .threemaLockBubbleRightFill)
-        messageAction.backgroundColor = .tintColor
+        let messageAction = MessageActionFactory.make(for: conversation)
         
         guard businessInjector.settingsStore.enableThreemaGroupCalls else {
             return [messageAction]
         }
         
-        let groupCallAction = UIContextualAction(
-            style: .normal,
-            title: "",
-            handler: { _, _, handler in
-                GlobalGroupCallManagerSingleton.shared.startGroupCall(
-                    in: group,
-                    intent: .createOrJoin
-                )
-                handler(true)
-            }
-        )
-        groupCallAction.image = UIImage(resource: .threemaPhoneFill)
-        groupCallAction.backgroundColor = .systemGray
+        let groupCallAction = CallActionFactory.make(for: group)
         return [messageAction, groupCallAction]
     }
     

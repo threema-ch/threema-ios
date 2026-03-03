@@ -25,57 +25,77 @@ import ThreemaEssentials
 
 extension ContactStore {
 
+    @objc func entityManager() -> EntityManager {
+        persistenceManager().entityManager
+    }
+
+    @objc func backgroundEntityManager() -> EntityManager {
+        persistenceManager().backgroundEntityManager
+    }
+
+    private func persistenceManager() -> PersistenceManager {
+        PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        )
+    }
+
     /// Add or update given contacts as work contact and do MD sync.
     ///
     /// - Parameter batchAddContacts: Array of contacts for adding as work contact
     @objc func batchAddWorkContacts(batchAddContacts: [BatchAddWorkContact]) async throws {
-        let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
+        let entityManager = backgroundEntityManager()
         let mediatorSyncableContacts = MediatorSyncableContacts(
-            UserSettings.shared(),
-            PushSettingManager(
-                UserSettings.shared(),
-                GroupManager(entityManager: entityManager),
-                entityManager,
-                TaskManager(),
-                true
+            userSettings: UserSettings.shared(),
+            pushSettingManager: PushSettingManager(
+                userSettings: UserSettings.shared(),
+                groupManager: GroupManager(entityManager: entityManager),
+                entityManager: entityManager,
+                markupParser: MarkupParser(),
+                taskManager: TaskManager(),
+                isWorkApp: true
             ),
-            TaskManager(),
-            entityManager
+            taskManager: TaskManager(),
+            entityManager: entityManager
         )
 
         let featureMasks = try await FeatureMask.getFeatureMask(for: batchAddContacts.map(\.identity))
 
-        let identities = await entityManager.perform {
-            var identities = [String]()
-            for batchAddContact in batchAddContacts {
-                guard let publicKey = batchAddContact.publicKey,
-                      let featureMask = featureMasks[batchAddContact.identity] else {
-                    continue
-                }
+        let identities = syncContactsQueue.sync {
+            entityManager.performAndWait {
+                var identities = [String]()
+                for batchAddContact in batchAddContacts {
+                    guard let publicKey = batchAddContact.publicKey,
+                          let featureMask = featureMasks[batchAddContact.identity] else {
+                        continue
+                    }
 
-                if let contactIdentity = self.addWorkContact(
-                    with: batchAddContact.identity,
-                    publicKey: publicKey,
-                    firstname: batchAddContact.firstName,
-                    lastname: batchAddContact.lastName,
-                    csi: batchAddContact.csi,
-                    jobTitle: batchAddContact.jobTitle,
-                    department: batchAddContact.department,
-                    featureMask: NSNumber(integerLiteral: featureMask),
-                    acquaintanceLevel: .direct,
-                    entityManager: entityManager,
-                    contactSyncer: mediatorSyncableContacts
-                ) {
-                    identities.append(contactIdentity)
+                    if let contactIdentity = self.addWorkContact(
+                        with: batchAddContact.identity,
+                        publicKey: publicKey,
+                        firstname: batchAddContact.firstName,
+                        lastname: batchAddContact.lastName,
+                        csi: batchAddContact.csi,
+                        jobTitle: batchAddContact.jobTitle,
+                        department: batchAddContact.department,
+                        featureMask: NSNumber(integerLiteral: featureMask),
+                        acquaintanceLevel: .direct,
+                        entityManager: entityManager,
+                        contactSyncer: mediatorSyncableContacts
+                    ) {
+                        identities.append(contactIdentity)
+                    }
                 }
+                return identities
             }
-            return identities
         }
 
-        // Get all work verified contacts from DB and set those that have not been supplied in this sync back to
+        // Get all work verified contacts from DB and set those that have not been supplied in this sync
+        // back to
         // non-work
         await entityManager.performSave {
-            if let allContacts = entityManager.entityFetcher.allContacts() as? [ContactEntity] {
+            if let allContacts = entityManager.entityFetcher.contactEntities() {
                 for contactEntity in allContacts {
                     let isWorkContact = identities.contains(contactEntity.identity)
                     if contactEntity.isWorkContact != isWorkContact {
@@ -147,14 +167,14 @@ extension ContactStoreProtocol {
     /// Update the acquaintance level of the contact to direct and sync it with multi device if activated
     /// - Parameters:
     ///   - identity: Identity of the contact
-    ///   - entityManager: EntityManager (default is BusinessInjector.ui.entityManager)
+    ///   - entityManager: EntityManager
     /// - Returns: Business Object of Contact
     public func updateAcquaintanceLevelToDirect(
         for identity: ThreemaIdentity,
-        entityManager: EntityManager = BusinessInjector.ui.entityManager
+        entityManager: EntityManager
     ) -> Contact? {
         entityManager.performAndWait {
-            guard let contactEntity = entityManager.entityFetcher.contact(for: identity.string) else {
+            guard let contactEntity = entityManager.entityFetcher.contactEntity(for: identity.rawValue) else {
                 return nil
             }
 
@@ -182,6 +202,12 @@ extension ContactStoreProtocol {
             } onError: { error in
                 continuation.resume(throwing: error)
             }
+        }
+    }
+    
+    func resetImportStatusForAllContacts(entityManager: EntityManager) async {
+        await entityManager.performSave {
+            entityManager.entityFetcher.contactEntities()?.forEach { $0.contactImportStatus = .initial }
         }
     }
 }

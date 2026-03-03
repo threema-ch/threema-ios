@@ -20,12 +20,28 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import TrustKit
 
 class SSLCAHelper: NSObject, SSLCAHelperProtocol {
 
     private var cachedTrustKit: TrustKit?
     private var cachedConfiguredDomains: [String]?
+    
+    // MARK: - Lifecycle
+    
+    override init() {
+        super.init()
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(resetCache),
+            name: .resetSSLCAHelperCache,
+            object: nil
+        )
+    }
+    
+    // MARK: - Public methods
 
     /// Check is authentication mode like server trust.
     /// - Parameter protectionSpace: Received protection space
@@ -105,6 +121,14 @@ class SSLCAHelper: NSObject, SSLCAHelperProtocol {
             DDLogError("Evaluate of trust failed \(error)")
             return false
         }
+    }
+    
+    // MARK: - Private helper
+    
+    /// Reset cache to pick up most recent pins from OPPF if needed
+    @objc private func resetCache() {
+        cachedTrustKit = nil
+        cachedConfiguredDomains = nil
     }
 
     /// Loads TrustKit with SSL cert pinning config for Public or OnPrem server

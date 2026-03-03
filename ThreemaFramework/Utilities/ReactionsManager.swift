@@ -230,7 +230,7 @@ public class ReactionsManager: ObservableObject {
             guard let message = entityManager.entityFetcher
                 .existingObject(with: self.messageObjectID) as? BaseMessageEntity,
                 let reactions = entityManager.entityFetcher.messageReactionEntities(
-                    forMessage: message,
+                    for: message,
                     creator: nil
                 ) else {
                 return false
@@ -360,7 +360,7 @@ public class ReactionsManager: ObservableObject {
     private func updateCurrentReactions(for message: BaseMessageEntity) {
         let entityManager = businessInjector.entityManager
         
-        guard let reactions = entityManager.entityFetcher.messageReactionEntities(forMessage: message) else {
+        guard let reactions = entityManager.entityFetcher.messageReactionEntities(for: message) else {
             currentReactions.removeAll()
             return
         }

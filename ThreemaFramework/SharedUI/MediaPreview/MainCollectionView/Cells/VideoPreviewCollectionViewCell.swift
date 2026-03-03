@@ -74,7 +74,7 @@ class VideoImageCell: ScreenWidthSizedCell, UIGestureRecognizerDelegate {
         videoBackgroundView.backgroundColor = .clear
         loadingView.backgroundColor = .clear
         playButton.tintColor = .white
-        playButton.image = playButton.image?.draw(withTintColor: .white)
+        playButton.image = playButton.image?.withTintColor(.white)
     }
     
     func showLoadingScreen() {

@@ -32,11 +32,15 @@
 - (BOOL)handleMagicTap;
 @end
 
-@class AbstractMessage, BaseMessageEntity;
+@class AbstractMessage, BaseMessageEntity, LaunchTaskManager;
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate, JKLLockScreenViewControllerDelegate, UNUserNotificationCenterDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
+/// Note: This should be used only internally, we must expose it since we use it in extensions.
+@property (nonatomic) LaunchTaskManager *launchTaskManager;
+
+@property (atomic) BOOL isBusinessInjectorReady;
 
 @property (nonatomic) CFTimeInterval lastForegroundTransition;
 @property (nonatomic) BOOL active;
@@ -47,8 +51,9 @@
 @property (nonatomic, strong) NSDate *appLaunchDate;
 
 @property (nonatomic) BOOL isAppLocked;
+@property (nonatomic) NSURL *pendingUrl;
+@property (nonatomic) UIApplicationShortcutItem *pendingShortCutItem;
 
-@property (nonatomic) BOOL isLockscreenDismissed;
 @property (nonatomic) UIInterfaceOrientationMask orientationLock;
 
 @property (nonatomic, readonly) BOOL isWorkContactsLoading;
@@ -56,13 +61,12 @@
 @property (weak, nonatomic) id<MagicTapHandler> magicTapHandler;
 
 + (AppDelegate*)sharedAppDelegate;
++ (BOOL)isRunningPreviews;
 + (UIAlertController *)isAlertViewShown;
 + (BOOL)hasBottomSafeAreaInsets;
 + (void)setupConnection;
 
-+ (UIStoryboard *)getLaunchStoryboard;
 + (UIStoryboard *)getMainStoryboard;
-+ (UIStoryboard *)getSettingsStoryboard;
 + (UIStoryboard *)getMyIdentityStoryboard;
 + (UITabBarController *)getMainTabBarController;
 
@@ -73,7 +77,6 @@
 - (void)presentIDBackupRestore;
 - (void)completedIDSetup;
 - (void)presentPasscodeView;
-- (void)eraseApplicationData:(JKLLockScreenViewController *)viewController;
 - (UIViewController *)currentTopViewController;
 - (void)eraseApplicationData;
 - (void)handlePresentingScreensWithForce:(BOOL)Force;

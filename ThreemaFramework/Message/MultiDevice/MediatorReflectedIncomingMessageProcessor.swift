@@ -688,7 +688,7 @@ class MediatorReflectedIncomingMessageProcessor {
 
     private func getSenderIdentity(for imsg: D2d_IncomingMessage) throws -> String {
         try frameworkInjector.entityManager.performAndWait {
-            guard let senderIdentity = self.frameworkInjector.entityManager.entityFetcher.contact(
+            guard let senderIdentity = self.frameworkInjector.entityManager.entityFetcher.contactEntity(
                 for: imsg.senderIdentity
             )?.identity else {
                 throw MediatorReflectedProcessorError.contactNotFound(identity: imsg.senderIdentity)

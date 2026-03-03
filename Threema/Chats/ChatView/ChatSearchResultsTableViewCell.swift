@@ -223,7 +223,10 @@ final class ChatSearchResultsTableViewCell: ThemedCodeStackTableViewCell {
         
         if let previewableMessage = message as? PreviewableMessage {
             messagePreviewTextLabel.attributedText = previewableMessage
-                .previewAttributedText(for: PreviewableMessageConfiguration.searchCell)
+                .previewAttributedText(
+                    for: PreviewableMessageConfiguration.searchCell,
+                    settingsStore: BusinessInjector.ui.settingsStore
+                )
         }
     }
     

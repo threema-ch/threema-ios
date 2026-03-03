@@ -23,19 +23,22 @@ import Foundation
 
 extension MDMSetup {
     @objc func runDisableMultiDevice() async {
-        
-        guard !ProcessInfoHelper.isRunningForTests else {
-            UserSettings.shared().enableMultiDevice = false
+        guard let localBusniessInjector = businessInjector as? BusinessInjector else {
+            DDLogError("BusinessInjector is not set")
             return
         }
 
-        let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
-        guard backgroundBusinessInjector.settingsStore.isMultiDeviceRegistered else {
+        guard !ProcessInfoHelper.isRunningForTests else {
+            localBusniessInjector.userSettings.enableMultiDevice = false
+            return
+        }
+
+        guard localBusniessInjector.settingsStore.isMultiDeviceRegistered else {
             return
         }
         
         do {
-            try await backgroundBusinessInjector.multiDeviceManager.disableMultiDevice()
+            try await localBusniessInjector.multiDeviceManager.disableMultiDevice()
         }
         catch {
             DDLogError("Disabling multi-device from MDMSetup failed: \(error)")

@@ -36,8 +36,6 @@ import Foundation
     var blobError: Bool { get set }
     var blobFilename: String? { get }
     var blobExportFilename: String { get }
-    var blobExternalFilename: String? { get }
-    var blobThumbnailExternalFilename: String? { get }
     var deletedAt: Date? { get }
     var isPersistingBlob: Bool { get }
 }

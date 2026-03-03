@@ -27,7 +27,7 @@ import ThreemaMacros
 import ThreemaProtocols
 
 public final class MessageSender: NSObject, MessageSenderProtocol {
-    
+
     private let serverConnector: ServerConnectorProtocol
     private let myIdentityStore: MyIdentityStoreProtocol
     private let userSettings: UserSettingsProtocol
@@ -36,9 +36,9 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     private let entityManager: EntityManager
     private let blobManager: BlobManagerProtocol
     private let blobMessageSender: BlobMessageSender
-    
+
     // MARK: - Lifecycle
-    
+
     init(
         serverConnector: ServerConnectorProtocol,
         myIdentityStore: MyIdentityStoreProtocol,
@@ -57,10 +57,10 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         self.entityManager = entityManager
         self.blobManager = blobManager
         self.blobMessageSender = blobMessageSender
-        
+
         super.init()
     }
-    
+
     convenience init(
         serverConnector: ServerConnectorProtocol,
         myIdentityStore: MyIdentityStoreProtocol,
@@ -80,7 +80,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             blobMessageSender: BlobMessageSender()
         )
     }
-    
+
     convenience init(entityManager: EntityManager, taskManager: TaskManagerProtocol) {
         self.init(
             serverConnector: ServerConnector.shared(),
@@ -91,7 +91,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             entityManager: entityManager
         )
     }
-    
+
     // MARK: - TextMessage
 
     @discardableResult
@@ -101,7 +101,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         sendProfilePicture: Bool = true,
         requestID: String? = nil
     ) async -> [TextMessageEntity] {
-        
+
         // We handle messages sent to a distribution list separately
         if let distributionList = await (
             entityManager.perform {
@@ -113,45 +113,45 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
         let trimmedText = ThreemaUtility.trimCharacters(in: text)
         let textsToSend = ThreemaUtility.trimMessageText(text: trimmedText)
-        
+
         let textMessages = await createTextMessages(
             texts: textsToSend,
             conversation: conversation,
             requestID: requestID,
             setConversationLastUpdate: true
         )
-        
+
         let tasks = await createTasks(
             textMessages: textMessages,
             conversation: conversation,
             sendProfilePicture: sendProfilePicture
         )
-        
+
         await executeSendTextMessageTasks(tasks)
-        
+
         donateInteractionForOutgoingMessage(in: conversation)
-        
+
         return textMessages
     }
-    
+
     private func sendDistributionListTextMessage(
         text: String,
         to distributionList: DistributionListEntity,
         sendProfilePicture: Bool = true,
         requestID: String? = nil
     ) async -> [TextMessageEntity] {
-        
+
         // Add message to distribution list conversation
         let trimmedText = ThreemaUtility.trimCharacters(in: text)
         let textsToSend = ThreemaUtility.trimMessageText(text: trimmedText)
-        
+
         let conversation = await entityManager.perform {
-            self.entityManager.entityFetcher.conversationEntity(forDistributionList: distributionList)
+            self.entityManager.entityFetcher.conversationEntity(for: Int(distributionList.distributionListID))
         }
         guard let conversation else {
             return []
         }
-        
+
         // TODO: (IOS-4366) How should we display (state, etc.) these messages in the distribution list conversation?
         let distributionListMessages = await createTextMessages(
             texts: textsToSend,
@@ -159,12 +159,12 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             requestID: nil,
             setConversationLastUpdate: true
         )
-                
+
         // Send message to all receiving conversations, this is mostly the same code as above for single conversations.
         var distributedMessages = [TextMessageEntity]()
-        
+
         for receivingConversation in receivingConversations(for: distributionList) {
-            
+
             let textMessages = await createTextMessages(
                 texts: textsToSend,
                 conversation: receivingConversation,
@@ -172,23 +172,23 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 setConversationLastUpdate: false,
                 distributionListMessages: distributionListMessages
             )
-            
+
             let tasks = await createTasks(
                 textMessages: textMessages,
                 conversation: receivingConversation,
                 sendProfilePicture: sendProfilePicture
             )
-            
+
             await executeSendTextMessageTasks(tasks)
-            
+
             donateInteractionForOutgoingMessage(in: conversation)
-            
+
             distributedMessages.append(contentsOf: textMessages)
         }
-        
+
         return distributedMessages
     }
-    
+
     private func createTextMessages(
         texts: [String],
         conversation: ConversationEntity,
@@ -197,61 +197,68 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         distributionListMessages: [TextMessageEntity]? = nil
     ) async -> [TextMessageEntity] {
         var textMessages = [TextMessageEntity]()
-        
+
         for (index, text) in texts.enumerated() {
             let textMessage: TextMessageEntity? = await entityManager.performSave {
-                
+
                 if let messageConversation = self.entityManager.entityFetcher
-                    .getManagedObject(by: conversation.objectID) as? ConversationEntity,
-                    let message = self.entityManager.entityCreator.textMessageEntity(
-                        for: messageConversation,
-                        setLastUpdate: setConversationLastUpdate
-                    ) {
-                    
-                    var remainingBody: NSString?
-                    if let quoteMessageID = QuoteUtil.parseQuoteV2(fromMessage: text, remainingBody: &remainingBody) {
-                        // swiftformat:disable:next acronyms
-                        message.quotedMessageId = quoteMessageID
-                        message.text = (remainingBody ?? "") as String
+                    .managedObject(with: conversation.objectID) as? ConversationEntity {
+
+                    let quotedMessageID: Data?
+                    let remainingBody: String?
+                    let messageText: String
+
+                    if let result = QuoteUtil.parseQuoteV2(from: text) {
+                        quotedMessageID = result.messageID
+                        remainingBody = result.remainingBody
+                        messageText = (remainingBody ?? "") as String
                     }
                     else {
-                        message.text = text
+                        quotedMessageID = nil
+                        messageText = text
+                        remainingBody = nil
                     }
-                    
+
+                    let message = self.entityManager.entityCreator.textMessageEntity(
+                        quotedMessageID: quotedMessageID,
+                        text: messageText,
+                        in: messageConversation,
+                        setLastUpdate: setConversationLastUpdate
+                    )
+
                     if let requestID {
-                        // swiftformat:disable:next acronyms
-                        message.webRequestId = requestID
+                        message.webRequestID = requestID
                     }
-                    
+
                     // Distribution list handling
                     if let distributionListMessages, index <= distributionListMessages.count {
                         message.distributionListMessage = distributionListMessages[index]
                     }
-                    
+
                     return message
                 }
                 return nil
             }
-            
+
             if let textMessage {
                 textMessages.append(textMessage)
             }
         }
-        
+
         assert(
             texts.count == textMessages.count,
             "Could not create TextMessages for all texts. Texts=\(texts.count), TextMessages=\(textMessages.count)."
         )
         return textMessages
     }
-    
+
     private func createTasks(
         textMessages: [TextMessageEntity],
         conversation: ConversationEntity,
         sendProfilePicture: Bool
     ) async -> [TaskDefinitionSendBaseMessage] {
         var tasks = [TaskDefinitionSendBaseMessage]()
-        
+
         for textMessage in textMessages {
             let task = await entityManager.perform {
                 var task: TaskDefinitionSendBaseMessage? = nil
@@ -272,27 +279,27 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                         sendContactProfilePicture: sendProfilePicture
                     )
                 }
-                
+
                 return task
             }
-            
+
             if let task {
                 tasks.append(task)
             }
         }
-        
+
         assert(
             textMessages.count == tasks.count,
             "Could not create Tasks for all TextMessages. TextMessages=\(textMessages.count), Tasks=\(tasks.count)."
         )
         return tasks
     }
-    
+
     private func executeSendTextMessageTasks(_ sendBaseMessageTasks: [TaskDefinitionSendBaseMessage]) async {
         // The `TaskManager.add *MUST* be called in the right order.
         await withCheckedContinuation { continuation in
             var localContinuation: CheckedContinuation<Void, Never>? = continuation
-            
+
             for sendBaseMessageTask in sendBaseMessageTasks {
                 taskManager.add(taskDefinition: sendBaseMessageTask) { task, error in
                     if let error {
@@ -305,12 +312,12 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                         DDLogError("\(task) to send messages failed: \(error)")
                         return
                     }
-                    
+
                     guard let task = task as? TaskDefinitionSendBaseMessage else {
                         assertionFailure("This must not happen.")
                         return
                     }
-                    
+
                     if let last = sendBaseMessageTasks.last, last === task {
                         assert(localContinuation != nil)
                         localContinuation?.resume()
@@ -320,9 +327,9 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             }
         }
     }
-    
+
     // MARK: - BlobMessage
-    
+
     public func sendBlobMessage(
         for item: URLSenderItem,
         in conversationObjectID: NSManagedObjectID,
@@ -337,7 +344,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             )
             throw MessageSenderError.noData
         }
-        
+
         // Check if the data is smaller than the max file size
         guard data.count < kMaxFileSize else {
             NotificationPresenterWrapper.shared.present(
@@ -346,7 +353,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             )
             throw MessageSenderError.tooBig
         }
-        
+
         let em = entityManager
         // Create message
         let messageID = try await em.performSave {
@@ -355,7 +362,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             ) as? ConversationEntity else {
                 throw MessageSenderError.unableToLoadConversation
             }
-            
+
             let origin: BlobOrigin =
                 if localConversation.isGroup,
                 let group = self.groupManager.getGroup(conversation: localConversation),
@@ -365,18 +372,70 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 else {
                     .public
                 }
-            
+
+            let type =
+                if let renderType = item.renderType?.intValue {
+                    FileMessageEntity.FileMessageBaseType(rawValue: renderType) ?? .file
+                }
+                else {
+                    FileMessageEntity.FileMessageBaseType.file
+                }
+
             let fileMessageEntity = try em.entityCreator.createFileMessageEntity(
-                for: item,
+                data: item.getData(),
+                mimeType: item.getMimeType(),
+                caption: item.caption,
+                fileName: item.getName(),
+                type: type,
+                duration: nil,
+                height: nil,
+                width: nil,
+                thumbnailData: nil,
+                thumbnailSize: nil,
+                encryptionKey: NaClCrypto.shared().randomBytes(kBlobKeyLen),
+                origin: NSNumber(integerLiteral: origin.rawValue),
                 in: localConversation,
-                with: origin,
                 correlationID: correlationID,
                 webRequestID: webRequestID
             )
-            
+
+            if fileMessageEntity.renderType == .voiceMessage || fileMessageEntity.renderType == .videoMessage {
+                fileMessageEntity.duration = item.getDuration()
+            }
+
+            if fileMessageEntity.renderType == .imageMessage || fileMessageEntity.renderType == .videoMessage {
+                fileMessageEntity.height = Int(item.getHeight())
+                fileMessageEntity.width = Int(item.getWidth())
+            }
+
+            // Thumbnail
+            if let thumbnailImage = item.getThumbnail() {
+
+                let thumbnailData: Data?
+
+                if UTIConverter.isPNGImageMimeType(fileMessageEntity.mimeType) {
+                    thumbnailData = thumbnailImage.pngData()
+                    fileMessageEntity.mimeTypeThumbnail = fileMessageEntity.mimeType
+                }
+                else {
+                    thumbnailData = MediaConverter.jpegRepresentation(for: thumbnailImage)
+                }
+
+                if let thumbnailData {
+                    let thumbnail = em.entityCreator.imageDataEntity(
+                        data: thumbnailData,
+                        size: CGSize(width: thumbnailImage.size.width, height: thumbnailImage.size.height)
+                    )
+                    fileMessageEntity.thumbnail = thumbnail
+                }
+                else {
+                    DDLogError("Unable to create thumbnail data for item")
+                }
+            }
+
             return fileMessageEntity.id
         }
-        
+
         // Fetch it again to get a non temporary objectID
         let fileMessageObjectID = try await em.perform {
             guard let localConversation = em.entityFetcher.existingObject(
@@ -384,22 +443,21 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             ) as? ConversationEntity else {
                 throw MessageSenderError.unableToLoadConversation
             }
-            
+
             guard let fileMessage = em.entityFetcher.message(
                 with: messageID,
-                conversation: localConversation
+                in: localConversation
             ) as? FileMessageEntity else {
                 throw MessageSenderError.unableToLoadMessage
             }
-            
+
             return fileMessage.objectID
         }
-        
+
         try await syncAndSendBlobMessage(with: fileMessageObjectID)
     }
     
-    @available(*, deprecated, message: "Only use from Objective-C code")
-    @objc public func sendBlobMessage(
+    @available(swift, obsoleted: 1.0, message: "Only use from Objective-C") @objc public func sendBlobMessage(
         for item: URLSenderItem,
         inConversationWithID conversationID: NSManagedObjectID,
         correlationID: String?,
@@ -432,7 +490,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         poiAddress: String?,
         in conversation: ConversationEntity
     ) async {
-        
+
         // We handle messages sent to a distribution list separately
         if let distributionList = await (
             entityManager.perform {
@@ -448,7 +506,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             )
             return
         }
-        
+
         let locationMessage = await createLocationMessage(
             conversation: conversation,
             coordinates: coordinates,
@@ -457,27 +515,27 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             poiAddress: poiAddress,
             setConversationLastUpdate: true
         )
-        
+
         guard let locationMessage else {
             assertionFailure("Could not create location message.")
             return
         }
-        
+
         let task = await createTask(
             locationMessage: locationMessage,
             conversation: conversation
         )
-        
+
         guard let task else {
             assertionFailure("Could not create task definition.")
             return
         }
-        
+
         await executeSendLocationMessageTask(task)
-        
+
         donateInteractionForOutgoingMessage(in: conversation)
     }
-    
+
     private func sendDistributionListLocationMessage(
         coordinates: CLLocationCoordinate2D,
         accuracy: CLLocationAccuracy,
@@ -486,15 +544,15 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         to distributionList: DistributionListEntity,
         sendProfilePicture: Bool = true
     ) async {
-        
+
         let conversation = await entityManager.perform {
-            self.entityManager.entityFetcher.conversationEntity(forDistributionList: distributionList)
+            self.entityManager.entityFetcher.conversationEntity(for: Int(distributionList.distributionListID))
         }
         guard let conversation else {
             assertionFailure("Could find distribution list.")
             return
         }
-        
+
         // TODO: (IOS-4366) How should we display (state, etc.) these messages in the distribution list conversation?
         let distributionListMessage = await createLocationMessage(
             conversation: conversation,
@@ -504,11 +562,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             poiAddress: poiAddress,
             setConversationLastUpdate: true
         )
-        
+
         guard let distributionListMessage else {
             return
         }
-        
+
         // Send message to all receiving conversations, this is mostly the same code as above for single conversations.
         for receivingConversation in receivingConversations(for: distributionList) {
             let locationMessage = await createLocationMessage(
@@ -520,28 +578,28 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 setConversationLastUpdate: false,
                 distributionListMessage: distributionListMessage
             )
-            
+
             guard let locationMessage else {
                 assertionFailure("Could not create location message.")
                 return
             }
-            
+
             let task = await createTask(
                 locationMessage: locationMessage,
                 conversation: receivingConversation
             )
-            
+
             guard let task else {
                 assertionFailure("Could not create task definition.")
                 return
             }
-            
+
             await executeSendLocationMessageTask(task)
-            
+
             donateInteractionForOutgoingMessage(in: conversation)
         }
     }
-    
+
     private func createLocationMessage(
         conversation: ConversationEntity,
         coordinates: CLLocationCoordinate2D,
@@ -552,27 +610,28 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         distributionListMessage: LocationMessageEntity? = nil
     ) async -> LocationMessageEntity? {
         await entityManager.performSave {
-            if let messageConversation = self.entityManager.entityFetcher
-                .getManagedObject(by: conversation.objectID) as? ConversationEntity,
-                let message = self.entityManager.entityCreator.locationMessageEntity(
-                    for: messageConversation,
-                    setLastUpdate: setConversationLastUpdate
-                ) {
-                
-                message.latitude = NSNumber(floatLiteral: coordinates.latitude)
-                message.longitude = NSNumber(floatLiteral: coordinates.longitude)
-                message.accuracy = NSNumber(floatLiteral: accuracy)
-                message.poiName = poiName
-                message.poiAddress = poiAddress
-                
-                // Distribution list handling
-                if let distributionListMessage {
-                    message.distributionListMessage = distributionListMessage
-                }
-                
-                return message
+            guard let messageConversation = self.entityManager.entityFetcher.managedObject(
+                with: conversation.objectID
+            ) as? ConversationEntity else {
+                return nil
             }
-            return nil
+
+            let message = self.entityManager.entityCreator.locationMessageEntity(
+                latitude: coordinates.latitude,
+                longitude: coordinates.longitude,
+                accuracy: accuracy,
+                poiName: poiName,
+                poiAddress: poiAddress,
+                in: messageConversation,
+                setLastUpdate: setConversationLastUpdate
+            )
+
+            // Distribution list handling
+            if let distributionListMessage {
+                message.distributionListMessage = distributionListMessage
+            }
+
+            return message
         }
     }
 
@@ -582,10 +641,10 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     ) async -> TaskDefinitionSendLocationMessage? {
         await entityManager.perform {
             var task: TaskDefinitionSendLocationMessage? = nil
-            
+
             // We replace \n with \\n to conform to specs
             let formattedAddress = locationMessage.poiAddress?.replacingOccurrences(of: "\n", with: "\\n")
-            
+
             if let group = self.groupManager.getGroup(conversation: conversation) {
                 self.groupManager.periodicSyncIfNeeded(for: group)
                 let receivers = group.members.map(\.identity)
@@ -603,17 +662,17 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     receiverIdentity: receiver
                 )
             }
-            
+
             return task
         }
     }
-    
+
     private func executeSendLocationMessageTask(_ sendLocationMessageTask: TaskDefinitionSendLocationMessage) async {
         taskManager.add(taskDefinition: sendLocationMessageTask)
     }
 
     // MARK: - BallotMessage
-    
+
     @objc public func sendBallotMessage(for ballot: BallotEntity) {
         guard BallotMessageEncoder.passesSanityCheck(ballot) else {
             DDLogError("Ballot did not pass sanity check. Do not send.")
@@ -626,10 +685,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             var group: Group?
             var conversation: ConversationEntity?
 
-            if let messageBallot = self.entityManager.entityFetcher
-                .getManagedObject(by: ballot.objectID) as? BallotEntity,
-                let message = self.entityManager.entityCreator
-                .ballotMessage(for: messageBallot.conversation) {
+            if let messageBallot = self.entityManager.entityFetcher.managedObject(
+                with: ballot.objectID
+            ) as? BallotEntity, let localConversation = messageBallot.conversation {
+
+                let message = self.entityManager.entityCreator.ballotMessageEntity(in: localConversation)
 
                 message.updateBallot(ballot)
 
@@ -643,7 +703,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     receiverIdentity = message.conversation.contact?.threemaIdentity
                 }
 
-                conversation = message.conversation
+                conversation = localConversation
             }
 
             return (messageID, receiverIdentity, group, conversation)
@@ -657,7 +717,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         taskManager.add(
             taskDefinition: TaskDefinitionSendBaseMessage(
                 messageID: messageID,
-                receiverIdentity: receiverIdentity?.string,
+                receiverIdentity: receiverIdentity?.rawValue,
                 group: group,
                 sendContactProfilePicture: false
             )
@@ -679,7 +739,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             var receiverIdentity: ThreemaIdentity?
             var group: Group?
             var conv: ConversationEntity?
-            
+
             if let conversation = ballot.conversation {
                 conv = conversation
                 group = self.groupManager.getGroup(conversation: conversation)
@@ -697,7 +757,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         taskManager.add(
             taskDefinition: TaskDefinitionSendBallotVoteMessage(
                 ballotID: ballotID,
-                receiverIdentity: receiverIdentity?.string,
+                receiverIdentity: receiverIdentity?.rawValue,
                 group: group,
                 sendContactProfilePicture: false
             )
@@ -709,7 +769,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     }
 
     // MARK: - Generic sending
-    
+
     public func sendMessage(abstractMessage: AbstractMessage, isPersistent: Bool, completion: (() -> Void)?) {
         taskManager.add(
             taskDefinition: TaskDefinitionSendAbstractMessage(
@@ -728,15 +788,15 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             else {
                 return nil
             }
-            
+
             return baseMessage is BlobData
         }
-    
+
         guard let isBlobData else {
             DDLogError("Unable to load message with object id \(objectID)")
             return
         }
-        
+
         @Sendable func resetSendingErrorIfValid() {
             entityManager.performAndWaitSave {
                 // We just checked above that a base message with this objectID exists
@@ -745,7 +805,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 else {
                     return
                 }
-                
+
                 if baseMessage.isGroupMessage {
                     // 3. If `receivers` includes the list of group members requesting a re-send
                     //    of `message`², remove the _re-send requested_ mark on `message` [...]
@@ -756,7 +816,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                         let rejectedByIdentities = Set(
                             baseMessage.rejectedBy?.map { ThreemaIdentity($0.identity) } ?? []
                         )
-                        
+
                         if rejectedByIdentities.subtracting(receivingMembers).isEmpty {
                             baseMessage.sendFailed = false
                         }
@@ -772,7 +832,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 }
             }
         }
-        
+
         // Set error state if blob sync or sending task creation fails
         @Sendable func setSendingError() {
             entityManager.performAndWaitSave {
@@ -781,7 +841,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 baseMessage?.sendFailed = true
             }
         }
-        
+
         if isBlobData {
             do {
                 try await syncAndSendBlobMessage(with: objectID, to: receivers)
@@ -835,7 +895,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             if let receiversExcluded {
                 task.receivingGroupMembers = Set(
                     group.members.filter { !receiversExcluded.contains($0) }
-                        .map(\.identity.string)
+                        .map(\.identity.rawValue)
                 )
             }
         }
@@ -859,42 +919,41 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             else {
                 throw MessageSenderError.unableToLoadMessage
             }
-            
+
             var hasTextChanged = false
             var previousText: String?
-            
+
             // Save edited text
             if let textMessage = baseMessage as? TextMessageEntity,
                textMessage.text != trimmedText {
-                
+
                 // Save history
                 previousText = textMessage.text
-                
+
                 // Update message
                 textMessage.text = trimmedText
                 hasTextChanged = true
             }
             else if let fileMessage = baseMessage as? FileMessageEntity,
                     fileMessage.caption != trimmedText {
-                
+
                 // Save history
                 if let previousCaption = fileMessage.caption {
                     previousText = previousCaption
                 }
-                
+
                 // Update message
                 fileMessage.caption = trimmedText
                 fileMessage.json = FileMessageEncoder.jsonString(for: fileMessage)
                 hasTextChanged = true
             }
-            
-            if hasTextChanged, let history = self.entityManager.entityCreator.messageHistoryEntry(for: baseMessage) {
-                history.message = baseMessage
-                history.editDate = baseMessage.lastEditedAt ?? baseMessage.date ?? .now
+
+            if hasTextChanged {
+                let history = self.entityManager.entityCreator.messageHistoryEntryEntity(for: baseMessage)
                 history.text = previousText
             }
             else {
-                DDLogError("[MessageSender] Text did not change or could not create MessageHistoryEntry")
+                DDLogInfo("[MessageSender] Text did not change.")
             }
 
             let messageID = baseMessage.id
@@ -926,7 +985,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             if let receiversExcluded {
                 task.receivingGroupMembers = Set(
                     group.members.filter { !receiversExcluded.contains($0) }
-                        .map(\.identity.string)
+                        .map(\Contact.identity.rawValue)
                 )
             }
         }
@@ -935,18 +994,18 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
     }
 
     // MARK: - Reactions
-    
+
     public func sendReaction(
         to objectID: NSManagedObjectID,
         reaction: EmojiVariant
     ) async throws -> ReactionsManager.ReactionSendingResult {
-        
+
         // The following code intends to map our protocol for the "Reaction" message submitting
-        
+
         // [Protocol Step] 1. Let reaction be the reaction to be applied to or withdrawn from a referred message which
         // must contain a
         // single fully-qualified emoji codepoint sequence that is part of the current Unicode standard.
-        
+
         let (message, messageID, isOwnMessage): (BaseMessageEntity?, Data?, Bool?) = await entityManager.perform {
             guard let message = self.entityManager.entityFetcher.existingObject(with: objectID) as? BaseMessageEntity
             else {
@@ -954,49 +1013,50 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             }
             return (message, message.id, message.isOwnMessage)
         }
-        
+
         guard let message, let messageID else {
             DDLogError("[Reactions] Message not found.")
             throw ReactionsManager.ReactionError.sendingFailed
         }
-        
+
         let (conversation, conversationIsGroup) = await entityManager.perform {
             let conversation = self.entityManager.entityFetcher
                 .existingObject(with: message.conversation.objectID) as? ConversationEntity
             return (conversation, conversation?.isGroup ?? false)
         }
-        
+
         guard let conversation else {
             DDLogError("[Reactions] Conversation not found.")
             throw ReactionsManager.ReactionError.sendingFailed
         }
-        
+
         // [Protocol Step] 2. Run the Legacy Reaction Mapping Steps with reaction and let legacy-reaction be the result.
         let legacyMapping = reaction.base.applyLegacyMapping()
-                
+
         if !conversationIsGroup {
             // Reaction if for message in 1:1 conversation
-            
+
             let contact: Contact? = await entityManager.perform {
-                guard let contactEntity = self.entityManager.entityFetcher.contact(for: conversation.contact?.identity)
+                guard let identity = conversation.contact?.identity,
+                      let contactEntity = self.entityManager.entityFetcher.contactEntity(for: identity)
                 else {
                     return nil
                 }
                 return Contact(contactEntity: contactEntity)
             }
-            
+
             guard let contact else {
                 DDLogError("[Reactions] Contact not found.")
                 throw ReactionsManager.ReactionError.sendingFailed
             }
-            
+
             let contactSupportsReaction = FeatureMask.check(contact: contact, for: .reactionSupport)
-            
+
             // We cannot react to our own message, if the other side does not support reactions.
             if isOwnMessage ?? false, !contactSupportsReaction {
                 return .noAction
             }
-            
+
             // [Protocol Step] 3. If legacy-reaction is not defined and the sender or the receiver does not have
             // REACTION_SUPPORT, log a warning and abort these steps.¹
             if legacyMapping == nil {
@@ -1004,23 +1064,23 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     return .noSupportRemoteSingle
                 }
             }
-            
+
             // [Protocol Step] 4. Let reacted-at be the current timestamp.
             let reactedAt = Date.now
-            
+
             // Since we do no longer save legacy acks/decs, we create a reaction anyways
             let apply = await entityManager.performSave {
-                
+
                 // [Protocol Step]  7. Apply reaction (i.e. apply or withdraw) to the referred message with the
                 // reacted-at timestamp.
                 // We check if the user has already reacted with the same emoji…
                 var messageReactionEntity: MessageReactionEntity?
-                
+
                 if let existingReactions = self.entityManager.entityFetcher.messageReactionEntities(
-                    forMessage: message,
+                    for: message,
                     creator: nil
                 ), !existingReactions.isEmpty {
-                    
+
                     messageReactionEntity = existingReactions.first {
                         $0.reaction == reaction.rawValue
                     }
@@ -1031,7 +1091,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                         }
                         return false
                     }
-                    
+
                     // If we do apply and the contact does not support reactions, we remove all existing reactions. This
                     // ensures that there cannot be a legacy ack and dec at the same time.
                     if !contactSupportsReaction {
@@ -1040,46 +1100,47 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                         }
                     }
                 }
-                
+
                 // … if not, we create a new reaction.
-                messageReactionEntity = self.entityManager.entityCreator.messageReactionEntity().then {
-                    $0.reaction = reaction.rawValue
+                messageReactionEntity = self.entityManager.entityCreator.messageReactionEntity(
+                    reaction: reaction.rawValue,
+                    message: message
+                ).then {
                     $0.date = reactedAt
-                    $0.message = message
                 }
-                
+
                 return true
             }
-            
+
             if !contactSupportsReaction, !apply {
                 return .noSupportRemoteSingle
             }
-            
+
             // [Protocol Step]  5. If both sender and receiver have REACTION_SUPPORT,…
             if contactSupportsReaction {
-                
+
                 // … run the 1:1 Messages Submit Steps with messages set from the following properties:
                 var e2eReactionMessage = CspE2e_Reaction()
                 e2eReactionMessage.messageID = try messageID.littleEndian()
-          
+
                 if apply {
                     e2eReactionMessage.action = .apply(reaction.data)
                 }
                 else {
                     e2eReactionMessage.action = .withdraw(reaction.data)
                 }
-                
+
                 let task = TaskDefinitionSendReactionMessage(
                     reaction: e2eReactionMessage,
-                    receiverIdentity: contact.identity.string
+                    receiverIdentity: contact.identity.rawValue
                 )
-                
+
                 let (taskWait, _) = taskManager.addWithWait(taskDefinition: task)
                 try await taskWait.wait()
 
                 return .success
             }
-            
+
             // [Protocol Step] 6. If the sender or the receiver does not have REACTION_SUPPORT, run the 1:1 Messages
             // Submit Steps with messages set from the following properties:
             else if let legacyMapping {
@@ -1089,7 +1150,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 case .dec:
                     await sendUserDecline(for: message, toIdentity: contact.identity)
                 }
-                
+
                 return .success
             }
         }
@@ -1099,25 +1160,25 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 DDLogError("[Reactions] Group not found.")
                 throw ReactionsManager.ReactionError.sendingFailed
             }
-            
+
             guard group.isSelfMember else {
                 DDLogError("[Reactions] Not member of group.")
                 return .notGroupMemeber
             }
-            
+
             var (hasRemoteSupport, unsupported) = FeatureMask.check(message: message, for: .reactionSupport)
-            
+
             if group.isNoteGroup {
                 hasRemoteSupport = true
             }
-            
+
             if legacyMapping == nil {
                 // [Protocol Step] 3. If legacy-reaction is not defined:
                 // [Protocol Step] 3.1 If the sender does not have REACTION_SUPPORT, log a warning and abort these
                 // steps.
                 // [Protocol Step] 3.2 If all of the group members do not have REACTION_SUPPORT, log a warning and abort
                 // these steps.
-                
+
                 if !hasRemoteSupport {
                     DDLogWarn(
                         "Tried to send a Reaction, but it is not supported by any receiver in the group."
@@ -1125,29 +1186,29 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     return .noSupportRemoteGroup
                 }
             }
-            
+
             // [Protocol Step] 4. Let reacted-at be the current timestamp.
             let reactedAt = Date.now
-            
+
             // [Protocol Step] 5. Run the Group Messages Submit Steps with messages set from the following properties:
             let apply = try await entityManager.performSave {
-                
+
                 guard let baseMessage = self.entityManager.entityFetcher
                     .existingObject(with: objectID) as? BaseMessageEntity
                 else {
                     throw MessageSenderError.unableToLoadMessage
                 }
-                
+
                 // [Protocol Step] 6. Apply reaction (i.e. apply or withdraw) to the referred message with the
                 // reacted-at timestamp.
                 // We check if the user has already reacted with the same emoji
                 var messageReactionEntity: MessageReactionEntity?
-                
+
                 if let existingReactions = self.entityManager.entityFetcher.messageReactionEntities(
-                    forMessage: baseMessage,
+                    for: baseMessage,
                     creator: nil
                 ), !existingReactions.isEmpty {
-                    
+
                     messageReactionEntity = existingReactions.first {
                         $0.reaction == reaction.rawValue
                     }
@@ -1158,7 +1219,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                         }
                         return false
                     }
-                    
+
                     // If we do apply and no contact does not support reactions, we remove all our own existing
                     // reactions. This ensures that there cannot be a legacy ack and dec at the same time for contacts
                     // that do not support reactions yet.
@@ -1168,51 +1229,52 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                         }
                     }
                 }
-           
+
                 // If not, we create a new reaction
-                messageReactionEntity = self.entityManager.entityCreator.messageReactionEntity().then {
-                    $0.reaction = reaction.rawValue
+                messageReactionEntity = self.entityManager.entityCreator.messageReactionEntity(
+                    reaction: reaction.rawValue,
+                    message: baseMessage
+                ).then {
                     $0.date = reactedAt
-                    $0.message = baseMessage
                 }
-                
+
                 return true
             }
-            
+
             if !hasRemoteSupport, !apply {
                 return .noSupportRemoteGroup
             }
-            
+
             var e2eReactionMessage = CspE2e_Reaction()
             e2eReactionMessage.messageID = try messageID.littleEndian()
-                
+
             if apply {
                 e2eReactionMessage.action = .apply(reaction.data)
             }
             else {
                 e2eReactionMessage.action = .withdraw(reaction.data)
             }
-                
+
             let task = TaskDefinitionSendReactionMessage(
                 reaction: e2eReactionMessage,
                 group: group
             )
-                
+
             if !unsupported.isEmpty {
                 var receivers = Set<String>()
-                    
+
                 for member in group.members {
                     let contains = unsupported.contains { $0.identity == member.identity }
-                        
+
                     guard !contains else {
                         continue
                     }
-                    receivers.insert(member.identity.string)
+                    receivers.insert(member.identity.rawValue)
                 }
-                    
+
                 task.receivingGroupMembers = receivers
             }
-                
+
             let (waitTask, _) = taskManager.addWithWait(taskDefinition: task)
             try await waitTask.wait()
 
@@ -1227,10 +1289,10 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                     case .dec:
                         await sendUserDecline(for: message, toGroup: group, receivers: unsupported)
                     }
-                        
+
                     return .success
                 }
-                    
+
                 // Checks for gateway ids in unsupported members
                 // If the group is message storing, we always show an alert
                 guard !group.isMessageStoringGatewayGroup else {
@@ -1238,7 +1300,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 }
                 // Check if unsupported contains non gateway ids
                 let unsupportingNonGatewayMembers = unsupported.filter { !$0.hasGatewayID }
-                    
+
                 // If so we have unsupporting members
                 if !unsupportingNonGatewayMembers.isEmpty {
                     return .partialSupportRemoteGroup
@@ -1251,10 +1313,10 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 return .success
             }
         }
-        
+
         return .error
     }
-    
+
     // MARK: - Status update
 
     public func sendDeliveryReceipt(for abstractMessage: AbstractMessage) -> Promise<Void> {
@@ -1291,7 +1353,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         let doSendReadReceipt = await entityManager.perform {
             // If multi device not activated and if sending read receipt to contact is disabled, then there is nothing
             // to do
-            let contactEntity = self.entityManager.entityFetcher.contact(for: toIdentity.string)
+            let contactEntity = self.entityManager.entityFetcher.contactEntity(for: toIdentity.rawValue)
             return !(!self.doSendReadReceipt(to: contactEntity) && !self.userSettings.enableMultiDevice)
         }
 
@@ -1314,7 +1376,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             return
         }
 
-        guard let group = groupManager.getGroup(toGroupIdentity.id, creator: toGroupIdentity.creator.string) else {
+        guard let group = groupManager.getGroup(toGroupIdentity.id, creator: toGroupIdentity.creator.rawValue) else {
             DDLogError("Group not found for \(toGroupIdentity)")
             return
         }
@@ -1329,7 +1391,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
     public func sendTypingIndicator(typing: Bool, toIdentity: ThreemaIdentity) {
         guard entityManager.performAndWait({
-            guard let contactEntity = self.entityManager.entityFetcher.contact(for: toIdentity.string) else {
+            guard let contactEntity = self.entityManager.entityFetcher.contactEntity(for: toIdentity.rawValue) else {
                 return false
             }
 
@@ -1343,7 +1405,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
         let typingIndicatorMessage = TypingIndicatorMessage()
         typingIndicatorMessage.typing = typing
-        typingIndicatorMessage.toIdentity = toIdentity.string
+        typingIndicatorMessage.toIdentity = toIdentity.rawValue
 
         taskManager.add(
             taskDefinition: TaskDefinitionSendAbstractMessage(
@@ -1403,7 +1465,11 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
     func donateInteractionForOutgoingMessage(
         in conversationManagedObjectID: NSManagedObjectID,
-        backgroundEntityManager: EntityManager = EntityManager(withChildContextForBackgroundProcess: true)
+        backgroundEntityManager: EntityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).backgroundEntityManager
     ) -> Guarantee<Bool> {
         firstly {
             Guarantee { $0(userSettings.allowOutgoingDonations) }
@@ -1474,7 +1540,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
         to receivers: MessageSenderReceivers = .all
     ) async throws {
         let result = try await blobManager.syncBlobsThrows(for: objectID)
-        
+
         if result == .uploaded {
             try await blobMessageSender.sendBlobMessage(with: objectID, to: receivers)
         }
@@ -1485,7 +1551,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             throw MessageSenderError.sendingFailed
         }
     }
-    
+
     private func sendNonBlobMessage(with objectID: NSManagedObjectID, to receivers: MessageSenderReceivers) throws {
         let (messageID, receiverIdentity, group) = try getMessageIDAndReceiver(for: objectID)
 
@@ -1502,23 +1568,23 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                 case let .groupMembers(identities):
                     identities
                 }
-            
+
             let taskDefinition = TaskDefinitionSendBaseMessage(
                 messageID: messageID,
                 group: group,
                 receivers: receiverIdentities,
                 sendContactProfilePicture: false
             )
-            
+
             taskManager.add(taskDefinition: taskDefinition)
         }
         else if let receiverIdentity {
             let taskDefinition = TaskDefinitionSendBaseMessage(
                 messageID: messageID,
-                receiverIdentity: receiverIdentity.string,
+                receiverIdentity: receiverIdentity.rawValue,
                 sendContactProfilePicture: false
             )
-            
+
             taskManager.add(taskDefinition: taskDefinition)
         }
         else {
@@ -1547,7 +1613,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             return (messageID, receiverIdentity, group)
         }
     }
-    
+
     func sendUserAck(for message: BaseMessageEntity, toIdentity: ThreemaIdentity) async {
         await sendReceipt(for: [message], receiptType: .ack, toIdentity: toIdentity)
     }
@@ -1628,7 +1694,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
 
                             let taskSendDeliveryReceipts = TaskDefinitionSendDeliveryReceiptsMessage(
                                 fromIdentity: self.myIdentityStore.identity,
-                                toIdentity: toIdentity.string,
+                                toIdentity: toIdentity.rawValue,
                                 receiptType: receiptType,
                                 receiptMessageIDs: receiptMessageIDs,
                                 receiptReadDates: receiptReadDates,
@@ -1705,8 +1771,8 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
                             receiptMessageIDs.append(key)
                             receiptReadDates.append(msgIDAndReadDate[key] as? Date)
                         }
-                        let receiverIdentities = receivers.map(\.identity.string)
-                        
+                        let receiverIdentities = receivers.map(\.identity.rawValue)
+
                         if !receiptMessageIDs.isEmpty {
                             DDLogVerbose("Sending delivery receipt for message IDs: \(receiptMessageIDs)")
 
@@ -1742,7 +1808,7 @@ public final class MessageSender: NSObject, MessageSenderProtocol {
             }
         })
     }
-    
+
     private func receivingConversations(for distributionList: DistributionListEntity) -> [ConversationEntity] {
         var conversations = [ConversationEntity]()
         entityManager.performAndWait {

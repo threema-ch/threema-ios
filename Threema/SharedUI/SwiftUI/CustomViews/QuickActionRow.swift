@@ -21,6 +21,7 @@
 import SwiftUI
 import ThreemaFramework
 
+@available(*, deprecated, message: "Do not use anymore.")
 struct QuickActionRow: View {
     private var actions: [Action] = []
     

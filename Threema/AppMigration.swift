@@ -19,10 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
+import Keychain
 import OSLog
 import ThreemaEssentials
-import ThreemaFramework
 import ThreemaMacros
 
 /// Migrate app to a new version
@@ -61,7 +62,7 @@ import ThreemaMacros
 ///     DDLogNotice("[AppMigration] App migration to version 4.9 successfully finished")
 /// }
 /// ```
-@objc class AppMigration: NSObject {
+public class AppMigration {
 
     private let osPOILog = OSLog(subsystem: "ch.threema.iapp.appMigration", category: .pointsOfInterest)
 
@@ -83,27 +84,12 @@ import ThreemaMacros
         }
     #endif
 
-    init(reset: Bool = false) {
+    public init(reset: Bool = false) {
         self.businessInjector = BusinessInjector(forBackgroundProcess: !Thread.isMainThread)
-        super.init()
 
         if reset {
             businessInjector.userSettings.appMigratedToVersion = AppMigrationVersion.none.rawValue
         }
-    }
-
-    @objc override init() {
-        self.businessInjector = BusinessInjector(forBackgroundProcess: !Thread.isMainThread)
-    }
-
-    @available(
-        *,
-        deprecated,
-        message: "Only use from Objective-C. Use `AppMigrationVersion.isMigrationRequired(userSettings:)` otherwise",
-        renamed: "AppMigrationVersion.isMigrationRequired(userSettings:)"
-    )
-    @objc static func isMigrationRequired(userSettings: UserSettings) -> Bool {
-        AppMigrationVersion.isMigrationRequired(userSettings: userSettings)
     }
 
     /// Runs all necessary migrations
@@ -112,7 +98,7 @@ import ThreemaMacros
     ///
     /// Errors thrown by `run` are always `NSErrors` i.e. they are directly usable by `ErrorHandler.abortWithError()`
     /// function.
-    @objc func run() throws {
+    public func run() throws {
         // We do not perform migrations in safe mode
         guard !SettingsBundleHelper.safeMode else {
             DDLogNotice("[AppMigration] safe mode enabled no migrations will be performed")
@@ -194,13 +180,13 @@ import ThreemaMacros
                 try migrateTo6_6()
                 migratedTo = .v6_6
             }
-            if migratedTo < .v6_8 {
-                try migrateTo6_8()
-                migratedTo = .v6_8
-            }
             if migratedTo < .v6_8_8 {
                 try migrateTo6_8_8()
                 migratedTo = .v6_8_8
+            }
+            if migratedTo < .v6_9 {
+                try migrateTo6_9()
+                migratedTo = .v6_9
             }
 
             // Add here a check if migration is necessary for a particular version...
@@ -229,40 +215,57 @@ import ThreemaMacros
         }
     }
 
+    func updateAppMigrationVersionToLatest() {
+        businessInjector.userSettings.appMigratedToVersion = AppMigrationVersion.latestVerison.rawValue
+    }
+
     // Add here migration function for particular version...
 
     /// Migrate to version 4.8:
     /// - Check protection on my identity store
     /// - Update all contacts to CNContact
-    /// - Update all work contacts the verfication level `kVerificationLevelWorkVerified` and
+    /// - Update all work contacts the verification level `kVerificationLevelWorkVerified` and
     ///   `kVerificationLevelWorkFullyVerified` to flag `workContact`
     /// - Cleanup draft of all conversations
     /// - Add push settings for all group conversations
-    /// - Mark all messages after latest readed message as read
+    /// - Mark all messages after last read message as read
     private func migrateTo4_8() throws {
         DDLogNotice("[AppMigration] App migration to version 4.8 started")
         os_signpost(.begin, log: osPOILog, name: "4.8 migration")
 
-        if DatabaseManager.db().shouldUpdateProtection() {
-            businessInjector.myIdentityStore.updateConnectionRights()
-            DatabaseManager.db().updateProtection()
+        try businessInjector.keychainManager.migrateToVersion0()
+
+        // In earlier versions, when we updated the database from NSFileProtectionComplete to
+        // NSFileProtectionCompleteUntilFirstUserAuthentication, we did not also update the
+        // contents of the external data directory. This needs to be done now, because the
+        // Web client must be able to access images etc. when the device is locked, and Core Data
+        // needs to save external data files for received media.
+        // To be sure, we check our entire app and group containers and change any files or directories
+        // that are still set to NSFileProtectionComplete to the more appropriate
+        // NSFileProtectionCompleteUntilFirstUserAuthentication.
+        // Note that directories may have a file protection class (which then applies to all new files
+        // created within them), but they do not have to.
+        let fileUtility = FileUtility.shared!
+        if let appDataDirectory = fileUtility.appDataDirectory(appGroupID: AppGroup.groupID()) {
+            fileUtility.updateProtectionFormCompleteToCompleteUntilFirstUserAuthentication(at: appDataDirectory)
         }
+        fileUtility.updateProtectionFormCompleteToCompleteUntilFirstUserAuthentication(
+            at: URL(fileURLWithPath: NSHomeDirectory())
+        )
+
         businessInjector.contactStore.updateAllContacts()
 
         MessageDraftStore.shared.cleanupDrafts()
         AppGroup.userDefaults().removeObject(forKey: "AlreadyDeletedOldDrafts")
 
         businessInjector.entityManager.performAndWaitSave {
-            for conversation in self.businessInjector.entityManager.entityFetcher.allConversations() {
-                guard let conversation = conversation as? ConversationEntity else {
-                    continue
-                }
+            for conversation in self.businessInjector.entityManager.entityFetcher.conversationEntities() ?? [] {
 
                 let messageFetcher = MessageFetcher(for: conversation, with: self.businessInjector.entityManager)
                 let calendar = Calendar.current
 
                 // Check has conversation unread messages
-                guard self.businessInjector.entityManager.entityFetcher.countUnreadMessages(for: conversation) > 0
+                guard self.businessInjector.entityManager.entityFetcher.unreadMessageCount(for: conversation) > 0
                 else {
                     if conversation.unreadMessageCount != 0 {
                         self.businessInjector.unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [conversation])
@@ -289,16 +292,14 @@ import ThreemaMacros
 
                 let batch = NSBatchUpdateRequest(entityName: "Message")
                 batch.resultType = .statusOnlyResultType
-                batch
-                    .predicate =
-                    NSPredicate(
-                        format: "conversation == %@ && isOwn == false && remoteSentDate < %@", conversation,
-                        firstRemoteSentDate! as NSDate
-                    )
+                batch.predicate = NSPredicate(
+                    format: "conversation == %@ && isOwn == false && remoteSentDate < %@", conversation,
+                    firstRemoteSentDate! as NSDate
+                )
 
                 batch.propertiesToUpdate = ["readDate": Date(), "read": true]
                 // if there was a error, the execute function will return nil or a result with the result 0
-                if let result = self.businessInjector.entityManager.entityFetcher.execute(batch) {
+                if let result = self.businessInjector.entityManager.entityFetcher.execute(batchUpdateRequest: batch) {
                     if let success = result.result as? Int,
                        success == 0 {
                         DDLogError(
@@ -348,18 +349,16 @@ import ThreemaMacros
 
             let batch = NSBatchUpdateRequest(entityName: "Conversation")
             batch.resultType = .statusOnlyResultType
-            batch
-                .predicate =
-                NSPredicate(
-                    format: "marked == \(NSNumber(booleanLiteral: true))"
-                )
+            batch.predicate = NSPredicate(
+                format: "marked == \(NSNumber(booleanLiteral: true))"
+            )
 
             batch.propertiesToUpdate = [
                 "marked": NSNumber(booleanLiteral: false),
                 "visibility": ConversationEntity.Visibility.pinned.rawValue,
             ]
             // if there was a error, the execute function will return nil or a result with the result 0
-            if let result = self.businessInjector.entityManager.entityFetcher.execute(batch) {
+            if let result = self.businessInjector.entityManager.entityFetcher.execute(batchUpdateRequest: batch) {
                 if let success = result.result as? Int,
                    success == 0 {
                     DDLogError(
@@ -402,17 +401,15 @@ import ThreemaMacros
             // Set for all conversations the last update
             let batch = NSBatchUpdateRequest(entityName: "Conversation")
             batch.resultType = .statusOnlyResultType
-            batch
-                .predicate =
-                NSPredicate(
-                    format: "lastUpdate == nil"
-                )
+            batch.predicate = NSPredicate(
+                format: "lastUpdate == nil"
+            )
 
             batch.propertiesToUpdate = [
                 "lastUpdate": Date(timeIntervalSince1970: 0),
             ]
             // if there was a error, the execute function will return nil or a result with the result 0
-            if let result = self.businessInjector.entityManager.entityFetcher.execute(batch) {
+            if let result = self.businessInjector.entityManager.entityFetcher.execute(batchUpdateRequest: batch) {
                 if let success = result.result as? Int,
                    success == 0 {
                     DDLogError(
@@ -443,7 +440,8 @@ import ThreemaMacros
         os_signpost(.begin, log: osPOILog, name: "5.5 migration")
 
         businessInjector.entityManager.performAndWaitSave {
-            if self.businessInjector.entityManager.entityDestroyer.deleteOwnContact() {
+            if self.businessInjector.entityManager.entityDestroyer
+                .deleteOwnContact(myIdentity: self.businessInjector.myIdentityStore.identity) {
                 DDLogNotice("[AppMigration] Removed own contact from contact list")
             }
         }
@@ -546,7 +544,8 @@ import ThreemaMacros
                         // The 'old' push setting identity, could be a Threema ID or a Group ID
                         var contactEntity: ContactEntity?
                         if identity.count == 8 {
-                            contactEntity = self.businessInjector.entityManager.entityFetcher.contact(for: identity)
+                            contactEntity = self.businessInjector.entityManager.entityFetcher
+                                .contactEntity(for: identity)
                         }
 
                         // Looking for contact or group for given push setting identity,
@@ -569,8 +568,7 @@ import ThreemaMacros
                                     .groupEntities(for: groupID) {
                                     for groupEntity in groupEntities {
                                         if let group = self.businessInjector.groupManager.getGroup(
-                                            // swiftformat:disable:next acronyms
-                                            groupEntity.groupId,
+                                            groupEntity.groupID,
                                             creator: groupEntity.groupCreator ?? myIdentity
                                         ) {
 
@@ -622,10 +620,9 @@ import ThreemaMacros
         businessInjector.entityManager.performAndWaitSave {
             if let allFileMessages =
                 self.businessInjector.entityManager.entityFetcher
-                    .allFileMessagesWithJsonCaptionButEmptyCaption() as?
-                    [FileMessageEntity] {
+                    .fileMessagesWithJSONCaptionButEmptyCaption() {
                 for fileMessage in allFileMessages {
-                    fileMessage.caption = fileMessage.jsonCaption
+                    fileMessage.caption = fileMessage.jsonDescription
                 }
             }
         }
@@ -678,9 +675,17 @@ import ThreemaMacros
         DDLogNotice("[AppMigration] App migration to version 6.0 started")
         os_signpost(.begin, log: osPOILog, name: "6.0 migration")
 
+        func decode(safeData data: Data) -> SafeData? {
+            try? NSKeyedUnarchiver.unarchivedObject(
+                ofClasses: [SafeData.self, NSArray.self, NSDate.self, NSNumber.self, NSString.self],
+                from: data
+            ) as? SafeData
+        }
+
         // Remember to setup of Threema Safe when downgrade Threema (only necessary if Threema Safe activated)
-        let safeConfigManager = SafeConfigManager(myIdentityStore: businessInjector.myIdentityStore)
-        if safeConfigManager.getKey() != nil {
+        if let data = businessInjector.userSettings.safeConfig,
+           let safeData = decode(safeData: data),
+           safeData.key != nil {
             businessInjector.userSettings.safeIntroShown = false
         }
 
@@ -688,15 +693,13 @@ import ThreemaMacros
         businessInjector.entityManager.performAndWaitSave {
             let batch = NSBatchUpdateRequest(entityName: "FileMessage")
             batch.resultType = .statusOnlyResultType
-            batch
-                .predicate =
-                NSPredicate(
-                    format: "isOwn == false AND type == 1 AND mimeType IN %@", UTIConverter.renderingAudioMimetypes()
-                )
+            batch.predicate = NSPredicate(
+                format: "isOwn == false AND type == 1 AND mimeType IN %@", UTIConverter.renderingAudioMimetypes()
+            )
 
             batch.propertiesToUpdate = ["consumed": Date(timeIntervalSince1970: 0)]
             // If there was an error, the execute function will return nil or a result with the result 0
-            if let result = self.businessInjector.entityManager.entityFetcher.execute(batch) {
+            if let result = self.businessInjector.entityManager.entityFetcher.execute(batchUpdateRequest: batch) {
                 if let success = result.result as? Int,
                    success == 0 {
                     DDLogError(
@@ -736,16 +739,12 @@ import ThreemaMacros
         os_signpost(.begin, log: osPOILog, name: "6.6 migration")
 
         func addReaction(to message: BaseMessageEntity, from contact: ContactEntity?, thumbUp: Bool, at date: Date) {
-            guard let reaction = businessInjector.entityManager.entityCreator.messageReactionEntity()
-            else {
-                DDLogError("Create reaction entity failed")
-                return
-            }
-
-            reaction.message = message
+            let reaction = businessInjector.entityManager.entityCreator.messageReactionEntity(
+                reaction: thumbUp ? "👍" : "👎",
+                message: message
+            )
             reaction.creator = contact
             reaction.date = date
-            reaction.reaction = thumbUp ? "👍" : "👎"
         }
 
         // Migrate existing ack/dec to new reactions
@@ -807,10 +806,10 @@ import ThreemaMacros
                         continue
                     }
 
-                    var contact: ContactEntity? = nil
+                    var contact: ContactEntity?
                     if receipt.identity != self.businessInjector.myIdentityStore.identity {
                         guard let fetchedContact = self.businessInjector.entityManager.entityFetcher
-                            .contact(for: receipt.identity) else {
+                            .contactEntity(for: receipt.identity) else {
                             continue
                         }
                         contact = fetchedContact
@@ -828,21 +827,6 @@ import ThreemaMacros
         DDLogNotice("[AppMigration] App migration to version 6.6 successfully finished")
     }
 
-    /// Migrate to version 6.8:
-    /// - Migrate Keychain when downgrade Threema, respectively delete all (incompatible) Keychain items except "Threema
-    /// identity 1"
-    private func migrateTo6_8() throws {
-        DDLogNotice("[AppMigration] App migration to version 6.8 started")
-        os_signpost(.begin, log: osPOILog, name: "6.8 migration")
-
-        if AppMigrationVersion.isAppVersionDowngraded {
-            try businessInjector.keychainHelper.migrateToDowngrade()
-        }
-
-        os_signpost(.end, log: osPOILog, name: "6.8 migration")
-        DDLogNotice("[AppMigration] App migration to version 6.8 successfully finished")
-    }
-    
     /// Migrate to version 6.8.8:
     /// - Migrate profilePictureContactList if there are Threema ID's with "Optional"
     private func migrateTo6_8_8() throws {
@@ -871,5 +855,53 @@ import ThreemaMacros
         
         os_signpost(.end, log: osPOILog, name: "6.8.8 migration")
         DDLogNotice("[AppMigration] App migration to version 6.8.8 successfully finished")
+    }
+
+    /// Migrate to version 6.9:
+    /// - Migrate some Settings to Keychain
+    private func migrateTo6_9() throws {
+        DDLogNotice("[AppMigration] App migration to version 6.9 started")
+        os_signpost(.begin, log: osPOILog, name: "6.9 migration")
+
+        try businessInjector.keychainManager.migrateToVersion1(
+            myIdentity: ThreemaIdentity(businessInjector.myIdentityStore.identity)
+        )
+
+        // Migrate license
+        let persistenceKeyLicenseUser = "Threema license username"
+        let persistenceKeyLicensePassword = "Threema license password"
+        let persistenceKeyDeviceID = "Threema device ID"
+        let persistenceKeyOnPremConfigURL = "Threema OnPrem config URL"
+
+        if let user = AppGroup.userDefaults().string(forKey: persistenceKeyLicenseUser),
+           let password = AppGroup.userDefaults().string(forKey: persistenceKeyLicensePassword) {
+
+            let deviceID = AppGroup.userDefaults().string(forKey: persistenceKeyDeviceID)
+            let server = AppGroup.userDefaults().string(forKey: persistenceKeyOnPremConfigURL)
+
+            let license = ThreemaLicense(
+                user: user,
+                password: password,
+                deviceID: deviceID,
+                onPremServer: server
+            )
+            try businessInjector.keychainManager.storeLicense(license)
+        }
+
+        AppGroup.userDefaults().removeObject(forKey: persistenceKeyLicenseUser)
+        AppGroup.userDefaults().removeObject(forKey: persistenceKeyLicensePassword)
+        AppGroup.userDefaults().removeObject(forKey: persistenceKeyOnPremConfigURL)
+        AppGroup.userDefaults().removeObject(forKey: persistenceKeyDeviceID)
+        AppGroup.userDefaults().synchronize()
+
+        // Migrate device ID for multi device
+        if let deviceID = AppGroup.userDefaults().data(forKey: "DeviceID") {
+            try businessInjector.keychainManager.storeMultiDeviceID(id: deviceID)
+
+            AppGroup.userDefaults().removeObject(forKey: "DeviceID")
+        }
+
+        os_signpost(.end, log: osPOILog, name: "6.9 migration")
+        DDLogNotice("[AppMigration] App migration to version 6.9 successfully finished")
     }
 }

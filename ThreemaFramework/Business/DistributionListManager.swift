@@ -43,41 +43,38 @@ public final class DistributionListManager: NSObject, DistributionListManagerPro
         name: String,
         imageData: Data?,
         recipients: Set<Contact>
-    ) throws {
-        try entityManager.performAndWaitSave {
-            
-            guard let distributionList = self.entityManager.entityCreator.distributionListEntity() else {
-                throw DistributionListManager.DistributionListError.creationFailure
-            }
+    ) -> DistributionList? {
+        entityManager.performAndWaitSave {
             
             // We check for id collisions with existing objects
             var id = Int64.random(in: 0..<Int64.max)
             var idCollision = self.entityManager.entityFetcher
-                .distributionListEntity(forDistributionListID: id as NSNumber) != nil
+                .distributionListEntity(for: Int(id)) != nil
            
             while idCollision {
                 id = Int64.random(in: 0..<Int64.max)
                 idCollision = self.entityManager.entityFetcher
-                    .distributionListEntity(forDistributionListID: id as NSNumber) != nil
+                    .distributionListEntity(for: Int(id)) != nil
             }
             
-            distributionList.distributionListID = id
-            distributionList.conversation = conversation
+            let distributionList = self.entityManager.entityCreator.distributionListEntity(
+                distributionListID: id,
+                conversation: conversation
+            )
             distributionList.name = name
             
             let contactEntities: Set<ContactEntity> = Set(recipients.compactMap {
-                self.entityManager.entityFetcher.contact(for: $0.identity.string)
+                self.entityManager.entityFetcher.contactEntity(for: $0.identity.rawValue)
             })
             
             conversation.members = contactEntities
             
             if let imageData, let image = UIImage(data: imageData) {
-                let dbImage = self.entityManager.entityCreator.imageDataEntity()
-                dbImage?.data = imageData
-                dbImage?.width = Int16(image.size.width)
-                dbImage?.height = Int16(image.size.height)
+                let dbImage = self.entityManager.entityCreator.imageDataEntity(data: imageData, size: image.size)
                 conversation.groupImage = dbImage
             }
+            
+            return DistributionList(distributionListEntity: distributionList)
         }
     }
 
@@ -96,7 +93,7 @@ public final class DistributionListManager: NSObject, DistributionListManagerPro
         
         entityManager.performAndWaitSave {
             guard let conversation = self.entityManager.entityFetcher
-                .conversation(for: distributionList.distributionListID as NSNumber) else {
+                .conversationEntity(for: distributionList.distributionListID) else {
                 return
             }
             guard let profilePicture else {
@@ -108,10 +105,7 @@ public final class DistributionListManager: NSObject, DistributionListManagerPro
                 return
             }
             
-            let dbImage = self.entityManager.entityCreator.imageDataEntity()
-            dbImage?.data = profilePicture
-            dbImage?.width = Int16(image.size.width)
-            dbImage?.height = Int16(image.size.height)
+            let dbImage = self.entityManager.entityCreator.imageDataEntity(data: profilePicture, size: image.size)
             conversation.groupImage = dbImage
         }
     }
@@ -125,7 +119,7 @@ public final class DistributionListManager: NSObject, DistributionListManagerPro
         
         entityManager.performAndWaitSave {
             guard let distributionListEntity = self.entityManager.entityFetcher
-                .distributionListEntity(forDistributionListID: distributionList.distributionListID as NSNumber) else {
+                .distributionListEntity(for: distributionList.distributionListID) else {
                 return
             }
             distributionListEntity.name = name
@@ -136,11 +130,11 @@ public final class DistributionListManager: NSObject, DistributionListManagerPro
         
         entityManager.performAndWaitSave {
             guard let conversation = self.entityManager.entityFetcher
-                .conversation(for: distributionList.distributionListID as NSNumber) else {
+                .conversationEntity(for: distributionList.distributionListID) else {
                 return
             }
             let contactEntities: Set<ContactEntity> = Set(recipients.compactMap {
-                self.entityManager.entityFetcher.contact(for: $0.identity.string)
+                self.entityManager.entityFetcher.contactEntity(for: $0.identity.rawValue)
             })
             
             conversation.members = contactEntities

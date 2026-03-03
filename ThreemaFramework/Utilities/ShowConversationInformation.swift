@@ -57,13 +57,13 @@ public class ShowConversationInformation: NSObject {
             resolvedConversation = conversation
         }
         else if let contact = info[kKeyContact] as? ContactEntity {
-            let em = EntityManager()
+            let em = BusinessInjector.ui.entityManager
             em.performAndWait {
                 resolvedConversation = em.conversation(for: contact.identity, createIfNotExisting: true)
             }
         }
         else if let identity = info[kKeyContactIdentity] as? String {
-            let em = EntityManager()
+            let em = BusinessInjector.ui.entityManager
             em.performAndWait {
                 resolvedConversation = em.conversation(for: identity, createIfNotExisting: true)
             }

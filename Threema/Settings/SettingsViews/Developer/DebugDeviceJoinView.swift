@@ -18,11 +18,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import CodeScanner
 import SwiftUI
+import ThreemaFramework
+import ThreemaMacros
 
 struct DebugDeviceJoinView: View {
-    
     private enum JoinState {
         case initial
         case connecting
@@ -30,26 +30,33 @@ struct DebugDeviceJoinView: View {
         case joining
         case joined
     }
-    
+
+    private struct LogMessage {
+        let uuid = UUID()
+        let message: String
+    }
+
+    @Environment(\.dismiss) private var dismiss
+
+    private let scannerViewModel: QRCodeScannerViewModel
     private var deviceJoin = DeviceJoin(role: .existingDevice)
+
     @State private var joinState = JoinState.initial {
         didSet {
             logMessages.append(.init(message: "\(joinState)"))
         }
     }
-    
-    @State private var deviceJoinURLString =
-        ""
-    
+
+    @State private var deviceJoinURLString = ""
+
     @State private var isShowingScanner = false
-    
-    private struct LogMessage {
-        let uuid = UUID()
-        let message: String
-    }
-    
+
     @State private var logMessages: [LogMessage] = []
-    
+
+    init(model: QRCodeScannerViewModel) {
+        self.scannerViewModel = model
+    }
+
     var body: some View {
         List {
             Section {
@@ -77,22 +84,10 @@ struct DebugDeviceJoinView: View {
                         Task {
                             joinState = .connecting
                             do {
-                                guard let url = URL(string: deviceJoinURLString) else {
-                                    // Just picked a random error
-                                    throw CancellationError()
-                                }
-                                
-                                let parsedURL = try URLParser.parse(url: url)
-                                guard case let .deviceGroupJoinRequestOffer(urlSafeBase64: base64) = parsedURL else {
-                                    // Just picked a random error
-                                    throw CancellationError()
-                                }
-                                
-                                let rendezvousHash = try await deviceJoin
-                                    .connect(urlSafeBase64DeviceGroupJoinRequestOffer: base64)
-                                
+                                let rendezvousHash = try await deviceJoin.connect(
+                                    urlSafeBase64DeviceGroupJoinRequestOffer: deviceJoinURLString
+                                )
                                 logMessages.append(.init(message: "RPH: \(rendezvousHash.hexString)"))
-                                
                                 joinState = .connected
                             }
                             catch {
@@ -126,7 +121,7 @@ struct DebugDeviceJoinView: View {
                     .disabled(joinState != .connected)
                 }
             }
-            
+
             Section {
                 ForEach(logMessages, id: \.uuid) { logMessage in
                     Text(logMessage.message)
@@ -134,29 +129,55 @@ struct DebugDeviceJoinView: View {
             }
         }
         .sheet(isPresented: $isShowingScanner) {
-            CodeScannerView(codeTypes: [.qr], completion: handleScan(result:))
+            NavigationStack {
+                QRCodeScannerView(model: scannerViewModel)
+            }
+        }
+        .navigationTitle(Text(verbatim: "Debug Device Join"))
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(role: .cancel) {
+                    dismiss()
+                } label: {
+                    Label(#localize("cancel"), systemImage: "xmark.circle.fill")
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .onAppear {
+            configureScanner()
         }
     }
-    
-    private func handleScan(result: Swift.Result<ScanResult, ScanError>) {
-        switch result {
-        case let .success(result):
-            guard !result.string.isEmpty else {
-                logMessages.append(.init(message: "Empty string scanned"))
-                return
-            }
-            
-            deviceJoinURLString = result.string
-        case let .failure(error):
-            logMessages.append(.init(message: "QR code scanning failed: \(error)"))
+
+    // MARK: - Helpers
+
+    private func configureScanner() {
+        scannerViewModel.onCancel = { [weak scannerViewModel] in
+            isShowingScanner = false
+            scannerViewModel?.onCancel = nil // avoid memory leaks
+            scannerViewModel?.onCompletion = nil
         }
-        
-        isShowingScanner = false
+        scannerViewModel.onCompletion = { [weak scannerViewModel] result in
+            if case let .multiDeviceLink(url) = result {
+                deviceJoinURLString = url
+                isShowingScanner = false
+            }
+            scannerViewModel?.onCancel = nil
+            scannerViewModel?.onCompletion = nil
+        }
     }
 }
 
 struct DebugDeviceJoinView_Previews: PreviewProvider {
     static var previews: some View {
-        DebugDeviceJoinView()
+        DebugDeviceJoinView(
+            model: .init(
+                mode: .multiDeviceLink,
+                audioSessionManager: .null,
+                systemFeedbackManager: .null,
+                systemPermissionsManager: .alwaysAllows
+            )
+        )
     }
 }

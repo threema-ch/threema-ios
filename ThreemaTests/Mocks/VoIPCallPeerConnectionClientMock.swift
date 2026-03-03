@@ -34,6 +34,7 @@ class VoIPCallPeerConnectionClientMock: VoIPCallPeerConnectionClientProtocol {
 
     func initialize(
         contactIdentity: String,
+        isInitiator: Bool,
         callID: ThreemaFramework.VoIPCallID?,
         peerConnectionParameters: Threema.PeerConnectionParameters,
         delegate: Threema.VoIPCallPeerConnectionClientDelegate,
@@ -90,7 +91,7 @@ class VoIPCallPeerConnectionClientMock: VoIPCallPeerConnectionClientProtocol {
         // no-op
     }
 
-    func answer(completion: @escaping (RTCSessionDescription) -> Void) {
+    func answer(completion: @escaping (RTCSessionDescription?, ThreemaFramework.VoIPCallSdpPatcher.SdpError?) -> Void) {
         // no-op
     }
 

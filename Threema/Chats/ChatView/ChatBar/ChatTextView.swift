@@ -20,12 +20,12 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import SwiftUI
 import ThreemaFramework
 import ThreemaMacros
 import UIKit
 
 protocol ChatTextViewDelegate: AnyObject {
-    // ChatTextView Changes
     func chatTextViewDidChange(_ textView: ChatTextView)
     func showContact(identity: String)
     
@@ -38,10 +38,10 @@ protocol ChatTextViewDelegate: AnyObject {
     func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph)
 }
 
-final class ChatTextView: CustomResponderTextView {
+final class ChatTextView: UITextView {
     
-    // MARK: - Public properties
-    
+    // MARK: - Overrides UITextView
+
     override var textAlignment: NSTextAlignment {
         didSet {
             // This is to work around an issue where the cursor position would switch back to left (even though we
@@ -66,11 +66,83 @@ final class ChatTextView: CustomResponderTextView {
             ]
         }
     }
-    
+
+    override func setBaseWritingDirection(_ writingDirection: NSWritingDirection, for range: UITextRange) {
+        switch writingDirection {
+        case .natural:
+            textAlignment = .natural
+        case .leftToRight:
+            textAlignment = .left
+        case .rightToLeft:
+            textAlignment = .right
+        @unknown default:
+            DDLogWarn("Unknown default case \(writingDirection)")
+            textAlignment = .natural
+        }
+
+        textViewDidChange(self)
+
+        configureInsetsIfNeeded()
+    }
+
+    // MARK: - Overrides UIResponder
+
     override var textInputContextIdentifier: String? {
         conversationIdentifier
     }
-    
+
+    override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+        guard action == #selector(paste(_:)) else {
+            return super.canPerformAction(action, withSender: sender)
+        }
+        
+        let hasTextOrURL = UIPasteboard.general.hasStrings || UIPasteboard.general.hasURLs
+        let hasImages = UIPasteboard.general.hasImages
+        
+        if hasImages || !hasTextOrURL {
+            return true
+        }
+        else {
+            return super.canPerformAction(action, withSender: sender)
+        }
+    }
+
+    override func paste(_ sender: Any?) {
+        let hasTextOrURL = UIPasteboard.general.hasStrings || UIPasteboard.general.hasURLs
+        let hasImages = UIPasteboard.general.hasImages
+        
+        if hasImages || !hasTextOrURL {
+            if UIPasteboard.general.numberOfItems > 0 {
+                handlePasteItem()
+            }
+        }
+        else {
+            super.paste(sender)
+        }
+    }
+
+    override var keyCommands: [UIKeyCommand]? {
+        [
+            UIKeyCommand(
+                title: #localize("hardware_keyboard_send_on_enter_discoverability_title"),
+                action: #selector(sendOnHWKReturn),
+                input: "\r"
+            ),
+        ]
+    }
+
+    // MARK: - Overrides UIView
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        // Only configure on first layout pass that matches all the requirements
+        configureInsetsIfNeeded()
+        resizeTextView()
+    }
+
+    // MARK: - Public properties
+
     /// Returns the amount by which chat view inset from the leading edge.
     ///
     /// This is currently only used to align the quote view.
@@ -98,10 +170,10 @@ final class ChatTextView: CustomResponderTextView {
     
     private let precomposedText: String?
     private var conversationIdentifier: String?
-    
+    private var menuInteraction: UIEditMenuInteraction?
+
     private let markupParser = MarkupParser()
-    private(set) var notParsedText = NSAttributedString()
-    
+
     private lazy var mentionsHelper = MentionsHelper()
         
     private lazy var heightConstraint: NSLayoutConstraint = {
@@ -163,9 +235,7 @@ final class ChatTextView: CustomResponderTextView {
         label.isAccessibilityElement = false
         return label
     }()
-    
-    private let textViewKeyboardWorkaroundHandler = TextViewKeyboardWorkaroundHandler()
-    
+        
     private var customTextStorage: MarkupParsingTextStorage?
     
     // MARK: - Lifecycle
@@ -185,7 +255,6 @@ final class ChatTextView: CustomResponderTextView {
         
         super.init(frame: .zero, textContainer: container)
         
-        self.pasteImageHandler = self
         textStorage.markupParsingTextStorageDelegate = self
         
         self.customTextStorage = textStorage
@@ -210,13 +279,8 @@ final class ChatTextView: CustomResponderTextView {
         DDLogVerbose("\(#function)")
         removeObservers()
     }
-    
-    // MARK: - Configuration
-    
-    private func configureTextView() {
-        let menuItem = UIMenuItem(title: #localize("scan_qr"), action: #selector(scanQRCode))
-        UIMenuController.shared.menuItems = [menuItem]
 
+    private func configureTextView() {
         font = UIFont.preferredFont(forTextStyle: Config.textStyle)
         backgroundColor = .secondarySystemGroupedBackground
         adjustsFontForContentSizeCategory = true
@@ -344,15 +408,7 @@ final class ChatTextView: CustomResponderTextView {
             placeholderLabel.isHidden = true
         }
     }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        // Only configure on first layout pass that matches all the requirements
-        configureInsetsIfNeeded()
-        resizeTextView()
-    }
-    
+
     private func configureInsetsIfNeeded() {
         guard !isDummy else {
             return
@@ -401,6 +457,21 @@ final class ChatTextView: CustomResponderTextView {
             name: UIResponder.keyboardWillHideNotification,
             object: nil
         )
+
+        let traits: [UITrait] = [UITraitUserInterfaceStyle.self, UITraitPreferredContentSizeCategory.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+                customTextStorage?.reformatText()
+            }
+            if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                // CGColors don’t auto-update with appearance changes
+                layer.borderColor = UIColor.separator.cgColor
+                customTextStorage?.reformatText()
+            }
+        }
     }
     
     private func removeObservers() {
@@ -420,21 +491,7 @@ final class ChatTextView: CustomResponderTextView {
         superview?.setNeedsLayout()
         superview?.superview?.setNeedsLayout()
     }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        if previousTraitCollection?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
-            customTextStorage?.reformatText()
-        }
-        else if traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
-            // CGColors have no automatic theme change built in, so we track it ourselves
-            layer.borderColor = UIColor.separator.cgColor
-            // This reformats the text using the new colors
-            customTextStorage?.reformatText()
-        }
-    }
-    
+
     @objc func updateLayoutForKeyboard(notification: NSNotification) {
         isEditing = false
         chatTextViewDelegate?.didEndEditing()
@@ -450,37 +507,7 @@ final class ChatTextView: CustomResponderTextView {
             becomeFirstResponder()
         }
     }
-    
-    override var keyCommands: [UIKeyCommand]? {
-        [
-            UIKeyCommand(
-                title: #localize("hardware_keyboard_send_on_enter_discoverability_title"),
-                action: #selector(sendOnHWKReturn),
-                input: "\r"
-            ),
-        ]
-    }
-    
-    // MARK: Overrides
-    
-    override func setBaseWritingDirection(_ writingDirection: NSWritingDirection, for range: UITextRange) {
-        switch writingDirection {
-        case .natural:
-            textAlignment = .natural
-        case .leftToRight:
-            textAlignment = .left
-        case .rightToLeft:
-            textAlignment = .right
-        @unknown default:
-            DDLogWarn("Unknown default case \(writingDirection)")
-            textAlignment = .natural
-        }
-        
-        textViewDidChange(self)
-        
-        configureInsetsIfNeeded()
-    }
-    
+
     // MARK: - Get information
     
     /// Approximation of number of lines
@@ -580,6 +607,18 @@ final class ChatTextView: CustomResponderTextView {
         resizeTextView()
     }
     
+    // MARK: - Handle custom edit menu actions
+    
+    override func editMenu(for textRange: UITextRange, suggestedActions: [UIMenuElement]) -> UIMenu? {
+        let canScan = DeviceCapabilitiesManager().supportsRecordingVideo
+        let scanAction = UIAction(title: #localize("scan_qr")) { [weak self] _ in
+            self?.scanQRCode()
+        }
+        let customActions: [UIMenuElement] = canScan ? [scanAction] : []
+        
+        return UIMenu(children: suggestedActions + customActions)
+    }
+    
     // MARK: - Private Functions
     
     private func handleMentions(with currentReplacementRange: NSRange, replacementText text: String) {
@@ -592,18 +631,37 @@ final class ChatTextView: CustomResponderTextView {
             mentionsTableViewDelegate?.shouldHideMentionsTableView(true)
         }
     }
-    
-    @objc private func scanQRCode() {
-        let qrController = QRScannerViewController()
-        
-        qrController.delegate = self
-        qrController.title = #localize("scan_qr")
-        qrController.navigationItem.scrollEdgeAppearance = Colors.defaultNavigationBarAppearance()
 
-        let nav = PortraitNavigationController(rootViewController: qrController)
+    private var topViewController: UIViewController {
+        AppDelegate.shared().currentTopViewController() ?? .init()
+    }
 
-        nav.modalTransitionStyle = .crossDissolve
-        window?.rootViewController?.present(nav, animated: true)
+    private func scanQRCode() {
+        let model = QRCodeScannerViewModel(
+            mode: .plainText,
+            audioSessionManager: AudioSessionManager(),
+            systemFeedbackManager: SystemFeedbackManager(
+                deviceCapabilitiesManager: DeviceCapabilitiesManager(),
+                settingsStore: BusinessInjector.ui.settingsStore
+            ),
+            systemPermissionsManager: SystemPermissionsManager()
+        )
+        model.onCompletion = { [weak self] result in
+            guard let self, case let .plainText(text) = result else {
+                return
+            }
+            topViewController.dismiss(animated: true) { [weak self] in
+                self?.insertText(text)
+            }
+        }
+        model.onCancel = { [weak self] in
+            self?.topViewController.dismiss(animated: true)
+        }
+        let rootView = QRCodeScannerView(model: model)
+        let viewController = UIHostingController(rootView: rootView)
+        let nav = PortraitNavigationController(rootViewController: viewController)
+
+        topViewController.present(nav, animated: true)
     }
 }
 
@@ -740,41 +798,45 @@ extension ChatTextView: UITextViewDelegate {
             isEditing = true
         }
     }
-    
-    func textView(
-        _ textView: UITextView,
-        shouldInteractWith URL: URL,
-        in characterRange: NSRange,
-        interaction: UITextItemInteraction
-    ) -> Bool {
-        guard IDNASafetyHelper.isLegalURL(url: URL, viewController: AppDelegate.shared().currentTopViewController())
+
+    func textView(_ textView: UITextView, primaryActionFor textItem: UITextItem, defaultAction: UIAction) -> UIAction? {
+        guard
+            case let .link(url) = textItem.content,
+            IDNASafetyHelper.isLegalURL(url: url, viewController: AppDelegate.shared().currentTopViewController())
         else {
-            return false
+            return nil
         }
-        if URL.absoluteString.starts(with: "ThreemaId:") {
-            if interaction == .invokeDefaultAction {
-                let threemaID = String(URL.absoluteString.suffix(8))
-                
-                guard let chatTextViewDelegate else {
+
+        let urlString = url.absoluteString
+
+        if urlString.starts(with: "ThreemaId:") {
+            return UIAction(title: defaultAction.title, image: defaultAction.image) { [weak self] _ in
+                guard let self else {
+                    return
+                }
+
+                let threemaID = String(urlString.suffix(8))
+
+                guard let delegate = chatTextViewDelegate else {
                     let msg = "chatTextViewDelegate is unexpectedly nil"
                     assertionFailure(msg)
                     DDLogError("\(msg)")
-                    return false
+                    return
                 }
-                
-                chatTextViewDelegate.showContact(identity: threemaID)
+
+                delegate.showContact(identity: threemaID)
             }
-            return false
         }
-        else if URL.scheme == "http" || URL.scheme == "https",
-                URL.host?.lowercased() == "threema.id",
-                interaction == .invokeDefaultAction {
-            URLHandler.handleThreemaDotIDURL(URL, hideAppChooser: false)
-            return false
+        else if url.scheme == "http" || url.scheme == "https", url.host?.lowercased() == "threema.id" {
+            return UIAction(title: defaultAction.title, image: defaultAction.image) { _ in
+                URLHandler.handleThreemaDotIDURL(url, hideAppChooser: false)
+            }
         }
-        return true
+        else {
+            return nil
+        }
     }
-    
+
     func textViewDidEndEditing(_ textView: UITextView) {
         if isEditing {
             isEditing = false
@@ -786,9 +848,9 @@ extension ChatTextView: UITextViewDelegate {
         
         resignFirstResponder()
     }
-    
-    // MARK: Private Helper Functions
-    
+
+    // MARK: Helpers
+
     private func calcPositionOffsetDiff(attributedString: NSAttributedString, currentReplacementRange: NSRange) -> Int {
         var diff = 0
         attributedString.enumerateAttributes(
@@ -805,25 +867,9 @@ extension ChatTextView: UITextViewDelegate {
         }
         return diff
     }
-}
 
-// MARK: - QRScannerViewControllerDelegate
-
-extension ChatTextView {
-    override func qrScannerViewController(_ controller: QRScannerViewController, didScanResult result: String?) {
-        if let result {
-            insertText(result)
-        }
-        controller.dismiss(animated: true)
-    }
-    
-    override func qrScannerViewController(
-        _ controller: QRScannerViewController,
-        didCancelAndWillDismissItself willDismissItself: Bool
-    ) {
-        if !willDismissItself {
-            controller.dismiss(animated: true)
-        }
+    private func handlePasteItem() {
+        _ = chatTextViewDelegate?.checkIfPastedStringIsMedia()
     }
 }
 
@@ -833,13 +879,5 @@ extension ChatTextView: MarkupParsingTextStorageDelegate {
     @available(iOS 18.0, *)
     func didInsertAdaptiveGlyph(glyph: NSAdaptiveImageGlyph) {
         chatTextViewDelegate?.processAndSendGlyph(glyph)
-    }
-}
-
-// MARK: - PasteImageHandler
-
-extension ChatTextView: PasteImageHandler {
-    func handlePasteItem() {
-        _ = chatTextViewDelegate?.checkIfPastedStringIsMedia()
     }
 }

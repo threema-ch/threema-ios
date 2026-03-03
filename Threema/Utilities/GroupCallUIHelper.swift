@@ -93,7 +93,7 @@ extension GroupCallUIHelper: GroupCallManagerSingletonUIDelegate {
         
         guard businessInjector.entityManager.performAndWait({
             if let conversation = businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: conversationManagedObjectID) as? ConversationEntity {
+                .managedObject(with: conversationManagedObjectID) as? ConversationEntity {
                 if let group = businessInjector.groupManager.getGroup(conversation: conversation) {
                     // We show a notification anyways when notify when mentioned is set to true
                     if !group.pushSetting.mentioned, !group.pushSetting.canSendPush() {

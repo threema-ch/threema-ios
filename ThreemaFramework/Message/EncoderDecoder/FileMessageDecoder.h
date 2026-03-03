@@ -22,13 +22,35 @@
 #import <ThreemaFramework/BoxFileMessage.h>
 #import <ThreemaFramework/GroupFileMessage.h>
 
-@class ConversationEntity, BaseMessageEntity;
-
 @interface FileMessageDecoder : NSObject
 
-+ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(BaseMessageEntity *message))onCompletion onError:(void(^)(NSError *err))onError;
+/**
+ Decode abstract file message.
 
-+ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(BaseMessageEntity *message))onCompletion onError:(void(^)(NSError *err))onError;
+ @param message Abstract file message
+ @param senderObject Sender object of type `ContactEntity`
+ @param conversationObject Conversation object of type `ConversationEntity`
+ @param isReflected Bool
+ @param timeout Timeout in seconds for thumbnail download
+ @param entityManagerObject Object of type `EntityManager`
+ @param onCompletion With parameter of type `BaseMessageEntity` as result
+ @param onError With parameter of type `NSError`
+ */
++ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable NSObject *)senderObject conversation:(nonnull NSObject *)conversationObject isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(NSObject *))onCompletion onError:(void(^)(NSError *))onError;
+
+/**
+ Decode abstract group file message.
+
+ @param message Abstract file message
+ @param senderObject Sender object of type `ContactEntity`
+ @param conversationObject Conversation object of type `ConversationEntity`
+ @param isReflected Bool
+ @param timeout Timeout in seconds for thumbnail download
+ @param entityManagerObject Object of type `EntityManager`
+ @param onCompletion With parameter of type `BaseMessageEntity` as result
+ @param onError With parameter of type `NSError`
+ */
++ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable NSObject *)senderObject conversation:(nonnull NSObject *)conversationObject isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void(^)(NSObject *))onCompletion onError:(void(^)(NSError *))onError;
 
 + (nullable NSString *)decodeFilenameFromBox:(nonnull BoxFileMessage *)message;
 

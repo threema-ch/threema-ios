@@ -51,7 +51,7 @@ import UIKit
     private var isSetupWizard = false
     private var allowsContentJavaScript = false
     private var loadingPresenter: NotificationPresenter?
-    
+
     // MARK: - Lifecycle
     
     /// Show content of a website in a webView
@@ -75,7 +75,7 @@ import UIKit
         
         self.title = title
     }
-    
+
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -83,27 +83,23 @@ import UIKit
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         view.backgroundColor = Colors.backgroundViewController
-        
         webView.navigationDelegate = self
         view = webView
+        setupTraitRegistration()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
         webView.backgroundColor = isSetupWizard ? Colors.backgroundWizard : Colors.backgroundViewController
-        
         loadURL()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
         loadingPresenter?.dismiss(animated: false)
     }
-    
+
     // MARK: Configurations
     
     override var shouldAutorotate: Bool {
@@ -163,21 +159,12 @@ import UIKit
             }
         }()
         
-        if #available(iOS 16.0, *) {
-            return url.appending(queryItems: [
-                URLQueryItem(name: "lang", value: Bundle.main.preferredLocalizations.first ?? "en"),
-                URLQueryItem(name: "version", value: AppInfo.appVersion.version ?? "-"),
-                URLQueryItem(name: "platform", value: "ios"),
-                URLQueryItem(name: "theme", value: theme),
-            ])
-        }
-        else {
-            let lang = Bundle.main.preferredLocalizations.first ?? "en"
-            let version = AppInfo.appVersion.version ?? "-"
-            
-            let urlString = "\(url.absoluteString)?lang=\(lang)&version=\(version)&platform=ios&theme=\(theme)"
-            return URL(string: urlString)
-        }
+        return url.appending(queryItems: [
+            URLQueryItem(name: "lang", value: Bundle.main.preferredLocalizations.first ?? "en"),
+            URLQueryItem(name: "version", value: AppVersionInfo.appVersion.version ?? "-"),
+            URLQueryItem(name: "platform", value: "ios"),
+            URLQueryItem(name: "theme", value: theme),
+        ])
     }
     
     /// Check and add SUPPORT as contact and open the chat with it.
@@ -185,42 +172,42 @@ import UIKit
         ContactStore.shared()
             .addContact(
                 with: "*SUPPORT",
-                verificationLevel: Int32(ContactEntity.VerificationLevel.fullyVerified.rawValue),
-                onCompletion: { contact, _ in
-                    let message = "My app version: \(ThreemaUtility.clientVersionWithMDM)"
-                    let info = [
-                        kKeyContact: contact,
-                        kKeyForceCompose: NSNumber(value: true),
-                        kKeyText: message,
-                    ] as [String: Any]
-                    
-                    DispatchQueue.main.async {
-                        NotificationCenter.default.post(
-                            name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                            object: nil,
-                            userInfo: info
-                        )
-                    }
-                },
-                onError: { error in
-                    DDLogError("\(error)")
+                verificationLevel: Int32(ContactEntity.VerificationLevel.fullyVerified.rawValue)
+            ) { contact, _ in
+                let message = "My app version: \(ThreemaUtility.clientVersionWithMDM)"
+                let info = [
+                    kKeyContact: contact as Any,
+                    kKeyForceCompose: NSNumber(value: true),
+                    kKeyText: message,
+                ] as [String: Any]
+                
+                DispatchQueue.main.async {
+                    NotificationCenter.default.post(
+                        name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                        object: nil,
+                        userInfo: info
+                    )
                 }
-            )
+            }
+            onError: { error in
+                DDLogError("\(error)")
+            }
     }
 }
 
 // MARK: - Notifications
 
 extension SettingsWebViewViewController {
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
-            return
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitUserInterfaceStyle.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                loadURL()
+            }
         }
-        
-        loadURL()
     }
 }
 
@@ -242,17 +229,19 @@ extension SettingsWebViewViewController: WKNavigationDelegate {
                 let safariView = SFSafariViewController(url: url, configuration: config)
                 present(safariView, animated: true)
             }
-            else {
-                if let host = url.host,
-                   host == "compose",
-                   let query = url.query,
-                   query.hasPrefix("id=*SUPPORT") {
-                    addSupportContactAndOpenChat()
-                }
-                else {
-                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
-                }
+            else if let host = url.host,
+                    host == "compose",
+                    let query = url.query,
+                    query.hasPrefix("id=*SUPPORT") {
+                addSupportContactAndOpenChat()
             }
+            else if let anchorName = url.fragment {
+                webView.evaluateJavaScript(String(format: "window.location.hash='%@';", anchorName))
+            }
+            else {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            }
+            
             decisionHandler(.cancel)
             return
         }

@@ -19,6 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftProtobuf
+import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -29,14 +31,16 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
     private var mediatorMessageProtocol: MediatorMessageProtocolProtocol!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
+        let (_, mainContext, _) = DatabasePersistentContext.devNullContext()
+        let databaseContext = DatabaseContext(mainContext: mainContext)
+
         frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager()
+            entityManager: EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false)
         )
 
-        mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
+        mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockMultiDevice.deviceGroupKeys)
     }
 
     func testEncodeDecodeIncomingMessageAbstractText() throws {
@@ -213,7 +217,7 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
             receiverIdentity: abstractMessage.toIdentity,
             createdAt: abstractMessage.date,
             nonce: abstractMessage.nonce,
-            deviceID: MockData.deviceID.paddedLittleEndian()
+            deviceID: MockMultiDevice.deviceID.paddedLittleEndian()
         )
     }
 }

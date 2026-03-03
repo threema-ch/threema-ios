@@ -1,4 +1,4 @@
-// swift-tools-version: 5.8
+// swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "GroupCalls",
     platforms: [
-        .iOS(.v15),
+        .iOS(.v17),
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
@@ -23,7 +23,7 @@ let package = Package(
         .package(path: "../ThreemaEssentials"),
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
         .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
-        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", from: "3.8.0"),
+        .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", exact: "3.8.5"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -64,5 +64,6 @@ let package = Package(
         // codesign --sign - --force WebRTC.xcframework/ios-arm64_x86_64-simulator/WebRTC.framework/
         // codesign --sign - --force WebRTC.xcframework/ios-arm64/WebRTC.framework/
         // codesign --sign - --force WebRTC.xcframework
-    ]
+    ],
+    swiftLanguageModes: [.v5],
 )

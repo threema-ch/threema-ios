@@ -18,14 +18,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import FileUtility
+import KeychainTestHelper
+import RemoteSecretProtocolTestHelper
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
 @testable import Threema
 @testable import ThreemaFramework
 
 class AppMigrationTests: XCTestCase {
     private var dbMainCnx: DatabaseContext!
-    private var dbBackgroundCnx: DatabaseContext!
     private var dbPreparer: DatabasePreparer!
 
     private var ddLoggerMock: DDLoggerMock!
@@ -35,12 +38,10 @@ class AppMigrationTests: XCTestCase {
     private var userSettingsMock: UserSettingsMock!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
+        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
         dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
         dbPreparer = DatabasePreparer(context: mainCnx)
 
         ddLoggerMock = DDLoggerMock()
@@ -50,6 +51,12 @@ class AppMigrationTests: XCTestCase {
         myIdentityStoreMock = MyIdentityStoreMock()
         groupManagerMock = GroupManagerMock()
         userSettingsMock = UserSettingsMock()
+
+        FileUtility.updateSharedInstance(with: FileUtility())
+        
+        // Workaround to ensure remote secret is initialized
+        let remoteSecretManagerMock = RemoteSecretManagerMock()
+        AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManagerMock)
     }
 
     override func tearDownWithError() throws {
@@ -63,26 +70,30 @@ class AppMigrationTests: XCTestCase {
         setupDataForMigrationVersion5_7()
         setupDataForMigrationVersion5_9()
         setupDataForMigrationVersion5_9_2()
+        setupDataForMigrationVersion6_0()
         setupDataForMigrationVersion6_2()
         setupDataForMigrationVersion6_2_1()
         try setupDataForMigrationVersion6_6()
         setupDataForMigrationVersion6_8_8()
+        setupDataForMigrationVersion6_9()
 
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
-        DatabaseManager.db().doMigrateDB()
+        try DatabaseManager(
+            appGroupID: AppGroup.groupID(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).migrateDB()
 
         // Setup mocks
         userSettingsMock.appMigratedToVersion = AppMigrationVersion.none.rawValue
 
-        let keychainHelperMock = KeychainHelperMock()
-
+        let keychainManagerMock = KeychainManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbMainCnx, myIdentityStore: myIdentityStoreMock),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
             groupManager: groupManagerMock,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
-            keychainHelper: keychainHelperMock
+            keychainManager: keychainManagerMock
         )
 
         let appMigration = AppMigration(
@@ -119,6 +130,11 @@ class AppMigrationTests: XCTestCase {
             ddLoggerMock
                 .exists(message: "[AppMigration] App migration to version 5.9.2 successfully finished")
         )
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 6.0 started"))
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(message: "[AppMigration] App migration to version 6.0 successfully finished")
+        )
         XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 6.2 started"))
         XCTAssertTrue(
             ddLoggerMock
@@ -139,28 +155,35 @@ class AppMigrationTests: XCTestCase {
             ddLoggerMock
                 .exists(message: "[AppMigration] App migration to version 6.6 successfully finished")
         )
-        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 6.8 started"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 6.8.8 started"))
         XCTAssertTrue(
             ddLoggerMock
-                .exists(message: "[AppMigration] App migration to version 6.8 successfully finished")
+                .exists(message: "[AppMigration] App migration to version 6.8.8 successfully finished")
+        )
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 6.9 started"))
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(message: "[AppMigration] App migration to version 6.9 successfully finished")
         )
 
-        let entityManager = EntityManager(databaseContext: dbMainCnx)
+        XCTAssertEqual(1, keychainManagerMock.migrateToVersion0Calls)
+
+        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         let conversations: [ConversationEntity] = entityManager.entityFetcher
-            .allConversations() as! [ConversationEntity]
+            .conversationEntities() ?? []
         XCTAssertEqual(conversations.count, 7)
 
         // Checks for 4.8 migration
         for conversation in ["SENDER01", "SENDER02"]
-            .map({ entityManager.entityFetcher.conversationEntity(forIdentity: $0) }) {
+            .map({ entityManager.entityFetcher.conversationEntity(for: $0) }) {
             XCTAssertEqual(
-                entityManager.entityFetcher.unreadMessages(for: conversation).count, 1
+                entityManager.entityFetcher.unreadMessages(for: conversation!)!.count, 1
             )
         }
 
         // Checks for 5.5 migration
 
-        let ownContact = entityManager.entityFetcher.contactsContainOwnIdentity()
+        let ownContact = entityManager.entityFetcher.ownIdentityContactEntity(myIdentity: myIdentityStoreMock.identity)
         // Own contact should be removed from contact list
         XCTAssertNil(ownContact)
 
@@ -179,11 +202,12 @@ class AppMigrationTests: XCTestCase {
         XCTAssertEqual(pushSettings.count, 4)
 
         let pushSettingManager = PushSettingManager(
-            userSettingsMock,
-            GroupManagerMock(),
-            EntityManager(),
-            TaskManager(),
-            false
+            userSettings: userSettingsMock,
+            groupManager: GroupManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            markupParser: MarkupParser(),
+            taskManager: TaskManagerMock(),
+            isWorkApp: false
         )
         var pushSetting1 = pushSettingManager.find(forContact: ThreemaIdentity("ECHOECHO"))
         XCTAssertEqual(pushSetting1.type, .offPeriod)
@@ -214,8 +238,8 @@ class AppMigrationTests: XCTestCase {
         XCTAssertNil(pushSetting4.periodOffTillDate)
 
         // Checks for 5.9 migration
-        let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: "FILEID01")
-        let fileMessages = entityManager.entityFetcher.fileMessages(for: conversation) as? [FileMessageEntity]
+        let conversation = entityManager.entityFetcher.conversationEntity(for: "FILEID01")!
+        let fileMessages = entityManager.entityFetcher.fileMessageEntities(for: conversation)
         XCTAssertNotNil(fileMessages)
 
         for fileMessage in fileMessages! {
@@ -229,28 +253,34 @@ class AppMigrationTests: XCTestCase {
         // .noSetup because my identity is not valid
         XCTAssertEqual(AppSetupState.notSetup, AppSetup.state)
 
+        // Checks for 6.0 migration
+        XCTAssertFalse(businessInjectorMock.userSettings.safeIntroShown)
+
         // Checks for 6.2 migration
         XCTAssertNil(AppGroup.userDefaults().object(forKey: "LastWorkUpdateRequest"))
 
         // Checks for 6.3 migration (6.2.1 downgrade of 6.3+ was running before
         // (see `setupDataForMigrationVersion6_2_1()`)
-        let outgoingQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
-            "outgoingQueue",
-            isDirectory: false
-        )
-        XCTAssertFalse(FileUtility.shared.isExists(fileURL: outgoingQueuePath))
-        let taskQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
+        let outgoingQueuePath = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())?
+            .appendingPathComponent(
+                "outgoingQueue",
+                isDirectory: false
+            )
+        XCTAssertFalse(FileUtility.shared.fileExists(at: outgoingQueuePath))
+        let taskQueuePath = FileUtility.shared.appDataDirectory(
+            appGroupID: AppGroup.groupID()
+        )?.appendingPathComponent(
             "taskQueue",
             isDirectory: false
         )
-        XCTAssertTrue(FileUtility.shared.isExists(fileURL: taskQueuePath))
+        XCTAssertTrue(FileUtility.shared.fileExists(at: taskQueuePath))
         
         // Checks for 6.6 migration
         // Ack/Dec
-        let reactionConversation = entityManager.entityFetcher.conversationEntity(forIdentity: "REACTION")
+        let reactionConversation = entityManager.entityFetcher.conversationEntity(for: "REACTION")!
         let reactionConversationMessages = try XCTUnwrap(
             entityManager.entityFetcher
-                .textMessages(for: reactionConversation) as? [TextMessageEntity]
+                .textMessageEntities(for: reactionConversation)
         )
         
         XCTAssertEqual(reactionConversationMessages.count, 2)
@@ -270,13 +300,13 @@ class AppMigrationTests: XCTestCase {
         }
         
         // Group reactions
-        let reactionContact = entityManager.entityFetcher.contact(for: "REACTION")
-        let reactionGroup = entityManager.entityFetcher.groupConversations(for: reactionContact)
-            .first as? ConversationEntity
+        let reactionContact = entityManager.entityFetcher.contactEntity(for: "REACTION")!
+        let reactionGroup = entityManager.entityFetcher.conversationEntities(for: reactionContact)?
+            .first
         let reactionGroupMessage = try XCTUnwrap(
             (
                 entityManager.entityFetcher
-                    .textMessages(for: reactionGroup) as? [TextMessageEntity]
+                    .textMessageEntities(for: reactionGroup!)
             )?.first
         )
         
@@ -295,10 +325,15 @@ class AppMigrationTests: XCTestCase {
         }
 
         // Check for 6.8 migration
-        XCTAssertEqual(keychainHelperMock.migrateToDowngradeCalls, 0)
+        XCTAssertEqual(keychainManagerMock.migrateToDowngradeCalls, 0)
         
         // Check for 6.8.8 migration
         XCTAssertEqual(["ABCDEFGH", "BCDEFGHI", "CDEFGHIJ"], userSettingsMock.profilePictureContactList as! [String])
+    
+        // Checks for 6.9 migration
+        XCTAssertEqual(1, keychainManagerMock.migrateToVersion1Calls)
+        XCTAssertEqual(1, keychainManagerMock.storeLicenseCalls.count)
+        XCTAssertEqual(1, keychainManagerMock.storeMultiDeviceIDCalls.count)
     }
 
     private func setupDataForMigrationVersion4_8() {
@@ -369,8 +404,7 @@ class AppMigrationTests: XCTestCase {
 
                 let conversation = dbPreparer
                     .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                        // swiftformat:disable:next acronyms
-                        conversation.groupId = groupEntity.groupId
+                        conversation.groupID = groupEntity.groupID
                         conversation.groupMyIdentity = self.myIdentityStoreMock.identity
                         conversation.members?.insert(member01)
                         conversation.members?.insert(member02)
@@ -391,6 +425,7 @@ class AppMigrationTests: XCTestCase {
             groupManagerMock.getGroupReturns.append(Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -425,6 +460,7 @@ class AppMigrationTests: XCTestCase {
             groupManagerMock.getGroupReturns.append(Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -496,7 +532,7 @@ class AppMigrationTests: XCTestCase {
         let calendar = Calendar.current
 
         let addFileMessage: (ConversationEntity, String) -> Void = { conversation, caption in
-            let testBundle = Bundle(for: DBLoadTests.self)
+            let testBundle = Bundle(for: AppMigrationTests.self)
             let testImageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
             let testImageData = try? Data(contentsOf: testImageURL!)
             let dbFile: FileDataEntity = self.dbPreparer.createFileDataEntity(data: testImageData!)
@@ -521,7 +557,7 @@ class AppMigrationTests: XCTestCase {
                 mimeType: "image/jpeg",
                 type: NSNumber(integerLiteral: 1),
                 messageID: messageID,
-                date: Date(),
+                date: date,
                 isOwn: true,
                 sent: true,
                 delivered: true,
@@ -562,26 +598,38 @@ class AppMigrationTests: XCTestCase {
         AppGroup.userDefaults().set(false, forKey: "PendingCreateID")
     }
 
+    private func setupDataForMigrationVersion6_0() {
+        // SafeData with serialized key
+        let safeDataStringWithKey =
+            "YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGvECMLDCdLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpb1UkbnVsbN0NDg8QERITFBUWFxgZGhoaGhoaGiEiGhoaGl5tYXhCYWNrdXBCeXRlc11yZXRlbnRpb25EYXlzVnNlcnZlcl8QD2JhY2t1cFN0YXJ0ZWRBdFpiYWNrdXBTaXplXxAVbGFzdEFsZXJ0QmFja3VwRmFpbGVkWmxhc3RCYWNrdXBTa2V5ViRjbGFzc1xsYXN0Q2hlY2tzdW1baXNUcmlnZ2VyZWRcY3VzdG9tU2VydmVyWmxhc3RSZXN1bHSAAIAAgACAAIAAgACAAIACgCKAAIAAgACAANIoFSlKWk5TLm9iamVjdHOvECAqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/K0FCQ0RFRkdHSYADgASABYAGgAeACIAJgAqAC4AMgA2ADoAPgBCAEYASgBOAFIAVgBaAF4AYgASAGYAagBuAHIAdgB6AH4AfgCCAIRATEOYQoBBsEPgQOBDTEH4QQRCmEFgQ2RBoECYQQxCMEM0QPRBLEGIQUxCrEPMQxhB4EGYQRBBbEOcQltJqa2xtWiRjbGFzc25hbWVYJGNsYXNzZXNXTlNBcnJheaJsblhOU09iamVjdNJqa3BxXxAZVGhyZWVtYUZyYW1ld29yay5TYWZlRGF0YaJybl8QGVRocmVlbWFGcmFtZXdvcmsuU2FmZURhdGEACAARABoAJAApADIANwBJAEwAUQBTAHkAfwCaAKkAtwC+ANAA2wDzAP4BAgEJARYBIgEvAToBPAE+AUABQgFEAUYBSAFKAUwBTgFQAVIBVAFZAWQBhwGJAYsBjQGPAZEBkwGVAZcBmQGbAZ0BnwGhAaMBpQGnAakBqwGtAa8BsQGzAbUBtwG5AbsBvQG/AcEBwwHFAccByQHLAc0BzwHRAdMB1QHXAdkB2wHdAd8B4QHjAeUB5wHpAesB7QHvAfEB8wH1AfcB+QH7Af0B/wIBAgMCBQIKAhUCHgImAikCMgI3AlMCVgAAAAAAAAIBAAAAAAAAAHMAAAAAAAAAAAAAAAAAAAJy"
+
+        userSettingsMock.safeConfig = Data(base64Encoded: safeDataStringWithKey)
+        userSettingsMock.safeIntroShown = true
+    }
+
     private func setupDataForMigrationVersion6_2() {
         AppGroup.userDefaults().set(["Key", "Value"], forKey: "LastWorkUpdateRequest")
         AppGroup.userDefaults().synchronize()
     }
 
     private func setupDataForMigrationVersion6_2_1() {
-        let outgoingQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
-            "outgoingQueue",
-            isDirectory: false
-        )
-        if FileUtility.shared.isExists(fileURL: outgoingQueuePath) {
-            FileUtility.shared.delete(at: outgoingQueuePath)
+        let outgoingQueuePath = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())?
+            .appendingPathComponent(
+                "outgoingQueue",
+                isDirectory: false
+            )
+        if FileUtility.shared.fileExists(at: outgoingQueuePath) {
+            FileUtility.shared.deleteIfExists(at: outgoingQueuePath)
         }
 
-        let taskQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
+        let taskQueuePath = FileUtility.shared.appDataDirectory(
+            appGroupID: AppGroup.groupID()
+        )?.appendingPathComponent(
             "taskQueue",
             isDirectory: false
         )
-        if !FileUtility.shared.isExists(fileURL: taskQueuePath) {
-            _ = FileUtility.shared.write(fileURL: taskQueuePath, text: "Test")
+        if !FileUtility.shared.fileExists(at: taskQueuePath) {
+            FileUtility.shared.write(contents: Data("Test".utf8), to: taskQueuePath)
         }
     }
     
@@ -648,5 +696,15 @@ class AppMigrationTests: XCTestCase {
     
     private func setupDataForMigrationVersion6_8_8() {
         userSettingsMock.profilePictureContactList = ["Optional(\"ABCDEFGH\")", "Optional(\"BCDEFGHI\")", "CDEFGHIJ"]
+    }
+
+    func setupDataForMigrationVersion6_9() {
+        // Test data for Threema Work/OnPrem license
+        AppGroup.userDefaults().setValue("user", forKey: "Threema license username")
+        AppGroup.userDefaults().setValue("password", forKey: "Threema license password")
+        AppGroup.userDefaults().setValue("http://threema.ch", forKey: "Threema OnPrem config URL")
+
+        // Test data for Device ID of multi device
+        AppGroup.userDefaults().setValue(MockData.generateDeviceID(), forKey: "DeviceID")
     }
 }

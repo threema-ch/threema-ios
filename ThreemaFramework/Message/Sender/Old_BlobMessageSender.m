@@ -54,7 +54,7 @@ static dispatch_queue_t backgroundQueue;
 
 #pragma mark - abstract methods
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation {
+- (void)sendItem:(URLSenderItem *)item inConversation:(NSObject *)conversationObject {
     [NSException raise:NSInternalInconsistencyException
                 format:@"Method %@ is abstract, subclass it", NSStringFromSelector(_cmd)];
 }
@@ -107,10 +107,15 @@ static dispatch_queue_t backgroundQueue;
         }
         // do DB modifications & upload in main queue
         dispatch_sync(dispatch_get_main_queue(), ^{
-            EntityManager *entityManager = [[EntityManager alloc] init];
-            if (self.message == nil) {
+            FileMessageEntity *message = (FileMessageEntity*)_messageObject;
+            ConversationEntity *conversation = (ConversationEntity*)_conversationObject;
+
+            EntityManager *entityManager = [[BusinessInjector ui] entityManager];
+            if (message == nil) {
                 @try {
                     [self createDBMessage];
+
+                    message = (FileMessageEntity*)_messageObject;
                 }
                 @catch (NSException *exception) {
                     // if the external reference for the image/video/file cannot be fullfilled CoreData will throw a NSInternalInconsistencyException
@@ -119,18 +124,18 @@ static dispatch_queue_t backgroundQueue;
                 }
             } else {
                 [entityManager performSyncBlockAndSafe:^{
-                    self.message.sendFailed = [NSNumber numberWithBool:NO];
+                    message.sendFailed = [NSNumber numberWithBool:NO];
                 }];
             }
 
-            if (self.message == nil) {
+            if (message == nil) {
                 DDLogError(@"BlobMessageSender: no message to send");
                 [self didFinishUpload];
                 return;
             }
             
             GroupManager *groupManager = [[[BusinessInjector alloc] initWithEntityManager:entityManager] groupManagerObjC];
-            Group *group = [groupManager getGroupWithConversation:self.conversation];
+            Group *group = [groupManager getGroupWithConversation:conversation];
             
             BlobOrigin origin = BlobOriginPublic;
             
@@ -182,7 +187,9 @@ static dispatch_queue_t backgroundQueue;
 #pragma mark - BlobUploadDelegate
 
 - (BOOL)uploadShouldCancel {
-    if ([_message wasDeleted]) {
+    FileMessageEntity *message = (FileMessageEntity*)_messageObject;
+
+    if ([message wasDeleted]) {
         return YES;
     }
     
@@ -196,12 +203,14 @@ static dispatch_queue_t backgroundQueue;
 - (void)uploadDidCancel {
     [self didFinishUpload];
     
-    EntityManager *entityManager = [[EntityManager alloc] init];
+    FileMessageEntity *message = (FileMessageEntity*)_messageObject;
+
+    EntityManager *entityManager = [[BusinessInjector ui] entityManager];
     [entityManager performAsyncBlockAndSafe:^{
-        ConversationEntity *conversation = _message.conversation;
+        ConversationEntity *conversation = message.conversation;
         conversation.lastMessage = nil;
         
-        [[entityManager entityDestroyer] deleteWithBaseMessage:_message];
+        [[entityManager entityDestroyer] deleteWithBaseMessage:message];
         MessageFetcher *messageFetcher = [[MessageFetcher alloc] initFor:conversation with:entityManager];
         conversation.lastMessage = [messageFetcher lastDisplayMessage];
     }];
@@ -212,10 +221,11 @@ static dispatch_queue_t backgroundQueue;
     [self didFinishUpload];
     
     __block BOOL wasDeleted = NO;
-    
-    EntityManager *entityManager = [[EntityManager alloc] init];
+    FileMessageEntity *message = (FileMessageEntity*)_messageObject;
+
+    EntityManager *entityManager = [[BusinessInjector ui] entityManager];
     [entityManager performAsyncBlockAndSafe:^{
-        if ([_message wasDeleted]) {
+        if ([message wasDeleted]) {
             DDLogWarn(@"Blob message has been deleted!");
             wasDeleted = YES;
         }
@@ -229,46 +239,51 @@ static dispatch_queue_t backgroundQueue;
     [self sendMessage:blobIds];
     
     // observer sent state in order to trigger [_uploadProgressDelegate uploadSucceededForMessage]
-    [_message addObserver:self forKeyPath:@"sent" options:0 context:nil];
+    [message addObserver:self forKeyPath:@"sent" options:0 context:nil];
+    [message addObserver:self forKeyPath:@"sentEncrypted" options:0 context:nil];
 }
 
 - (void)uploadFailed {
     [self didFinishUpload];
     
-    if ([_message wasDeleted] == NO) {
-        EntityManager *entityManager = [[EntityManager alloc] init];
+    FileMessageEntity *message = (FileMessageEntity*)_messageObject;
+    if ([message wasDeleted] == NO) {
+        EntityManager *entityManager = [[BusinessInjector ui] entityManager];
         [entityManager performAsyncBlockAndSafe:^{
-            _message.sendFailed = [NSNumber numberWithBool:YES];
-            _message.blobProgress = nil;
+            message.sendFailed = [NSNumber numberWithBool:YES];
+            message.blobProgress = nil;
         }];
     }
     
-    [_uploadProgressDelegate blobMessageSender:self uploadFailedForMessage:_message error:UploadErrorSendFailed];
+    [_uploadProgressDelegate blobMessageSender:self uploadFailedForMessage:message error:UploadErrorSendFailed];
 }
 
 - (void)noUploadNoteGroup {
     [self didFinishUpload];
-    
-    if ([_message wasDeleted] == NO) {
-        EntityManager *entityManager = [[EntityManager alloc] init];
+
+    FileMessageEntity *message = (FileMessageEntity*)_messageObject;
+    if ([message wasDeleted] == NO) {
+        EntityManager *entityManager = [[BusinessInjector ui] entityManager];
         [entityManager performSyncBlockAndSafe:^{
-            _message.sent = [NSNumber numberWithBool:YES];
-            _message.blobProgress = nil;
+            message.sent = [NSNumber numberWithBool:YES];
+            message.blobProgress = nil;
         }];
     }
-    [_uploadProgressDelegate blobMessageSender:self uploadSucceededForMessage:_message];
+    [_uploadProgressDelegate blobMessageSender:self uploadSucceededForMessage:message];
 }
 
 - (void)uploadProgress:(NSNumber *)progress {
-    if ([_message wasDeleted]) {
+    FileMessageEntity *message = (FileMessageEntity*)_messageObject;
+
+    if ([message wasDeleted]) {
         return;
     }
     
-    EntityManager *entityManager = [[EntityManager alloc] init];
+    EntityManager *entityManager = [[BusinessInjector ui] entityManager];
     [entityManager performSyncBlockAndSafe:^{
-        _message.blobProgress = progress;
+        message.blobProgress = progress;
     }];
-    [_uploadProgressDelegate blobMessageSender:self uploadProgress:progress forMessage:_message];
+    [_uploadProgressDelegate blobMessageSender:self uploadProgress:progress forMessage:message];
 }
 
 #pragma mark - KVO
@@ -276,12 +291,13 @@ static dispatch_queue_t backgroundQueue;
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     if ([object isKindOfClass:[BaseMessageEntity class]]) {
         @try {
+            FileMessageEntity *message = (FileMessageEntity*)_messageObject;
             BaseMessageEntity *messageObject = (BaseMessageEntity *)object;
             
-            if (messageObject.objectID == self.message.objectID) {
-                [_message removeObserver:self forKeyPath:@"sent"];
-                _message.blobProgress = nil;
-                [_uploadProgressDelegate blobMessageSender:self uploadSucceededForMessage:_message];
+            if (messageObject.objectID == message.objectID) {
+                [message removeObserver:self forKeyPath:@"sent"];
+                message.blobProgress = nil;
+                [_uploadProgressDelegate blobMessageSender:self uploadSucceededForMessage:message];
             }
         } @catch (NSException *exception) {
             DDLogError(@"[Observer] Can't cast object into message");

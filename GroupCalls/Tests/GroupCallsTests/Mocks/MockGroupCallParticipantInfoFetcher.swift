@@ -33,7 +33,7 @@ extension MockGroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPr
     }
     
     func fetchDisplayName(for id: ThreemaEssentials.ThreemaIdentity) -> String {
-        id.string
+        id.rawValue
     }
     
     func fetchIDColor(for id: ThreemaEssentials.ThreemaIdentity) -> UIColor {

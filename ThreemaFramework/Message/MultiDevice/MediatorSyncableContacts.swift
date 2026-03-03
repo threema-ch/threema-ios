@@ -39,10 +39,10 @@ class MediatorSyncableContacts: NSObject {
     private let entityManager: EntityManager
     
     init(
-        _ userSettings: UserSettingsProtocol,
-        _ pushSettingManager: PushSettingManagerProtocol,
-        _ taskManager: TaskManagerProtocol,
-        _ entityManager: EntityManager
+        userSettings: UserSettingsProtocol,
+        pushSettingManager: PushSettingManagerProtocol,
+        taskManager: TaskManagerProtocol,
+        entityManager: EntityManager
     ) {
         self.userSettings = userSettings
         self.pushSettingManager = pushSettingManager
@@ -51,19 +51,23 @@ class MediatorSyncableContacts: NSObject {
     }
     
     @objc override convenience init() {
-        let entityManager = EntityManager(withChildContextForBackgroundProcess: true)
+        let localEntityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).backgroundEntityManager
 
         self.init(
-            UserSettings.shared(),
-            PushSettingManager(
-                entityManager: entityManager,
+            userSettings: UserSettings.shared(),
+            pushSettingManager: PushSettingManager(
+                entityManager: localEntityManager,
                 taskManager: TaskManager(
-                    backgroundEntityManager: entityManager,
+                    backgroundEntityManager: localEntityManager,
                     serverConnector: ServerConnector.shared()
                 )
             ),
-            TaskManager(),
-            entityManager
+            taskManager: TaskManager(),
+            entityManager: localEntityManager
         )
     }
     
@@ -71,16 +75,12 @@ class MediatorSyncableContacts: NSObject {
         var allDeltaContacts = [DeltaSyncContact]()
         
         entityManager.performAndWait {
-            guard let allContacts = self.entityManager.entityFetcher.allContacts() else {
+            guard let allContacts = self.entityManager.entityFetcher.contactEntities() else {
                 DDLogError("Unable to load all contacts")
                 return
             }
             
-            for anyContact in allContacts {
-                guard let contact = anyContact as? ContactEntity else {
-                    continue
-                }
-
+            for contact in allContacts {
                 var newDeltaSyncContact = DeltaSyncContact()
                 self.loadAndUpdateAll(contact, delta: &newDeltaSyncContact, added: true, withoutProfileImage: false)
 
@@ -118,7 +118,7 @@ class MediatorSyncableContacts: NSObject {
         }
 
         entityManager.performAndWait {
-            guard let contact = self.entityManager.entityFetcher.contact(for: identity) else {
+            guard let contact = self.entityManager.entityFetcher.contactEntity(for: identity) else {
                 return
             }
             
@@ -168,7 +168,7 @@ class MediatorSyncableContacts: NSObject {
             }
         }
 
-        if let conversation = entityManager.entityFetcher.conversation(for: contactEntity) {
+        if let conversation = entityManager.entityFetcher.conversationEntity(for: contactEntity.identity) {
             delta.syncContact.update(conversation: conversation)
 
             delta.lastConversationUpdate = conversation.lastUpdate
@@ -515,6 +515,7 @@ class MediatorSyncableContacts: NSObject {
     }
 
     /// Objective-C bridge
+    @available(swift, obsoleted: 1.0, renamed: "sync()", message: "Only use from Objective-C")
     @objc func syncObjc(completionHandler: @escaping (Error?) -> Void) {
         sync()
             .done {
@@ -563,7 +564,7 @@ class MediatorSyncableContacts: NSObject {
             let identities = self.deltaSyncContacts.map(\.syncContact.identity)
 
             for identity in identities {
-                if let contact = self.entityManager.entityFetcher.contact(for: identity) {
+                if let contact = self.entityManager.entityFetcher.contactEntity(for: identity) {
                     var delta = self.getDelta(identity)
 
                     if delta.profilePicture == .updated,

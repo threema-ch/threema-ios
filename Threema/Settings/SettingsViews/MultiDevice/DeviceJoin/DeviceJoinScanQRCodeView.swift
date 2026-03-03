@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
-import CodeScanner
 import SwiftUI
 import ThreemaMacros
 
@@ -33,11 +32,10 @@ struct DeviceJoinScanQRCodeView: View {
     
     // MARK: Private state
     
-    @State private var debugDeviceJoinURLString = ""
+    @State private var urlSafeBase64 = ""
         
     @State private var successfulScanned = false
-    
-    @State private var showNoCameraAccessAlert = false
+
     @State private var showRetryError = false
     @State private var retryErrorTitle = ""
     @State private var retryErrorMessage = ""
@@ -47,9 +45,26 @@ struct DeviceJoinScanQRCodeView: View {
     @State private var showVerifyEmojiView = false
     
     @AccessibilityFocusState private var isConnectingViewFocused: Bool
-    
+
+    @State private var scannerViewModel: QRCodeScannerViewModel
+
+    init(showWizard: Binding<Bool>, deviceJoinManager: DeviceJoinManager) {
+        self._showWizard = showWizard
+        let model = QRCodeScannerViewModel(
+            mode: .multiDeviceLink,
+            audioSessionManager: AudioSessionManager(),
+            systemFeedbackManager: SystemFeedbackManager(
+                deviceCapabilitiesManager: DeviceCapabilitiesManager(),
+                settingsStore: BusinessInjector.ui.settingsStore
+            ),
+            systemPermissionsManager: SystemPermissionsManager()
+        )
+        self.scannerViewModel = model
+        self.deviceJoinManager = deviceJoinManager
+    }
+
     // MARK: - View
-    
+
     var body: some View {
         ZStack {
             // `NavigationLink` is needed for programatic navigation
@@ -64,74 +79,25 @@ struct DeviceJoinScanQRCodeView: View {
                 EmptyView()
             }
             .hidden()
-            
-            GeometryReader { geometryProxy in
-                ScrollView {
-                    VStack {
-                        
-                        DeviceJoinHeaderView(
-                            title: #localize("multi_device_join_scan_qr_code_title"),
-                            description: String.localizedStringWithFormat(
-                                #localize("multi_device_join_scan_qr_code_info"),
-                                TargetManager.appName
-                            )
-                        )
-                        
-                        Spacer()
-                        
-                        Group {
-                            if !successfulScanned {
-                                // This needs to reappear after a scan with an error so it actually scans again
-                                CodeScannerView(codeTypes: [.qr]) { result in
-                                    Task { @MainActor in
-                                        handleScan(result: result)
-                                    }
-                                }
-                                .background(Color.green) // Only needed for preview & simulator
-                                .accessibilityElement()
-                                .accessibilityLabel(
-                                    #localize(
-                                        "multi_device_join_scan_qr_code_scanner_view_accessibility_label"
-                                    )
-                                )
-                                .accessibilityHint(String.localizedStringWithFormat(
-                                    #localize(
-                                        "multi_device_join_scan_qr_code_scanner_view_accessibility_hint"
-                                    ),
-                                    TargetManager.appName
-                                ))
-                            }
-                            else {
-                                Color.black
-                            }
-                        }
-                        .aspectRatio(contentMode: .fit)
-                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-                        
-                        Spacer()
-                        Spacer()
-                        
-                        // Allow entering of URL if build with Xcode
-                        #if targetEnvironment(simulator)
-                            HStack {
-                                TextField(text: $debugDeviceJoinURLString) {
-                                    Text(verbatim: "Join URL")
-                                }
-                                
-                                Button {
-                                    process(inputString: debugDeviceJoinURLString)
-                                } label: {
-                                    Text(verbatim: "Connect")
-                                }
-                            }
-                            .padding(.bottom)
-                        #endif
+
+            QRCodeScannerView(model: scannerViewModel)
+
+            // Allow entering of URL if build with Xcode
+            #if targetEnvironment(simulator)
+                HStack {
+                    TextField(text: $urlSafeBase64) {
+                        Text(verbatim: "Join URL")
                     }
-                    .frame(minHeight: geometryProxy.size.height - geometryProxy.safeAreaInsets.bottom)
-                    .padding([.horizontal, .bottom], 24)
+
+                    Button {
+                        process(urlSafeBase64: urlSafeBase64)
+                    } label: {
+                        Text(verbatim: "Connect")
+                    }
                 }
-            }
-            
+                .padding(.bottom)
+            #endif
+
             // This is an overlay during establishing the rendezvous connection
             DeviceJoinProgressView(text: #localize("multi_device_join_connecting"))
                 .foregroundColor(.secondary)
@@ -144,19 +110,7 @@ struct DeviceJoinScanQRCodeView: View {
         .navigationBarBackButtonHidden()
         // Note: This will also influence all views lower in the navigation stack
         .interactiveDismissDisabled(deviceJoinManager.viewState != .scanQRCode)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(role: .cancel) {
-                    deviceJoinManager.deviceJoin.cancel()
-                    showWizard = false
-                } label: {
-                    Label(#localize("cancel"), systemImage: "xmark.circle.fill")
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        .onChange(of: deviceJoinManager.viewState) { nextState in
+        .onChange(of: deviceJoinManager.viewState) { _, nextState in
             switch nextState {
             // We might go back after an error occurred during connection/scanning
             case .scanQRCode:
@@ -169,31 +123,21 @@ struct DeviceJoinScanQRCodeView: View {
                 break
             }
         }
-        // No camera access
-        .alert(
-            #localize("alert_no_access_title_camera"),
-            isPresented: $showNoCameraAccessAlert
-        ) {
-            Button(#localize("alert_no_access_open_settings")) {
-                guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
-                    DDLogWarn("Unable to get settings URL")
-                    return
-                }
-                
-                openURL(settingsURL)
-            }
-            
-            Button(#localize("cancel"), role: .cancel) {
+        .onAppear {
+            scannerViewModel.onCancel = {
+                deviceJoinManager.deviceJoin.cancel()
                 showWizard = false
             }
-        } message: {
-            Text(#localize("alert_no_access_message_camera"))
+            scannerViewModel.onCompletion = { result in
+                guard case let .multiDeviceLink(urlString) = result else {
+                    return
+                }
+                successfulScanned = true
+                process(urlSafeBase64: urlString)
+            }
         }
         // Retry error
-        .alert(
-            retryErrorTitle,
-            isPresented: $showRetryError
-        ) {
+        .alert(retryErrorTitle, isPresented: $showRetryError) {
             Button("ok") {
                 Task {
                     successfulScanned = false
@@ -204,10 +148,7 @@ struct DeviceJoinScanQRCodeView: View {
             Text(retryErrorMessage)
         }
         // Fatal error
-        .alert(
-            fatalErrorTitle,
-            isPresented: $showFatalError
-        ) {
+        .alert(fatalErrorTitle, isPresented: $showFatalError) {
             Button("ok") {
                 deviceJoinManager.deviceJoin.cancel()
                 showWizard = false
@@ -216,71 +157,13 @@ struct DeviceJoinScanQRCodeView: View {
             Text(#localize("multi_device_join_fatal_error_message"))
         }
     }
-    
-    private func handleScan(result: Swift.Result<ScanResult, ScanError>) {
-        switch result {
-        case let .success(success):
-            successfulScanned = true
-            
-            process(inputString: success.string)
-            
-        case .failure(.permissionDenied):
-            DDLogError("No camera access when scanning QR Code")
-            requestCameraAccess()
-            
-        case .failure:
-            fatalErrorTitle = #localize("multi_device_join_fatal_scanning_qr_code_error_title")
-            showFatalError = true
-            
-            DDLogError("Failed to scan QR Code")
-        }
-    }
-    
-    private func requestCameraAccess() {
-        let authorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
-        switch authorizationStatus {
-        case .notDetermined:
-            AVCaptureDevice.requestAccess(for: .video) { granted in
-                if !granted {
-                    Task { @MainActor in
-                        showNoCameraAccessAlert = true
-                    }
-                }
-            }
-        case .restricted, .denied:
-            DDLogError("Restricted or denied camera access")
-            showNoCameraAccessAlert = true
-        case .authorized:
-            // Everything is all right
-            break
-        @unknown default:
-            DDLogError("Unknown default camera authorization status")
-            fatalErrorTitle = #localize("multi_device_join_fatal_camera_access_error_title")
-            showFatalError = true
-        }
-    }
-    
-    private func process(inputString: String) {
-        // Verify URL
-        guard let urlSafeBase64 = verify(inputString: inputString) else {
-            DDLogError("Invalid QR Code")
-            
-            retryErrorTitle = #localize("multi_device_join_unknown_qr_code_title")
-            retryErrorMessage = String.localizedStringWithFormat(
-                #localize("multi_device_join_unknown_qr_code_message"),
-                DeviceJoinManager.downloadURL
-            )
-            showRetryError = true
-            
-            return
-        }
-        
+
+    private func process(urlSafeBase64: String) {
         // Only show connecting state if verification was successful
         do {
             try withAnimation {
                 try deviceJoinManager.advance(to: .establishRendezvousConnection)
             }
-            
             connect(to: urlSafeBase64)
         }
         catch {
@@ -290,28 +173,7 @@ struct DeviceJoinScanQRCodeView: View {
             showFatalError = true
         }
     }
-   
-    private func verify(inputString: String) -> String? {
-        guard let url = URL(string: inputString) else {
-            return nil
-        }
-        
-        let parsedURL: URLParser.URLType
-        do {
-            parsedURL = try URLParser.parse(url: url)
-        }
-        catch {
-            DDLogError("Error parsing url: \(error)")
-            return nil
-        }
-        
-        guard case let .deviceGroupJoinRequestOffer(urlSafeBase64: urlSafeBase64) = parsedURL else {
-            return nil
-        }
-        
-        return urlSafeBase64
-    }
-    
+
     private func connect(to urlSafeBase64: String) {
         Task {
             do {

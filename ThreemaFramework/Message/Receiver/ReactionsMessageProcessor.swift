@@ -29,9 +29,11 @@ final class ReactionsMessageProcessor: NSObject {
     }
     
     private let entityManager: EntityManager
-    
-    @objc init(entityManager: EntityManager) {
+    private let messageProcessorDelegate: MessageProcessorDelegate
+
+    @objc init(entityManager: EntityManager, messageProcessorDelegate: MessageProcessorDelegate) {
         self.entityManager = entityManager
+        self.messageProcessorDelegate = messageProcessorDelegate
     }
 
     @objc func handleMessage(
@@ -46,7 +48,7 @@ final class ReactionsMessageProcessor: NSObject {
             
             guard let message = self.entityManager.entityFetcher.message(
                 with: decoded.messageID.littleEndianData,
-                conversation: conversation
+                in: conversation
             ) else {
                 return nil
             }
@@ -55,7 +57,7 @@ final class ReactionsMessageProcessor: NSObject {
                 return nil
             }
             
-            let contact = self.entityManager.entityFetcher.contact(for: abstractMessage.fromIdentity)
+            let contact = self.entityManager.entityFetcher.contactEntity(for: abstractMessage.fromIdentity)
             
             // If the contact is nil, this might mean we are the sender. If this is not the case we discard
             guard contact != nil || abstractMessage.fromIdentity == MyIdentityStore.shared().identity else {
@@ -76,7 +78,7 @@ final class ReactionsMessageProcessor: NSObject {
                 }
                 
                 guard self.entityManager.entityFetcher.messageReactionEntity(
-                    forMessageID: decoded.messageID.littleEndianData,
+                    for: decoded.messageID.littleEndianData,
                     creator: contact,
                     reaction: reactionString
                 ) == nil else {
@@ -84,15 +86,12 @@ final class ReactionsMessageProcessor: NSObject {
                     return nil
                 }
 
-                guard let reactionEntity = self.entityManager.entityCreator.messageReactionEntity() else {
-                    assertionFailure("Should never happen.")
-                    return nil
-                }
-                
+                let reactionEntity = self.entityManager.entityCreator.messageReactionEntity(
+                    reaction: reactionString,
+                    message: message
+                )
                 reactionEntity.date = abstractMessage.date
                 reactionEntity.creator = contact
-                reactionEntity.reaction = reactionString
-                reactionEntity.message = message
                
             case let .withdraw(reactionData):
                 guard reactionData.count <= 64 else {
@@ -106,13 +105,14 @@ final class ReactionsMessageProcessor: NSObject {
                 }
                 
                 guard let reaction = self.entityManager.entityFetcher.messageReactionEntity(
-                    forMessageID: decoded.messageID.littleEndianData,
+                    for: decoded.messageID.littleEndianData,
                     creator: contact,
                     reaction: reactionString
                 ) else {
                     return nil
                 }
-                
+
+                self.messageProcessorDelegate.changedManagedObjectID(reaction.objectID)
                 self.entityManager.entityDestroyer.delete(reaction: reaction)
 
             case .none:
@@ -136,7 +136,7 @@ final class ReactionsMessageProcessor: NSObject {
             
             guard let message = self.entityManager.entityFetcher.message(
                 with: decoded.messageID.littleEndianData,
-                conversation: conversation
+                in: conversation
             ) else {
                 return nil
             }
@@ -145,7 +145,7 @@ final class ReactionsMessageProcessor: NSObject {
                 return nil
             }
             
-            let contact = self.entityManager.entityFetcher.contact(for: abstractMessage.fromIdentity)
+            let contact = self.entityManager.entityFetcher.contactEntity(for: abstractMessage.fromIdentity)
             
             // If the contact is nil, this might mean we are the sender. If this is not the case we discard
             guard contact != nil || abstractMessage.fromIdentity == MyIdentityStore.shared().identity else {
@@ -166,7 +166,7 @@ final class ReactionsMessageProcessor: NSObject {
                 }
                 
                 guard self.entityManager.entityFetcher.messageReactionEntity(
-                    forMessageID: decoded.messageID.littleEndianData,
+                    for: decoded.messageID.littleEndianData,
                     creator: contact,
                     reaction: reactionString
                 ) == nil else {
@@ -174,15 +174,12 @@ final class ReactionsMessageProcessor: NSObject {
                     return nil
                 }
                 
-                guard let reactionEntity = self.entityManager.entityCreator.messageReactionEntity() else {
-                    assertionFailure("Should never happen.")
-                    return nil
-                }
-                
+                let reactionEntity = self.entityManager.entityCreator.messageReactionEntity(
+                    reaction: reactionString,
+                    message: message
+                )
                 reactionEntity.date = abstractMessage.date
                 reactionEntity.creator = contact
-                reactionEntity.reaction = reactionString
-                reactionEntity.message = message
                
             case let .withdraw(reactionData):
                 guard reactionData.count <= 64 else {
@@ -196,13 +193,14 @@ final class ReactionsMessageProcessor: NSObject {
                 }
                 
                 guard let reaction = self.entityManager.entityFetcher.messageReactionEntity(
-                    forMessageID: decoded.messageID.littleEndianData,
+                    for: decoded.messageID.littleEndianData,
                     creator: contact,
                     reaction: reactionString
                 ) else {
                     return nil
                 }
                 
+                self.messageProcessorDelegate.changedManagedObjectID(reaction.objectID)
                 self.entityManager.entityDestroyer.delete(reaction: reaction)
 
             case .none:
@@ -223,7 +221,7 @@ final class ReactionsMessageProcessor: NSObject {
             return
         }
         
-        let contact = entityManager.entityFetcher.contact(for: sender)
+        let contact = entityManager.entityFetcher.contactEntity(for: sender)
         
         // If the contact is nil, this might mean we are the sender. If this is not the case we discard
         guard contact != nil || sender == MyIdentityStore.shared().identity else {
@@ -235,25 +233,18 @@ final class ReactionsMessageProcessor: NSObject {
         // assume he still does not fully support reactions and remove the ones sent before to mimic the legacy
         // behavior.
         if let existingReactions = entityManager.entityFetcher.messageReactionEntities(
-            forMessage: message,
+            for: message,
             creator: contact
         ), !existingReactions.isEmpty {
-            
             for existingReaction in existingReactions {
+                messageProcessorDelegate.changedManagedObjectID(existingReaction.objectID)
                 entityManager.entityDestroyer.delete(reaction: existingReaction)
             }
         }
             
         // Map legacy reaction to new reaction
-        guard let reaction = entityManager.entityCreator.messageReactionEntity() else {
-            DDLogError("[Reaction] Could not create reaction entity. Discarding incoming ack/dec.")
-
-            throw ReactionsMessageProcessingError.reactionCreationFailed
-        }
-        
+        let reaction = entityManager.entityCreator.messageReactionEntity(reaction: ack ? "👍" : "👎", message: message)
         reaction.creator = contact
-        reaction.reaction = ack ? "👍" : "👎"
         reaction.date = date
-        reaction.message = message
     }
 }

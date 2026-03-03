@@ -43,12 +43,8 @@ extension Colors {
         
         // MARK: UIView
         UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).tintColor = .primary
-        UIView.appearance(whenContainedInInstancesOf: [UIDocumentMenuViewController.self]).tintColor = .primary
         UIView.appearance(whenContainedInInstancesOf: [UIWindow.self, UIView.self]).tintColor = .primary
-                        
-        // MARK: UIButton
-        UIButton.appearance(whenContainedInInstancesOf: [UIDocumentMenuViewController.self]).tintColor = .primary
-                
+                                        
         // MARK: UILabel
         // Do not change it for cells, because cells have their own appearance
         UILabel.appearance(whenContainedInInstancesOf: [UITextField.self]).textColor = UIColor.placeholderText
@@ -56,12 +52,9 @@ extension Colors {
         // MARK: UITextView
         UITextView.appearance().textColor = .label
         UITextView.appearance().tintColor = .primary
-        UITextView.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).textColor = .white
         
         // MARK: TextField
         UITextField.appearance().textColor = .label
-        UITextField.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).textColor = .white
-        UITextField.appearance(whenContainedInInstancesOf: [PageContentViewController.self]).keyboardAppearance = .dark
         
         // MARK: UIBarButtonItem
         UIBarButtonItem.appearance().tintColor = .primary

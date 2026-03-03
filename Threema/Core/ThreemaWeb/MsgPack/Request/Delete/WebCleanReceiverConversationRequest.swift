@@ -42,17 +42,17 @@ class WebCleanReceiverConversationRequest: WebAbstractMessage {
     
     func clean() {
         DispatchQueue.main.sync {
-            let entityManager = EntityManager()
-            
-            if identity != nil {
-                if let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: identity) {
+            let entityManager = BusinessInjector.ui.entityManager
+
+            if let identity {
+                if let conversation = entityManager.entityFetcher.conversationEntity(for: identity) {
                     entityManager.performAndWaitSave {
                         entityManager.entityDestroyer.delete(conversation: conversation)
                     }
                 }
             }
             else if groupID != nil {
-                if let conversation = entityManager.entityFetcher.legacyConversation(for: groupID) {
+                if let conversation = entityManager.entityFetcher.legacyConversationEntity(for: groupID) {
                     entityManager.performAndWaitSave {
                         var imageData: Data?
                         var imageHeight: NSNumber?
@@ -67,20 +67,22 @@ class WebCleanReceiverConversationRequest: WebAbstractMessage {
                         entityManager.entityDestroyer.delete(conversation: conversation)
 
                         let tmpConversation = entityManager.entityCreator.conversationEntity()
-                        tmpConversation?.contact = conversation.contact
-                        tmpConversation?.members = conversation.members
-                        // swiftformat:disable:next acronyms
-                        tmpConversation?.groupId = conversation.groupID
-                        tmpConversation?.groupName = conversation.groupName
-                        tmpConversation?.groupMyIdentity = conversation.groupMyIdentity
+                        tmpConversation.contact = conversation.contact
+                        tmpConversation.members = conversation.members
+                        tmpConversation.groupID = conversation.groupID
+                        tmpConversation.groupName = conversation.groupName
+                        tmpConversation.groupMyIdentity = conversation.groupMyIdentity
                         
                         if let imageData {
-                            let tmpImageData = entityManager.entityCreator.imageDataEntity()
-                            tmpImageData?.data = imageData
-                            tmpImageData?.height = Int16(truncating: imageHeight ?? 0.0)
-                            tmpImageData?.width = Int16(truncating: imageWidth ?? 0.0)
-                            tmpConversation?.groupImage = tmpImageData
-                            tmpConversation?.groupImageSetDate = conversation.groupImageSetDate
+                            let tmpImageData = entityManager.entityCreator.imageDataEntity(
+                                data: imageData,
+                                size: CGSize(
+                                    width: Double(truncating: imageWidth ?? 0.0),
+                                    height: Double(truncating: imageHeight ?? 0.0)
+                                )
+                            )
+                            tmpConversation.groupImage = tmpImageData
+                            tmpConversation.groupImageSetDate = conversation.groupImageSetDate
                         }
                     }
                 }

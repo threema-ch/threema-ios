@@ -37,6 +37,12 @@ import ThreemaFramework
     private let businessInjector: BusinessInjectorProtocol
     private let notificationManager: NotificationManager
 
+    private lazy var dirtyObjectManager = PersistenceManager(
+        appGroupID: AppGroup.groupID(),
+        userDefaults: AppGroup.userDefaults(),
+        remoteSecretManager: AppLaunchManager.remoteSecretManager
+    ).dirtyObjectManager
+
     private var completionHandler: (() -> Void)?
 
     required init(
@@ -55,32 +61,32 @@ import ThreemaFramework
         let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
         self.init(
             pendingUserNotificationManager: PendingUserNotificationManager(
-                UserNotificationManager(
-                    businessInjector.settingsStore,
-                    businessInjector.userSettings,
-                    businessInjector.myIdentityStore,
-                    businessInjector.pushSettingManager,
-                    businessInjector.contactStore,
-                    businessInjector.groupManager,
-                    businessInjector.entityManager,
-                    TargetManager.isBusinessApp
+                userNotificationManager: UserNotificationManager(
+                    settingsStore: businessInjector.settingsStore,
+                    userSettings: businessInjector.userSettings,
+                    myIdentityStore: businessInjector.myIdentityStore,
+                    pushSettingManager: businessInjector.pushSettingManager,
+                    contactStore: businessInjector.contactStore,
+                    groupManager: businessInjector.groupManager,
+                    entityManager: businessInjector.entityManager,
+                    isWorkApp: TargetManager.isBusinessApp
                 ),
-                businessInjector.pushSettingManager,
-                businessInjector.entityManager
+                pushSettingManager: businessInjector.pushSettingManager,
+                entityManager: businessInjector.entityManager
             ),
             backgroundPendingUserNotificationManager: PendingUserNotificationManager(
-                UserNotificationManager(
-                    backgroundBusinessInjector.settingsStore,
-                    backgroundBusinessInjector.userSettings,
-                    backgroundBusinessInjector.myIdentityStore,
-                    backgroundBusinessInjector.pushSettingManager,
-                    backgroundBusinessInjector.contactStore,
-                    backgroundBusinessInjector.groupManager,
-                    backgroundBusinessInjector.entityManager,
-                    TargetManager.isBusinessApp
+                userNotificationManager: UserNotificationManager(
+                    settingsStore: backgroundBusinessInjector.settingsStore,
+                    userSettings: backgroundBusinessInjector.userSettings,
+                    myIdentityStore: backgroundBusinessInjector.myIdentityStore,
+                    pushSettingManager: backgroundBusinessInjector.pushSettingManager,
+                    contactStore: backgroundBusinessInjector.contactStore,
+                    groupManager: backgroundBusinessInjector.groupManager,
+                    entityManager: backgroundBusinessInjector.entityManager,
+                    isWorkApp: TargetManager.isBusinessApp
                 ),
-                backgroundBusinessInjector.pushSettingManager,
-                backgroundBusinessInjector.entityManager
+                pushSettingManager: backgroundBusinessInjector.pushSettingManager,
+                entityManager: backgroundBusinessInjector.entityManager
             ),
             backgroundBusinessInjector: backgroundBusinessInjector
         )
@@ -252,9 +258,9 @@ extension IncomingMessageManager: MessageProcessorDelegate {
 
     func changedManagedObjectID(_ objectID: NSManagedObjectID) {
         if !AppDelegate.shared().active {
-            // Set dirty DB objects for refreshing in the app process
-            let databaseManager = DatabaseManager()
-            databaseManager.addDirtyObjectID(objectID)
+            dirtyObjectManager.markAsDirty(objectID: objectID) {
+                AppGroup.notifySyncNeeded()
+            }
         }
     }
     
@@ -275,31 +281,17 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
     }
     
-    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessageEntity) {
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessageEntity baseMessageEntityObject: NSObject) {
+        guard let baseMessage = baseMessageEntityObject as? BaseMessageEntity else {
+            fatalError("Parameter `baseMessageEntityObject` must be type of `BaseMessageEntity`")
+        }
+
         businessInjector.entityManager.performAndWaitSave {
             if let msg = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: baseMessage.objectID) as? BaseMessageEntity {
+                .managedObject(with: baseMessage.objectID) as? BaseMessageEntity {
                 if !AppDelegate.shared().active {
-                    let databaseManager = DatabaseManager()
-                    databaseManager.addDirtyObject(msg)
-                   
-                    let conversation = msg.conversation
-                    databaseManager.addDirtyObject(conversation)
-                    if let contact = conversation.contact {
-                        databaseManager.addDirtyObject(contact)
-                    }
-        
-                    if message is ReactionMessage || message is GroupReactionMessage,
-                       let reactions = baseMessage.reactions {
-                        for reaction in reactions {
-                            databaseManager.addDirtyObject(reaction)
-                        }
-                    }
-                    else if message is EditMessage || message is EditGroupMessage,
-                            let editHistoryEntries = baseMessage.historyEntries {
-                        for entry in editHistoryEntries {
-                            databaseManager.addDirtyObject(entry)
-                        }
+                    self.dirtyObjectManager.markAsDirty(objectID: msg.objectID) {
+                        AppGroup.notifySyncNeeded()
                     }
                 }
 
@@ -347,10 +339,14 @@ extension IncomingMessageManager: MessageProcessorDelegate {
             }
         }
     }
-    
-    func readMessage(inConversations: Set<ConversationEntity>?) {
-        if let inConversations, !inConversations.isEmpty {
-            businessInjector.unreadMessages.totalCount(doCalcUnreadMessagesCountOf: inConversations)
+
+    func readMessage(inConversations: Set<AnyHashable>?) {
+        guard let conversations = inConversations as? Set<ConversationEntity> else {
+            fatalError("Parameter `inConversations` must be type of `Set<ConversationEntity>`")
+        }
+
+        if !conversations.isEmpty {
+            businessInjector.unreadMessages.totalCount(doCalcUnreadMessagesCountOf: conversations)
         }
 
         DispatchQueue.main.async {
@@ -399,18 +395,20 @@ extension IncomingMessageManager: MessageProcessorDelegate {
         }
         
         businessInjector.entityManager.performAndWait {
-            let databaseManager = DatabaseManager()
-            
-            if let contactEntity = self.businessInjector.entityManager.entityFetcher.contact(
+            if let contactEntity = self.businessInjector.entityManager.entityFetcher.contactEntity(
                 for: message.fromIdentity
             ) {
-                databaseManager.addDirtyObject(contactEntity)
+                self.dirtyObjectManager.markAsDirty(objectID: contactEntity.objectID) {
+                    AppGroup.notifySyncNeeded()
+                }
             }
             
             if let conversation = self.businessInjector.entityManager.entityFetcher.conversationEntity(
-                forIdentity: message.fromIdentity
+                for: message.fromIdentity
             ) {
-                databaseManager.addDirtyObject(conversation)
+                self.dirtyObjectManager.markAsDirty(objectID: conversation.objectID) {
+                    AppGroup.notifySyncNeeded()
+                }
             }
         }
     }

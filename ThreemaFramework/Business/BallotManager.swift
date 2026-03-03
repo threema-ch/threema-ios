@@ -20,19 +20,98 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
+import ThreemaMacros
 
 public class BallotManager: NSObject {
     private let entityManager: EntityManager
     
-    @objc init(entityManager: EntityManager) {
+    @objc public init(entityManager: EntityManager) {
         self.entityManager = entityManager
+    }
+    
+    @objc public func create(
+        with title: String,
+        choices: [String],
+        type: BallotEntity.BallotType,
+        assessmentType: BallotEntity.BallotAssessmentType,
+        conversation: NSManagedObjectID
+    ) -> BallotEntity {
+        let conversation = entityManager.entityFetcher.existingObject(with: conversation) as? ConversationEntity
+        let ballotID = NaClCrypto.shared().randomBytes(Int32(ThreemaProtocol.ballotIDLength)) ?? Data()
+        let ballot = entityManager.entityCreator.ballotEntity(id: ballotID)
+        ballot.createDate = Date()
+        ballot.creatorID = MyIdentityStore.shared().identity
+        ballot.title = title
+        ballot.type = type.rawValue as NSNumber
+        ballot.assessmentType = assessmentType.rawValue as NSNumber
+        ballot.displayMode = BallotEntity.BallotDisplayMode.list.rawValue as NSNumber
+        ballot.conversation = conversation
+        
+        choices.enumerated().forEach { [weak self] item in
+            let choice = item.element
+            let position = item.offset
+            let entity = self?.entityManager.entityCreator.ballotChoiceEntity(
+                ballotEntity: ballot,
+                id: arc4random() as NSNumber
+            )
+            entity?.name = choice
+            entity?.orderPosition = position as NSNumber
+        }
+        
+        return ballot
+    }
+    
+    public func getPollIDs(
+        conversation: ConversationEntity? = nil,
+        state: BallotEntity.BallotState? = nil
+    ) async -> [NSManagedObjectID] {
+        await entityManager.entityFetcher.pollIDs(conversation: conversation, state: state)
+    }
+    
+    public func getBallotEntity(for id: NSManagedObjectID) -> BallotEntity? {
+        guard let ballotEntity = entityManager.entityFetcher.existingObject(with: id) as? BallotEntity else {
+            DDLogError("Could not fetch ballot entity for id: \(id).")
+            return nil
+        }
+        
+        return ballotEntity
+    }
+    
+    public func getPoll(for id: NSManagedObjectID) -> Poll? {
+        guard let ballotEntity = entityManager.entityFetcher.existingObject(with: id) as? BallotEntity else {
+            DDLogError("Could not fetch ballot entity for id: \(id).")
+            return nil
+        }
+        
+        let creator: Poll.Creator? =
+            if let identity = ballotEntity.creatorID {
+                if identity == BusinessInjector.ui.myIdentityStore.identity {
+                    .me
+                }
+                else {
+                    entityManager.performAndWait {
+                        if let contact = self.entityManager.entityFetcher.contactEntity(for: identity) {
+                            .other(displayName: contact.displayName)
+                        }
+                        else {
+                            .other(displayName: identity)
+                        }
+                    }
+                }
+            }
+            else {
+                .other(displayName: #localize("unknown"))
+            }
+        
+        return Poll(for: ballotEntity, creator: creator, identityStore: BusinessInjector.ui.myIdentityStore)
     }
     
     @objc public func choiceResultCount(
         _ ballot: BallotEntity,
         choiceID: NSNumber
     ) -> Int {
-        guard let choice = entityManager.entityFetcher.ballotChoice(for: ballot.id, with: choiceID),
+        guard let choice = entityManager.entityFetcher.ballotChoiceEntity(for: ballot.id, and: choiceID),
               let result = choice.result else {
             DDLogError("[Ballot] [\(ballot.id.hexString)] Could not fetch choice for ballot.")
             return 0
@@ -46,21 +125,19 @@ public class BallotManager: NSObject {
         choiceID: NSNumber,
         participantIDs: [String]
     ) {
-        guard let choice = entityManager.entityFetcher.ballotChoice(for: ballot.id, with: choiceID),
+        guard let choice = entityManager.entityFetcher.ballotChoiceEntity(for: ballot.id, and: choiceID),
               let result = choice.result else {
             DDLogError("[Ballot] [\(ballot.id.hexString)] Could not fetch choice for ballot.")
             return
         }
         
         for ballotResult in result {
-            // swiftformat:disable acronyms
-            if !participantIDs.contains(ballotResult.participantId) {
+            if !participantIDs.contains(ballotResult.participantID) {
                 DDLogWarn(
-                    "[Ballot] [\(ballot.id.hexString)] Removed vote (\(ballotResult.participantId) from ballot"
+                    "[Ballot] [\(ballot.id.hexString)] Removed vote (\(ballotResult.participantID) from ballot"
                 )
-                choice.removeResultForIdentity(ballotResult.participantId)
+                choice.removeResultForIdentity(ballotResult.participantID)
             }
-            // swiftformat:enable acronyms
         }
     }
     
@@ -70,7 +147,7 @@ public class BallotManager: NSObject {
         with newValue: NSNumber,
         for contactID: String
     ) {
-        guard let choice = entityManager.entityFetcher.ballotChoice(for: ballot.id, with: choiceID) else {
+        guard let choice = entityManager.entityFetcher.ballotChoiceEntity(for: ballot.id, and: choiceID) else {
             DDLogError("[Ballot] [\(ballot.id.hexString)] Could not fetch choice for ballot.")
             return
         }
@@ -89,14 +166,11 @@ public class BallotManager: NSObject {
             result.modifyDate = Date()
         }
         else {
-            guard let newResult = entityManager.entityCreator.ballotResultEntity() else {
-                return
-            }
+            let newResult = entityManager.entityCreator.ballotResultEntity(
+                participantID: contactID,
+                ballotChoiceEntity: choice
+            )
             newResult.value = newValue
-            // swiftformat:disable:next acronyms
-            newResult.participantId = contactID
-            
-            choice.addToResult(newResult)
         }
         choice.modifyDate = Date()
     }
@@ -117,12 +191,15 @@ public class BallotManager: NSObject {
         )
         let json = try? JSONEncoder().encode(voteInfo)
         
-        let sysMsg = entityManager.entityCreator.systemMessageEntity(for: conversation)
+        let type: SystemMessageEntity.SystemMessageEntityType = updatedVote ? .voteUpdated : .vote
+        let sysMsg = entityManager.entityCreator.systemMessageEntity(
+            for: type,
+            in: conversation
+        )
         let date = Date()
-        sysMsg?.type = NSNumber(integerLiteral: updatedVote ? kSystemMessageVoteUpdated : kSystemMessageVote)
-        sysMsg?.arg = json
-        sysMsg?.date = date
-        sysMsg?.remoteSentDate = date
+        sysMsg.arg = json
+        sysMsg.date = date
+        sysMsg.remoteSentDate = date
         
         // We intentionally do not save the changes in here. They get saved with the ballot after the last step of
         // decoding.

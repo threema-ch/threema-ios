@@ -31,7 +31,17 @@ final class ChatBubbleBackgroundView: UIView {
         case bubbles
         case none
     }
-    
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupTraitRegistration()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     /// Which bubble arrow should be shown?
     var showChatBubbleArrow: ShowChatBubbleArrow = .leading {
         didSet {
@@ -42,9 +52,21 @@ final class ChatBubbleBackgroundView: UIView {
             updatePaths(for: bounds)
         }
     }
-    
+
     // MARK: Bubble shape
-    
+
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitUserInterfaceStyle.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                updateColors()
+            }
+        }
+    }
+
     private lazy var backgroundLayer: CAShapeLayer = {
         let shapeLayer = CAShapeLayer()
         self.layer.addSublayer(shapeLayer)
@@ -95,7 +117,7 @@ final class ChatBubbleBackgroundView: UIView {
             CATransaction.commit()
         }
     }
-    
+
     /// Used to update the bubble frame for animations
     var bubbleFrame: CGRect? {
         didSet {
@@ -164,16 +186,5 @@ final class ChatBubbleBackgroundView: UIView {
     
     private func updateColors() {
         backgroundLayer.fillColor = localBackgroundColor.cgColor
-    }
-    
-    // CGColors have no automatic theme change built in, so we track it ourselves
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
-            return
-        }
-        
-        updateColors()
     }
 }

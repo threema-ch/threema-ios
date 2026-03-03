@@ -22,14 +22,28 @@
 #import <ThreemaFramework/BoxFileMessage.h>
 #import <ThreemaFramework/GroupFileMessage.h>
 
-@class FileMessageEntity;
-
 @interface FileMessageEncoder : NSObject
 
-+ (BoxFileMessage *)encodeFileMessageEntity:(FileMessageEntity *)message;
+/**
+ Encode or get abstract file message of file entity.
 
-+ (GroupFileMessage *)encodeGroupFileMessageEntity:(FileMessageEntity *)message;
+ @param fileMessageEntityObject Object of type `FileMessageEntity`
+ @return `BoxFileMessage`
+ */
++ (BoxFileMessage *)encodeFileMessageEntity:(nonnull NSObject *)fileMessageEntityObject NS_SWIFT_NAME(encodeFileMessageEntity(_:));
 
-+ (NSString *)jsonStringForFileMessageEntity:(FileMessageEntity *)message;
+/**
+ Encode or get abstract group file message of file entity.
+
+ @param fileMessageEntityObject Object of type `FileMessageEntity`
+ @return `GroupFileMessage`
+ */
++ (GroupFileMessage *)encodeGroupFileMessageEntity:(nonnull NSObject *)fileMessageEntityObject;
+
+/**
+ @param fileMessageEntityObject Object of type `FileMessageEntity`
+ @return `NSString`
+ */
++ (NSString *)jsonStringForFileMessageEntity:(nonnull NSObject *)fileMessageEntityObject NS_SWIFT_NAME(jsonString(for:));
 
 @end

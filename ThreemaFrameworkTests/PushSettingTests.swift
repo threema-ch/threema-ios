@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
 @testable import ThreemaFramework
 
@@ -103,7 +104,7 @@ final class PushSettingTests: XCTestCase {
             )
         }
         
-        XCTAssertTrue(TextStyleUtils.isMeOrAllMention(inText: textMessage1.contentToCheckForMentions()))
+        XCTAssertTrue(MarkupParser().isMeOrAllMention(in: textMessage1.contentToCheckForMentions() ?? ""))
         
         var textMessage2: BaseMessageEntity!
 
@@ -123,7 +124,7 @@ final class PushSettingTests: XCTestCase {
             )
         }
         
-        XCTAssertFalse(TextStyleUtils.isMeOrAllMention(inText: textMessage2.contentToCheckForMentions()))
+        XCTAssertFalse(MarkupParser().isMeOrAllMention(in: textMessage2.contentToCheckForMentions() ?? ""))
 
         var fileMessage1: FileMessageEntity!
 
@@ -134,7 +135,7 @@ final class PushSettingTests: XCTestCase {
             )
         }
         
-        XCTAssertTrue(TextStyleUtils.isMeOrAllMention(inText: fileMessage1.contentToCheckForMentions()))
+        XCTAssertTrue(MarkupParser().isMeOrAllMention(in: fileMessage1.contentToCheckForMentions() ?? ""))
 
         var fileMessage2: FileMessageEntity!
 
@@ -142,6 +143,6 @@ final class PushSettingTests: XCTestCase {
             fileMessage2 = databasePreparer.createFileMessageEntity(conversation: conversation, caption: "Hello!")
         }
         
-        XCTAssertFalse(TextStyleUtils.isMeOrAllMention(inText: fileMessage2.contentToCheckForMentions()))
+        XCTAssertFalse(MarkupParser().isMeOrAllMention(in: fileMessage2.contentToCheckForMentions() ?? ""))
     }
 }

@@ -29,8 +29,6 @@
 #import "GroupFileMessage.h"
 #import "BallotMessageDecoder.h"
 #import "FileMessageDecoder.h"
-#import "QuoteUtil.h"
-#import "TextStyleUtils.h"
 #import "ThreemaUtilityObjC.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "NSString+Hex.h"
@@ -52,15 +50,8 @@
 - (NSString *)pushNotificationBody {
     NSString *body = [NSString new];
     if ([self isKindOfClass:[GroupTextMessage class]]) {
-        NSString *quotedIdentity = nil;
-        NSString *remainingBody = nil;
-        NSString *quotedText = [QuoteUtil parseQuoteFromMessage:((GroupTextMessage *)self).text quotedIdentity:&quotedIdentity remainingBody:&remainingBody];
-        if (quotedText) {
-            body = remainingBody;
-        } else {
-            body = ((GroupTextMessage *)self).text;
-        }
-        body = [TextStyleUtils makeMentionsStringForText:body];
+        MarkupParser *parser = [[MarkupParser alloc] init];
+        body = [parser makeMentionsStringFor:((GroupTextMessage *)self).text];
     }
     else if ([self isKindOfClass:[GroupImageMessage class]]) {
         body = [BundleUtil localizedStringForKey:@"new_image_message"];

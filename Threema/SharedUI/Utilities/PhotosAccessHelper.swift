@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import MBProgressHUD
 import PhotosUI
@@ -108,19 +109,17 @@ let tmpDirectory = "tmpImages/"
         completion(assets, pickerController)
     }
     
-    @objc static func cleanTemporaryDirectory() {
-        let fileManager = FileManager.default
-        let tmpDirURL = FileManager.default.temporaryDirectory.appendingPathComponent(tmpDirectory)
-        try? fileManager.removeItem(at: tmpDirURL)
-    }
-    
     @objc static func getTempDir() -> URL {
-        let fileManager = FileManager.default
-        let tmpDirURL = FileManager.default.temporaryDirectory.appendingPathComponent(tmpDirectory)
+        let fileUtility = FileUtility.shared!
+        let tmpDirURL = fileUtility.appTemporaryUnencryptedDirectory
         
-        if !fileManager.fileExists(atPath: tmpDirURL.absoluteString) {
+        if fileUtility.fileExists(at: tmpDirURL) == false {
             do {
-                try fileManager.createDirectory(at: tmpDirURL, withIntermediateDirectories: true, attributes: nil)
+                try fileUtility.mkDir(
+                    at: tmpDirURL,
+                    withIntermediateDirectories: true,
+                    attributes: nil
+                )
             }
             catch {
                 DDLogError("Error \(error.localizedDescription)")
@@ -130,17 +129,16 @@ let tmpDirectory = "tmpImages/"
         return tmpDirURL
     }
     
-    @objc static func storeImageToTmprDir(imageData: UIImage) -> URL {
+    @objc static func storeImageToTmpDir(imageData: UIImage) -> URL {
         let tmpDir = getTempDir()
-        let fileName = FileUtility.shared.getTemporarySendableFileName(base: "image")
+        let fileUtility = FileUtility.shared!
+        let fileName = fileUtility.getTemporarySendableFileName(base: "image")
         let fileURL = tmpDir.appendingPathComponent(fileName + ".jpeg")
         let data = MediaConverter.jpegRepresentation(for: imageData)
         
-        do {
-            try data?.write(to: fileURL)
-        }
-        catch {
-            DDLogError("Error \(error.localizedDescription)")
+        guard fileUtility.write(contents: data, to: fileURL) else {
+            DDLogError("Failed to store image to temporary directory.")
+            return fileURL
         }
         
         return fileURL
@@ -148,14 +146,13 @@ let tmpDirectory = "tmpImages/"
     
     @objc static func storePDFToTmpDir(pdfData: Data) -> URL {
         let tmpDir = getTempDir()
-        let fileName = FileUtility.shared.getTemporarySendableFileName(base: "Scanned-Documents")
+        let fileUtility = FileUtility.shared!
+        let fileName = fileUtility.getTemporarySendableFileName(base: "Scanned-Documents")
         let fileURL = tmpDir.appendingPathComponent(fileName + ".pdf")
         
-        do {
-            try pdfData.write(to: fileURL)
-        }
-        catch {
-            DDLogError("Error \(error.localizedDescription)")
+        guard fileUtility.write(contents: pdfData, to: fileURL) else {
+            DDLogError("Failed to store PDF to temporary directory.")
+            return fileURL
         }
         
         return fileURL
@@ -260,8 +257,8 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
         }
         
         let tmpDirURL = PhotosAccessHelper.getTempDir()
-        let fileManager = FileManager.default
-        let filename = FileUtility.shared.getTemporarySendableFileName(
+        let fileUtility = FileUtility.shared!
+        let filename = fileUtility.getTemporarySendableFileName(
             base: "video",
             directoryURL: tmpDirURL,
             pathExtension: url.pathExtension
@@ -273,7 +270,10 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
             return PhotosPickerError.fileTooLargeForSending
         }
         else {
-            do { try fileManager.copyItem(at: url, to: newURL) } catch {
+            do {
+                try fileUtility.copy(from: url, to: newURL)
+            }
+            catch {
                 return PhotosPickerError.fileNotFound
             }
             return newURL
@@ -285,7 +285,7 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
             return PhotosPickerError.fileNotFound
         }
         let tmpDirURL = PhotosAccessHelper.getTempDir()
-        let fileManager = FileManager.default
+        let fileUtility = FileUtility.shared!
         let filename = FileUtility.shared.getTemporarySendableFileName(
             base: "image",
             directoryURL: tmpDirURL,
@@ -293,7 +293,10 @@ extension PhotosAccessHelper: PHPickerViewControllerDelegate {
         )
         
         let newURL = tmpDirURL.appendingPathComponent(filename).appendingPathExtension(url.pathExtension)
-        do { try fileManager.copyItem(at: url, to: newURL) } catch {
+        do {
+            try fileUtility.copy(from: url, to: newURL)
+        }
+        catch {
             DDLogError("Could not load image \(error)")
             return PhotosPickerError.fileNotFound
         }

@@ -42,8 +42,6 @@ APP_URL_SCHEME = threemaonprem
 
 /// Declare the use of encryption to streamline the app submission process
 
-/// URL to sentry
-
 
 // Accent Color
 ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColorOnPrem

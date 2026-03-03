@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#import "ThreemaFramework/ThreemaFramework-swift.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #import "ServerAPIRequest.h"
 #import "ActivityIndicatorProxy.h"
@@ -208,7 +208,7 @@
 }
 
 + (void)addAuthorization:(NSMutableURLRequest*)request {
-    if (TargetManagerObjc.isOnPrem) {
+    if (TargetManagerObjC.isOnPrem) {
         // OnPrem requires Basic Authorization header
         NSString *userPass = [NSString stringWithFormat:@"%@:%@", [LicenseStore sharedLicenseStore].licenseUsername, [LicenseStore sharedLicenseStore].licensePassword];
         NSString *userPassBase64 = [[userPass dataUsingEncoding:NSUTF8StringEncoding] base64EncodedStringWithOptions:0];

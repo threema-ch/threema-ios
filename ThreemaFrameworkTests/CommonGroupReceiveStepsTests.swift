@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
 @testable import ThreemaFramework
 
@@ -41,7 +42,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         let expectedResult: CommonGroupReceiveSteps.Result = .discardMessage
         
         let businessInjector = BusinessInjectorMock(
-            entityManager: EntityManager()
+            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false)
         )
 
         let groupID = MockData.generateGroupID()
@@ -60,7 +61,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         let expectedResult: CommonGroupReceiveSteps.Result = .discardMessage
         
         let businessInjector = BusinessInjectorMock(
-            entityManager: EntityManager()
+            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false)
         )
 
         let groupID = MockData.generateGroupID()
@@ -88,7 +89,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext),
+            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
             groupManager: groupManagerMock
         )
         
@@ -111,7 +112,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: member.string
+                    identity: member.rawValue
                 ))
             }
             
@@ -126,8 +127,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                // swiftformat:disable:next acronyms
-                dbConversation.groupId = dbGroup.groupId
+                dbConversation.groupID = dbGroup.groupID
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
             }
@@ -135,6 +135,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             group = Group(
                 myIdentityStore: businessInjectorMock.myIdentityStore,
                 userSettings: businessInjectorMock.userSettings,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -152,7 +153,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         XCTAssertEqual(groupManagerMock.dissolveCalls.count, 1)
         let firstDissolveCall = try XCTUnwrap(groupManagerMock.dissolveCalls.first)
         XCTAssertEqual(firstDissolveCall.groupID, groupID)
-        XCTAssertEqual(firstDissolveCall.receivers, Set([sender.string]))
+        XCTAssertEqual(firstDissolveCall.receivers, Set([sender.rawValue]))
     }
     
     func testForceLeftGroupWithMeAsCreator() throws {
@@ -160,7 +161,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext),
+            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
             groupManager: groupManagerMock
         )
         
@@ -183,7 +184,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: member.string
+                    identity: member.rawValue
                 ))
             }
             
@@ -198,8 +199,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                // swiftformat:disable:next acronyms
-                dbConversation.groupId = dbGroup.groupId
+                dbConversation.groupID = dbGroup.groupID
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
             }
@@ -207,6 +207,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             group = Group(
                 myIdentityStore: businessInjectorMock.myIdentityStore,
                 userSettings: businessInjectorMock.userSettings,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -224,7 +225,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         XCTAssertEqual(groupManagerMock.dissolveCalls.count, 1)
         let firstDissolveCall = try XCTUnwrap(groupManagerMock.dissolveCalls.first)
         XCTAssertEqual(firstDissolveCall.groupID, groupID)
-        XCTAssertEqual(firstDissolveCall.receivers, Set([sender.string]))
+        XCTAssertEqual(firstDissolveCall.receivers, Set([sender.rawValue]))
     }
     
     func testLeftGroupWithOtherCreator() throws {
@@ -232,7 +233,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext),
+            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
             groupManager: groupManagerMock
         )
         
@@ -253,20 +254,20 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         databasePreparer.save {
             let dbCreator = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: creator.string
+                identity: creator.rawValue
             )
             
             var dbMembers = [ContactEntity]()
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: member.string
+                    identity: member.rawValue
                 ))
             }
             
             let dbGroup = databasePreparer.createGroupEntity(
                 groupID: groupID,
-                groupCreator: creator.string
+                groupCreator: creator.rawValue
             )
             dbGroup.state = NSNumber(integerLiteral: 2) // GroupStateLeft
             
@@ -275,8 +276,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                // swiftformat:disable:next acronyms
-                dbConversation.groupId = dbGroup.groupId
+                dbConversation.groupID = dbGroup.groupID
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
                 dbConversation.contact = dbCreator
@@ -285,6 +285,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             group = Group(
                 myIdentityStore: businessInjectorMock.myIdentityStore,
                 userSettings: businessInjectorMock.userSettings,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -305,7 +306,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         XCTAssertEqual(groupManagerMock.leaveCalls.count, 1)
         let firstLeaveCall = try XCTUnwrap(groupManagerMock.leaveCalls.first)
         XCTAssertEqual(firstLeaveCall.groupIdentity, groupIdentity)
-        XCTAssertEqual(firstLeaveCall.receivers, [sender.string])
+        XCTAssertEqual(firstLeaveCall.receivers, [sender.rawValue])
     }
     
     func testForceLeftGroupWithOtherCreator() throws {
@@ -313,7 +314,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext),
+            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
             groupManager: groupManagerMock
         )
         
@@ -334,20 +335,20 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         databasePreparer.save {
             let dbCreator = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: creator.string
+                identity: creator.rawValue
             )
             
             var dbMembers = [ContactEntity]()
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: member.string
+                    identity: member.rawValue
                 ))
             }
             
             let dbGroup = databasePreparer.createGroupEntity(
                 groupID: groupID,
-                groupCreator: creator.string
+                groupCreator: creator.rawValue
             )
             dbGroup.state = NSNumber(integerLiteral: 3) // GroupStateForceLeft
             
@@ -356,8 +357,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                // swiftformat:disable:next acronyms
-                dbConversation.groupId = dbGroup.groupId
+                dbConversation.groupID = dbGroup.groupID
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
                 dbConversation.contact = dbCreator
@@ -366,6 +366,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             group = Group(
                 myIdentityStore: businessInjectorMock.myIdentityStore,
                 userSettings: businessInjectorMock.userSettings,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -386,7 +387,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         XCTAssertEqual(groupManagerMock.leaveCalls.count, 1)
         let firstLeaveCall = try XCTUnwrap(groupManagerMock.leaveCalls.first)
         XCTAssertEqual(firstLeaveCall.groupIdentity, groupIdentity)
-        XCTAssertEqual(firstLeaveCall.receivers, [sender.string])
+        XCTAssertEqual(firstLeaveCall.receivers, [sender.rawValue])
     }
     
     // MARK: No member
@@ -396,7 +397,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext),
+            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
             groupManager: groupManagerMock
         )
         
@@ -419,7 +420,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: member.string
+                    identity: member.rawValue
                 ))
             }
             
@@ -433,8 +434,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                // swiftformat:disable:next acronyms
-                dbConversation.groupId = dbGroup.groupId
+                dbConversation.groupID = dbGroup.groupID
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
             }
@@ -442,6 +442,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             group = Group(
                 myIdentityStore: businessInjectorMock.myIdentityStore,
                 userSettings: businessInjectorMock.userSettings,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -460,7 +461,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         XCTAssertEqual(groupManagerMock.emptyMemberListCalls.count, 1)
         let firstEmptyMemberListCall = try XCTUnwrap(groupManagerMock.emptyMemberListCalls.first)
         XCTAssertEqual(firstEmptyMemberListCall.groupID, groupID)
-        XCTAssertEqual(firstEmptyMemberListCall.receivers, Set([ThreemaIdentity(sender.string)]))
+        XCTAssertEqual(firstEmptyMemberListCall.receivers, Set([ThreemaIdentity(sender.rawValue)]))
     }
     
     func testSenderNoMemberWithOtherCreator() throws {
@@ -468,7 +469,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext),
+            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
             groupManager: groupManagerMock
         )
         
@@ -489,20 +490,20 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         databasePreparer.save {
             let dbCreator = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: creator.string
+                identity: creator.rawValue
             )
             
             var dbMembers = [ContactEntity]()
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: member.string
+                    identity: member.rawValue
                 ))
             }
             
             let dbGroup = databasePreparer.createGroupEntity(
                 groupID: groupID,
-                groupCreator: creator.string
+                groupCreator: creator.rawValue
             )
             
             let dbConversation = databasePreparer.createConversation(
@@ -510,8 +511,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                // swiftformat:disable:next acronyms
-                dbConversation.groupId = dbGroup.groupId
+                dbConversation.groupID = dbGroup.groupID
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
                 dbConversation.contact = dbCreator
@@ -520,6 +520,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             group = Group(
                 myIdentityStore: businessInjectorMock.myIdentityStore,
                 userSettings: businessInjectorMock.userSettings,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -547,7 +548,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext),
+            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
             groupManager: groupManagerMock
         )
         
@@ -568,20 +569,20 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         databasePreparer.save {
             let dbCreator = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: creator.string
+                identity: creator.rawValue
             )
             
             var dbMembers = [ContactEntity]()
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
                     publicKey: MockData.generatePublicKey(),
-                    identity: member.string
+                    identity: member.rawValue
                 ))
             }
             
             let dbGroup = databasePreparer.createGroupEntity(
                 groupID: groupID,
-                groupCreator: creator.string
+                groupCreator: creator.rawValue
             )
             
             let dbConversation = databasePreparer.createConversation(
@@ -589,8 +590,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { dbConversation in
-                // swiftformat:disable:next acronyms
-                dbConversation.groupId = dbGroup.groupId
+                dbConversation.groupID = dbGroup.groupID
                 dbConversation.groupMyIdentity = businessInjectorMock.myIdentityStore.identity
                 dbConversation.members = Set<ContactEntity>(dbMembers)
                 dbConversation.contact = dbCreator
@@ -599,6 +599,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             group = Group(
                 myIdentityStore: businessInjectorMock.myIdentityStore,
                 userSettings: businessInjectorMock.userSettings,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil

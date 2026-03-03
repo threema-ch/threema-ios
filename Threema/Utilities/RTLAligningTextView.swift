@@ -60,14 +60,9 @@ class RTLAligningTextView: UITextView {
     }
 
     private func initCustomLayoutManager() {
-        if #available(iOS 17, *) {
-            customLayoutManager.textStorage = textStorage
-            customLayoutManager.addTextContainer(self.textContainer)
-
-            self.textContainer.replaceLayoutManager(customLayoutManager)
-        }
-        else {
-            customLayoutManager = super.layoutManager
-        }
+        customLayoutManager.textStorage = textStorage
+        customLayoutManager.addTextContainer(textContainer)
+        
+        textContainer.replaceLayoutManager(customLayoutManager)
     }
 }

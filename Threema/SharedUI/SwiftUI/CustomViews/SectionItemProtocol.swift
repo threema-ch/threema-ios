@@ -20,6 +20,7 @@
 
 import SwiftUI
 
+@available(*, deprecated, message: "Do not use anymore.")
 protocol SectionItemProtocol: ViewDestinationProtocol {
     associatedtype Destination: View
     associatedtype Label: View

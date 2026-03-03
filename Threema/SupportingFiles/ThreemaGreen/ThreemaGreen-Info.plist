@@ -129,8 +129,15 @@
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>$(INFOPLIST_KEY_UILaunchStoryboardName)</string>
+    <key>UILaunchScreen</key>
+    <dict>
+        <key>UIColorName</key>
+        <string>LaunchScreenBackground</string>
+        <key>UIImageName</key>
+        <string>LockCover</string>
+        <key>UIImageRespectsSafeAreaInsets</key>
+        <true/>
+    </dict>
 	<key>UIPrerenderedIcon</key>
 	<true/>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -156,5 +163,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+    <key>UIDesignRequiresCompatibility</key>
+    <true/>
 </dict>
 </plist>

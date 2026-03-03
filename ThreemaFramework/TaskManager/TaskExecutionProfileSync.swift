@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaProtocols
 
 /// Reflect my profile data to mediator server.
@@ -74,6 +75,7 @@ final class TaskExecutionProfileSync: TaskExecutionBlobTransaction {
 
         let profileStore = ProfileStore(
             serverConnector: frameworkInjector.serverConnector,
+            myIdentity: ThreemaIdentity(frameworkInjector.myIdentityStore.identity),
             myIdentityStore: frameworkInjector.myIdentityStore,
             contactStore: frameworkInjector.contactStore,
             userSettings: frameworkInjector.userSettings,

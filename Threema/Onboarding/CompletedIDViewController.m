@@ -24,11 +24,11 @@
 #import "MyIdentityStore.h"
 #import "ServerAPIConnector.h"
 #import "PhoneNumberNormalizer.h"
-#import "RectUtil.h"
 #import "ProgressLabel.h"
 #import "IntroQuestionView.h"
 #import "WorkDataFetcher.h"
 #import "MDMSetup.h"
+#import <MBProgressHUD/MBProgressHUD.h>
 #import "Threema-Swift.h"
 #import "NibUtil.h"
 #import "AppDelegate.h"
@@ -70,7 +70,7 @@
     
     [self updateData];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+    MDMSetup *mdmSetup = [MDMSetup new];
     if ([mdmSetup skipWizard]) {
         [self finishAction:nil];
     }
@@ -81,7 +81,7 @@
 }
 
 - (void)updateData {
-    NSString *nickname = _identityStore.pushFromName;
+    NSString *nickname = self.setupConfiguration.nickname;
     
     if (nickname.length == 0) {
         nickname = _identityStore.identity;
@@ -89,30 +89,31 @@
     
     self.nicknameValue.text = nickname;
     
-    if (_identityStore.createIDEmail.length > 0) {
-        self.emailValue.text = _identityStore.createIDEmail;
+    if (self.setupConfiguration.linkEmail.length > 0) {
+        self.emailValue.text = self.setupConfiguration.linkEmail;
     } else {
         self.emailValue.text = @"-";
     }
     
     if (_identityStore.linkedMobileNo) {
-        self.phoneValue.text = _identityStore.createIDPhone;
-    } else if (_identityStore.createIDPhone.length > 0) {
+        self.phoneValue.text = _identityStore.linkedMobileNo;
+    } else if (self.setupConfiguration.linkPhoneNumber.length > 0) {
         PhoneNumberNormalizer *normalizer = [PhoneNumberNormalizer sharedInstance];
         NSString *prettyMobileNo;
-        _phoneNumber = [normalizer phoneNumberToE164:_identityStore.createIDPhone withDefaultRegion:[PhoneNumberNormalizer userRegion] prettyFormat:&prettyMobileNo];
+        _phoneNumber = [normalizer phoneNumberToE164:self.setupConfiguration.linkPhoneNumber withDefaultRegion:[PhoneNumberNormalizer userRegion] prettyFormat:&prettyMobileNo];
         
         self.phoneValue.text = prettyMobileNo;
     } else {
         self.phoneValue.text = @"-";
     }
     
-    if ([UserSettings sharedUserSettings].syncContacts) {
+    if (self.setupConfiguration.syncContacts) {
         self.syncContactValue.text = [BundleUtil localizedStringForKey:@"On"];
     } else {
         self.syncContactValue.text = [BundleUtil localizedStringForKey:@"Off"];
     }
-    if (_identityStore.tempSafePassword != nil && _identityStore.tempSafePassword.length > 0) {
+    
+    if (self.setupConfiguration.safePassword != nil && self.setupConfiguration.safePassword.length > 0) {
         self.enableSafeValue.text = [BundleUtil localizedStringForKey:@"On"];
     } else {
         self.enableSafeValue.text = [BundleUtil localizedStringForKey:@"Off"];
@@ -123,16 +124,16 @@
     [super adaptToSmallScreen];
     
     CGFloat yOffset = -28.0;
-    _nickNameView.frame = [RectUtil offsetRect:_nickNameView.frame byX:0.0 byY:yOffset];
+    _nickNameView.frame = CGRectMake(_nickNameView.frame.origin.x, _nickNameView.frame.origin.y + yOffset, _nickNameView.frame.size.width, _nickNameView.frame.size.height);
     
     yOffset -= 8.0;
-    _linkedToView.frame = [RectUtil offsetRect:_linkedToView.frame byX:0.0 byY:yOffset];
+    _linkedToView.frame = CGRectMake(_linkedToView.frame.origin.x, _linkedToView.frame.origin.y + yOffset, _linkedToView.frame.size.width, _linkedToView.frame.size.height);
     
     yOffset -= 8.0;
-    _syncContactsView.frame = [RectUtil offsetRect:_syncContactsView.frame byX:0.0 byY:yOffset];
+    _syncContactsView.frame = CGRectMake(_syncContactsView.frame.origin.x, _syncContactsView.frame.origin.y + yOffset, _syncContactsView.frame.size.width, _syncContactsView.frame.size.height);
     
     yOffset -= 16.0;
-    _finishButton.frame = [RectUtil offsetRect:_finishButton.frame byX:0.0 byY:yOffset];
+    _finishButton.frame = CGRectMake(_finishButton.frame.origin.x, _finishButton.frame.origin.y + yOffset, _finishButton.frame.size.width, _finishButton.frame.size.height);
 }
 
 - (void)setup {
@@ -142,7 +143,7 @@
     _nickNameLabel.text = [BundleUtil localizedStringForKey:@"id_completed_nickname"];
     _linkedToLabel.text = [BundleUtil localizedStringForKey:@"id_completed_linked_to"];
     _syncContactsLabel.text = [BundleUtil localizedStringForKey:@"id_completed_sync_contacts"];
-    _enableSafeLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"safe_setup_backup_title"], TargetManagerObjc.localizedAppName];
+    _enableSafeLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"safe_setup_backup_title"], TargetManagerObjC.localizedAppName];
     
     [_finishButton setTitle:[BundleUtil localizedStringForKey:@"finish"] forState:UIControlStateNormal];
     _finishButton.accessibilityIdentifier = @"SetupFinishButton";
@@ -161,13 +162,18 @@
     _phoneImageView.image = [[UIImage systemImageNamed:@"phone.fill"] imageWithTintColor:Colors.textSetup];
     _mailImageView.image = [[UIImage systemImageNamed:@"envelope.fill"] imageWithTintColor:Colors.textSetup];
     
-    if (!TargetManagerObjc.isBusinessApp) {
+    if (!TargetManagerObjC.isBusinessApp) {
         _emailView.hidden = YES;
     }
 }
 
+- (void)persistNickname {
+    [MyIdentityStore sharedMyIdentityStore].pushFromName = self.setupConfiguration.nickname;
+    [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
+}
+
 - (BOOL)linkEmail {
-    if (_identityStore.createIDEmail.length < 1) {
+    if (self.setupConfiguration.linkEmail.length < 1) {
         return NO;
     }
     
@@ -177,7 +183,7 @@
     
     _syncEmailSemaphore = dispatch_semaphore_create(0);
     
-    NSString *email = _identityStore.createIDEmail;
+    NSString *email = self.setupConfiguration.linkEmail;
     
     dispatch_async(dispatch_get_main_queue(), ^{
         [self showEmailProgress];
@@ -211,7 +217,7 @@
 }
 
 - (BOOL)linkPhone {
-    if (_identityStore.createIDPhone.length < 1) {
+    if (self.setupConfiguration.linkPhoneNumber.length < 1) {
         return NO;
     }
     
@@ -256,7 +262,9 @@
 }
 
 - (BOOL)syncAdressBook {
-    if ([UserSettings sharedUserSettings].syncContacts == NO) {
+    [UserSettings sharedUserSettings].syncContacts = self.setupConfiguration.syncContacts;
+    
+    if (self.setupConfiguration.syncContacts == NO) {
         return NO;
     }
     
@@ -289,11 +297,12 @@
 
 - (void)enableSafeWithCompletion:(nullable void(^)(BOOL enabled))onCompletion {
     SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
-    SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager: [[BusinessInjector new] groupManagerObjC]];
+    BusinessInjector * bi = [BusinessInjector new];
+    SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager: [bi groupManagerObjC] myIdentityStore: bi.myIdentityStore];
     SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
     
     // apply Threema Safe password and server config from MDM
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+    MDMSetup *mdmSetup = [MDMSetup new];
     NSString *customServer = nil;
     NSString *customServerUsername = nil;
     NSString *customServerPassword = nil;
@@ -301,7 +310,7 @@
     NSNumber *retentionDays = nil;
     
     if ([mdmSetup isSafeBackupPasswordPreset]) {
-        self.identityStore.tempSafePassword = [mdmSetup safePassword];
+        self.setupConfiguration.safePassword = [mdmSetup safePassword];
     }
     
     if ([mdmSetup isSafeBackupServerPreset]) {
@@ -312,26 +321,26 @@
         // Set data to safeConfigManager in case of empty or to short password
         [safeConfigManager setCustomServer:customServer];
         [safeConfigManager setServer:customServer];
-    } else if ([safeConfigManager getCustomServer] != nil) {
-        customServer = [safeConfigManager getCustomServer];
-        customServerUsername = [safeConfigManager getServerUser];
-        customServerPassword = [safeConfigManager getServerPassword];
-        maxBackupBytes = [safeConfigManager getMaxBackupBytesObjC];
-        retentionDays = [safeConfigManager getRetentionDaysObjC];
+    } else if (self.setupConfiguration.safeCustomServer != nil) {
+        customServer = self.setupConfiguration.safeCustomServer;
+        customServerUsername = self.setupConfiguration.safeServerUsername;
+        customServerPassword = self.setupConfiguration.safeServerPassword;
+        maxBackupBytes = self.setupConfiguration.safeMaxBackupBytes;
+        retentionDays = self.setupConfiguration.safeRetentionDays;
     }
         
-    if (self.identityStore.tempSafePassword == nil || self.identityStore.tempSafePassword.length < 8) {
+    if (self.setupConfiguration.safePassword == nil || self.setupConfiguration.safePassword.length < 8) {
         [safeManager deactivate];
         onCompletion(NO);
         return;
     }
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self showSafeProgress:_enableSafeView progressValue:_enableSafeValue progressText:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"safe_preparing"], TargetManagerObjc.localizedAppName]];
+        [self showSafeProgress:_enableSafeView progressValue:_enableSafeValue progressText:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"safe_preparing"], TargetManagerObjC.localizedAppName]];
     });
     
     dispatch_sync(dispatch_get_main_queue(), ^{
-        [safeManager activateWithIdentity:self.identityStore.identity safePassword:self.identityStore.tempSafePassword customServer:customServer serverUser:customServerUsername serverPassword:customServerPassword server:nil maxBackupBytes:maxBackupBytes retentionDays:retentionDays completion:^(NSError * _Nullable error) {
+        [safeManager activateWithIdentity:self.identityStore.identity safePassword:self.setupConfiguration.safePassword customServer:customServer serverUser:customServerUsername serverPassword:customServerPassword server:nil maxBackupBytes:maxBackupBytes retentionDays:retentionDays completion:^(NSError * _Nullable error) {
             if (error != nil) {
                 _hasErrors = YES;
                 [_syncSafeProgressLabel showErrorMessage:error.localizedDescription];
@@ -358,10 +367,10 @@
     CGFloat addedEmailHeight = _emailView.frame.size.height;
     
     // double size of email & phone fields
-    _phoneView.frame = [RectUtil changeSizeOf:_phoneView.frame deltaX:0.0 deltaY:addedPhoneHeight];
-    _emailView.frame = [RectUtil changeSizeOf:_emailView.frame deltaX:0.0 deltaY:addedEmailHeight];
+    _phoneView.frame = CGRectMake(_phoneView.frame.origin.x, _phoneView.frame.origin.y, _phoneView.frame.size.width, _phoneView.frame.size.height + addedPhoneHeight);
+    _emailView.frame = CGRectMake(_emailView.frame.origin.x, _emailView.frame.origin.y, _emailView.frame.size.width, _emailView.frame.size.height + addedEmailHeight);
     
-    _linkedToView.frame = [RectUtil changeSizeOf:_linkedToView.frame deltaX:0.0 deltaY:addedPhoneHeight + addedEmailHeight];
+    _linkedToView.frame = CGRectMake(_linkedToView.frame.origin.x, _linkedToView.frame.origin.y, _linkedToView.frame.size.width, _linkedToView.frame.size.height + addedPhoneHeight + addedEmailHeight);
     
     [UIView animateWithDuration:0.4 delay:0 options:0 animations:^{
         //hide title and increase content (scroll) section
@@ -369,17 +378,17 @@
         _scrollView.frame = CGRectMake(_scrollView.frame.origin.x, _scrollView.frame.origin.y - _titleLabel.frame.size.height, _scrollView.frame.size.width, _scrollView.frame.size.height + _titleLabel.frame.size.height);
 
         CGFloat yOffset = 0;
-        _nickNameView.frame = [RectUtil offsetRect:_nickNameView.frame byX:0.0 byY:yOffset];
+        _nickNameView.frame = CGRectMake(_nickNameView.frame.origin.x, _nickNameView.frame.origin.y + yOffset, _nickNameView.frame.size.width, _nickNameView.frame.size.height);
         
-        _linkedToView.frame = [RectUtil offsetRect:_linkedToView.frame byX:0.0 byY:yOffset];
+        _linkedToView.frame = CGRectMake(_linkedToView.frame.origin.x, _linkedToView.frame.origin.y + yOffset, _linkedToView.frame.size.width, _linkedToView.frame.size.height);
         
-        _emailView.frame = [RectUtil offsetRect:_emailView.frame byX:0.0 byY:addedPhoneHeight];
+        _emailView.frame = CGRectMake(_emailView.frame.origin.x, _emailView.frame.origin.y + addedPhoneHeight, _emailView.frame.size.width, _emailView.frame.size.height);
         
-        _syncContactsView.frame = [RectUtil offsetRect:_syncContactsView.frame byX:0.0 byY:addedPhoneHeight];
+        _syncContactsView.frame = CGRectMake(_syncContactsView.frame.origin.x, _syncContactsView.frame.origin.y + addedPhoneHeight, _syncContactsView.frame.size.width, _syncContactsView.frame.size.height);
 
-        _enableSafeView.frame = [RectUtil offsetRect:_enableSafeView.frame byX:0.0 byY:addedPhoneHeight];
+        _enableSafeView.frame = CGRectMake(_enableSafeView.frame.origin.x, _enableSafeView.frame.origin.y + addedPhoneHeight, _enableSafeView.frame.size.width, _enableSafeView.frame.size.height);
         
-        _finishButton.frame = [RectUtil offsetRect:_finishButton.frame byX:0.0 byY:-yOffset];
+        _finishButton.frame = CGRectMake(_finishButton.frame.origin.x, _finishButton.frame.origin.y + -yOffset, _finishButton.frame.size.width, _finishButton.frame.size.height);
 
         [self.containerDelegate hideControls:YES];
     } completion:nil];
@@ -388,7 +397,7 @@
 - (void)showEmailProgress {
     CGFloat yPos = CGRectGetMaxY(_emailValue.frame);
     
-    CGRect labelRect = [RectUtil setYPositionOf:_emailValue.frame y:yPos];
+    CGRect labelRect = CGRectMake(_emailValue.frame.origin.x, yPos, _emailValue.frame.size.width, _emailValue.frame.size.height);
     
     _emailProgressLabel = [[ProgressLabel alloc] initWithFrame:labelRect];
     _emailProgressLabel.backgroundColor = [UIColor clearColor];
@@ -410,8 +419,7 @@
 
 - (void)showPhoneProgress {
     CGFloat yPos = CGRectGetMaxY(_phoneValue.frame);
-    
-    CGRect labelRect = [RectUtil setYPositionOf:_phoneValue.frame y:yPos];
+    CGRect labelRect = CGRectMake(_phoneValue.frame.origin.x, yPos, _phoneValue.frame.size.width, _phoneValue.frame.size.height);
     
     _phoneProgressLabel = [[ProgressLabel alloc] initWithFrame:labelRect];
     _phoneProgressLabel.backgroundColor = [UIColor clearColor];
@@ -494,52 +502,77 @@
     _finishButton.userInteractionEnabled = NO;
     _finishButton.alpha = 0.0;
     
-    [AppSetup setState:AppSetupStateIdentitySetupComplete];
-    
     [self arrangeViewsForCompletion];
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-        __block NSInteger timout = 2000;
-        
-        if ([self linkPhone]) {
-            timout += 1000;
-        }
-        
-        if ([self linkEmail]) {
-            timout += 1000;
+    [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    
+    // Run migration if needed
+    [SetupApp runDatabaseMigrationIfNeededWithRemoteSecretAndKeychain:self.setupConfiguration.remoteSecretAndKeychain completionHandler:^(NSError * _Nullable error) {
+        if (error != nil) {
+            [ErrorHandler abortWithError:error];
+            return;
         }
 
-        if ([self syncAdressBook]) {
-            timout += 500;
-        }
-        
-        [self enableSafeWithCompletion:^(BOOL enabled) {
-            if (enabled) {
-                timout += 500;
+        [SetupApp runAppMigrationIsNeededWithCompletionHandler:^(NSError * _Nullable error) {
+            if (error != nil) {
+                [ErrorHandler abortWithError:error];
+                return;
             }
-            
-            // do not show Threema Safe Intro after setup wizard
-            [[UserSettings sharedUserSettings] setSafeIntroShown:YES];
 
-            if (_hasErrors == NO) {
-                // no errors - continue after timeout
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timout * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
-                    [_delegate completedIDSetup];
-                });
-            } else {
-                // user needs to confirm
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [_finishButton setTitle:[BundleUtil localizedStringForKey:@"Done"] forState:UIControlStateNormal];
-                    _finishButton.userInteractionEnabled = YES;
-                    _finishButton.alpha = 1.0;
-                });
-            }
-            
-            _identityStore.createIDPhone = nil;
-            _identityStore.createIDEmail = nil;
-            _identityStore.tempSafePassword = nil;
+            // Set new identity feature mask
+            [FeatureMask updateLocalObjc];
+
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
+
+            [AppSetup setState:AppSetupStateIdentitySetupComplete];
+
+            // From now on all business objects can be used as usual
+
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                __block NSInteger timeout = 2000;
+
+                [self persistNickname];
+
+                if ([self linkPhone]) {
+                    timeout += 1000;
+                }
+
+                if ([self linkEmail]) {
+                    timeout += 1000;
+                }
+
+                if ([self syncAdressBook]) {
+                    timeout += 500;
+                }
+
+                [self enableSafeWithCompletion:^(BOOL enabled) {
+                    if (enabled) {
+                        timeout += 500;
+                    }
+
+                    // Do not show Threema Safe Intro after setup wizard
+                    [[UserSettings sharedUserSettings] setSafeIntroShown:YES];
+
+                    if (_hasErrors == NO) {
+                        // No errors - continue after timeout
+                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
+                            [_delegate completedIDSetup];
+                        });
+                    } else {
+                        // User needs to confirm
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [_finishButton setTitle:[BundleUtil localizedStringForKey:@"Done"] forState:UIControlStateNormal];
+                            _finishButton.userInteractionEnabled = YES;
+                            _finishButton.alpha = 1.0;
+                        });
+                    }
+
+                    _identityStore.createIDPhone = nil;
+                    _identityStore.createIDEmail = nil;
+                }];
+            });
         }];
-    });
+    }];
 }
 
 - (void)finishCompletionProcess {
@@ -563,7 +596,7 @@
     view.showOnlyOkButton = YES;
     view.questionLabel.text = errorText;
     view.delegate = self;
-    view.frame = [RectUtil rect:view.frame centerIn:self.view.frame round:YES];
+    view.frame = [self rect:view.frame centerIn:self.view.frame round:YES];
     
     [self.view addSubview:view];
     
@@ -572,6 +605,26 @@
 
 - (void)selectedOk:(IntroQuestionView *)sender {
     [self hideMessageView:sender ignoreControls:YES];
+}
+
+#pragma mark - RectUtil
+
+- (CGRect)rect:(CGRect)rect centerIn:(CGRect)outerRect round:(BOOL)round {
+    CGFloat innerWidth = rect.size.width;
+    CGFloat outerWidth = outerRect.size.width;
+    
+    CGFloat innerHeight = rect.size.height;
+    CGFloat outerHeight = outerRect.size.height;
+    
+    CGFloat x = (outerWidth - innerWidth) / 2.0;
+    CGFloat y = (outerHeight - innerHeight) / 2.0;
+    
+    if (round) {
+        x = roundf(x);
+        y = roundf(y);
+    }
+    
+    return CGRectMake(x, y, rect.size.width, rect.size.height);
 }
 
 @end

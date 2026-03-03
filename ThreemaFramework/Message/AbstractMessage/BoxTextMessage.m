@@ -20,7 +20,7 @@
 
 #import "BoxTextMessage.h"
 #import "ProtocolDefines.h"
-#import "QuoteUtil.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 @implementation BoxTextMessage
 
@@ -60,7 +60,7 @@
 }
 
 - (NSData *)quotedBody {
-    NSString *quotedText = self.quotedMessageId != nil ? [QuoteUtil generateText:self.text quotedId:self.quotedMessageId] : self.text;
+    NSString *quotedText = self.quotedMessageId != nil ? [QuoteUtil generateText:self.text quotedID:self.quotedMessageId] : self.text;
     return [quotedText dataUsingEncoding:NSUTF8StringEncoding];
 }
 

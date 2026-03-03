@@ -25,9 +25,8 @@
 #import "UIDefines.h"
 #import "ServerAPIRequest.h"
 #import "MDMSetup.h"
-#import "UIImage+ColoredImage.h"
 #import "WorkDataFetcher.h"
-
+#import "Threema-Swift.h"
 
 @interface EnterLicenseViewController () <UITextFieldDelegate>
 
@@ -42,7 +41,7 @@
 
 + (EnterLicenseViewController*)instantiate {
     NSString *storyboardName = @"License";
-    if (TargetManagerObjc.isOnPrem) {
+    if (TargetManagerObjC.isOnPrem) {
         storyboardName = @"LicenseOnPrem";
     }
 
@@ -56,7 +55,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    MDMSetup *mdmSetup = [MDMSetup new];
     isUsernameSetByMDM = [mdmSetup existsMdmKey:MDM_KEY_LICENSE_USERNAME];
     isPasswordSetByMDM = [mdmSetup existsMdmKey:MDM_KEY_LICENSE_PASSWORD];
 
@@ -76,12 +75,12 @@
     _logoImageView.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
     _logoImageView.contentMode = UIViewContentModeScaleAspectFit;
     
-    if (TargetManagerObjc.isOnPrem) {
-        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_onprem_description"], TargetManagerObjc.appName];
-        _threemaAdminInfoLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_onprem_admin_description"], TargetManagerObjc.appName];
+    if (TargetManagerObjC.isOnPrem) {
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_onprem_description"], TargetManagerObjC.appName];
+        _threemaAdminInfoLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_onprem_admin_description"], TargetManagerObjC.appName];
     } else {
-        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_description"], TargetManagerObjc.appName];
-        _threemaAdminInfoLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_work_admin_description"], TargetManagerObjc.appName];
+        _descriptionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_description"], TargetManagerObjC.appName];
+        _threemaAdminInfoLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"enter_license_work_admin_description"], TargetManagerObjC.appName];
     }
     
     [_confirmButton setTitle:[BundleUtil localizedStringForKey:@"next"] forState:UIControlStateNormal];
@@ -115,7 +114,7 @@
     }
     
     NSString *serverUrl = [BundleUtil objectForInfoDictionaryKey:@"PresetOppfUrl"];
-    if (TargetManagerObjc.isCustomOnPrem && serverUrl != nil) {
+    if (TargetManagerObjC.isCustomOnPrem && serverUrl != nil) {
         _serverTextField.text = serverUrl;
         _serverTextField.userInteractionEnabled = false;
     }
@@ -131,7 +130,7 @@
     [self.view addGestureRecognizer:mainTapGesture];
        
     _confirmButton.backgroundColor = UIColor.tintColor;
-    [_confirmButton setTitleColor:[UIColor labelColor] forState:UIControlStateNormal];
+    [_confirmButton setTitleColor:[Colors textProminentButtonWizard] forState:UIControlStateNormal];
     _licenseUsernameTextField.tintColor = UIColor.tintColor;
     _licensePasswordTextField.tintColor = UIColor.tintColor;
     _serverTextField.tintColor = UIColor.tintColor;
@@ -158,7 +157,7 @@
         if (isPasswordSetByMDM == NO) {
             _licensePasswordTextField.text = _licenseStore.licensePassword;
         }
-        if (TargetManagerObjc.isOnPrem) {
+        if (TargetManagerObjC.isOnPrem) {
             _serverTextField.text = _licenseStore.onPremConfigUrl;
         }
         if (_licenseStore.errorMessage && ![_licenseStore.errorMessage isEqualToString:@"License username/password too short"]) {
@@ -189,9 +188,9 @@
     [self updateConfirmButton];
     [self updateColors];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    MDMSetup *mdmSetup = [MDMSetup new];
     NSString *predefinedOppfMDM = [mdmSetup onPremConfigUrl];
-    if ([TargetManagerObjc isCustomOnPrem] && predefinedOppfMDM != nil) {
+    if ([TargetManagerObjC isCustomOnPrem] && predefinedOppfMDM != nil) {
         if (![[LicenseStore sharedLicenseStore] validCustomOnPremConfigUrlWithPredefinedUrl:predefinedOppfMDM]) {
             _licenseUsernameTextField.userInteractionEnabled = NO;
             _licensePasswordTextField.userInteractionEnabled = NO;
@@ -283,8 +282,9 @@
 
 - (IBAction)confirmAction:(id)sender {
     [self updateConfirmButton];
-    if (!_confirmButton.enabled)
+    if (!_confirmButton.enabled) {
         return;
+    }
     
     [self showActivityIndicatorWithMessage:[BundleUtil localizedStringForKey:@"enter_license_checking"]];
     
@@ -295,7 +295,7 @@
         [_licenseStore setLicensePassword:_licensePasswordTextField.text];
     }
 
-    if (TargetManagerObjc.isOnPrem) {
+    if (TargetManagerObjC.isOnPrem) {
         [_licenseStore setOnPremConfigUrl:_serverTextField.text];
     }
     [_licenseStore performLicenseCheckWithCompletion:^(BOOL success) {
@@ -309,11 +309,13 @@
                         [self confirmLicenseCheck];
                     } onError:^(NSError *error) {
                         dispatch_async(dispatch_get_main_queue(), ^{
-                            [self showErrorMessage:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjc.appName]];
+                            [self showErrorMessage:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjC.appName]];
                             _confirmButton.hidden = false;
                         });
                     }];
                 }
+                // We try to safe if we get a success
+                [self storeToKeychainWithUser:_licenseStore.licenseUsername password:_licenseStore.licensePassword deviceID:_licenseStore.licenseDeviceID onPremServer:_licenseStore.onPremConfigUrl];
             } else {
                 [self showErrorMessage:_licenseStore.errorMessage];
                 [self updateConfirmButton];
@@ -324,10 +326,11 @@
 
 - (void)confirmLicenseCheck {
     dispatch_async(dispatch_get_main_queue(), ^{
-        // While we was not conneted to the server, in background the notification extension could be started
-        [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
-        [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
-        
+        // While we was not connected to the server, in background the notification extension could be started
+        if (UserSettings.sharedUserSettings.ipcCommunicationEnabled == NO) {
+            [AppGroup setMeActive];
+        }
+
         [self showSuccessMessage:[BundleUtil localizedStringForKey:@"ok"]];
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1000 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
             [_delegate licenseConfirmed];

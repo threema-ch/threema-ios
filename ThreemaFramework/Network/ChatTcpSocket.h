@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#import "ThreemaFramework/ThreemaFramework-swift.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "GCDAsyncSocket.h"
 
 #ifndef ChatTcpSocket_h

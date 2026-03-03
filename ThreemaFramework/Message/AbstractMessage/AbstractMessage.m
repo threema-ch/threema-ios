@@ -25,9 +25,7 @@
 #import "BallotMessageDecoder.h"
 #import "FileMessageDecoder.h"
 #import "BundleUtil.h"
-#import "QuoteUtil.h"
 #import "QuotedMessageProtocol.h"
-#import "TextStyleUtils.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "NSString+Hex.h"
 #import "ThreemaUtilityObjC.h"
@@ -51,7 +49,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return self;
 }
 
-- (BoxedMessage*)makeBox:(ContactEntity *  _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore nonce:(NSData* _Nonnull)nonce {
+- (BoxedMessage*)makeBox:(NSObject *  _Nonnull)toContactObject myIdentityStore:(id<MyIdentityStoreProtocol> _Nonnull)myIdentityStore nonce:(NSData* _Nonnull)nonce {
+    NSAssert([toContactObject isKindOfClass:[ContactEntity class]], @"Parameter toContactObject must be type of ContactEntity");
+    ContactEntity *toContact = (ContactEntity*)toContactObject;
 
     /* prepare data for box */
     uint8_t type = self.type;
@@ -104,7 +104,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
     /* sign/encrypt with our secret key */
     NSData *boxedData = [myIdentityStore encryptData:boxData withNonce:nonce publicKey:toContact.publicKey];
-    
+
     BoxedMessage *boxmsg = [[BoxedMessage alloc] init];
     boxmsg.fromIdentity = myIdentityStore.identity;
     boxmsg.toIdentity = self.toIdentity;
@@ -214,15 +214,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (NSString *)pushNotificationBody {
     NSString *body = [NSString new];
     if ([self isKindOfClass:[BoxTextMessage class]]) {
-        NSString *quotedIdentity = nil;
-        NSString *remainingBody = nil;
-        NSString *quotedText = [QuoteUtil parseQuoteFromMessage:((BoxTextMessage *)self).text quotedIdentity:&quotedIdentity remainingBody:&remainingBody];
-        if (quotedText) {
-            body = remainingBody;
-        } else {
-            body = ((BoxTextMessage *)self).text;
-        }
-        body = [TextStyleUtils makeMentionsStringForText:body];
+        MarkupParser *parser = [[MarkupParser alloc] init];
+        body = [parser makeMentionsStringFor:((BoxTextMessage *)self).text];
     }
     else if ([self isKindOfClass:[BoxImageMessage class]]) {
         body = [BundleUtil localizedStringForKey:@"new_image_message"];

@@ -24,19 +24,6 @@ import UIKit
 /// Typical circle with x mark icon, but the x mark is not transparent
 final class OpaqueDeleteButton: ThemedCodeButton {
     
-    private lazy var deleteImageView: UIImageView = {
-        
-        let imageView = UIImageView(
-            image: UIImage(systemName: "xmark.circle.fill")?
-                .applying(symbolWeight: .heavy, symbolScale: .large)
-        )
-        
-        imageView.contentMode = .scaleAspectFit
-        imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor).isActive = true
-        
-        return imageView
-    }()
-    
     /// Background to make x opaque
     private lazy var xMarkBackgroundView: UIView = {
         let view = UIView()
@@ -50,41 +37,49 @@ final class OpaqueDeleteButton: ThemedCodeButton {
         super.configureButton()
 
         // Add and layout subviews
-        
-        addSubview(xMarkBackgroundView)
-        addSubview(deleteImageView)
 
+        addSubview(xMarkBackgroundView)
+        setImage(
+            UIImage(systemName: "xmark.circle.fill")?.applying(symbolWeight: .heavy, symbolScale: .large),
+            for: .normal
+        )
+    
         xMarkBackgroundView.translatesAutoresizingMaskIntoConstraints = false
-        deleteImageView.translatesAutoresizingMaskIntoConstraints = false
         
         // Inset x mark background to make it not appear outside of the circle
         let xMarkBackgroundInset: CGFloat = 8
         
         NSLayoutConstraint.activate([
             xMarkBackgroundView.topAnchor.constraint(
-                equalTo: deleteImageView.topAnchor,
+                equalTo: topAnchor,
                 constant: xMarkBackgroundInset
             ),
             xMarkBackgroundView.leadingAnchor.constraint(
-                equalTo: deleteImageView.leadingAnchor,
+                equalTo: leadingAnchor,
                 constant: xMarkBackgroundInset
             ),
             xMarkBackgroundView.bottomAnchor.constraint(
-                equalTo: deleteImageView.bottomAnchor,
+                equalTo: bottomAnchor,
                 constant: -xMarkBackgroundInset
             ),
             xMarkBackgroundView.trailingAnchor.constraint(
-                equalTo: deleteImageView.trailingAnchor,
+                equalTo: trailingAnchor,
                 constant: -xMarkBackgroundInset
             ),
-            
-            // Add image to center of button
-            deleteImageView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            deleteImageView.centerYAnchor.constraint(equalTo: centerYAnchor),
         ])
         
         accessibilityLabel = #localize("delete")
         
         tintColor = .systemGray
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        guard let imageView else {
+            return
+        }
+        
+        insertSubview(xMarkBackgroundView, belowSubview: imageView)
     }
 }

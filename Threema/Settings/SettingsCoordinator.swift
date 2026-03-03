@@ -23,11 +23,9 @@ import Foundation
 import SwiftUI
 import ThreemaMacros
 
-final class SettingsCoordinator: NSObject, Coordinator {
+final class SettingsCoordinator: NSObject, Coordinator, CurrentDestinationHolding {
     
     // MARK: - Internal destination
-    
-    typealias CoordinatorDestination = InternalDestination
     
     enum InternalDestination: Equatable {
         case betaFeedback
@@ -35,7 +33,7 @@ final class SettingsCoordinator: NSObject, Coordinator {
         
         case privacy
         case appearance
-        case noftifications
+        case notifications
         case chat
         case media
         case storage
@@ -48,6 +46,7 @@ final class SettingsCoordinator: NSObject, Coordinator {
         case invite(sourceView: UIView)
         case channel
         case workInfo
+        case workReferral
         
         case support
         case policy
@@ -58,59 +57,66 @@ final class SettingsCoordinator: NSObject, Coordinator {
     
     // MARK: - Coordinator
     
-    weak var parentCoordinator: (any Coordinator)?
     var childCoordinators: [any Coordinator] = []
-    
-    private(set) var currentDestination: InternalDestination?
-    
-    private lazy var rootVC = SettingsViewController(coordinator: self)
-    
-    // MARK: - Public properties
-    
-    var horizontalSizeClass: UIUserInterfaceSizeClass = .unspecified {
-        didSet {
-            guard oldValue != horizontalSizeClass else {
-                return
-            }
-            horizontalSizeClassDidChange()
-        }
+    var rootViewController: UIViewController {
+        rootNavigationController
     }
+    
+    // MARK: - Routers
+    
+    private let shareActivityRouter: any ShareActivityRouting
+    private let passcodeRouter: any PasscodeRouting
+    
+    var currentDestination: InternalDestination?
     
     // MARK: - Private properties
 
     private lazy var settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
+    private weak var presentingViewController: UIViewController?
+    
+    private lazy var settingsViewController: SettingsViewController = {
+        let settingsViewController = SettingsViewController(coordinator: self)
+        
+        let tabBarItem = ThreemaTabBarController.TabBarItem(.settings)
+        settingsViewController.tabBarItem = tabBarItem.uiTabBarItem
+        settingsViewController.title = tabBarItem.title
+        
+        return settingsViewController
+    }()
+    
+    private lazy var rootNavigationController = UINavigationController()
+        
+    private lazy var navigationDestinationResetter = NavigationDestinationResetter(
+        rootViewController: settingsViewController,
+        destinationHolder: self.eraseToAnyDestinationHolder()
+    )
     
     // MARK: - Lifecycle
 
-    init(parentCoodinator: any Coordinator) {
-        self.parentCoordinator = parentCoodinator
-    }
-    
-    func rootViewController() -> UIViewController {
-        rootVC
-    }
-    
-    // MARK: - Updates
-
-    func checkDetailVC() {
-        guard horizontalSizeClass == .regular else {
-            return
-        }
-        
-        show(currentDestination ?? .privacy)
-    }
-    
-    private func horizontalSizeClassDidChange() {
-        rootVC.updateSelection()
+    init(
+        presentingViewController: UIViewController,
+        shareActivityRouter: any ShareActivityRouting,
+        passcodeRouter: any PasscodeRouting
+    ) {
+        self.presentingViewController = presentingViewController
+        self.shareActivityRouter = shareActivityRouter
+        self.passcodeRouter = passcodeRouter
     }
     
     // MARK: - Presentation
     
-    func show(_ destination: Destination) {
-        parentCoordinator?.show(destination)
+    func start() {
+        rootNavigationController.delegate = navigationDestinationResetter
+        
+        /// Due to this coordinator's rootViewController being part of a
+        /// `UITabViewController`, it's not needed to present anything here.
+        /// The rootViewController is added by to the `UITabViewController`'s
+        /// viewControllers in ``AppCoordinator``'s `configureSplitViewController` method.
+        rootNavigationController.setViewControllers(
+            [settingsViewController],
+            animated: false
+        )
     }
-    
-    func show(_ destination: Destination.AppDestination.SettingsDestination) { }
     
     func show(_ destination: InternalDestination) {
         guard currentDestination != destination else {
@@ -131,7 +137,7 @@ final class SettingsCoordinator: NSObject, Coordinator {
         case .appearance:
             showAppearanceSettings()
             
-        case .noftifications:
+        case .notifications:
             showNotificationSettings()
             
         case .chat:
@@ -163,6 +169,9 @@ final class SettingsCoordinator: NSObject, Coordinator {
             
         case .workInfo:
             showWorkInfo()
+        
+        case .workReferral:
+            showWorkReferral()
             
         case .support:
             showSupportInfo()
@@ -180,19 +189,7 @@ final class SettingsCoordinator: NSObject, Coordinator {
             showAdvancedSettings()
         }
         
-        rootVC.updateSelection()
-    }
-    
-    func show(_ viewController: UIViewController, style: CordinatorNavigationStyle) {
-        parentCoordinator?.show(viewController, style: style)
-    }
-    
-    func shareActivity(_ items: [Any], sourceView: UIView?) {
-        parentCoordinator?.shareActivity(items, sourceView: sourceView)
-    }
-    
-    func dismiss() {
-        parentCoordinator?.dismiss()
+        settingsViewController.updateSelection()
     }
     
     // MARK: - Private functions
@@ -204,33 +201,32 @@ final class SettingsCoordinator: NSObject, Coordinator {
     
     private func showDeveloperSettings() {
         let vc = UIHostingController(rootView: DeveloperSettingsView())
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showPrivacySettings() {
         let vc = UIHostingController(rootView: PrivacySettingsView().environmentObject(settingsStore))
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showAppearanceSettings() {
-        let vc = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
-            .instantiateViewController(identifier: "AppearanceSettingsViewController")
-        show(vc)
+        let vc = UIHostingController(rootView: AppearanceSettingsView())
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showNotificationSettings() {
         let vc = UIHostingController(rootView: NotificationSettingsView().environmentObject(settingsStore))
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showChatSettings() {
         let vc = UIHostingController(rootView: ChatSettingsView().environmentObject(settingsStore))
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showMediaSettings() {
         let vc = UIHostingController(rootView: MediaSettingsView().environmentObject(settingsStore))
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showStorageSettings() {
@@ -239,28 +235,29 @@ final class SettingsCoordinator: NSObject, Coordinator {
                 rootView: StorageManagementView(model: .init(businessInjector: BusinessInjector.ui))
                     .environmentObject(settingsStore)
             )
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showPasscodeSettings() {
-        let vc = KKPasscodeSettingsViewController(style: .insetGrouped)
-        show(vc, style: .passcode(style: .show))
+        passcodeRouter.requireAuthenticationIfNeeded(onSuccess: { [weak self] in
+            let vc = KKPasscodeSettingsViewController(style: .insetGrouped)
+            self?.presentingViewController?.show(vc, sender: self)
+        })
     }
     
     private func showCallSettings() {
         let vc = UIHostingController(rootView: CallSettingsView().environmentObject(settingsStore))
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showDesktopSettings() {
         let vc = UIHostingController(rootView: LinkedDevicesView().environmentObject(settingsStore))
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showWebSettings() {
-        let vc = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
-            .instantiateViewController(identifier: "ThreemaWeb")
-        show(vc)
+        let vc = UIHostingController(rootView: ThreemaWebSettingsView())
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showWorkInfo() {
@@ -269,7 +266,12 @@ final class SettingsCoordinator: NSObject, Coordinator {
             title: #localize("settings_threema_work"),
             allowsContentJavaScript: true
         )
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
+    }
+    
+    private func showWorkReferral() {
+        let vc = UIHostingController(rootView: WorkReferralView())
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showInviteActivity(sourceView: UIView) {
@@ -279,7 +281,7 @@ final class SettingsCoordinator: NSObject, Coordinator {
             TargetManager.localizedAppName,
             BusinessInjector.ui.myIdentityStore.identity ?? ""
         )
-        shareActivity([shareText], sourceView: sourceView)
+        shareActivityRouter.present(items: [shareText], sourceView: sourceView)
     }
     
     private func openChannelChat() {
@@ -293,7 +295,7 @@ final class SettingsCoordinator: NSObject, Coordinator {
             title: #localize("settings_list_support_title"),
             allowsContentJavaScript: true
         )
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showPrivacyPolicy() {
@@ -301,7 +303,7 @@ final class SettingsCoordinator: NSObject, Coordinator {
             url: ThreemaURLProvider.privacyPolicy,
             title: #localize("settings_list_privacy_policy_title")
         )
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showToS() {
@@ -309,31 +311,16 @@ final class SettingsCoordinator: NSObject, Coordinator {
             url: ThreemaURLProvider.termsOfService,
             title: #localize("settings_list_tos_title")
         )
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showLicense() {
         let vc = LicenseViewController()
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showAdvancedSettings() {
         let vc = UIHostingController(rootView: AdvancedSettingsView().environmentObject(settingsStore))
-        show(vc)
-    }
-}
-
-// MARK: - UINavigationControllerDelegate
-
-extension SettingsCoordinator: UINavigationControllerDelegate {
-    func navigationController(
-        _ navigationController: UINavigationController,
-        didShow viewController: UIViewController,
-        animated: Bool
-    ) {
-        // If we navigate back to the rootVC, we reset the destination
-        if navigationController.topViewController == rootVC, horizontalSizeClass == .compact {
-            currentDestination = nil
-        }
+        presentingViewController?.show(vc, sender: self)
     }
 }

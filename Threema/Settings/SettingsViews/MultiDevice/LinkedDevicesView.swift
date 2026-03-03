@@ -50,18 +50,6 @@ struct LinkedDevicesView: View {
         )
         .sheet(isPresented: $showWizard) {
             DeviceJoinView(showWizard: $showWizard)
-                .apply { joinView in
-                    if #available(iOS 16.0, *) {
-                        NavigationStack {
-                            joinView
-                        }
-                    }
-                    else {
-                        NavigationView {
-                            joinView
-                        }
-                    }
-                }
         }
     }
 }
@@ -392,7 +380,10 @@ private struct AddDeviceSection: View {
         Section {
             Button {
                 if linkedDevicesViewModel.businessInjector.entityManager.entityFetcher
-                    .contactsContainOwnIdentity() != nil {
+                    .ownIdentityContactEntity(
+                        myIdentity: linkedDevicesViewModel.businessInjector.myIdentityStore
+                            .identity
+                    ) != nil {
                     showOwnIdentityInContactsAlert = true
                 }
                 else if KKPasscodeLock.shared().isPasscodeRequired() {
@@ -407,7 +398,7 @@ private struct AddDeviceSection: View {
             .disabled(
                 !duplicateContactIdentities.isEmpty ||
                     (linkedDevicesViewModel.deviceLimitReached && ThreemaEnvironment.allowMultipleLinkedDevices) ||
-                    MDMSetup(setup: false).disableMultiDevice()
+                    MDMSetup().disableMultiDevice()
             )
         } footer: {
             if !duplicateContactIdentities.isEmpty {
@@ -456,7 +447,7 @@ private struct AddDeviceSection: View {
         ) {
             Button(#localize("multi_device_new_linked_show_contact_button")) {
                 guard let ownIdentityContact = linkedDevicesViewModel.businessInjector.entityManager.entityFetcher
-                    .contact(
+                    .contactEntity(
                         for: linkedDevicesViewModel.businessInjector.myIdentityStore.identity
                     ) else {
                     DDLogError("Unable to fetch own identity contact")
@@ -491,12 +482,10 @@ private struct AddDeviceSection: View {
     }
 
     private func loadDuplicateContacts() {
-        var duplicates: NSSet?
-        linkedDevicesViewModel.businessInjector.entityManager.entityFetcher.hasDuplicateContacts(
-            withDuplicateIdentities: &duplicates
-        )
+        let duplicates = linkedDevicesViewModel.businessInjector.entityManager.entityFetcher
+            .duplicateContactIdentities()
         
-        duplicateContactIdentities = Array(duplicates as? Set<String> ?? [])
+        duplicateContactIdentities = Array(duplicates ?? [])
     }
 }
 
@@ -584,7 +573,7 @@ private struct LinkedDeviceListView: View {
     @Environment(\.sizeCategory) private var sizeCategory: ContentSizeCategory
     @Environment(\.dismiss) var dismiss
 
-    private let mdm = MDMSetup(setup: false)
+    private let mdm = MDMSetup()
 
     let device: DeviceInfo
     

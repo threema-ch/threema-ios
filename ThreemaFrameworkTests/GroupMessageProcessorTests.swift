@@ -19,8 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
-
 @testable import ThreemaFramework
 
 class GroupMessageProcessorTests: XCTestCase {
@@ -30,7 +30,6 @@ class GroupMessageProcessorTests: XCTestCase {
     private var ddLoggerMock: DDLoggerMock!
     
     override func setUpWithError() throws {
-        // necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
@@ -144,7 +143,7 @@ class GroupMessageProcessorTests: XCTestCase {
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
                 groupManager: groupManagerMock as! NSObject,
-                entityManager: EntityManager(databaseContext: databaseCnx),
+                entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
                 nonceGuard: NonceGuardMock()
             )
 
@@ -181,7 +180,7 @@ class GroupMessageProcessorTests: XCTestCase {
         // prepare test db
 
         for member in [expectedMember01, expectedMember02, expectedMember03] {
-            databasePreparer.createContact(identity: member.string)
+            databasePreparer.createContact(identity: member.rawValue)
         }
 
         // 0: test description
@@ -198,7 +197,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Group found all good, group chat message can be processed",
                 GroupTextMessage(),
-                expectedMember01.string,
+                expectedMember01.rawValue,
                 false,
                 false,
                 false,
@@ -225,7 +224,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Do nothing, sender is creator of the group",
                 GroupRequestSyncMessage(),
-                expectedMember01.string,
+                expectedMember01.rawValue,
                 false,
                 false,
                 false,
@@ -235,7 +234,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Do nothing, because received GroupRequestSyncMessage form member but i'm not creator",
                 GroupRequestSyncMessage(),
-                expectedMember02.string,
+                expectedMember02.rawValue,
                 false,
                 false,
                 false,
@@ -250,7 +249,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Member left the group",
                 GroupLeaveMessage(),
-                expectedMember02.string,
+                expectedMember02.rawValue,
                 false,
                 true,
                 false,
@@ -260,7 +259,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Creator left the group",
                 GroupLeaveMessage(),
-                expectedMember01.string,
+                expectedMember01.rawValue,
                 false,
                 true,
                 false,
@@ -277,15 +276,17 @@ class GroupMessageProcessorTests: XCTestCase {
             let myIdentityStoreMock = MyIdentityStoreMock()
             let userSettingsMock = UserSettingsMock()
             let taskManagerMock = TaskManagerMock()
-            let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+            let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
 
             let groupManager = GroupManager(
-                myIdentityStoreMock,
-                ContactStoreMock(callOnCompletion: true),
-                taskManagerMock,
-                UserSettingsMock(),
-                entityManager,
-                GroupPhotoSenderMock()
+                myIdentityStore: myIdentityStoreMock,
+                contactStore: ContactStoreMock(callOnCompletion: true),
+                taskManager: taskManagerMock,
+                userSettings: UserSettingsMock(),
+                entityManager: entityManager,
+                groupPhotoSender: {
+                    GroupPhotoSenderMock()
+                }
             )
 
             let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: expectedMember01)
@@ -294,9 +295,9 @@ class GroupMessageProcessorTests: XCTestCase {
                 for: expectedGroupIdentity,
                 members: Set<String>([
                     myIdentityStoreMock.identity,
-                    expectedMember01.string,
-                    expectedMember02.string,
-                    expectedMember03.string,
+                    expectedMember01.rawValue,
+                    expectedMember02.rawValue,
+                    expectedMember03.rawValue,
                 ]),
                 systemMessageDate: Date(),
                 sourceCaller: .local
@@ -310,7 +311,7 @@ class GroupMessageProcessorTests: XCTestCase {
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
             message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
             message.groupID = expectedGroupIdentity.id
-            message.groupCreator = expectedGroupIdentity.creator.string
+            message.groupCreator = expectedGroupIdentity.creator.rawValue
             message.fromIdentity = test[2] as? String
             message.toIdentity = myIdentityStoreMock.identity
 
@@ -345,7 +346,7 @@ class GroupMessageProcessorTests: XCTestCase {
                 test[3] as! Bool,
                 ddLoggerMock
                     .exists(
-                        message: "Group ID \(expectedGroupIdentity.id.hexString) (creator \(expectedGroupIdentity.creator.string)) not found. Requesting sync from creator."
+                        message: "Group ID \(expectedGroupIdentity.id.hexString) (creator \(expectedGroupIdentity.creator.rawValue)) not found. Requesting sync from creator."
                     ),
                 testDescription
             )
@@ -387,7 +388,7 @@ class GroupMessageProcessorTests: XCTestCase {
 
         var members = Set<ContactEntity>()
         for member in [expectedMember01, expectedMember02, expectedMember03] {
-            members.insert(databasePreparer.createContact(identity: member.string))
+            members.insert(databasePreparer.createContact(identity: member.rawValue))
         }
 
         // 0: test description
@@ -403,7 +404,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Group found all good, process group message",
                 GroupTextMessage(),
-                expectedMember01.string,
+                expectedMember01.rawValue,
                 false,
                 false,
                 false,
@@ -421,7 +422,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Do nothing, sender is creator of the group",
                 GroupRequestSyncMessage(),
-                expectedCreator.string,
+                expectedCreator.rawValue,
                 false,
                 false,
                 true,
@@ -449,7 +450,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Sync this group, because answer regular GroupRequestSyncMessage from member",
                 GroupRequestSyncMessage(),
-                expectedMember02.string,
+                expectedMember02.rawValue,
                 false,
                 false,
                 true,
@@ -463,7 +464,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Member left the group",
                 GroupLeaveMessage(),
-                expectedMember02.string,
+                expectedMember02.rawValue,
                 false,
                 true,
                 false,
@@ -472,7 +473,7 @@ class GroupMessageProcessorTests: XCTestCase {
             [
                 "Creator left the group",
                 GroupLeaveMessage(),
-                expectedCreator.string,
+                expectedCreator.rawValue,
                 false,
                 true,
                 false,
@@ -486,7 +487,7 @@ class GroupMessageProcessorTests: XCTestCase {
             let testDescription = test[0] as! String
 
             let userSettingsMock = UserSettingsMock()
-            let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+            let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
             
             let groupManagerMock = GroupManagerMock(myIdentityStoreMock)
 
@@ -495,8 +496,8 @@ class GroupMessageProcessorTests: XCTestCase {
             let groupEntity = databasePreparer.save {
                 databasePreparer.createGroupEntity(
                     groupID: expectedGroupIdentity.id,
-                    groupCreator: expectedGroupIdentity.creator.string == myIdentityStoreMock
-                        .identity ? nil : expectedGroupIdentity.creator.string
+                    groupCreator: expectedGroupIdentity.creator.rawValue == myIdentityStoreMock
+                        .identity ? nil : expectedGroupIdentity.creator.rawValue
                 )
             }
             
@@ -515,6 +516,7 @@ class GroupMessageProcessorTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: .now
@@ -525,7 +527,7 @@ class GroupMessageProcessorTests: XCTestCase {
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
             message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
             message.groupID = expectedGroupIdentity.id
-            message.groupCreator = expectedGroupIdentity.creator.string
+            message.groupCreator = expectedGroupIdentity.creator.rawValue
             message.fromIdentity = test[2] as? String
             message.toIdentity = myIdentityStoreMock.identity
 
@@ -625,15 +627,17 @@ class GroupMessageProcessorTests: XCTestCase {
 
             let userSettingsMock = UserSettingsMock()
             let taskManagerMock = TaskManagerMock()
-            let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+            let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
 
             let groupManager = GroupManager(
-                myIdentityStoreMock,
-                ContactStoreMock(callOnCompletion: true),
-                taskManagerMock,
-                userSettingsMock,
-                entityManager,
-                GroupPhotoSenderMock()
+                myIdentityStore: myIdentityStoreMock,
+                contactStore: ContactStoreMock(callOnCompletion: true),
+                taskManager: taskManagerMock,
+                userSettings: userSettingsMock,
+                entityManager: entityManager,
+                groupPhotoSender: {
+                    GroupPhotoSenderMock()
+                }
             )
 
             let expectedGroupIdentity = GroupIdentity(
@@ -655,7 +659,7 @@ class GroupMessageProcessorTests: XCTestCase {
 
             groupManager.leaveDB(
                 groupID: expectedGroupIdentity.id,
-                creator: expectedGroupIdentity.creator.string,
+                creator: expectedGroupIdentity.creator.rawValue,
                 member: myIdentityStoreMock.identity,
                 systemMessageDate: Date()
             )
@@ -665,7 +669,7 @@ class GroupMessageProcessorTests: XCTestCase {
             let message: AbstractGroupMessage = (test[1] as! AbstractGroupMessage)
             message.nonce = BytesUtility.generateRandomBytes(length: Int(kNonceLen))
             message.groupID = expectedGroupIdentity.id
-            message.groupCreator = expectedGroupIdentity.creator.string
+            message.groupCreator = expectedGroupIdentity.creator.rawValue
             message.fromIdentity = (test[2] as! String)
             message.toIdentity = myIdentityStoreMock.identity
 

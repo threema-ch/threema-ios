@@ -20,9 +20,8 @@
 
 #import "FileCaptionView.h"
 #import "MediaBrowserFile.h"
-#import "RectUtil.h"
 #import "ThreemaUtilityObjC.h"
-#import "TextStyleUtils.h"
+#import "Threema-Swift.h"
 
 #define PADDING 10.0
 
@@ -64,13 +63,14 @@
         textView.scrollEnabled = YES;
         textView.backgroundColor = [UIColor clearColor];
         textView.selectable = NO;
+        textView.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
         
-        textView.text = [TextStyleUtils makeMentionsStringForText:caption];
+        MarkupParser *parser = [[MarkupParser alloc] init];
+        textView.attributedText = [parser makeMentionsForMWWrapperAttributedStringFor:caption];
         
         CGFloat maxHeight = 200.0;
-        CGSize textSize = [textView.text boundingRectWithSize:CGSizeMake(rect.size.width, maxHeight)
+        CGSize textSize = [textView.attributedText boundingRectWithSize:CGSizeMake(rect.size.width, maxHeight)
                                                       options:NSStringDrawingUsesLineFragmentOrigin
-                                                   attributes:@{NSFontAttributeName:textView.font}
                                                       context:nil].size;
         CGFloat calcHeight = textSize.height;
         
@@ -86,7 +86,7 @@
         } else {
             textView.frame = CGRectMake(0, rect.size.height + 2.0 , rect.size.width, size.height);
             [view addSubview:textView];
-            view.frame = [RectUtil setHeightOf:view.frame height:rect.size.height + textView.frame.size.height];
+            view.frame = CGRectMake(view.frame.origin.x, view.frame.origin.y, view.frame.size.width, rect.size.height + textView.frame.size.height);
         }
     }
     

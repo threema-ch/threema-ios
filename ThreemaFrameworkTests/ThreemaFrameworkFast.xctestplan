@@ -17,6 +17,7 @@
   },
   "testTargets" : [
     {
+      "parallelizable" : false,
       "skippedTests" : [
         "EntityFetcherTests\/testAllContactIdentitiesFetchingPerformance()",
         "EntityFetcherTests\/testAllContactsFetchingPerformance()",

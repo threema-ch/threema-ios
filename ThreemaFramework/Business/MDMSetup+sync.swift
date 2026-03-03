@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 import ThreemaProtocols
 
@@ -26,20 +27,31 @@ extension MDMSetup {
     /// MD sync of setting one to one and group call, if MDM parameter 'th_disable_calls' or 'th_disable_group_calls' is
     /// set
     @objc func syncSettingCalls() {
-        let businessInjector = BusinessInjector()
+        guard let localBusniessInjector = businessInjector as? BusinessInjector else {
+            DDLogError("BusinessInjector is not set")
+            return
+        }
 
-        guard AppSetup.isCompleted,
-              businessInjector.userSettings.enableMultiDevice,
+        guard AppSetup.isCompleted else {
+            return
+        }
+        
+        guard localBusniessInjector.userSettings.enableMultiDevice,
               existsMdmKey(MDM_KEY_DISABLE_CALLS) || existsMdmKey(MDM_KEY_DISABLE_GROUP_CALLS) else {
             return
         }
 
-        businessInjector.settingsStoreInternal.syncSettingCalls()
+        localBusniessInjector.settingsStoreInternal.syncSettingCalls()
     }
 
     /// MD sync of MDM parameter 'th_disable_add_contact'
     @objc func sync() {
-        guard UserSettings.shared().enableMultiDevice,
+        guard let localBusniessInjector = businessInjector as? BusinessInjector else {
+            DDLogError("BusinessInjector is not set")
+            return
+        }
+
+        guard localBusniessInjector.userSettings.enableMultiDevice,
               AppSetup.isCompleted
         else {
             return
@@ -50,22 +62,38 @@ extension MDMSetup {
 
     func mdmParameters() -> Sync_MdmParameters {
         var mdmParametersSync = Sync_MdmParameters()
-
-        if let externalMdm = getCompanyMDM(),
-           let parameterDisableAddContact = mdmParameterSyncBool(
-               key: MDM_KEY_DISABLE_ADD_CONTACT,
-               mdmParameters: externalMdm
-           ) {
-            mdmParametersSync.externalParameters[MDM_KEY_DISABLE_ADD_CONTACT] = parameterDisableAddContact
+        
+        if let externalMdm = getCompanyMDM() {
+            if let parameterDisableAddContact = mdmParameterSyncBool(
+                key: MDM_KEY_DISABLE_ADD_CONTACT,
+                mdmParameters: externalMdm
+            ) {
+                mdmParametersSync.externalParameters[MDM_KEY_DISABLE_ADD_CONTACT] = parameterDisableAddContact
+            }
+            
+            if let parameterEnforceRemoteSecret = mdmParameterSyncBool(
+                key: MDM_KEY_ENABLE_REMOTE_SECRET,
+                mdmParameters: externalMdm
+            ) {
+                mdmParametersSync.externalParameters[MDM_KEY_ENABLE_REMOTE_SECRET] = parameterEnforceRemoteSecret
+            }
         }
 
         if let threemaMdm = getThreemaMDM(),
-           let mdmParameters = threemaMdm[MDM_KEY_THREEMA_PARAMS] as? [AnyHashable: Any],
-           let parameterDisableAddContact = mdmParameterSyncBool(
-               key: MDM_KEY_DISABLE_ADD_CONTACT,
-               mdmParameters: mdmParameters
-           ) {
-            mdmParametersSync.threemaParameters[MDM_KEY_DISABLE_ADD_CONTACT] = parameterDisableAddContact
+           let mdmParameters = threemaMdm[MDM_KEY_THREEMA_PARAMS] as? [AnyHashable: Any] {
+            if let parameterDisableAddContact = mdmParameterSyncBool(
+                key: MDM_KEY_DISABLE_ADD_CONTACT,
+                mdmParameters: mdmParameters
+            ) {
+                mdmParametersSync.threemaParameters[MDM_KEY_DISABLE_ADD_CONTACT] = parameterDisableAddContact
+            }
+            
+            if let parameterEnforceRemoteSecret = mdmParameterSyncBool(
+                key: MDM_KEY_ENABLE_REMOTE_SECRET,
+                mdmParameters: mdmParameters
+            ) {
+                mdmParametersSync.threemaParameters[MDM_KEY_ENABLE_REMOTE_SECRET] = parameterEnforceRemoteSecret
+            }
         }
 
         return mdmParametersSync

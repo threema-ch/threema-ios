@@ -110,20 +110,15 @@ extension UnreadMessagesProtocolObjc {
     ) -> Int {
         let block = {
             var unreadMessagesCount = 0
-            var conversations = [ConversationEntity]()
-
-            for conversation in self.entityManager.entityFetcher.allConversations() {
-                if let conversation = conversation as? ConversationEntity {
-                    conversations.append(conversation)
-                }
+            guard let conversationEntities = self.entityManager.entityFetcher.conversationEntities(),
+                  !conversationEntities.isEmpty else {
+                return unreadMessagesCount
             }
 
-            if !conversations.isEmpty {
-                unreadMessagesCount = self.count(
-                    conversations: conversations,
-                    doCalcUnreadMessagesCountOf: doCalcUnreadMessagesCountOf
-                )
-            }
+            unreadMessagesCount = self.count(
+                conversations: conversationEntities,
+                doCalcUnreadMessagesCountOf: doCalcUnreadMessagesCountOf
+            )
 
             return unreadMessagesCount
         }
@@ -147,7 +142,7 @@ extension UnreadMessagesProtocolObjc {
             if doCalcUnreadMessagesCountOf.contains(where: { item in
                 item.objectID == conversation.objectID
             }) {
-                count = entityManager.entityFetcher.countUnreadMessages(for: conversation)
+                count = entityManager.entityFetcher.unreadMessageCount(for: conversation)
             }
             else {
                 count = conversation.unreadMessageCount.intValue
@@ -165,7 +160,7 @@ extension UnreadMessagesProtocolObjc {
             else {
                 totalCount += 1
             }
-
+            
             guard conversation.unreadMessageCount.intValue != count else {
                 if count != 0 {
                     DDLogVerbose(
@@ -175,7 +170,7 @@ extension UnreadMessagesProtocolObjc {
                 continue
             }
             conversation.unreadMessageCount = NSNumber(integerLiteral: count)
-
+            
             DDLogVerbose(
                 "Unread message count updated (\(count)) for conversation \(conversation.displayName)"
             )
@@ -193,8 +188,7 @@ extension UnreadMessagesProtocolObjc {
     public func read(for conversation: ConversationEntity, isAppInBackground: Bool) -> Int {
 
         // Only send receipt if not Group
-        guard let messages = entityManager.entityFetcher.unreadMessages(for: conversation) as? [BaseMessageEntity]
-        else {
+        guard let messages = entityManager.entityFetcher.unreadMessages(for: conversation) else {
             return 0
         }
 
@@ -231,12 +225,10 @@ extension UnreadMessagesProtocolObjc {
             // Reflect read receipts for group message
             if let groupEntity = entityManager.entityFetcher.groupEntity(for: conversation) {
                 
-                // swiftformat:disable: acronyms
                 let groupIdentity = GroupIdentity(
-                    id: groupEntity.groupId,
+                    id: groupEntity.groupID,
                     creator: ThreemaIdentity(groupEntity.groupCreator ?? MyIdentityStore.shared().identity)
                 )
-                // swiftformat:enable: acronyms
 
                 // Send (reflect) read receipt
                 let unreadMessagesLocal = unreadMessages

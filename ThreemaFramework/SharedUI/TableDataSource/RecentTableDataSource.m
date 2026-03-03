@@ -21,7 +21,6 @@
 #import "RecentTableDataSource.h"
 #import "ErrorHandler.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
-#import "EntityFetcher.h"
 #import "MyIdentityStore.h"
 #import "ContactStore.h"
 
@@ -62,7 +61,7 @@
 - (void)initFetchedResultsController:(BusinessInjector *)businessInjector
 {
     _messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:businessInjector.myIdentityStore userSettings:businessInjector.userSettings groupManager:businessInjector.groupManagerObjC entityManager:businessInjector.entityManager];
-    _fetchedResultsController = [businessInjector.entityManager.entityFetcher fetchedResultsControllerForConversations];
+    _fetchedResultsController = [businessInjector.entityManager.entityFetcher fetchedResultsControllerForConversationEntitiesWithHidePrivateChats:[UserSettings.sharedUserSettings hidePrivateChats]];
     
     NSError *error = nil;
     if (![_fetchedResultsController performFetch:&error]) {

@@ -19,9 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "Old_FileMessageSender.h"
-#import "EntityCreator.h"
-#import "EntityFetcher.h"
-#import "ThreemaFramework/ThreemaFramework-swift.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "NaClCrypto.h"
 #import "BoxFileMessage.h"
 #import "GroupFileMessage.h"
@@ -30,6 +28,7 @@
 #import "UTIConverter.h"
 #import "BundleUtil.h"
 #import "MediaConverter.h"
+@import FileUtility;
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -63,26 +62,32 @@
 
 - (instancetype)init
 {
-    EntityManager *em = [[EntityManager alloc] init];
+    EntityManager *em = [[BusinessInjector ui] entityManager];
     TaskManager *tm = [TaskManager new];
     return [self init:tm groupManager:[[GroupManager alloc] initWithEntityManager:em taskManagerObjc:tm] entityManager:em];
 }
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation {
-    [self sendItem:item inConversation:conversation requestId:nil];
+- (void)sendItem:(URLSenderItem *)item inConversation:(NSObject *)conversationObject {
+    NSAssert(conversationObject == nil || [conversationObject isKindOfClass:[ConversationEntity class]], @"Parameter conversationObject must be type of ConversationEntity");
+
+    [self sendItem:item inConversation:conversationObject requestId:nil];
 }
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation requestId:(NSString *)requestId {
+- (void)sendItem:(URLSenderItem *)item inConversation:(NSObject *)conversationObject requestId:(NSString *)requestId {
+    NSAssert(conversationObject == nil || [conversationObject isKindOfClass:[ConversationEntity class]], @"Parameter conversationObject must be type of ConversationEntity");
+
     _item = item;
-    self.conversation = conversation;
+    self.conversationObject = conversationObject;
     _webRequestId = requestId;
     
     [self scheduleUpload];
 }
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation requestId:(NSString *)requestId correlationId:(NSString *)correlationId {
+- (void)sendItem:(URLSenderItem *)item inConversation:(NSObject *)conversationObject requestId:(NSString *)requestId correlationId:(NSString *)correlationId {
+    NSAssert(conversationObject == nil || [conversationObject isKindOfClass:[ConversationEntity class]], @"Parameter conversationObject must be type of ConversationEntity");
+
     _item = item;
-    self.conversation = conversation;
+    self.conversationObject = conversationObject;
     _webRequestId = requestId;
     self.correlationId = correlationId;
 
@@ -124,12 +129,12 @@
     NSData *encryptionKey = [[NaClCrypto sharedCrypto] randomBytes:kBlobKeyLen];
 
     [entityManager performSyncBlockAndSafe:^{
-        FileDataEntity *fileData = [entityManager.entityCreator fileDataEntity];
-        fileData.data = data;
+        FileDataEntity *fileData = [entityManager.entityCreator fileDataEntityWithData:data message:nil];
+
+        ConversationEntity *conversation = (ConversationEntity*)self.conversationObject;
+        ConversationEntity *conversationOwnContext = (ConversationEntity *)[entityManager.entityFetcher managedObjectWith:conversation.objectID];
         
-        ConversationEntity *conversationOwnContext = (ConversationEntity *)[entityManager.entityFetcher getManagedObjectById:self.conversation.objectID];
-        
-        FileMessageEntity *message = [entityManager.entityCreator fileMessageEntityForConversationEntity:conversationOwnContext];
+        FileMessageEntity *message = [entityManager.entityCreator fileMessageEntityIn:conversationOwnContext setLastUpdate:YES];
         message.fileSize = [NSNumber numberWithInteger:data.length];
         if (self.fileNameFromWeb != nil) {
             message.fileName = self.fileNameFromWeb;
@@ -183,10 +188,7 @@
             }
 
             if (thumbnailData) {
-                ImageDataEntity *dbThumbnail = [entityManager.entityCreator imageDataEntity];
-                dbThumbnail.data = thumbnailData;
-                dbThumbnail.height = thumbnailImage.size.height;
-                dbThumbnail.width = thumbnailImage.size.width;
+                ImageDataEntity *dbThumbnail = [entityManager.entityCreator imageDataEntityWithData:thumbnailData size:thumbnailImage.size message:nil];
                 message.thumbnail = dbThumbnail;
             }
             else {
@@ -198,19 +200,21 @@
         
         message.json = [FileMessageEncoder jsonStringForFileMessageEntity:message];
 
-        self.message = message;
+        self.messageObject = message;
     }];
 }
 
-- (void)retryMessage:(FileMessageEntity *)message {
-    self.message = message;
-    self.conversation = message.conversation;
-    
+- (void)retryMessage:(NSObject *)messageObject {
+    NSAssert(messageObject == nil || [messageObject isKindOfClass:[FileMessageEntity class]], @"Parameter messageObject must be type of FileMessageEntity");
+
+    self.messageObject = messageObject;
+    self.conversationObject = ((FileMessageEntity*)messageObject).conversation;
+
     [self scheduleUpload];
 }
 
 -(NSData *)encryptedData {
-    FileMessageEntity *fileMessageEntity = (FileMessageEntity *)self.message;
+    FileMessageEntity *fileMessageEntity = (FileMessageEntity *)self.messageObject;
     NSData *data = fileMessageEntity.data.data;
     NSData *encryptionKey = fileMessageEntity.encryptionKey;
     
@@ -223,7 +227,7 @@
 }
 
 - (NSData *)encryptedThumbnailData {
-    FileMessageEntity *fileMessageEntity = (FileMessageEntity *)self.message;
+    FileMessageEntity *fileMessageEntity = (FileMessageEntity *)self.messageObject;
     if (fileMessageEntity.thumbnail) {
         NSData *boxThumbnailData = [[NaClCrypto sharedCrypto] symmetricEncryptData:fileMessageEntity.thumbnail.data withKey:fileMessageEntity.encryptionKey nonce:[NSData dataWithBytesNoCopy:kNonce_2 length:sizeof(kNonce_2) freeWhenDone:NO]];
         if (boxThumbnailData == nil) {
@@ -240,19 +244,19 @@
 
 - (void)sendMessage:(NSArray *)blobIds {
     [entityManager performSyncBlockAndSafe:^{
-        FileMessageEntity *fileMessageEntity = (FileMessageEntity *)self.message;
+        FileMessageEntity *fileMessageEntity = (FileMessageEntity *)self.messageObject;
         fileMessageEntity.blobId = blobIds[0];
         if ([blobIds count] > 1) {
             fileMessageEntity.blobThumbnailId = blobIds[1];
         }
 
         NSString *receiverIdentity;
-        Group *group = [groupManager getGroupWithConversation:self.message.conversation];
+        Group *group = [groupManager getGroupWithConversation:fileMessageEntity.conversation];
         if (group == nil) {
-            receiverIdentity = self.message.conversation.contact.identity;
+            receiverIdentity = fileMessageEntity.conversation.contact.identity;
         }
 
-        TaskDefinitionSendBaseMessage *task = [[TaskDefinitionSendBaseMessage alloc] initWithMessageID:self.message.id receiverIdentity:receiverIdentity group:group sendContactProfilePicture:YES];
+        TaskDefinitionSendBaseMessage *task = [[TaskDefinitionSendBaseMessage alloc] initWithMessageID:fileMessageEntity.id receiverIdentity:receiverIdentity group:group sendContactProfilePicture:YES];
         [taskManager addObjcWithTaskDefinition:task];
     }];
 }
@@ -263,7 +267,7 @@
     NSString *errorMessage;
     switch (error) {
         case UploadErrorFileTooBig:
-            errorMessage = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"error_message_file_too_big"], [[FileUtility shared] getFileSizeDescriptionFrom:kMaxFileSize]];
+            errorMessage = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"error_message_file_too_big"], [[FileUtility new] getFileSizeDescriptionFrom:kMaxFileSize]];
             break;
             
         case UploadErrorInvalidFile:

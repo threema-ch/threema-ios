@@ -53,12 +53,7 @@ public enum Platform: Int, Sendable {
         case .ios:
             "iphone"
         case .android:
-            if #available(iOS 17.0, *) {
-                "smartphone"
-            }
-            else {
-                "iphone"
-            }
+            "smartphone"
         case .desktop, .web, .unspecified:
             "desktopcomputer"
         }

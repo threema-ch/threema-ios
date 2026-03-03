@@ -119,6 +119,7 @@ struct WallpaperSectionView: View {
                     }
                     
                     settingsVM.wallpaperStore.saveDefaultWallpaper(selectedUIImage)
+                    settingsVM.wallpaperType = .custom
                     selectedUIImage = nil
                 }
                 .onReceive(
@@ -160,15 +161,14 @@ struct WallpaperSectionView: View {
         })
         
         .onAppear {
-            if settingsVM.wallpaperStore.defaultIsEmptyWallpaper() {
+            switch settingsVM.wallpaperType {
+            case .empty:
                 emptySelected = true
                 customImage = nil
-            }
-            else if settingsVM.wallpaperStore.defaultIsThreemaWallpaper() {
+            case .threema:
                 threemaSelected = true
                 customImage = nil
-            }
-            else {
+            case .custom:
                 selectedUIImage = settingsVM.wallpaperStore.currentDefaultWallpaper()
                 customImage = Image(uiImage: selectedUIImage!)
                 customSelected = true
@@ -179,7 +179,7 @@ struct WallpaperSectionView: View {
     // MARK: - Private Functions
     
     private func selectEmpty() {
-        settingsVM.wallpaperStore.saveDefaultWallpaper(nil)
+        settingsVM.wallpaperType = .empty
         withAnimation {
             emptySelected = true
             threemaSelected = false
@@ -191,8 +191,7 @@ struct WallpaperSectionView: View {
     }
     
     private func selectThreema() {
-        settingsVM.wallpaperStore.saveDefaultWallpaper(settingsVM.wallpaperStore.defaultWallPaper)
-
+        settingsVM.wallpaperType = .threema
         withAnimation {
             emptySelected = false
             threemaSelected = true
@@ -216,16 +215,15 @@ struct WallpaperSectionView: View {
     
     private func loadImage() {
         isSelectingCustom = false
-
-        if settingsVM.wallpaperStore.defaultIsEmptyWallpaper() {
+        
+        switch settingsVM.wallpaperType {
+        case .empty:
             emptySelected = true
             customImage = nil
-        }
-        else if settingsVM.wallpaperStore.defaultIsThreemaWallpaper() {
+        case .threema:
             threemaSelected = true
             customImage = nil
-        }
-        else {
+        case .custom:
             selectedUIImage = settingsVM.wallpaperStore.currentDefaultWallpaper()
             customImage = Image(uiImage: selectedUIImage!)
             customSelected = true
@@ -296,7 +294,8 @@ struct WallpaperTypeView: View {
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
                     .imageScale(.large)
-                    .foregroundColor(.accentColor)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.white, Color.accentColor)
             }
             else {
                 Image(systemName: "circle")
@@ -316,12 +315,6 @@ extension Image {
             .scaledToFill()
             .frame(width: newSize.width, height: newSize.height)
             .clipped()
-        if #available(iOS 16.0, *) {
-            return ImageRenderer(content: image).uiImage
-        }
-        else {
-            // Fallback on earlier versions
-            return nil
-        }
+        return ImageRenderer(content: image).uiImage
     }
 }

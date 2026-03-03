@@ -32,10 +32,26 @@ enum ThreemaVideoCallQualitySetting {
     ThreemaVideoCallQualitySettingMaximumQuality
 };
 
+typedef NS_ENUM(NSInteger, WallpaperType) {
+    WallpaperTypeEmpty = 0,
+    WallpaperTypeThreema = 1,
+    WallpaperTypeCustom = 2
+};
+
+
+
 @protocol UserSettingsProtocol <NSObject>
 
-@property (nonatomic, readwrite) NSInteger appMigratedToVersion;
+// Appearance
+@property (nonatomic, readwrite) BOOL displayOrderFirstName;
+@property (nonatomic, readwrite) BOOL hideStaleContacts;
+@property (nonatomic, readwrite) float previewLimit;
+@property (nonatomic, readwrite) BOOL showGalleryPreview;
+@property (nonatomic, readwrite) BOOL showProfilePictures;
+@property (nonatomic, readwrite) BOOL useSystemTheme;
 
+@property (nonatomic, readwrite) BOOL darkTheme;
+@property (nonatomic, readwrite) NSInteger appMigratedToVersion;
 @property (nonatomic, readwrite) enum SendProfilePicture sendProfilePicture;
 @property (nonatomic, strong) NSArray *profilePictureContactList;
 @property (nonatomic, readwrite) BOOL syncContacts;
@@ -51,6 +67,7 @@ enum ThreemaVideoCallQualitySetting {
 @property (nonatomic, readwrite) BOOL enableThreemaGroupCalls;
 @property (nonatomic, strong) NSOrderedSet *blacklist;
 @property (nonatomic, strong) NSArray *syncExclusionList;
+@property (nonatomic, readwrite) enum WallpaperType wallpaperType;
 @property (nonatomic, strong) NSData *wallpaper;
 @property (nonatomic, readwrite) BOOL autoSaveMedia;
 @property (nonatomic, readwrite) BOOL allowOutgoingDonations;
@@ -92,14 +109,14 @@ enum ThreemaVideoCallQualitySetting {
 
 @property (nonatomic, readwrite) NSInteger keepMessagesDays;
 
-@property (nonatomic, readwrite) BOOL contactList2;
-
+@property (nonatomic, readwrite) NSData *safeConfig;
 @property (nonatomic, readwrite) BOOL safeIntroShown;
 
 @property (nonatomic, readwrite) BOOL ipcCommunicationEnabled;
 @property (nonatomic, readwrite) NSData *ipcSecretPrefix;
 
 @property (nonatomic, readwrite) BOOL companyDirectory;
+@property (nonatomic, readwrite) BOOL showWorkReferral;
 
 @end
 
@@ -110,9 +127,6 @@ enum AcceptPrivacyPolicyVariant {
     AcceptPrivacyPolicyVariantImplicitly,
     AcceptPrivacyPolicyVariantUpdate
 };
-
-@property (nonatomic, readwrite) BOOL hideStaleContacts;
-
 
 @property (nonatomic, readwrite) BOOL darkTheme;
 @property (nonatomic, readwrite) BOOL useSystemTheme;
@@ -135,9 +149,6 @@ enum AcceptPrivacyPolicyVariant {
 
 @property (nonatomic, readwrite) BOOL openPlusIconInChat;
 
-@property (nonatomic, readwrite, copy) NSData *deviceID;
-
-@property (nonatomic, readwrite) NSData *safeConfig;
 @property (nonatomic, readwrite) NSData *evaluatedPolicyDomainStateApp;
 @property (nonatomic, readwrite) NSData *evaluatedPolicyDomainStateShareExtension;
 
@@ -147,7 +158,6 @@ enum AcceptPrivacyPolicyVariant {
 @property (nonatomic, readwrite) BOOL jbDetectionDismissed;
 @property (nonatomic, readwrite) BOOL partialReactionSupportAlertShown;
 
-@property (nonatomic, readwrite) BOOL contactList2;
 @property (nonatomic, readwrite) BOOL newNavigationEnabled;
 
 + (UserSettings*)sharedUserSettings;

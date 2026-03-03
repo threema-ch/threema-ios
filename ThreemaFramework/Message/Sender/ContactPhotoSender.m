@@ -28,8 +28,6 @@
 #import "ActivityIndicatorProxy.h"
 #import "ThreemaError.h"
 #import "ContactStore.h"
-#import "EntityCreator.h"
-#import "EntityFetcher.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "UserSettings.h"
 #import "ServerConnector.h"
@@ -96,7 +94,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         }
     }
     
-    ContactEntity *contact = [[entityManager entityFetcher] contactForId:identity];
+    ContactEntity *contact = [[entityManager entityFetcher] contactEntityFor:identity];
     
     if (contact.isGatewayID || contact.isEchoEcho) {
         return nil;
@@ -131,9 +129,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     }
 }
 
-- (void)startWithImageToMember:(ContactEntity*)_toMember onCompletion:(void (^)(void))_onCompletion onError:(void (^)(NSError *))_onError {
-    
-    toMember = _toMember;
+- (void)startWithImageToMember:(NSObject *)_toMemberObject onCompletion:(void (^)(void))_onCompletion onError:(void (^)(NSError *))_onError {
+    NSAssert(_toMemberObject == nil || [_toMemberObject isKindOfClass:[ContactEntity class]], @"Parameter _toMemberObject must be type of ContactEntity");
+
+    toMember = (ContactEntity*)_toMemberObject;
     onCompletion = _onCompletion;
     onError = _onError;
     
@@ -199,7 +198,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (toMember != nil) {
         // Reload CoreData object because of concurrency problem
         [entityManager performBlock:^{
-            ContactEntity *member = [[entityManager entityFetcher] getManagedObjectById:toMember.objectID];
+            ContactEntity *member = (ContactEntity*)[[entityManager entityFetcher] managedObjectWith:toMember.objectID];
 
             /* send to the specified member only */
             [self sendSetPhotoMessageToIdentity:member.identity withBlobId:blobId];

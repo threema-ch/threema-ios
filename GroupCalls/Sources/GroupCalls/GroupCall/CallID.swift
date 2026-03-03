@@ -35,7 +35,7 @@ struct GroupCallID: Sendable {
         callStartData: GroupCallStartData,
         dependencies: Dependencies
     ) throws {
-        let creatorID = Data(groupIdentity.creator.string.utf8)
+        let creatorID = Data(groupIdentity.creator.rawValue.utf8)
         let groupID = groupIdentity.id
         let protocolVersion = Data(repeating: UInt8(callStartData.protocolVersion), count: 1)
         let gck = callStartData.gck

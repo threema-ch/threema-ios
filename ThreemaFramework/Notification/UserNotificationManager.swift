@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import ThreemaEssentials
 import ThreemaMacros
@@ -28,14 +29,14 @@ public protocol UserNotificationManagerProtocol {
     func testNotificationContent(payload: [AnyHashable: Any]) -> UNMutableNotificationContent
     func threemaWebNotificationContent(payload: [AnyHashable: Any]) -> UNMutableNotificationContent
     func applyContent(
-        _ from: UserNotificationContent,
-        _ to: inout UNMutableNotificationContent,
-        _ silent: Bool,
-        _ baseMessage: BaseMessageEntity?
+        from: UserNotificationContent,
+        to: inout UNMutableNotificationContent,
+        silent: Bool,
+        baseMessage: BaseMessageEntity?
     )
 }
 
-public class UserNotificationManager: UserNotificationManagerProtocol {
+public final class UserNotificationManager: UserNotificationManagerProtocol {
     private let settingsStore: SettingsStoreProtocol
     private let userSettings: UserSettingsProtocol
     private let myIdentityStore: MyIdentityStoreProtocol
@@ -44,16 +45,18 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     private let groupManager: GroupManagerProtocol
     private let entityManager: EntityManager
     private let isWorkApp: Bool
+    private let fileUtility: FileUtilityProtocol
     
     public init(
-        _ settingsStore: SettingsStoreProtocol,
-        _ userSettings: UserSettingsProtocol,
-        _ myIdentityStore: MyIdentityStoreProtocol,
-        _ pushSettingManager: PushSettingManagerProtocol,
-        _ contactStore: ContactStoreProtocol,
-        _ groupManager: GroupManagerProtocol,
-        _ entityManager: EntityManager,
-        _ isWorkApp: Bool
+        settingsStore: SettingsStoreProtocol,
+        userSettings: UserSettingsProtocol,
+        myIdentityStore: MyIdentityStoreProtocol,
+        pushSettingManager: PushSettingManagerProtocol,
+        contactStore: ContactStoreProtocol,
+        groupManager: GroupManagerProtocol,
+        entityManager: EntityManager,
+        isWorkApp: Bool,
+        fileUtility: FileUtilityProtocol = FileUtility.shared
     ) {
         self.settingsStore = settingsStore
         self.userSettings = userSettings
@@ -63,6 +66,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         self.groupManager = groupManager
         self.entityManager = entityManager
         self.isWorkApp = isWorkApp
+        self.fileUtility = fileUtility
     }
     
     // MARK: - Public functions
@@ -117,7 +121,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         }
         
         // Adds the thumbnail attachment if it is a file, image or video message. Note that we are only adding
-        // attachement for the `final` stage.
+        // attachment for the `final` stage.
         // This due to an error: If a notification with an attachment is removed for the `base` stage,
         // then the attachment for the `final` stage will not be displayed.
         if settingsStore.pushShowPreview,
@@ -177,10 +181,10 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     /// - Parameter to: Effective notification content for notification center
     /// - Parameter silent: If false than sound will played for the notification
     public func applyContent(
-        _ from: UserNotificationContent,
-        _ to: inout UNMutableNotificationContent,
-        _ silent: Bool,
-        _ baseMessage: BaseMessageEntity?
+        from: UserNotificationContent,
+        to: inout UNMutableNotificationContent,
+        silent: Bool,
+        baseMessage: BaseMessageEntity?
     ) {
         
         var pushSound: String = from.categoryIdentifier.elementsEqual("GROUP") ? userSettings
@@ -247,29 +251,30 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     // MARK: - Private functions
     
     private func saveAttachment(
-        _ image: ImageDataEntity,
-        _ id: String,
-        _ stage: UserNotificationStage
+        image: ImageDataEntity,
+        id: String,
+        stage: UserNotificationStage
     ) -> (name: String, url: URL)? {
         if let tmpDirectory = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).last {
             let attachmentDirectory = "\(tmpDirectory)/PushImages"
+            let attachmentDirectoryURL = URL(fileURLWithPath: attachmentDirectory)
             let attachmentName = "PushImage_\(id)_\(stage)"
             let attachmentURL = URL(fileURLWithPath: "\(attachmentDirectory)/\(attachmentName).jpg")
             
-            let fileManager = FileManager.default
-            
             do {
-                if !fileManager.fileExists(atPath: attachmentDirectory) {
-                    try fileManager.createDirectory(
+                if fileUtility.fileExists(at: attachmentDirectoryURL) == false {
+                    try fileUtility.mkDir(
                         at: URL(fileURLWithPath: attachmentDirectory, isDirectory: true),
                         withIntermediateDirectories: false,
                         attributes: nil
                     )
                 }
-                if fileManager.fileExists(atPath: attachmentURL.absoluteString) {
-                    try fileManager.removeItem(at: attachmentURL)
+                if fileUtility.fileExists(at: attachmentURL) {
+                    try fileUtility.delete(at: attachmentURL)
                 }
                 
+                /// This is the only exception to not using ``FileUtility`` to store something to disk.
+                /// As we clean the push directory on each did become active, we're fine with this exception.
                 try image.data.write(to: attachmentURL, options: .completeFileProtectionUntilFirstUserAuthentication)
 
                 return (name: attachmentName, url: attachmentURL)
@@ -299,7 +304,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         }
         
         // Is blockUnknown active?
-        if entityManager.entityFetcher.contact(for: senderIdentity) == nil,
+        if entityManager.entityFetcher.contactEntity(for: senderIdentity) == nil,
            userSettings.blockUnknown,
            !PredefinedContacts(rawValue: senderIdentity).ignoreBlockUnknown {
             return false
@@ -359,8 +364,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         -> (groupID: String, groupCreator: String)? {
         if let baseMessage = pendingUserNotification.baseMessage,
            let group = entityManager.entityFetcher.groupEntity(for: baseMessage.conversation) {
-            // swiftformat:disable:next acronyms
-            return (group.groupId.base64EncodedString(), group.groupCreator ?? MyIdentityStore.shared().identity)
+            return (group.groupID.base64EncodedString(), group.groupCreator ?? MyIdentityStore.shared().identity)
         }
         else if let abstractMessage = pendingUserNotification.abstractMessage as? AbstractGroupMessage {
             return (abstractMessage.groupID.base64EncodedString(), abstractMessage.groupCreator)
@@ -370,7 +374,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     
     private func fromName(for pendingUserNotification: PendingUserNotification) -> String {
         if let senderIdentity = pendingUserNotification.senderIdentity,
-           let senderContact = entityManager.entityFetcher.contact(for: senderIdentity) {
+           let senderContact = entityManager.entityFetcher.contactEntity(for: senderIdentity) {
             // We only show nickname for restrictive notifications, otherwise we always use the display name.
             switch settingsStore.notificationType {
             case .restrictive:
@@ -387,7 +391,8 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     private func nickname(for pendingUserNotification: PendingUserNotification) -> String {
         if let baseMessage = pendingUserNotification.baseMessage {
             if baseMessage.conversation.isGroup {
-                if let contact = entityManager.entityFetcher.contact(for: pendingUserNotification.senderIdentity),
+                if let senderIdentity = pendingUserNotification.senderIdentity,
+                   let contact = entityManager.entityFetcher.contactEntity(for: senderIdentity),
                    let publicNickname = contact.publicNickname {
                     return publicNickname
                 }
@@ -410,9 +415,13 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         else if pendingUserNotification.abstractMessage != nil {
             if let isGroup = pendingUserNotification.isGroupMessage, isGroup {
                 if let groupCallStartMessage = pendingUserNotification.abstractMessage as? GroupCallStartMessage {
+                    
+                    let groupIdentity = GroupIdentity(
+                        id: groupCallStartMessage.groupID,
+                        creator: ThreemaIdentity(groupCallStartMessage.groupCreator)
+                    )
                     if let groupConversation = entityManager.entityFetcher.conversationEntity(
-                        for: groupCallStartMessage.groupID,
-                        creator: groupCallStartMessage.groupCreator
+                        for: groupIdentity, myIdentity: MyIdentityStore.shared().identity
                     ) {
                         return groupConversation.groupName ?? #localize("new_message_unknown_group")
                     }
@@ -433,17 +442,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
     
     private func bodyWithPreview(for pendingUserNotification: PendingUserNotification, fromName: String) -> String {
         if let baseMessage = pendingUserNotification.baseMessage as? PreviewableMessage {
-            if let isGroup = pendingUserNotification.isGroupMessage, isGroup {
-                if settingsStore.notificationType == .complete {
-                    return TextStyleUtils.makeMentionsString(forText: baseMessage.previewText)
-                }
-                else {
-                    return TextStyleUtils.makeMentionsString(forText: "\(fromName): \(baseMessage.previewText)")
-                }
-            }
-            else {
-                return TextStyleUtils.makeMentionsString(forText: baseMessage.previewText)
-            }
+            return baseMessage.previewAttributedText(for: .pushNotification, settingsStore: settingsStore).string
         }
         if let abstractMessage = pendingUserNotification.abstractMessage {
             if abstractMessage is AbstractGroupMessage {
@@ -486,7 +485,10 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             if let groupIDString = content.groupID,
                let groupID = Data(base64Encoded: groupIDString),
                let groupCreator = content.groupCreator,
-               let conversation = entityManager.entityFetcher.conversationEntity(for: groupID, creator: groupCreator) {
+               let conversation = entityManager.entityFetcher.conversationEntity(
+                   for: GroupIdentity(id: groupID, creatorID: groupCreator),
+                   myIdentity: myIdentityStore.identity
+               ) {
                 conversation.conversationCategory == .private
             }
             else {
@@ -494,7 +496,7 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
             }
         }
         else if let senderID = content.senderID,
-                let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: senderID) {
+                let conversation = entityManager.entityFetcher.conversationEntity(for: senderID) {
             conversation.conversationCategory == .private
         }
         else {
@@ -516,9 +518,9 @@ public class UserNotificationManager: UserNotificationManagerProtocol {
         
         if let image,
            let attachment = saveAttachment(
-               image,
-               baseMessage.id.hexString,
-               pendingUserNotification.stage
+               image: image,
+               id: baseMessage.id.hexString,
+               stage: pendingUserNotification.stage
            ) {
             
             return (attachment.name, attachment.url)

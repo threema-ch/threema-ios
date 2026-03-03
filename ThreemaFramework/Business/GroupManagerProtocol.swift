@@ -88,7 +88,7 @@ extension GroupManagerProtocol {
 // Convenience functions for GroupIdentity type
 extension GroupManagerProtocol {
     public func group(for groupIdentity: GroupIdentity) -> Group? {
-        getGroup(groupIdentity.id, creator: groupIdentity.creator.string)
+        getGroup(groupIdentity.id, creator: groupIdentity.creator.rawValue)
     }
     
     public func leave(groupWith groupIdentity: GroupIdentity, inform receivers: GroupManagerProtocolReceivers) {
@@ -97,24 +97,18 @@ extension GroupManagerProtocol {
             case .all:
                 nil
             case let .members(list):
-                list.map(\.string)
+                list.map(\.rawValue)
             }
         
         leave(groupIdentity: groupIdentity, toMembers: members)
     }
     
     public func sendSyncRequest(for groupIdentity: GroupIdentity) {
-        sendSyncRequest(groupID: groupIdentity.id, creator: groupIdentity.creator.string)
+        sendSyncRequest(groupID: groupIdentity.id, creator: groupIdentity.creator.rawValue)
     }
 }
 
 @objc public protocol GroupManagerProtocolObjc {
-    func createOrUpdateObjc(
-        groupID: Data,
-        creator: String,
-        members: Set<String>,
-        systemMessageDate: Date
-    ) async throws -> (Group, Set<String>?)
     func createOrUpdateDBObjc(
         groupID: Data,
         creator: String,
@@ -140,12 +134,6 @@ extension GroupManagerProtocol {
         systemMessageDate: Date,
         send: Bool
     ) async throws
-    func setNameObjc(
-        group: Group,
-        name: String?,
-        systemMessageDate: Date,
-        send: Bool
-    ) async throws
     func setPhotoObjc(
         groupID: Data,
         creator: String,
@@ -164,23 +152,10 @@ extension GroupManagerProtocol {
 
 // Define "default" arguments for certain protocol methods
 extension GroupManagerProtocolObjc {
-    public func createOrUpdateObjc(
-        groupID: Data,
-        creator: String,
-        members: Set<String>
-    ) async throws -> (Group, Set<String>?) {
-        try await createOrUpdateObjc(
-            groupID: groupID,
-            creator: creator,
-            members: members,
-            systemMessageDate: Date()
-        )
-    }
-    
     public func leave(groupIdentity: GroupIdentity, toMembers: [String]?) {
         leave(
             groupID: groupIdentity.id,
-            creator: groupIdentity.creator.string,
+            creator: groupIdentity.creator.rawValue,
             toMembers: toMembers,
             systemMessageDate: Date()
         )

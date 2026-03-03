@@ -31,7 +31,7 @@
 /**
  Will be called if core data object has changed during incoming message process, but is not a message.
 
- @param objectID: Managed Object ID of changed core data object
+ @param objectID Managed Object ID of changed core data object
  */
 - (void)changedManagedObjectID:(NSManagedObjectID * _Nonnull)objectID;
 
@@ -46,9 +46,9 @@
  Processing of incoming (reflected) message has changed (is stored in DB).
  
  @param message Incoming message
- @param baseMessage Created or edited DB message
+ @param baseMessageEntityObject Created or edited DB message of type `BaseMessageEntity`
  */
-- (void)incomingMessageChanged:(AbstractMessage * _Nonnull)message baseMessage:(BaseMessageEntity * _Nonnull)baseMessage;
+- (void)incomingMessageChanged:(AbstractMessage * _Nonnull)message baseMessageEntity:(NSObject * _Nonnull)baseMessageEntityObject;
 
 /**
  Processing of incoming (reflected) message is finished.
@@ -60,9 +60,9 @@
 /**
  Message was marked as read.
 
- @param inConversations Recalculate count of unread messages in this conversations
+ @param inConversations Recalculate count of unread messages in this conversations of type `ConversationEntity`
  */
-- (void)readMessage:(nullable NSSet<ConversationEntity *> *)inConversations
+- (void)readMessage:(nullable NSSet *)inConversations
 NS_SWIFT_NAME(readMessage(inConversations:));
 
 /**
@@ -96,10 +96,10 @@ NS_SWIFT_NAME(readMessage(inConversations:));
 /**
  Process voip call.
 
- @param message: VoIP message
- @param identity: Identity from contact of the message
- @param onCompletion: Completion handler with MessageProcessorDelegate, use it when call MessageProcessorDelegate in completion block (e.g. of processVoIPCall), to prevent blocking of dispatch queue 'ServerConnector.queueMessageProcessorDelegate')
- @param onError: Error handler with MessageProcessorDelegate, use it when call MessageProcessorDelegate in error block (e.g. of processVoIPCall), to prevent blocking of dispatch queue 'ServerConnector.queueMessageProcessorDelegate')
+ @param message VoIP message
+ @param identity Identity from contact of the message
+ @param onCompletion Completion handler with MessageProcessorDelegate, use it when call MessageProcessorDelegate in completion block (e.g. of processVoIPCall), to prevent blocking of dispatch queue 'ServerConnector.queueMessageProcessorDelegate')
+ @param onError Error handler with MessageProcessorDelegate, use it when call MessageProcessorDelegate in error block (e.g. of processVoIPCall), to prevent blocking of dispatch queue 'ServerConnector.queueMessageProcessorDelegate')
  */
 - (void)processVoIPCall:(NSObject * _Nonnull)message identity:(NSString * _Nullable)identity onCompletion:(void(^ _Nonnull)(id<MessageProcessorDelegate> _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull, id<MessageProcessorDelegate> _Nullable))onError;
 

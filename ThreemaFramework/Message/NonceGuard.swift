@@ -70,7 +70,7 @@ class NonceGuard: NSObject, NonceGuardProtocol {
             return true
         }
 
-        return entityManager.isMessageNonceAlreadyInDB(nonce: nonce)
+        return messageNonceExists(nonce)
     }
 
     /// Check if message nonce is already processed.
@@ -81,7 +81,7 @@ class NonceGuard: NSObject, NonceGuardProtocol {
             throw NonceGuardError.messageNonceIsNil(message: "Nonce of message \(message.loggingDescription) is empty")
         }
 
-        return entityManager.isMessageNonceAlreadyInDB(nonce: message.nonce)
+        return messageNonceExists(message.nonce)
     }
 
     /// Incoming message nonce will be stored in DB.
@@ -137,18 +137,30 @@ class NonceGuard: NSObject, NonceGuardProtocol {
     func processed(nonces: [Data]) throws {
         try entityManager.performAndWaitSave {
             for nonce in nonces {
-                guard !self.entityManager.isMessageNonceAlreadyInDB(nonce: nonce) else {
+                guard !self.messageNonceExists(nonce) else {
                     DDLogError("Nonce is already in DB")
                     continue
                 }
                 
                 // As soon as hashing of a nonce fails we'll report an error and stop processing them
-                guard let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentityStore: self.myIdentityStore) else {
+                guard let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentity: self.myIdentityStore.identity) else {
                     throw NonceGuardError.hashingFailed
                 }
                 
-                self.entityManager.entityCreator.nonceEntity(with: hashedNonce)
+                _ = self.entityManager.entityCreator.nonceEntity(for: hashedNonce)
             }
         }
+    }
+
+    private func messageNonceExists(_ nonce: Data) -> Bool {
+        let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentity: myIdentityStore.identity)
+
+        guard let hashedNonce else {
+            // We throw away messages with duplicate nonces and we don't want this to happen whenever hashing
+            // fails. Thus we will return false in these cases.
+            return false
+        }
+
+        return entityManager.isMessageNonceAlreadyInDB(hashedNonce)
     }
 }

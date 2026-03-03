@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 
 /// Get and set the current `AppSetupState`
@@ -49,7 +50,7 @@ public class AppSetup: NSObject {
             }
             
             if newValue == .complete {
-                FileUtility.shared.delete(at: AppSetup.noPreexistingDatabaseFile)
+                FileUtility.shared.deleteIfExists(at: AppSetup.noPreexistingDatabaseFile)
             }
             
             AppGroup.userDefaults().set(newValue.rawValue, forKey: Constants.appSetupStateKey)
@@ -68,28 +69,34 @@ public class AppSetup: NSObject {
         // For the second one we might be able to skip to the last screen, but there is no time to really test this
         state == .identityAdded || state == .identitySetupComplete
     }
-    
+
+    // Is the identity added, but the setup not completed?
+    static var isIdentityAdded: Bool {
+        state == .identityAdded || AppSetup.isIdentityProvisioned
+    }
+
     /// Is the identity provisioned, but maybe the setup not completed?
     @objc static var isIdentityProvisioned: Bool {
         state == .identitySetupComplete || state == .complete
     }
-    
+
     // MARK: - Preexisting database file
     
     /// This file is created during a call to `registerIfADatabaseFileExists()` and only deleted if `state` is set to
     /// `.complete`
-    private static let noPreexistingDatabaseFile: URL? = FileUtility.shared.appDataDirectory?.appendingPathComponent(
-        "APP_SETUP_NOT_COMPLETED" // Named like this for backwards compatibility
-    )
+    private static let noPreexistingDatabaseFile: URL? = FileUtility.shared
+        .appDataDirectory(appGroupID: AppGroup.groupID())?.appendingPathComponent(
+            "APP_SETUP_NOT_COMPLETED" // Named like this for backwards compatibility
+        )
     
     /// Create a marker if no database file exist when this is called. The marker can only be removed by completing the
     /// setup with setting`state` to `.complete`
     @objc public static func registerIfADatabaseFileExists() {
-        if !FileUtility.shared.isExists(fileURL: noPreexistingDatabaseFile),
-           !FileUtility.shared.isExists(fileURL: DatabaseManager.storeURL()) {
+        if !FileUtility.shared.fileExists(at: noPreexistingDatabaseFile),
+           !DatabaseManager.dbExists(appGroupID: AppGroup.groupID(), fileUtility: FileUtility.shared) {
             FileUtility.shared.write(
-                fileURL: noPreexistingDatabaseFile,
-                contents: nil
+                contents: nil,
+                to: noPreexistingDatabaseFile
             )
         }
     }
@@ -102,7 +109,7 @@ public class AppSetup: NSObject {
             return true
         }
         
-        return !FileUtility.shared.isExists(fileURL: AppSetup.noPreexistingDatabaseFile)
+        return !FileUtility.shared.fileExists(at: AppSetup.noPreexistingDatabaseFile)
     }
     
     // MARK: - Private helper

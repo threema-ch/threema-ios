@@ -70,7 +70,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
     // MARK: - Properties
     
     private weak var tableView: UITableView?
-    private weak var businessInjector: BusinessInjector?
+    private weak var businessInjector: BusinessInjectorProtocol?
     
     @Published private var currentSearchText = ""
     private var cancellables = Set<AnyCancellable>()
@@ -95,7 +95,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
         }
     }()
     
-    init(tableView: UITableView, businessInjector: BusinessInjector) {
+    init(tableView: UITableView, businessInjector: BusinessInjectorProtocol) {
         self.tableView = tableView
         self.businessInjector = businessInjector
         
@@ -353,7 +353,10 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
             return
         }
         
-        let contactsIDs = entityFetcher.matchingContactsForContactListSearch(containing: currentSearchText)
+        let contactsIDs = entityFetcher.matchingContactsForContactListSearch(
+            containing: currentSearchText,
+            hideStaleContacts: UserSettings.shared().hideStaleContacts
+        )
         
         // We do not show the section if we have no contacts
         guard !contactsIDs.isEmpty else {

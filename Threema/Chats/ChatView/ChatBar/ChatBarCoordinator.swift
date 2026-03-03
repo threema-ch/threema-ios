@@ -20,6 +20,7 @@
 
 import AudioToolbox
 import CocoaLumberjackSwift
+import FileUtility
 import GroupCalls
 import SwiftProtobuf
 import SwiftUI
@@ -60,6 +61,9 @@ final class ChatBarCoordinator {
     var isRecording = false
     
     // MARK: - Private properties
+    
+    private lazy var documentPicker = DocumentPicker(for: conversation, presenter: chatViewController)
+    private var sendMediaAction: SendMediaAction?
     
     private var conversation: ConversationEntity
     private var messageToEdit: EditedMessage? {
@@ -121,9 +125,7 @@ final class ChatBarCoordinator {
         AudioServicesCreateSystemSoundID(soundURL as CFURL, &sentMessageSoundID)
         return sentMessageSoundID
     }()
-    
-    private var chatViewActionsHelper: ChatViewControllerActionsHelper
-    
+        
     private var mentionsVisible = false
     
     private var precomposedText: String? {
@@ -142,14 +144,12 @@ final class ChatBarCoordinator {
     
     init(
         conversation: ConversationEntity,
-        chatViewControllerActionsHelper: ChatViewControllerActionsHelper,
         chatViewController: ChatViewController,
         chatBarCoordinatorDelegate: ChatBarCoordinatorDelegate?,
         chatViewTableViewVoiceMessageCellDelegate: ChatViewTableViewVoiceMessageCellDelegate,
         showConversationInformation: ShowConversationInformation? = nil
     ) {
         self.conversation = conversation
-        self.chatViewActionsHelper = chatViewControllerActionsHelper
         self.chatViewController = chatViewController
         self.chatBarCoordinatorDelegate = chatBarCoordinatorDelegate
         self.chatViewTableViewVoiceMessageCellDelegate = chatViewTableViewVoiceMessageCellDelegate
@@ -204,7 +204,7 @@ final class ChatBarCoordinator {
                 switch subtype {
                 case let .quote(text, objectIDString):
                     guard let quotedMessage = businessInjector.entityManager.entityFetcher
-                        .existingObject(withIDString: objectIDString) as? QuoteMessage else {
+                        .existingObject(with: objectIDString) as? QuoteMessage else {
                         MessageDraftStore.shared.deleteDraft(for: conversation)
                         return
                     }
@@ -213,7 +213,7 @@ final class ChatBarCoordinator {
                     
                 case let .edit(text, objectIDString):
                     guard let editMessage = businessInjector.entityManager.entityFetcher
-                        .existingObject(withIDString: objectIDString) as? EditedMessage else {
+                        .existingObject(with: objectIDString) as? EditedMessage else {
                         MessageDraftStore.shared.deleteDraft(for: conversation)
                         return
                     }
@@ -327,7 +327,7 @@ final class ChatBarCoordinator {
         let editedView = ChatBarEditedMessageView(editedMessage: message, delegate: self)
         chatBarContainerView.add(editedView)
         chatBarContainerView.becomeFirstResponder()
-        chatBar.disablePlusButton()
+        chatBar.toggleBarButtons(enabled: false)
     }
 
     /// Removes the currently displayed edit message view
@@ -336,7 +336,7 @@ final class ChatBarCoordinator {
         messageToEdit = nil
         chatBarContainerView.removeEditedMessageView()
         chatBar.removeCurrentText()
-        chatBar.enablePlusButton()
+        chatBar.toggleBarButtons(enabled: true)
     }
 
     /// Shows the quote view for message on top of the chat bar. Removes currently existing quote or edit views
@@ -356,6 +356,7 @@ final class ChatBarCoordinator {
         let quoteView = ChatBarQuoteView(quotedMessage: message, delegate: self)
         chatBarContainerView.add(quoteView)
         chatBarContainerView.becomeFirstResponder()
+        chatBar.toggleBarButtons(enabled: false)
     }
     
     /// Removes the currently displayed quote view
@@ -363,6 +364,7 @@ final class ChatBarCoordinator {
         quoteMessage = nil
         chatBarContainerView.removeQuoteView()
         chatBarCoordinatorDelegate?.didDismissQuoteView()
+        chatBar.toggleBarButtons(enabled: true)
     }
     
     /// Updates colors for all subviews
@@ -491,36 +493,27 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     }
     
     func showCamera() {
-        guard let action = SendMediaAction(for: chatViewActionsHelper) else {
-            let message = "Could not create SendMediaAction in \(#function)"
-            DDLogError("\(message)")
-            assertionFailure(message)
+        guard let chatViewController else {
             return
         }
         
-        chatViewActionsHelper.currentLegacyAction = action
-        action.mediaPickerType = MediaPickerTakePhoto
+        sendMediaAction = SendMediaAction(chatViewController: chatViewController)
         
         resignFirstResponder()
         
-        action.execute()
+        sendMediaAction?.executeAction(withType: .takePhoto)
     }
     
     func showImagePicker() {
-        guard let action = SendMediaAction(for: chatViewActionsHelper) else {
-            let message = "Could not create SendMediaAction in \(#function)"
-            DDLogError("\(message)")
-            assertionFailure(message)
+        guard let chatViewController else {
             return
         }
         
-        chatViewActionsHelper.currentLegacyAction = action
-        
-        action.mediaPickerType = MediaPickerChooseExisting
-        
+        sendMediaAction = SendMediaAction(chatViewController: chatViewController)
+
         resignFirstResponder()
         
-        action.execute()
+        sendMediaAction?.executeAction(withType: .chooseExisting)
     }
     
     func showAssetsSelector() {
@@ -537,7 +530,6 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         chatViewController.present(assetActionController, animated: true, completion: nil)
     }
     
-    @discardableResult
     func sendOrPreviewPastedItem() -> Bool {
         guard canSendText() else {
             return false
@@ -548,12 +540,8 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             .numberOfItems == 1
         
         if containsMemoji {
-            guard let image = UIPasteboard.general.image?.pngData() else {
-                showPasteError()
-                return false
-            }
-            
-            guard let uti = ImageURLSenderItemCreator.getUTI(for: image) as? String else {
+            guard let image = UIPasteboard.general.image?.pngData(),
+                  let uti = ImageURLSenderItemCreator.getUTI(for: image) as? String else {
                 showPasteError()
                 return false
             }
@@ -618,37 +606,31 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     }
     
     private func showPastedItemsPreview(_ items: [Any]) {
-        guard let sendMediaAction = SendMediaAction(for: chatViewActionsHelper) else {
-            assertionFailure()
+        guard let chatViewController else {
             return
         }
-        sendMediaAction.showPreview(forAssets: items)
+        
+        sendMediaAction = SendMediaAction(chatViewController: chatViewController)
+                                     
+        sendMediaAction?.showPreviewForAssets(assets: items)
     }
     
     private func previewPrecomposedImage(_ image: UIImage) {
         let item = ImagePreviewItem()
         let filename = "composed-image-\(UUID().uuidString).png"
-        let url = FileUtility.shared.appTemporaryDirectory.appendingPathComponent(filename)
-        guard let imageData = MediaConverter.pngRepresentation(for: image) else {
+        let fileUtility = FileUtility.shared!
+        let url = fileUtility.appTemporaryUnencryptedDirectory.appendingPathComponent(filename)
+        guard let chatViewController, let imageData = MediaConverter.pngRepresentation(for: image),
+              fileUtility.write(contents: imageData, to: url) else {
             showPasteError()
             return
-        }
-        do {
-            try imageData.write(to: url)
-        }
-        catch {
-            showPasteError()
         }
         
         item.itemURL = url
         item.filename = filename
-        
-        guard let sendMediaAction = SendMediaAction(for: chatViewActionsHelper) else {
-            showPasteError()
-            return
-        }
-        
-        sendMediaAction.showPreview(forAssets: [item])
+        sendMediaAction = SendMediaAction(chatViewController: chatViewController)
+
+        sendMediaAction?.showPreviewForAssets(assets: [item])
     }
     
     func showPasteError() {
@@ -711,7 +693,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
                 for unsupportedContact in unsupportedContacts {
                     // If the contact has a gateway ID and is the creator of the group the message is sent in…
                     if unsupportedContact.hasGatewayID,
-                       unsupportedContact.identity.string == group.groupCreatorIdentity {
+                       unsupportedContact.identity.rawValue == group.groupCreatorIdentity {
                         // … we only send the message to it, if it is a message storing gateway group.
                         if group.isMessageStoringGatewayGroup {
                             filteredUnsupportedContact.append(unsupportedContact)
@@ -752,7 +734,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         // Quote Message
         else if let quoteMessage {
             assert(conversation.distributionList == nil, "Quoting in distribution lists is not allowed!")
-            sendableRawText = QuoteUtil.generateText(rawText, with: quoteMessage.id)
+            sendableRawText = QuoteUtil.generateText(rawText, quotedID: quoteMessage.id)
             businessInjector.messageSender.sendTextMessage(containing: sendableRawText, in: conversation)
             removeQuoteView()
         }
@@ -834,24 +816,12 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     
     /// Checks permission for microphone and starts recording if granted. Shows alert otherwise.
     func startRecording(with draftAudioURL: URL? = nil) {
-        if #available(iOS 18.0, *) {
-            AVAudioApplication.requestRecordPermission { granted in
-                if granted {
-                    self.record(with: draftAudioURL)
-                }
-                else {
-                    self.showMicrophonePermissionAlert()
-                }
+        AVAudioApplication.requestRecordPermission { granted in
+            if granted {
+                self.record(with: draftAudioURL)
             }
-        }
-        else {
-            AVAudioSession.sharedInstance().requestRecordPermission { granted in
-                if granted {
-                    self.record(with: draftAudioURL)
-                }
-                else {
-                    self.showMicrophonePermissionAlert()
-                }
+            else {
+                self.showMicrophonePermissionAlert()
             }
         }
     }
@@ -910,7 +880,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     }
     
     func showContact(identity: String) {
-        if let contact = businessInjector.entityManager.entityFetcher.contact(for: identity) {
+        if let contact = businessInjector.entityManager.entityFetcher.contactEntity(for: identity) {
             let detailsViewController = SingleDetailsViewController(for: Contact(contactEntity: contact))
             let navigationController = ThemedNavigationController(rootViewController: detailsViewController)
             navigationController.modalPresentationStyle = .formSheet
@@ -918,15 +888,7 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
             chatViewController?.present(navigationController, animated: true)
         }
         else if identity == businessInjector.myIdentityStore.identity {
-            // TODO: IOS-2927 Refactor `MeContactDetailsViewController` to allow removing `MainStoryboard`
-            let storyboard = UIStoryboard(name: "MainStoryboard", bundle: nil)
-            let vc = storyboard.instantiateViewController(withIdentifier: "meContactDetailsViewController")
-            
-            let navigationController = ModalNavigationController(rootViewController: vc)
-            navigationController.modalPresentationStyle = .formSheet
-            navigationController.showDoneButton = true
-            
-            chatViewController?.present(navigationController, animated: true)
+            NotificationPresenterWrapper.shared.present(type: .meNotAllowed)
         }
         else {
             DDLogError("Can't find contact for tapped mention")
@@ -955,40 +917,31 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
     }
     
     func assetActionHelperDidSelectOwnOption(_ picker: PPAssetsActionHelper, didFinishPicking assets: [Any]) {
-        guard let sendMediaAction = SendMediaAction(for: chatViewActionsHelper) else {
-            let message = "Could not create SendMediaAction in \(#function)"
-            DDLogError("\(message)")
-            assertionFailure(message)
-            return
-        }
+        
         guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
+        sendMediaAction = SendMediaAction(chatViewController: chatViewController)
+
         chatViewController.dismiss(animated: true, completion: nil)
-        sendMediaAction.sendAssets(assets, asFile: false, withCaptions: nil)
+        sendMediaAction?.sendAssets(assets: assets, asFile: false, withCaptions: [], completion: nil)
     }
     
     func assetsActionHelperDidSelectOwnSnapButton(_ picker: PPAssetsActionHelper, didFinishPicking assets: [Any]) {
-        guard let action = SendMediaAction(for: chatViewActionsHelper) else {
-            let message = "Could not create SendMediaAction in \(#function)"
-            DDLogError("\(message)")
-            assertionFailure(message)
-            return
-        }
         guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
         
         chatViewController.dismiss(animated: true, completion: nil)
-        
+        sendMediaAction = SendMediaAction(chatViewController: chatViewController)
+
         if !assets.isEmpty {
-            action.showPreview(forAssets: assets, showKeyboard: true)
+            sendMediaAction?.showPreviewForAssets(assets: assets, showKeyboard: true)
         }
         else {
-            action.mediaPickerType = MediaPickerChooseExisting
-            action.execute()
+            sendMediaAction?.executeAction(withType: .chooseExisting)
         }
     }
     
@@ -999,33 +952,24 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
         }
         
         chatViewController.dismiss(animated: true, completion: nil)
-        
-        guard let action = SendMediaAction(for: chatViewActionsHelper) else {
-            let message = "Could not create SendMediaAction in \(#function)"
-            DDLogError("\(message)")
-            assertionFailure(message)
-            return
-        }
-        
-        chatViewActionsHelper.currentLegacyAction = action
-        
-        action.mediaPickerType = MediaPickerTakePhoto
-        action.execute()
+        sendMediaAction = SendMediaAction(chatViewController: chatViewController)
+
+        sendMediaAction?.executeAction(withType: .takePhoto)
     }
     
     func assetsActionHelperDidSelectLocation(_ picker: PPAssetsActionHelper) {
-        guard let sendLocationAction = SendLocationAction(for: chatViewActionsHelper) else {
-            let message = "Could not create SendLocationAction"
-            DDLogError("\(message)")
-            assertionFailure(message)
-            return
-        }
         guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
         chatViewController.dismiss(animated: true, completion: nil)
-        sendLocationAction.execute()
+        
+        ServerInfoProviderFactory.makeServerInfoProvider().mapsServer { info, _ in
+            let vc = SendLocationViewController(conversation: chatViewController.conversation, mapsServerInfo: info)
+            let navigationController = ModalNavigationController(rootViewController: vc)
+            navigationController.modalPresentationStyle = .formSheet
+            chatViewController.present(navigationController, animated: true)
+        }
     }
     
     func assetsActionHelperDidSelectRecordAudio(_ picker: PPAssetsActionHelper) {
@@ -1043,10 +987,9 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
             return
         }
         chatViewController.dismiss(animated: true, completion: nil)
-        BallotDispatcher.showBallotCreateViewController(
-            forConversation: conversation,
-            on: chatViewController.navigationController
-        )
+        
+        let createViewController = UIHostingController(rootView: CreatePollView(conversation: conversation))
+        chatViewController.navigationController?.present(createViewController, animated: true, completion: nil)
     }
     
     func assetsActionHelperDidSelectScanDocument(_ picker: PPAssetsActionHelper) {
@@ -1061,18 +1004,23 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
     }
     
     func assetsActionHelperDidSelectShareFile(_ picker: PPAssetsActionHelper) {
-        guard let documentPicker = DocumentPicker(for: chatViewController, conversation: conversation) else {
-            let message = "Could not create DocumentPicker"
-            DDLogError("\(message)")
-            assertionFailure(message)
-            return
-        }
         guard let chatViewController else {
             DDLogError("chatViewController should not be nil when calling \(#function)")
             return
         }
         chatViewController.dismiss(animated: true, completion: nil)
-        documentPicker.show()
+        
+        documentPicker.showDocumentPicker()
+    }
+    
+    func assetsActionHelperDidSelectShareContact(_ picker: PPAssetsActionHelper) {
+        guard let chatViewController else {
+            DDLogError("chatViewController should not be nil when calling \(#function)")
+            return
+        }
+        chatViewController.dismiss(animated: true, completion: nil)
+        
+        documentPicker.checkPermissionAndShowContactPicker()
     }
 }
 

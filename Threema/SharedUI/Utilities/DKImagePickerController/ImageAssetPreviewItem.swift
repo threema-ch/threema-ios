@@ -22,7 +22,7 @@ import Foundation
 import PromiseKit
 import ThreemaMacros
 
-class ImageAssetPreviewItem: ImagePreviewItem {
+final class ImageAssetPreviewItem: ImagePreviewItem {
     private typealias Asset = (filename: String, uti: String, imageData: Data)
     override var originalAsset: Any? {
         get {
@@ -132,7 +132,8 @@ class ImageAssetPreviewItem: ImagePreviewItem {
         }
     }
     
-    func freeMemory() {
+    override func freeMemory() {
+        super.freeMemory()
         internalImageData = nil
         internalUTI = nil
         filename = nil

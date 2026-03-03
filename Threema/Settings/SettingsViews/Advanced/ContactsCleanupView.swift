@@ -141,20 +141,17 @@ struct ContactsCleanupView: View {
         }
 
         return entityManager.performAndWait {
-            var duplicates: NSSet?
-            if !entityManager.entityFetcher.hasDuplicateContacts(
-                withDuplicateIdentities: &duplicates
-            ) {
+            guard let duplicates = entityManager.entityFetcher.duplicateContactIdentities() else {
                 showNoDuplicatesError = true
                 DDLogNotice("No duplicate contacts found")
                 return false
             }
             
-            let duplicateContactIdentities = Array(duplicates as? Set<String> ?? []).sorted()
+            let duplicateContactIdentities = Array(duplicates ?? []).sorted()
             
             DDLogNotice("Statistics for duplicate contacts (\(duplicateContactIdentities.count) Threema IDs affected)")
             for id in duplicateContactIdentities {
-                guard let contacts = entityManager.entityFetcher.allContacts(forID: id) as? [ContactEntity],
+                guard let contacts = entityManager.entityFetcher.contactEntities(for: id),
                       !contacts.isEmpty else {
                     DDLogNotice("Duplicate contacts not found for ID: \(id)")
                     continue
@@ -169,9 +166,8 @@ struct ContactsCleanupView: View {
                     // note: total message count can be higher than sum of message
                     let contactCreatedAt = contact.createdAt != nil ? ISOFormatter
                         .string(from: contact.createdAt!) : "-"
-                    let contactTotalMessageCount: Int = entityManager.entityFetcher.countMessages(forContact: contact)
-                    // swiftformat:disable:next acronyms
-                    let partialCnContactID = contact.cnContactId?.prefix(8) ?? "-"
+                    let contactTotalMessageCount: Int = entityManager.entityFetcher.messageCount(for: contact)
+                    let partialCnContactID = contact.cnContactID?.prefix(8) ?? "-"
                     let prefix =
                         "ID=\(partialID), ContactID=\(getCoreDataID(contact)), ContactCreatedAt=\(contactCreatedAt), ContactHidden=\(contact.isHidden), Contact#Msg=\(contactTotalMessageCount), LinkedContact=\(partialCnContactID)"
                     
@@ -184,7 +180,7 @@ struct ContactsCleanupView: View {
                         for conversation in sortedConversations {
                             let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
                             let messageCount = messageFetcher.count()
-                            let contactConversationMessageCount: Int = entityManager.entityFetcher.countMessages(
+                            let contactConversationMessageCount: Int = entityManager.entityFetcher.messageCount(
                                 for: contact,
                                 in: conversation
                             )
@@ -308,7 +304,7 @@ struct ContactsCleanupView: View {
     ) {
         for duplicateContact in duplicateContacts {
             if let conversations = entityManager.entityFetcher
-                .conversations(forMember: duplicateContact) as? [ConversationEntity], !conversations.isEmpty {
+                .conversationEntities(for: duplicateContact), !conversations.isEmpty {
                 for conversation in conversations {
                     conversation.members?.remove(duplicateContact)
                     conversation.members?.insert(mainContact)
@@ -360,7 +356,8 @@ struct ContactsCleanupView: View {
         let entityManager = BusinessInjector.ui.entityManager
         
         entityManager.performAndWaitSave {
-            if entityManager.entityDestroyer.deleteOwnContact() {
+            if entityManager.entityDestroyer
+                .deleteOwnContact(myIdentity: BusinessInjector.ui.myIdentityStore.identity) {
                 NotificationPresenterWrapper.shared.present(type: .generalSuccess)
                 DDLogNotice("Deleted own contact from advanced settings.")
             }
@@ -392,22 +389,20 @@ struct ContactsCleanupView: View {
         let entityManager = BusinessInjector.ui.entityManager
 
         entityManager.performAndWaitSave {
-            var duplicates: NSSet?
-            if !entityManager.entityFetcher.hasDuplicateContacts(
-                withDuplicateIdentities: &duplicates
-            ) {
+ 
+            guard let duplicates = entityManager.entityFetcher.duplicateContactIdentities() else {
                 showNoDuplicatesError = true
                 DDLogNotice("No duplicate contacts found")
                 return
             }
             
-            let duplicateContactIdentities = Array(duplicates as? Set<String> ?? []).sorted()
+            let duplicateContactIdentities = Array(duplicates ?? []).sorted()
             
             var removableContacts = [ContactEntity]()
             var unremovableContacts = [ContactEntity]()
             
             for id in duplicateContactIdentities {
-                guard let contacts = entityManager.entityFetcher.allContacts(forID: id) as? [ContactEntity],
+                guard let contacts = entityManager.entityFetcher.contactEntities(for: id),
                       contacts.count > 1 else {
                     DDLogNotice("Duplicate contacts not found for ID: \(id)")
                     continue
@@ -453,7 +448,7 @@ struct ContactsCleanupView: View {
                 //   column Z2PARTICIPANTS and "disappears" automatically when deleting a duplicate contact
                 
                 for contact in sortedContactsToRemove {
-                    let contactTotalMessageCount: Int = entityManager.entityFetcher.countMessages(forContact: contact)
+                    let contactTotalMessageCount: Int = entityManager.entityFetcher.messageCount(for: contact)
                     let conversations = getAllConversations(contact: contact)
                     
                     if contactTotalMessageCount == 0, conversations.isEmpty {
@@ -510,15 +505,5 @@ struct ContactsCleanupView: View {
         DDLogNotice("Exiting app to leave safe mode")
         DDLog.flushLog()
         exit(EXIT_SUCCESS)
-    }
-}
-
-class ContactsCleanupViewHostingController: UIHostingController<ContactsCleanupView> {
-    required init?(coder: NSCoder) {
-        super.init(coder: coder, rootView: ContactsCleanupView())
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
     }
 }

@@ -47,6 +47,4 @@ __deprecated_msg("Use ThreemaUtility instead")
 
 + (void)sendErrorLocalNotification:(NSString *)title body:(NSString *)body userInfo:(NSDictionary *)userInfo onCompletion:(void(^)(void))onCompletion;
 
-+ (void)waitForSeconds:(int)count finish:(void(^)(void))finish;
-
 @end

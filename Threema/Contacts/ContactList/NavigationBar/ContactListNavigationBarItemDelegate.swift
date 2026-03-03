@@ -21,7 +21,8 @@
 import Foundation
 
 protocol ContactListActionDelegate: AnyObject {
-    func add(_ item: ContactListAddItem) -> Void
-    func filterChanged(_ item: ContactListFilterItem) -> Void
-    func didToggleWorkContacts(_ isTurnedOn: Bool) -> Void
+    func add(_ item: ContactListAddItem)
+    func filterChanged(_ item: ContactListFilterItem)
+    func didToggleWorkContacts(_ isTurnedOn: Bool)
+    func didSelect(_ destination: ContactsCoordinator.InternalDestination)
 }

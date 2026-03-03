@@ -54,7 +54,7 @@ protocol ChatScrollPositionProvider {
 }
 
 /// Store chat scroll position in app group user defaults
-class ChatScrollPosition: NSObject, ChatScrollPositionProvider {
+final class ChatScrollPosition: ChatScrollPositionProvider {
     
     static let shared = ChatScrollPosition()
     
@@ -94,7 +94,7 @@ class ChatScrollPosition: NSObject, ChatScrollPositionProvider {
         }
     }
     
-    @objc func removeSavedPosition(for conversation: ConversationEntity) {
+    func removeSavedPosition(for conversation: ConversationEntity) {
         savedScrollPositions.removeValue(forKey: identifier(for: conversation))
     }
     
@@ -120,13 +120,5 @@ class ChatScrollPosition: NSObject, ChatScrollPositionProvider {
     private func identifier(for conversation: ConversationEntity) -> String {
         // We need a string to allow storing it in user defaults
         conversation.objectID.uriRepresentation().absoluteString
-    }
-    
-    // MARK: - Objective-C support
-    
-    @available(*, deprecated, renamed: "shared", message: "Only use for Objective-C access")
-    @objc class func _sharedObjC() -> ChatScrollPosition {
-        // TODO: Remove `NSObject` inheritance when this Objective-C dependency can be removed
-        shared
     }
 }

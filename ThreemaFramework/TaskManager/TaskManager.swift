@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import PromiseKit
 
@@ -237,9 +238,9 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
                 )
 
                 if let queuePath = TaskManager.taskQueue?.queuePath(),
-                   FileUtility.shared.isExists(fileURL: queuePath) {
+                   FileUtility.shared.fileExists(at: queuePath) {
                     if let data = FileUtility.shared.read(fileURL: queuePath) {
-                        FileUtility.shared.delete(at: queuePath)
+                        FileUtility.shared.deleteIfExists(at: queuePath)
 
                         TaskManager.taskQueue?.decode(data)
                     }
@@ -249,9 +250,10 @@ public final class TaskManager: NSObject, TaskManagerProtocol {
     }
 }
 
-// MARK: - TaskManagerProtocolObjc
+// MARK: Objective-C extension for the TaskManager
 
-extension TaskManager: TaskManagerProtocolObjc {
+extension TaskManager {
+    @available(swift, obsoleted: 1.0, renamed: "add(taskDefinition:)", message: "Only use from Objective-C")
     @objc func addObjc(taskDefinition: AnyObject) {
         assert(taskDefinition is TaskDefinition)
         guard let taskDefinition = taskDefinition as? TaskDefinition else {
@@ -262,6 +264,12 @@ extension TaskManager: TaskManagerProtocolObjc {
         _ = add(taskDefinition: taskDefinition)
     }
 
+    @available(
+        swift,
+        obsoleted: 1.0,
+        renamed: "add(taskDefinition:completionHandler:)",
+        message: "Only use from Objective-C"
+    )
     @objc func addObjc(taskDefinition: AnyObject, completionHandler: @escaping (AnyObject, Error?) -> Void) {
         assert(taskDefinition is TaskDefinition)
         guard let taskDefinition = taskDefinition as? TaskDefinition else {

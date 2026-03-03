@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
@@ -38,8 +39,8 @@ class MetadataCoderTests: XCTestCase {
             secretKey: Data(base64Encoded: "WE2g/Mu8jeGHMUX0pqyCP+ypW6gCu2xEBKESOyqgbn0=")!
         )
         
-        publicKeyA = (NaClCrypto.shared()?.derivePublicKey(fromSecretKey: myIdentityStoreA.keySecret()))!
-        publicKeyB = (NaClCrypto.shared()?.derivePublicKey(fromSecretKey: myIdentityStoreB.keySecret()))!
+        publicKeyA = NaClCrypto.shared()!.derivePublicKey(fromSecretKey: myIdentityStoreA.clientKey)
+        publicKeyB = NaClCrypto.shared()!.derivePublicKey(fromSecretKey: myIdentityStoreB.clientKey)
     }
     
     func testEncodeDecode() throws {

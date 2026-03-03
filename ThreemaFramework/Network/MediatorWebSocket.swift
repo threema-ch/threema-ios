@@ -31,7 +31,7 @@ import Starscream
     fileprivate let server: String
     fileprivate let delegate: SocketProtocolDelegate
 
-    fileprivate var socket: WebSocket?
+    fileprivate var socket: Starscream.WebSocket?
     fileprivate var readLength: UInt32?
     fileprivate var readTag: Int16?
     fileprivate var writeTag: Int16?
@@ -62,7 +62,7 @@ import Starscream
             throw MediatorWebSocketError.invalidServerURL
         }
 
-        self.socket = WebSocket(
+        self.socket = Starscream.WebSocket(
             request: URLRequest(url: serverURL),
             certPinner: self
         )
@@ -155,7 +155,7 @@ extension MediatorWebSocket: WebSocketDelegate {
             DDLogWarn("cancelled")
             delegate.didDisconnect(errorCode: lastError?.code ?? 0)
         case .ping, .pong, .viabilityChanged, .reconnectSuggested:
-            DDLogVerbose("ping, pong, viabilityChanged or reconnectSuggested")
+            DDLogNotice("ping, pong, viabilityChanged or reconnectSuggested: \(event)")
             lastError = nil
         case .peerClosed:
             DDLogWarn("peerClosed")

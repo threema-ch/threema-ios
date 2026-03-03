@@ -31,10 +31,10 @@ actor MediatorSyncableGroup {
     private var task: TaskDefinitionGroupSync?
 
     init(
-        _ userSettings: UserSettingsProtocol,
-        _ pushSettingManager: PushSettingManagerProtocol,
-        _ taskManager: TaskManagerProtocol,
-        _ groupManager: GroupManagerProtocol
+        userSettings: UserSettingsProtocol,
+        pushSettingManager: PushSettingManagerProtocol,
+        taskManager: TaskManagerProtocol,
+        groupManager: GroupManagerProtocol
     ) {
         self.userSettings = userSettings
         self.pushSettingManager = pushSettingManager
@@ -44,10 +44,10 @@ actor MediatorSyncableGroup {
 
     init(entityManager: EntityManager, taskManager: TaskManagerProtocol) {
         self.init(
-            UserSettings.shared(),
-            PushSettingManager(entityManager: entityManager, taskManager: taskManager),
-            taskManager,
-            GroupManager(entityManager: entityManager, taskManager: taskManager)
+            userSettings: UserSettings.shared(),
+            pushSettingManager: PushSettingManager(entityManager: entityManager, taskManager: taskManager),
+            taskManager: taskManager,
+            groupManager: GroupManager(entityManager: entityManager, taskManager: taskManager)
         )
     }
 
@@ -56,7 +56,7 @@ actor MediatorSyncableGroup {
             return
         }
 
-        guard let group = groupManager.getGroup(identity.id, creator: identity.creator.string) else {
+        guard let group = groupManager.getGroup(identity.id, creator: identity.creator.rawValue) else {
             return
         }
 
@@ -202,7 +202,7 @@ actor MediatorSyncableGroup {
     private func getSyncGroup(_ identity: GroupIdentity) -> Sync_Group {
         if let task,
            task.syncGroup.groupIdentity.groupID == identity.id.paddedLittleEndian(),
-           task.syncGroup.groupIdentity.creatorIdentity == identity.creator.string {
+           task.syncGroup.groupIdentity.creatorIdentity == identity.creator.rawValue {
             return task.syncGroup
         }
         else {

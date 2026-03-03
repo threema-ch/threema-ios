@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 
 extension StorageManagementView {
@@ -62,15 +63,16 @@ extension StorageManagementView {
             await Task(priority: .background) {
                 var dbSize: Int64 = 0
                 var appSize: Int64 = 0
-                if let appDataURL = FileUtility.shared.appDataDirectory {
+                let fileUtility = FileUtility.shared!
+                if let appDataURL = fileUtility.appDataDirectory(appGroupID: AppGroup.groupID()) {
                     let dbURL = appDataURL.appendingPathComponent("ThreemaData.sqlite")
-                    dbSize = FileUtility.shared.fileSizeInBytes(fileURL: dbURL) ?? 0
+                    dbSize = fileUtility.fileSizeInBytes(fileURL: dbURL) ?? 0
                     DDLogInfo(
                         "DB size \(ByteCountFormatter.string(fromByteCount: dbSize, countStyle: ByteCountFormatter.CountStyle.file))"
                     )
                     
-                    FileUtility.shared.pathSizeInBytes(pathURL: appDataURL, size: &appSize)
-                    FileUtility.shared.pathSizeInBytes(pathURL: FileManager.default.temporaryDirectory, size: &appSize)
+                    fileUtility.pathSizeInBytes(pathURL: appDataURL, size: &appSize)
+                    fileUtility.pathSizeInBytes(pathURL: fileUtility.appTemporaryDirectory, size: &appSize)
                     DDLogInfo(
                         "APP size \(ByteCountFormatter.string(fromByteCount: appSize, countStyle: ByteCountFormatter.CountStyle.file))"
                     )

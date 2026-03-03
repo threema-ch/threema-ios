@@ -89,7 +89,11 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
             contactStore: ContactStore.shared(),
             userSettings: UserSettings.shared(),
             taskManager: TaskManager(),
-            entityManager: EntityManager()
+            entityManager: PersistenceManager(
+                appGroupID: AppGroup.groupID(),
+                userDefaults: AppGroup.userDefaults(),
+                remoteSecretManager: AppLaunchManager.remoteSecretManager
+            ).entityManager
         )
     }
 
@@ -237,6 +241,11 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
             DDLogWarn("Feature mask or contact status update error: \(error)")
         }
         
+        DDLogNotice("Reset import status of all contacts")
+        // Reset the `contactImportStatus`, as without the MD, we should update a contact from the linked iOS
+        // contact.
+        await contactStore.resetImportStatusForAllContacts(entityManager: entityManager)
+        
         // Run refresh steps for all solicitedContactIdentities.
         // (See _Application Update Steps_ in the Threema Protocols for details.)
         guard runForwardSecurityRefreshSteps else {
@@ -245,7 +254,7 @@ public class MultiDeviceManager: MultiDeviceManagerProtocol {
         
         DDLogNotice("Fetch solicited contacts")
         let solicitedContactIdentities = await entityManager.perform {
-            self.entityManager.entityFetcher.allSolicitedContactIdentities()
+            self.entityManager.entityFetcher.solicitedContactIdentities()
         }
         
         await ForwardSecurityRefreshSteps().run(for: solicitedContactIdentities.map {

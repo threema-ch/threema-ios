@@ -43,26 +43,11 @@ extension EmojiCategory {
             case .smileysEmotion:
                 "face.smiling"
             case .animalsNature:
-                if #available(iOS 17.0, *) {
-                    "cat"
-                }
-                else {
-                    "tortoise"
-                }
+                "cat"
             case .food:
-                if #available(iOS 16.0, *) {
-                    "birthday.cake"
-                }
-                else {
-                    "fork.knife"
-                }
+                "birthday.cake"
             case .activities:
-                if #available(iOS 16.0, *) {
-                    "soccerball"
-                }
-                else {
-                    "figure.walk"
-                }
+                "soccerball"
             case .travelPlaces:
                 "car"
             case .objects:

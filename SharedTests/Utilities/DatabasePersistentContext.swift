@@ -22,18 +22,25 @@ import CoreData
 import XCTest
 @testable import ThreemaFramework
 
-class DatabasePersistentContext {
-    
+public class DatabasePersistentContext {
     // The CD in memory persistent store doesn't support derived attributes:
     // "Core Data provided atomic stores do not support derived properties (NSInvalidArgumentException)"
     // Thus the function to create one was removed.
+
+    public static var modelURL: URL? = BundleUtil.url(
+        forResource: DatabaseManager.databaseModelName,
+        withExtension: "momd"
+    )
 
     /// Context in memory, doesn't work with NSBatch... commands (use devNullContext)
     ///
     /// - Returns:
     ///    DB context for testing
-    static func inMemoryContext() -> TMAManagedObjectContext {
-        let modelURL = BundleUtil.url(forResource: "ThreemaData", withExtension: "momd")
+    static func inMemoryContext() -> ThreemaManagedObjectContext {
+        let modelURL = BundleUtil.url(
+            forResource: DatabaseManager.databaseModelName,
+            withExtension: "momd"
+        )
         let managedObjectContext = NSManagedObjectModel(contentsOf: modelURL!)
         let persistentStoreCoordinator = NSPersistentStoreCoordinator(managedObjectModel: managedObjectContext!)
         do {
@@ -47,29 +54,38 @@ class DatabasePersistentContext {
         catch {
             fatalError("Adding in memory persistent store failed")
         }
-        
-        let context = TMAManagedObjectContext(
+
+        let context = ThreemaManagedObjectContext(
             concurrencyType: NSManagedObjectContextConcurrencyType
                 .mainQueueConcurrencyType
         )
         context.persistentStoreCoordinator = persistentStoreCoordinator
-        
+
         return context
     }
-    
-    ///  Context stored data to /dev/null, works with NSBatch... commands
-    ///
-    /// - Returns:
-    ///    DB context for testing
-    static func devNullContext(withChildContextForBackgroundProcess: Bool = false) -> (
+
+    /// Context stored data to /dev/null, works with NSBatch... commands
+    /// - Parameters:
+    ///   - withChildContextForBackgroundProcess: Whether to add a child context, `false` by default
+    ///   - isRemoteSecretEnabled: Whether to use the encrypted DB model, `false` by default
+    ///  - Returns:
+    ///   DB context for testing
+    public static func devNullContext(
+        withChildContextForBackgroundProcess: Bool = false,
+        isRemoteSecretEnabled: Bool = false
+    ) -> (
         persistentStoreCoordinator: NSPersistentStoreCoordinator,
-        mainContext: TMAManagedObjectContext,
-        childContext: TMAManagedObjectContext?
+        mainContext: ThreemaManagedObjectContext,
+        childContext: ThreemaManagedObjectContext?
     ) {
-        var modelURL = BundleUtil.url(forResource: "ThreemaData", withExtension: "momd")
-        let coreDataModelVersion = BundleUtil.object(forInfoDictionaryKey: "ThreemaCoreDataVersion") as! String
+        let modelName = isRemoteSecretEnabled ? DatabaseManager.databaseEncryptedModelName : DatabaseManager
+            .databaseModelName
+        var modelURL = BundleUtil.url(
+            forResource: modelName,
+            withExtension: "momd"
+        )
         // Hack, because of could not load omo file?!?!
-        modelURL = modelURL?.appendingPathComponent("ThreemaDataV\(coreDataModelVersion).mom")
+        modelURL = modelURL?.appendingPathComponent("ThreemaDataV\(DatabaseManager.databaseModelVersion).mom")
         let managedObjectModel = NSManagedObjectModel(contentsOf: modelURL!)
         let container = NSPersistentContainer(name: "TestData", managedObjectModel: managedObjectModel!)
         container.persistentStoreDescriptions[0].url = URL(fileURLWithPath: "/dev/null")
@@ -77,12 +93,12 @@ class DatabasePersistentContext {
             XCTAssertNil(error)
         }
 
-        let mainContext = TMAManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        let mainContext = ThreemaManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         mainContext.persistentStoreCoordinator = container.persistentStoreCoordinator
 
-        var childContext: TMAManagedObjectContext?
+        var childContext: ThreemaManagedObjectContext?
         if withChildContextForBackgroundProcess {
-            childContext = TMAManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+            childContext = ThreemaManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
             childContext?.parent = mainContext
         }
 

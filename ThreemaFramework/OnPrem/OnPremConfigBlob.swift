@@ -22,7 +22,7 @@
 
 import Foundation
 
-public struct OnPremConfigBlob: Decodable {
+public struct OnPremConfigBlob: Decodable, Sendable {
     // Note: these are Strings instead of URLs so that they can include placeholders
     let uploadUrl: String
     let downloadUrl: String

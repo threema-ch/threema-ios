@@ -66,22 +66,16 @@ class DateFormatterTests_fr_CH: XCTestCase {
         if #available(iOS 17.4, *) {
             "demain à 02:03"
         }
-        else if #available(iOS 17.0, *) {
-            "demain, 02:03"
-        }
         else {
-            "demain à 02:03"
+            "demain, 02:03"
         }
     
     let expectedRelativeLongStyleDateShortStyleTimeToday_fr_CH =
         if #available(iOS 17.4, *) {
             "aujourd’hui à 13:14"
         }
-        else if #available(iOS 17.0, *) {
-            "aujourd’hui, 13:14"
-        }
         else {
-            "aujourd’hui à 13:14"
+            "aujourd’hui, 13:14"
         }
     
     let expectedAccessibilityDateTime_fr_CH = "1 février 2020 à 13:14"
@@ -89,11 +83,8 @@ class DateFormatterTests_fr_CH: XCTestCase {
         if #available(iOS 17.4, *) {
             "1 février 2020 à 13:14"
         }
-        else if #available(iOS 17.0, *) {
-            "1 février 2020, 13:14"
-        }
         else {
-            "1 février 2020 à 13:14"
+            "1 février 2020, 13:14"
         }
     
     // MARK: - Test formats provided by the system

@@ -23,7 +23,22 @@ import ThreemaProtocols
 @testable import ThreemaFramework
 
 class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
+    var inAppSounds = true
+
+    var inAppVibrate = true
     
+    var displayOrderFirstName = true
+
+    var hideStaleContacts = false
+
+    var previewLimit: Float = 0.0
+
+    var showGalleryPreview = true
+
+    var showProfilePictures = true
+
+    var useSystemTheme = true
+
     var syncContacts = true
     
     var blacklist = Set<String>()
@@ -90,6 +105,8 @@ class SettingsStoreMock: SettingsStoreProtocol, SettingsStoreInternalProtocol {
     
     var sentryAppDevice: String?
     
+    var ipcCommunicationEnabled = false
+
     func updateSettingsStore(with syncSettings: Sync_Settings) {
         // Noop
     }

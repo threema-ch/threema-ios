@@ -27,7 +27,7 @@ func encryptedBackup() throws {
     let expectedThreemaID = "ABDCEFGH"
     let expectedClientKey = Data(repeating: 0x01, count: 32)
     // swiftformat:disable:next acronyms
-    let expectedBackupData = BackupData(threemaId: expectedThreemaID, ck: expectedClientKey)
+    let expectedBackupData = IdentityBackupData(threemaId: expectedThreemaID, clientKey: expectedClientKey)
     
     let password = "abcdefgh"
 

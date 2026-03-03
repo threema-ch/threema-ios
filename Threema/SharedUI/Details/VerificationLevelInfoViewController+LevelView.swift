@@ -26,7 +26,7 @@ extension VerificationLevelInfoViewController {
     class LevelView: UIView {
         
         private var level = 0
-        
+
         private enum Configuration {
             static var levelImageOffsetFromTop: CGFloat {
                 UIFontMetrics(forTextStyle: .body).scaledValue(for: 5)
@@ -65,13 +65,14 @@ extension VerificationLevelInfoViewController {
             
             configureContent()
             configureLayout()
+            setupTraitRegistration()
         }
-        
+
         @available(*, unavailable)
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
-        
+
         private func configureContent() {
             if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
                 levelImage.image = StyleKit.verificationImageBig(for: level)
@@ -130,15 +131,17 @@ extension VerificationLevelInfoViewController {
                 NSLayoutConstraint.activate(defaultConstraints)
             }
         }
-        
-        override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-            super.traitCollectionDidChange(previousTraitCollection)
-            
-            guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
-                return
+
+        private func setupTraitRegistration() {
+            let traits: [UITrait] = [UITraitUserInterfaceStyle.self]
+            registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+                guard let self else {
+                    return
+                }
+                if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                    configureContent()
+                }
             }
-            
-            configureContent()
         }
     }
 }

@@ -21,6 +21,7 @@
 import SwiftUI
 import ThreemaFramework
 
+@available(*, deprecated, message: "Do not use anymore.")
 struct ButtonNavigationLink<Content: View>: View {
     
     var action: () -> Void
@@ -40,6 +41,7 @@ struct ButtonNavigationLink<Content: View>: View {
     }
 }
 
+@available(*, deprecated, message: "Do not use anymore.")
 struct ModalNavigationLink<Content: View, Label: View>: View {
     @State private var isPresentedFullScreen = false
     @State private var isPresentedSheet = false
@@ -69,6 +71,35 @@ struct ModalNavigationLink<Content: View, Label: View>: View {
     }
 }
 
+@available(*, deprecated, message: "Do not use anymore.")
+struct BindedModalNavigationLink<Content: View, Label: View>: View {
+    @Binding var isPresented: Bool
+
+    var destination: () -> Content
+    var label: () -> Label
+    var onDismiss: () -> Void
+    var fullscreen = false
+
+    var body: some View {
+        ButtonNavigationLink {
+            isPresented.toggle()
+        } label: {
+            label()
+        }
+        .applyIf(fullscreen) { view in
+            view.fullScreenCover(isPresented: $isPresented, onDismiss: onDismiss) {
+                destination()
+            }
+        }
+        .applyIf(!fullscreen) { view in
+            view.sheet(isPresented: $isPresented, onDismiss: onDismiss) {
+                destination()
+            }
+        }
+    }
+}
+
+@available(*, deprecated, message: "Do not use anymore.")
 struct LockedModalNavigationLink<Content: View, Label: View>: View {
     @State private var isPresented = false
     
@@ -87,6 +118,7 @@ struct LockedModalNavigationLink<Content: View, Label: View>: View {
     }
 }
 
+@available(*, deprecated, message: "Do not use anymore.")
 struct LockedButtonNavigationLink<Content: View>: View {
 
     @State private var showLockscreen = false
@@ -113,6 +145,7 @@ struct LockedButtonNavigationLink<Content: View>: View {
     }
 }
 
+@available(*, deprecated, message: "Do not use anymore.")
 struct LockedNavigationLink<Content: View, Label: View>: View {
     
     @State private var showLockscreen = false
@@ -162,6 +195,7 @@ struct LockedNavigationLink<Content: View, Label: View>: View {
     }
 }
 
+@available(*, deprecated, message: "Do not use anymore.")
 struct ThreemaNavigationLink<Label: View, ViewDestination: ViewDestinationRepresentable>: View {
     @EnvironmentObject var navigator: Navigator<ViewDestination>
     var viewDestination: ViewDestination
@@ -192,6 +226,7 @@ extension ThreemaNavigationLink {
     }
 }
 
+@available(*, deprecated, message: "Do not use anymore.")
 protocol ThemedViewControllerRepresentable: View {
     /// Add additional setup before the view is presented
     var title: String { get }
@@ -204,6 +239,7 @@ protocol ThemedViewControllerRepresentable: View {
 }
 
 extension ThemedViewControllerRepresentable {
+    @available(*, deprecated, message: "Do not use anymore.")
     func navigationController() -> UINavigationController {
         let navC = ThemedNavigationController(navigationBarClass: StatusNavigationBar.self, toolbarClass: nil)
         navC.navigationBar.prefersLargeTitles = largeTitle

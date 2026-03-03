@@ -240,7 +240,8 @@ class GlobalSearchDataSource: UITableViewDiffableDataSource<GlobalSearch.Section
         
         let conversations = entityFetcher.matchingConversationsForGlobalSearch(
             containing: currentSearchText,
-            scope: currentSearchScope
+            scope: currentSearchScope,
+            hidePrivateChats: UserSettings.shared().hidePrivateChats
         )
         
         // We do not show the section if we have no conversations

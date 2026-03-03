@@ -19,13 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import PromiseKit
-
-protocol MediaPreviewItemProtocol: PreviewItemProtocol {
-    var thumbnail: Promise<UIImage> { get }
-    func freeMemory()
-}
 
 @objc open class MediaPreviewItem: NSObject {
     public enum LoadError: Error {
@@ -55,7 +51,10 @@ protocol MediaPreviewItemProtocol: PreviewItemProtocol {
     public var sendAsFile = false
     public var caption: String?
     
-    public lazy var itemQueue = DispatchQueue(label: "ch.threema.mediaPreviewItemQueue", attributes: .concurrent)
+    public private(set) lazy var itemQueue = DispatchQueue(
+        label: "ch.threema.mediaPreviewItemQueue",
+        attributes: .concurrent
+    )
     
     lazy var estimatedFileSize: Double = {
         guard let itemURL = self.itemURL else {
@@ -96,10 +95,11 @@ protocol MediaPreviewItemProtocol: PreviewItemProtocol {
             return
         }
         
-        FileUtility.shared.delete(at: url)
+        FileUtility.shared.deleteIfExists(at: url)
     }
     
-    func freeMemory() {
+    open func freeMemory() {
+        filename = nil
         internalThumbnail = nil
     }
 }

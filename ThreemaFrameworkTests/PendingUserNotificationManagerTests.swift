@@ -18,20 +18,26 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import FileUtility
+import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
+
 @testable import ThreemaFramework
 
 class PendingUserNotificationManagerTests: XCTestCase {
     private var dbMainCnx: DatabaseContext!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
-        FileUtility.shared.delete(at: URL(fileURLWithPath: PendingUserNotificationManager.pathPendingUserNotifications))
+        FileUtility.updateSharedInstance(with: FileUtility())
+        
         FileUtility.shared
-            .delete(at: URL(fileURLWithPath: PendingUserNotificationManager.pathProcessedUserNotifications))
+            .deleteIfExists(at: URL(fileURLWithPath: PendingUserNotificationManager.pathPendingUserNotifications))
+        FileUtility.shared
+            .deleteIfExists(at: URL(fileURLWithPath: PendingUserNotificationManager.pathProcessedUserNotifications))
         
         PendingUserNotificationManager.clear()
 
@@ -50,10 +56,10 @@ class PendingUserNotificationManagerTests: XCTestCase {
         abstractMsg.fromIdentity = expectedFromIdentity
 
         let pendingManager1 = PendingUserNotificationManager(
-            UserNotificationManagerMock(),
-            UserNotificationCenterManagerMock(),
-            PushSettingManagerMock(),
-            EntityManager()
+            userNotificationManager: UserNotificationManagerMock(),
+            userNotificationCenterManager: UserNotificationCenterManagerMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         let pendingNotification1 = pendingManager1.pendingUserNotification(
             for: abstractMsg,
@@ -65,10 +71,10 @@ class PendingUserNotificationManagerTests: XCTestCase {
         PendingUserNotificationManager.clear()
 
         let pendingManager2 = PendingUserNotificationManager(
-            UserNotificationManagerMock(),
-            UserNotificationCenterManagerMock(),
-            PushSettingManagerMock(),
-            EntityManager()
+            userNotificationManager: UserNotificationManagerMock(),
+            userNotificationCenterManager: UserNotificationCenterManagerMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         let pendingNotification2 = pendingManager2.pendingUserNotification(
             for: abstractMsg,
@@ -97,10 +103,12 @@ class PendingUserNotificationManagerTests: XCTestCase {
         let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(returnFireDate: Date())
 
         let pendingManager = PendingUserNotificationManager(
-            UserNotificationManagerMock(returnUserNotificationContent: expectedUserNotificationContent),
-            userNotificationCenterManagerMock,
-            PushSettingManagerMock(),
-            EntityManager()
+            userNotificationManager: UserNotificationManagerMock(
+                returnUserNotificationContent: expectedUserNotificationContent
+            ),
+            userNotificationCenterManager: userNotificationCenterManagerMock,
+            pushSettingManager: PushSettingManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         let pendingNotification = pendingManager.pendingUserNotification(
             for: abstractMsg,
@@ -150,10 +158,12 @@ class PendingUserNotificationManagerTests: XCTestCase {
         let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(returnFireDate: Date())
 
         let pendingManager = PendingUserNotificationManager(
-            UserNotificationManagerMock(returnUserNotificationContent: expectedUserNotificationContent),
-            userNotificationCenterManagerMock,
-            PushSettingManagerMock(),
-            EntityManager()
+            userNotificationManager: UserNotificationManagerMock(
+                returnUserNotificationContent: expectedUserNotificationContent
+            ),
+            userNotificationCenterManager: userNotificationCenterManagerMock,
+            pushSettingManager: PushSettingManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         let pendingNotification = pendingManager.pendingUserNotification(
             for: abstractMsg,
@@ -201,10 +211,10 @@ class PendingUserNotificationManagerTests: XCTestCase {
             userNotificationCenterManagerMock.removeCalls.removeAll()
 
             let pendingManager = PendingUserNotificationManager(
-                UserNotificationManagerMock(),
-                userNotificationCenterManagerMock,
-                PushSettingManagerMock(),
-                EntityManager()
+                userNotificationManager: UserNotificationManagerMock(),
+                userNotificationCenterManager: userNotificationCenterManagerMock,
+                pushSettingManager: PushSettingManagerMock(),
+                entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
             )
             let pendingNotification = pendingManager.pendingUserNotification(
                 for: abstractMessage,
@@ -260,23 +270,28 @@ class PendingUserNotificationManagerTests: XCTestCase {
             publicKey: MockData.generatePublicKey(),
             readReceipts: 0,
             typingIndicators: 0,
-            verificationLevel: 0
+            verificationLevel: 0,
+            sortOrderFirstName: true
         )
-        sender.setIdentity(to: expectedFromIdentity)
-        let baseMessage = TextMessageEntity(context: dbMainCnx.current, text: "")
-        baseMessage.conversation = ConversationEntity(context: dbMainCnx.current)
+        sender.setIdentity(to: expectedFromIdentity, sortOrderFirstName: true)
+        let baseMessage = TextMessageEntity(
+            context: dbMainCnx.current,
+            id: expectedEditedMessageID,
+            isOwn: false,
+            text: "",
+            conversation: ConversationEntity(context: dbMainCnx.current)
+        )
         baseMessage.sender = sender
-        baseMessage.id = expectedEditedMessageID
 
         let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(
             returnFireDate: Date()
         )
 
         let pendingManager = PendingUserNotificationManager(
-            UserNotificationManagerMock(),
-            userNotificationCenterManagerMock,
-            PushSettingManagerMock(),
-            EntityManager()
+            userNotificationManager: UserNotificationManagerMock(),
+            userNotificationCenterManager: userNotificationCenterManagerMock,
+            pushSettingManager: PushSettingManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         _ = pendingManager.pendingUserNotification(
             for: abstractMessage,
@@ -341,14 +356,19 @@ class PendingUserNotificationManagerTests: XCTestCase {
             publicKey: MockData.generatePublicKey(),
             readReceipts: 0,
             typingIndicators: 0,
-            verificationLevel: 0
+            verificationLevel: 0,
+            sortOrderFirstName: true
         )
 
-        sender.setIdentity(to: expectedFromIdentity)
-        let baseMessage = TextMessageEntity(context: dbMainCnx.current, text: "")
-        baseMessage.conversation = ConversationEntity(context: dbMainCnx.current)
+        sender.setIdentity(to: expectedFromIdentity, sortOrderFirstName: true)
+        let baseMessage = TextMessageEntity(
+            context: dbMainCnx.current,
+            id: expectedEditedMessageID,
+            isOwn: false,
+            text: "",
+            conversation: ConversationEntity(context: dbMainCnx.current)
+        )
         baseMessage.sender = sender
-        baseMessage.id = expectedEditedMessageID
 
         let expectedPendingUserNotification =
             PendingUserNotification(key: "\(expectedFromIdentity)\(expectedMessageID.hexString)")
@@ -363,10 +383,12 @@ class PendingUserNotificationManagerTests: XCTestCase {
         )
 
         let pendingManager = PendingUserNotificationManager(
-            UserNotificationManagerMock(returnUserNotificationContent: expectedUserNotificationContent),
-            userNotificationCenterManagerMock,
-            PushSettingManagerMock(),
-            EntityManager()
+            userNotificationManager: UserNotificationManagerMock(
+                returnUserNotificationContent: expectedUserNotificationContent
+            ),
+            userNotificationCenterManager: userNotificationCenterManagerMock,
+            pushSettingManager: PushSettingManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         _ = pendingManager.pendingUserNotification(
             for: abstractMessage,
@@ -439,13 +461,18 @@ class PendingUserNotificationManagerTests: XCTestCase {
                 publicKey: MockData.generatePublicKey(),
                 readReceipts: 0,
                 typingIndicators: 0,
-                verificationLevel: 0
+                verificationLevel: 0,
+                sortOrderFirstName: true
             )
-            sender.setIdentity(to: expectedFromIdentity)
-            let baseMessage = TextMessageEntity(context: dbMainCnx.current, text: "")
-            baseMessage.conversation = ConversationEntity(context: dbMainCnx.current)
+            sender.setIdentity(to: expectedFromIdentity, sortOrderFirstName: true)
+            let baseMessage = TextMessageEntity(
+                context: dbMainCnx.current,
+                id: expectedDeletedMessageID,
+                isOwn: false,
+                text: "",
+                conversation: ConversationEntity(context: dbMainCnx.current)
+            )
             baseMessage.sender = sender
-            baseMessage.id = expectedDeletedMessageID
 
             let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(
                 returnFireDate: Date(),
@@ -453,10 +480,10 @@ class PendingUserNotificationManagerTests: XCTestCase {
             )
 
             let pendingManager = PendingUserNotificationManager(
-                UserNotificationManagerMock(),
-                userNotificationCenterManagerMock,
-                PushSettingManagerMock(),
-                EntityManager()
+                userNotificationManager: UserNotificationManagerMock(),
+                userNotificationCenterManager: userNotificationCenterManagerMock,
+                pushSettingManager: PushSettingManagerMock(),
+                entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
             )
             _ = pendingManager.pendingUserNotification(
                 for: abstractMessage,
@@ -509,10 +536,10 @@ class PendingUserNotificationManagerTests: XCTestCase {
         abstractMsg.fromIdentity = expectedFromIdentity
 
         let pendingManager1 = PendingUserNotificationManager(
-            UserNotificationManagerMock(),
-            UserNotificationCenterManagerMock(),
-            PushSettingManagerMock(),
-            EntityManager()
+            userNotificationManager: UserNotificationManagerMock(),
+            userNotificationCenterManager: UserNotificationCenterManagerMock(),
+            pushSettingManager: PushSettingManagerMock(),
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         guard let pendingNotification1 = pendingManager1.pendingUserNotification(
             for: abstractMsg,

@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 
 @objc class VideoMessageProcessor: NSObject {
     
@@ -115,7 +116,7 @@ import PromiseKit
                         .existingObject(with: conversationManagedObjectID) as? ConversationEntity,
                         let msg = self.entityManager.entityFetcher.message(
                             with: videoMessageID,
-                            conversation: conversation
+                            in: conversation
                         ) as? VideoMessageEntity
                     else {
                         seal.reject(
@@ -142,13 +143,21 @@ import PromiseKit
                        let thumbnailImage = UIImage(data: thumbnailData),
                        let thumbnailJpegData = thumbnailImage.jpegData(compressionQuality: 1.0) {
                         
-                        let thumbnail: ImageDataEntity? = msg.thumbnail == nil ? self.entityManager.entityCreator
-                            .imageDataEntity() : msg.thumbnail
+                        let thumbnail: ImageDataEntity
+                        if var messageThumbnail = msg.thumbnail {
+                            messageThumbnail.data = thumbnailJpegData
+                            messageThumbnail.width = Int16(thumbnailImage.size.width)
+                            messageThumbnail.height = Int16(thumbnailImage.size.height)
+                            thumbnail = messageThumbnail
+                        }
+                        else {
+                            let newThumbnail = self.entityManager.entityCreator.imageDataEntity(
+                                data: thumbnailJpegData,
+                                size: thumbnailImage.size
+                            )
+                            thumbnail = newThumbnail
+                        }
                         
-                        thumbnail?.data = thumbnailJpegData
-                        thumbnail?.width = Int16(thumbnailImage.size.width)
-                        thumbnail?.height = Int16(thumbnailImage.size.height)
-
                         msg.thumbnail = thumbnail
 
                         // Mark blob as done, if is group message and Multi Device is activated then always on `local`

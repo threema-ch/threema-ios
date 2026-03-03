@@ -71,7 +71,8 @@ class WebUpdateGroupRequest: WebAbstractMessage {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
         DispatchQueue.main.sync {
             let businessInjector = BusinessInjector.ui
-            guard let conversation = businessInjector.entityManager.entityFetcher.legacyConversation(for: id) else {
+            guard let conversation = businessInjector.entityManager.entityFetcher.legacyConversationEntity(for: id)
+            else {
                 ack!.success = false
                 ack!.error = "invalidGroup"
                 completion()

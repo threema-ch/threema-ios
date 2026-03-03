@@ -71,7 +71,7 @@ final class ChatViewMessageDetailsViewController: ThemedCodeModernGroupedTableVi
     // MARK: - Private properties
     
     private let messageManagedObjectID: NSManagedObjectID
-    private lazy var message: BaseMessageEntity? = EntityManager().entityFetcher.existingObject(
+    private lazy var message: BaseMessageEntity? = BusinessInjector.ui.entityManager.entityFetcher.existingObject(
         with: messageManagedObjectID
     ) as? BaseMessageEntity
     

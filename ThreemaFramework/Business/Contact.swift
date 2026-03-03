@@ -84,6 +84,9 @@ public class Contact: NSObject {
     // MARK: - Public properties
 
     public let identity: ThreemaIdentity
+    
+    // This is not directly referenced, but used in `ContactStore.m:959`ff to filter contacts
+    @available(*, deprecated, renamed: "identity", message: "Only use from Objective-C")
     @objc(identity) public let objcIdentity: String
     
     let publicKey: Data
@@ -98,7 +101,7 @@ public class Contact: NSObject {
     // This only means it's a verified contact from the admin (in the same work package)
     // To check if this contact is a work ID, use the work identities list in user settings
     // bad naming because of the history...
-    private(set) var isWorkContact: Bool
+    public private(set) var isWorkContact: Bool
 
     public let showOtherTypeIcon: Bool
     
@@ -163,7 +166,7 @@ public class Contact: NSObject {
     }
     
     public var isEchoEcho: Bool {
-        identity.string == "ECHOECHO"
+        identity.rawValue == "ECHOECHO"
     }
     
     public var forwardSecurityMode: ForwardSecurityMode {
@@ -176,7 +179,7 @@ public class Contact: NSObject {
             let businessInjector = BusinessInjector()
             guard let dhSession = try businessInjector.dhSessionStore.bestDHSession(
                 myIdentity: MyIdentityStore.shared().identity,
-                peerIdentity: identity.string
+                peerIdentity: identity.rawValue
             ) else {
                 return .none
             }
@@ -210,9 +213,9 @@ public class Contact: NSObject {
 
     // MARK: - Private properties
     
-    private var isForwardSecurityAvailable: Bool
+    public var isForwardSecurityAvailable: Bool
 
-    private lazy var idColor: UIColor = IDColor.forData(Data(identity.string.utf8))
+    private lazy var idColor: UIColor = IDColor.forData(Data(identity.rawValue.utf8))
 
     /// Either first character of first and last name in order depending of the user setting, or first two characters of
     /// public
@@ -251,7 +254,7 @@ public class Contact: NSObject {
         }
         
         // ID
-        return String(identity.string.prefix(2)).uppercased()
+        return String(identity.rawValue.prefix(2)).uppercased()
     }
     
     /// Image data sent from threema. For KVO, observe `profilePicture` directly.
@@ -408,12 +411,12 @@ public class Contact: NSObject {
     private func resolveDisplayName() -> String {
         var value = String(ContactUtil.name(fromFirstname: firstName, lastname: lastName) ?? "")
 
-        if value.isEmpty, let publicNickname, !publicNickname.isEmpty, publicNickname != identity.string {
+        if value.isEmpty, let publicNickname, !publicNickname.isEmpty, publicNickname != identity.rawValue {
             value = "~\(publicNickname)"
         }
 
         if value.isEmpty {
-            value = identity.string
+            value = identity.rawValue
         }
 
         switch state {

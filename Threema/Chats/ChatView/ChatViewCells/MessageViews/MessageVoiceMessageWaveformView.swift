@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import DSWaveformImage
+import FileUtility
 import Foundation
 import ThreemaFramework
 import UIKit
@@ -99,7 +100,7 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     private var lastBlobState: BlobDisplayState?
     private weak var waveformDelegate: MessageVoiceMessageWaveformViewDelegate?
     private var previousBoundsSize: CGSize?
-    
+
     // MARK: - Views
     
     private lazy var imageView: UIImageView = {
@@ -120,12 +121,13 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
     
     init(waveformDelegate: MessageVoiceMessageWaveformViewDelegate? = nil) {
         self.waveformDelegate = waveformDelegate
-        
+
         super.init(frame: .zero)
-        
+
         configureView()
+        setupTraitRegistration()
     }
-    
+
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -213,6 +215,14 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         let waveformDrawer = DSWaveformImage.WaveformImageDrawer()
         let waveformRenderer = LinearWaveformRenderer()
         let samples = await (try? analyzer.samples(fromAudioAt: audioURL, count: sampleCount, qos: .background)) ?? []
+
+        do {
+            try FileUtility.shared.delete(at: audioURL)
+        }
+        catch {
+            DDLogError("The temporary audio file couldn't be deleted, after generating waveform: \(error)")
+        }
+
         let image = waveformDrawer.waveformImage(
             from: samples,
             with: completeWaveformConfig,
@@ -327,7 +337,19 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
             shouldAntialias: true
         )
     }
-    
+
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitUserInterfaceStyle.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                render(voiceMessage)
+            }
+        }
+    }
+
     // MARK: - UIView Overrides
     
     override func layoutSubviews() {
@@ -346,15 +368,5 @@ final class MessageVoiceMessageWaveformView: UIView, UIGestureRecognizerDelegate
         DDLogVerbose("Rendering waveform for size \(bounds.size)")
         
         updateView(with: voiceMessage)
-    }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
-            return
-        }
-        
-        render(voiceMessage)
     }
 }

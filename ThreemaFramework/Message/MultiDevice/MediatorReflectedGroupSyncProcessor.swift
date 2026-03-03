@@ -57,7 +57,7 @@ class MediatorReflectedGroupSyncProcessor {
 
         guard let group = frameworkInjector.groupManager.getGroup(
             groupIdentity.id,
-            creator: groupIdentity.creator.string
+            creator: groupIdentity.creator.rawValue
         )
         else {
             throw MediatorReflectedProcessorError.groupToUpdateNotExists(groupIdentity: groupIdentity)

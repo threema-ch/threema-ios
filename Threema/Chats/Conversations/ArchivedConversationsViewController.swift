@@ -56,7 +56,10 @@ class ArchivedConversationsViewController: ThemedTableViewController {
     private lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
         let fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = businessInjector.entityManager
             .entityFetcher
-            .fetchedResultsControllerForArchivedConversations()
+            .fetchedResultsControllerForArchivedConversationEntities(
+                hidePrivateChats: UserSettings.shared()
+                    .hidePrivateChats
+            )
             
         fetchedResultsController.delegate = self
             
@@ -78,11 +81,11 @@ class ArchivedConversationsViewController: ThemedTableViewController {
     
     // MARK: - Lifecycle
     
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        
+    init() {
+        super.init(nibName: nil, bundle: nil)
+
         addObservers()
-        
+
         do {
             try fetchedResultsController.performFetch()
         }
@@ -90,7 +93,12 @@ class ArchivedConversationsViewController: ThemedTableViewController {
             DDLogError("Failed to load archived conversations: \(error.localizedDescription)")
         }
     }
-    
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         viewLoadedInBackground = AppDelegate.shared().isAppInBackground()
@@ -219,7 +227,7 @@ extension ArchivedConversationsViewController {
             return
         }
         
-        if tableView.indexPathsForSelectedRows?.count != nil {
+        if tableView.indexPathsForSelectedRows?.count == nil {
             hideToolbar()
             didStartMultiselect = false
         }
@@ -275,11 +283,12 @@ extension ArchivedConversationsViewController {
             if conversation.conversationCategory == .private {
                 UserReminder.maybeShowDeletePrivateChatInfoOnViewController(on: self)
             }
-            ConversationsViewControllerHelper.handleDeletion(
-                of: conversation,
+            
+            DeleteConversationAction.execute(
+                for: conversation,
                 owner: self,
                 cell: cell,
-                handler: handler
+                onCompletion: handler
             )
         }
         
@@ -545,8 +554,8 @@ extension ArchivedConversationsViewController {
         )
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(refreshDirtyObjects),
-            name: NSNotification.Name(rawValue: kNotificationDBRefreshedDirtyObject),
+            selector: #selector(changedManagedObjects),
+            name: DatabaseContext.changedManagedObjects,
             object: nil
         )
         NotificationCenter.default.addObserver(
@@ -580,11 +589,13 @@ extension ArchivedConversationsViewController {
         }
     }
     
-    @objc private func refreshDirtyObjects(notification: NSNotification) {
-        guard let objectID: NSManagedObjectID = notification.userInfo?[kKeyObjectID] as? NSManagedObjectID else {
+    @objc private func changedManagedObjects(_ notification: Notification) {
+        guard let refreshedObjectIDs = notification
+            .userInfo?[DatabaseContext.refreshedObjectIDsKey] as? Set<NSManagedObjectID> else {
             return
         }
-        if objectID.entity == ConversationEntity.entity() {
+
+        if refreshedObjectIDs.contains(where: { $0.entity == ConversationEntity.entity() }) {
             DispatchQueue.main.async {
                 self.refreshData()
             }

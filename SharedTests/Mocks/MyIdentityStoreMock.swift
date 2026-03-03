@@ -23,22 +23,24 @@ import ThreemaFramework
 import ThreemaMacros
 
 class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
-    var companyName: String!
+    var companyName: String?
     
-    var directoryCategories: NSMutableDictionary!
+    var directoryCategories: NSMutableDictionary?
     
-    var department: String!
+    var department: String?
     
-    var jobTitle: String!
+    var jobTitle: String?
 
-    var csi: String!
+    var csi: String?
 
-    var category: String!
+    var category: String?
 
-    var firstName: String!
+    var firstName: String?
 
-    var lastName: String!
+    var lastName: String?
 
+    var isDefaultProfilePicture: Bool
+    
     func displayName() -> String {
         if let name = ContactUtil.name(fromFirstname: firstName, lastname: lastName) {
             return name as String
@@ -51,39 +53,48 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
         return "\(identity) (\(#localize("me")))"
     }
 
-    var pushFromName: String!
+    var pushFromName: String?
 
     var linkEmailPending = false
 
+    var createIDEmail: String?
+   
     var linkedEmail: String?
 
     var linkMobileNoPending = false
 
+    var createIDPhone: String?
+    
     var linkedMobileNo: String?
 
     var profilePicture: NSMutableDictionary?
 
-    func encryptData(_ data: Data!, withNonce nonce: Data!, publicKey: Data!) -> Data! {
-        NaClCrypto.shared()?.encryptData(data, withPublicKey: publicKey, signKey: secretKey, nonce: nonce)
+    func encryptData(_ data: Data, withNonce nonce: Data, publicKey: Data) -> Data? {
+        NaClCrypto.shared()?.encryptData(data, withPublicKey: publicKey, signKey: clientKey, nonce: nonce)
     }
 
-    func decryptData(_ data: Data!, withNonce nonce: Data!, publicKey _publicKey: Data!) -> Data! {
-        NaClCrypto.shared()?.decryptData(data, withSecretKey: secretKey, signKey: _publicKey, nonce: nonce)
+    func decryptData(_ data: Data, withNonce nonce: Data, publicKey _publicKey: Data) -> Data? {
+        NaClCrypto.shared()?.decryptData(data, withSecretKey: clientKey, signKey: _publicKey, nonce: nonce)
     }
 
-    func sharedSecret(withPublicKey publicKey: Data!) -> Data! {
-        NaClCrypto.shared().sharedSecret(forPublicKey: publicKey, secretKey: secretKey)
+    func sharedSecret(withPublicKey publicKey: Data) -> Data? {
+        NaClCrypto.shared().sharedSecret(forPublicKey: publicKey, secretKey: clientKey)
     }
     
-    func mySharedSecret() -> Data! {
-        NaClCrypto.shared().sharedSecret(forPublicKey: publicKey, secretKey: secretKey)
+    func mySharedSecret() -> Data? {
+        NaClCrypto.shared().sharedSecret(forPublicKey: publicKey, secretKey: clientKey)
     }
 
-    private let secretKey: Data!
+    var publicKey: Data!
+    var clientKey: Data?
 
     init(identity: String, secretKey: Data) {
         self.identity = identity
-        self.secretKey = secretKey
+        self.publicKey = NaClCrypto.shared().derivePublicKey(fromSecretKey: secretKey)
+        self.clientKey = secretKey
+        self.resolvedProfilePicture = UIImage(systemName: "person.circle")!
+        self.resolvedGroupCallProfilePicture = UIImage(systemName: "person.crop.circle")!
+        self.isDefaultProfilePicture = false
     }
 
     override convenience init() {
@@ -92,39 +103,25 @@ class MyIdentityStoreMock: NSObject, MyIdentityStoreProtocol {
 
     var identity: String
 
-    func keySecret() -> Data! {
-        secretKey
-    }
-
-    func isKeychainLocked() -> Bool {
-        false
-    }
-
-    func updateConnectionRights() {
-        // no-op
-    }
-
-    var publicKey: Data {
-        NaClCrypto.shared().derivePublicKey(fromSecretKey: secretKey)
-    }
-
     var isValidIdentity: Bool {
         false
     }
 
-    var licenseSupportURL = ""
+    var licenseSupportURL: String? = ""
 
-    var serverGroup: String!
+    var serverGroup: String?
 
-    func backupIdentity(withPassword password: String!) -> String! {
+    func backupIdentity(withPassword password: String) -> String? {
         ""
     }
 
-    var revocationPasswordSetDate: Date!
+    var revocationPasswordSetDate: Date?
 
-    var revocationPasswordLastCheck: Date!
+    var revocationPasswordLastCheck: Date?
     
-    var resolvedProfilePicture: UIImage!
+    var resolvedProfilePicture: UIImage
     
-    var resolvedGroupCallProfilePicture: UIImage!
+    var resolvedGroupCallProfilePicture: UIImage
+    
+    var idColor: UIColor = .red
 }

@@ -48,14 +48,13 @@ extension ContactEntity {
             case .removed:
                 contactImage = nil
             case .updated:
-                guard let contactDefinedProfilePicture else {
+                guard let contactDefinedProfilePicture, let image = UIImage(data: contactDefinedProfilePicture) else {
                     break
                 }
                 
-                let dbImageData = entityManager.entityCreator
-                    .imageDataEntity()
-                contactImage = dbImageData
-                contactImage?.data = contactDefinedProfilePicture
+                let dbImageDataEntity = entityManager.entityCreator
+                    .imageDataEntity(data: contactDefinedProfilePicture, size: image.size)
+                contactImage = dbImageDataEntity
             case .none:
                 break
             }
@@ -70,7 +69,10 @@ extension ContactEntity {
         }
 
         if syncContact.hasFirstName {
-            setFirstName(to: syncContact.firstNameNullable)
+            setFirstName(
+                to: syncContact.firstNameNullable,
+                sortOrderFirstName: UserSettings.shared().sortOrderFirstName
+            )
         }
 
         if syncContact.hasIdentityType {
@@ -86,7 +88,7 @@ extension ContactEntity {
         }
 
         if syncContact.hasLastName {
-            setLastName(to: syncContact.lastNameNullable)
+            setLastName(to: syncContact.lastNameNullable, sortOrderFirstName: UserSettings.shared().sortOrderFirstName)
         }
 
         if syncContact.hasNickname {

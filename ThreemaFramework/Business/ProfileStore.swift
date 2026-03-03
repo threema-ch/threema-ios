@@ -21,11 +21,18 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaProtocols
 
-@objc public class ProfileStore: NSObject {
+public protocol ProfileStoreProtocol {
+    var profile: ProfileStore.Profile { get }
+    func save(_ profile: ProfileStore.Profile)
+}
+
+@objc public class ProfileStore: NSObject, ProfileStoreProtocol {
 
     public struct Profile {
+        public var myIdentity: ThreemaIdentity
         public var nickname: String?
         public var profileImage: Data?
         public var sendProfilePicture: SendProfilePicture
@@ -37,6 +44,7 @@ import ThreemaProtocols
     }
     
     private let serverConnector: ServerConnectorProtocol
+    private let myIdentity: ThreemaIdentity
     private let myIdentityStore: MyIdentityStoreProtocol
     private let contactStore: ContactStoreProtocol
     private let userSettings: UserSettingsProtocol
@@ -44,21 +52,24 @@ import ThreemaProtocols
 
     init(
         serverConnector: ServerConnectorProtocol,
+        myIdentity: ThreemaIdentity,
         myIdentityStore: MyIdentityStoreProtocol,
         contactStore: ContactStoreProtocol,
         userSettings: UserSettingsProtocol,
         taskManager: TaskManagerProtocol?
     ) {
         self.serverConnector = serverConnector
+        self.myIdentity = myIdentity
         self.myIdentityStore = myIdentityStore
         self.contactStore = contactStore
         self.userSettings = userSettings
         self.taskManager = taskManager
     }
-    
-    override public convenience init() {
+
+    convenience init(myIdentity: ThreemaIdentity) {
         self.init(
             serverConnector: ServerConnector.shared(),
+            myIdentity: myIdentity,
             myIdentityStore: MyIdentityStore.shared(),
             contactStore: ContactStore.shared(),
             userSettings: UserSettings.shared(),
@@ -66,10 +77,15 @@ import ThreemaProtocols
         )
     }
     
-    public func profile() -> Profile {
+    override public convenience init() {
+        self.init(myIdentity: ThreemaIdentity(MyIdentityStore.shared().identity))
+    }
+
+    public var profile: Profile {
         let profileImage: Data? = myIdentityStore.profilePicture?["ProfilePicture"] as? Data
-        
+
         return Profile(
+            myIdentity: myIdentity,
             nickname: myIdentityStore.pushFromName,
             profileImage: profileImage,
             sendProfilePicture: userSettings.sendProfilePicture,
@@ -155,6 +171,7 @@ import ThreemaProtocols
     @objc func syncAndSave(email: String?, completionHandler: @escaping (Error?) -> Void) {
         syncAndSave(
             Profile(
+                myIdentity: myIdentity,
                 nickname: myIdentityStore.pushFromName,
                 profileImage: myIdentityStore.profilePicture?["ProfilePicture"] as? Data,
                 sendProfilePicture: userSettings.sendProfilePicture,
@@ -180,6 +197,7 @@ import ThreemaProtocols
     @objc func syncAndSave(mobileNo: String?, completionHandler: @escaping (Error?) -> Void) {
         syncAndSave(
             Profile(
+                myIdentity: myIdentity,
                 nickname: myIdentityStore.pushFromName,
                 profileImage: myIdentityStore.profilePicture?["ProfilePicture"] as? Data,
                 sendProfilePicture: userSettings.sendProfilePicture,

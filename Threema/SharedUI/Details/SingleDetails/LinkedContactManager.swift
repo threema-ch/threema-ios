@@ -45,8 +45,7 @@ class LinkedContactManager: NSObject {
     
     /// Is the contact linked to any `CNContact`?
     private var contactIsLinked: Bool {
-        // swiftformat:disable:next acronyms
-        contact.cnContactId != nil
+        contact.cnContactID != nil
     }
     
     /// Current linked `CNContact`
@@ -95,8 +94,7 @@ class LinkedContactManager: NSObject {
         )
         
         // Get a notification when the linking of this contact changes
-        // swiftformat:disable:next acronyms
-        cnContactIDObserver = contact.observe(\.cnContactId) { [weak self] _, _ in
+        cnContactIDObserver = contact.observe(\.cnContactID) { [weak self] _, _ in
             DispatchQueue.main.async {
                 self?.updateCNContact()
             }
@@ -127,8 +125,7 @@ class LinkedContactManager: NSObject {
             return nil
         }
         
-        // swiftformat:disable:next acronyms
-        guard let linkedID = contact.cnContactId else {
+        guard let linkedID = contact.cnContactID else {
             return nil
         }
         

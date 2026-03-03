@@ -22,9 +22,8 @@ import SwiftUI
 import ThreemaMacros
 
 struct DeleteRevokeOverviewView: View {
-    @Environment(\.dismiss) var dismiss
-    
     @Binding var tabSelection: Int
+    var onDismiss: () -> Void
     
     @State private var showConfirmationAlert = false
     
@@ -86,7 +85,7 @@ struct DeleteRevokeOverviewView: View {
                         .buttonStyle(.bordered)
                         
                         Button {
-                            dismiss()
+                            onDismiss()
                         } label: {
                             Text(#localize("cancel"))
                                 .frame(maxWidth: .infinity)
@@ -132,6 +131,6 @@ struct DeleteRevokeOverviewView: View {
 }
 
 #Preview {
-    DeleteRevokeOverviewView(tabSelection: .constant(1))
+    DeleteRevokeOverviewView(tabSelection: .constant(1)) { }
         .background(.black)
 }

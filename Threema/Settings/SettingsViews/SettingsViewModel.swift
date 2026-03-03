@@ -55,7 +55,7 @@ class SettingsViewModel: ObservableObject {
     
     func giveFeedback() {
         if let contact = BusinessInjector.ui.entityManager.entityFetcher
-            .contact(for: Constants.betaFeedbackIdentity) {
+            .contactEntity(for: Constants.betaFeedbackIdentity) {
             showConversation(for: contact)
         }
         else {
@@ -63,12 +63,12 @@ class SettingsViewModel: ObservableObject {
                 with: Constants.betaFeedbackIdentity,
                 verificationLevel: Int32(ContactEntity.VerificationLevel.unverified.rawValue)
             ) { [self] contact, _ in
-                guard let contact else {
+                guard let contactEntity = contact as? ContactEntity else {
                     DDLogError("Can't add \(Constants.betaFeedbackIdentity) as contact")
                     return
                 }
                 
-                showConversation(for: contact)
+                showConversation(for: contactEntity)
             } onError: { error in
                 DDLogError("Can't add \(Constants.betaFeedbackIdentity) as contact \(error)")
             }

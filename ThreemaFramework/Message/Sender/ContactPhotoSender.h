@@ -22,8 +22,6 @@
 #import <ThreemaFramework/Old_BlobUploadDelegate.h>
 #import <ThreemaFramework/AbstractMessage.h>
 
-@class ConversationEntity, ContactEntity;
-
 NS_ASSUME_NONNULL_BEGIN
 
 @protocol ContactPhotoSenderProtocol <NSObject>
@@ -33,11 +31,18 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Send my profile picture to the sender of the given received message if necessary.
 
- @param message: Sender of message is receiver of profile picture
+ @param message Sender of message is receiver of profile picture
  */
 - (void)sendProfilePicture:(AbstractMessage *)message NS_SWIFT_NAME(sendProfilePicture(message:));
 
-- (void)startWithImageToMember:(ContactEntity*)toMember onCompletion:(void (^ _Nullable)(void))onCompletion onError:(void (^ _Nullable) ( NSError * _Nullable ))onError;
+/**
+ Send photo of the contact.
+
+ @param toMemberObject Object of type `ContactEntity`
+ @param onCompletion No parameter
+ @param onError With parameter of type `NSError`
+ */
+- (void)startWithImageToMember:(NSObject *)toMemberObject onCompletion:(void (^ _Nullable)(void))onCompletion onError:(void (^ _Nullable)(NSError * _Nullable ))onError;
 
 @end
 

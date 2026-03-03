@@ -18,7 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
+
 @testable import ThreemaFramework
 
 final class IntentCreatorTests: XCTestCase {
@@ -44,7 +46,7 @@ final class IntentCreatorTests: XCTestCase {
     }
     
     func testAllowedDonateInteractionForIncomingMessage() throws {
-        let entityManager = EntityManager(databaseContext: dbMainCnx)
+        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.notificationType = NSNumber(integerLiteral: NotificationType.complete.userSettingsValue)
@@ -77,8 +79,7 @@ final class IntentCreatorTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = groupID
+                    conversation.groupID = groupID
                     conversation.contact = contact1
                     conversation.groupName = "Testgruppe"
                 }
@@ -101,7 +102,7 @@ final class IntentCreatorTests: XCTestCase {
     }
     
     func testNotAllowedDonateInteractionForIncomingMessage() throws {
-        let entityManager = EntityManager(databaseContext: dbMainCnx)
+        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.notificationType = NSNumber(integerLiteral: NotificationType.balanced.userSettingsValue)
@@ -134,8 +135,7 @@ final class IntentCreatorTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = groupID
+                    conversation.groupID = groupID
                     conversation.contact = contact1
                     conversation.groupName = "Testgruppe"
                 }
@@ -159,7 +159,7 @@ final class IntentCreatorTests: XCTestCase {
     }
     
     func testDoNotDonateForPrivateChats1() throws {
-        let entityManager = EntityManager(databaseContext: dbMainCnx)
+        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.notificationType = NSNumber(integerLiteral: NotificationType.balanced.userSettingsValue)
@@ -195,8 +195,7 @@ final class IntentCreatorTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = groupID
+                    conversation.groupID = groupID
                     conversation.contact = contact1
                     conversation.groupName = "Testgruppe"
                 }
@@ -219,7 +218,7 @@ final class IntentCreatorTests: XCTestCase {
     }
     
     func testDoNotDonateForPrivateChats2() throws {
-        let entityManager = EntityManager(databaseContext: dbMainCnx)
+        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.notificationType = NSNumber(integerLiteral: NotificationType.complete.userSettingsValue)
@@ -254,8 +253,7 @@ final class IntentCreatorTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default,
                 complete: { conversation in
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = groupID
+                    conversation.groupID = groupID
                     conversation.contact = contact1
                     conversation.groupName = "Testgruppe"
                     

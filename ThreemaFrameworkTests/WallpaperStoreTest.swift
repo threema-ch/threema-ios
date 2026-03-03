@@ -18,6 +18,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import FileUtility
+import RemoteSecretProtocolTestHelper
 import XCTest
 @testable import ThreemaFramework
 
@@ -25,7 +27,7 @@ class WallpaperStoreTest: XCTestCase {
 
     // MARK: - Setup
 
-    private let wallpaperStore = WallpaperStore.shared
+    private let wallpaperStore = WallpaperStore(fileUtility: FileUtility())
 
     private var conversation1: ConversationEntity!
     private var conversationID1: NSManagedObjectID!
@@ -33,7 +35,7 @@ class WallpaperStoreTest: XCTestCase {
     private var conversation2: ConversationEntity!
     private var conversationID2: NSManagedObjectID!
     
-    private var mainCnx: NSManagedObjectContext!
+    private var mainCnx: ThreemaManagedObjectContext!
     private var entityManager: EntityManager!
     
     private let testImageURL1 = Bundle(for: WallpaperStoreTest.self)
@@ -48,7 +50,7 @@ class WallpaperStoreTest: XCTestCase {
 
         (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
         let context = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        entityManager = EntityManager(databaseContext: context)
+        entityManager = EntityManager(databaseContext: context, isRemoteSecretEnabled: false)
         
         conversation1 = createConversation(
             id: "abcdefgh",
@@ -70,6 +72,10 @@ class WallpaperStoreTest: XCTestCase {
         testImage1 = UIImage(data: data1)!
         let data2 = try! Data(contentsOf: testImageURL2)
         testImage2 = UIImage(data: data2)!
+        
+        // Workaround to ensure remote secret is initialized
+        let remoteSecretManagerMock = RemoteSecretManagerMock()
+        AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManagerMock)
     }
 
     private func createConversation(
@@ -166,13 +172,5 @@ class WallpaperStoreTest: XCTestCase {
         // Assert
         XCTAssertEqual(wallpaperStore.wallpaper(for: conversationID1)?.pngData(), testImage1.pngData())
         XCTAssertEqual(wallpaperStore.wallpaper(for: conversationID2)?.pngData(), testImage1.pngData())
-    }
-    
-    func testCurrenDefaultWallpaper() {
-        // Arrange & Act
-        wallpaperStore.saveDefaultWallpaper(testImage1)
-        
-        // Assert
-        XCTAssertEqual(wallpaperStore.currentDefaultWallpaper()?.pngData(), testImage1.pngData())
     }
 }

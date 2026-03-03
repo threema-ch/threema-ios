@@ -21,9 +21,8 @@
 import SwiftUI
 
 struct DeleteRevokeView: View {
-    @Environment(\.dismiss) var dismiss
-    
     var alreadyDeleted = false
+    var onDismiss: () -> Void
     
     @State private var successViewType: SuccessViewType = .delete
     @State private var tabSelection = 0
@@ -31,8 +30,10 @@ struct DeleteRevokeView: View {
     var body: some View {
         TabView(selection: $tabSelection) {
             if !alreadyDeleted {
-                DeleteRevokeOverviewView(tabSelection: $tabSelection)
-                    .tag(0)
+                DeleteRevokeOverviewView(tabSelection: $tabSelection) {
+                    onDismiss()
+                }
+                .tag(0)
                 RevokeView(tabSelection: $tabSelection, successViewType: $successViewType)
                     .tag(1)
             }
@@ -62,5 +63,5 @@ enum SuccessViewType {
 }
 
 #Preview {
-    DeleteRevokeView()
+    DeleteRevokeView { }
 }

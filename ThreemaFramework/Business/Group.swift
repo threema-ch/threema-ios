@@ -30,12 +30,12 @@ import ThreemaProtocols
 public class Group: NSObject {
     
     // These strings are used as static properties for performance reasons
+    public static let maxGroupMembers = BundleUtil.object(forInfoDictionaryKey: "ThreemaMaxGroupMembers") as? Int ?? 0
     private static let meString = #localize("me")
     private static let unknownString = #localize("(unknown)")
     private static let oneMemberTitleString = #localize("group_one_member_title")
     private static let multipleMemberTitleString = #localize("group_multiple_members_title")
-    private static let maxGroupMembers = BundleUtil.object(forInfoDictionaryKey: "ThreemaMaxGroupMembers") as? Int ?? 0
-
+    
     // MARK: - Internal types
     
     /// A member in a group
@@ -69,7 +69,7 @@ public class Group: NSObject {
 
         public var identity: String? {
             switch self {
-            case let .contact(contact): contact.identity.string
+            case let .contact(contact): contact.identity.rawValue
             case let .me(identity): identity
             default: nil
             }
@@ -186,7 +186,7 @@ public class Group: NSObject {
     }
     
     @objc public var groupCreatorIdentity: String {
-        if let identity = conversationContact?.identity.string {
+        if let identity = conversationContact?.identity.rawValue {
             return identity
         }
         return myIdentityStore.identity
@@ -247,7 +247,7 @@ public class Group: NSObject {
 
     /// All group member identities including me
     public var allMemberIdentities: Set<String> {
-        var identities = Set(members.map(\.identity.string))
+        var identities = Set(members.map(\.identity.rawValue))
         if state == .active {
             identities.insert(myIdentityStore.identity)
         }
@@ -260,7 +260,7 @@ public class Group: NSObject {
     var allActiveMemberIdentitiesWithoutCreator: [String] {
         members
             .filter { $0.state != .invalid }
-            .map(\.identity.string)
+            .map(\.identity.rawValue)
     }
     
     public private(set) var usesNonGeneratedProfilePicture = false
@@ -271,8 +271,8 @@ public class Group: NSObject {
 
     private let myIdentityStore: MyIdentityStoreProtocol
     private let userSettings: UserSettingsProtocol
-    private let pushSettingManager = PushSettingManager()
-    
+    private let pushSettingManager: PushSettingManagerProtocol
+
     private var conversationGroupMyIdentity: String?
 
     /// `nil` if we the creator of this group
@@ -285,7 +285,7 @@ public class Group: NSObject {
     }
 
     private lazy var idColor: UIColor = {
-        let creatorIDData = Data(groupIdentity.creator.string.utf8)
+        let creatorIDData = Data(groupIdentity.creator.rawValue.utf8)
         let combinedID = creatorIDData + groupIdentity.id
         return IDColor.forData(combinedID)
     }()
@@ -329,6 +329,7 @@ public class Group: NSObject {
     init(
         myIdentityStore: MyIdentityStoreProtocol,
         userSettings: UserSettingsProtocol,
+        pushSettingManager: PushSettingManagerProtocol,
         groupEntity: GroupEntity,
         conversation: ConversationEntity,
         lastSyncRequest: Date?
@@ -342,17 +343,16 @@ public class Group: NSObject {
 
         self.myIdentityStore = myIdentityStore
         self.userSettings = userSettings
+        self.pushSettingManager = pushSettingManager
         self.conversation = conversation
         self.conversationGroupMyIdentity = conversation.groupMyIdentity
         if let contactEntity = conversation.contact {
             self.conversationContact = Contact(contactEntity: contactEntity)
         }
-        // swiftformat:disable: acronyms
         self.groupIdentity = GroupIdentity(
-            id: groupEntity.groupId,
+            id: groupEntity.groupID,
             creator: ThreemaIdentity(groupEntity.groupCreator ?? myIdentityStore.identity)
         )
-        // swiftformat:enable: acronyms
         self.state = GroupEntity.GroupState(rawValue: groupEntity.state.intValue)!
         self.name = conversation.groupName
         
@@ -424,15 +424,13 @@ public class Group: NSObject {
                     }
                     
                 case .updated:
-                    // swiftformat:disable: acronyms
                     guard groupIdentity == GroupIdentity(
-                        id: groupEntity.groupId,
+                        id: groupEntity.groupID,
                         creator: ThreemaIdentity(groupEntity.groupCreator ?? myIdentityStore.identity)
                     ) else {
                         DDLogError("Group identity mismatch")
                         return
                     }
-                    // swiftformat:enable: acronyms
 
                     if let newState = GroupEntity.GroupState(rawValue: groupEntity.state.intValue) {
                         if state != newState {

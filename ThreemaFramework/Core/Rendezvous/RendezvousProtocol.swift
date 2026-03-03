@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 /// Implementation of the Connection Rendezvous Protocol to establish a 1:1 connection between two devices

@@ -24,8 +24,8 @@ import SwiftUI
 import ThreemaFramework
 import ThreemaMacros
 
-class MultiThisDeviceCell: MultiDeviceCell {
-    
+final class MultiThisDeviceCell: MultiDeviceCell {
+
     // MARK: - Public property
     
     weak var parentViewController: MultiDeviceViewController?
@@ -51,15 +51,8 @@ class MultiThisDeviceCell: MultiDeviceCell {
     
     @objc func enabledSwitchValueChanged(_ sender: UISwitch) {
         if sender.isOn {
-            var duplicates: NSSet?
-            guard !BusinessInjector.ui.entityManager.entityFetcher.hasDuplicateContacts(
-                withDuplicateIdentities: &duplicates
-            ) else {
-                var duplicateIdentitiesDesc = "?"
-                if let duplicateIdentities = duplicates as? Set<String> {
-                    duplicateIdentitiesDesc = duplicateIdentities.joined(separator: ", ")
-                }
-
+            if let duplicates = BusinessInjector.ui.entityManager.entityFetcher.duplicateContactIdentities() {
+                let duplicateIdentitiesDesc = duplicates.joined(separator: ", ")
                 UIAlertTemplate.showAlert(
                     owner: parentViewController!,
                     title: #localize("multi_device_linked_duplicate_contacts_title"),
@@ -124,8 +117,7 @@ class MultiThisDeviceCell: MultiDeviceCell {
 
     @objc
     private func platformIconTapped(tapGestureRecognizer: UITapGestureRecognizer) {
-        let bi = BusinessInjector.ui
-        let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: bi.myIdentityStore)
+        let deviceGroupKeyManager = DeviceGroupKeyManager()
         if deviceGroupKeyManager.dgk != nil {
             MultiDeviceWizardManager.shared.showWizard(
                 on: (parentViewController?.navigationController)!,

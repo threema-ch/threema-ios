@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -29,14 +30,13 @@ final class AppUpdateStepsTests: XCTestCase {
     private var entityManager: EntityManager!
     
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema")
 
         let (_, mainContext, childContext) = DatabasePersistentContext
             .devNullContext(withChildContextForBackgroundProcess: true)
         let databaseBackgroundContext = DatabaseContext(mainContext: mainContext, backgroundContext: childContext)
         databasePreparer = DatabasePreparer(context: mainContext)
-        entityManager = EntityManager(databaseContext: databaseBackgroundContext)
+        entityManager = EntityManager(databaseContext: databaseBackgroundContext, isRemoteSecretEnabled: false)
     }
 
     func testTwoContactsOneWithInvalidSession() async throws {
@@ -54,7 +54,7 @@ final class AppUpdateStepsTests: XCTestCase {
         let (terminateContact, terminateConversation) = databasePreparer.save {
             let contact = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: terminateIdentity.string
+                identity: terminateIdentity.rawValue
             )
             
             // System messages will only be posted if we have a conversation and we need it to initialize the
@@ -80,7 +80,7 @@ final class AppUpdateStepsTests: XCTestCase {
         
         // Mark sessions of `terminateIdentity` as invalid
         sessionStore.hasInvalidSessions = [
-            "\(businessInjectorMock.myIdentityStore.identity!)+\(terminateIdentity.string)": true,
+            "\(businessInjectorMock.myIdentityStore.identity!)+\(terminateIdentity.rawValue)": true,
         ]
         
         XCTAssertEqual(2, sessionStore.dhSessionList.count)
@@ -91,7 +91,7 @@ final class AppUpdateStepsTests: XCTestCase {
         let keepContact = databasePreparer.save {
             databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: keepIdentity.string
+                identity: keepIdentity.rawValue
             )
         }
         

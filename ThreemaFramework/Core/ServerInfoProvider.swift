@@ -20,13 +20,13 @@
 
 import Foundation
 
-@objcMembers public class ChatServerInfo: NSObject {
-    public let serverNamePrefix: String
-    public let serverNameSuffix: String
-    public let serverPorts: [Int]
-    public let useServerGroups: Bool
-    public let publicKey: Data
-    public let publicKeyAlt: Data
+public class ChatServerInfo: NSObject {
+    @objc public let serverNamePrefix: String
+    @objc public let serverNameSuffix: String
+    @objc public let serverPorts: [Int]
+    @objc public let useServerGroups: Bool
+    @objc public let publicKey: Data
+    @objc public let publicKeyAlt: Data
     
     init(
         serverNamePrefix: String,
@@ -45,15 +45,15 @@ import Foundation
     }
 }
 
-@objcMembers public class DirectoryServerInfo: NSObject {
-    public let url: String
+public class DirectoryServerInfo: NSObject {
+    @objc public let url: String
     
     init(url: String) {
         self.url = url
     }
 }
 
-@objcMembers public class BlobServerInfo: NSObject {
+public class BlobServerInfo: NSObject {
     public let downloadURL: String
     public let uploadURL: String
     public let doneURL: String
@@ -65,7 +65,23 @@ import Foundation
     }
 }
 
-@objcMembers public class WorkServerInfo: NSObject {
+public class WorkServerInfo: NSObject {
+    @objc public let url: String
+    
+    init(url: String) {
+        self.url = url
+    }
+}
+
+public class AvatarServerInfo: NSObject {
+    @objc public let url: String
+    
+    init(url: String) {
+        self.url = url
+    }
+}
+
+public class SafeServerInfo: NSObject {
     public let url: String
     
     init(url: String) {
@@ -73,25 +89,9 @@ import Foundation
     }
 }
 
-@objcMembers public class AvatarServerInfo: NSObject {
-    public let url: String
-    
-    init(url: String) {
-        self.url = url
-    }
-}
-
-@objcMembers public class SafeServerInfo: NSObject {
-    public let url: String
-    
-    init(url: String) {
-        self.url = url
-    }
-}
-
-@objcMembers public class MediatorServerInfo: NSObject {
-    public let url: String
-    public let blob: BlobServerInfo
+public class MediatorServerInfo: NSObject {
+    @objc public let url: String
+    @objc public let blob: BlobServerInfo
 
     init(deviceGroupIDFirstByteHex: String, url: String, blob: BlobServerInfo) {
         let prefix4 = String(deviceGroupIDFirstByteHex.prefix(1)).lowercased()
@@ -112,7 +112,7 @@ import Foundation
     }
 }
 
-@objcMembers public class WebServerInfo: NSObject {
+public class WebServerInfo: NSObject {
     public let url: String
     public let overrideSaltyRtcHost: String?
     public let overrideSaltyRtcPort: Int?
@@ -124,7 +124,7 @@ import Foundation
     }
 }
 
-@objcMembers public class RendezvousServerInfo: NSObject {
+public class RendezvousServerInfo: NSObject {
     public let url: String
 
     init(url: String) {
@@ -148,7 +148,7 @@ public enum DomainMatchMode: String {
     }
 }
 
-@objcMembers public class MapsServerInfo: NSObject {
+public class MapsServerInfo: NSObject {
     public let poiNamesURL: String
     public let poiAroundURL: String
     
@@ -166,7 +166,7 @@ public enum DomainSpkisAlgorithm {
     }
 }
 
-@objcMembers public final class Domain: NSObject {
+public final class Domain: NSObject {
     public private(set) var domain: String
     public private(set) var spkis: [[String: DomainSpkisAlgorithm]]
     public private(set) var matchMode: DomainMatchMode
@@ -245,4 +245,25 @@ extension Domain {
     func rendezvousServer(completionHandler: @escaping (RendezvousServerInfo?, Error?) -> Void)
     func domains(completionHandler: @escaping ([Domain]?, Error?) -> Void)
     func mapsServer(completionHandler: @escaping (MapsServerInfo?, Error?) -> Void)
+}
+
+extension ServerInfoProvider {
+    // Simplest way to get work server URL for now
+    public func workServerURL() async throws -> String? {
+        try await withCheckedThrowingContinuation { continuation in
+            // IPv6 check cannot be applied here as we are not allowed to load the settings
+            workServer(ipv6: true) { workServerInfo, error in
+                if let workServerInfo {
+                    continuation.resume(returning: workServerInfo.url)
+                }
+                else if let error {
+                    continuation.resume(throwing: error)
+                }
+                else {
+                    assertionFailure("This should never be reached")
+                    continuation.resume(returning: nil)
+                }
+            }
+        }
+    }
 }

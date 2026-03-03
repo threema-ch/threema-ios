@@ -98,6 +98,12 @@ import ThreemaProtocols
     }
     
     /// Wrapper for ObjC (see `processEnvelopeMessage(sender:envelopeMessage:)` for details)
+    @available(
+        swift,
+        obsoleted: 1.0,
+        renamed: "processEnvelopeMessage(sender:envelopeMessage:)",
+        message: "Only use from Objective-C"
+    )
     @objc func processEnvelopeMessageObjC(
         sender: ForwardSecurityContact,
         envelopeMessage: ForwardSecurityEnvelopeMessage

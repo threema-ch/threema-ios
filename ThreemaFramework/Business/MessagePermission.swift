@@ -52,17 +52,17 @@ public class MessagePermission: NSObject {
         var result: (isAllowed: Bool, reason: String?) = (false, nil)
         
         entityManager.performAndWait {
-            if let conversation = self.entityManager.entityFetcher.conversationEntity(forIdentity: identity) {
+            if let conversation = self.entityManager.entityFetcher.conversationEntity(for: identity) {
                 result = self.canSend(to: conversation)
             }
             // Check for blacklisted contact
-            else if let contact = self.entityManager.entityFetcher.contact(for: identity),
+            else if let contact = self.entityManager.entityFetcher.contactEntity(for: identity),
                     self.userSettings.blacklist.contains(contact.identity) {
                 DDLogError("Cannot send a message to this contact \(identity) because it is blocked")
                 result = (false, #localize("contact_blocked_cannot_send"))
             }
             // Check for invalid contact
-            else if let contact = self.entityManager.entityFetcher.contact(for: identity),
+            else if let contact = self.entityManager.entityFetcher.contactEntity(for: identity),
                     contact.contactState == .invalid {
                 DDLogError("Cannot send a message to this contact (\(contact.identity) because it is invalid")
                 result = (false, #localize("contact_invalid_cannot_send"))

@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -30,8 +31,8 @@ class MessageReceiverTests: XCTestCase {
     var mediatorMessageProtocol: MediatorMessageProtocolProtocol!
 
     override func setUpWithError() throws {
-        deviceGroupKeys = MockData.deviceGroupKeys
-        deviceID = MockData.deviceID
+        deviceGroupKeys = MockMultiDevice.deviceGroupKeys
+        deviceID = MockMultiDevice.deviceID
 
         mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: deviceGroupKeys)
     }
@@ -59,7 +60,7 @@ class MessageReceiverTests: XCTestCase {
     }
 
     func testRequestDevicesInfo() throws {
-        let expectedOtherDeviceID: UInt64 = try MockData.deviceID.littleEndian()
+        let expectedOtherDeviceID: UInt64 = try MockMultiDevice.deviceID.littleEndian()
         let expectedDeviceLabel = "Test-Device"
         let expectedAppVersion = "0.1"
 

@@ -23,104 +23,98 @@
 @protocol MyIdentityStoreProtocol <NSObject>
 
 @property (strong, nonatomic, readwrite) NSString *identity;
-@property (strong, nonatomic, readwrite) NSString *pushFromName;
+@property (nullable, strong, nonatomic, readwrite) NSString *pushFromName;
 
+@property (nullable, strong, nonatomic, readwrite) NSString *createIDEmail;
 @property (nonatomic, readwrite) BOOL linkEmailPending;
-@property (strong, nonatomic, readwrite) NSString *linkedEmail;
+@property (nullable, strong, nonatomic, readwrite) NSString *linkedEmail;
 
+@property (nullable, strong, nonatomic, readwrite) NSString *createIDPhone;
 @property (nonatomic, readwrite) BOOL linkMobileNoPending;
-@property (strong, nonatomic, readwrite) NSString *linkedMobileNo;
+@property (nullable, strong, nonatomic, readwrite) NSString *linkedMobileNo;
 
-@property (strong, nonatomic, readwrite) NSMutableDictionary *profilePicture;
+@property (nullable, strong, nonatomic, readwrite) NSMutableDictionary *profilePicture;
 
-@property (strong, nonatomic, readonly) NSData *publicKey;
-@property (strong, nonatomic, readwrite) NSString *firstName;
-@property (strong, nonatomic, readwrite) NSString *lastName;
-@property (strong, nonatomic, readwrite) NSString *csi;
-@property (strong, nonatomic, readwrite) NSString *jobTitle;
-@property (strong, nonatomic, readwrite) NSString *department;
-@property (strong, nonatomic, readwrite) NSString *category;
+@property (strong, nonatomic, readwrite) NSData *publicKey;
+@property (nullable, strong, nonatomic, readwrite) NSData *clientKey;
 
-@property (strong, nonatomic, readonly) UIImage *resolvedProfilePicture;
-@property (strong, nonatomic, readonly) UIImage *resolvedGroupCallProfilePicture;
+@property (nullable, strong, nonatomic, readwrite) NSString *firstName;
+@property (nullable, strong, nonatomic, readwrite) NSString *lastName;
+@property (nullable, strong, nonatomic, readwrite) NSString *csi;
+@property (nullable, strong, nonatomic, readwrite) NSString *jobTitle;
+@property (nullable, strong, nonatomic, readwrite) NSString *department;
+@property (nullable, strong, nonatomic, readwrite) NSString *category;
+
+@property (nonnull, strong, nonatomic, readonly) UIImage *resolvedProfilePicture;
+@property (nonnull, strong, nonatomic, readonly) UIColor *idColor;
+@property (nonnull, strong, nonatomic, readonly) UIImage *resolvedGroupCallProfilePicture;
+@property (nonatomic, readonly) BOOL isDefaultProfilePicture;
 
 @property (nullable, strong, nonatomic, readwrite) NSString *companyName;
-@property (strong, nonatomic, readwrite) NSMutableDictionary *directoryCategories;
+@property (nullable, strong, nonatomic, readwrite) NSMutableDictionary *directoryCategories;
 
-- (NSData*)encryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)publicKey;
-- (NSData*)decryptData:(NSData*)data withNonce:(NSData*)nonce publicKey:(NSData*)_publicKey;
-- (NSData*)sharedSecretWithPublicKey:(NSData*)publicKey;
-- (NSData*)mySharedSecret;
-- (NSData*)keySecret;
-- (BOOL)isKeychainLocked;
-
-- (void)updateConnectionRights;
+- (nullable NSData *)encryptData:(nonnull NSData *)data withNonce:(nonnull NSData *)nonce publicKey:(nonnull NSData *)publicKey;
+- (nullable NSData *)decryptData:(nonnull NSData *)data withNonce:(nonnull NSData *)nonce publicKey:(nonnull NSData *)_publicKey;
+- (nullable NSData *)sharedSecretWithPublicKey:(nonnull NSData *)publicKey;
+- (nullable NSData *)mySharedSecret;
 
 /// Exists there a valid identity?
 ///
 /// This might also be `true` during setup if just the app was deleted, but an identity still exists in the keychain
 @property (nonatomic, readonly) BOOL isValidIdentity;
 
-- (NSString * _Nonnull)displayName;
-- (NSString*)backupIdentityWithPassword:(NSString*)password;
+- (nonnull NSString *)displayName;
+- (nullable NSString *)backupIdentityWithPassword:(nonnull NSString *)password;
 
-@property (strong, nonatomic, readwrite) NSDate *revocationPasswordSetDate;
-@property (strong, nonatomic, readwrite) NSDate *revocationPasswordLastCheck;
+@property (nullable, strong, nonatomic, readwrite) NSDate *revocationPasswordSetDate;
+@property (nullable, strong, nonatomic, readwrite) NSDate *revocationPasswordLastCheck;
 
-@property (strong, nonatomic, readwrite) NSString *licenseSupportUrl NS_SWIFT_NAME(licenseSupportURL);
+@property (nullable, strong, nonatomic, readwrite) NSString *licenseSupportUrl NS_SWIFT_NAME(licenseSupportURL);
 
-@property (strong, nonatomic, readwrite) NSString *serverGroup;
+@property (nullable, strong, nonatomic, readwrite) NSString *serverGroup;
 
 @end
 
 @interface MyIdentityStore : NSObject <MyIdentityStoreProtocol>
 
-@property (strong, nonatomic, readwrite) NSMutableDictionary *profilePicture;
+@property (nullable, strong, nonatomic, readwrite) NSMutableDictionary *profilePicture;
 
 @property (nonatomic, readwrite) BOOL linkEmailPending;
-@property (strong, nonatomic, readwrite) NSString *linkedEmail;
+@property (nullable, strong, nonatomic, readwrite) NSString *linkedEmail;
 
 @property (nonatomic, readwrite) BOOL linkMobileNoPending;
-@property (strong, nonatomic, readwrite) NSString *linkMobileNoVerificationId NS_SWIFT_NAME(linkMobileNoVerificationID);
-@property (strong, nonatomic, readwrite) NSDate *linkMobileNoStartDate;
-@property (strong, nonatomic, readwrite) NSString *linkedMobileNo;
+@property (nullable, strong, nonatomic, readwrite) NSString *linkMobileNoVerificationId NS_SWIFT_NAME(linkMobileNoVerificationID);
+@property (nullable, strong, nonatomic, readwrite) NSDate *linkMobileNoStartDate;
+@property (nullable, strong, nonatomic, readwrite) NSString *linkedMobileNo;
 
-@property (strong, nonatomic, readwrite) NSDate *privateIdentityInfoLastUpdate;
+@property (nullable, strong, nonatomic, readwrite) NSDate *privateIdentityInfoLastUpdate;
 
 @property (nonatomic, readwrite) NSInteger lastSentFeatureMask;
 
-@property (strong, nonatomic, readwrite) NSDate *licenseLastCheck;
-@property (strong, nonatomic, readwrite) NSString *licenseLogoLightUrl NS_SWIFT_NAME(licenseLogoLightURL);
-@property (strong, nonatomic, readwrite) NSString *licenseLogoDarkUrl NS_SWIFT_NAME(licenseLogoDarkURL);
+@property (nullable, strong, nonatomic, readwrite) NSDate *licenseLastCheck;
+@property (nullable, strong, nonatomic, readwrite) NSString *licenseLogoLightUrl NS_SWIFT_NAME(licenseLogoLightURL);
+@property (nullable, strong, nonatomic, readwrite) NSString *licenseLogoDarkUrl NS_SWIFT_NAME(licenseLogoDarkURL);
 
-@property (strong, nonatomic, readwrite) NSString *createIDEmail;
-@property (strong, nonatomic, readwrite) NSString *createIDPhone;
+@property (nullable, strong, nonatomic, readwrite) NSData *lastWorkUpdateRequestHash;
+@property (nullable, strong, nonatomic, readwrite) NSDate *lastWorkUpdateDate;
 
-@property (strong, nonatomic, readwrite) NSString *tempSafePassword;
+@property (nullable, strong, nonatomic, readwrite) NSString *lastWorkInfoLanguage;
+@property (nullable, strong, nonatomic, readwrite) NSString *lastWorkInfoMdmDescription;
 
-@property (strong, nonatomic, readwrite) NSData *lastWorkUpdateRequestHash;
-@property (strong, nonatomic, readwrite) NSDate *lastWorkUpdateDate;
-
-@property (strong, nonatomic, readwrite) NSString *lastWorkInfoLanguage;
-@property (strong, nonatomic, readwrite) NSString *lastWorkInfoMdmDescription;
-
-+ (MyIdentityStore*)sharedMyIdentityStore;
-- (instancetype) __unavailable init;
++ (nonnull MyIdentityStore *)sharedMyIdentityStore;
+- (nonnull instancetype) __unavailable init;
 
 + (void)resetSharedInstance;
 
-- (BOOL)isProvisioned;
-- (void)generateKeyPairWithSeed:(NSData*)seed;
-- (void)destroy;
-/// For testing: Destroy all keychain items that are available on this device only (kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
-- (void)destroyDeviceOnlyKeychainItems;
-- (void)storeInKeychain;
-- (NSArray *)directoryCategoryIdsSortedByName NS_SWIFT_NAME(directoryCategoryIDsSortedByName());
+- (void)generateKeyPairWithSeed:(nonnull NSData *)seed;
+- (nonnull NSArray *)directoryCategoryIdsSortedByName NS_SWIFT_NAME(directoryCategoryIDsSortedByName());
 
-- (NSString*)addBackupGroupDashes:(NSString*)backup;
-- (void)restoreFromBackup:(NSString*)backup withPassword:(NSString*)password onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
-- (void)restoreFromBackup:(NSString*)myIdentity withSecretKey:(NSData*)mySecretKey onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
-- (BOOL)isValidBackupFormat:(NSString*)backup;
+- (nonnull NSString *)addBackupGroupDashes:(nonnull NSString *)backup;
+- (void)restoreFromBackup:(nonnull NSString *)backup withPassword:(nonnull NSString *)password onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)(NSError * _Nonnull error))onError;
+- (void)restoreFromBackup:(nonnull NSString *)myIdentity withSecretKey:(nonnull NSData *)mySecretKey onCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)(NSError * _Nonnull error))onError;
+- (BOOL)isValidBackupFormat:(nullable NSString *)backup;
 - (BOOL)sendUpdateWorkInfoStatus;
+
+- (NSString *)profilePicturePath;
 
 @end

@@ -124,7 +124,7 @@ final class ChatProfileView: UIStackView {
     private let tapAction: TapAction
     
     private lazy var touchAnimator = UIViewPropertyAnimator.barButtonHighlightAnimator(for: self)
-    
+
     // MARK: Views
     
     /// Profile picture of contact or group
@@ -245,7 +245,7 @@ final class ChatProfileView: UIStackView {
         configureButton()
         configureContentObservers()
     }
-    
+
     @available(*, unavailable, message: "Use init(for:)")
     override init(frame: CGRect) {
         fatalError("Use init(for: Conversation)")
@@ -255,13 +255,11 @@ final class ChatProfileView: UIStackView {
     required init(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    // MARK: - Destruction
-    
+
     deinit {
         touchAnimator.stopAnimation(true)
     }
-    
+
     // MARK: - Configuration
     
     private func configureView() {
@@ -341,6 +339,8 @@ final class ChatProfileView: UIStackView {
         else {
             configureSingleChatObservers()
         }
+
+        setupTraitRegistration()
     }
     
     private func configureNameObserver() {
@@ -488,7 +488,19 @@ final class ChatProfileView: UIStackView {
         
         membersListLabel.text = distributionList?.recipientsSummary ?? " "
     }
-    
+
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitPreferredContentSizeCategory.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+                updateNameAndVerificationDescriptionStack()
+            }
+        }
+    }
+
     // MARK: - Actions
     
     @objc private func viewTapped() {
@@ -508,15 +520,7 @@ final class ChatProfileView: UIStackView {
     }
     
     // MARK: - Environment changes
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        if traitCollection.verticalSizeClass != previousTraitCollection?.verticalSizeClass {
-            updateNameAndVerificationDescriptionStack()
-        }
-    }
-    
+
     /// Set name and verification description stack based on size class
     ///
     /// This is due to the fact that the navigation bar height is smaller with a compact vertical size class (e.g.
@@ -557,16 +561,12 @@ final class ChatProfileView: UIStackView {
                 }
                 
                 let businessContact = Contact(contactEntity: contact)
-                var otherThreemaAccessibilityLabel: String?
-                let accessibilityValue = [
-                    businessContact.verificationLevelAccessibilityLabel,
-                    otherThreemaAccessibilityLabel,
-                ]
-                .compactMap { $0 }
-                .filter { !$0.isEmpty }
-                .joined(separator: ". ")
+                let label = [businessContact.verificationLevelAccessibilityLabel]
+                    .compactMap { $0 }
+                    .filter { !$0.isEmpty }
+                    .joined(separator: ". ")
                 
-                return accessibilityValue
+                return label
             }
             else {
                 return nil

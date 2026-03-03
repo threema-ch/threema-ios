@@ -25,35 +25,35 @@ import SwiftUI
 @objc class SwiftUIAdapter: NSObject {
     
     private static var injectedContainer: AppContainer = .defaultValue
-    
-    @objc static func createDeleteRevokeIdentityView() -> UIViewController {
-        let deleteRevokeView = DeleteRevokeView()
-        let hostingController = UIHostingController(rootView: deleteRevokeView)
-        hostingController.navigationItem.largeTitleDisplayMode = .never
-        hostingController.navigationController?.navigationBar.isHidden = true
-        hostingController.hidesBottomBarWhenPushed = true
-        hostingController.navigationItem.hidesBackButton = true
-        hostingController.navigationController?.interactivePopGestureRecognizer?.isEnabled = false
-        return hostingController
-    }
         
-    @objc static func createDeleteSummaryView() -> UIViewController {
-        let deleteView = DeleteRevokeView(alreadyDeleted: true)
+    @objc static func createDeleteSummaryView(
+        onDismiss: @escaping () -> Void
+    ) -> UIViewController {
+        let deleteView = DeleteRevokeView(
+            alreadyDeleted: true,
+            onDismiss: onDismiss
+        )
         let hostingController = UIHostingController(rootView: deleteView)
         return hostingController
     }
 
+    @available(*, deprecated, message: "Do not use anymore.")
     @objc static func createNotificationSettingsView() -> UIViewController {
         let settingsVC = createSettingsView()
         settingsVC.navigationItem.largeTitleDisplayMode = .never
         return settingsVC
     }
     
+    @available(*, deprecated, message: "Do not use anymore.")
     @objc static func createSettingsView() -> UIViewController {
         SettingsView().makeViewController(injectedContainer)
     }
  
-    @objc static func createProfileView() -> UIViewController {
-        ProfileView().makeViewController(injectedContainer)
+    @available(*, deprecated, message: "Do not use anymore.")
+    @objc static func createProfileView(
+        onDismiss: @escaping () -> Void
+    ) -> UIViewController {
+        ProfileView(onDismiss: onDismiss)
+            .makeViewController(injectedContainer)
     }
 }

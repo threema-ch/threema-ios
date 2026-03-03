@@ -279,7 +279,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
                     self.frameworkInjector.entityManager.setForwardSecurityMode(
                         abstractMessage.messageID,
                         in: conversation,
-                        forwardSecurityMode: newMode
+                        forwardSecurityMode: BaseMessageEntity.ForwardSecurityMode(rawValue: Int(newMode.rawValue))!
                     )
                 }
             }
@@ -379,7 +379,7 @@ final class TaskExecutionSendMessage: TaskExecution, TaskExecutionProtocol {
         guard
             let message = frameworkInjector.entityManager.entityFetcher.message(
                 with: abstractMessage.messageID,
-                conversation: conversation
+                in: conversation
             ),
             let initialForwardSecurityMode = ForwardSecurityMode(
                 rawValue: message.forwardSecurityMode.uintValue

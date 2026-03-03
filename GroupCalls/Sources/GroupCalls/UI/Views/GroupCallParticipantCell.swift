@@ -35,6 +35,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
     var participant: ViewModelParticipant? {
         didSet {
             updateView()
+            clip()
         }
     }
     
@@ -50,9 +51,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
     
     override public var bounds: CGRect {
         didSet {
-            Task { @MainActor in
-                clip()
-            }
+            clip()
         }
     }
     
@@ -283,7 +282,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
                     if UIDevice.current.userInterfaceIdiom == .phone {
                         NSLayoutConstraint.activate(profilePictureViewHeightConstraintScreenshots)
 
-                        switch participant.threemaIdentity.string {
+                        switch participant.threemaIdentity.rawValue {
                         case "H3BK2FVH", "VK55MZ3W", "OOOBNWYK", "OOO8U3TJ":
                             profilePictureView.contentMode = .scaleAspectFit
                         default:
@@ -295,7 +294,7 @@ class GroupCallParticipantCell: UICollectionViewCell {
                         
                         participant.threemaIdentity
                         
-                        switch participant.threemaIdentity.string {
+                        switch participant.threemaIdentity.rawValue {
                         case "H3BK2FVH":
                             if participant.displayName == "Peter Schreiner" {
                                 profilePictureView.contentMode = .scaleAspectFit
@@ -375,9 +374,18 @@ class GroupCallParticipantCell: UICollectionViewCell {
             return
         }
         
-        profilePictureView.layer.masksToBounds = true
-        profilePictureView.clipsToBounds = true
-        profilePictureView.layer.cornerRadius = profilePictureView.frame.width / 2
+        Task { @MainActor in
+            do {
+                try await Task.sleep(seconds: 0.1)
+            }
+            catch {
+                DDLogError("[GroupCalls] Failed to sleep task to clip profile picture view.")
+            }
+            
+            profilePictureView.layer.masksToBounds = true
+            profilePictureView.clipsToBounds = true
+            profilePictureView.layer.cornerRadius = profilePictureView.frame.width / 2
+        }
     }
     
     private func videoRendererViewConstraints() -> [NSLayoutConstraint] {

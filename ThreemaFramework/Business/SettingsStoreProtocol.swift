@@ -22,7 +22,15 @@ import Foundation
 import ThreemaProtocols
 
 public protocol SettingsStoreProtocol {
-    
+
+    // Appearance
+    var displayOrderFirstName: Bool { get set }
+    var hideStaleContacts: Bool { get set }
+    var previewLimit: Float { get set }
+    var showGalleryPreview: Bool { get set }
+    var showProfilePictures: Bool { get set }
+    var useSystemTheme: Bool { get set }
+
     // Privacy
     var syncContacts: Bool { get set }
     var blacklist: Set<String> { get set }
@@ -35,6 +43,8 @@ public protocol SettingsStoreProtocol {
     var hidePrivateChats: Bool { get set }
     
     // Notifications
+    var inAppSounds: Bool { get set }
+    var inAppVibrate: Bool { get set }
     var enableMasterDnd: Bool { get set }
     var masterDndWorkingDays: Set<Int> { get set }
     var masterDndStartTime: String? { get set }
@@ -68,6 +78,7 @@ public protocol SettingsStoreProtocol {
     var enableIPv6: Bool { get set }
     var validationLogging: Bool { get set }
     var sentryAppDevice: String? { get set }
+    var ipcCommunicationEnabled: Bool { get set }
 }
 
 protocol SettingsStoreInternalProtocol {

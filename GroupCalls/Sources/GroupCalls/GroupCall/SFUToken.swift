@@ -66,15 +66,8 @@ public struct SFUToken: Sendable {
     public func hasAllowedHostnameSuffix(url: URL) -> Bool {
         var host = ""
         
-        if #available(iOS 16.0, *) {
-            if let givenHost = url.host() {
-                host = givenHost
-            }
-        }
-        else {
-            if let givenHost = url.host {
-                host = givenHost
-            }
+        if let givenHost = url.host() {
+            host = givenHost
         }
         
         if let port = url.port {

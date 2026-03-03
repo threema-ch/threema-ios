@@ -25,9 +25,7 @@
 #import <CommonCrypto/CommonDigest.h>
 #import "NSString+Hex.h"
 #import "UIDefines.h"
-#import "RectUtil.h"
 #import "LicenseStore.h"
-#import "ThreemaFramework/ThreemaFramework-swift.h"
 
 #define NUM_POSITIONS_REQUIRED 200
 #define NUM_LINES 16
@@ -66,20 +64,20 @@
     [super adaptToSmallScreen];
     
     CGFloat yOffset = -10.0;
-    _titleLabel.frame = [RectUtil offsetRect:_titleLabel.frame byX:0.0 byY:yOffset];
+    _titleLabel.frame = CGRectMake(_titleLabel.frame.origin.x, _titleLabel.frame.origin.y + yOffset, _titleLabel.frame.size.width, _titleLabel.frame.size.height);
     
     yOffset -= 24.0;
-    _actionLabel.frame = [RectUtil offsetRect:_actionLabel.frame byX:0.0 byY:yOffset];
-    _progressView.frame = [RectUtil offsetRect:_progressView.frame byX:0.0 byY:yOffset];
-    _randomDataView.frame = [RectUtil offsetRect:_randomDataView.frame byX:0.0 byY:yOffset];
-    _fingerView.frame = [RectUtil offsetRect:_fingerView.frame byX:0.0 byY:yOffset];
-    _fingerView.frame = [RectUtil changeSizeOf:_fingerView.frame deltaX:-24.0 deltaY:-24.0];
+    _actionLabel.frame = CGRectMake(_actionLabel.frame.origin.x, _actionLabel.frame.origin.y + yOffset, _actionLabel.frame.size.width, _actionLabel.frame.size.height);
+    _progressView.frame = CGRectMake(_progressView.frame.origin.x, _progressView.frame.origin.y + yOffset, _progressView.frame.size.width, _progressView.frame.size.height);
+    _randomDataView.frame = CGRectMake(_randomDataView.frame.origin.x, _randomDataView.frame.origin.y + yOffset, _randomDataView.frame.size.width, _randomDataView.frame.size.height);
+    _fingerView.frame = CGRectMake(_fingerView.frame.origin.x, _fingerView.frame.origin.y + yOffset, _fingerView.frame.size.width, _fingerView.frame.size.height);
+    _fingerView.frame = CGRectMake(_fingerView.frame.origin.x, _fingerView.frame.origin.y, _fingerView.frame.size.width - 24.0, _fingerView.frame.size.height - 24.0);
     
     yOffset -= 20.0;
-    _cancelButton.frame = [RectUtil offsetRect:self.cancelButton.frame byX:0.0 byY:yOffset];
+    _cancelButton.frame = CGRectMake(self.cancelButton.frame.origin.x, self.cancelButton.frame.origin.y + yOffset, self.cancelButton.frame.size.width, self.cancelButton.frame.size.height);
     
     yOffset = 45.0;
-    self.moreView.frame = [RectUtil offsetRect:self.moreView.frame byX:0.0 byY:yOffset];
+    self.moreView.frame = CGRectMake(self.moreView.frame.origin.x, self.moreView.frame.origin.y + yOffset, self.moreView.frame.size.width, self.moreView.frame.size.height);
 }
 
 - (void)setup {
@@ -87,18 +85,18 @@
     
     _progressView.tintColor = UIColor.tintColor;
     
-    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], TargetManagerObjc.appName];
-    _actionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"move_your_finger"], TargetManagerObjc.localizedAppName];
+    _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], TargetManagerObjC.appName];
+    _actionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"move_your_finger"], TargetManagerObjC.localizedAppName];
     
     self.moreView.mainView = self.mainContentView;
     self.moreView.moreButtonTitle = [BundleUtil localizedStringForKey:@"more_information"];
-    self.moreView.moreMessageText = [BundleUtil localizedStringForKey:@"more_information_random_seed"];
+    self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_random_seed"], TargetManagerObjC.localizedAppName];
         
     _motionEntropyCollector = [[MotionEntropyCollector alloc] init];
     
     _randomDataView.delegate = self;
     _randomDataView.isAccessibilityElement = YES;
-    [_randomDataView setAccessibilityHint:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"move_your_finger"], TargetManagerObjc.localizedAppName]];
+    [_randomDataView setAccessibilityHint:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"move_your_finger"], TargetManagerObjC.localizedAppName]];
     _randomDataView.accessibilityIdentifier = @"randomDataView";
     
     [self setupRandomMatrix];

@@ -58,18 +58,21 @@ import Foundation
             safeBackupStatus |= SafeSetupWork.backupDisable
         }
         else {
-            if mdmSetup.safeEnable() == nil {
-                safeBackupStatus |= SafeSetupWork.backupEnable
-            }
-            else if !Bool(exactly: mdmSetup.safeEnable())! {
-                safeBackupStatus |= SafeSetupWork.backupDisable
+            if let safeEnable = mdmSetup.safeEnable() {
+                if let safeEnableBool = Bool(exactly: safeEnable),
+                   !safeEnableBool {
+                    safeBackupStatus |= SafeSetupWork.backupDisable
+                }
+                else {
+                    safeBackupStatus |= SafeSetupWork.backupForce
+                    
+                    if mdmSetup.safePassword() != nil {
+                        safeBackupStatus |= SafeSetupWork.passwordPreset
+                    }
+                }
             }
             else {
-                safeBackupStatus |= SafeSetupWork.backupForce
-                
-                if mdmSetup.safePassword() != nil {
-                    safeBackupStatus |= SafeSetupWork.passwordPreset
-                }
+                safeBackupStatus |= SafeSetupWork.backupEnable
             }
 
             if mdmSetup.safeServerURL() != nil {

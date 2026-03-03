@@ -74,6 +74,7 @@ extern NSString * _Nonnull const MDM_KEY_SAFE_PASSWORD_PATTERN;
 extern NSString * _Nonnull const MDM_KEY_SAFE_PASSWORD_MESSAGE;
 
 extern NSString * _Nonnull const MDM_KEY_ONPREM_SERVER;
+extern NSString * _Nonnull const MDM_KEY_ENABLE_REMOTE_SECRET;
 
 extern NSString * _Nonnull const MDM_KEY_THREEMA_CONFIGURATION;
 extern NSString * _Nonnull const MDM_KEY_THREEMA_OVERRIDE;
@@ -86,17 +87,15 @@ typedef enum : int {
     CallsPolicyTypeUnknown
 } CallsPolicyType;
 
-@interface MDMSetup : NSObject {
-    BOOL isSetup;
-    /// true means it is Threema Work
-    BOOL isLicenseRequired;
-    dispatch_queue_t queue;
-}
+@interface MDMSetup : NSObject
+
+@property (readonly, nullable) NSObject *businessInjector;
 
 @property (readonly, assign) NSString *idBackup;
 @property (readonly, assign) NSString *idBackupPassword;
 
-- (MDMSetup*) initWithSetup:(BOOL)setup;
+- (MDMSetup*)init;
+- (MDMSetup*)initWithAppSetupStateRawValue:(NSInteger)appSetupStateRawValue;
 
 + (void)clearMdmCache;
 
@@ -126,7 +125,7 @@ typedef enum : int {
 
 - (BOOL)disableMultiDevice;
 
-- (NSString *)webHosts;
+- (nullable NSString *)webHosts;
 
 - (BOOL)disableCreateGroup;
 
@@ -140,19 +139,29 @@ typedef enum : int {
 
 - (BOOL)disableHideStaleContacts;
 
-- (NSNumber*)safeEnable;
+- (BOOL)enableRemoteSecret;
 
-- (NSString*)safePassword;
+- (nullable NSNumber *)safeEnable;
 
-- (NSString*)safeServerUrl NS_SWIFT_NAME(safeServerURL());
+- (nullable NSString *)safePassword;
 
-- (NSString*)safeServerUsername;
+- (nullable NSString *)safeServerUrl NS_SWIFT_NAME(safeServerURL());
 
-- (NSString*)safeServerPassword;
+- (nullable NSString *)safeServerUsername;
 
-- (NSString *)safePasswordPattern;
+- (nullable NSString *)safeServerPassword;
 
-- (NSString *)safePasswordMessage;
+- (nullable NSString *)safePasswordPattern;
+
+- (nullable NSString *)safePasswordMessage;
+
+- (nullable NSString *)nickname;
+
+- (nullable NSString *)linkEmail;
+
+- (nullable NSString *)linkPhoneNumber;
+
+- (BOOL)contactSync;
 
 - (nullable NSNumber *)keepMessagesDays;
 
@@ -160,7 +169,7 @@ typedef enum : int {
 
 - (BOOL)safeRestoreEnable;
 
-- (NSString*)safeRestoreId NS_SWIFT_NAME(safeRestoreID());
+- (nullable NSString *)safeRestoreId NS_SWIFT_NAME(safeRestoreID());
 
 - (BOOL)isSafeBackupDisable;
 
@@ -186,15 +195,15 @@ typedef enum : int {
 
 - (BOOL)hasIDBackup;
 
-- (void)restoreIDBackupOnCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError *error))onError;
+- (void)restoreIDBackupOnCompletion:(void(^_Nonnull)(void))onCompletion onError:(void(^_Nonnull)(NSError *error))onError;
 
 - (nullable NSString *)supportDescriptionString;
 
-- (BOOL)existsMdmKey:(NSString*)mdmKey;
+- (BOOL)existsMdmKey:(nonnull NSString*)mdmKey;
 
-- (NSDictionary*)getCompanyMDM;
+- (nullable NSDictionary *)getCompanyMDM;
 
-- (NSDictionary*)getThreemaMDM;
+- (nullable NSDictionary *)getThreemaMDM;
 
 /// Apply Threema MDM parameters (workData) to company MDM
 /// @param workData: Threema MDM parameters
@@ -203,7 +212,7 @@ typedef enum : int {
 
 /// Apply company MDM with cached Threema MDM parameters
 /// @param sendForce: If YES send update work info any way
-- (void)applyCompanyMDMWithCachedThreemaMDMSendForce:(BOOL)sendForce;
+- (void)applyCompanyMDMWithCachedThreemaMDMSendForce:(BOOL)sendForce NS_SWIFT_NAME(applyCompanyMDMWithCachedThreemaMDM(sendForce:));
 
 - (void)deleteThreemaMdm;
 

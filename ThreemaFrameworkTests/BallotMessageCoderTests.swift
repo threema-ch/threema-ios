@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentialsTestHelper
 import XCTest
 @testable import ThreemaFramework
 
@@ -44,18 +45,18 @@ class BallotMessageCoderTests: XCTestCase {
         // Goal: Test impossibility for client to create a Ballot with DisplayModeSummary
         
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext)
+        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
-            for: Data([1]),
-            creator: "ECHOECHO"
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
+            for: preparer.groupID,
+            creatorID: "ECHOECHO", myIdentity: preparer.myIdentity
         ))
         
         // Create Ballot
         let ballot = createLocalBallot()
         createChoices(for: ballot)
-        ballot.displayMode = NSNumber(integerLiteral: BallotDisplayMode.summary.rawValue)
-        
+        ballot.displayMode = NSNumber(integerLiteral: BallotEntity.BallotDisplayMode.summary.rawValue)
+
         // Act:
         // Encode:
         let boxBallotCreateMessage = BallotMessageEncoder.encodeCreateMessage(forBallot: ballot)
@@ -69,9 +70,15 @@ class BallotMessageCoderTests: XCTestCase {
             fromBox: boxBallotCreateMessage,
             sender: nil,
             conversation: conversation,
-            onCompletion: { message in
-                decodedBallot = message.ballot
-                expect.fulfill()
+            onCompletion: { messageObject in
+                do {
+                    let message = try XCTUnwrap(messageObject as? BallotMessageEntity)
+                    decodedBallot = message.ballot
+                    expect.fulfill()
+                }
+                catch {
+                    XCTFail("\(error)")
+                }
             },
             onError: { error in
                 XCTFail("\(error)")
@@ -82,19 +89,18 @@ class BallotMessageCoderTests: XCTestCase {
         wait(for: [expect], timeout: 3)
 
         // Assert:
-        XCTAssertEqual(decodedBallot?.displayMode?.intValue, BallotDisplayMode.summary.rawValue)
+        XCTAssertEqual(decodedBallot?.displayMode?.intValue, BallotEntity.BallotDisplayMode.summary.rawValue)
     }
     
     func testBallotEncodingDisplayModeNotSpecified() throws {
         // Goal: Test that DisplayMode is List, when nothing is specified
 
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext)
+        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
-            for: Data([1]),
-            creator:
-            "ECHOECHO"
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
+            for: preparer.groupID,
+            creatorID: "ECHOECHO", myIdentity: preparer.myIdentity
         ))
 
         // Create Ballot
@@ -114,9 +120,15 @@ class BallotMessageCoderTests: XCTestCase {
             fromBox: boxBallotCreateMessage,
             sender: nil,
             conversation: conversation,
-            onCompletion: { message in
-                decodedBallot = message.ballot
-                expect.fulfill()
+            onCompletion: { messageObject in
+                do {
+                    let message = try XCTUnwrap(messageObject as? BallotMessageEntity)
+                    decodedBallot = message.ballot
+                    expect.fulfill()
+                }
+                catch {
+                    XCTFail("\(error)")
+                }
             },
             onError: { error in
                 XCTFail("\(error)")
@@ -127,19 +139,18 @@ class BallotMessageCoderTests: XCTestCase {
         wait(for: [expect], timeout: 3)
 
         // Assert:
-        XCTAssertEqual(decodedBallot?.displayMode?.intValue, BallotDisplayMode.list.rawValue)
+        XCTAssertEqual(decodedBallot?.displayMode?.intValue, BallotEntity.BallotDisplayMode.list.rawValue)
     }
 
     func testBallotEncodingChoicesTotalVotesNotSet() throws {
         // Goal: Test that Choices have no value for totalVotes after Encoding
 
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext)
+        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
-            for: Data([1]),
-            creator:
-            "ECHOECHO"
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
+            for: preparer.groupID,
+            creatorID: "ECHOECHO", myIdentity: preparer.myIdentity
         ))
 
         // Create Ballot
@@ -167,9 +178,15 @@ class BallotMessageCoderTests: XCTestCase {
             fromBox: boxBallotCreateMessage,
             sender: nil,
             conversation: conversation,
-            onCompletion: { message in
-                decodedBallot = message.ballot
-                expect.fulfill()
+            onCompletion: { messageObject in
+                do {
+                    let message = try XCTUnwrap(messageObject as? BallotMessageEntity)
+                    decodedBallot = message.ballot
+                    expect.fulfill()
+                }
+                catch {
+                    XCTFail("\(error)")
+                }
             },
             onError: { error in
                 XCTFail("\(error)")
@@ -190,12 +207,11 @@ class BallotMessageCoderTests: XCTestCase {
     func testDecodeMessageCreateBallot() throws {
         // Goal: Test Decoding of incoming message without existing Ballot
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext)
+        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
-            for: Data([1]),
-            creator:
-            "ECHOECHO"
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
+            for: preparer.groupID,
+            creatorID: "ECHOECHO", myIdentity: preparer.myIdentity
         ))
         let boxBallotCreateMessage = BoxBallotCreateMessage()
         let jsonString = preparer.loadContentAsString(
@@ -214,9 +230,15 @@ class BallotMessageCoderTests: XCTestCase {
             fromBox: boxBallotCreateMessage,
             sender: nil,
             conversation: conversation,
-            onCompletion: { message in
-                decodedBallot = message.ballot
-                expect.fulfill()
+            onCompletion: { messageObject in
+                do {
+                    let message = try XCTUnwrap(messageObject as? BallotMessageEntity)
+                    decodedBallot = message.ballot
+                    expect.fulfill()
+                }
+                catch {
+                    XCTFail("\(error)")
+                }
             },
             onError: { error in
                 XCTFail("\(error)")
@@ -242,7 +264,7 @@ class BallotMessageCoderTests: XCTestCase {
         XCTAssertEqual(decodedBallot?.assessmentType, 1)
         XCTAssertEqual(decodedBallot?.type, 1)
         XCTAssertEqual(decodedBallot?.choicesType, 0)
-        XCTAssertEqual(decodedBallot?.displayMode?.intValue, BallotDisplayMode.list.rawValue)
+        XCTAssertEqual(decodedBallot?.displayMode?.intValue, BallotEntity.BallotDisplayMode.list.rawValue)
 
         // Choices
         XCTAssertEqual(choices.count, 4)
@@ -254,8 +276,7 @@ class BallotMessageCoderTests: XCTestCase {
         XCTAssertEqual(results0.count, 3)
 
         for result in results0 {
-            // swiftformat:disable:next acronyms
-            switch result.participantId {
+            switch result.participantID {
             case "ECHOECHO":
                 XCTAssertEqual(result.value, 1)
             case "ECHOECHO1":
@@ -275,8 +296,7 @@ class BallotMessageCoderTests: XCTestCase {
         XCTAssertEqual(results1.count, 3)
 
         for result in results1 {
-            // swiftformat:disable:next acronyms
-            switch result.participantId {
+            switch result.participantID {
             case "ECHOECHO":
                 XCTAssertEqual(result.value, 1)
             case "ECHOECHO1":
@@ -293,12 +313,11 @@ class BallotMessageCoderTests: XCTestCase {
         // Goal: Creating a message with no results must not crash
 
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext)
+        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
-            for: Data([1]),
-            creator:
-            "ECHOECHO"
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
+            for: preparer.groupID,
+            creatorID: "ECHOECHO", myIdentity: preparer.myIdentity
         ))
         let boxBallotCreateMessage = BoxBallotCreateMessage()
         let jsonString = preparer.loadContentAsString(
@@ -317,9 +336,15 @@ class BallotMessageCoderTests: XCTestCase {
             fromBox: boxBallotCreateMessage,
             sender: nil,
             conversation: conversation,
-            onCompletion: { message in
-                decodedBallot = message.ballot
-                expect.fulfill()
+            onCompletion: { messageObject in
+                do {
+                    let message = try XCTUnwrap(messageObject as? BallotMessageEntity)
+                    decodedBallot = message.ballot
+                    expect.fulfill()
+                }
+                catch {
+                    XCTFail("\(error)")
+                }
             },
             onError: { error in
                 XCTFail("\(error)")
@@ -351,12 +376,11 @@ class BallotMessageCoderTests: XCTestCase {
         // for participants and no values for participants votes
 
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext)
+        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
         let ballotDecoder = BallotMessageDecoder(entityManager)
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
-            for: Data([1]),
-            creator:
-            "ECHOECHO"
+        let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
+            for: preparer.groupID,
+            creatorID: "ECHOECHO", myIdentity: preparer.myIdentity
         ))
         let boxBallotCreateMessage = BoxBallotCreateMessage()
         let jsonString = preparer.loadContentAsString(
@@ -375,9 +399,15 @@ class BallotMessageCoderTests: XCTestCase {
             fromBox: boxBallotCreateMessage,
             sender: nil,
             conversation: conversation,
-            onCompletion: { message in
-                decodedBallot = message.ballot
-                expect.fulfill()
+            onCompletion: { messageObject in
+                do {
+                    let message = try XCTUnwrap(messageObject as? BallotMessageEntity)
+                    decodedBallot = message.ballot
+                    expect.fulfill()
+                }
+                catch {
+                    XCTFail("\(error)")
+                }
             },
             onError: { error in
                 XCTFail("\(error)")
@@ -427,8 +457,7 @@ class BallotMessageCoderTests: XCTestCase {
         )
         ballot.id = MockData.generateBallotID()
         ballot.createDate = Date()
-        // swiftformat:disable:next acronyms
-        ballot.creatorId = "MyID"
+        ballot.creatorID = "MyID"
         ballot.title = "TestBallot"
         ballot.choicesType = 0
         

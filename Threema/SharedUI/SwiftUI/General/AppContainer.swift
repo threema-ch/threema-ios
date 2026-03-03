@@ -22,6 +22,7 @@ import Combine
 import SwiftUI
 import ThreemaFramework
 
+@available(*, deprecated, message: "Do not use anymore.")
 @dynamicMemberLookup
 struct AppContainer: EnvironmentKey {
     
@@ -42,6 +43,7 @@ struct AppContainer: EnvironmentKey {
 }
 
 extension EnvironmentValues {
+    @available(*, deprecated, message: "Do not use anymore.")
     var appContainer: AppContainer {
         get { self[AppContainer.self] }
         set { self[AppContainer.self] = newValue }
@@ -49,6 +51,7 @@ extension EnvironmentValues {
 }
 
 extension View {
+    @available(*, deprecated, message: "Do not use anymore.")
     func inject(_ container: AppContainer) -> some View {
         environment(\.appContainer, container)
     }

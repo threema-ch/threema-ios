@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 /// Coordinates the access to the shared resource (at this time only used for the connection to the server)
 /// of message processing between the App, Notification Extension and Share Extension.
@@ -56,12 +57,14 @@ final class ProcessCoordinator: NSObject {
     }
 
     // Dispatch queue to sync (serialize) request access calls
-    private let startRequestQueue = DispatchQueue(label: "ch.threema.ProcessStateHandover.startRequestQueue")
+    private let startRequestQueue = DispatchQueue(
+        label: "ch.threema.ProcessStateHandover.startRequestQueue",
+        qos: .userInitiated
+    )
 
     private var pollingSemaphore: DispatchSemaphore?
     private var pollingStopped = false
     private let pollingInMilliseconds = 70
-    private let pollingTimeoutInMilliseconds = 700
 
     // Dispatch queue to sync member variables `pollingSemaphore` and `pollingStopped`,
     // note that the polling is running in his own background thread
@@ -103,7 +106,7 @@ final class ProcessCoordinator: NSObject {
     @objc convenience init(serverConnector: ServerConnectorProtocol, userSettings: UserSettingsProtocol) {
         self.init(
             myAppType: AppGroup.getCurrentType(),
-            state: .requested,
+            state: .unused,
             serverConnector: serverConnector,
             userSettings: userSettings
         )
@@ -117,14 +120,20 @@ final class ProcessCoordinator: NSObject {
         serverConnector?.unregisterConnectionStateDelegate(delegate: self)
     }
 
-    @available(*, deprecated, message: "Use `AccessState.description` instead")
+    @available(swift, obsoleted: 1.0, renamed: "AccessState.description", message: "Only use from Objective-C")
     @objc static func nameFor(accessState state: AccessState) -> String {
         state.description
     }
 
-    /// Request access to connecting to chat/mediator server
+    /// Request access to connecting to chat/mediator server.
+    ///
+    /// - Parameter pollingTimeout: If the timeout (milliseconds) reached
+    ///  then the state will changed to `AccessState.using`.
+    ///  If another process is running, the timeout should be higher than 700 ms.
+    ///  This is because if the process is busy, the IPC message probably cannot be sent immediately.
+    ///
     /// - Returns: Result as state
-    @objc func requestAccess() async -> AccessState {
+    @objc func requestAccess(pollingTimeout: Int) async -> AccessState {
         await withCheckedContinuation { continuation in
             startRequestQueue.async {
                 guard self.serverConnector?.connectionState != .loggedIn else {
@@ -133,14 +142,12 @@ final class ProcessCoordinator: NSObject {
                     return
                 }
 
-                continuation.resume(returning: self.requestAccess())
+                continuation.resume(returning: self.requestAccess(timeout: pollingTimeout))
             }
         }
     }
 
-    /// Inquires communication for connect to chat/mediator server
-    /// - Parameter completionHandler: Result as state and error
-    private func requestAccess() -> AccessState {
+    private func requestAccess(timeout: Int) -> AccessState {
         pollingQueue.sync {
             self.pollingSemaphore = DispatchSemaphore(value: 0)
             self.pollingStopped = false
@@ -154,7 +161,7 @@ final class ProcessCoordinator: NSObject {
             self.pollingRequested()
         }
 
-        let result = pollingSemaphore?.wait(timeout: .now() + .milliseconds(pollingTimeoutInMilliseconds))
+        let result = pollingSemaphore?.wait(timeout: .now() + .milliseconds(timeout))
 
         pollingQueue.sync {
             self.pollingStopped = true
@@ -281,64 +288,84 @@ final class ProcessCoordinator: NSObject {
             return state
         }
 
-        return switch receivedState {
+        let newState: AccessState
+
+        switch receivedState {
         case .unused:
             switch state {
-            case .unused: .unused
-            case .requested: .using
-            case .using: .using
-            case .willRelease: .willRelease
+            case .unused: newState = .unused
+            case .requested: newState = .using
+            case .using: newState = .using
+            case .willRelease: newState = .willRelease
             }
         case .requested:
             switch state {
-            case .unused: .unused
+            case .unused: newState = .unused
             case .requested:
                 switch myAppType {
-                case AppGroupTypeApp: fromAppType == AppGroupTypeShareExtension ? .willRelease : .requested
-                case AppGroupTypeShareExtension: .requested
-                case AppGroupTypeNotificationExtension: .willRelease
+                case AppGroupTypeApp: newState = fromAppType == AppGroupTypeShareExtension ? .willRelease : .requested
+                case AppGroupTypeShareExtension: newState = .requested
+                case AppGroupTypeNotificationExtension: newState = .willRelease
                 default:
                     fatalError("Unknown my app type: \(myAppType)")
                 }
             case .using:
                 switch myAppType {
-                case AppGroupTypeApp: fromAppType == AppGroupTypeShareExtension ? .willRelease : .using
-                case AppGroupTypeShareExtension: .using
-                case AppGroupTypeNotificationExtension: .willRelease
+                case AppGroupTypeApp:
+                    if fromAppType == AppGroupTypeShareExtension {
+                        // In this case the app and the share extension run at the same time.
+                        // This can happen when a file message is shared within the app. Then the app
+                        // must disconnect and reconnect with a 2 seconds delay.
+                        if serverConnector?.connectionState != .disconnected {
+                            serverConnector?.disconnect(initiator: .app)
+                            DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+                                self.serverConnector?.connect(initiator: .app)
+                            }
+                        }
+
+                        newState = .willRelease
+                    }
+                    else {
+                        newState = .using
+                    }
+                case AppGroupTypeShareExtension: newState = .using
+                case AppGroupTypeNotificationExtension: newState = .willRelease
                 default:
                     fatalError("Unknown my app type: \(myAppType)")
                 }
-            case .willRelease: .willRelease
+            case .willRelease: newState = .willRelease
             }
         case .using:
             switch state {
-            case .unused: .unused
+            case .unused: newState = .unused
             case .requested:
                 switch myAppType {
-                case AppGroupTypeApp: fromAppType == AppGroupTypeShareExtension ? .willRelease : .requested
-                case AppGroupTypeShareExtension: .requested
-                case AppGroupTypeNotificationExtension: .willRelease
+                case AppGroupTypeApp: newState = fromAppType == AppGroupTypeShareExtension ? .willRelease : .requested
+                case AppGroupTypeShareExtension: newState = .requested
+                case AppGroupTypeNotificationExtension: newState = .willRelease
                 default:
                     fatalError("Unknown my app type: \(myAppType)")
                 }
             case .using:
                 switch myAppType {
-                case AppGroupTypeApp: fromAppType == AppGroupTypeShareExtension ? .willRelease : .using
-                case AppGroupTypeShareExtension: .using
-                case AppGroupTypeNotificationExtension: .willRelease
+                case AppGroupTypeApp: newState = fromAppType == AppGroupTypeShareExtension ? .willRelease : .using
+                case AppGroupTypeShareExtension: newState = .using
+                case AppGroupTypeNotificationExtension: newState = .willRelease
                 default:
                     fatalError("Unknown my app type: \(myAppType)")
                 }
-            case .willRelease: .willRelease
+            case .willRelease: newState = .willRelease
             }
         case .willRelease:
             switch state {
-            case .unused: .unused
-            case .requested: .requested
-            case .using: .using
-            case .willRelease: .willRelease
+            case .unused: newState = .unused
+            case .requested: newState = .requested
+            case .using: newState = .using
+            case .willRelease: newState = .willRelease
             }
         }
+
+        return newState
     }
 
     private var secretPrefix: String {

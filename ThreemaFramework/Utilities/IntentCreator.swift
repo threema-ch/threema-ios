@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import Intents
 import PromiseKit
+import ThreemaEssentials
 
 public class IntentCreator {
     
@@ -45,6 +46,11 @@ public class IntentCreator {
         direction: INInteractionDirection
     ) -> INInteraction? {
         
+        guard !AppLaunchManager.isRemoteSecretEnabled else {
+            DDLogVerbose("Donations for interactions are disabled by the remote secret feature")
+            return nil
+        }
+        
         if direction == .outgoing,
            !userSettings.allowOutgoingDonations {
             DDLogVerbose("Donations for outgoing interactions are disabled by the user")
@@ -62,7 +68,7 @@ public class IntentCreator {
         var isPrivate = false
         
         entityManager.performAndWaitSave {
-            if let internalFetchedContact = self.entityManager.entityFetcher.contact(for: contactID) {
+            if let internalFetchedContact = self.entityManager.entityFetcher.contactEntity(for: contactID) {
                 fetchedContact = internalFetchedContact
                 if let conversation = self.entityManager.conversation(
                     forContact: internalFetchedContact,
@@ -130,6 +136,11 @@ public class IntentCreator {
         direction: INInteractionDirection
     ) -> INInteraction? {
         
+        guard !AppLaunchManager.isRemoteSecretEnabled else {
+            DDLogVerbose("Donations for interactions are disabled by the remote secret feature")
+            return nil
+        }
+        
         if direction == .outgoing,
            !userSettings.allowOutgoingDonations {
             DDLogVerbose("Donations for outgoing interactions are disabled by the user")
@@ -148,7 +159,8 @@ public class IntentCreator {
         var isPrivate = false
         
         entityManager.performAndWait {
-            if let internalFetchedContact = self.entityManager.entityFetcher.contact(for: contactID) {
+            if let contactID,
+               let internalFetchedContact = self.entityManager.entityFetcher.contactEntity(for: contactID) {
                 fetchedContact = internalFetchedContact
                 if let conversation = self.entityManager.conversation(
                     forContact: internalFetchedContact,
@@ -158,9 +170,9 @@ public class IntentCreator {
                 }
             }
             
+            let groupIdentity = GroupIdentity(id: groupID, creator: ThreemaIdentity(creatorID))
             if let conversation = self.entityManager.entityFetcher.conversationEntity(
-                for: groupID,
-                creator: creatorID
+                for: groupIdentity, myIdentity: MyIdentityStore.shared().identity
             ) {
                 isPrivate = isPrivate || conversation.conversationCategory == .private
                 groupConversation = conversation

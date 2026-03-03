@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentialsTestHelper
 import XCTest
 @testable import ThreemaFramework
 
@@ -30,14 +31,15 @@ class NonceGuardTests: XCTestCase {
     private var ddLoggerMock: DDLoggerMock!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
 
         entityManager = EntityManager(
-            databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: nil),
-            myIdentityStore: myIdentityStore
+            databaseContext: DatabaseContext(
+                mainContext: mainCnx,
+                backgroundContext: nil
+            ), isRemoteSecretEnabled: false
         )
         dbPreparer = DatabasePreparer(context: mainCnx)
 
@@ -52,9 +54,9 @@ class NonceGuardTests: XCTestCase {
 
     func testIsProcessed() throws {
         let nonce = MockData.generateMessageNonce()
-        let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentityStore: myIdentityStore)
+        let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentity: myIdentityStore.identity)
         entityManager.performAndWaitSave {
-            _ = self.entityManager.entityCreator.nonceEntity(with: hashedNonce)
+            _ = self.entityManager.entityCreator.nonceEntity(for: hashedNonce!)
         }
 
         let expectedIncomingMessage = BoxTextMessage()
@@ -91,9 +93,9 @@ class NonceGuardTests: XCTestCase {
 
     func testIsProcessedReflected() throws {
         let nonce = MockData.generateMessageNonce()
-        let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentityStore: myIdentityStore)
+        let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentity: myIdentityStore.identity)
         entityManager.performAndWaitSave {
-            _ = self.entityManager.entityCreator.nonceEntity(with: hashedNonce)
+            _ = self.entityManager.entityCreator.nonceEntity(for: hashedNonce!)
         }
 
         let expectedIncomingMessage = BoxTextMessage()
@@ -121,8 +123,11 @@ class NonceGuardTests: XCTestCase {
 
         let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         try nonceGuard.processed(message: expectedIncomingMessage)
-
-        XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: expectedIncomingMessage.nonce))
+        let hashedNonce = NonceHasher.hashedNonce(expectedIncomingMessage.nonce, myIdentity: myIdentityStore.identity)!
+       
+        XCTAssertTrue(entityManager.entityFetcher.isNonceEntityAlreadyInDB(
+            hashedNonce
+        ))
     }
 
     func testProcessedNonceIsNil() throws {
@@ -149,8 +154,11 @@ class NonceGuardTests: XCTestCase {
 
         let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         try nonceGuard.processed(message: expectedIncomingMessage)
-
-        XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: expectedIncomingMessage.nonce))
+        let hashedNonce = NonceHasher.hashedNonce(expectedIncomingMessage.nonce, myIdentity: myIdentityStore.identity)!
+        
+        XCTAssertTrue(entityManager.entityFetcher.isNonceEntityAlreadyInDB(
+            hashedNonce
+        ))
     }
     
     func testDoNotStoreSameNonceTwice() throws {
@@ -159,12 +167,14 @@ class NonceGuardTests: XCTestCase {
         let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         try nonceGuard.processed(nonces: [nonce, nonce])
 
-        let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentityStore: myIdentityStore)
-        let matchedDBNonces = entityManager.entityFetcher.allNonceEntities()?.filter {
+        let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentity: myIdentityStore.identity)
+        let matchedDBNonces = entityManager.entityFetcher.nonceEntities()?.filter {
             $0.nonce == hashedNonce
         }
         
-        XCTAssertTrue(entityManager.entityFetcher.isNonceAlreadyInDB(nonce: nonce))
+        XCTAssertTrue(entityManager.entityFetcher.isNonceEntityAlreadyInDB(
+            hashedNonce!
+        ))
         XCTAssertEqual(1, matchedDBNonces?.count)
     }
 }

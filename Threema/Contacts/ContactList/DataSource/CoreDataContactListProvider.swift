@@ -41,15 +41,12 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
     
     init(
         entityFetcher: EntityFetcher = BusinessInjector.ui.entityManager.entityFetcher,
-        at fetchedResultsControllerKeyPath: KeyPath<
-            ContactListFetchManager,
-            NSFetchedResultsController<NSFetchRequestResult>
-        >,
+        fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult>,
         entityResolver: @escaping (Entity) -> BusinessEntity?
     ) {
         self.entityFetcher = entityFetcher
         self.entityResolver = entityResolver
-        self.fetchedResultsController = entityFetcher[keyPath: fetchedResultsControllerKeyPath]
+        self.fetchedResultsController = fetchedResultsController
         self.snapshotSubject = .init(ContactListSnapshot())
         super.init()
         fetchedResultsController.delegate = self
@@ -73,7 +70,7 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
                 guard let self else {
                     return
                 }
-                self.fetchedResultsController = entityFetcher[keyPath: fetchedResultsControllerKeyPath]
+                self.fetchedResultsController = fetchedResultsController
                 fetchedResultsController.delegate = self
                 try? fetchedResultsController.performFetch()
             }
@@ -87,7 +84,7 @@ class CoreDataContactListProvider<Entity: NSObject, BusinessEntity: NSObject>: N
     // MARK: - Functions
     
     func entity(for id: NSManagedObjectID) -> BusinessEntity? {
-        guard let entity = entityFetcher.getManagedObject(by: id) as? Entity else {
+        guard let entity = entityFetcher.managedObject(with: id) as? Entity else {
             return nil
         }
         

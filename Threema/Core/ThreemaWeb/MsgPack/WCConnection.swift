@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ChunkedDC
 import CocoaLumberjackSwift
 import Foundation
 
@@ -93,7 +94,7 @@ extension WCConnection {
             salty_log_init_callback(callback, UInt8(LEVEL_INFO))
             
             guard let currentWebClientSession = self.delegate.currentWebClientSession() else {
-                ValidationLogger.shared().logString("[Threema Web] Can't connect to web, webClientSession is nil")
+                DDLogNotice("[Threema Web] Can't connect to web, webClientSession is nil")
                 WCSessionManager.shared.removeWCSessionFromRunning(self.delegate.currentWCSession())
                 return
             }
@@ -194,7 +195,7 @@ extension WCConnection {
     
     func sendChunk(chunk: [UInt8], msgpack: Data?, connectionInfo: Bool) {
         guard let responderSender = responder_sender else {
-            ValidationLogger.shared().logString("[Threema Web] sendChunk: response_sender is nil")
+            DDLogNotice("[Threema Web] sendChunk: response_sender is nil")
             return
         }
                 
@@ -211,12 +212,12 @@ extension WCConnection {
                 }
             }
             catch {
-                ValidationLogger.shared().logString("[Threema Web] Error during create chunks")
+                DDLogNotice("[Threema Web] Error during create chunks")
                 close(close: true, forget: false, sendDisconnect: false, reason: .error)
             }
         }
         else {
-            ValidationLogger.shared()?.logString("[Threema Web] sendChunk status is not ready")
+            DDLogNotice("[Threema Web] sendChunk status is not ready")
         }
     }
     
@@ -290,7 +291,7 @@ extension WCConnection {
             delegate.currentWebClientSession()!.isConnecting = false
             let errorString =
                 "[Threema Web] salty relayed data responder error \(String(describing: client_ret?.success))"
-            ValidationLogger.shared().logString(errorString)
+            DDLogNotice(errorString)
             WCSessionManager.shared.removeWCSessionFromRunning(delegate.currentWCSession())
             return
         }
@@ -313,8 +314,8 @@ extension WCConnection {
             0
         )
         if salty_client_init_ret.success == UInt8(INIT_OK.rawValue) {
-            ValidationLogger.shared().logString("[Threema Web] salty client init success")
-            ValidationLogger.shared().logString("[Threema Web] Start EventDispatchQueue")
+            DDLogNotice("[Threema Web] salty client init success")
+            DDLogNotice("[Threema Web] Start EventDispatchQueue")
             requestEventDispatchQueue(
                 responder_event: salty_client_init_ret.event_rx,
                 responder_receiver: client_ret!.receiver_rx
@@ -345,8 +346,8 @@ extension WCConnection {
             let errorString = "[Threema Web] Connection ended with exit code \(connect_success)"
             connectionStatus = .disconnected
             DDLogVerbose("[Threema Web] connectToWebClient -> Set connection state to \(connectionStatus)")
-            ValidationLogger.shared().logString(errorString)
-                
+            DDLogNotice(errorString)
+
             salty_relayed_data_client_free(client_ret!.client)
             salty_channel_sender_tx_free(client_ret!.sender_tx)
             if freeDisconnect {
@@ -366,7 +367,7 @@ extension WCConnection {
         else {
             delegate.currentWebClientSession()!.isConnecting = false
             let errorString = "[Threema Web] salty client init error \(salty_client_init_ret.success)"
-            ValidationLogger.shared().logString(errorString)
+            DDLogNotice(errorString)
             WCSessionManager.shared.removeWCSessionFromRunning(delegate.currentWCSession())
         }
     }
@@ -393,8 +394,8 @@ extension WCConnection {
                         DDLogVerbose(
                             "[Threema Web] EVENT_SERVER_HANDSHAKE_COMPLETED -> Set connection state to \(self.connectionStatus)"
                         )
-                        ValidationLogger.shared().logString("[Threema Web] Peer not connected")
-                        
+                        DDLogNotice("[Threema Web] Peer not connected")
+
                         // start timer and wait 10 seconds for peer
                         self.connectionWaitTimer?.invalidate()
                         DispatchQueue.main.async {
@@ -404,7 +405,7 @@ extension WCConnection {
                                 block: { _ in
                                     self.connectionWaitTimer?.invalidate()
                                     self.connectionWaitTimer = nil
-                                    ValidationLogger.shared().logString("[Threema Web] Error peer is not connected")
+                                    DDLogNotice("[Threema Web] Error peer is not connected")
                                     self.close(close: true, forget: false, sendDisconnect: true, reason: .stop)
                                 }
                             )
@@ -555,11 +556,11 @@ extension WCConnection {
                         }
                     }
                     catch {
-                        ValidationLogger.shared().logString("Something went wrong while unchunk data: \(error)")
+                        DDLogNotice("Something went wrong while unchunk data: \(error)")
                     }
                     salty_client_recv_msg_ret_free(recv_ret)
                 case UInt8(MSG_CLOSE.rawValue):
-                    ValidationLogger.shared().logString("[Threema Web] MSG_CLOSE")
+                    DDLogNotice("[Threema Web] MSG_CLOSE")
                     salty_client_recv_msg_ret_free(recv_ret)
                 default:
                     salty_client_recv_msg_ret_free(recv_ret)
@@ -577,7 +578,7 @@ extension WCConnection {
     
     private func removeWCSessionFromRunning(reason: WCConnectionStopReason, forget: Bool) {
         if reason != .pause, reason != .replace {
-            ValidationLogger.shared().logString("[Threema Web] Set current session by stop to inactive")
+            DDLogNotice("[Threema Web] Set current session by stop to inactive")
             WCSessionManager.shared.removeWCSessionFromRunning(delegate.currentWCSession())
             if forget, let webclientSession = delegate.currentWebClientSession() {
                 WebClientSessionStore.shared.deleteWebClientSession(webclientSession)

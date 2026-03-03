@@ -24,236 +24,122 @@ import SwiftUI
 
 @objc final class AppCoordinator: NSObject, Coordinator {
     
-    // MARK: - Internal destination
-    
-    // To please the compiler, we add an internal destination.
-    typealias CoordinatorDestination = InternalDestination
-    
-    enum InternalDestination: Equatable {
-        case none
-    }
-    
     // MARK: - Coordinator
     
     weak var parentCoordinator: (any Coordinator)?
     var childCoordinators: [any Coordinator] = []
+    var rootViewController: UIViewController {
+        splitViewController
+    }
 
     private var window: UIWindow
-    private lazy var lockScreen = LockScreen(isLockScreenController: false)
+    
+    // MARK: - Routers
+    
+    private lazy var shareActivityRouter: ShareActivityRouting = ShareActivityRouter(
+        rootViewController: rootViewController
+    )
+    private lazy var modalRouter: ModalRouting = ModalRouter(
+        rootViewController: rootViewController
+    )
+    private lazy var passcodeRouter: PasscodeRouting = PasscodeRouter(
+        lockScreen: LockScreen(isLockScreenController: false),
+        isPasscodeRequired: KKPasscodeLock.shared().isPasscodeRequired(),
+        rootViewController: rootViewController
+    )
     
     // MARK: - Views
     
-    private lazy var tabBarController = TabBarController(coordinator: self)
-    private lazy var splitViewController = MainSplitViewController(
-        coordinator: self,
-        tabBarController: tabBarController
-    )
+    private lazy var splitViewController = ThreemaSplitViewController()
     
-    private var currentModalNavigationController: UINavigationController?
+    private var tabBarController: ThreemaTabBarController {
+        splitViewController.threemaTabBarController
+    }
     
     // MARK: - Tabs
     
-    private lazy var settingsCoordinator1 = SettingsCoordinator(parentCoodinator: self)
-    private lazy var contactsTabHelper = TabNavigationHelper(
-        destination: .contacts,
-        coordinator: settingsCoordinator1
-    )
+    private lazy var contactsCoordinator: ContactsCoordinator = {
+        let coordinator = ContactsCoordinator(
+            presentingViewController: rootViewController
+        )
+        childCoordinators.append(coordinator)
+        coordinator.start()
+        return coordinator
+    }()
     
-    private lazy var settingsCoordinator2 = SettingsCoordinator(parentCoodinator: self)
-    private lazy var conversationsTabHelper = TabNavigationHelper(
-        destination: .conversations,
-        coordinator: settingsCoordinator2
-    )
+    private lazy var conversationsCoordinator: ConversationsCoordinator = {
+        let coordinator = ConversationsCoordinator(
+            presentingViewController: rootViewController
+        )
+        childCoordinators.append(coordinator)
+        coordinator.start()
+        return coordinator
+    }()
     
-    private lazy var profileCoordinator = ProfileCoordinator(parentCoodinator: self)
-    private lazy var profileTabHelper = TabNavigationHelper(
-        destination: .profile,
-        coordinator: profileCoordinator
-    )
+    private lazy var profileCoordinator: ProfileCoordinator = {
+        let coordinator = ProfileCoordinator(
+            presentingViewController: rootViewController,
+            shareActivityRouter: shareActivityRouter,
+            modalRouter: modalRouter,
+            passcodeRouter: passcodeRouter
+        )
+        childCoordinators.append(coordinator)
+        coordinator.start()
+        return coordinator
+    }()
     
-    private lazy var settingsCoordinator = SettingsCoordinator(parentCoodinator: self)
-    private lazy var settingsTabHelper = TabNavigationHelper(
-        destination: .settings,
-        coordinator: settingsCoordinator
-    )
-    
-    // MARK: - State
-    
-    // This property gets updated by the `SplitViewController` since we do not have a view to observe
-    var horizontalSizeClass: UIUserInterfaceSizeClass {
-        didSet {
-            guard oldValue != horizontalSizeClass else {
-                return
-            }
-            horizontalSizeClassDidChange()
-        }
-    }
-    
-    private(set) var currentTab: TabBarController.TabBarItem = .profile
+    private lazy var settingsCoordinator: SettingsCoordinator = {
+        let coordinator = SettingsCoordinator(
+            presentingViewController: rootViewController,
+            shareActivityRouter: shareActivityRouter,
+            passcodeRouter: passcodeRouter
+        )
+        childCoordinators.append(coordinator)
+        coordinator.start()
+        return coordinator
+    }()
 
     // MARK: - Lifecycle
 
     @objc init(window: UIWindow) {
         self.window = window
-        self.horizontalSizeClass = .unspecified
         
         super.init()
         
-        configure()
+        /// Because this is init from Objective-C,
+        /// `start()` method is called upon init.
+        start()
     }
     
-    private func configure() {
+    func start() {
+        configureSplitViewController()
+        
         window.rootViewController = splitViewController
         window.makeKeyAndVisible()
     }
     
-    func rootViewController() -> UIViewController {
-        splitViewController
-    }
-    
     // MARK: - Layout management
     
-    private func horizontalSizeClassDidChange() {
-        adaptChildCoordinators()
-        horizontalSizeClass == .regular ? presentRegularLayout() : presentCompactLayout()
-    }
-    
-    /// Prepares the navigation controllers and their view controller stacks for a size class change
-    private func adaptChildCoordinators() {
-        // Call changes to VC's before changing the navigation controllers to prevent crashes.
+    private func configureSplitViewController() {
+        let navigationThreemaLogoViewController = ThreemaLogoViewControllerFactory.threemaLogoNavigationController
         
-        contactsTabHelper.adaptNavigationControllers(for: horizontalSizeClass)
-        conversationsTabHelper.adaptNavigationControllers(for: horizontalSizeClass)
-        
-        profileCoordinator.horizontalSizeClass = horizontalSizeClass
-        profileTabHelper.adaptNavigationControllers(for: horizontalSizeClass)
-        
-        settingsCoordinator.horizontalSizeClass = horizontalSizeClass
-        settingsTabHelper.adaptNavigationControllers(for: horizontalSizeClass)
-    }
-    
-    private func presentCompactLayout() {
-        tabBarController.viewControllers = [
-            contactsTabHelper.primaryNavigationController,
-            conversationsTabHelper.primaryNavigationController,
-            profileTabHelper.primaryNavigationController,
-            settingsTabHelper.primaryNavigationController,
+        splitViewController.viewControllers = [
+            tabBarController,
+            navigationThreemaLogoViewController,
         ]
         
-        tabBarController.selectedIndex = currentTab.rawValue
-    }
-    
-    private func presentRegularLayout() {
-        let tabNavigationHelper = tabNavigationHelperForCurrentTab()
-        splitViewController.setViewController(tabNavigationHelper.primaryNavigationController, for: .supplementary)
-        splitViewController.setViewController(tabNavigationHelper.detailNavigationController, for: .secondary)
-    }
+        /// For now we keep as is. Ideally, the navigation would already be
+        /// part of the rootViewController.
+        let viewControllers: [UIViewController] = [
+            contactsCoordinator.rootViewController,
+            conversationsCoordinator.rootViewController,
+            profileCoordinator.rootViewController,
+            settingsCoordinator.rootViewController,
+        ]
         
-    // MARK: - Presentation
-    
-    func swichtTab(to tab: TabBarController.TabBarItem) {
-        guard currentTab != tab else {
-            return
-        }
-        
-        currentTab = tab
-        
-        if horizontalSizeClass == .regular {
-            // Update maintabbar selection
-            splitViewController.updateSelection()
-            
-            // Set view controllers
-            presentRegularLayout()
-        }
-        else {
-            // Update sidebar selection
-            splitViewController.updateSelection()
-        }
-    }
-    
-    public func show(_ destination: Destination) {
-        switch destination {
-        case let .app(appDestination):
-            // show(appDestination)
-            return
-        }
-    }
-    
-    public func show(_ destination: InternalDestination) {
-        assertionFailure("The app coordinator does not support internal destinations.")
-    }
-    
-    func show(_ destination: Destination.AppDestination) {
-        let tab = TabBarController.TabBarItem(destination)
-        swichtTab(to: tab)
-    }
-    
-    func show(_ viewController: UIViewController, style: CordinatorNavigationStyle) {
-        splitViewController.hide(.primary)
-        
-        let tabNavigationHelper = tabNavigationHelperForCurrentTab()
-        
-        switch style {
-        case .show:
-            if horizontalSizeClass == .regular {
-                tabNavigationHelper.detailNavigationController.viewControllers.removeAll()
-                tabNavigationHelper.detailNavigationController.pushViewController(viewController, animated: true)
-            }
-            else {
-                tabNavigationHelper.primaryNavigationController.pushViewController(viewController, animated: true)
-            }
-            
-        case let .modal(style, transition):
-            let navigationController = UINavigationController(rootViewController: viewController)
-            navigationController.modalPresentationStyle = style
-            navigationController.modalTransitionStyle = transition
-            currentModalNavigationController = navigationController
-            tabNavigationHelper.primaryNavigationController.present(navigationController, animated: true)
-            
-        case let .passcode(style):
-            guard KKPasscodeLock.shared().isPasscodeRequired() else {
-                show(viewController, style: style)
-                return
-            }
-            
-            let parentVCforLockScreen: UIViewController =
-                if horizontalSizeClass == .regular {
-                    tabNavigationHelper.detailNavigationController
-                }
-                else {
-                    tabNavigationHelper.primaryNavigationController
-                }
-            
-            lockScreen.presentLockScreenView(viewController: parentVCforLockScreen, enteredCorrectly: { [weak self] in
-                self?.show(viewController, style: style)
-            })
-        }
-    }
-    
-    func shareActivity(_ items: [Any], sourceView: UIView?) {
-        let tabNavigationHelper = tabNavigationHelperForCurrentTab()
-        let activityViewController = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        activityViewController.popoverPresentationController?.sourceView = sourceView
-        tabNavigationHelper.primaryNavigationController.present(activityViewController, animated: true)
-    }
-    
-    func dismiss() {
-        currentModalNavigationController?.dismiss(animated: true)
-        currentModalNavigationController = nil
-    }
-    
-    // MARK: - Helpers
-    
-    private func tabNavigationHelperForCurrentTab() -> TabNavigationHelper {
-        switch currentTab {
-        case .contacts:
-            contactsTabHelper
-        case .conversations:
-            conversationsTabHelper
-        case .profile:
-            profileTabHelper
-        case .settings:
-            settingsTabHelper
-        }
+        tabBarController.viewControllers = viewControllers
+        // We must set the conversations tab as the default. This is because, by default, the selectedIndex is 0, which
+        // corresponds to the contact tab.
+        tabBarController.selectedIndex = ThreemaTabBarController.TabBarItem.conversations.rawValue
     }
 }

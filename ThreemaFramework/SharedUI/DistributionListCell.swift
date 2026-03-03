@@ -31,6 +31,21 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
     
     // MARK: - Public properties
     
+    override public func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        
+        guard hasCheckmark else {
+            return
+        }
+        checkMarkView.isChecked = selected
+    }
+    
+    public var hasCheckmark = false {
+        didSet {
+            checkMarkView.isHidden = !hasCheckmark
+        }
+    }
+    
     public var size = CellConfiguration.Size.small {
         didSet {
             guard size != oldValue else {
@@ -41,7 +56,7 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
             sizeDidChange()
         }
     }
-
+    
     /// Distribution list to show
     @objc public var distributionList: DistributionList? {
         didSet {
@@ -58,7 +73,7 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
     }
     
     // MARK: - Subviews
-
+    
     private var profilePictureSizeConstraint: NSLayoutConstraint?
     
     private lazy var profilePictureView: ProfilePictureImageView = {
@@ -101,12 +116,19 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
         let label = UILabel()
         label.font = .preferredFont(forTextStyle: .footnote)
         label.textColor = .secondaryLabel
-
+        
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 2
         }
         
         return label
+    }()
+    
+    private lazy var checkMarkView: CustomCellCheckMarkAccessoryView = {
+        let view = CustomCellCheckMarkAccessoryView()
+        view.isHidden = !hasCheckmark
+        
+        return view
     }()
     
     // MARK: Layout stacks
@@ -130,17 +152,17 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
     
     private lazy var textStack: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [firstLineStack, membersListLabel])
-
+        
         stackView.spacing = configuration.verticalSpacing
         stackView.axis = .vertical
         stackView.distribution = .equalSpacing
         stackView.alignment = .fill
-
+        
         return stackView
     }()
     
     private lazy var containerStack: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [profilePictureView, textStack])
+        let stackView = UIStackView(arrangedSubviews: [profilePictureView, textStack, checkMarkView])
         
         stackView.axis = .horizontal
         stackView.distribution = .fill

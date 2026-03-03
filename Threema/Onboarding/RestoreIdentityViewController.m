@@ -23,14 +23,11 @@
 #import <MBProgressHUD/MBProgressHUD.h>
 #import "MyIdentityStore.h"
 #import "NSData+Base32.h"
-#import "ScanBackupController.h"
 #import "AppDelegate.h"
-#import "IdentityBackupStore.h"
 #import "ServerAPIConnector.h"
-#import "UIImage+ColoredImage.h"
-#import "RectUtil.h"
 #import "IntroQuestionView.h"
 #import "NibUtil.h"
+#import "Threema-Swift.h"
 
 @interface RestoreIdentityViewController () <IntroQuestionDelegate>
 
@@ -147,7 +144,6 @@
     [self refreshView];
 }
 
-
 - (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
     if ([text isEqualToString:@"\n"]) {
         [_passwordTextField becomeFirstResponder];
@@ -234,7 +230,6 @@
         ServerAPIConnector *apiConnector = [[ServerAPIConnector alloc] init];
         /* Obtain server group from server */
         [apiConnector updateMyIdentityStore:myIdentityStore onCompletion:^{
-            [myIdentityStore storeInKeychain];
             dispatch_async(dispatch_get_main_queue(), ^{
                 [MBProgressHUD hideHUDForView:self.view animated:YES];
             });
@@ -247,13 +242,6 @@
     } onError:^(NSError *error) {
         [self handleError:error];
     }];
-}
-
-- (void)showScanViewController {
-    ScanBackupController *scanController = [[ScanBackupController alloc] init];
-    scanController.containingViewController = self;
-    scanController.delegate = self;
-    [scanController startScan];
 }
 
 - (void)hideKeyboard {
@@ -271,7 +259,7 @@
         view.showOnlyOkButton = YES;
         view.questionLabel.text = error.localizedDescription;
         view.delegate = self;
-        view.frame = [RectUtil rect:view.frame centerIn:self.view.frame round:YES];
+        view.frame = [self rect:view.frame centerIn:self.view.frame round:YES];
         
         [self.view addSubview:view];
         
@@ -330,8 +318,16 @@
     }
 }
 
+- (BOOL)canScan {
+    if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+        NSArray *mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:UIImagePickerControllerSourceTypeCamera];
+        return [mediaTypes containsObject:UTTypeMovie.identifier];
+    }
+    return NO;
+}
+
 - (void) refreshView {
-    _scanView.hidden = _backupTextView.isFirstResponder && [ScanBackupController canScan] ? NO : YES;
+    _scanView.hidden = _backupTextView.isFirstResponder && [self canScan] ? NO : YES;
 }
 
 #pragma mark - IntroQuestionViewDelegate
@@ -342,19 +338,12 @@
     [_passwordTextField becomeFirstResponder];
 }
 
-#pragma mark Scan backup controller delegate
-
-- (void)didScanBackup:(NSString *)backup {
-    _backupLabel.hidden = YES;
-    _backupTextView.text = backup;
-}
-
 #pragma mark - UITapGestureRecognizer
 
 - (void)tappedScan:(UITapGestureRecognizer *)sender
 {
     if (sender.state == UIGestureRecognizerStateEnded) {
-        [self showScanViewController];
+        [self showScannerViewController];
     }
 }
 
@@ -373,6 +362,25 @@
             [_delegate restoreIdentityCancelled];
         }
     }
+}
+
+#pragma mark - Rect
+
+- (CGRect)rect:(CGRect)rect centerIn:(CGRect)outerRect round:(BOOL)round {
+    CGFloat innerWidth = rect.size.width;
+    CGFloat outerWidth = outerRect.size.width;
+    
+    CGFloat innerHeight = rect.size.height;
+    CGFloat outerHeight = outerRect.size.height;
+    
+    CGFloat x = (outerWidth - innerWidth) / 2.0;
+    CGFloat y = (outerHeight - innerHeight) / 2.0;
+    
+    if (round) {
+        x = roundf(x);
+        y = roundf(y);
+    }
+    return CGRectMake(x, y, rect.size.width, rect.size.height);
 }
 
 @end

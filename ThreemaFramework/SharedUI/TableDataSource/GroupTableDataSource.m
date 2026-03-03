@@ -19,8 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "GroupTableDataSource.h"
-#import "EntityCreator.h"
-#import "EntityFetcher.h"
 #import "ErrorHandler.h"
 #import "ContactStore.h"
 
@@ -85,7 +83,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)setupFetchedResultsControllerWithDelegate:(id<NSFetchedResultsControllerDelegate>)delegate {
-    NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForGroups];
+    NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForGroupConversationEntities];
     fetchedResultsController.delegate = delegate;
     _fetchedResultsController = fetchedResultsController;
     
@@ -98,7 +96,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 -(void)filterByWords:(NSArray *)words {
     if (words) {
-        _filteredGroups = [_entityManager.entityFetcher groupConversationsFilteredByWords:words];
+        _filteredGroups = [_entityManager.entityFetcher filteredGroupConversationEntitiesBy:words];
     } else {
         _filteredGroups= nil;
     }
@@ -107,8 +105,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (NSSet *)selectedConversations {
     NSMutableSet *conversations = [NSMutableSet setWithCapacity:[_selectedGroups count]];
     for (Group *group in _selectedGroups) {
-        ConversationEntity *conversationEntity = [[_entityManager entityFetcher] conversationEntityForGroupId:group.groupID creator:group.groupCreatorIdentity];
-        [conversations addObject:conversationEntity];
+        [_entityManager performBlockAndWait:^{
+            ConversationEntity *conversationEntity = [[_entityManager entityFetcher] groupConversationEntityFor:group.groupID creatorID:group.groupCreatorIdentity myIdentity:[[MyIdentityStore sharedMyIdentityStore] identity]];
+            [conversations addObject:conversationEntity];
+        }];
     }
     return conversations;
 }

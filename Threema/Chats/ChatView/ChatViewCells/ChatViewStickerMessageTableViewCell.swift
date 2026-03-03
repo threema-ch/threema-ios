@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import ThreemaFramework
 import UIKit
 
@@ -182,7 +183,7 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageActions {
         
         // Save
         let saveHandler = {
-            guard !MDMSetup(setup: false).disableShareMedia() else {
+            guard !MDMSetup().disableShareMedia() else {
                 DDLogWarn(
                     "[ChatViewStickerMessageTableViewCell] Tried to save media, even if MDM disabled it."
                 )
@@ -198,7 +199,7 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageActions {
         // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected
         // itself.
         let copyHandler = {
-            guard !MDMSetup(setup: false).disableShareMedia() else {
+            guard !MDMSetup().disableShareMedia() else {
                 DDLogWarn(
                     "[ChatViewStickerMessageTableViewCell] Tried to copy media, even if MDM disabled it."
                 )
@@ -222,8 +223,19 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageActions {
         }
         
         // Share
-        let shareItems = [MessageActivityItem(for: message)]
-        
+        let data = BaseMessageEntityMessageShareContentMapper.mapToContent(
+            from: message,
+            fileUtility: FileUtility.shared
+        )
+        let shareHandler = {
+            if let data {
+                [UIActivityHelperFactory.makeItemSource(type: .messageActivity(data))]
+            }
+            else {
+                []
+            }
+        }
+
         // Speak
         var speakText = message.fileMessageType.localizedDescription
         if let caption = message.caption, !caption.isEmpty {
@@ -261,7 +273,7 @@ extension ChatViewStickerMessageTableViewCell: ChatViewMessageActions {
             quoteHandler: quoteHandler,
             saveHandler: saveHandler,
             copyHandler: copyHandler,
-            shareItems: shareItems,
+            shareHandler: shareHandler,
             speakText: speakText,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,

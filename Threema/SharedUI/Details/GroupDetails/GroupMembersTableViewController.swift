@@ -144,8 +144,9 @@ final class GroupMembersTableViewController: ThemedTableViewController {
             }
             
             action.run(cell)
-        
-        case let .contact(contact, _):
+            
+        case let .contactCreator(contact, left: _, inMembers: _),
+             let .contact(contact, _):
             let singleDetailsViewController = SingleDetailsViewController(for: contact)
             show(singleDetailsViewController, sender: self)
             

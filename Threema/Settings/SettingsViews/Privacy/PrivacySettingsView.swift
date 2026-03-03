@@ -38,7 +38,7 @@ struct PrivacySettingsView: View {
     @State var observeSendReadReceipt: AnyCancellable?
     @State var observeSendTypingIndicator: AnyCancellable?
 
-    let mdmSetup = MDMSetup(setup: false)
+    let mdmSetup = MDMSetup()
 
     // MARK: - View
 
@@ -81,28 +81,30 @@ struct PrivacySettingsView: View {
             
             // MARK: OS Integration
             
-            Section {
-                Toggle(isOn: $settingsVM.allowOutgoingDonations) {
-                    Text(#localize("settings_privacy_os_donate"))
-                }
-                if settingsVM.allowOutgoingDonations {
-                    Button(#localize("settings_privacy_os_reset"), role: .destructive) {
-                        settingsVM.removeINInteractions(showNotification: true)
+            if !AppLaunchManager.isRemoteSecretEnabled {
+                Section {
+                    Toggle(isOn: $settingsVM.allowOutgoingDonations) {
+                        Text(#localize("settings_privacy_os_donate"))
                     }
-                }
-            } header: {
-                Text(#localize("settings_privacy_os_header"))
-            } footer: {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(String.localizedStringWithFormat(
-                        #localize("settings_privacy_os_footer"),
-                        TargetManager.appName
-                    ))
-                    Link(
-                        #localize("learn_more"),
-                        destination: ThreemaURLProvider.interactionFAQ
-                    )
-                    .font(.footnote)
+                    if settingsVM.allowOutgoingDonations {
+                        Button(#localize("settings_privacy_os_reset"), role: .destructive) {
+                            settingsVM.removeINInteractions(showNotification: true)
+                        }
+                    }
+                } header: {
+                    Text(#localize("settings_privacy_os_header"))
+                } footer: {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(String.localizedStringWithFormat(
+                            #localize("settings_privacy_os_footer"),
+                            TargetManager.appName
+                        ))
+                        Link(
+                            #localize("learn_more"),
+                            destination: ThreemaURLProvider.interactionFAQ
+                        )
+                        .font(.footnote)
+                    }
                 }
             }
             
@@ -349,9 +351,9 @@ private struct PickerAndButtonView: View {
     }
     
     private func resetTypingIndicator() {
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
-        guard let contacts = entityManager.entityFetcher.contactsWithCustomTypingIndicator() as? [ContactEntity] else {
+        guard let contacts = entityManager.entityFetcher.contactEntitiesWithCustomTypingIndicator() else {
             return
         }
         entityManager.performAndWaitSave {

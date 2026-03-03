@@ -53,7 +53,7 @@ extension ProfileCollectionViewDataSource {
         }
         
         var footerText: String? {
-            let mdm = MDMSetup(setup: false)
+            let mdm = MDMSetup()
 
             switch self {
             case .header:
@@ -148,7 +148,8 @@ extension ProfileCollectionViewDataSource {
                     safeStore: SafeStore(
                         safeConfigManager: SafeConfigManager(),
                         serverApiConnector: ServerAPIConnector(),
-                        groupManager: businessInjector.groupManager
+                        groupManager: businessInjector.groupManager,
+                        myIdentityStore: businessInjector.myIdentityStore
                     ),
                     safeApiService: SafeApiService()
                 )
@@ -196,7 +197,7 @@ extension ProfileCollectionViewDataSource {
         }
 
         var isInteractionDisabled: Bool {
-            let mdm = MDMSetup(setup: false)
+            let mdm = MDMSetup()
 
             switch self {
             case .header, .publicKey:

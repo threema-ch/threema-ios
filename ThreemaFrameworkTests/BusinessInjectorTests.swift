@@ -20,6 +20,7 @@
 
 import ThreemaEssentials
 import XCTest
+
 @testable import ThreemaFramework
 
 final class BusinessInjectorTests: XCTestCase {
@@ -28,7 +29,6 @@ final class BusinessInjectorTests: XCTestCase {
     private var backgroundEntityManager: EntityManager!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
@@ -37,14 +37,17 @@ final class BusinessInjectorTests: XCTestCase {
         dbPreparer = DatabasePreparer(context: backgroundCnx!)
 
         backgroundEntityManager =
-            EntityManager(databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx))
+            EntityManager(
+                databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx),
+                isRemoteSecretEnabled: false
+            )
     }
 
     func testRunOnBackground() async throws {
         let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
 
         dbPreparer.save {
-            dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
         }
 
         let businessInjector = BusinessInjector(entityManager: backgroundEntityManager)
@@ -56,7 +59,7 @@ final class BusinessInjectorTests: XCTestCase {
                     return nil
                 }
                 return backgroundBusinessInjector.entityManager.entityFetcher
-                    .contact(for: expectedThreemaIdentity.string).threemaIdentity
+                    .contactEntity(for: expectedThreemaIdentity.rawValue)?.threemaIdentity
             }
         }
 
@@ -67,7 +70,7 @@ final class BusinessInjectorTests: XCTestCase {
         let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
 
         dbPreparer.save {
-            dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
         }
 
         let expect = expectation(description: "BusinessInjector.runOnBackgroundAndWait")
@@ -83,7 +86,7 @@ final class BusinessInjectorTests: XCTestCase {
                             return nil
                         }
                         return backgroundBusinessInjector.entityManager.entityFetcher
-                            .contact(for: expectedThreemaIdentity.string).threemaIdentity
+                            .contactEntity(for: expectedThreemaIdentity.rawValue)?.threemaIdentity
                     }
                 }
 

@@ -19,36 +19,27 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "SplashViewController.h"
-#import "BundleUtil.h"
-#import "RectUtil.h"
 #import <QuartzCore/QuartzCore.h>
-#import "NibUtil.h"
 #import "RandomSeedViewController.h"
-#import "MyIdentityStore.h"
-#import "IdentityBackupStore.h"
-#import "ServerAPIConnector.h"
 #import <MBProgressHUD/MBProgressHUD.h>
 #import "AppDelegate.h"
 #import "UIDefines.h"
-#import "UserSettings.h"
-#import "NibUtil.h"
-#import "ThreemaFramework.h"
-
 #import "ConfirmIDViewController.h"
 #import "PickNicknameViewController.h"
 #import "LinkIDViewController.h"
 #import "SyncContactsViewController.h"
 #import "CompletedIDViewController.h"
 #import "RestoreIdentityViewController.h"
-
 #import "IntroQuestionView.h"
-#import "LicenseStore.h"
 #import "EnterLicenseViewController.h"
-#import "MDMSetup.h"
-#import "ContactStore.h"
 #import "Threema-Swift.h"
-#import "WorkDataFetcher.h"
 #import <StoreKit/StoreKit.h>
+#import "OnboardingPageViewController.h"
+#import "Threema-Swift.h"
+
+@import FileUtility;
+@import RemoteSecret;
+@import Keychain;
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelAll;
@@ -67,9 +58,7 @@
 @property IntroQuestionView *acceptPrivacyPolicyQuestionView;
 @property IntroQuestionView *existingBackupQuestionView;
 @property IntroQuestionView *existingIdQuestionView;
-
-@property CGFloat parallaxDeltaX;
-@property CGFloat bgImagescale;
+@property IntroQuestionView *existingRemoteSecretQuestionView;
 
 @property NSString *idBackup;
 
@@ -90,7 +79,7 @@
 {
     self = [super initWithCoder:coder];
     if (self) {
-        mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+        mdmSetup = [MDMSetup new];
         didWorkApiFetch = NO;
     }
     return self;
@@ -101,11 +90,7 @@
     
     self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
 
-    _bgImagescale = 1.5;
-
     [self setupControls];
-
-    [self setupBackgroundView];
 
     [self setNeedsStatusBarAppearanceUpdate];
 
@@ -116,31 +101,23 @@
     _threemaLogoView.image = [Colors threemaLogo];
 }
 
-- (void)setupBackgroundView {
-    CGFloat width = self.view.frame.size.width;
-    CGFloat height = self.view.frame.size.height;
-
-    _parallaxDeltaX = - width*_bgImagescale/20.0;
-
-    CGRect bgRect = CGRectMake(0.0, 0.0, width*(_bgImagescale*2), height*_bgImagescale);
-    bgRect = [RectUtil rect:bgRect centerIn:self.view.frame];
-    // fix for iPad landscape
-    _bgView.frame = CGRectMake(bgRect.origin.x, bgRect.origin.y, bgRect.size.width, bgRect.size.height);
-
-    [self.view sendSubviewToBack:_bgView];
-}
-
 - (void)setupControls {
     
     _privacyView.hidden = YES;
-    _privacyView.frame = [RectUtil rect:_privacyView.frame centerHorizontalIn:_containerView.frame];
+    _privacyView.frame = [self rect:_privacyView.frame centerHorizontalIn:_containerView.frame round:NO];
     _controlsView.hidden = YES;
-    _controlsView.frame = [RectUtil rect:_controlsView.frame centerHorizontalIn:_containerView.frame];
+    _controlsView.frame = [self rect:_controlsView.frame centerHorizontalIn:_containerView.frame round:NO];
     
     _setupButton.backgroundColor = UIColor.tintColor;
     _setupButton.layer.cornerRadius = 5;
     _setupButton.accessibilityIdentifier = @"SplashViewControllerSetupButton";
     [_setupButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
+   
+    // We disable the button if remote secret is enabled and there is existing date, to force a restore
+    if ([DatabaseManager isExistingDBEncrypted]) {
+        _setupButton.enabled = NO;
+        _setupButton.alpha = 0.5;
+    }
     
     _restoreButton.backgroundColor = UIColor.tintColor;
     _restoreButton.layer.borderWidth = 1;
@@ -150,7 +127,7 @@
     _restoreButton.titleLabel.minimumScaleFactor = 0.6;
     _restoreButton.accessibilityIdentifier = @"SplashViewControllerRestoreButton";
     [_restoreButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
-
+    
     _setupTitleLabel.textColor = Colors.textSetup;
     _setupTitleLabel.accessibilityElementsHidden = true;
     
@@ -159,17 +136,17 @@
     
     _welcomeLabel.text = [BundleUtil localizedStringForKey:@"lets_get_started"];
     
-    _restoreTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"restore_title_text"], TargetManagerObjc.appName];
-    _setupTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"setup_title_text"], TargetManagerObjc.appName];
+    _restoreTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"restore_title_text"], TargetManagerObjC.appName];
+    _setupTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"setup_title_text"], TargetManagerObjC.appName];
     
     [_setupButton setTitle:[BundleUtil localizedStringForKey:@"setup_threema"] forState:UIControlStateNormal];
     [_restoreButton setTitle:[BundleUtil localizedStringForKey:@"restore_id"] forState:UIControlStateNormal];
     
-    if (TargetManagerObjc.isOnPrem) {
+    if (TargetManagerObjC.isOnPrem) {
         _privacyPolicyInfo.hidden = true;
     }
     else {
-        NSString *privacyPolicyText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privacy_policy_about"], TargetManagerObjc.appName];
+        NSString *privacyPolicyText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privacy_policy_about"], TargetManagerObjC.appName];
         
         _privacyPolicyInfo.font = [UIFont systemFontOfSize:16.0];
         _privacyPolicyInfo.tapDelegate = self;
@@ -218,23 +195,21 @@
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
     
     [coordinator animateAlongsideTransition:nil completion:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
-        CGRect viewFrame = self.view.safeAreaLayoutGuide.layoutFrame;
-        
         CGRect privacyTargetRect;
         
         if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
             /* iPhone 4s */
-            privacyTargetRect = [RectUtil setYPositionOf:_privacyView.frame y:120.0];
+            privacyTargetRect = CGRectMake(_privacyView.frame.origin.x, 120.0, _privacyView.frame.size.width, _privacyView.frame.size.height);
         } else {
-            privacyTargetRect = [RectUtil setYPositionOf:_privacyView.frame y:170.0];
+            privacyTargetRect = CGRectMake(_privacyView.frame.origin.x, 170.0, _privacyView.frame.size.width, _privacyView.frame.size.height);
         }
                 
         CGRect controlsTargetRect;
         if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
             /* iPhone 4s */
-            controlsTargetRect = [RectUtil setYPositionOf:_controlsView.frame y:privacyTargetRect.origin.y + privacyTargetRect.size.height - 40.0];
+            privacyTargetRect = CGRectMake(_controlsView.frame.origin.x, privacyTargetRect.origin.y + privacyTargetRect.size.height - 40.0, _controlsView.frame.size.width, _controlsView.frame.size.height);
         } else {
-            controlsTargetRect = [RectUtil setYPositionOf:_controlsView.frame y:privacyTargetRect.origin.y + privacyTargetRect.size.height];
+            privacyTargetRect = CGRectMake(_controlsView.frame.origin.x, privacyTargetRect.origin.y + privacyTargetRect.size.height, _controlsView.frame.size.width, _controlsView.frame.size.height);
         }
                 
         _privacyView.frame = privacyTargetRect;
@@ -265,8 +240,8 @@
 
                 [self presentUI];
             } onError:^(NSError *error) {
-                NSString *title = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_title"], TargetManagerObjc.appName];
-                NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjc.appName];
+                NSString *title = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_title"], TargetManagerObjC.appName];
+                NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"work_data_fetch_failed_message"], TargetManagerObjC.appName];
                 [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
                     exit(0);
                 }];
@@ -283,39 +258,61 @@
     _restoreButton.hidden = [mdmSetup disableBackups];
 
     if ([mdmSetup isSafeRestoreForce]) {
-        [self showRestoreSafeViewController:[self hasDataOnDevice]];
+        [self showRestoreSafeViewController: [self hasDataOnDevice]];
         [self slideOut:self fromRightToLeft:YES onCompletion:nil];
         [self slideIn:_restoreSafeViewController fromLeftToRight:YES  onCompletion:nil];
+        
     } else if ([mdmSetup hasIDBackup] && AppSetup.isCompleted == false) {
         // TODO: (IOS-4531) This will run a full Safe restore again even if the restore completed and only the steps for `.identitySetupComplete` (i.e. app setup steps) are left to run
         [self restoreIDFromMDM];
+        
     } else if (AppSetup.shouldDirectlyShowSetupWizard) {
-        [self presentPageViewController];
+        SetupApp *setupApp = [[SetupApp alloc]
+                              initWithDelegate: self
+                              licenseStore:[LicenseStore sharedLicenseStore]
+                              myIdentityStore:[MyIdentityStore sharedMyIdentityStore]
+                              mdmSetup:self->mdmSetup
+                              hasPreexistingData: [self hasDataOnDevice]
+        ];
+        
+        [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
+            if (error != nil || remoteSecretAndKeychain == nil) {
+                DDLogError(@"Failed to directly show setup wizard: %@", error);
+                // TODO: (IOS-5426) Improve error handling
+                NSString *title = @"Restoring Identity Failed";
+                NSString *message = @"Please close or delete app and try again.";
+                [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
+                    exit(EXIT_FAILURE);
+                }];
+                return;
+            }
+
+            [self presentPageViewControllerWithRemoteSecretAndKeychain:remoteSecretAndKeychain];
+        }];
+        
     } else {
-        [self setupBackgroundView];
         [self checkRefreshStoreReceipt];
         [self showPrivacyControls];
     }
 }
 
 - (void)showPrivacyControls {
-    CGRect viewFrame = self.view.safeAreaLayoutGuide.layoutFrame;
     
     CGRect privacyTargetRect;
     
     if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
         /* iPhone 4s */
-        privacyTargetRect = [RectUtil setYPositionOf:_privacyView.frame y:120.0];
+        privacyTargetRect = CGRectMake(_privacyView.frame.origin.x, 120.0, _privacyView.frame.size.width, _privacyView.frame.size.height);
     } else {
-        privacyTargetRect = [RectUtil setYPositionOf:_privacyView.frame y:170.0];
+        privacyTargetRect = CGRectMake(_privacyView.frame.origin.x, 170.0, _privacyView.frame.size.width, _privacyView.frame.size.height);
     }
     
     CGRect controlsTargetRect;
     if (MAX([UIScreen mainScreen].bounds.size.height, [UIScreen mainScreen].bounds.size.width) <= 480) {
         /* iPhone 4s */
-        controlsTargetRect = [RectUtil setYPositionOf:_controlsView.frame y:privacyTargetRect.origin.y + privacyTargetRect.size.height - 40.0];
+        controlsTargetRect = CGRectMake(_controlsView.frame.origin.x, privacyTargetRect.origin.y + privacyTargetRect.size.height - 40.0, _controlsView.frame.size.width, _controlsView.frame.size.height);
     } else {
-        controlsTargetRect = [RectUtil setYPositionOf:_controlsView.frame y:privacyTargetRect.origin.y + privacyTargetRect.size.height];
+        controlsTargetRect = CGRectMake(_controlsView.frame.origin.x, privacyTargetRect.origin.y + privacyTargetRect.size.height, _controlsView.frame.size.width, _controlsView.frame.size.height);
     }
     
     _privacyView.hidden = NO;
@@ -333,10 +330,10 @@
         [[ServerConnector sharedServerConnector] deactivateMultiDevice];
         
         NSString *title = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_title"];
-        NSString *message =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_message"], TargetManagerObjc.appName];
+        NSString *message =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_message"], TargetManagerObjC.appName];
         NSString *linkButton = [BundleUtil localizedStringForKey:@"multi_device_linked_id_missing_reset_button"];
         [UIAlertTemplate showAlertWithOwner:self title:title message:message titleOk:linkButton actionOk:^(UIAlertAction * _Nonnull action) {
-            [[UIApplication sharedApplication] openURL:[ThreemaURLProviderObjc getURL:ThreemaURLProviderTypeMultiDeviceReset] options:@{} completionHandler:nil];
+            [[UIApplication sharedApplication] openURL:[ThreemaURLProviderObjC getURL:ThreemaURLProviderTypeMultiDeviceReset] options:@{} completionHandler:nil];
         }];
     }
 }
@@ -344,7 +341,31 @@
 - (void)restoreIDFromMDM {
     [self setAcceptPrivacyPolicyValues:AcceptPrivacyPolicyVariantImplicitly];
     [mdmSetup restoreIDBackupOnCompletion:^{
-        [self presentPageViewController];
+        SetupApp *setupApp = [[SetupApp alloc]
+                              initWithDelegate: self
+                              licenseStore:[LicenseStore sharedLicenseStore]
+                              myIdentityStore:[MyIdentityStore sharedMyIdentityStore]
+                              mdmSetup:self->mdmSetup
+                              hasPreexistingData: [self hasDataOnDevice]
+        ];
+        [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
+            if (error != nil || remoteSecretAndKeychain == nil) {
+                // TODO: (IOS-5426) Improve error handling & localize it
+                DDLogError(@"Failed to setup identity: %@", error);
+                NSString *title = @"Creating New Identity Failed";
+                NSString *message = @"Please close app and try again.";
+                [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
+                    exit(EXIT_FAILURE);
+                }];
+                return;
+            }
+
+            [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
+
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
+
+            [self presentPageViewControllerWithRemoteSecretAndKeychain:remoteSecretAndKeychain];
+        }];
     } onError:^(NSError *error) {
         _restoreIdentityViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"RestoreIdentityViewController"];
         _restoreIdentityViewController.delegate = self;
@@ -354,12 +375,12 @@
 
         [self slideOut:self fromRightToLeft:YES onCompletion:nil];
         [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:^{
-            // make sure controls are visible
+            // Make sure controls are visible
             _privacyView.alpha = 1.0;
             _privacyView.hidden = NO;
-            _privacyView.frame = [RectUtil rect:_privacyView.frame centerIn:self.view.frame];
+            _privacyView.frame = [self rect:_privacyView.frame centerIn:self.view.frame round:NO];
 
-            // show error message
+            // Show error message
             [_restoreIdentityViewController handleError:error];
         }];
     }];
@@ -383,7 +404,7 @@
     BOOL showInfoView = false;
     LicenseStore *licenseStore = [LicenseStore sharedLicenseStore];
     // In Custom OnPrem Apps, the Threema Private info view is not displayed. Additionally, the view is not shown when one of the fields (username, password, or URL) is already set.    
-    if (licenseStore.licenseUsername == nil && licenseStore.licensePassword == nil && licenseStore.onPremConfigUrl == nil && !TargetManagerObjc.isCustomOnPrem) {
+    if (licenseStore.licenseUsername == nil && licenseStore.licensePassword == nil && licenseStore.onPremConfigUrl == nil && !TargetManagerObjC.isCustomOnPrem) {
         showInfoView = true;
     }
     
@@ -414,29 +435,39 @@
     }
 }
 
-- (void)presentPageViewController {
+- (void)presentPageViewControllerWithRemoteSecretAndKeychain:(nonnull RemoteSecretAndKeychainObjC *)remoteSecretAndKeychain {
+    SetupConfiguration *setupConfiguration = [[SetupConfiguration alloc] initWithRemoteSecretAndKeychain:remoteSecretAndKeychain mdm:mdmSetup];
+    
     ConfirmIDViewController *confirmVc = [self.storyboard instantiateViewControllerWithIdentifier:@"ConfirmIDViewController"];
+    
     SafeViewController *safeVc = [self.storyboard instantiateViewControllerWithIdentifier:@"SafeSetup"];
+    safeVc.setupConfiguration = setupConfiguration;
+    
     PickNicknameViewController *pickNicknameVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PickNicknameViewController"];
+    pickNicknameVc.setupConfiguration = setupConfiguration;
+    
     LinkIDViewController *linkIdVc = [self.storyboard instantiateViewControllerWithIdentifier:@"LinkIDViewController"];
+    linkIdVc.setupConfiguration = setupConfiguration;
+    
     SyncContactsViewController *syncVc = [self.storyboard instantiateViewControllerWithIdentifier:@"SyncContactsViewController"];
-    CompletedIDViewController *complededVc = [self.storyboard instantiateViewControllerWithIdentifier:@"CompletedIDViewController"];
-    complededVc.delegate = self;
+    syncVc.setupConfiguration = setupConfiguration;
+    
+    CompletedIDViewController *completedVc = [self.storyboard instantiateViewControllerWithIdentifier:@"CompletedIDViewController"];
+    completedVc.delegate = self;
+    completedVc.setupConfiguration = setupConfiguration;
 
-    ParallaxPageViewController *pageVc = [self.storyboard instantiateViewControllerWithIdentifier:@"ParallaxPageViewController"];
+    OnboardingPageViewController *pageVc = [self.storyboard instantiateViewControllerWithIdentifier:@"OnboardingPageViewController"];
 
     if ([mdmSetup skipWizard]) {
-        pageVc.viewControllers = @[complededVc];
+        pageVc.viewControllers = @[completedVc];
     } else {
         if ([mdmSetup isSafeBackupDisable] || ([mdmSetup isSafeBackupForce] && [mdmSetup isSafeBackupPasswordPreset])) {
-            pageVc.viewControllers = @[confirmVc, pickNicknameVc, linkIdVc, syncVc, complededVc];
+            pageVc.viewControllers = @[confirmVc, pickNicknameVc, linkIdVc, syncVc, completedVc];
         } else {
-            pageVc.viewControllers = @[confirmVc, safeVc, pickNicknameVc, linkIdVc, syncVc, complededVc];
+            pageVc.viewControllers = @[confirmVc, safeVc, pickNicknameVc, linkIdVc, syncVc, completedVc];
         }
     }
 
-    pageVc.bgView = _bgView;
-    pageVc.parallaxFactor = [NSNumber numberWithDouble: fabs(_parallaxDeltaX/self.view.frame.size.width)];
     pageVc.modalPresentationStyle = UIModalPresentationFullScreen;
     
     // make sure to clean up
@@ -451,7 +482,7 @@
     }];
 }
 
-- (void)showApplicaitonUI {
+- (void)showApplicationUI {
     [[AppDelegate sharedAppDelegate] completedIDSetup];
 }
 
@@ -459,7 +490,7 @@
     MFMailComposeViewController *mailController = [[MFMailComposeViewController alloc] init];
     mailController.mailComposeDelegate = self;
     
-    if (TargetManagerObjc.isBusinessApp) {
+    if (TargetManagerObjC.isBusinessApp) {
         [mailController setToRecipients:@[@"support-work@threema.ch"]];
     }
     else {
@@ -467,7 +498,7 @@
     }
         
     [mailController setSubject:[BundleUtil localizedStringForKey:@"contact_support_mail_subject"]];
-    NSString *message = [NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"contact_support_mail_message"], TargetManagerObjc.appName, TargetManagerObjc.localizedAppName, errorCode];
+    NSString *message = [NSString localizedStringWithFormat:[BundleUtil localizedStringForKey:@"contact_support_mail_message"], TargetManagerObjC.appName, TargetManagerObjC.localizedAppName, errorCode];
     [mailController setMessageBody:message isHTML:NO];
     
     [self presentViewController:mailController animated:YES completion:nil];
@@ -484,9 +515,9 @@
     if (_existingBackupQuestionView == nil) {
         _existingBackupQuestionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
         _existingBackupQuestionView.tag = 1;
-        _existingBackupQuestionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"backup_found_message"], TargetManagerObjc.localizedAppName];
+        _existingBackupQuestionView.questionLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"backup_found_message"], TargetManagerObjC.localizedAppName];
         _existingBackupQuestionView.delegate = self;
-        _existingBackupQuestionView.frame = [RectUtil rect:_existingBackupQuestionView.frame centerIn:self.view.frame round:YES];
+        _existingBackupQuestionView.frame = [self rect:_existingBackupQuestionView.frame centerIn:self.view.frame round:YES];
         
         [self.view addSubview:_existingBackupQuestionView];
     }
@@ -503,9 +534,9 @@
     if (_existingIdQuestionView == nil) {
         _existingIdQuestionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
         _existingIdQuestionView.tag = 2;
-        _existingIdQuestionView.questionLabel.text = [[NSString alloc] initWithFormat:[BundleUtil localizedStringForKey:@"id_exists"], TargetManagerObjc.localizedAppName, [[MyIdentityStore sharedMyIdentityStore] identity]];
+        _existingIdQuestionView.questionLabel.text = [[NSString alloc] initWithFormat:[BundleUtil localizedStringForKey:@"id_exists"], TargetManagerObjC.localizedAppName, [[MyIdentityStore sharedMyIdentityStore] identity]];
         _existingIdQuestionView.delegate = self;
-        _existingIdQuestionView.frame = [RectUtil rect:_existingIdQuestionView.frame centerIn:self.view.frame round:YES];
+        _existingIdQuestionView.frame = [self rect:_existingIdQuestionView.frame centerIn:self.view.frame round:YES];
         
         [self.view addSubview:_existingIdQuestionView];
     }
@@ -515,6 +546,25 @@
 
 - (void)hideIDExistsQuestion {
     [self hideMessageView:_existingIdQuestionView];
+}
+
+- (void)showRemoteSecretExistsQuestion {
+    
+    if (_existingRemoteSecretQuestionView == nil) {
+        _existingRemoteSecretQuestionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
+        _existingRemoteSecretQuestionView.tag = 3;
+        _existingRemoteSecretQuestionView.questionLabel.text = [BundleUtil localizedStringForKey:@"intro_question_text_rs"];
+        _existingRemoteSecretQuestionView.delegate = self;
+        _existingRemoteSecretQuestionView.frame = [self rect:_existingRemoteSecretQuestionView.frame centerIn:self.view.frame round:YES];
+        
+        [self.view addSubview:_existingRemoteSecretQuestionView];
+    }
+    
+    [self showMessageView:_existingRemoteSecretQuestionView];
+}
+
+- (void)hideRemoteSecretExistsQuestion {
+    [self hideMessageView:_existingRemoteSecretQuestionView];
 }
 
 #pragma mark - manage views
@@ -583,18 +633,15 @@
 
     //start position
     if (toRight) {
-        childView.frame = [RectUtil setXPositionOf:childView.frame x:self.view.frame.size.width];
+        childView.frame = CGRectMake(self.view.frame.size.width, childView.frame.origin.y, childView.frame.size.width, childView.frame.size.height);
     } else {
-        childView.frame = [RectUtil setXPositionOf:childView.frame x:self.view.frame.size.width * -1.0];
+        childView.frame = CGRectMake(self.view.frame.size.width * -1.0, childView.frame.origin.y, childView.frame.size.width, childView.frame.size.height);
     }
 
     [child beginAppearanceTransition:YES animated:YES];
     [UIView animateWithDuration:0.5 animations:^{
         //end position
-        childView.frame = [RectUtil setXPositionOf:childView.frame x:0];
-
-        CGFloat parallaxFactor = toRight == YES ? 1.0 : -1.0;
-        _bgView.frame = [RectUtil offsetRect:_bgView.frame byX:_parallaxDeltaX*parallaxFactor byY:0.0];
+        childView.frame = CGRectMake(0, childView.frame.origin.y, childView.frame.size.width, childView.frame.size.height);
     } completion:^(BOOL finished) {
         [child endAppearanceTransition];
         [child didMoveToParentViewController:self];
@@ -614,15 +661,15 @@
     }
 
     //start position
-    childView.frame = [RectUtil setXPositionOf:childView.frame x:0];
+    childView.frame = CGRectMake(0, childView.frame.origin.y, childView.frame.size.width, childView.frame.size.height);
 
     [child beginAppearanceTransition:NO animated:YES];
     [UIView animateWithDuration:0.5 animations:^{
         //end position
         if (toLeft) {
-            childView.frame = [RectUtil setXPositionOf:childView.frame x:self.view.frame.size.width * -1.0];
+            childView.frame = CGRectMake(self.view.frame.size.width * -1.0, childView.frame.origin.y, childView.frame.size.width, childView.frame.size.height);
         } else {
-            childView.frame = [RectUtil setXPositionOf:childView.frame x:self.view.frame.size.width];
+            childView.frame = CGRectMake(self.view.frame.size.width, childView.frame.origin.y, childView.frame.size.width, childView.frame.size.height);
         }
     } completion:^(BOOL finished) {
         [child endAppearanceTransition];
@@ -643,20 +690,38 @@
     }
     
     [[[ServerAPIConnector alloc] init] createIdentityWithStore:[MyIdentityStore sharedMyIdentityStore] onCompletion:^(MyIdentityStore *store) {
-        [AppSetup setState:AppSetupStateIdentityAdded];
+        SetupApp *setupApp = [[SetupApp alloc]
+                              initWithDelegate: self
+                              licenseStore:[LicenseStore sharedLicenseStore]
+                              myIdentityStore:[MyIdentityStore sharedMyIdentityStore]
+                              mdmSetup:self->mdmSetup
+                              hasPreexistingData: [self hasDataOnDevice]
+        ];
+        [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
+            if (error != nil || remoteSecretAndKeychain == nil) {
+                // TODO: (IOS-5426) Improve error handling & localize it
+                DDLogError(@"Failed to setup identity: %@", error);
+                NSString *title = @"Creating New Identity Failed";
+                NSString *message = @"Please close app and try again.";
+                [UIAlertTemplate showAlertWithOwner:self title:title message:message actionOk:^(UIAlertAction *action __unused)  {
+                    exit(EXIT_FAILURE);
+                }];
+                return;
+            }
 
-        [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
+            [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
 
-        [MBProgressHUD hideHUDForView:self.view animated:YES];
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
 
-        [self presentPageViewController];
+            [self presentPageViewControllerWithRemoteSecretAndKeychain:remoteSecretAndKeychain];
+        }];
     } onError:^(NSError *error) {
         [MBProgressHUD hideHUDForView:self.view animated:YES];
         UIAlertController *errAlert = [UIAlertController alertControllerWithTitle:error.localizedDescription message:error.localizedFailureReason preferredStyle:UIAlertControllerStyleAlert];
         [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"try_again"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
             [self createIdentity];
         }]];
-        if (TargetManagerObjc.isBusinessApp) {
+        if (TargetManagerObjC.isBusinessApp) {
             [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"enter_license_enter_new_credentials"] style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction * action) {
                 [self cancelPressed];
                 [self presentLicenseViewController];
@@ -679,13 +744,12 @@
     }];
 }
 
-
 - (void)setAcceptPrivacyPolicyValues:(int)variant {
     [[UserSettings sharedUserSettings] setAcceptedPrivacyPolicyDate:[NSDate date]];
     [[UserSettings sharedUserSettings] setAcceptedPrivacyPolicyVariant:variant];
 }
 
-#pragma mark - private
+#pragma mark - Private
 
 - (NSString *)getIDBackup {
     NSString *backupData = [IdentityBackupStore loadIdentityBackup];
@@ -707,8 +771,18 @@
     return NO;
 }
 
+- (BOOL)checkForRSExists {
+
+    if ([KeychainManager hasRemoteSecretInStore]) {
+        [self showRemoteSecretExistsQuestion];
+        return YES;
+    }
+    return NO;
+}
+
 - (BOOL)checkForIDExists {
-    if (AppSetup.isIdentityProvisioned) {
+    // Because we load an existing identity at `viewDidLoad` we know here if there is still a valid identity in the keychain
+    if ([MyIdentityStore.sharedMyIdentityStore isValidIdentity]) {
         [self showIDExistsQuestion];
         return YES;
     }
@@ -716,12 +790,12 @@
 }
 
 - (void)checkRefreshStoreReceipt {
-    if (TargetManagerObjc.isBusinessApp) {
+    if (TargetManagerObjC.isBusinessApp) {
         return;
     }
     
     NSURL *receiptUrl = [[NSBundle mainBundle] appStoreReceiptURL];
-    if (receiptUrl && ![[NSFileManager defaultManager] fileExistsAtPath:receiptUrl.path]) {
+    if (receiptUrl && ![[FileUtility new] fileExistsAt:receiptUrl]) {
         // No receipt available; try to refresh
         SKReceiptRefreshRequest *refreshRequest = [[SKReceiptRefreshRequest alloc] initWithReceiptProperties:nil];
         [refreshRequest start];        
@@ -732,17 +806,25 @@
 
 - (IBAction)setupAction:(id)sender {
     _triggeredSetup = YES;
-    // Check for ID Export, if Threema Work or if Threema and has no existing ID
-    if (TargetManagerObjc.isBusinessApp || (!TargetManagerObjc.isBusinessApp && ![self checkForIDExists])) {
-        if ([self checkForIDBackup] == NO) {
-            [self showSetupViewController];
-            [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-            [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
+    
+    // First we check for an existing RS, the check will show a question view and handle decision itself.
+    if(![self checkForRSExists]) {
+        // Check for ID Export, if is business app or if Threema and has no existing ID
+        if (TargetManagerObjC.isBusinessApp || (!TargetManagerObjC.isBusinessApp && ![self checkForIDExists])) {
+            if ([self checkForIDBackup] == NO) {
+                [self showSetupViewController];
+                [self slideOut:self fromRightToLeft:YES onCompletion:nil];
+                [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
+            }
         }
     }
 }
 
 - (IBAction)restoreAction:(id)sender {
+    [self startRestore];
+}
+
+-(void)startRestore {
     _triggeredSetup = NO;
     
     if ([mdmSetup isSafeRestoreDisable]) {
@@ -776,8 +858,31 @@
         [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:nil];
     }
     else if (sender.tag == 2) {
+        // Use identity that already exists in keychain
+        
         [self hideIDExistsQuestion];
-        [self presentPageViewController];
+        
+        SetupApp *setupApp = [[SetupApp alloc]
+                              initWithDelegate: self
+                              licenseStore:[LicenseStore sharedLicenseStore]
+                              myIdentityStore:[MyIdentityStore sharedMyIdentityStore]
+                              mdmSetup:self->mdmSetup
+                              hasPreexistingData: [self hasDataOnDevice]
+        ];
+        
+        [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
+            if (error != nil || remoteSecretAndKeychain == nil) {
+                DDLogError(@"Failed to directly show setup wizard: %@", error);
+                exit(EXIT_FAILURE);
+            }
+
+            [self presentPageViewControllerWithRemoteSecretAndKeychain:remoteSecretAndKeychain];
+        }];
+    }
+    else if (sender.tag == 3) {
+        // RS exists, we give the option to restore a backup with the ID
+        [self hideRemoteSecretExistsQuestion];
+        [self startRestore];
     }
 }
 
@@ -796,7 +901,23 @@
         }
     }
     else if (sender.tag == 2) {
+        // User wants new ID
+        
         [self hideIDExistsQuestion];
+        
+        // Remove all keychain items
+        [KeychainManager deleteAllItemsAndReturnError:(NSError * _Nullable __autoreleasing * _Nullable) {}];
+
+        [self showSetupViewController];
+        [self slideOut:self fromRightToLeft:YES onCompletion:nil];
+        [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
+    }
+    else if (sender.tag == 3) {
+        // User wants new RS and needs new ID
+        [self hideRemoteSecretExistsQuestion];
+        
+        // Remove all keychain items
+        [KeychainManager deleteAllItemsAndReturnError:(NSError * _Nullable __autoreleasing * _Nullable) {}];
         
         [self showSetupViewController];
         [self slideOut:self fromRightToLeft:YES onCompletion:nil];
@@ -820,14 +941,8 @@
 #pragma mark - CompletedIDDelegate
 
 - (void)completedIDSetup {
-    if ([[DatabaseManager dbManager] shouldUpdateProtection]) {
-        MyIdentityStore *myIdentityStore = [MyIdentityStore sharedMyIdentityStore];
-        [myIdentityStore updateConnectionRights];
-        [[DatabaseManager dbManager] updateProtection];
-    }
-    
     // Delete decrypted backup data from application documents folder
-    [[FileUtility shared]  deleteAt: [[[FileUtility shared] appDocumentsDirectory] URLByAppendingPathComponent:@"safe-backup.json"]];
+    [[FileUtility new] deleteIfExistsAt:[[[FileUtility new] appDocumentsDirectory] URLByAppendingPathComponent:@"safe-backup.json"]];
     
     // The App Setup Steps should be called as the last step of the onboarding and if they fail they need to be retried.
     // We log the steps (incl. retries) to a separate file in the document directory such that this can be requested in
@@ -837,25 +952,33 @@
     [LogManager deleteLogFile:appSetupStepsLogFile];
     [LogManager addFileLogger:appSetupStepsLogFile];
     
-    [self runAppSetupStepsWithCompletion:^{
-        [LogManager removeFileLogger:appSetupStepsLogFile];
-        
-        // The setup is only completed if the App Setup Steps are successfully completed
-        [AppSetup setState:AppSetupStateComplete];
-        
-        [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:true];
-        [WorkDataFetcher checkUpdateWorkDataForce:YES onCompletion:^{
-            [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:false];
-        } onError:^(NSError *error) {
-            [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:false];
+    [self runWorkDataUpdateWithCompletion:^{
+        [self runAppSetupStepsWithCompletion:^{
+            [LogManager removeFileLogger:appSetupStepsLogFile];
+            
+            // The setup is only completed if the App Setup Steps are successfully completed
+            [AppSetup setState:AppSetupStateComplete];
+                        
+            [self showApplicationUI];
+            
+            // Delete log file again
+            [LogManager deleteLogFile:appSetupStepsLogFile];
         }];
-        
-        [self showApplicaitonUI];
-        
-        // Delete log file again
-        [LogManager deleteLogFile:appSetupStepsLogFile];
     }];
 }
+
+/// Run the work data update
+/// - Parameter onCompletion: Called when update succeeds and fails
+- (void)runWorkDataUpdateWithCompletion:(nonnull void(^)(void))onCompletion {
+    [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:true];
+    [WorkDataFetcher checkUpdateWorkDataForce:YES onCompletion:^{
+        [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:false];
+        onCompletion();
+    } onError:^(NSError *error) {
+        [[AppDelegate sharedAppDelegate] setIsWorkContactsLoading:false];
+        onCompletion();
+    }];
+};
 
 /// Run the App Setup Steps and show a retry alert if they fail
 /// - Parameter onCompletion: Called when App Setup Steps are successfully completed
@@ -863,7 +986,7 @@
     if ([AppDelegate sharedAppDelegate].currentTopViewController.view) {
         [MBProgressHUD showHUDAddedTo:[AppDelegate sharedAppDelegate].currentTopViewController.view animated:YES];
     }
-    
+
     AppSetupStepsObjC *appSetupSteps = [[AppSetupStepsObjC alloc] init];
     [appSetupSteps runWithCompletionHandler:^(NSError * _Nullable error) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -979,9 +1102,22 @@
 - (void)restoreIdentityDone {
     _restoreIdentityViewController.delegate = nil;
     
-    [AppSetup setState:AppSetupStateIdentityAdded];
-    
-    [self presentPageViewController];
+    SetupApp *setupApp = [[SetupApp alloc]
+                          initWithDelegate: self
+                          licenseStore:[LicenseStore sharedLicenseStore]
+                            myIdentityStore:[MyIdentityStore sharedMyIdentityStore]
+                          mdmSetup:self->mdmSetup
+                          hasPreexistingData:[self hasDataOnDevice]
+    ];
+    [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
+        if (error != nil|| remoteSecretAndKeychain == nil ) {
+            exit(EXIT_FAILURE);
+        }
+
+        // We always show the rest of the setup because the ID configuration is deleted before the restoration. This
+        // is due to the fact that the restored ID might be different than the one used with the previous configuration
+        [self presentPageViewControllerWithRemoteSecretAndKeychain:remoteSecretAndKeychain];
+    }];
 }
 
 #pragma mark - EnterLicenseDelegate
@@ -994,7 +1130,7 @@
 #pragma mark - ZSWTappableLabel delegate
 
 - (void)tappableLabel:(ZSWTappableLabel *)tappableLabel tappedAtIndex:(NSInteger)idx withAttributes:(NSDictionary *)attributes {
-    NSURL *url = [ThreemaURLProviderObjc getURL:ThreemaURLProviderTypePrivacyPolicy];
+    NSURL *url = [ThreemaURLProviderObjC getURL:ThreemaURLProviderTypePrivacyPolicy];
     NSString *title = [BundleUtil localizedStringForKey:@"settings_list_privacy_policy_title"];
     UIViewController *vc = [[SettingsWebViewViewController alloc] initWithUrl:url title:title allowsContentJavaScript:false isSetupWizard:true];
     privacyPolicyNavigationController = [[UINavigationController alloc] initWithRootViewController:vc];
@@ -1017,6 +1153,38 @@
 
 - (void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(nullable NSError *)error {
     [controller dismissViewControllerAnimated:YES completion:nil];
+}
+
+#pragma mark - RectUtil
+
+- (CGRect)rect:(CGRect)rect centerIn:(CGRect)outerRect round:(BOOL)round {
+    CGFloat innerWidth = rect.size.width;
+    CGFloat outerWidth = outerRect.size.width;
+    
+    CGFloat innerHeight = rect.size.height;
+    CGFloat outerHeight = outerRect.size.height;
+    
+    CGFloat x = (outerWidth - innerWidth) / 2.0;
+    CGFloat y = (outerHeight - innerHeight) / 2.0;
+    
+    if (round) {
+        x = roundf(x);
+        y = roundf(y);
+    }
+    
+    return CGRectMake(x, y, rect.size.width, rect.size.height);
+}
+
+- (CGRect)rect:(CGRect)rect centerHorizontalIn:(CGRect)outerRect round:(BOOL)round {
+   CGFloat innerWidth = rect.size.width;
+   CGFloat outerWidth = outerRect.size.width;
+   
+   CGFloat x = (outerWidth - innerWidth) / 2.0;
+   if (round)
+       x = roundf(x);
+   CGFloat y = rect.origin.y;
+   
+    return CGRectMake(x, y, rect.size.width, rect.size.height);
 }
 
 @end

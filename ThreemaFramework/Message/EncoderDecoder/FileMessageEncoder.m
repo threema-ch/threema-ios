@@ -22,7 +22,7 @@
 #import "FileMessageKeys.h"
 #import "NSString+Hex.h"
 #import "JsonUtil.h"
-#import "ThreemaFramework/ThreemaFramework-swift.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -31,7 +31,10 @@
 #endif
 @implementation FileMessageEncoder
 
-+ (BoxFileMessage *)encodeFileMessageEntity:(FileMessageEntity *)message {
++ (BoxFileMessage *)encodeFileMessageEntity:(nonnull NSObject *)fileMessageEntityObject {
+    NSAssert([fileMessageEntityObject isKindOfClass:[FileMessageEntity class]], @"Parameter fileMessageEntityObject must be type of FileMessageEntity");
+    FileMessageEntity *message = (FileMessageEntity*)fileMessageEntityObject;
+
     NSData *jsonData = [self jsonDataForMessage:message];
     
     BoxFileMessage *boxMessage = [[BoxFileMessage alloc] init];
@@ -43,7 +46,10 @@
 
 }
 
-+ (GroupFileMessage *)encodeGroupFileMessageEntity:(FileMessageEntity *)message {
++ (GroupFileMessage *)encodeGroupFileMessageEntity:(nonnull NSObject *)fileMessageEntityObject {
+    NSAssert([fileMessageEntityObject isKindOfClass:[FileMessageEntity class]], @"Parameter fileMessageEntityObject must be type of FileMessageEntity");
+    FileMessageEntity *message = (FileMessageEntity*)fileMessageEntityObject;
+
     NSData *jsonData = [self jsonDataForMessage:message];
     
     GroupFileMessage *boxMessage = [[GroupFileMessage alloc] init];
@@ -54,7 +60,10 @@
     return boxMessage;
 }
 
-+ (NSString *)jsonStringForFileMessageEntity:(FileMessageEntity *)message {
++ (NSString *)jsonStringForFileMessageEntity:(nonnull NSObject *)fileMessageEntityObject {
+    NSAssert([fileMessageEntityObject isKindOfClass:[FileMessageEntity class]], @"Parameter fileMessageEntityObject must be type of FileMessageEntity");
+    FileMessageEntity *message = (FileMessageEntity*)fileMessageEntityObject;
+    
     NSData *jsonData = [self jsonDataForMessage:message];
     return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
 }
@@ -93,7 +102,7 @@
     }
     
     NSMutableDictionary *metaDict = [NSMutableDictionary dictionary];
-    if ([message.durationObjc intValue] > 0) {
+    if ([message.durationObjc floatValue] > 0) {
         NSNumber *duration = [[NSNumber alloc] initWithFloat:message.durationObjc.floatValue];
         [metaDict setObject:duration forKey:JSON_FILE_KEY_METADATA_DURATION];
     }

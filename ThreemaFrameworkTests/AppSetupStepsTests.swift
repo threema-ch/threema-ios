@@ -19,8 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
+
+import RemoteSecretProtocolTestHelper
 @testable import ThreemaFramework
 
 final class AppSetupStepsTests: XCTestCase {
@@ -37,17 +40,21 @@ final class AppSetupStepsTests: XCTestCase {
     private var businessInjectorMock: FrameworkInjectorProtocol!
     
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema")
 
+        let remoteSecretManagerMock = RemoteSecretManagerMock()
+        
         let (_, mainContext, childContext) = DatabasePersistentContext
             .devNullContext(withChildContextForBackgroundProcess: true)
         let databaseBackgroundContext = DatabaseContext(mainContext: mainContext, backgroundContext: childContext)
         databasePreparer = DatabasePreparer(context: mainContext)
         backgroundEntityManager = EntityManager(
             databaseContext: databaseBackgroundContext,
-            myIdentityStore: myIdentityStoreMock
+            isRemoteSecretEnabled: remoteSecretManagerMock.isRemoteSecretEnabled
         )
+        
+        // Workaround to ensure remote secret is initialized
+        AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManagerMock)
     }
 
     func testBasicRun() async throws {
@@ -128,7 +135,7 @@ final class AppSetupStepsTests: XCTestCase {
         // let noSessionInitMessage = try XCTUnwrap(noSessionMessage.data as? ForwardSecurityDataInit)
         // let noSessionSession = try XCTUnwrap(sessionStore.bestDHSession(
         //     myIdentity: businessInjectorMock.myIdentityStore.identity,
-        //     peerIdentity: conversationAndGroupIdentity.string
+        //     peerIdentity: conversationAndGroupIdentity.rawValue
         // ))
         // XCTAssertEqual(noSessionSession.id, noSessionInitMessage.sessionID)
         
@@ -202,7 +209,7 @@ final class AppSetupStepsTests: XCTestCase {
         databasePreparer.save {
             let contact = databasePreparer.createContact(
                 publicKey: MockData.generatePublicKey(),
-                identity: identity.string
+                identity: identity.rawValue
             )
             contact.setFeatureMask(to: 255)
             return contact
@@ -228,17 +235,19 @@ final class AppSetupStepsTests: XCTestCase {
         let groupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: creator)
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            backgroundEntityManager,
-            GroupPhotoSenderMock()
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: backgroundEntityManager,
+            groupPhotoSender: {
+                GroupPhotoSenderMock()
+            }
         )
         
         guard let group = try await groupManager.createOrUpdateDB(
             for: groupIdentity,
-            members: Set(members.map(\.string)),
+            members: Set(members.map(\.rawValue)),
             systemMessageDate: .now,
             sourceCaller: .local
         ) else {

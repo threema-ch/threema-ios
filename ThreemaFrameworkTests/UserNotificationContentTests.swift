@@ -18,7 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
+
 @testable import ThreemaFramework
 
 class UserNotificationContentTests: XCTestCase {
@@ -26,7 +28,6 @@ class UserNotificationContentTests: XCTestCase {
     private var databasePreparer: DatabasePreparer!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
@@ -148,8 +149,7 @@ class UserNotificationContentTests: XCTestCase {
             )
             databasePreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = group.groupId
+                    conversation.groupID = group.groupID
                     conversation.contact = contact
                 
                     textMessage = self.databasePreparer.createTextMessage(

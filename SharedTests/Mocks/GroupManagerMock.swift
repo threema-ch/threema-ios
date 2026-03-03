@@ -103,15 +103,6 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         throw GroupManager.GroupError.notCreator
     }
 
-    func createOrUpdateObjc(
-        groupID: Data,
-        creator: String,
-        members: Set<String>,
-        systemMessageDate: Date
-    ) async throws -> (Group, Set<String>?) {
-        throw GroupManager.GroupError.notCreator
-    }
-
     func createOrUpdateDB(
         for groupIdentity: GroupIdentity,
         members: Set<String>,
@@ -155,7 +146,7 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
         }
 
         return getGroupReturns
-            .first(where: { $0.groupIdentity.id == groupID && $0.groupIdentity.creator.string == creator })
+            .first(where: { $0.groupIdentity.id == groupID && $0.groupIdentity.creator.rawValue == creator })
     }
     
     func getGroup(conversation: ConversationEntity) -> Group? {
@@ -192,15 +183,6 @@ class GroupManagerMock: NSObject, GroupManagerProtocol {
     func setNameObjc(
         groupID: Data,
         creator: String,
-        name: String?,
-        systemMessageDate: Date,
-        send: Bool
-    ) async throws {
-        // no-op
-    }
-
-    func setNameObjc(
-        group: Group,
         name: String?,
         systemMessageDate: Date,
         send: Bool

@@ -23,7 +23,7 @@ import Foundation
 import ThreemaMacros
 import UIKit
 
-public class MarkupParser {
+@objc public class MarkupParser: NSObject {
     // MARK: - Nested Types
 
     private enum MentionType {
@@ -198,7 +198,7 @@ public class MarkupParser {
     private var isBoundaryIndex: [Bool] = []
     private var isMentionIndex: [Bool] = []
     
-    public init() { }
+    override public init() { }
 }
 
 // MARK: - Public functions
@@ -263,9 +263,7 @@ extension MarkupParser {
                 var url: URL?
                 if let urlResult = result.url {
                     // Corrects the wrong encoded URL from NSDataDetector under iOS17
-                    if #available(iOS 17.0, *),
-                       var urlSourceString = attributedString.string.substring(with: result.range) {
-                        
+                    if var urlSourceString = attributedString.string.substring(with: result.range) {
                         // Add missing URL scheme, if happen when NSDataDetector detected an URL without scheme in
                         // the text (eg. 'threema.com')
                         if let scheme = urlResult.scheme, !urlSourceString.starts(with: scheme) {
@@ -302,8 +300,10 @@ extension MarkupParser {
     /// - Parameter string: String to parse
     /// - Returns: Preview string with all internal markup stripped
     public func previewString(for string: String, font: UIFont) -> NSAttributedString {
-        let parsedMarkups = NSMutableAttributedString(string: string)
-        
+        let parsedMarkups = NSMutableAttributedString(
+            string: string,
+            attributes: [NSAttributedString.Key.font: font]
+        )
         do {
             try parse(
                 allTokens: tokenize(
@@ -459,6 +459,80 @@ extension MarkupParser {
         }
         
         return mutableOriginalString
+    }
+}
+
+// MARK: - Convenience helper
+
+extension MarkupParser {
+    @objc public func makeMentionsString(for text: String) -> String {
+        let input = NSAttributedString(string: text)
+        let result = markify(
+            attributedString: input,
+            font: .systemFont(ofSize: 14),
+            parseURL: false,
+            parseMention: true,
+            removeMarkups: true,
+            forTextStorage: false,
+            forTests: false
+        )
+        return result.string
+    }
+    
+    @objc public func makeMentionsForMWWrapperAttributedString(for text: String) -> NSAttributedString {
+        let input = NSAttributedString(
+            string: text,
+            attributes: [
+                NSAttributedString.Key.font: UIFont.preferredFont(forTextStyle: .body),
+                NSAttributedString.Key.foregroundColor: UIColor.label,
+            ]
+        )
+        
+        return markify(
+            attributedString: input,
+            font: UIFont.preferredFont(forTextStyle: .body),
+            parseURL: false,
+            parseMention: true,
+            removeMarkups: true,
+            forTextStorage: false,
+            forTests: false
+        )
+    }
+    
+    public func isMeOrAllMention(in text: String) -> Bool {
+        let attributed = markify(
+            attributedString: NSAttributedString(string: text),
+            font: .systemFont(ofSize: 14),
+            parseMention: true
+        )
+
+        var found = false
+        attributed.enumerateAttribute(
+            NSAttributedString.Key.tokenType,
+            in: NSRange(location: 0, length: attributed.length)
+        ) { attribute, range, _ in
+            guard let attribute = attribute as? MarkupParser.TokenType, attribute == TokenType.mention else {
+                return
+            }
+            
+            var mutableRange = range
+            let attributes = attributed.attributes(
+                at: range.location,
+                longestEffectiveRange: &mutableRange,
+                in: NSRange(location: 0, length: attributed.length)
+            )
+
+            if let mentionType = attributes[NSAttributedString.Key.contact] as? MentionType {
+                switch mentionType {
+                case .me, .all:
+                    found = true
+                default:
+                    found = false
+                }
+            }
+        }
+
+        return found
     }
 }
 
@@ -860,7 +934,8 @@ extension MarkupParser {
                                         of: "ThreemaId:",
                                         with: ""
                                     )
-                                    if let contact = businessInjector.contactStore.contact(for: threemaID) {
+                                    if let contact = businessInjector.contactStore
+                                        .contact(for: threemaID) as? ContactEntity {
                                         attributes.updateValue(
                                             MentionType.contact(contact),
                                             forKey: NSAttributedString.Key.contact

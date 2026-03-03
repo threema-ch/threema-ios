@@ -191,19 +191,11 @@ extension EmojiReactionModal {
                     Text(content.emoji)
                         .font(.title3)
                     
-                    if #available(iOS 17.0, *) {
-                        Text(String(format: "%.0f", value))
-                            .contentTransition(.numericText(value: value))
-                            .font(.subheadline)
-                            .fontWeight(isSelected ? .bold : .regular)
-                            .foregroundColor(Colors.chatReactionBubbleTextColor.color)
-                    }
-                    else {
-                        Text(verbatim: "\(content.count)")
-                            .font(.subheadline)
-                            .fontWeight(isSelected ? .bold : .regular)
-                            .foregroundColor(Colors.chatReactionBubbleTextColor.color)
-                    }
+                    Text(String(format: "%.0f", value))
+                        .contentTransition(.numericText(value: value))
+                        .font(.subheadline)
+                        .fontWeight(isSelected ? .bold : .regular)
+                        .foregroundColor(Colors.chatReactionBubbleTextColor.color)
                 }
             }
             .dynamicTypeSize(...DynamicTypeSize.accessibility3)

@@ -19,8 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import PromiseKit
+import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
+
 @testable import ThreemaFramework
 
 class TaskExecutionTransactionTests: XCTestCase {
@@ -41,10 +44,9 @@ class TaskExecutionTransactionTests: XCTestCase {
     )]
     
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
+        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext(isRemoteSecretEnabled: false)
         databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
     }
@@ -132,8 +134,8 @@ class TaskExecutionTransactionTests: XCTestCase {
             
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
-                deviceID: MockData.deviceID,
-                deviceGroupKeys: MockData.deviceGroupKeys
+                deviceID: MockMultiDevice.deviceID,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys
             )
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
@@ -162,7 +164,7 @@ class TaskExecutionTransactionTests: XCTestCase {
                 ) as? NSError
             }
             let frameworkInjectorMock = BusinessInjectorMock(
-                entityManager: EntityManager(databaseContext: databaseBackgroundCnx),
+                entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false),
                 userSettings: UserSettingsMock(enableMultiDevice: true),
                 serverConnector: serverConnectorMock
             )
@@ -256,7 +258,7 @@ class TaskExecutionTransactionTests: XCTestCase {
         let frameworkInjectorMock = BusinessInjectorMock(
             contactStore: ContactStoreMock(),
             conversationStore: ConversationStoreMock(),
-            entityManager: EntityManager(databaseContext: databaseBackgroundCnx),
+            entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false),
             groupManager: GroupManagerMock(),
             licenseStore: LicenseStore.shared(),
             messageSender: MessageSenderMock(),

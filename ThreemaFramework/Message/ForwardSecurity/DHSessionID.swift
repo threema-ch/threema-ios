@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentials
 
 public class DHSessionID: CustomStringConvertible, Equatable, Comparable {
     static let dhSessionIDLength = 16

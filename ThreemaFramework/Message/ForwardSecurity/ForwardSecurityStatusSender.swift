@@ -40,7 +40,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         
         postSystemMessage(
             for: contact.identity,
-            reason: kFsDebugMessage,
+            reason: .fsDebugMessage,
             arg: "New initiator DH session \(session.description)"
         )
     }
@@ -56,13 +56,13 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         if ThreemaEnvironment.fsDebugStatusMessages {
             postSystemMessage(
                 for: contact.identity,
-                reason: kFsDebugMessage,
+                reason: .fsDebugMessage,
                 arg: "Responder session established \(session.description)"
             )
         }
         
         if existingSessionPreempted {
-            postSystemMessage(for: contact.identity, reason: kSystemMessageFsSessionReset, arg: 0)
+            postSystemMessage(for: contact.identity, reason: .fsSessionReset, arg: 0)
         }
         
         // Rationale for local/outgoing applied version: Should be identical to remote/incoming
@@ -70,7 +70,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         if session.outgoingAppliedVersion.rawValue >= CspE2eFs_Version.v11.rawValue {
             // If a new session has been established with V1.1 or higher, we display the message, that forward security
             // has been enabled (by both participants) in this chat.
-            postSystemMessage(for: contact.identity, reason: kSystemMessageFsSessionEstablished)
+            postSystemMessage(for: contact.identity, reason: .fsSessionEstablished)
         }
     }
     
@@ -90,7 +90,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         if ThreemaEnvironment.fsDebugStatusMessages {
             postSystemMessage(
                 for: contact.identity,
-                reason: kFsDebugMessage,
+                reason: .fsDebugMessage,
                 arg: msg
             )
         }
@@ -127,15 +127,16 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             // 2. Lookup the message for `message_id` in the `group` and let `message` be
             //    the result.
             guard let conversation = self.entityManager.entityFetcher.conversationEntity(
-                for: groupIdentity.id,
-                creator: groupIdentity.creator.string
+                for: groupIdentity,
+                myIdentity: MyIdentityStore.shared().identity
             ) else {
                 return false
             }
             
-            guard let message = self.entityManager.entityFetcher.ownMessage(
+            guard let message = self.entityManager.entityFetcher.message(
                 with: rejectedMessageID,
-                conversation: conversation
+                in: conversation,
+                isOwn: true
             ) else {
                 // 4. If the user is not the sender of (the original) `message`, abort these
                 //    steps.
@@ -148,8 +149,8 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             //    `message`.
             switch message {
             case is TextMessageEntity, is LocationMessageEntity, is FileMessageEntity, is BallotMessageEntity:
-                guard let contactEntity = self.entityManager.entityFetcher.contact(for: sender.string) else {
-                    DDLogError("[ForwardSecurity] Unable to find contact entity for \(sender.string)")
+                guard let contactEntity = self.entityManager.entityFetcher.contactEntity(for: sender.rawValue) else {
+                    DDLogError("[ForwardSecurity] Unable to find contact entity for \(sender.rawValue)")
                     return true
                 }
                 
@@ -175,7 +176,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             //    2. Abort these steps.
             
             let groupManager = GroupManager(entityManager: entityManager)
-            guard let group = groupManager.getGroup(groupIdentity.id, creator: groupIdentity.creator.string) else {
+            guard let group = groupManager.getGroup(groupIdentity.id, creator: groupIdentity.creator.rawValue) else {
                 DDLogWarn("[ForwardSecurity] Unable to load group")
                 return
             }
@@ -183,7 +184,11 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             if group.isOwnGroup {
                 Task {
                     do {
-                        try await groupManager.sync(group: group, to: Set([sender.string]), withoutCreateMessage: false)
+                        try await groupManager.sync(
+                            group: group,
+                            to: Set([sender.rawValue]),
+                            withoutCreateMessage: false
+                        )
                     }
                     catch {
                         DDLogError("[ForwardSecurity] Error while syncing group: \(error)")
@@ -197,7 +202,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         entityManager.performAndWaitSave { [self] in
             // 1. Lookup the message for `message_id` in the associated 1:1 conversation
             //    and let `message` be the result.
-            guard let conversation = entityManager.entityFetcher.conversationEntity(forIdentity: contact.identity)
+            guard let conversation = entityManager.entityFetcher.conversationEntity(for: contact.identity)
             else {
                 DDLogError(
                     "[ForwardSecurity] Conversation for rejected message ID \(rejectedMessageID.hexString) not found"
@@ -206,9 +211,10 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
                 return
             }
             
-            guard let message = entityManager.entityFetcher.ownMessage(
+            guard let message = entityManager.entityFetcher.message(
                 with: rejectedMessageID,
-                conversation: conversation
+                in: conversation,
+                isOwn: true
             ) else {
                 // 2. If `message` is not defined or the user is not the sender of `message`,
                 //    abort these steps.
@@ -263,7 +269,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         if ThreemaEnvironment.fsDebugStatusMessages {
             postSystemMessage(
                 for: contact.identity,
-                reason: kFsDebugMessage,
+                reason: .fsDebugMessage,
                 arg: msg
             )
         }
@@ -277,7 +283,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         if ThreemaEnvironment.fsDebugStatusMessages {
             postSystemMessage(
                 for: contact.identity,
-                reason: kFsDebugMessage,
+                reason: .fsDebugMessage,
                 arg: "First 4DH message received in session \(session.description)"
             )
         }
@@ -288,8 +294,8 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         // the session has been established
         
         if session.outgoingAppliedVersion == .v10 {
-            postSystemMessage(for: contact.identity, reason: kSystemMessageFsSessionEstablished)
-            
+            postSystemMessage(for: contact.identity, reason: .fsSessionEstablished)
+
             // We do not save here but wait for this change to be saved together with the final save in message
             // processing.
             // If we were to save here we might stop processing the message and retry at a later date having state that
@@ -297,7 +303,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             // long
             // enough for the message to be deleted from server. We then have weird state.
             entityManager.performAndWait {
-                guard let contact = self.entityManager.entityFetcher.contact(for: contact.identity) else {
+                guard let contact = self.entityManager.entityFetcher.contactEntity(for: contact.identity) else {
                     DDLogError(
                         "[ForwardSecurity] Could not fetch contact (\(contact.identity)) when attempting to set FS flag to enabled"
                     )
@@ -317,7 +323,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         if ThreemaEnvironment.fsDebugStatusMessages {
             postSystemMessage(
                 for: contact.identity,
-                reason: kFsDebugMessage,
+                reason: .fsDebugMessage,
                 arg: "Initiator DH session established \(session.description)"
             )
         }
@@ -327,7 +333,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         if session.outgoingAppliedVersion.rawValue >= CspE2eFs_Version.v11.rawValue {
             // If a new session has been established with V1.1 or higher, we display the message, that forward security
             // has been enabled (by both participants) in this chat.
-            postSystemMessage(for: contact.identity, reason: kSystemMessageFsSessionEstablished)
+            postSystemMessage(for: contact.identity, reason: .fsSessionEstablished)
         }
     }
     
@@ -342,7 +348,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
 
         if ThreemaEnvironment.fsDebugStatusMessages {
             let string = "\(session.description) updated \(versionUpdatedSnapshot.description)"
-            postSystemMessage(for: contact.identity, reason: kFsDebugMessage, arg: string)
+            postSystemMessage(for: contact.identity, reason: .fsDebugMessage, arg: string)
         }
         
         var forwardSecurityStateIsOff: Bool? = nil
@@ -350,7 +356,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         // See `first4DhMessageReceived(session:contact:)` for an explanation of why this is not
         // `performBlockSyncAndSafe`.
         entityManager.performAndWait {
-            guard let contact = self.entityManager.entityFetcher.contact(for: contact.identity) else {
+            guard let contact = self.entityManager.entityFetcher.contactEntity(for: contact.identity) else {
                 DDLogError(
                     "[ForwardSecurity] Could not find contact (\(contact.identity)) when attempting to post negotiated version update"
                 )
@@ -374,7 +380,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         if versionUpdatedSnapshot.before.local == .v10,
            versionUpdatedSnapshot.after.local.rawValue >= CspE2eFs_Version.v11.rawValue,
            forwardSecurityStateIsOff {
-            postSystemMessage(for: contact.identity, reason: kSystemMessageFsSessionEstablished)
+            postSystemMessage(for: contact.identity, reason: .fsSessionEstablished)
         }
     }
     
@@ -385,7 +391,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         guard ThreemaEnvironment.fsDebugStatusMessages else {
             return
         }
-        postSystemMessage(for: contact.identity, reason: kFsDebugMessage, arg: string)
+        postSystemMessage(for: contact.identity, reason: .fsDebugMessage, arg: string)
     }
     
     func messageWithoutFSReceived(in session: DHSession, contactIdentity: String, message: AbstractMessage) {
@@ -400,7 +406,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
             // See `first4DhMessageReceived(session:contact:)` for an explanation of why this is not
             // `performBlockSyncAndSafe`.
             entityManager.performAndWait {
-                guard let contact = self.entityManager.entityFetcher.contact(for: contactIdentity) else {
+                guard let contact = self.entityManager.entityFetcher.contactEntity(for: contactIdentity) else {
                     DDLogError(
                         "[ForwardSecurity] Could not fetch contact (\(contactIdentity)) when attempting to update the forward security state"
                     )
@@ -413,7 +419,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
                     contact.forwardSecurityState = NSNumber(value: ForwardSecurityState.off.rawValue)
                     self.postSystemMessage(
                         for: contactIdentity,
-                        reason: kSystemMessageFsMessageWithoutForwardSecurity
+                        reason: .fsMessageWithoutForwardSecurity
                     )
                 }
             }
@@ -421,7 +427,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         else if session.outgoingAppliedVersion.rawValue >= CspE2eFs_Version.v11.rawValue {
             // TODO(ANDR-2452): Do not distinguish between 1.0 and newer versions when enough clients have updated. Show this status message for every message without FS.
             //  For sessions with version 1.1 or newer, inform for every message without fs
-            postSystemMessage(for: contactIdentity, reason: kSystemMessageFsMessageWithoutForwardSecurity)
+            postSystemMessage(for: contactIdentity, reason: .fsMessageWithoutForwardSecurity)
         }
     }
     
@@ -434,20 +440,20 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         
         postSystemMessage(
             for: contact.identity,
-            reason: kFsDebugMessage,
+            reason: .fsDebugMessage,
             arg: "DH session not found (ID \(sessionID.description))"
         )
     }
     
     func illegalSessionState(identity: String, sessionID: DHSessionID) {
-        postSystemMessage(for: identity, reason: kSystemMessageFsIllegalSessionState, arg: 0)
+        postSystemMessage(for: identity, reason: .fsIllegalSessionState, arg: 0)
     }
     
     private func showResetOrNotSupportedAnymore(contact: ForwardSecurityContact, _ hasForwardSecuritySupport: Bool) {
         if hasForwardSecuritySupport {
             postSystemMessage(
                 for: contact.identity,
-                reason: kSystemMessageFsSessionReset,
+                reason: .fsSessionReset,
                 arg: 0,
                 allowDuplicates: true
             )
@@ -455,20 +461,25 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         else {
             postSystemMessage(
                 for: contact.identity,
-                reason: kSystemMessageFsNotSupportedAnymore,
+                reason: .fsNotSupportedAnymore,
                 arg: 0,
                 allowDuplicates: false
             )
         }
     }
     
-    private func postSystemMessage(for contactIdentity: String, reason: Int, arg: Int, allowDuplicates: Bool = true) {
+    private func postSystemMessage(
+        for contactIdentity: String,
+        reason: SystemMessageEntity.SystemMessageEntityType,
+        arg: Int,
+        allowDuplicates: Bool = true
+    ) {
         postSystemMessage(for: contactIdentity, reason: reason, arg: String(arg), allowDuplicates: allowDuplicates)
     }
     
     private func postSystemMessage(
         for contactIdentity: String,
-        reason: Int,
+        reason: SystemMessageEntity.SystemMessageEntityType,
         arg: String? = nil,
         allowDuplicates: Bool = true
     ) {
@@ -482,19 +493,18 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
                 if !allowDuplicates {
                     let messageFetcher = MessageFetcher(for: conversation, with: self.entityManager)
                     if let lastSystemMessage = messageFetcher.lastMessage() as? SystemMessageEntity,
-                       lastSystemMessage.type.intValue == reason {
+                       lastSystemMessage.type.intValue == reason.rawValue {
                         DDLogNotice("[ForwardSecurity] Don't post duplicate system message for \(reason)")
                         return
                     }
                 }
                 
-                let systemMessage = self.entityManager.entityCreator.systemMessageEntity(for: conversation)
-                systemMessage?.type = NSNumber(value: reason)
-                systemMessage?.arg = arg?.data(using: .utf8)
-                systemMessage?.remoteSentDate = Date()
-                if systemMessage?.isAllowedAsLastMessage ?? false {
-                    conversation.lastMessage = systemMessage
-                }
+                let systemMessage = self.entityManager.entityCreator.systemMessageEntity(
+                    for: reason,
+                    in: conversation
+                )
+                systemMessage.arg = arg?.data(using: .utf8)
+                systemMessage.remoteSentDate = Date()
             }
             else {
                 DDLogNotice("[ForwardSecurity] Can't add status message because conversation is nil")
@@ -507,7 +517,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
         try? await FeatureMask.updateFeatureMask(for: [ThreemaIdentity(contact.identity)])
 
         return await entityManager.perform {
-            guard let contactEntity = self.entityManager.entityFetcher.contact(for: contact.identity) else {
+            guard let contactEntity = self.entityManager.entityFetcher.contactEntity(for: contact.identity) else {
                 return false
             }
             
@@ -517,7 +527,7 @@ class ForwardSecurityStatusSender: ForwardSecurityStatusListener {
     
     func hasForwardSecuritySupport(_ contact: ForwardSecurityContact) async -> Bool {
         await entityManager.perform {
-            guard let contactEntity = self.entityManager.entityFetcher.contact(for: contact.identity)
+            guard let contactEntity = self.entityManager.entityFetcher.contactEntity(for: contact.identity)
             else {
                 return false
             }

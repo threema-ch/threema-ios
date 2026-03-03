@@ -22,6 +22,7 @@ import Foundation
 import PhotosUI
 import SwiftUI
 
+@available(*, deprecated, message: "Do not use anymore. Use native SwiftUI image picker instead.")
 struct SwiftUIImagePicker: UIViewControllerRepresentable {
     @Binding var image: UIImage?
 

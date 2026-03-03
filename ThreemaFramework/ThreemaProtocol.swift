@@ -23,38 +23,6 @@
 import Foundation
 import ThreemaMacros
 
-/// Swiftification of constants from from `ProtocolDefines.h`
-public enum ThreemaProtocol {
-    public static let identityLength = Int(kIdentityLen)
-    public static let messageIDLength = Int(kMessageIdLen)
-    public static let nonceLength = Int(kNonceLen)
-    public static let blobIDLength = Int(kBlobIdLen)
-    public static let blobKeyLength = Int(kBlobKeyLen)
-    public static let groupIDLength = Int(kGroupIdLen)
-    public static let ballotIDLength = Int(kBallotIdLen)
-    public static let deviceIDLength = Int(kDeviceIdLen)
-    public static let gckLength = Int(kGCKLen)
-    public static let publicKeyLength = Int(kNaClCryptoPubKeySize)
-    public static let reflectIDLength = MediatorMessageProtocol.MEDIATOR_REFLECT_ID_LENGTH
-    
-    /// kNonce_1[]
-    static let nonce01 = Data([
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
-    ])
-    
-    /// kNonce_2[]
-    static let nonce02 = Data([
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-    ])
-    
-    /// Used for blobs in local note groups
-    static let nonUploadedBlobID = Data(BytesUtility.padding([], pad: 0, length: blobIDLength))
-}
-
 @objc public enum ThreemaProtocolError: Int, Error, CustomStringConvertible {
     public typealias RawValue = Int
 

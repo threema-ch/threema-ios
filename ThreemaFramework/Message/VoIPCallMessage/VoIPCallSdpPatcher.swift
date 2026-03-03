@@ -33,10 +33,12 @@ public class VoIPCallSdpPatcher: NSObject {
         self.rtpHeaderExtensionConfig = config
     }
     
-    ///  Whether this SDP is created locally and it is the offer, a local answer or a remote SDP.
+    /// Whether this SDP is a local offer, a local answer or a remote SDP.
     public enum SdpType {
+        case REMOTE_OFFER
+        case REMOTE_ANSWER
         case LOCAL_OFFER
-        case LOCAL_ANSWER_OR_REMOTE_SDP
+        case LOCAL_ANSWER
     }
     
     /// RTP header extension configuration.
@@ -46,7 +48,7 @@ public class VoIPCallSdpPatcher: NSObject {
         case ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER
     }
     
-    enum SdpErrorType: Error, Equatable {
+    public enum SdpErrorType: Error, Equatable {
         case invalidSdp
         case illegalArgument
         case matchesError
@@ -79,7 +81,7 @@ public class VoIPCallSdpPatcher: NSObject {
     public class SdpError: Error {
         var type: SdpErrorType
         var description: String
-        init(type: SdpErrorType, description: String) {
+        public init(type: SdpErrorType, description: String) {
             self.type = type
             self.description = description
         }
@@ -88,21 +90,23 @@ public class VoIPCallSdpPatcher: NSObject {
             description
         }
     }
-    
+
+    var rtpExtensionsInRemoteOffer = RtpExtensionReplayer()
+
     private var rtpHeaderExtensionConfig: RtpHeaderExtensionConfig = .DISABLE
     
     struct SdpPatcherContext {
         var type: SdpType
         var config: VoIPCallSdpPatcher
         var payloadTypeOpus: String
-        var rtpExtensionIDRemapper: RtpExtensionIDRemapper
+        var rtpExtensionsInLocalOfferIDRemapper: RtpExtensionIDRemapper
         var section: SdpSection
         
         init(type: SdpType, config: VoIPCallSdpPatcher, payloadTypeOpus: String) {
             self.type = type
             self.config = config
             self.payloadTypeOpus = payloadTypeOpus
-            self.rtpExtensionIDRemapper = RtpExtensionIDRemapper(config: config)
+            self.rtpExtensionsInLocalOfferIDRemapper = RtpExtensionIDRemapper(config: config)
             self.section = SdpSection.GLOBAL
         }
     }
@@ -141,6 +145,43 @@ public class VoIPCallSdpPatcher: NSObject {
         }
     }
 
+    struct RtpExtensionReplayer {
+        enum MediaSection {
+            case AUDIO, VIDEO
+        }
+        
+        private static var extensions = [MediaSection: [String]]()
+        
+        static func mediaSection(fromSdpSection section: SdpSection) -> MediaSection? {
+            switch section {
+            case .MEDIA_AUDIO:
+                .AUDIO
+            case .MEDIA_VIDEO:
+                .VIDEO
+            default:
+                nil
+            }
+        }
+        
+        mutating func add(section: MediaSection, line: String) {
+            if let lines = VoIPCallSdpPatcher.RtpExtensionReplayer.extensions[section] {
+                VoIPCallSdpPatcher.RtpExtensionReplayer.extensions[section] = lines + [line]
+            }
+            else {
+                VoIPCallSdpPatcher.RtpExtensionReplayer.extensions[section] = [line]
+            }
+        }
+        
+        mutating func replay(section: MediaSection) -> [String] {
+            VoIPCallSdpPatcher.RtpExtensionReplayer.extensions.removeValue(forKey: section) ?? []
+        }
+        
+        /// Only use for testing
+        static func clearExtensionsForTesting() {
+            extensions.removeAll()
+        }
+    }
+    
     struct RtpExtensionIDRemapper {
         private var currentID: Int?
         private var maxID: Int?
@@ -224,14 +265,14 @@ public class VoIPCallSdpPatcher: NSObject {
             var context = SdpPatcherContext(type: type, config: self, payloadTypeOpus: payloadTypeOpus!)
             let linesArray = sdp.linesArray
             
-            for (var index, line) in linesArray.enumerated() {
+            for line in linesArray {
                 do {
+                    var lineLine = Line(line: line)
                     try handleLine(
                         context: &context,
                         lines: &lines,
-                        lineString: line,
+                        line: &lineLine,
                         sdpLineArray: linesArray,
-                        index: &index
                     )
                 }
                 catch {
@@ -244,7 +285,6 @@ public class VoIPCallSdpPatcher: NSObject {
                     }
                 }
             }
-            
             return lines
         }
         catch {
@@ -263,14 +303,12 @@ public class VoIPCallSdpPatcher: NSObject {
     private func handleLine(
         context: inout SdpPatcherContext,
         lines: inout String,
-        lineString: String,
+        line: inout Line,
         sdpLineArray: [String],
-        index: inout Int
     ) throws {
         let current: SdpSection = context.section
-        var line = Line(line: lineString)
         var action: LineAction
-        if lineString.starts(with: "m=") {
+        if line.line.starts(with: "m=") {
             action = try handleSectionLine(context: &context, line: &line)
         }
         else {
@@ -282,7 +320,7 @@ public class VoIPCallSdpPatcher: NSObject {
             case .MEDIA_VIDEO:
                 action = try handleVideoLine(&context, &line)
             case .MEDIA_DATA_CHANNEL:
-                action = try handleDataChannelLine(context, &line)
+                action = try handleDataChannelLine(&line)
             default:
                 // Note: This also swallows `MEDIA_UNKNOWN`. Since we reject these lines completely,
                 //       a line within that section should never be parsed.
@@ -301,23 +339,34 @@ public class VoIPCallSdpPatcher: NSObject {
         case .REJECT:
             DDLogError("Rejected line: \(line.line)")
         }
+        
         // If we have switched to another section and the line has been rejected,
         // we need to reject the remainder of the section.
         if current != context.section, action == .REJECT {
-            // noinspection StatementWithEmptyBody
-            var debug = String()
-            for (i, newLine) in sdpLineArray.enumerated() {
-                if i > index {
-                    if !newLine.starts(with: "m=") {
-                        debug.append(newLine)
-                        index = i
-                    }
-                    else {
-                        break
-                    }
+
+            var debug = ""
+            var rejectedLine: String?
+            
+            for newLine in sdpLineArray {
+                if !newLine.starts(with: "m=") {
+                    debug.append(newLine)
+                    rejectedLine = newLine
+                }
+                else {
+                    break
                 }
             }
-            DDLogError("Rejected section: \(debug)")
+            
+            if !debug.isEmpty {
+                DDLogError("Rejected section: \(debug)")
+            }
+            
+            // Since we've already read the beginning of the section and can't push it back to the reader, we need to
+            // handle it here.
+            if let rejectedLine {
+                var line = Line(line: rejectedLine)
+                try handleLine(context: &context, lines: &lines, line: &line, sdpLineArray: sdpLineArray)
+            }
         }
     }
     
@@ -470,7 +519,14 @@ public class VoIPCallSdpPatcher: NSObject {
             
             // Write our custom params
             builder.append("stereo=0;sprop-stereo=0;cbr=1")
+            
             return try line.rewrite(line: builder)
+        }
+        
+        // For local answers, inject the accepted remote offer RTP header extensions after the MID in a hacky ugly AF
+        // way
+        if context.type == .LOCAL_ANSWER, line.line.hasPrefix("a=mid:") {
+            return VoIPCallSdpPatcher.handleRtpHeaderExtensionInjectionAfterMid(context: context, line: &line)
         }
         
         // Handle RTP header extensions
@@ -497,6 +553,12 @@ public class VoIPCallSdpPatcher: NSObject {
         let lineString = line.line
         let lineRange = NSRange(lineString.startIndex..<lineString.endIndex, in: lineString)
         
+        // For local answers, inject the accepted remote offer RTP header extensions after the MID in a hacky ugly AF
+        // way
+        if context.type == .LOCAL_ANSWER, line.line.hasPrefix("a=mid:") {
+            return VoIPCallSdpPatcher.handleRtpHeaderExtensionInjectionAfterMid(context: context, line: &line)
+        }
+        
         // Handle RTP header extensions
         let rtpHeaderExtensionRegex = try NSRegularExpression(
             pattern: VoIPCallSdpPatcher.SDP_EXTMAP_ANY_RE,
@@ -517,7 +579,7 @@ public class VoIPCallSdpPatcher: NSObject {
     ///   - line: Line
     /// - Throws: SdpError
     /// - Returns: LineAction
-    private func handleDataChannelLine(_ context: SdpPatcherContext, _ line: inout Line) throws -> LineAction {
+    private func handleDataChannelLine(_ line: inout Line) throws -> LineAction {
         try line.accept()
     }
     
@@ -549,38 +611,53 @@ public class VoIPCallSdpPatcher: NSObject {
             return try line.reject()
         }
         
-        // Require encryption for the remainder of headers
-        if uriAndAttributes.starts(with: "urn:ietf:params:rtp-hdrext:encrypt") {
-            return try remapRtpHeaderExtensionIfOutbound(&context, &line, uriAndAttributes)
-        }
-        
-        // Reject the rest
-        return try line.reject()
-    }
-    
-    /// Handle remap Rtp header extension if outbound.
-    /// - Parameters:
-    ///   - context: SdpPatcherContext
-    ///   - line: Line
-    ///   - uriAndAttributes: String
-    /// - Throws: SdpError
-    /// - Returns: LineAction
-    private func remapRtpHeaderExtensionIfOutbound(
-        _ context: inout SdpPatcherContext,
-        _ line: inout Line,
-        _ uriAndAttributes: String
-    ) throws -> LineAction {
-        // Rewrite if local offer, otherwise accept
-        if context.type == .LOCAL_OFFER {
-            try line.rewrite(line: String(
-                format: "a=extmap:%i %@",
-                context.rtpExtensionIDRemapper.assignID(uriAndAttributes: uriAndAttributes),
+        switch context.type {
+        // Only allow encrypted extensions and remember them so they can be copied into the local answer
+        case .REMOTE_OFFER:
+            guard uriAndAttributes.starts(with: "urn:ietf:params:rtp-hdrext:encrypt") else {
+                return try line.reject()
+            }
+            if let mediaSection = RtpExtensionReplayer.mediaSection(fromSdpSection: context.section) {
+                context.config.rtpExtensionsInRemoteOffer.add(section: mediaSection, line: line.line)
+            }
+            return try line.accept()
+            
+        case .REMOTE_ANSWER:
+            guard uriAndAttributes.starts(with: "urn:ietf:params:rtp-hdrext:encrypt") else {
+                return try line.reject()
+            }
+            return try line.accept()
+            
+        case .LOCAL_OFFER:
+            if uriAndAttributes.starts(with: "urn:ietf:params:rtp-hdrext:encrypt") {
+                // We don't expect any encrypted extensions since they are no longer generated
+                // by default. Not having to handle duplicates makes this code simpler.
+                return try line.reject()
+            }
+            return try line.rewrite(line: String(
+                format: "a=extmap:%d urn:ietf:params:rtp-hdrext:encrypt %@",
+                context.rtpExtensionsInLocalOfferIDRemapper.assignID(uriAndAttributes: uriAndAttributes),
                 uriAndAttributes
             ))
+        
+        // We don't expect any extensions since all encrypted header extensions are stripped by the SDP engine, because
+        // Google decided so.
+        case .LOCAL_ANSWER:
+            return try line.reject()
         }
-        else {
-            try line.accept()
+    }
+    
+    private static func handleRtpHeaderExtensionInjectionAfterMid(
+        context: SdpPatcherContext,
+        line: inout Line
+    ) -> LineAction {
+        guard let mediaSection = RtpExtensionReplayer.mediaSection(fromSdpSection: context.section) else {
+            return try! line.accept()
         }
+        
+        var replayedExtensions = context.config.rtpExtensionsInRemoteOffer.replay(section: mediaSection)
+        replayedExtensions.insert(line.line, at: 0)
+        return try! line.rewrite(line: "\(replayedExtensions.joined(separator: "\r\n"))")
     }
 }
 

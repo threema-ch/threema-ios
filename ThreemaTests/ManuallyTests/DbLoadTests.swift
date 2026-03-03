@@ -20,22 +20,69 @@
 
 import XCTest
 
+import FileUtility
 import ThreemaEssentials
-@testable import Threema
+import ThreemaEssentialsTestHelper
+#if THREEMA_CUSTOMER
+    @testable import Threema
+#elseif THREEMA_WORK
+    @testable import Threema_Work
+#elseif THREEMA_ONPREM
+    @testable import Threema_OnPrem
+#elseif CUSTOM_ONPREM
+    @testable import Custom_OnPrem
+#elseif THREEMA_GREEN
+    @testable import Threema_Green
+#elseif THREEMA_BLUE
+    @testable import Threema_Blue
+#endif
 @testable import ThreemaFramework
 
 class DBLoadTests: XCTestCase {
 
-    override func setUp() {
-        // necessary for ValidationLogger
-        AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
+    override func setUp() async throws {
+        AppGroup.setAppID(BundleUtil.threemaAppIdentifier())
+        AppGroup.setGroupID(BundleUtil.threemaAppGroupIdentifier())
+        
+        FileUtility.updateSharedInstance(with: FileUtility())
+
+        // Workaround to ensure remote secret is initialized
+        let remoteSecretManager = try await AppLaunchManager.shared.initializeRemoteSecret(
+            navigationController: nil,
+            onDelete: nil,
+            onCancel: nil
+        )
+        
+        AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManager)
+    }
+
+    func testTargetUnderTest() {
+        #if THREEMA_CUSTOMER
+            XCTAssertEqual(AppGroup.groupID(), "group.ch.threema")
+            XCTAssertEqual(TargetManager.current, .threema)
+        #elseif THREEMA_WORK
+            XCTAssertEqual(AppGroup.groupID(), "group.ch.threema.work")
+            XCTAssertEqual(TargetManager.current, .work)
+        #elseif THREEMA_ONPREM
+            XCTAssertEqual(AppGroup.groupID(), "group.ch.threema.onprem")
+            XCTAssertEqual(TargetManager.current, .onPrem)
+        #elseif CUSTOM_ONPREM
+            XCTAssertEqual(AppGroup.groupID(), "group.com.custom.onprem")
+            XCTAssertEqual(TargetManager.current, .customOnPrem)
+        #elseif THREEMA_GREEN
+            XCTAssertEqual(AppGroup.groupID(), "group.ch.threema.red")
+            XCTAssertEqual(TargetManager.current, .green)
+        #elseif THREEMA_BLUE
+            XCTAssertEqual(AppGroup.groupID(), "group.ch.threema.work.red")
+            XCTAssertEqual(TargetManager.current, .blue)
+        #endif
     }
 
     /// Print out shell commands to copy database and external data form simulator. To prepare database before, run
     /// methods in this file like 'testDbLoad'.
     func testCopyOldVersionOfDatabase() {
         
-        let databasePath = FileUtility.shared.appDataDirectory?.path
+        let databasePath = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())?.path
         
         if databasePath != nil {
             print("\nCopy 'old' version of database for testing DB migration:")
@@ -65,10 +112,14 @@ class DBLoadTests: XCTestCase {
     ///
     /// Note: the database must contain at least 2 nonduplicate contacts before running this test
     func testGenerateDuplicateContacts() async throws {
-        let em = EntityManager(withChildContextForBackgroundProcess: true)
+        let em = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).backgroundEntityManager
 
         let allContactIdentity: [String] = await em.perform {
-            (em.entityFetcher.allContacts() as? [ContactEntity])?.map(\.identity) ?? [String]()
+            em.entityFetcher.contactEntities()?.map(\.identity) ?? [String]()
         }
 
         guard allContactIdentity.count >= 2 else {
@@ -81,28 +132,31 @@ class DBLoadTests: XCTestCase {
 
             for identity in allContactIdentity {
 
-                if let contactsForIdentity = em.entityFetcher.allContacts(forID: identity) as? [ContactEntity],
+                if let contactsForIdentity = em.entityFetcher.contactEntities(for: identity),
                    contactsForIdentity.count == 1,
                    let contact = contactsForIdentity.first {
 
                     print("Create duplicate contact for \(identity)")
-                    if let duplicateContact = em.entityCreator.contact() {
-                        duplicateContact.setIdentity(to: identity)
-                        duplicateContact.setFirstName(to: "Duplicate of")
-                        duplicateContact.setLastName(to: identity)
-                        duplicateContact.publicKey = contact.publicKey
-                        duplicateContact.contactVerificationLevel = contact.contactVerificationLevel
-                        duplicateContact.workContact = contact.workContact
-                        duplicateContact.forwardSecurityState = contact.forwardSecurityState
-                        duplicateContact.setFeatureMask(to: Int(truncating: contact.featureMask))
-                        duplicateContact.isHidden = contact.isHidden
-                        duplicateContact.typingIndicator = contact.typingIndicator
-                        duplicateContact.readReceipt = contact.readReceipt
-                        duplicateContact.contactImportStatus = contact.contactImportStatus
-                        duplicateContact.publicNickname = contact.publicNickname
+                    let duplicateContact = em.entityCreator.contactEntity(
+                        identity: identity,
+                        publicKey: contact.publicKey,
+                        sortOrderFirstName: true
+                    )
+                    duplicateContact.setIdentity(to: identity, sortOrderFirstName: true)
+                    duplicateContact.setFirstName(to: "Duplicate of", sortOrderFirstName: true)
+                    duplicateContact.setLastName(to: identity, sortOrderFirstName: true)
+                    duplicateContact.publicKey = contact.publicKey
+                    duplicateContact.contactVerificationLevel = contact.contactVerificationLevel
+                    duplicateContact.workContact = contact.workContact
+                    duplicateContact.forwardSecurityState = contact.forwardSecurityState
+                    duplicateContact.setFeatureMask(to: Int(truncating: contact.featureMask))
+                    duplicateContact.isHidden = contact.isHidden
+                    duplicateContact.typingIndicator = contact.typingIndicator
+                    duplicateContact.readReceipt = contact.readReceipt
+                    duplicateContact.contactImportStatus = contact.contactImportStatus
+                    duplicateContact.publicNickname = contact.publicNickname
 
-                        newDuplicateContacts.append(duplicateContact)
-                    }
+                    newDuplicateContacts.append(duplicateContact)
                 }
             }
 
@@ -139,11 +193,9 @@ class DBLoadTests: XCTestCase {
             if let firstDuplicateContact = newDuplicateContacts.first {
                 // inspired from CallHistoryManager / CallHistoryManagerTests
                 for _ in 0..<10 {
-                    if let call = em.entityCreator.callEntity() {
-                        call.callID = NSNumber(value: UInt32.random(in: UInt32.min..<UInt32.max))
-                        call.date = Date()
-                        call.contact = firstDuplicateContact
-                    }
+                    let call = em.entityCreator.callEntity(contactEntity: firstDuplicateContact)
+                    call.callID = NSNumber(value: UInt32.random(in: UInt32.min..<UInt32.max))
+                    call.date = Date()
                 }
                 print(
                     "Created 10 (invisible) call history entries for duplicate of \(firstDuplicateContact.identity)"
@@ -161,7 +213,7 @@ class DBLoadTests: XCTestCase {
         await em.performSave {
             group.conversation.members?.formUnion(Set(newDuplicateContacts))
             for duplicateContact in newDuplicateContacts {
-                let mainContact = em.entityFetcher.contact(for: duplicateContact.identity)
+                let mainContact = em.entityFetcher.contactEntity(for: duplicateContact.identity)
 
                 self.addGroupTextMessage("From main contact", sender: mainContact, in: group, entityManager: em)
                 self.addGroupTextMessage(
@@ -185,7 +237,7 @@ class DBLoadTests: XCTestCase {
             for i in 0..<newDuplicateContacts.count {
                 // alternate between regular and duplicate contacts
                 let duplicate = newDuplicateContacts[i]
-                let contact = i % 2 == 0 ? duplicate : em.entityFetcher.contact(for: duplicate.identity)
+                let contact = i % 2 == 0 ? duplicate : em.entityFetcher.contactEntity(for: duplicate.identity)
                 message.addToRejectedBy(contact!)
             }
             print(
@@ -205,28 +257,30 @@ class DBLoadTests: XCTestCase {
         
         let texts = try JSONDecoder().decode([String].self, from: Data(contentsOf: textsPath))
         
-        var conversation: ConversationEntity?
+        var newConversation: ConversationEntity?
         
         _ = createContacts(for: ["ECHOECHO"])
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         entityManager.performAndWaitSave {
-            if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
-                conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
+            if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {
+                newConversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
             }
         }
+        
+        let conversation = try XCTUnwrap(newConversation)
         
         entityManager.performAndWaitSave {
             for index in 0..<100_000 {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .hour, value: index, to: Date(timeIntervalSince1970: 0))!
                 let message = entityManager.entityCreator.textMessageEntity(
-                    for: conversation,
+                    text: "\(index) - \(texts[index % texts.count])",
+                    in: conversation,
                     setLastUpdate: true
-                )!
-                message.text = "\(index) - \(texts[index % texts.count])"
+                )
                 message.date = date
-                message.sender = conversation?.contact
+                message.sender = conversation.contact
                 message.sent = true
                 message.delivered = true
                 message.read = true
@@ -293,10 +347,10 @@ class DBLoadTests: XCTestCase {
 
         let texts = try JSONDecoder().decode([String].self, from: Data(contentsOf: textsPath))
 
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         entityManager.performAndWaitSave {
-            for item in entityManager.entityFetcher.allContacts() {
-                guard let contactEntity = item as? ContactEntity, !contactEntity.isHidden else {
+            for contactEntity in entityManager.entityFetcher.contactEntities() ?? [] {
+                guard !contactEntity.isHidden else {
                     continue
                 }
 
@@ -305,11 +359,7 @@ class DBLoadTests: XCTestCase {
         }
 
         entityManager.performAndWait {
-            for item in entityManager.entityFetcher.allConversations() {
-                guard let conversation = item as? ConversationEntity else {
-                    continue
-                }
-
+            for conversation in entityManager.entityFetcher.conversationEntities() ?? [] {
                 var lastMessage: BaseMessageEntity?
 
                 entityManager.performAndWaitSave {
@@ -317,10 +367,10 @@ class DBLoadTests: XCTestCase {
                         let calendar = Calendar.current
                         let date = calendar.date(byAdding: .second, value: index, to: Date(timeIntervalSince1970: 0))!
                         let message = entityManager.entityCreator.textMessageEntity(
-                            for: conversation,
+                            text: "\(index) - \(texts[index % texts.count])",
+                            in: conversation,
                             setLastUpdate: true
-                        )!
-                        message.text = "\(index) - \(texts[index % texts.count])"
+                        )
                         message.isOwn = index % 4 == 0 ? true : false
                         message.date = date
                         message.sender = conversation.contact
@@ -356,32 +406,37 @@ class DBLoadTests: XCTestCase {
 
         let texts = try JSONDecoder().decode([String].self, from: Data(contentsOf: textsPath))
 
-        var conversation: ConversationEntity?
+        var newConversation: ConversationEntity?
 
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
 
         let senders = ["ECHOECHO"]
         _ = createContacts(for: senders)
         for sender in senders {
             entityManager.performAndWaitSave {
-                if let contact = entityManager.entityFetcher.contact(for: sender) {
-                    conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
+                if let contact = entityManager.entityFetcher.contactEntity(for: sender) {
+                    newConversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
                 }
             }
+            
+            let conversation = try XCTUnwrap(newConversation)
 
             for index in 0..<5000 {
                 entityManager.performAndWaitSave {
                     let calendar = Calendar.current
                     let date = calendar.date(byAdding: .second, value: +index, to: Date())!
-                    let message = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)!
+                    let message = entityManager.entityCreator.textMessageEntity(
+                        text: texts[index % texts.count],
+                        in: conversation,
+                        setLastUpdate: true
+                    )
                     let isOwn = index % 3 == 0 ? false : true
                     message.isOwn = NSNumber(booleanLiteral: isOwn)
-                    message.text = texts[index % texts.count]
                     message.date = date
                     message.sent = true
                     message.delivered = true
                     if !isOwn {
-                        message.sender = conversation?.contact
+                        message.sender = conversation.contact
                         message.read = index % 5 == 0 ? true : false
                         message.readDate = index % 5 == 0 ? date : nil
                     }
@@ -401,19 +456,20 @@ class DBLoadTests: XCTestCase {
         
         let texts = try JSONDecoder().decode([String].self, from: Data(contentsOf: textsPath))
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
 
         for num in 0..<1000 {
-            for groupConversation in entityManager.entityFetcher.allGroupConversations() as! [ConversationEntity] {
+            for groupConversation in entityManager.entityFetcher.groupConversationEntities() ?? [] {
                 entityManager.performAndWaitSave {
-                    for contact in entityManager.entityFetcher.allContacts() as! [ContactEntity] {
+                    for contact in entityManager.entityFetcher.contactEntities() ?? [] {
                         let calendar = Calendar.current
                         let date = calendar.date(byAdding: .hour, value: 1, to: Date(timeIntervalSince1970: 0))!
                         let message = entityManager.entityCreator.textMessageEntity(
-                            for: groupConversation,
+                            text: "Message \(num) from \(contact.identity) \(texts[num % texts.count])",
+                            in: groupConversation,
                             setLastUpdate: true
-                        )!
-                        message.text = "Message \(num) from \(contact.identity) \(texts[num % texts.count])"
+                        )
+                        
                         message.date = date
                         message.sender = contact
                         message.isOwn = NSNumber(booleanLiteral: false)
@@ -423,7 +479,7 @@ class DBLoadTests: XCTestCase {
             }
         }
 
-        if let groupConversations = entityManager.entityFetcher.allGroupConversations() as? [ConversationEntity] {
+        if let groupConversations = entityManager.entityFetcher.groupConversationEntities() {
             let unreadMessages = UnreadMessages(messageSender: MessageSenderMock(), entityManager: entityManager)
             unreadMessages.totalCount(doCalcUnreadMessagesCountOf: Set(groupConversations))
         }
@@ -444,7 +500,7 @@ class DBLoadTests: XCTestCase {
                 }
             }
             
-            try addContacts(for: fetchIdentities, entityManager: EntityManager())
+            try addContacts(for: fetchIdentities, entityManager: BusinessInjector.ui.entityManager)
         }
         catch {
             print(error)
@@ -479,25 +535,31 @@ class DBLoadTests: XCTestCase {
         semaphore.wait()
         
         for pk in pks {
-            print("add id: \(pk.key)")
+            print("Add id: \(pk.key)")
             
             entityManager.performAndWaitSave {
-                if let contact = entityManager.entityCreator.contact() {
-                    contact.setIdentity(to: pk.key)
-                    contact.contactVerificationLevel = .unverified
-                    contact.publicNickname = pk.key
-                    contact.isHidden = false
-                    contact.workContact = 0
-                    contact.publicKey = pk.value
+                guard entityManager.entityFetcher.contactEntity(for: pk.key) == nil,
+                      MyIdentityStore.shared().identity != pk.key else {
+                    return
                 }
+
+                let contact = entityManager.entityCreator.contactEntity(
+                    identity: pk.key,
+                    publicKey: pk.value,
+                    sortOrderFirstName: true
+                )
+                contact.contactVerificationLevel = .unverified
+                contact.publicNickname = pk.key
+                contact.isHidden = false
+                contact.workContact = 0
             }
         }
     }
     
     func testAssignImagesToAllContacts() {
-        let entityManager = EntityManager()
-        
-        for contact in entityManager.entityFetcher.allContacts() as! [ContactEntity] {
+        let entityManager = BusinessInjector.ui.entityManager
+
+        for contact in entityManager.entityFetcher.contactEntities() ?? [] {
             
             let testBundle = Bundle(for: DBLoadTests.self)
             let testImageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
@@ -506,11 +568,10 @@ class DBLoadTests: XCTestCase {
                 .jpegData(compressionQuality: 0.99)!
             
             entityManager.performAndWaitSave {
-                let imageData = entityManager.entityCreator.imageDataEntity()!
-                imageData.data = resizedTestImage
-                imageData.width = 512
-                imageData.height = 512
-                
+                let imageData = entityManager.entityCreator.imageDataEntity(
+                    data: resizedTestImage,
+                    size: CGSize(width: 512, height: 512)
+                )
                 contact.contactImage = imageData
             }
         }
@@ -520,9 +581,13 @@ class DBLoadTests: XCTestCase {
         var conversation: ConversationEntity?
         
         _ = createContacts(for: ["ECHOECHO"])
-        let entityManager = EntityManager(withChildContextForBackgroundProcess: false)
+        let entityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).entityManager
         entityManager.performAndWaitSave {
-            if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
+            if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {
                 conversation = (entityManager.conversation(forContact: contact, createIfNotExisting: true))!
             }
         }
@@ -541,6 +606,29 @@ class DBLoadTests: XCTestCase {
         }
     }
     
+    func testLoadImageFileMessagesToAllOneToOneConversations() {
+        let imageCount = 100
+
+        let testBundle = Bundle(for: DBLoadTests.self)
+        let testImageURL = testBundle.url(forResource: "Bild-1-0", withExtension: "jpg")
+        let testImageData = try? Data(contentsOf: testImageURL!)
+
+        let entityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).entityManager
+
+        for conversation in entityManager.entityFetcher.conversationEntities() ?? [] {
+            for i in 0..<imageCount {
+                let log = "Image: \(i) / \(imageCount)"
+                print(log)
+
+                loadImage(with: testImageData!, conversation, entityManager, log)
+            }
+        }
+    }
+
     func loadImage(
         with imageData: Data,
         _ conversation: ConversationEntity,
@@ -549,14 +637,16 @@ class DBLoadTests: XCTestCase {
     ) {
         
         entityManager.performAndWaitSave {
-            let dbFile: FileDataEntity = (entityManager.entityCreator.fileDataEntity())!
-            dbFile.data = imageData
+            let dbFile: FileDataEntity = entityManager.entityCreator.fileDataEntity(data: imageData)
             
-            let thumbnailFile: ImageDataEntity = entityManager.entityCreator.imageDataEntity()!
-            thumbnailFile.data = MediaConverter.getThumbnailFor(UIImage(data: imageData)!)!
-                .jpegData(compressionQuality: 1.0)!
-            
-            let message: FileMessageEntity = (entityManager.entityCreator.fileMessageEntity(for: conversation))!
+            let thumbnailImage = MediaConverter.getThumbnailFor(UIImage(data: imageData)!)!
+            let thumbnailData = thumbnailImage.jpegData(compressionQuality: 1.0)!
+            let thumbnailFile: ImageDataEntity = entityManager.entityCreator.imageDataEntity(
+                data: thumbnailData,
+                size: thumbnailImage.size
+            )
+         
+            let message: FileMessageEntity = entityManager.entityCreator.fileMessageEntity(in: conversation)
             message.data = dbFile
             message.thumbnail = thumbnailFile
             message.fileName = "Bild.jpeg"
@@ -591,9 +681,13 @@ class DBLoadTests: XCTestCase {
         var conversation: ConversationEntity?
         
         _ = createContacts(for: ["ECHOECHO"])
-        let entityManager = EntityManager(withChildContextForBackgroundProcess: false)
+        let entityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).entityManager
         entityManager.performAndWaitSave {
-            if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
+            if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {
                 conversation = (entityManager.conversation(forContact: contact, createIfNotExisting: true))!
             }
         }
@@ -624,14 +718,16 @@ class DBLoadTests: XCTestCase {
     ) {
         
         entityManager.performAndWaitSave {
-            let dbFile: FileDataEntity = (entityManager.entityCreator.fileDataEntity())!
-            dbFile.data = videoData
+            let dbFile: FileDataEntity = entityManager.entityCreator.fileDataEntity(data: videoData)
             
-            let thumbnailFile: ImageDataEntity = entityManager.entityCreator.imageDataEntity()!
-            thumbnailFile.data = MediaConverter.getThumbnailFor(UIImage(data: thumbnailData)!)!
-                .jpegData(compressionQuality: 1.0)!
+            let thumbnailImage = MediaConverter.getThumbnailFor(UIImage(data: thumbnailData)!)!
+            let thumbnailData = thumbnailImage.jpegData(compressionQuality: 1.0)!
+            let thumbnailFile: ImageDataEntity = entityManager.entityCreator.imageDataEntity(
+                data: thumbnailData,
+                size: thumbnailImage.size
+            )
             
-            let message: FileMessageEntity = (entityManager.entityCreator.fileMessageEntity(for: conversation))!
+            let message: FileMessageEntity = entityManager.entityCreator.fileMessageEntity(in: conversation)
             message.data = dbFile
             message.thumbnail = thumbnailFile
             message.fileName = "Video.mp4"
@@ -666,9 +762,13 @@ class DBLoadTests: XCTestCase {
         var conversation: ConversationEntity?
         
         _ = createContacts(for: ["ECHOECHO"])
-        let entityManager = EntityManager(withChildContextForBackgroundProcess: false)
+        let entityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).entityManager
         entityManager.performAndWaitSave {
-            if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
+            if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {
                 conversation = (entityManager.conversation(forContact: contact, createIfNotExisting: true))!
             }
         }
@@ -695,10 +795,9 @@ class DBLoadTests: XCTestCase {
     ) {
         
         entityManager.performAndWaitSave {
-            let dbFile: FileDataEntity = (entityManager.entityCreator.fileDataEntity())!
-            dbFile.data = audioData
+            let dbFile: FileDataEntity = entityManager.entityCreator.fileDataEntity(data: audioData)
                         
-            let message: FileMessageEntity = (entityManager.entityCreator.fileMessageEntity(for: conversation))!
+            let message: FileMessageEntity = entityManager.entityCreator.fileMessageEntity(in: conversation)
             message.data = dbFile
             message.fileName = "Audio.mp3"
             message.fileSize = NSNumber(integerLiteral: dbFile.data!.count)
@@ -732,9 +831,13 @@ class DBLoadTests: XCTestCase {
         var conversation: ConversationEntity?
         
         _ = createContacts(for: ["ECHOECHO"])
-        let entityManager = EntityManager(withChildContextForBackgroundProcess: false)
+        let entityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).entityManager
         entityManager.performAndWaitSave {
-            if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
+            if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {
                 conversation = (entityManager.conversation(forContact: contact, createIfNotExisting: true))!
             }
         }
@@ -744,15 +847,13 @@ class DBLoadTests: XCTestCase {
         let testAudioData = try XCTUnwrap(Data(contentsOf: testAudioURL))
         
         entityManager.performAndWaitSave {
-            let dbFile: AudioDataEntity = (entityManager.entityCreator.audioDataEntity())!
-            dbFile.data = testAudioData
+            let dbFile: AudioDataEntity = entityManager.entityCreator.audioDataEntity(data: testAudioData)
             
-            let message: AudioMessageEntity = (entityManager.entityCreator.audioMessageEntity(for: conversation))!
+            let message: AudioMessageEntity = entityManager.entityCreator.audioMessageEntity(in: conversation!)
             message.audio = dbFile
             message.duration = 2
             message.audioSize = 55
-            // swiftformat:disable:next acronyms
-            message.audioBlobId = MockData.generateBlobID()
+            message.audioBlobID = MockData.generateBlobID()
             message.encryptionKey = MockData.generateBlobEncryptionKey()
             message.progress = 100
         }
@@ -762,9 +863,9 @@ class DBLoadTests: XCTestCase {
         var conversation: ConversationEntity?
         
         _ = createContacts(for: ["ECHOECHO"])
-        let entityManager = EntityManager(withChildContextForBackgroundProcess: false)
+        let entityManager = BusinessInjector.ui.entityManager
         entityManager.performAndWaitSave {
-            if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
+            if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {
                 conversation = (entityManager.conversation(forContact: contact, createIfNotExisting: true))!
             }
         }
@@ -774,22 +875,24 @@ class DBLoadTests: XCTestCase {
         let testImageData = try XCTUnwrap(Data(contentsOf: testImageURL))
         
         entityManager.performAndWaitSave {
-            let imageDataEntity: ImageDataEntity = (entityManager.entityCreator.imageDataEntity())!
-            imageDataEntity.data = testImageData
-            imageDataEntity.height = 1379
-            imageDataEntity.width = 1837
+            let imageDataEntity: ImageDataEntity = entityManager.entityCreator.imageDataEntity(
+                data: testImageData,
+                size: CGSize(width: 1837, height: 1379)
+            )
             
-            let thumbnailDataEntity: ImageDataEntity = entityManager.entityCreator.imageDataEntity()!
-            thumbnailDataEntity.data = MediaConverter.getThumbnailFor(UIImage(data: testImageData)!)!
-                .jpegData(compressionQuality: 1.0)!
+            let thumbnailImage = MediaConverter.getThumbnailFor(UIImage(data: testImageData)!)!
+            let thumbnailData = thumbnailImage.jpegData(compressionQuality: 1.0)!
+            let thumbnailDataEntity: ImageDataEntity = entityManager.entityCreator.imageDataEntity(
+                data: thumbnailData,
+                size: thumbnailImage.size
+            )
 
-            let message: ImageMessageEntity = (entityManager.entityCreator.imageMessageEntity(for: conversation))!
+            let message: ImageMessageEntity = entityManager.entityCreator.imageMessageEntity(in: conversation!)
             message.image = imageDataEntity
             message.thumbnail = thumbnailDataEntity
             
             message.encryptionKey = MockData.generateBlobEncryptionKey()
-            // swiftformat:disable:next acronyms
-            message.imageBlobId = MockData.generateBlobID()
+            message.imageBlobID = MockData.generateBlobID()
             message.imageNonce = MockData.generateMessageNonce()
             message.imageSize = NSNumber(value: imageDataEntity.data.count)
             message.progress = 100
@@ -800,9 +903,9 @@ class DBLoadTests: XCTestCase {
         var conversation: ConversationEntity?
         
         _ = createContacts(for: ["ECHOECHO"])
-        let entityManager = EntityManager(withChildContextForBackgroundProcess: false)
+        let entityManager = BusinessInjector.ui.entityManager
         entityManager.performAndWaitSave {
-            if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
+            if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {
                 conversation = (entityManager.conversation(forContact: contact, createIfNotExisting: true))!
             }
         }
@@ -815,20 +918,21 @@ class DBLoadTests: XCTestCase {
         let testImageData = try XCTUnwrap(Data(contentsOf: testImageURL))
         
         entityManager.performAndWaitSave {
-            let videoDataEntity: VideoDataEntity = (entityManager.entityCreator.videoDataEntity())!
-            videoDataEntity.data = testVideoData
+            let videoDataEntity: VideoDataEntity = entityManager.entityCreator.videoDataEntity(data: testVideoData)
             
-            let thumbnailDataEntity: ImageDataEntity = entityManager.entityCreator.imageDataEntity()!
-            thumbnailDataEntity.data = MediaConverter.getThumbnailFor(UIImage(data: testImageData)!)!
-                .jpegData(compressionQuality: 1.0)!
+            let thumbnailImage = MediaConverter.getThumbnailFor(UIImage(data: testImageData)!)!
+            let thumbnailData = thumbnailImage.jpegData(compressionQuality: 1.0)!
+            let thumbnailDataEntity: ImageDataEntity = entityManager.entityCreator.imageDataEntity(
+                data: thumbnailData,
+                size: thumbnailImage.size
+            )
 
-            let message: VideoMessageEntity = (entityManager.entityCreator.videoMessageEntity(for: conversation))!
+            let message: VideoMessageEntity = entityManager.entityCreator.videoMessageEntity(in: conversation!)
             message.video = videoDataEntity
             message.thumbnail = thumbnailDataEntity
             
             message.encryptionKey = MockData.generateBlobEncryptionKey()
-            // swiftformat:disable:next acronyms
-            message.videoBlobId = MockData.generateBlobID()
+            message.videoBlobID = MockData.generateBlobID()
             message.duration = 10
             message.videoSize = NSNumber(value: videoDataEntity.data.count)
             message.progress = 100
@@ -846,14 +950,14 @@ class DBLoadTests: XCTestCase {
         let alternateEveryXMessage = 5
         
         let testBundle = Bundle(for: DBLoadTests.self)
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         // Create group
         let group = try await createGroup(named: "Quote Messages", with: [], entityManager: entityManager)
 
         // Sender
         _ = createContacts(for: ["ECHOECHO"])
-        let senderContact = try XCTUnwrap(entityManager.entityFetcher.contact(for: "ECHOECHO"))
+        let senderContact = try XCTUnwrap(entityManager.entityFetcher.contactEntity(for: "ECHOECHO"))
         
         // Load texts
         let testTextsURL = try XCTUnwrap(testBundle.url(forResource: "test_texts", withExtension: "json"))
@@ -866,10 +970,10 @@ class DBLoadTests: XCTestCase {
         // Text messages
         entityManager.performAndWaitSave {
             let outgoingMessage = entityManager.entityCreator.textMessageEntity(
-                for: group.conversation,
+                text: texts[0],
+                in: group.conversation,
                 setLastUpdate: true
-            )!
-            outgoingMessage.text = texts[0]
+            )
             outgoingMessage.date = Date()
             outgoingMessage.sent = true
             outgoingMessage.delivered = true
@@ -879,10 +983,10 @@ class DBLoadTests: XCTestCase {
             quotableMessages.append(outgoingMessage)
             
             let incomingMessage = entityManager.entityCreator.textMessageEntity(
-                for: group.conversation,
+                text: texts[1],
+                in: group.conversation,
                 setLastUpdate: true
-            )!
-            incomingMessage.text = texts[1]
+            )
             incomingMessage.date = Date()
             incomingMessage.sent = true
             incomingMessage.delivered = true
@@ -965,18 +1069,18 @@ class DBLoadTests: XCTestCase {
         entityManager.performAndWaitSave {
             do {
                 for senderItem in senderItems {
-                    let ownFileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
+                    let ownFileMessageEntity = try self.createFileMessageEntity(
                         for: senderItem,
                         in: group.conversation,
-                        with: .public
+                        with: entityManager
                     )
                     ownFileMessageEntity.isOwn = true
                     quotableMessages.append(ownFileMessageEntity)
                     
-                    let otherFileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
+                    let otherFileMessageEntity = try self.createFileMessageEntity(
                         for: senderItem,
                         in: group.conversation,
-                        with: .public
+                        with: entityManager
                     )
                     otherFileMessageEntity.isOwn = false
                     otherFileMessageEntity.sender = senderContact
@@ -984,10 +1088,10 @@ class DBLoadTests: XCTestCase {
                     
                     // This needs to be last otherwise the `renderType` of stickers will be 1 instead of 2
                     senderItem.caption = texts.randomElement() ?? "Caption"
-                    let captionFileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
+                    let captionFileMessageEntity = try self.createFileMessageEntity(
                         for: senderItem,
                         in: group.conversation,
-                        with: .public
+                        with: entityManager
                     )
                     captionFileMessageEntity.isOwn = false
                     captionFileMessageEntity.sender = senderContact
@@ -1010,39 +1114,39 @@ class DBLoadTests: XCTestCase {
         
         entityManager.performAndWaitSave {
             let ownLocationMessage = entityManager.entityCreator.locationMessageEntity(
-                for: group.conversation,
+                latitude: locations[0].latitude,
+                longitude: locations[0].longitude,
+                accuracy: locations[0].accuracy,
+                poiName: locations[0].name,
+                poiAddress: locations[0].address,
+                in: group.conversation,
                 setLastUpdate: true
-            )!
-            ownLocationMessage.latitude = locations[0].latitude as NSNumber
-            ownLocationMessage.longitude = locations[0].longitude as NSNumber
-            ownLocationMessage.accuracy = locations[0].accuracy as NSNumber
-            ownLocationMessage.poiName = locations[0].name
-            ownLocationMessage.poiAddress = locations[0].address
+            )
             ownLocationMessage.isOwn = true
             quotableMessages.append(ownLocationMessage)
             
             let otherLocationMessage = entityManager.entityCreator.locationMessageEntity(
-                for: group.conversation,
+                latitude: locations[2].latitude,
+                longitude: locations[2].longitude,
+                accuracy: locations[2].accuracy,
+                poiName: locations[2].name,
+                poiAddress: locations[2].address,
+                in: group.conversation,
                 setLastUpdate: true
-            )!
-            otherLocationMessage.latitude = locations[2].latitude as NSNumber
-            otherLocationMessage.longitude = locations[2].longitude as NSNumber
-            otherLocationMessage.accuracy = locations[2].accuracy as NSNumber
-            otherLocationMessage.poiName = locations[2].name
-            otherLocationMessage.poiAddress = locations[2].address
+            )
             otherLocationMessage.isOwn = false
             otherLocationMessage.sender = senderContact
             quotableMessages.append(otherLocationMessage)
 
             let anotherLocationMessage = entityManager.entityCreator.locationMessageEntity(
-                for: group.conversation,
+                latitude: locations[3].latitude,
+                longitude: locations[3].longitude,
+                accuracy: locations[3].accuracy,
+                poiName: locations[3].name,
+                poiAddress: locations[3].address,
+                in: group.conversation,
                 setLastUpdate: true
-            )!
-            anotherLocationMessage.latitude = locations[3].latitude as NSNumber
-            anotherLocationMessage.longitude = locations[3].longitude as NSNumber
-            anotherLocationMessage.accuracy = locations[3].accuracy as NSNumber
-            anotherLocationMessage.poiName = locations[3].name
-            anotherLocationMessage.poiAddress = locations[3].address
+            )
             anotherLocationMessage.isOwn = false
             anotherLocationMessage.sender = senderContact
             quotableMessages.append(anotherLocationMessage)
@@ -1055,11 +1159,11 @@ class DBLoadTests: XCTestCase {
         entityManager.performAndWaitSave {
             for index in 0..<numberOfMessagesToAdd {
                 let message = entityManager.entityCreator.textMessageEntity(
-                    for: group.conversation,
+                    text: "\(index) - \(texts[index % texts.count])",
+                    in: group.conversation,
                     setLastUpdate: true
-                )!
-                message.text = "\(index) - \(texts[index % texts.count])"
-                message.date = Date()
+                )
+                
                 message.sent = true
                 message.delivered = true
                 message.remoteSentDate = Date.now
@@ -1067,8 +1171,7 @@ class DBLoadTests: XCTestCase {
                 
                 // Don't add a quote to every forth message
                 if index % 4 > 0 {
-                    // swiftformat:disable:next acronyms
-                    message.quotedMessageId = quotableMessages[index % quotableMessages.count].id
+                    message.quotedMessageID = quotableMessages[index % quotableMessages.count].id
                 }
                 
                 if index % (alternateEveryXMessage * 2) >= alternateEveryXMessage {
@@ -1090,7 +1193,7 @@ class DBLoadTests: XCTestCase {
         let numberOfMessagesToAdd = 100
         let alternateEveryXMessage = 5
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         // Create group
         let group = try await createGroup(named: "Image File Messages", with: [], entityManager: entityManager)
@@ -1116,7 +1219,7 @@ class DBLoadTests: XCTestCase {
         let numberOfMessagesToAdd = 100
         let alternateEveryXMessage = 5
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         // Create group
         let group = try await createGroup(named: "Sticker File Messages", with: [], entityManager: entityManager)
@@ -1148,7 +1251,7 @@ class DBLoadTests: XCTestCase {
         let numberOfMessagesToAdd = 100
         let alternateEveryXMessage = 5
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         // Create group
         let group = try await createGroup(named: "Animated Image File Messages", with: [], entityManager: entityManager)
@@ -1177,7 +1280,7 @@ class DBLoadTests: XCTestCase {
         let numberOfMessagesToAdd = 100
         let alternateEveryXMessage = 5
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         // Create group
         let group = try await createGroup(
@@ -1216,7 +1319,7 @@ class DBLoadTests: XCTestCase {
         let numberOfMessagesToAdd = 100
         let alternateEveryXMessage = 5
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         // Create group
         let group = try await createGroup(named: "Video File Messages", with: [], entityManager: entityManager)
@@ -1242,7 +1345,7 @@ class DBLoadTests: XCTestCase {
         let numberOfMessagesToAdd = 100
         let alternateEveryXMessage = 5
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         // Create group
         let group = try await createGroup(named: "Voice File Messages", with: [], entityManager: entityManager)
@@ -1273,7 +1376,7 @@ class DBLoadTests: XCTestCase {
         let numberOfMessagesToAdd = 100
         let alternateEveryXMessage = 5
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         // Create group
         let group = try await createGroup(named: "File File Messages", with: [], entityManager: entityManager)
@@ -1307,34 +1410,34 @@ class DBLoadTests: XCTestCase {
         
         _ = createContacts(for: [identity])
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         // Load conversation
         var conversation: ConversationEntity!
         
         entityManager.performAndWaitSave {
-            if let contact = entityManager.entityFetcher.contact(for: identity) {
+            if let contact = entityManager.entityFetcher.contactEntity(for: identity) {
                 conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
             }
         }
         
-        let incomingCallStates: [Int] = [
-            kSystemMessageCallMissed,
-            kSystemMessageCallRejected,
-            kSystemMessageCallRejectedBusy,
-            kSystemMessageCallRejectedTimeout,
-            kSystemMessageCallEnded,
-            kSystemMessageCallRejectedDisabled,
-            kSystemMessageCallRejectedUnknown,
+        let incomingCallStates: [SystemMessageEntity.SystemMessageEntityType] = [
+            .callMissed,
+            .callRejected,
+            .callRejectedBusy,
+            .callRejectedTimeout,
+            .callEnded,
+            .callRejectedDisabled,
+            .callRejectedUnknown,
         ]
         
-        let outgoingCallStates: [Int] = [
-            kSystemMessageCallRejected,
-            kSystemMessageCallRejectedBusy,
-            kSystemMessageCallRejectedTimeout,
-            kSystemMessageCallEnded,
-            kSystemMessageCallRejectedDisabled,
-            kSystemMessageCallRejectedUnknown,
+        let outgoingCallStates: [SystemMessageEntity.SystemMessageEntityType] = [
+            .callRejected,
+            .callRejectedBusy,
+            .callRejectedTimeout,
+            .callEnded,
+            .callRejectedDisabled,
+            .callRejectedUnknown,
         ]
         
         for index in 0..<numberOfMessagesToAdd {
@@ -1343,13 +1446,12 @@ class DBLoadTests: XCTestCase {
                 outgoingCallStates[index % outgoingCallStates.count]
             
             entityManager.performAndWaitSave {
-                guard let systemMessage = entityManager.entityCreator.systemMessageEntity(for: conversation) else {
-                    XCTFail("Could not create system message")
-                    return
-                }
-                
+                let systemMessage = entityManager.entityCreator.systemMessageEntity(
+                    for: callType,
+                    in: conversation
+                )
+
                 systemMessage.remoteSentDate = Date.now
-                systemMessage.type = NSNumber(integerLiteral: callType)
                 
                 var callInfo = [
                     "DateString": DateFormatter.shortStyleTimeNoDate(Date()),
@@ -1357,7 +1459,7 @@ class DBLoadTests: XCTestCase {
                 ] as [String: Any]
                 
                 if index % (incomingCallStates.count + outgoingCallStates.count) == 0,
-                   callType == kSystemMessageCallEnded {
+                   callType == .callEnded {
                     callInfo["CallTime"] = DateFormatter.timeFormatted(Int.random(in: 1..<60 * 60 * 48))
                 }
                 
@@ -1416,7 +1518,7 @@ class DBLoadTests: XCTestCase {
         
         var participants = createContacts(for: fetchIdentities.reversed())
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         let myIdentityStoreMock = MyIdentityStoreMock()
         
@@ -1438,16 +1540,13 @@ class DBLoadTests: XCTestCase {
             
             entityManager.performAndWaitSave {
                 // Setup ballot
-                let baseBallot = entityManager.entityCreator.ballot()!
-                baseBallot.id = BytesUtility.generateRandomBytes(length: ThreemaProtocol.ballotIDLength)!
+                let baseBallot = entityManager.entityCreator
+                    .ballotEntity(id: BytesUtility.generateRandomBytes(length: ThreemaProtocol.ballotIDLength)!)
                 baseBallot.createDate = Date()
-                // swiftformat:disable:next acronyms
-                baseBallot.creatorId = isIncoming ? "ECHOECHO" : myIdentityStoreMock.identity
+                baseBallot.creatorID = isIncoming ? "ECHOECHO" : myIdentityStoreMock.identity
                 baseBallot.conversation = conversation
                 baseBallot.title = ballotTitles[index % ballotTitles.count]
-                baseBallot.type = NSNumber(integerLiteral: BallotType.intermediate.rawValue)
-                baseBallot.assessmentType = NSNumber(integerLiteral: BallotAssessmentType.multi.rawValue)
-                
+
                 if isClosed {
                     baseBallot.close()
                 }
@@ -1456,10 +1555,11 @@ class DBLoadTests: XCTestCase {
                 
                 // Setup choices
                 for choiceNo in 0..<Int.random(in: choicesPerBallot) {
-                    let ballotChoice = entityManager.entityCreator.ballotChoice()!
-                    ballotChoice.ballot = baseBallot
+                    let ballotChoice = entityManager.entityCreator.ballotChoiceEntity(
+                        ballotEntity: baseBallot,
+                        id: NSNumber(value: choiceNo)
+                    )
                     ballotChoice.createDate = Date()
-                    ballotChoice.id = NSNumber(value: choiceNo)
                     ballotChoice.name = ballotOptions[choiceNo % ballotOptions.count]
                     ballotChoice.orderPosition = NSNumber(value: choiceNo)
                     
@@ -1482,7 +1582,7 @@ class DBLoadTests: XCTestCase {
                 
                 // Get sender
                 let sender = entityManager.entityFetcher
-                    .contact(
+                    .contactEntity(
                         for: isIncoming ? participants
                             .filter { $0 != myIdentityStoreMock.identity
                             }[Int.random(in: 0..<(participants.count - 1))] :
@@ -1490,7 +1590,7 @@ class DBLoadTests: XCTestCase {
                     )
                 
                 // Always create open ballot message
-                let ballotOpenMessage = entityManager.entityCreator.ballotMessage(for: conversation)!
+                let ballotOpenMessage = entityManager.entityCreator.ballotMessageEntity(in: conversation)
                 ballotOpenMessage.isOwn = NSNumber(value: !isIncoming)
                 ballotOpenMessage.ballot = baseBallot
                 ballotOpenMessage.sender = sender
@@ -1498,7 +1598,7 @@ class DBLoadTests: XCTestCase {
                 
                 // Only sometimes create ballot close message
                 if isClosed {
-                    let ballotCloseMessage = entityManager.entityCreator.ballotMessage(for: conversation)!
+                    let ballotCloseMessage = entityManager.entityCreator.ballotMessageEntity(in: conversation)
                     ballotCloseMessage.isOwn = NSNumber(value: !isIncoming)
                     ballotCloseMessage.ballot = baseBallot
                     ballotCloseMessage.sender = sender
@@ -1525,7 +1625,7 @@ class DBLoadTests: XCTestCase {
         let captions = try JSONDecoder().decode([String].self, from: Data(contentsOf: testCaptionsURL))
         
         _ = createContacts(for: ["ECHOECHO"])
-        let senderContact = try XCTUnwrap(entityManager.entityFetcher.contact(for: "ECHOECHO"))
+        let senderContact = try XCTUnwrap(entityManager.entityFetcher.contactEntity(for: "ECHOECHO"))
         
         for index in 0..<times {
             if showCaptions {
@@ -1545,10 +1645,10 @@ class DBLoadTests: XCTestCase {
             
             entityManager.performAndWaitSave {
                 do {
-                    let fileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
+                    let fileMessageEntity = try self.createFileMessageEntity(
                         for: senderItem,
                         in: group.conversation,
-                        with: .public
+                        with: entityManager
                     )
                     
                     if index % (alternateEveryXMessage * 2) >= alternateEveryXMessage {
@@ -1578,14 +1678,14 @@ class DBLoadTests: XCTestCase {
         let numberOfMessagesToAdd = 100
         let alternateEveryXMessage = 5
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         // Create group
         let group = try await createGroup(named: "Location Messages", with: [], entityManager: entityManager)
 
         // Fetch contact
         _ = _ = createContacts(for: ["ECHOECHO"])
-        let senderContact = try XCTUnwrap(entityManager.entityFetcher.contact(for: "ECHOECHO"))
+        let senderContact = try XCTUnwrap(entityManager.entityFetcher.contactEntity(for: "ECHOECHO"))
         
         // Load and add locations
         
@@ -1598,15 +1698,14 @@ class DBLoadTests: XCTestCase {
             
             entityManager.performAndWaitSave {
                 let locationMessage = entityManager.entityCreator.locationMessageEntity(
-                    for: group.conversation,
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    accuracy: location.accuracy,
+                    poiName: location.name,
+                    poiAddress: location.address,
+                    in: group.conversation,
                     setLastUpdate: true
-                )!
-                
-                locationMessage.latitude = location.latitude as NSNumber
-                locationMessage.longitude = location.longitude as NSNumber
-                locationMessage.accuracy = location.accuracy as NSNumber
-                locationMessage.poiName = location.name
-                locationMessage.poiAddress = location.address
+                )
                 
                 if index % (alternateEveryXMessage * 2) >= alternateEveryXMessage {
                     // incoming message
@@ -1655,7 +1754,7 @@ class DBLoadTests: XCTestCase {
         
         _ = createContacts(for: memberIDsToAddAndRemove)
 
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         
         // Create group
         let group = try await createGroup(named: "System Messages", with: [], entityManager: entityManager)
@@ -1698,16 +1797,16 @@ class DBLoadTests: XCTestCase {
         // Ensure all contacts exist
         _ = createContacts(for: Array(groupMemberIDsAndNames.keys))
 
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
 
         // Load all contacts and assign the names
         let members = try groupMemberIDsAndNames.map { id, name -> ContactEntity in
-            let contact = try XCTUnwrap(entityManager.entityFetcher.contact(for: id))
+            let contact = try XCTUnwrap(entityManager.entityFetcher.contactEntity(for: id))
             
             let names = name.components(separatedBy: .whitespaces)
             entityManager.performAndWaitSave {
-                contact.setFirstName(to: names.first)
-                contact.setLastName(to: names.last)
+                contact.setFirstName(to: names.first, sortOrderFirstName: true)
+                contact.setLastName(to: names.last, sortOrderFirstName: true)
             }
             
             return contact
@@ -1764,10 +1863,10 @@ class DBLoadTests: XCTestCase {
         
         entityManager.performAndWaitSave {
             do {
-                let fileMessageEntity = try entityManager.entityCreator.createFileMessageEntity(
+                let fileMessageEntity = try self.createFileMessageEntity(
                     for: fileSenderItem,
                     in: group.conversation,
-                    with: .public
+                    with: entityManager
                 )
                 
                 fileMessageEntity.isOwn = false
@@ -1844,17 +1943,19 @@ class DBLoadTests: XCTestCase {
         forContact contactEntity: ContactEntity,
         entityManager: EntityManager
     ) -> ConversationEntity? {
-        let conversation = entityManager.entityFetcher.conversation(for: contactEntity)
+        let conversation = entityManager.entityFetcher.conversationEntity(for: contactEntity.identity)
         
-        if conversation == nil,
-           let conversation = entityManager.entityCreator.conversationEntity(true) {
+        if conversation == nil {
+            let conversation = entityManager.entityCreator.conversationEntity()
             conversation.contact = contactEntity
             
             if contactEntity.showOtherThreemaTypeIcon {
                 // Add work info as first message
-                let systemMessage = entityManager.entityCreator.systemMessageEntity(for: conversation)
-                systemMessage?.type = NSNumber(value: kSystemMessageContactOtherAppInfo)
-                systemMessage?.remoteSentDate = Date.now
+                let systemMessage = entityManager.entityCreator.systemMessageEntity(
+                    for: .contactOtherAppInfo,
+                    in: conversation
+                )
+                systemMessage.remoteSentDate = Date.now
             }
             
             print("Created 1:1 conversation for \(contactEntity.identity)")
@@ -1876,7 +1977,7 @@ class DBLoadTests: XCTestCase {
             mediatorSyncableContacts.syncAsync()
         }
         
-        return conversation
+        return conversation!
     }
 
     /// create a text message in the one to one conversation with the provided contact
@@ -1894,18 +1995,21 @@ class DBLoadTests: XCTestCase {
                 forContact: contact,
                 entityManager: entityManager
             )
-            let message = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)!
             
-            message.text = text
+            let unwrappedConversation = try! XCTUnwrap(conversation)
+
+            let message = entityManager.entityCreator.textMessageEntity(
+                text: text,
+                in: unwrappedConversation,
+                setLastUpdate: true
+            )
             
-            message.date = Date()
             message.sent = true
             message.remoteSentDate = Date.now
             message.delivered = true
             message.deliveryDate = Date()
             
-            // swiftformat:disable:next acronyms
-            message.quotedMessageId = quoteID
+            message.quotedMessageID = quoteID
             
             if isOwn {
                 message.isOwn = true
@@ -1925,20 +2029,17 @@ class DBLoadTests: XCTestCase {
     ) -> TextMessageEntity {
         entityManager.performAndWaitSave {
             let message = entityManager.entityCreator.textMessageEntity(
-                for: group.conversation,
+                text: text,
+                in: group.conversation,
                 setLastUpdate: true
-            )! as TextMessageEntity
-            
-            message.text = text
+            )
 
-            message.date = Date()
             message.sent = true
             message.remoteSentDate = Date.now
             message.delivered = true
             message.deliveryDate = Date()
             
-            // swiftformat:disable:next acronyms
-            message.quotedMessageId = quoteID
+            message.quotedMessageID = quoteID
             
             if let sender {
                 message.isOwn = false
@@ -1961,29 +2062,34 @@ class DBLoadTests: XCTestCase {
         let textsPath = try XCTUnwrap(testBundle.url(forResource: "test_texts", withExtension: "json"))
         let texts = try JSONDecoder().decode([String].self, from: Data(contentsOf: textsPath))
         
-        var conversation: ConversationEntity?
+        var newConversation: ConversationEntity?
         
         _ = createContacts(for: ["ECHOECHO"])
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         entityManager.performAndWaitSave {
-            if let contact = entityManager.entityFetcher.contact(for: "ECHOECHO") {
-                conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
+            if let contact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") {
+                newConversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
             }
         }
+        
+        let conversation = try XCTUnwrap(newConversation)
         
         entityManager.performAndWaitSave {
             for index in 0..<(numberOfMessages / 2) {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .hour, value: -(index * 8), to: Date())
-                let message = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)!
-                message.text = "\(index) - \(texts[index % texts.count])"
+                let message = entityManager.entityCreator.textMessageEntity(
+                    text: "\(index) - \(texts[index % texts.count])",
+                    in: conversation,
+                    setLastUpdate: true
+                )
+                
                 message.isOwn = false
-                message.sender = conversation?.contact
+                message.sender = conversation.contact
 
                 message.sent = true
                 message.remoteSentDate = Date.now
-                message.date = Date()
                 message.delivered = true
                 message.deliveryDate = Date()
                 message.read = true
@@ -1997,8 +2103,11 @@ class DBLoadTests: XCTestCase {
             for index in 0..<(numberOfMessages / 2) {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .hour, value: -(index * 8), to: Date())!
-                let message = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)!
-                message.text = "\(index) - \(texts[index % texts.count])"
+                let message = entityManager.entityCreator.textMessageEntity(
+                    text: "\(index) - \(texts[index % texts.count])",
+                    in: conversation,
+                    setLastUpdate: true
+                )
                 message.isOwn = true
 
                 message.date = date
@@ -2010,5 +2119,27 @@ class DBLoadTests: XCTestCase {
                 print("Batch 2: \(index)/\(numberOfMessages / 2)")
             }
         }
+    }
+
+    private func createFileMessageEntity(
+        for item: URLSenderItem,
+        in conversationEntity: ConversationEntity,
+        with entityManager: EntityManager
+    ) throws -> FileMessageEntity {
+        try entityManager.entityCreator.createFileMessageEntity(
+            data: item.getData(),
+            mimeType: item.getMimeType(),
+            caption: item.caption,
+            fileName: item.getName(),
+            type: .file,
+            duration: item.getDuration(),
+            height: Int(item.getHeight()),
+            width: Int(item.getWidth()),
+            thumbnailData: item.getThumbnail().pngData(),
+            thumbnailSize: item.getThumbnail().size,
+            encryptionKey: MockData.generateBlobEncryptionKey(),
+            origin: NSNumber(integerLiteral: 1),
+            in: conversationEntity
+        )
     }
 }

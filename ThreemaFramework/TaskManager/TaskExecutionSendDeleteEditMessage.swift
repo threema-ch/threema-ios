@@ -161,7 +161,7 @@ final class TaskExecutionSendDeleteEditMessage: TaskExecution, TaskExecutionProt
 
                         let message = self.frameworkInjector.entityManager.entityFetcher.message(
                             with: messageID,
-                            conversation: conversation
+                            in: conversation
                         )
 
                         if task.deleteMessage != nil {

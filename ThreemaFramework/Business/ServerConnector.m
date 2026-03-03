@@ -36,6 +36,7 @@
 #import "AppGroup.h"
 #import "LicenseStore.h"
 #import "PushPayloadDecryptor.h"
+@import Keychain;
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelAll;
@@ -175,14 +176,16 @@ struct pktExtension {
 #define EXTENSION_TYPE_MESSAGE_PAYLOAD_VERSION 0x02
 #define EXTENSION_TYPE_DEVICE_COOKIE 0x03
 
+#define DUPLICATE_CONNECTION_RECONNECT_ALLOWED @"duplicateConnectionReconnectAllowed"
+
 + (ServerConnector*)sharedServerConnector {
     static ServerConnector *instance;
-    
-    @synchronized (self) {
-        if (!instance)
-            instance = [[ServerConnector alloc] init];
-    }
-    
+
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [ServerConnector new];
+    });
+
     return instance;
 }
 
@@ -214,8 +217,8 @@ struct pktExtension {
 
         doUnblockIncomingMessages = YES;
         isWaitingForReconnect = NO;
-        isRolePromotedToLeader = NO;
-        
+        [self setIsRolePromotedToLeader:NO];
+
         /* listen for identity changes */
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(identityCreated:) name:kNotificationCreatedIdentity object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(identityDestroyed:) name:kNotificationDestroyedIdentity object:nil];
@@ -306,10 +309,49 @@ struct pktExtension {
 
 #pragma mark - Chat (Mediator) Server connection handling
 
+/// If another process is active then the timeout will be set to 4900 ms otherwise to 700 ms.
+///
+/// @return The timeout in milliseconds
+- (int)processCoordinatorPollingTimeout {
+    if (AppGroup.areOthersActive) {
+        return 4900;
+    }
+    return 700;
+}
+
+/// Check of duplicate connection error of the share or notification extension.
+/// Show duplicate connection alert is it called by the app.
+///
+/// @return Is reconnection allowed, is always true is it called by the extension
+- (BOOL)checkDuplicateConnectionInExtension {
+    BOOL isReconnectAllowed = YES;
+
+    if (AppGroup.getCurrentType != AppGroupTypeApp) {
+        return isReconnectAllowed;
+    }
+
+    NSUserDefaults *userDefaults = AppGroup.userDefaults;
+    id duplicateConnectionReconnectAllowed = [userDefaults valueForKey:DUPLICATE_CONNECTION_RECONNECT_ALLOWED];
+    if (duplicateConnectionReconnectAllowed) {
+        [userDefaults removeObjectForKey:DUPLICATE_CONNECTION_RECONNECT_ALLOWED];
+
+        isReconnectAllowed = ((NSNumber *)duplicateConnectionReconnectAllowed).boolValue;
+        [self showAnotherConnectionAlertWithReconnectAllowed:isReconnectAllowed];
+    }
+
+    return isReconnectAllowed;
+}
+
 - (void)connect:(ConnectionInitiator)initiator onCompletion:(void(^ _Nullable)(BOOL))onCompletion {
+    if (![self checkDuplicateConnectionInExtension]) {
+        return;
+    }
+
     if ([[UserSettings sharedUserSettings] ipcCommunicationEnabled]) {
-        DDLogNotice(@"[Darwin] Connect");
-        [processCoordinator requestAccessWithCompletionHandler:^(enum AccessState state) {
+        int timeout = [self processCoordinatorPollingTimeout];
+
+        DDLogNotice(@"[Darwin] Connect (timeout: %i)", timeout);
+        [processCoordinator requestAccessWithPollingTimeout:timeout completionHandler:^(enum AccessState state) {
             switch (state) {
                 case AccessStateUnused:
                     if ([AppGroup getCurrentType] == AppGroupTypeApp) {
@@ -330,6 +372,8 @@ struct pktExtension {
                     break;
                 case AccessStateUsing:
                     DDLogNotice(@"[Darwin] Resource is using, connecting to server");
+                    [AppGroup setMeActive];
+
                     [self _connectWithConnectionInitiator:initiator];
                     if (onCompletion) {
                         onCompletion(YES);
@@ -388,9 +432,15 @@ struct pktExtension {
 }
 
 - (void)connectWait:(ConnectionInitiator)initiator {
+    if (![self checkDuplicateConnectionInExtension]) {
+        return;
+    }
+
     if ([[UserSettings sharedUserSettings] ipcCommunicationEnabled]) {
-        DDLogNotice(@"[Darwin] Connect wait");
-        [processCoordinator requestAccessWithCompletionHandler:^(enum AccessState state) {
+        int timeout = [self processCoordinatorPollingTimeout];
+
+        DDLogNotice(@"[Darwin] Connect wait (timeout: %i)", timeout);
+        [processCoordinator requestAccessWithPollingTimeout:timeout completionHandler:^(enum AccessState state) {
             switch (state) {
                 case AccessStateUnused:
                     if ([AppGroup getCurrentType] == AppGroupTypeApp) {
@@ -408,6 +458,8 @@ struct pktExtension {
                     break;
                 case AccessStateUsing:
                     DDLogNotice(@"[Darwin] Resource is using, connecting to server");
+                    [AppGroup setMeActive];
+
                     [self _connectWaitWithConnectionInitiator:initiator];
                     break;
                 case AccessStateWillRelease:
@@ -475,6 +527,25 @@ struct pktExtension {
     });
 }
 
+- (void)connectWithCurrentAppGroupType {
+    ConnectionInitiator initiator;
+
+    switch ([AppGroup getCurrentType]) {
+        case AppGroupTypeApp:
+        case AppGroupTypeNone:
+            initiator = ConnectionInitiatorApp;
+            break;
+        case AppGroupTypeShareExtension:
+            initiator = ConnectionInitiatorShareExtension;
+            break;
+        case AppGroupTypeNotificationExtension:
+            initiator = ConnectionInitiatorNotificationExtension;
+            break;
+    }
+
+    [self connect:initiator onCompletion:nil];
+}
+
 - (void)_connect {
     // TODO: Remove comment IOS-3558
     DDLogNotice(@"Connect began.");
@@ -508,12 +579,11 @@ struct pktExtension {
             || self.connectionState == ConnectionStateConnected
             || self.connectionState == ConnectionStateLoggedIn)
         {
-            // TODO: Remove comment IOS-3558
-            DDLogNotice(@"Connect: State was connecting, connected or logged in.");
+            DDLogNotice(@"Abort connect, because connection state is %@", [self nameForConnectionState:self.connectionState]);
             return;
         }
 
-        DDLogNotice(@"Cannot connect - invalid connection state (actual state: %@)", [self nameForConnectionState:self.connectionState]);
+        DDLogNotice(@"Cannot connect, because connection state is %@", [self nameForConnectionState:self.connectionState]);
         if ([AppGroup getCurrentType] != AppGroupTypeNotificationExtension) {
             autoReconnect = YES;
             [self reconnectAfterDelay];
@@ -592,7 +662,7 @@ struct pktExtension {
     DDLogVerbose(@"Client tempkey_pub = %@, tempkey_sec = %@", clientTempKeyPub, clientTempKeySec);
 #endif
 
-    DeviceGroupKeyManager *deviceGroupKeyManager = [[DeviceGroupKeyManager alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
+    DeviceGroupKeyManager *deviceGroupKeyManager = [DeviceGroupKeyManager new];
     NSData *dgk = deviceGroupKeyManager.dgk;
     if (!dgk) {
         DDLogNotice(@"Connect direct.");
@@ -657,8 +727,6 @@ struct pktExtension {
 }
 
 - (void)_connectViaMediator:(nonnull NSData *)dgk {
-    UserSettings *settings = [UserSettings sharedUserSettings];
-
     // Derive multi device keys
     NSError *deriveKeyError;
     DeviceGroupDerivedKey *deviceGroupDerivedKey = [[DeviceGroupDerivedKey alloc] initWithDgk:dgk error:&deriveKeyError];
@@ -682,10 +750,20 @@ struct pktExtension {
         NSLog(@"%@", [NSString stringWithHexData:deviceGroupID]);
         deviceGroupKeys = [[DeviceGroupKeys alloc] initWithDgpk:deviceGroupDerivedKey.dgpk dgrk:deviceGroupDerivedKey.dgrk dgdik:deviceGroupDerivedKey.dgdik dgsddk:deviceGroupDerivedKey.dgsddk dgtsk:deviceGroupDerivedKey.dgtsk deviceGroupIDFirstByteHex:deviceGroupIDFirstByteHex];
 
-        if ([settings deviceID] == nil || [[settings deviceID] length] != kDeviceIdLen) {
-            settings.deviceID = [NSData dataWithBytes:[[NaClCrypto sharedCrypto] randomBytes:kDeviceIdLen].bytes length:kDeviceIdLen];
+        KeychainManager *keychainManager = [[BusinessInjector ui] keychainManagerObjC];
+        deviceID = [keychainManager loadMultiDeviceIDObjC];
+
+        if (deviceID == nil || [deviceID length] != kDeviceIdLen) {
+            deviceID = [NSData dataWithBytes:[[NaClCrypto sharedCrypto] randomBytes:kDeviceIdLen].bytes length:kDeviceIdLen];
+
+            NSError *error = nil;
+            [keychainManager storeMultiDeviceIDWithId:deviceID error:&error];
+            if (error) {
+                NSString *errorMessage = [NSString stringWithFormat:@"Couldn't store device ID in Keychain: %@", error.localizedDescription];
+                DDLogError(@"%@", errorMessage);
+                [NSException raise:error.domain.description format:@"%@", errorMessage];
+            }
         }
-        deviceID = settings.deviceID;
     };
 
     NSAssert([deviceID length] == kDeviceIdLen, @"Device ID has wrong length");
@@ -706,7 +784,8 @@ struct pktExtension {
             NSString *server = [NSString stringWithFormat:@"%@/%@", mediatorServerInfo.url, clientUrlInfo];
             serverKeyPub = chatServerInfo.publicKey;
             serverAltKeyPub = chatServerInfo.publicKeyAlt;
-            
+
+            UserSettings *settings = [UserSettings sharedUserSettings];
             NSError *socketError;
             socket = [[MediatorWebSocket alloc] initWithServer:server ports:@[] preferIPv6:settings.enableIPv6 delegate:self queue:socketQueue error:&socketError];
             
@@ -747,6 +826,7 @@ struct pktExtension {
         if ([self isOthersConnectedDisconnectBy:initiator] == NO) {
             [self _disconnect];
         }
+        [self disconnectedBy:initiator];
     });
 }
 
@@ -758,6 +838,7 @@ struct pktExtension {
             [self _disconnect];
             isDisconnected = YES;
         }
+        [self disconnectedBy:initiator];
     });
 
     if (isDisconnected) {
@@ -770,7 +851,7 @@ struct pktExtension {
 - (void)reconnect {
     dispatch_async(socketQueue, ^{
         if ([serverConnectorConnectionState connectionState] == ConnectionStateDisconnected) {
-            [self _connect];
+            [self connectWithCurrentAppGroupType];
         } else if ([serverConnectorConnectionState connectionState] == ConnectionStateConnecting) {
             DDLogVerbose(@"Connection already in progress, not reconnecting");
         } else {
@@ -790,9 +871,16 @@ struct pktExtension {
 - (void)connectBy:(ConnectionInitiator)initiator {
     DDLogNotice(@"Connect initiated by (%@)", [self nameForConnectionInitiator:initiator]);
     if (![connectionInitiators containsObject:[NSNumber numberWithInteger:initiator]]) {
-        // TODO: Remove comment IOS-3558
         DDLogNotice(@"Add initiator to connectInitiators.");
         [connectionInitiators addObject:[NSNumber numberWithInteger:initiator]];
+    }
+}
+
+-(void)disconnectedBy:(ConnectionInitiator)initiator {
+    DDLogNotice(@"Disconnected initiated by (%@)", [self nameForConnectionInitiator:initiator]);
+    if (![connectionInitiators containsObject:[NSNumber numberWithInteger:initiator]]) {
+        DDLogNotice(@"Remove initiator from connectInitiators.");
+        [connectionInitiators removeObject:[NSNumber numberWithInteger:initiator]];
     }
 }
 
@@ -863,43 +951,19 @@ struct pktExtension {
             NSData *errorMessageData = [NSData dataWithBytes:plerr->err_message length:datalen - sizeof(struct plError)];
             NSString *errorMessage = [[NSString alloc] initWithData:errorMessageData encoding:NSUTF8StringEncoding];
             DDLogError(@"Received error message from server: %@", errorMessage);
-            
-            BOOL anotherConnectionError = false;
-            
+
             if ([errorMessage rangeOfString:@"Another connection"].location != NSNotFound) {
-                // extension took over connection
-                if ([AppGroup amIActive] == NO) {
-                    break;
-                }
-                
-                anotherConnectionError = true;
-                
-                // ignore first few occurrences of "Another connection" messages to gracefully handle network switches
-                if (anotherConnectionCount < 5) {
-                    anotherConnectionCount++;
-                    break;
-                }
+                [self showAnotherConnectionAlertWithReconnectAllowed:plerr->reconnect_allowed ? YES : NO];
             }
-            
-            if (!plerr->reconnect_allowed) {
-                autoReconnect = NO;
-            }
-            
-            if (lastErrorDisplay == nil || ((-[lastErrorDisplay timeIntervalSinceNow]) > kErrorDisplayInterval)) {
-                lastErrorDisplay = [NSDate date];
-                
-                NSDictionary *info = nil;
-                
-                if (anotherConnectionError) {
-                    NSBundle *bundle = [BundleUtil mainBundle];
-                    errorMessage = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"error_other_connection_for_same_identity_message"], TargetManagerObjc.localizedAppName, TargetManagerObjc.appName, TargetManagerObjc.appName];
-                    info = [NSDictionary dictionaryWithObjectsAndKeys: [BundleUtil localizedStringForKey:@"error_other_connection_for_same_identity_title"], kKeyTitle, errorMessage, kKeyMessage, nil];
-                } else {
-                    info = [NSDictionary dictionaryWithObjectsAndKeys: errorMessage, kKeyMessage, nil];
+            else {
+                if (!plerr->reconnect_allowed) {
+                    autoReconnect = NO;
                 }
-                
-                [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationErrorConnectionFailed object:nil userInfo:info];
+
+                NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys: errorMessage, kKeyMessage, nil];
+                [self showConnectionAlertWithInfo:info];
             }
+
             break;
         }
         case PLTYPE_ALERT: {
@@ -960,7 +1024,7 @@ struct pktExtension {
 
                 TaskDefinitionReceiveMessage *task = [[TaskDefinitionReceiveMessage alloc] initWithMessage:boxmsg receivedAfterInitialQueueSend:!chatServerInInitialQueueSend maxBytesToDecrypt:[AppGroup getCurrentType] != AppGroupTypeNotificationExtension ? MAX_BYTES_TO_DECRYPT_NO_LIMIT : MAX_BYTES_TO_DECRYPT_NOTIFICATION_EXTENSION timeoutDownloadThumbnail:timeoutDownloadThumbnail];
 
-                // Use `[self entityManagerForMessageProcessing]` if is not nil (properly setted from Notification Extension), otherwise nil (means will be created within TaskManager) for in App processing
+                // Use `[self backgroundEntityManagerForMessageProcessing]` if is not nil (properly setted from Notification Extension), otherwise nil (means will be created within TaskManager) for in App processing
                 TaskManager *tm = [[TaskManager alloc] initWithBackgroundEntityManager:[self backgroundEntityManagerForMessageProcessing] serverConnector:self];
                 [tm addObjcWithTaskDefinition:task];
             }
@@ -1021,7 +1085,7 @@ struct pktExtension {
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, reconnectDelay * NSEC_PER_SEC);
         dispatch_after(popTime, socketQueue, ^(void){
             isWaitingForReconnect = false;
-            [self connect:[AppGroup getCurrentType] onCompletion:nil];
+            [self connectWithCurrentAppGroupType];
         });
     }
 }
@@ -1210,8 +1274,7 @@ struct pktExtension {
 
 - (void)deactivateMultiDevice {
     @synchronized (deviceGroupKeys) {
-        DeviceGroupKeyManager *deviceGroupKeyManager = [[DeviceGroupKeyManager alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore]];
-        [deviceGroupKeyManager destroy];
+        [DeviceGroupKeyManager destroy];
         [UserSettings sharedUserSettings].enableMultiDevice = NO;
         // Ensure that the change is observed by SettingStores
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationSettingStoreSynchronization object:nil];
@@ -1219,6 +1282,16 @@ struct pktExtension {
         deviceID = nil;
         doUnblockIncomingMessages = YES;
     };
+}
+
+- (void)setIsRolePromotedToLeader:(BOOL)newIsRolePromotedToLeader {
+    if (isRolePromotedToLeader != newIsRolePromotedToLeader) {
+        isRolePromotedToLeader = newIsRolePromotedToLeader;
+    }
+
+    if ([[UserSettings sharedUserSettings] enableMultiDevice] == YES) {
+        DDLogNotice(@"[Config] Multi-Device: Am I promoted to leader? %@", isRolePromotedToLeader ? @"YES" : @"NO");
+    }
 }
 
 #pragma mark - Push Notification
@@ -1359,21 +1432,6 @@ struct pktExtension {
     return [socket isProxyConnection];
 }
 
-- (void)displayServerAlert:(NSString*)alertText {
-    
-    if ([displayedServerAlerts containsObject:alertText])
-        return;
-    
-    /* not shown before */
-    NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
-                          alertText, kKeyMessage,
-                          nil];
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationServerMessage object:nil userInfo:info];
-    
-    [displayedServerAlerts addObject:alertText];
-}
-
 - (void)networkStatusDidChange:(NSNotification *)notice
 {
     if ([reachabilityWrapper didLastConnectionTypeChange] && ([reachabilityWrapper isReachabilityUnavailable] || [serverConnectorConnectionState connectionState] == ConnectionStateDisconnected || [serverConnectorConnectionState connectionState] == ConnectionStateDisconnecting)) {
@@ -1386,6 +1444,62 @@ struct pktExtension {
             [serverConnectorConnectionState disconnecting];
             [socket disconnect];
         }
+    }
+}
+
+#pragma mark - Display server / connection alert
+
+- (void)displayServerAlert:(NSString*)alertText {
+
+    if ([displayedServerAlerts containsObject:alertText]) {
+        return;
+    }
+
+    /* not shown before */
+    NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys:
+                          alertText, kKeyMessage,
+                          nil];
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationServerMessage object:nil userInfo:info];
+
+    [displayedServerAlerts addObject:alertText];
+}
+
+- (void)showAnotherConnectionAlertWithReconnectAllowed:(BOOL)isReconnectAllowed {
+    // If I am not active than an extension took over the connection
+    if ([[UserSettings sharedUserSettings] ipcCommunicationEnabled] == NO && [AppGroup amIActive] == NO) {
+        return;
+    }
+
+    // Ignore first few occurrences of "Another connection" messages to gracefully handle network switches
+    if ([[UserSettings sharedUserSettings] ipcCommunicationEnabled] == NO && anotherConnectionCount < 5) {
+        anotherConnectionCount++;
+        return;
+    }
+
+    if (!isReconnectAllowed) {
+        autoReconnect = NO;
+    }
+
+    // Do not show the alert if it's the share or notification extension, but set a flag to display it next time in the app
+    if (AppGroup.getCurrentType == AppGroupTypeShareExtension || AppGroup.getCurrentType == AppGroupTypeNotificationExtension) {
+        NSUserDefaults *userDefaults = AppGroup.userDefaults;
+        [userDefaults setValue:[NSNumber numberWithBool:isReconnectAllowed] forKey:DUPLICATE_CONNECTION_RECONNECT_ALLOWED];
+        return;
+    }
+
+    NSString *localizedErrorMessage = [BundleUtil localizedStringForKey:@"error_other_connection_for_same_identity_message"];
+    NSString *errorMessage = [NSString stringWithFormat:localizedErrorMessage, TargetManagerObjC.localizedAppName, TargetManagerObjC.appName, TargetManagerObjC.appName];
+    NSDictionary *info = [NSDictionary dictionaryWithObjectsAndKeys: [BundleUtil localizedStringForKey:@"error_other_connection_for_same_identity_title"], kKeyTitle, errorMessage, kKeyMessage, nil];
+
+    [self showConnectionAlertWithInfo:info];
+}
+
+- (void)showConnectionAlertWithInfo:(NSDictionary *)info {
+    if (lastErrorDisplay == nil || ((-[lastErrorDisplay timeIntervalSinceNow]) > kErrorDisplayInterval)) {
+        lastErrorDisplay = [NSDate date];
+
+        [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationErrorConnectionFailed object:nil userInfo:info];
     }
 }
 
@@ -1414,7 +1528,7 @@ struct pktExtension {
     DDLogNotice(@"Interrupt queue on Task Manager");
     [TaskManager interrupt];
 
-    isRolePromotedToLeader = NO;
+    [self setIsRolePromotedToLeader:NO];
     doUnblockIncomingMessages = YES;
     maximumNumberOfDeviceSlots = nil;
 
@@ -1424,13 +1538,16 @@ struct pktExtension {
     }
 
     if (code == ServerConnectionCloseCodeUnsupportedProtocolVersion) {
-        [self displayServerAlert:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_unsupported_protocol_version_alert"], TargetManagerObjc.appName, TargetManagerObjc.appName]];
+        [self displayServerAlert:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"multi_device_unsupported_protocol_version_alert"], TargetManagerObjC.appName, TargetManagerObjC.appName]];
     }
     else if (code == ServerConnectionCloseCodeDeviceSlotStateMismatch) {
         [self displayServerAlert:[BundleUtil localizedStringForKey:@"multi_device_slot_state_mismatch_alert"]];
 
         // Device slot state mismatch -> this device must relink
         [self deactivateMultiDevice];
+    }
+    else if (code == ServerConnectionCloseCodeDuplicateConnection) {
+        [self showAnotherConnectionAlertWithReconnectAllowed:NO];
     }
     else {
         [self reconnectAfterDelay];
@@ -1493,7 +1610,7 @@ struct pktExtension {
             // Adding Device ID extension if is Multi Device activated
             if (deviceID != nil && [deviceID length] == kDeviceIdLen) {
                 /* CSP device ID (0x01) extension payload */
-                [extensionsData appendData:[self makeExtensionWithType:EXTENSION_TYPE_DEVICE_ID data:[UserSettings sharedUserSettings].deviceID]];
+                [extensionsData appendData:[self makeExtensionWithType:EXTENSION_TYPE_DEVICE_ID data:deviceID]];
             }
             
             /* device cookie (0x03) extension payload */
@@ -1672,8 +1789,8 @@ struct pktExtension {
             else if ((int)type == MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_ROLE_PROMOTED_TO_LEADER) {
                 DDLogVerbose(@"Promoted to leader -> unblock incoming chat messages, if allowed");
 
-                isRolePromotedToLeader = YES;
-                
+                [self setIsRolePromotedToLeader:YES];
+
                 if ([serverConnectorConnectionState connectionState] == ConnectionStateLoggedIn) {
                     /* Unblock incoming messages */
                     [self _unblockIncomingMessagesIfAllowed];
@@ -1705,6 +1822,10 @@ struct pktExtension {
 #pragma mark - ConnectionStateDelegate
 
 - (void)connectionStateChanged:(ConnectionState)state {
+    if (UserSettings.sharedUserSettings.ipcCommunicationEnabled && state == ConnectionStateDisconnected) {
+        [AppGroup setMeInactive];
+    }
+
     dispatch_sync(queueConnectionStateDelegate, ^{
         if (clientConnectionStateDelegates != nil && [clientConnectionStateDelegates count] > 0) {
             for (id<ConnectionStateDelegate> delegate in clientConnectionStateDelegates) {
@@ -1747,9 +1868,9 @@ struct pktExtension {
     });
 }
 
-- (void)incomingMessageChanged:(AbstractMessage * _Nonnull)message baseMessage:(BaseMessageEntity * _Nonnull)baseMessage {
+- (void)incomingMessageChanged:(AbstractMessage * _Nonnull)message baseMessageEntity:(NSObject * _Nonnull)baseMessageEntityObject {
     dispatch_sync(queueMessageProcessorDelegate, ^{
-        [clientMessageProcessorDelegate incomingMessageChanged:message baseMessage:baseMessage];
+        [clientMessageProcessorDelegate incomingMessageChanged:message baseMessageEntity:baseMessageEntityObject];
     });
 }
 

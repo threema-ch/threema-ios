@@ -18,8 +18,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
-
 @testable import Threema
 
 class SafeTests: XCTestCase {
@@ -27,7 +27,6 @@ class SafeTests: XCTestCase {
     override func setUp() {
         super.setUp()
         
-        // necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
     }
 
@@ -79,13 +78,7 @@ class SafeTests: XCTestCase {
     }
 
     func testSafeStoreCreateKey() {
-        let store = SafeStore(
-            safeConfigManager: SafeConfigManager(),
-            serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
-        )
-
-        let result = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")
+        let result = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")
 
         XCTAssertEqual(
             hexString(data: result!),
@@ -94,15 +87,9 @@ class SafeTests: XCTestCase {
     }
 
     func testSafeStoreGetBackupIDAndGetEncrptionKey() {
-        let store = SafeStore(
-            safeConfigManager: SafeConfigManager(),
-            serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
-        )
-
-        let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")
-        let backupID = store.getBackupID(key: key!)
-        let encryptionKey = store.getEncryptionKey(key: key!)
+        let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")
+        let backupID = SafeStore.getBackupID(key: key!)
+        let encryptionKey = SafeStore.getEncryptionKey(key: key!)
 
         XCTAssertNotNil(backupID)
         XCTAssertNotNil(encryptionKey)
@@ -125,11 +112,12 @@ class SafeTests: XCTestCase {
         let store = SafeStore(
             safeConfigManager: SafeConfigManager(),
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
+            groupManager: GroupManagerMock(),
+            myIdentityStore: MyIdentityStoreMock()
         )
-        let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")
+        let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")
         let encryptedData = try! store.encryptBackupData(key: key!, data: parser.getJsonAsBytes(from: dataIn)!)
-        let decryptedData = try! store.decryptBackupData(key: key!, data: encryptedData)
+        let decryptedData = try! SafeStore.decryptBackupData(key: key!, data: encryptedData)
 
         let dataOut = try! parser.getSafeBackupData(from: Data(decryptedData))
 
@@ -158,20 +146,8 @@ class SafeTests: XCTestCase {
             ["Zzzzzzz1", true],
         ]
 
-        let safeConfigManager = SafeConfigManager()
-        let safeStore = SafeStore(
-            safeConfigManager: safeConfigManager,
-            serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
-        )
-        let safeManager = SafeManager(
-            safeConfigManager: safeConfigManager,
-            safeStore: safeStore,
-            safeApiService: SafeApiService()
-        )
-
         for passwordTest in passwordTests {
-            let isBad = safeManager.isPasswordBad(password: passwordTest[0] as! String)
+            let isBad = SafeManager.isPasswordBad(password: passwordTest[0] as! String)
 
             if passwordTest[1] as! Bool {
                 XCTAssert(isBad, "\(passwordTest[0]) isBad:\(isBad)")
@@ -203,38 +179,13 @@ class SafeTests: XCTestCase {
             XCTAssertEqual(result, passwordTest[1] as! Bool)
         }
     }
-    
-    // func testApi() {
-    //    let asyncDone = expectation(description: "async func")
-    //
-    //    var identity: String?
-    //
-    //    let api = ServerAPIConnector()
-    //    api.fetchBulkIdentityInfo(["ECHOECHO"], onCompletion: { (identities, publicKeys, featureLevels, featureMasks,
-    //    states, types) in
-    //
-    //        if let identities = identities as? [String] {
-    //            print(identities.count)
-    //            identity = identities[0] as String
-    //        }
-    //
-    //        asyncDone.fulfill()
-    //    }) { (error) in
-    //        print(error)
-    //
-    //        asyncDone.fulfill()
-    //    }
-    //
-    //    wait(for: [asyncDone], timeout: 10)
-    //
-    //    XCTAssertEqual("ECHOECHO", identity)
-    // }
 
     func testSafeSeverToDisplay() {
         let store = SafeStore(
             safeConfigManager: SafeConfigManagerMock(server: nil),
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
+            groupManager: GroupManagerMock(),
+            myIdentityStore: MyIdentityStoreMock()
         )
 
         let result = store.getSafeServerToDisplay()
@@ -246,9 +197,11 @@ class SafeTests: XCTestCase {
         let store = SafeStore(
             safeConfigManager: SafeConfigManagerMock(server: nil),
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
+            groupManager: GroupManagerMock(),
+            myIdentityStore: MyIdentityStoreMock()
         )
-        let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")!
+        
+        let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")!
 
         store.getSafeServer(key: key) { result in
             switch result {
@@ -258,7 +211,7 @@ class SafeTests: XCTestCase {
                 XCTAssertEqual(
                     safeServer.server
                         .appendingPathComponent(
-                            "backups/\(BytesUtility.toHexString(bytes: store.getBackupID(key: key)!))"
+                            "backups/\(BytesUtility.toHexString(bytes: SafeStore.getBackupID(key: key)!))"
                         )
                         .absoluteString,
                     "https://safe-06.threema.ch/backups/066384d3695fbbd9f31a7d533900fd0cd8d1373beb6a28678522d2a49980c9c3"
@@ -273,9 +226,11 @@ class SafeTests: XCTestCase {
         let store = SafeStore(
             safeConfigManager: SafeConfigManagerMock(server: "http://test.com"),
             serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
+            groupManager: GroupManagerMock(),
+            myIdentityStore: MyIdentityStoreMock()
         )
-        let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")!
+        
+        let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar")!
 
         store.getSafeServer(key: key) { result in
             switch result {
@@ -285,7 +240,7 @@ class SafeTests: XCTestCase {
                 XCTAssertEqual(
                     safeServer.server
                         .appendingPathComponent(
-                            "backups/\(BytesUtility.toHexString(bytes: store.getBackupID(key: key)!))"
+                            "backups/\(BytesUtility.toHexString(bytes: SafeStore.getBackupID(key: key)!))"
                         )
                         .absoluteString,
                     "http://test.com/backups/066384d3695fbbd9f31a7d533900fd0cd8d1373beb6a28678522d2a49980c9c3"
@@ -318,12 +273,6 @@ class SafeTests: XCTestCase {
             ["HTtPS://example.com", nil, nil, "HTtPS://example.com"],
             ["http://example.com", nil, nil, "http://example.com"],
         ]
-
-        let store = SafeStore(
-            safeConfigManager: SafeConfigManager(),
-            serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
-        )
 
         for serverURLTest in serverURLTests {
             let safeServer = SafeStore.extractSafeServerAuth(server: URL(string: serverURLTest[0]!)!)

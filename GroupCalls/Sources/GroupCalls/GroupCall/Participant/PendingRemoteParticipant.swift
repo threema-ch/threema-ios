@@ -119,7 +119,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
                       memberOfGroupWith: groupID
                   ) else {
                 DDLogWarn(
-                    "[Group Calls] Received group call envelope from identity \(threemaIdentity?.string ?? "nil") that is not a member of the group the call is running in"
+                    "[Group Calls] Received group call envelope from identity \(threemaIdentity?.rawValue ?? "nil") that is not a member of the group the call is running in"
                 )
                 return .none
             }
@@ -208,7 +208,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
         DDLogNotice("[GroupCall] Create HandshakeHelloMessage for PendingRemoteParticipant \(participantID)")
 
         let helloMessage = Groupcall_ParticipantToParticipant.Handshake.Hello.with {
-            $0.identity = localIdentity.string
+            $0.identity = localIdentity.rawValue
             $0.nickname = localNickname
             $0.pck = keyPair.publicKey
             $0.pcck = pcck
@@ -248,7 +248,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
         
         guard let pcckRemote else {
             DDLogError(
-                "[GroupCall] pcckRemote must not be nil at this point. Identity: \(threemaIdentity?.string ?? "nil")."
+                "[GroupCall] pcckRemote must not be nil at this point. Identity: \(threemaIdentity?.rawValue ?? "nil")."
             )
             throw GroupCallError.badParticipantState
         }
@@ -283,9 +283,9 @@ final class PendingRemoteParticipant: RemoteParticipant {
         
         let innerNonce = dependencies.groupCallCrypto.randomBytes(of: groupCallMessageCrypto.symmetricNonceLength)
         
-        guard let identity = threemaIdentity?.string,
+        guard let identity = threemaIdentity?.rawValue,
               let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: identity) else {
-            DDLogError("[GroupCall] Could not get shared secret for identity: \(threemaIdentity?.string ?? "nil").")
+            DDLogError("[GroupCall] Could not get shared secret for identity: \(threemaIdentity?.rawValue ?? "nil").")
             throw GroupCallError.badParticipantState
         }
         
@@ -367,7 +367,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
         
         guard let pcckRemote else {
             DDLogError(
-                "[GroupCall] pcckRemote must not be nil at this point. Identity: \(threemaIdentity?.string ?? "nil")."
+                "[GroupCall] pcckRemote must not be nil at this point. Identity: \(threemaIdentity?.rawValue ?? "nil")."
             )
             throw GroupCallError.badParticipantState
         }
@@ -377,7 +377,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
         
         guard let pckRemote else {
             DDLogError(
-                "[GroupCall] pckRemote must not be nil at this point. Identity: \(threemaIdentity?.string ?? "nil")."
+                "[GroupCall] pckRemote must not be nil at this point. Identity: \(threemaIdentity?.rawValue ?? "nil")."
             )
             throw GroupCallError.badParticipantState
         }
@@ -394,9 +394,9 @@ final class PendingRemoteParticipant: RemoteParticipant {
         let innerNonce = innerData[0..<groupCallMessageCrypto.symmetricNonceLength]
         let ciphertext = innerData.advanced(by: Int(groupCallMessageCrypto.symmetricNonceLength))
         
-        guard let identity = threemaIdentity?.string,
+        guard let identity = threemaIdentity?.rawValue,
               let sharedSecret = dependencies.groupCallCrypto.sharedSecret(with: identity) else {
-            DDLogError("[GroupCall] Could not get shared secret for identity: \(threemaIdentity?.string ?? "nil").")
+            DDLogError("[GroupCall] Could not get shared secret for identity: \(threemaIdentity?.rawValue ?? "nil").")
             throw GroupCallError.badParticipantState
         }
         
@@ -443,7 +443,7 @@ final class PendingRemoteParticipant: RemoteParticipant {
         
         guard let threemaIdentity, let nickname, let remoteContext, let pckRemote, let pcckRemote, let mediaKeys else {
             DDLogError(
-                "[GroupCall] Could not promote participant with id:\(participantID.id) because one of the following is nil: identity=\(threemaIdentity?.string ?? "nil"), nickname=\(nickname ?? "nil"), remoteContext=\(remoteContext == nil ? "nil" : "not nil"),  pckRemote=\(pckRemote == nil ? "nil" : "not nil"), pcckRemote=\(pcckRemote == nil ? "nil" : "not nil"), mediaKeys=\(mediaKeys == nil ? "nil" : "not nil")."
+                "[GroupCall] Could not promote participant with id:\(participantID.id) because one of the following is nil: identity=\(threemaIdentity?.rawValue ?? "nil"), nickname=\(nickname ?? "nil"), remoteContext=\(remoteContext == nil ? "nil" : "not nil"),  pckRemote=\(pckRemote == nil ? "nil" : "not nil"), pcckRemote=\(pcckRemote == nil ? "nil" : "not nil"), mediaKeys=\(mediaKeys == nil ? "nil" : "not nil")."
             )
             throw GroupCallError.badParticipantState
         }

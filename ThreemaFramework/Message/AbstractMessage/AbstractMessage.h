@@ -37,8 +37,6 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
     BaseMessageFlagsNoDeliveryReceipt = 1 << 7
 };
 
-@class ContactEntity;
-
 @protocol MyIdentityStoreProtocol;
 
 @interface AbstractMessage : NSObject <NSSecureCoding, LoggingDescriptionProtocol>
@@ -62,11 +60,11 @@ typedef NS_OPTIONS(NSInteger, BaseMessageFlags) {
 /**
  Make boxed message with end to end encrypted message.
 
- @param toContact: Receiver contact of the message
- @param myIdentityStore: Sender of the message, with secret key
- @param nonce: Nonce to encrypt message
+ @param toContactObject Receiver contact of the message (must be type of `ContactEntity`)
+ @param myIdentityStore Sender of the message, with secret key
+ @param nonce Nonce to encrypt message
  */
-- (BoxedMessage* _Nullable)makeBox:(ContactEntity* _Nonnull)toContact myIdentityStore:(id<MyIdentityStoreProtocol>  _Nonnull)myIdentityStore nonce:(NSData* _Nonnull)nonce;
+- (BoxedMessage* _Nullable)makeBox:(NSObject * _Nonnull)toContactObject myIdentityStore:(id<MyIdentityStoreProtocol>  _Nonnull)myIdentityStore nonce:(NSData* _Nonnull)nonce;
 
 + (NSData*)randomMessageId NS_SWIFT_NAME(randomMessageID());
 

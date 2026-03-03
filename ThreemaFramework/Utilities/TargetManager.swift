@@ -29,33 +29,33 @@ public enum TargetManager {
     case customOnPrem
     
     public static let current: TargetManager = {
-        guard !ProcessInfoHelper.isRunningForTests else {
-            return .threema
-        }
-        
         switch BundleUtil.targetManagerKey() {
         case "Threema":
-            return .threema
+            .threema
         case "ThreemaGreen":
-            return .green
+            .green
         case "ThreemaWork":
-            return .work
+            .work
         case "ThreemaBlue":
-            return .blue
+            .blue
         case "ThreemaOnPrem":
-            return .onPrem
+            .onPrem
         case "CustomOnPrem":
-            return .customOnPrem
+            .customOnPrem
         case let .some(bundleName):
             fatalError("There is a unknown bundle id \(bundleName)")
         case .none:
-            return handleNoneTargetManager()
+            handleNoneTargetManager()
         }
     }()
     
     /// Verify the appropriate course of action in the event that the targetManagerKey is not set.
     /// - Returns: TargetManager
     private static func handleNoneTargetManager() -> TargetManager {
+        guard !ProcessInfoHelper.isRunningForTests else {
+            return .threema
+        }
+
         guard ProcessInfoHelper.isRunningForScreenshots else {
             fatalError("There is no bundle id")
         }
@@ -147,7 +147,8 @@ public enum TargetManager {
     public static let isCustomOnPrem = current == .customOnPrem
 }
 
-@objc public class TargetManagerObjc: NSObject {
+@available(swift, obsoleted: 1.0, renamed: "TargetManager", message: "Only use from Objective-C")
+public final class TargetManagerObjC: NSObject {
     
     @objc public enum TargetManager: Int, RawRepresentable {
         case threema

@@ -22,7 +22,7 @@ import SwiftUI
 import ThreemaMacros
 
 struct MediaSettingsView: View {
-    private let mdmSetup = MDMSetup(setup: false)
+    private let mdmSetup = MDMSetup()
 
     @EnvironmentObject var settingsStore: SettingsStore
 

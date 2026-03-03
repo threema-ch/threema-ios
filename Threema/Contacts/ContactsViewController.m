@@ -21,20 +21,18 @@
 #import "ContactsViewController.h"
 #import "ContactStore.h"
 #import "UserSettings.h"
-#import "DatabaseManager.h"
 #import "GatewayAvatarMaker.h"
 #import "ContactTableDataSource.h"
 #import "GroupTableDataSource.h"
 #import "WorkContactTableDataSource.h"
 #import "DistributionListTableDataSource.h"
-#import "DeleteConversationAction.h"
 #import "ModalPresenter.h"
-#import "RectUtil.h"
 #import "WorkDataFetcher.h"
 #import "LicenseStore.h"
 #import "BundleUtil.h"
 #import "ModalNavigationController.h"
 #import "MDMSetup.h"
+#import "Threema-Swift.h"
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelInfo;
@@ -87,13 +85,12 @@ typedef enum : NSUInteger {
         /* listen for stale contacts setting */
         [[UserSettings sharedUserSettings] addObserver:self forKeyPath:@"hideStaleContacts" options:0 context:nil];
         
-        _entityManager = [[EntityManager alloc] init];
-        
-        if (TargetManagerObjc.isBusinessApp) {
+        _entityManager = [[BusinessInjector ui] entityManager];
+
+        if (TargetManagerObjC.isBusinessApp) {
             _companyDirectoryCellView = [[CompanyDirectoryCellView alloc] init];
         }
     }
-    self.navigationController.title = [BundleUtil localizedStringForKey:@"contacts"];
     return self;
 }
 
@@ -117,7 +114,7 @@ typedef enum : NSUInteger {
         distributionImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_distribution_list"];
         [self.segmentedControl setImage:distributionImage forSegmentAtIndex:ModeDistributionLists];
         
-        if (TargetManagerObjc.isBusinessApp) {
+        if (TargetManagerObjC.isBusinessApp) {
             [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContacts animated:NO];
             UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
             workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
@@ -126,7 +123,7 @@ typedef enum : NSUInteger {
         }
     }
     else {
-        if (TargetManagerObjc.isBusinessApp) {
+        if (TargetManagerObjC.isBusinessApp) {
             [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContacts animated:NO];
             UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
             workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
@@ -139,7 +136,7 @@ typedef enum : NSUInteger {
         
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshWorkContactTableView:) name:kNotificationRefreshWorkContactTableView object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshContactSortIndices:) name:kNotificationRefreshContactSortIndices object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshDirtyObjects:) name:kNotificationDBRefreshedDirtyObject object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changedManagedObjects:) name:DatabaseContext.changedManagedObjects object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadingWorkContacts:) name:kNotificationLoadWorkContacts object:nil];
 
     [self setRefreshControlTitle:NO];
@@ -153,11 +150,14 @@ typedef enum : NSUInteger {
     
     [self updateNoContactsView];
     
+    self.navigationController.navigationBar.prefersLargeTitles = YES;
+    self.title = [BundleUtil localizedStringForKey:@"contacts"];
+    
     self.searchController = [[UISearchController alloc]initWithSearchResultsController:nil];
     self.searchController.delegate = self;
     self.searchController.searchBar.showsScopeBar = NO;
     self.searchController.searchBar.scopeButtonTitles = nil;
-    self.navigationItem.hidesSearchBarWhenScrolling = NO;
+    self.navigationItem.hidesSearchBarWhenScrolling = YES;
     self.tableView.keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
     self.searchController.searchBar.delegate = self;
     self.searchController.searchResultsUpdater = self;
@@ -175,7 +175,6 @@ typedef enum : NSUInteger {
     [self.tableView registerClass:ContactCell.class forCellReuseIdentifier:@"ContactCell"];
     [self.tableView registerClass:GroupCell.class forCellReuseIdentifier:@"GroupCell"];
     [self.tableView registerClass:DistributionListCell.class forCellReuseIdentifier:@"DistributionListCell"];
-    self.title = [BundleUtil localizedStringForKey:@"contacts"];
 }
 
 - (void)refresh {
@@ -335,18 +334,18 @@ typedef enum : NSUInteger {
 }
 
 - (void)updateNoDataForContacts {
-    if ([AppDelegate sharedAppDelegate].isWorkContactsLoading && TargetManagerObjc.isBusinessApp) {
-        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], TargetManagerObjc.appName];
+    if ([AppDelegate sharedAppDelegate].isWorkContactsLoading && TargetManagerObjC.isBusinessApp) {
+        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], TargetManagerObjC.appName];
         _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:@"no_contacts_loading"];
         
         [self shouldShowNoContactIndicatorView:YES];
     }
     else {
         _noContactsTitleLabel.text = [BundleUtil localizedStringForKey:@"no_contacts"];
-        if (TargetManagerObjc.isOnPrem) {
+        if (TargetManagerObjC.isOnPrem) {
             _noContactsMessageLabel.text = @"";
         } else {
-            NSString *stringSyncON = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_contacts_syncon"], TargetManagerObjc.appName];
+            NSString *stringSyncON = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_contacts_syncon"], TargetManagerObjC.appName];
             NSString *stringSyncOFF = [BundleUtil localizedStringForKey:@"no_contacts_syncoff"];
             _noContactsMessageLabel.text = [UserSettings sharedUserSettings].syncContacts ? stringSyncON : stringSyncOFF;
         }
@@ -356,13 +355,13 @@ typedef enum : NSUInteger {
 
 - (void)updateNoDataForWorkContacts {
     if ([AppDelegate sharedAppDelegate].isWorkContactsLoading) {
-        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], TargetManagerObjc.appName];
+        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], TargetManagerObjC.appName];
         _noContactsMessageLabel.text = [BundleUtil localizedStringForKey:@"no_contacts_loading"];
         [self shouldShowNoContactIndicatorView:YES];
     }
     else {
-        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], TargetManagerObjc.appName];
-        _noContactsMessageLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts_message"], TargetManagerObjc.appName];
+        _noContactsTitleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts"], TargetManagerObjC.appName];
+        _noContactsMessageLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"no_work_contacts_message"], TargetManagerObjC.appName];
         [self shouldShowNoContactIndicatorView:NO];
     }
 }
@@ -883,7 +882,7 @@ typedef enum : NSUInteger {
     }
 }
 
-- (UIContextMenuConfiguration *)tableView:(UITableView *)tableView contextMenuConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath point:(CGPoint)point  API_AVAILABLE(ios(13.0)){
+- (UIContextMenuConfiguration *)tableView:(UITableView *)tableView contextMenuConfigurationForRowAtIndexPath:(NSIndexPath *)indexPath point:(CGPoint)point {
     
     UITableViewCell *contextCell = [tableView cellForRowAtIndexPath:indexPath];
     
@@ -956,7 +955,7 @@ typedef enum : NSUInteger {
     return nil;
 }
 
-- (void)tableView:(UITableView *)tableView willPerformPreviewActionForMenuWithConfiguration:(UIContextMenuConfiguration *)configuration animator:(id<UIContextMenuInteractionCommitAnimating>)animator  API_AVAILABLE(ios(13.0)){
+- (void)tableView:(UITableView *)tableView willPerformPreviewActionForMenuWithConfiguration:(UIContextMenuConfiguration *)configuration animator:(id<UIContextMenuInteractionCommitAnimating>)animator {
     UIViewController *previewVc = animator.previewViewController;
     if ([previewVc isKindOfClass:[SingleDetailsViewController class]]) {
         contactForDetails = ((SingleDetailsViewController *)previewVc)._contact;
@@ -1018,17 +1017,9 @@ typedef enum : NSUInteger {
 
 - (void)deleteGroup:(Group *)group atIndexPath:(nonnull NSIndexPath *)indexPath {
     ConversationEntity *conversation = group.conversation;
-    DeleteConversationAction *deleteAction = [DeleteConversationAction deleteActionForConversation:conversation];
     
-    UIView *groupCell = [self.tableView cellForRowAtIndexPath:indexPath];
-    if (groupCell == nil) {
-        groupCell = self.view;
-    }
-    
-    deleteAction.presentingViewController = self;
-    deleteAction.presentingRect = [groupCell convertRect:groupCell.bounds toView:self.tableView];
-    _deleteAction = deleteAction;
-    [deleteAction executeOnCompletion:^(BOOL succeeded) {
+    UITableViewCell *groupCell = [self.tableView cellForRowAtIndexPath:indexPath];
+    [DeleteConversationAction executeFor:conversation owner:self cell:groupCell singleFunction:SingleFunctionDouble onCompletion:^(BOOL succeeded) {
         [self updateTableViewAfterDeletion:succeeded];
     }];
 }
@@ -1042,7 +1033,7 @@ typedef enum : NSUInteger {
         contactCell = self.view;
     }
     
-    [deleteContactAction executeIn:contactCell of:self completion:^(BOOL succeeded) {
+    [deleteContactAction executeIn:contactCell of:self willDelete:nil completion:^(BOOL succeeded) {
         [self updateTableViewAfterDeletion:succeeded];
     }];
 }
@@ -1054,7 +1045,7 @@ typedef enum : NSUInteger {
     NSString *cancelTitle = [BundleUtil localizedStringForKey:@"cancel"];
     
     [UIAlertTemplate showDestructiveAlertWithOwner:self title:title message:nil titleDestructive:destructiveTitle actionDestructive:^(UIAlertAction * _Nonnull __unused destructiveAction) {
-        EntityManager *em = [[EntityManager alloc] init];
+        EntityManager *em = [[BusinessInjector ui] entityManager];
         [em performSyncBlockAndSafe:^{
                 [[em entityDestroyer] deleteWithDistributionListEntity:distributionList];
         }];
@@ -1188,6 +1179,7 @@ typedef enum : NSUInteger {
             [_workContactsDataSource setIgnoreFRCUpdates:YES];
             [_groupsDataSource setIgnoreFRCUpdates:YES];
 
+            self.navigationItem.searchController = _searchController;
             [_currentDataSource filterByWords: [self searchWordsForText:_searchController.searchBar.text]];
 
             [self updateNoContactsView];
@@ -1202,8 +1194,15 @@ typedef enum : NSUInteger {
             [_contactsDataSource setIgnoreFRCUpdates:YES];
             [_workContactsDataSource setIgnoreFRCUpdates:YES];
             [_groupsDataSource setIgnoreFRCUpdates:NO];
+            
+            if ([AppLaunchManager isRemoteSecretEnabled]) {
+                self.navigationItem.searchController = nil;
+            }
+            else {
+                self.navigationItem.searchController = _searchController;
+                [_currentDataSource filterByWords: [self searchWordsForText:_searchController.searchBar.text]];
+            }
 
-            [_currentDataSource filterByWords: [self searchWordsForText:_searchController.searchBar.text]];
             self.tableView.tableHeaderView = nil;
             [self updateNoContactsView];
             break;
@@ -1212,6 +1211,7 @@ typedef enum : NSUInteger {
             self.navigationItem.title = [BundleUtil localizedStringForKey:@"segmentcontrol_distribution_list"];
             _rfControl = self.refreshControl;
             _currentDataSource = [self distributionListTableDataSource];
+            self.navigationItem.searchController = _searchController;
             self.tableView.tableHeaderView = nil;
             [self updateNoContactsView];
             break;
@@ -1224,6 +1224,7 @@ typedef enum : NSUInteger {
             [_workContactsDataSource setIgnoreFRCUpdates:NO];
             [_groupsDataSource setIgnoreFRCUpdates:YES];
             
+            self.navigationItem.searchController = _searchController;
             [_currentDataSource filterByWords: [self searchWordsForText:_searchController.searchBar.text]];
             if ([UserSettings sharedUserSettings].companyDirectory == true) {
                 self.tableView.tableHeaderView = _companyDirectoryCellView;
@@ -1249,29 +1250,27 @@ typedef enum : NSUInteger {
 }
 
 - (IBAction)addAction:(id)sender {
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    MDMSetup *mdmSetup = [MDMSetup new];
     
     if (_mode == ModeContacts || _mode == ModeWorkContacts) {
         if ([mdmSetup disableAddContact]) {
             [UIAlertTemplate showAlertWithOwner:self title:@"" message:[BundleUtil localizedStringForKey:@"disabled_by_device_policy"] actionOk:nil];
             return;
         }
-        UIStoryboard *storyboard = self.storyboard;
-        UINavigationController *navVC = [storyboard instantiateViewControllerWithIdentifier:@"AddContactNavigationController"];
+        UIViewController *controller = [AddContactViewObjC hostingController];
         
-        [self presentViewController:navVC animated:YES completion:nil];
+        [self presentViewController:controller animated:YES completion:nil];
     } else if (_mode == ModeGroups) {
         if ([mdmSetup disableCreateGroup]) {
             [UIAlertTemplate showAlertWithOwner:self title:@"" message:[BundleUtil localizedStringForKey:@"disabled_by_device_policy"] actionOk:nil];
             return;
         }
-        UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"CreateGroup" bundle:nil];
-        UINavigationController *navVC = [storyboard instantiateInitialViewController];
-        
+        UIViewController* createGroupVC = [[SelectContactListViewController alloc] initForGroupCreation: @[] onSaveDisplayMode: OnSaveDisplayModeShowDetails];
+        UINavigationController *navVC = [[UINavigationController alloc] initWithRootViewController: createGroupVC];
         [self presentViewController:navVC animated:YES completion:nil];
     }
     else if (_mode == ModeDistributionLists){
-        UIViewController* createDistList = [[DistributionListCreateEditViewController alloc]init];
+        UIViewController* createDistList = [[SelectContactListViewController alloc] initForListCreation: @[] onSaveDisplayMode: OnSaveDisplayModeShowDetails];
         UINavigationController *navVC = [[UINavigationController alloc] initWithRootViewController:createDistList];
         [self presentViewController:navVC animated:YES completion:nil];
     }
@@ -1328,14 +1327,14 @@ typedef enum : NSUInteger {
 }
 
 - (void)show429ErrorMessage:(UIRefreshControl *)sender {
-    if (TargetManagerObjc.isBusinessApp) {
-        NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"pull_to_sync_429_message_work"], TargetManagerObjc.appName];
+    if (TargetManagerObjC.isBusinessApp) {
+        NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"pull_to_sync_429_message_work"], TargetManagerObjC.appName];
         [UIAlertTemplate showAlertWithOwner:self title:nil message:message actionOk:^(UIAlertAction * _Nonnull okAction) {
             [self updateWorkDataAndEndRefreshing:sender];
         }];
     }
     else {
-        NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"pull_to_sync_429_message"], TargetManagerObjc.appName];
+        NSString *message = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"pull_to_sync_429_message"], TargetManagerObjC.appName];
         [UIAlertTemplate showAlertWithOwner:self title:nil message:message actionOk:^(UIAlertAction * _Nonnull okAction) {
             [self updateWorkDataAndEndRefreshing:sender];
         }];
@@ -1448,11 +1447,10 @@ typedef enum : NSUInteger {
     }
 }
 
-- (void)refreshDirtyObjects:(NSNotification*)notification {
-    NSManagedObjectID *objectID = [notification.userInfo objectForKey:kKeyObjectID];
-    if (objectID == nil) {
+- (void)changedManagedObjects:(NSNotification*)notification {
+    dispatch_async(dispatch_get_main_queue(), ^{
         [self resetData];
-    }
+    });
 }
 
 - (void)loadingWorkContacts:(NSNotification *)notification {

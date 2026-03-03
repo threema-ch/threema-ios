@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import Keychain
 import ThreemaFramework
 import ThreemaMacros
 
@@ -41,6 +42,7 @@ public protocol NotificationManagerProtocol {
     private let webClientAuthKey = "wca"
     private let availableCheckKey = "alive-check"
     private let pushTestKey = "push-test"
+    private let cmdKey = "cmd"
     
     private let businessInjector: BusinessInjectorProtocol
     
@@ -133,7 +135,7 @@ public protocol NotificationManagerProtocol {
             
             if !receivedWhileRunning {
                 if let from = threemaPayload["from"] as? String,
-                   let contact = businessInjector.entityManager.entityFetcher.contact(for: from),
+                   let contact = businessInjector.entityManager.entityFetcher.contactEntity(for: from),
                    let cmd = threemaPayload["cmd"] as? String {
                     var info: [AnyHashable: Any]?
                     if cmd == "newmsg" || cmd == "missedcall" {
@@ -150,9 +152,9 @@ public protocol NotificationManagerProtocol {
                         if let groupIDString = threemaPayload["groupId"] as? String,
                            let groupID = Data(base64Encoded: groupIDString),
                            let groupCreator = threemaPayload["groupCreator"] as? String,
-                           let conversation = businessInjector.entityManager.entityFetcher.conversationEntity(
+                           let conversation = businessInjector.entityManager.entityFetcher.groupConversationEntity(
                                for: groupID,
-                               creator: groupCreator
+                               creatorID: groupCreator, myIdentity: businessInjector.myIdentityStore.identity
                            ) {
                             info = [
                                 kKeyConversation: conversation,
@@ -161,7 +163,7 @@ public protocol NotificationManagerProtocol {
                         }
                         else {
                             if let groups = businessInjector.entityManager.entityFetcher
-                                .conversations(forMember: contact) as? [ConversationEntity],
+                                .conversationEntities(for: contact),
                                 groups.count == 1 {
                                 info = [
                                     kKeyConversation: groups.first!,
@@ -192,6 +194,24 @@ public protocol NotificationManagerProtocol {
                         DDLogError("Could not open chat from notification due to an unknown error.")
                     }
                 }
+                else if let cmd = threemaPayload["cmd"] as? String,
+                        cmd == "microphonePermissionError" {
+                    AVAudioApplication.requestRecordPermission { granted in
+                        if !granted {
+                            DispatchQueue.main.async {
+                                // No access to microphone, stop call
+                                guard let rootVC = AppDelegate.keyWindow?.rootViewController else {
+                                    return
+                                }
+                                
+                                UIAlertTemplate.showOpenSettingsAlert(
+                                    owner: rootVC,
+                                    noAccessAlertType: .microphone
+                                )
+                            }
+                        }
+                    }
+                }
                 completionHandler?([])
             }
             else if let availableCheck = threemaPayload[availableCheckKey] as? Bool,
@@ -218,72 +238,19 @@ public protocol NotificationManagerProtocol {
                 )
                 completionHandler?([])
             }
+            else if let cmd = threemaPayload[cmdKey] as? String,
+                    cmd == "error" || cmd == "microphonePermissionError" {
+                completionHandler?([
+                    UNNotificationPresentationOptions.list,
+                    UNNotificationPresentationOptions.banner,
+                    UNNotificationPresentationOptions.badge,
+                    UNNotificationPresentationOptions.sound,
+                ])
+            }
             else {
                 completionHandler?([])
             }
         }
-    }
-    
-    @objc func handleVoipPush(
-        payload: [AnyHashable: Any],
-        withCompletionHandler completionHandler: @escaping (
-            (_ isThreemaDict: Bool, _ payload: [AnyHashable: Any]?)
-                -> Void
-        )
-    ) {
-        guard !businessInjector.myIdentityStore.isKeychainLocked() else {
-            if payload["threema"] != nil {
-                NotificationManager.showNoAccessToDatabaseNotification {
-                    exit(0)
-                }
-            }
-            // The keychain is locked; we cannot proceed. The UI will show the ProtectedDataUnavailable screen
-            // at this point. To prevent this screen from appearing when the user unlocks their device after we
-            // have processed the push, we exit now so that the process will restart after the device is unlocked.
-            completionHandler(false, nil)
-            return
-        }
-        if payload["NotificationExtensionOffer"] != nil {
-            DatabaseManager.db().refreshDirtyObjects(true)
-            
-            if ServerConnector.shared().connectionState == .disconnected {
-                ServerConnector.shared().isAppInBackground = AppDelegate.shared().isAppInBackground()
-                ServerConnector.shared().connectWait(initiator: .threemaCall)
-                completionHandler(false, nil)
-            }
-            return
-        }
-        
-        loadVoIPMessages(payload: payload, withCompletionHandler: completionHandler)
-    }
-    
-    func loadVoIPMessages(
-        payload: [AnyHashable: Any],
-        withCompletionHandler completionHandler: @escaping (
-            (_ isThreemaDict: Bool, _ payload: [AnyHashable: Any]?)
-                -> Void
-        )
-    ) {
-        guard let threemaPayload = PushPayloadDecryptor
-            .decryptPushPayload(payload[ThreemaPushNotificationDictionary.key.rawValue] as? [AnyHashable: Any]) else {
-            DDLogError("[Push] Missing information to show notification")
-            completionHandler(false, payload)
-            return
-        }
-        
-        // swiftformat:disable:next acronyms
-        let messageID = threemaPayload[ThreemaPushNotificationDictionary.messageIDKey]
-        let senderID = threemaPayload[ThreemaPushNotificationDictionary.fromKey]
-        
-        DDLogInfo("[Push] Received VoIP Push Notification for \(messageID ?? "?") from \(senderID ?? "?")")
-        
-        DatabaseManager.db().refreshDirtyObjects(true)
-        
-        if ServerConnector.shared().connectionState == .disconnected {
-            ServerConnector.shared().isAppInBackground = AppDelegate.shared().isAppInBackground()
-            ServerConnector.shared().connectWait(initiator: .threemaCall)
-        }
-        completionHandler(true, threemaPayload)
     }
     
     func playReceivedMessageSound() {
@@ -314,37 +281,25 @@ extension NotificationManager {
             TargetManager.appName
         )
         ThreemaUtilityObjC.sendErrorLocalNotification(title, body: message, userInfo: nil) {
-            ThreemaUtilityObjC.wait(forSeconds: 2, finish: completionHandler)
+            if AppDelegate.shared().active {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                    completionHandler()
+                }
+            }
+            else {
+                completionHandler()
+            }
         }
     }
     
-    final class func showNoMicrophonePermissionNotification() {
-        let title = String.localizedStringWithFormat(
-            #localize("call_voip_not_supported_title"),
-            TargetManager.localizedAppName
-        )
-        let message = String.localizedStringWithFormat(
-            #localize("alert_no_access_message_microphone"),
-            TargetManager.appName
-        )
-        ThreemaUtilityObjC.sendErrorLocalNotification(title, body: message, userInfo: nil)
+    /// Fire a local notification when microphone permission is not set or denied
+    /// - Parameter entityManager: EntityManager to load the unread messages count
+    final class func sendMicrophonePermissionErrorLocalNotification(entityManager: EntityManager) {
+        ThreemaUtility.sendMicrophonePermissionErrorLocalNotification(entityManager: entityManager)
     }
 }
 
 extension NotificationManager {
-    private func wait(for seconds: Int, finish: @escaping (() -> Void)) {
-        if seconds > 0,
-           AppGroup.getActiveType() == AppGroupTypeApp {
-            let deadlineTime = DispatchTime.now() + .seconds(seconds)
-            DispatchQueue.main.asyncAfter(deadline: deadlineTime) {
-                self.wait(for: seconds - 1, finish: finish)
-            }
-        }
-        else {
-            finish()
-        }
-    }
-    
     static func showThreemaWebError(title: String, body: String) {
         guard UIApplication.shared.applicationState != .active else {
             UIAlertTemplate.showAlert(
@@ -380,7 +335,7 @@ extension NotificationManager {
         }
         
         guard let currentSession else {
-            ValidationLogger.shared().logString("[ThreemaWeb] Unknown session try to connect; Session blocked")
+            DDLogNotice("[ThreemaWeb] Unknown session try to connect; Session blocked")
             completionHandler?([])
             return
         }
@@ -421,8 +376,14 @@ extension NotificationManager {
             wca: webPayload[webClientAuthKey] as? String,
             webClientSession: currentSession
         )
-        DatabaseManager.db().refreshDirtyObjects(false)
-        
+
+        let dirtyObjectManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).dirtyObjectManager
+        dirtyObjectManager.refreshDirtyObjects(reset: false)
+
         completionHandler?([])
     }
 }

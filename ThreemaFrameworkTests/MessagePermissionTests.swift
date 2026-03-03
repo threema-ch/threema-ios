@@ -18,7 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
+
 @testable import ThreemaFramework
 
 class MessagePermissionTests: XCTestCase {
@@ -28,7 +30,6 @@ class MessagePermissionTests: XCTestCase {
     private var myIdentityStoreMock: MyIdentityStoreMock!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let cnx = DatabasePersistentContext.devNullContext()
@@ -61,7 +62,7 @@ class MessagePermissionTests: XCTestCase {
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
 
         let result = mp.canSend(to: toIdentity)
@@ -91,7 +92,7 @@ class MessagePermissionTests: XCTestCase {
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
 
         let result = mp.canSend(to: toIdentity)
@@ -118,7 +119,7 @@ class MessagePermissionTests: XCTestCase {
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         
         let reason = UnsafeMutablePointer<NSString?>.allocate(capacity: 2048)
@@ -155,7 +156,7 @@ class MessagePermissionTests: XCTestCase {
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
 
         let reason = UnsafeMutablePointer<NSString?>.allocate(capacity: 2048)
@@ -190,7 +191,7 @@ class MessagePermissionTests: XCTestCase {
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
 
         let result = mp.canSend(to: toIdentity)
@@ -212,14 +213,14 @@ class MessagePermissionTests: XCTestCase {
             )
             let dbConversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
-                    // swiftformat:disable:next acronyms
-                    dbConversation.groupId = groupEntity.groupId
+                    dbConversation.groupID = groupEntity.groupID
                     dbConversation.groupMyIdentity = oldGroupMyIdentity
                 }
 
             group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -233,7 +234,7 @@ class MessagePermissionTests: XCTestCase {
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
             groupManager: groupManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
 
         let result = mp.canSend(
@@ -264,13 +265,13 @@ class MessagePermissionTests: XCTestCase {
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
                     dbConversation.contact = dbContactGroupCreator
                     dbConversation.groupMyIdentity = self.myIdentityStoreMock.identity
-                    // swiftformat:disable:next acronyms
-                    dbConversation.groupId = dbGroup.groupId
+                    dbConversation.groupID = dbGroup.groupID
                 }
 
             group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -284,7 +285,7 @@ class MessagePermissionTests: XCTestCase {
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
             groupManager: groupManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
 
         let result = mp.canSend(groudID: groupID, groupCreatorIdentity: groupCreatorIdentity)
@@ -308,13 +309,13 @@ class MessagePermissionTests: XCTestCase {
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
                     dbConversation.contact = nil
                     dbConversation.groupMyIdentity = self.myIdentityStoreMock.identity
-                    // swiftformat:disable:next acronyms
-                    dbConversation.groupId = dbGroup.groupId
+                    dbConversation.groupID = dbGroup.groupID
                 }
 
             group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: dbGroup,
                 conversation: dbConversation,
                 lastSyncRequest: nil
@@ -328,7 +329,7 @@ class MessagePermissionTests: XCTestCase {
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
             groupManager: groupManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
 
         let result = mp.canSend(groudID: groupID, groupCreatorIdentity: groupCreatorIdentity)
@@ -366,8 +367,7 @@ class MessagePermissionTests: XCTestCase {
             dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { dbConversation in
                     dbConversation.contact = dbContactGroupCreator
-                    // swiftformat:disable:next acronyms
-                    dbConversation.groupId = dbGroup.groupId
+                    dbConversation.groupID = dbGroup.groupID
                     dbConversation.members = Set<ContactEntity>([dbContactGroupMember])
 
                     conversation = dbConversation
@@ -376,6 +376,7 @@ class MessagePermissionTests: XCTestCase {
             group = Group(
                 myIdentityStore: MyIdentityStoreMock(),
                 userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: dbGroup,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -389,7 +390,7 @@ class MessagePermissionTests: XCTestCase {
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(),
             groupManager: groupManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
 
         let result = mp.canSend(

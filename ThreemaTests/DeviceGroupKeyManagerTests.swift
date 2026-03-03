@@ -18,6 +18,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import KeychainTestHelper
+import ThreemaEssentials
 import XCTest
 @testable import Threema
 
@@ -25,20 +27,26 @@ import XCTest
 class DeviceGroupKeyManagerTests: XCTestCase {
 
     func testDgk() throws {
-        let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: MyIdentityStoreMock())
+        let keychainManagerMock = KeychainManagerMock()
+
+        let deviceGroupKeyManager = DeviceGroupKeyManager(keychainManager: keychainManagerMock)
 
         let key = deviceGroupKeyManager.create()
         let result = deviceGroupKeyManager.dgk
 
         XCTAssertNotNil(result)
         XCTAssertEqual(key, result)
-        XCTAssertEqual(result?.count, Int(kDeviceGroupKeyLen))
+        XCTAssertEqual(result?.count, ThreemaProtocol.deviceGroupKeyLength)
+        XCTAssertEqual(1, keychainManagerMock.loadMultiDeviceGroupKeyCalls)
+        XCTAssertEqual(1, keychainManagerMock.storeMultiDeviceGroupKeyCalls.count)
     }
 
     func testStoreAndLoad() throws {
-        let expectedDgk = BytesUtility.generateRandomBytes(length: Int(kDeviceGroupKeyLen))!
+        let keychainManagerMock = KeychainManagerMock()
 
-        let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: MyIdentityStoreMock())
+        let expectedDgk = BytesUtility.generateRandomBytes(length: ThreemaProtocol.deviceGroupKeyLength)!
+
+        let deviceGroupKeyManager = DeviceGroupKeyManager(keychainManager: keychainManagerMock)
         let stored = deviceGroupKeyManager.store(dgk: expectedDgk)
 
         XCTAssertTrue(stored)
@@ -47,5 +55,7 @@ class DeviceGroupKeyManagerTests: XCTestCase {
 
         XCTAssertNotNil(result)
         XCTAssertEqual(result, expectedDgk)
+        XCTAssertEqual(1, keychainManagerMock.loadMultiDeviceGroupKeyCalls)
+        XCTAssertEqual(1, keychainManagerMock.storeMultiDeviceGroupKeyCalls.count)
     }
 }

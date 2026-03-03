@@ -21,7 +21,6 @@ Screenshots/
 
 ## Swift Package Manager
 .build/
-*.resolved
 
 ## Other
 *.moved-aside
@@ -42,3 +41,6 @@ export/
 
 ## We don't want to commit binaries
 *.xcframework
+
+.env
+!.env.example

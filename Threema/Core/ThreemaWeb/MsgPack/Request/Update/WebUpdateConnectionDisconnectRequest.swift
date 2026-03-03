@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 class WebUpdateConnectionDisconnectRequest: WebAbstractMessage {
@@ -32,7 +33,7 @@ class WebUpdateConnectionDisconnectRequest: WebAbstractMessage {
     
     func disconnect(session: WCSession) {
         let forget: Bool = reason == "delete"
-        ValidationLogger.shared()?.logString("[Threema Web] Disconnect webclient WebUpdateConnectionDisconnectRequest")
+        DDLogNotice("[Threema Web] Disconnect webclient WebUpdateConnectionDisconnectRequest")
         session.stop(close: true, forget: forget, sendDisconnect: false, reason: .stop)
     }
 }

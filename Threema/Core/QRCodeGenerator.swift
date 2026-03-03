@@ -66,10 +66,3 @@ enum QRCodeGenerator {
         return UIImage(systemName: "xmark.circle") ?? UIImage()
     }
 }
-
-@available(*, deprecated, renamed: "QRCodeGenerator", message: "Only use from Objective-C")
-class QRCodeGeneratorObjC: NSObject {
-    @objc static func generateQRCode(for string: String, size: CGFloat) -> UIImage {
-        QRCodeGenerator.generateQRCode(for: string, size: size)
-    }
-}

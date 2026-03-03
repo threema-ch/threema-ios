@@ -20,12 +20,12 @@
 
 #import <UIKit/UIKit.h>
 
-@class ContactEntity;
-
 @interface ContactNameLabel : UILabel
 
-@property (nonatomic, strong) ContactEntity *contact;
+/// Type of `ContactEntity`
+@property (nonatomic, strong) NSObject *contactObject;
 
-- (void)setContact:(ContactEntity*)contact;
+/// @param contactObject Object of type `ContactEntity`
+- (void)setContactObject:(NSObject *)contactObject;
 
 @end

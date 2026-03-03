@@ -19,9 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ProgressLabel.h"
-#import "RectUtil.h"
 #import "BundleUtil.h"
-#import "UIImage+ColoredImage.h"
 
 #define ACTIVITY_INDICATOR_PADDING 6.0
 #define NUMBER_OF_LINES 2
@@ -53,10 +51,10 @@
 
 - (void)setup {
     _activityIndicatior = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
-    _activityIndicatior.color = Colors.textSetup;
+    _activityIndicatior.color = UIColor.whiteColor;
     _activityIndicatior.hidden = YES;
     
-    _activityIndicatior.frame = [RectUtil rect:_activityIndicatior.frame centerVerticalIn:self.bounds round:YES];
+    _activityIndicatior.frame = [self rect:_activityIndicatior.frame centerVerticalIn:self.bounds round:YES];
     [self addSubview:_activityIndicatior];
     
     _label = [[UILabel alloc] initWithFrame:self.bounds];
@@ -81,7 +79,7 @@
 
 - (void)showActivityIndicator {
     CGFloat maxX = CGRectGetMaxX(_activityIndicatior.frame) + ACTIVITY_INDICATOR_PADDING;
-    CGRect labelFrame = [RectUtil offsetAndResizeRect:self.bounds byX:maxX byY:0.0];
+    CGRect labelFrame = CGRectMake(self.bounds.origin.x + maxX, self.bounds.origin.y, self.bounds.size.width - maxX, self.bounds.size.height);
     _label.frame = labelFrame;
     
     [_activityIndicatior startAnimating];
@@ -129,7 +127,7 @@
     }
     if (_statusView == nil) {
         _statusView = [[UIImageView alloc] initWithImage:image];
-        _statusView.frame = [RectUtil growRect:_activityIndicatior.frame byDx:-6.0 byDy:-6.0];
+        _statusView.frame = [self growRect:_activityIndicatior.frame byDx:-6.0 byDy:-6.0];
         [self addSubview:_statusView];
     } else {
         _statusView.image = image;
@@ -137,7 +135,7 @@
             
     if (CGRectIntersectsRect(_label.frame, _statusView.frame)) {
         CGFloat maxX = CGRectGetMaxX(_statusView.frame) + ACTIVITY_INDICATOR_PADDING;
-        CGRect labelFrame = [RectUtil offsetAndResizeRect:self.bounds byX:maxX byY:0.0];
+        CGRect labelFrame = CGRectMake(self.bounds.origin.x + maxX, self.bounds.origin.y, self.bounds.size.width - maxX, self.bounds.size.height);
         _label.frame = labelFrame;
     }
     
@@ -166,6 +164,29 @@
 
 - (NSInteger)numberOfLines {
     return _label.numberOfLines;
+}
+
+#pragma mark - RectUtil
+
+- (CGRect)rect:(CGRect)rect centerVerticalIn:(CGRect)outerRect round:(BOOL)round {
+    CGFloat innerHeight = rect.size.height;
+    CGFloat outerHeight = outerRect.size.height;
+    
+    CGFloat x = rect.origin.x;
+    CGFloat y = (outerHeight - innerHeight) / 2.0;
+    if (round)
+        y = roundf(y);
+    
+    return CGRectMake(x, y, rect.size.width, rect.size.height);
+}
+
+- (CGRect)growRect:(CGRect)rect byDx:(CGFloat)dX byDy:(CGFloat)dY{
+    CGFloat x = rect.origin.x - dX / 2.0;
+    CGFloat y = rect.origin.y - dY / 2.0;
+    CGFloat width = rect.size.width + dX;
+    CGFloat height = rect.size.height + dY;
+    
+    return CGRectMake(x, y, width, height);
 }
 
 @end

@@ -20,7 +20,7 @@
 
 import Foundation
 
-class BatchAddWorkContact: NSObject {
+class BatchAddWorkContact: NSObject, @unchecked Sendable {
     let identity: String
     let publicKey: Data?
     let firstName: String?

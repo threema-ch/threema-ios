@@ -94,6 +94,16 @@ struct StorageManagementConversationView: View {
         }
         .padding(.bottom, 8)
         
+        // TODO: (IOS-5768) We added the temporary fix to remove draft for a conversation in `safeMode`. See ticket for more information.
+        if SettingsBundleHelper.safeMode {
+            Button(role: .destructive) {
+                model.deleteDraft()
+            } label: {
+                Text(verbatim: "Delete Draft")
+            }
+            .buttonStyle(.bordered)
+        }
+        
         if !model.isSingleConversation {
             StorageView(bodyText: Section.messageRetention.localizedDescription) {
                 MessageRetentionView(

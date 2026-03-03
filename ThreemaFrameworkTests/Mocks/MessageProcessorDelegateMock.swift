@@ -34,7 +34,7 @@ class MessageProcessorDelegateMock: NSObject, MessageProcessorDelegate {
         // no-op
     }
 
-    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessageEntity) {
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessageEntity baseMessageEntityObject: NSObject) {
         // no-op
     }
 
@@ -54,7 +54,7 @@ class MessageProcessorDelegateMock: NSObject, MessageProcessorDelegate {
         // no-op
     }
 
-    func readMessage(inConversations: Set<ConversationEntity>?) {
+    func readMessage(inConversations: Set<AnyHashable>?) {
         // no-op
     }
 

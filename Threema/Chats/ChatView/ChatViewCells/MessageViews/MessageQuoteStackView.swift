@@ -230,7 +230,10 @@ final class MessageQuoteStackView: UIStackView {
             nameAndQuoteStackView.spacing = 0
         }
         
-        quoteLabel.attributedText = quoteMessage.previewAttributedText(for: .quote)
+        quoteLabel.attributedText = quoteMessage.previewAttributedText(
+            for: .quote,
+            settingsStore: BusinessInjector.ui.settingsStore
+        )
         
         // We need to set the font explicitly to make the label set its height correctly
         if quoteMessage.deletedAt == nil {

@@ -21,7 +21,6 @@
 import CocoaLumberjackSwift
 import Combine
 import Foundation
-import ThreemaProtocols
 
 /// Sends sendable values from one async stream continuation to many Combine subscribers
 ///

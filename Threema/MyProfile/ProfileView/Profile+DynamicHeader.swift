@@ -84,19 +84,11 @@ extension ProfileView {
             GeometryReader { proxy in
                 dynamicListContainer { placeHolder in
                     VStack {
-                        if #available(iOS 16.0, *) {
-                            List {
-                                placeHolder(proxy)
-                                content()
-                            }
-                            .scrollIndicators(state != .normal ? .never : .automatic)
+                        List {
+                            placeHolder(proxy)
+                            content()
                         }
-                        else {
-                            List {
-                                placeHolder(proxy)
-                                content()
-                            }
-                        }
+                        .scrollIndicators(state != .normal ? .never : .automatic)
                     }
                 }
             }
@@ -162,14 +154,7 @@ extension ProfileView {
                                 }
                             }
                             else {
-                                if #available(iOS 16.0, *) {
-                                    withAnimation(animation) {
-                                        alignment = .center
-                                        labelOffset = fixedHeight / 1.4
-                                        inset = 0
-                                    }
-                                }
-                                else {
+                                withAnimation(animation) {
                                     alignment = .center
                                     labelOffset = fixedHeight / 1.4
                                     inset = 0

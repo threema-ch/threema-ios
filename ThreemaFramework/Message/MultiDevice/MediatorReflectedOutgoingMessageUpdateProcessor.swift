@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaProtocols
 
 class MediatorReflectedOutgoingMessageUpdateProcessor {
@@ -72,10 +73,11 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
         let id = messageID.littleEndianData
 
         guard let conversation = frameworkInjector.entityManager.entityFetcher
-            .conversationEntity(forIdentity: receiverIdentity),
-            let message = frameworkInjector.entityManager.entityFetcher.ownMessage(
+            .conversationEntity(for: receiverIdentity),
+            let message = frameworkInjector.entityManager.entityFetcher.message(
                 with: id,
-                conversation: conversation
+                in: conversation,
+                isOwn: true
             ) else {
             DDLogError("Own message ID \(messageID.littleEndianData.hexString) to set as sent not found")
             return
@@ -99,12 +101,16 @@ class MediatorReflectedOutgoingMessageUpdateProcessor {
     ) throws {
         let id = messageID.littleEndianData
 
+        let groupIdentity = GroupIdentity(
+            id: receiverGroupID.littleEndianData,
+            creator: ThreemaIdentity(receiverGroupCreator)
+        )
         guard let conversation = frameworkInjector.entityManager.entityFetcher.conversationEntity(
-            for: receiverGroupID.littleEndianData,
-            creator: receiverGroupCreator
+            for: groupIdentity,
+            myIdentity: frameworkInjector.myIdentityStore.identity
         ),
             let message = frameworkInjector.entityManager.entityFetcher
-            .ownMessage(with: id, conversation: conversation) else {
+            .message(with: id, in: conversation, isOwn: true) else {
             DDLogError("Own message ID \(messageID.littleEndianData.hexString) to set as sent not found")
             return
         }

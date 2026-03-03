@@ -25,7 +25,6 @@
 #import "WorkContactTableDataSource.h"
 #import "DistributionListTableDataSource.h"
 #import "BundleUtil.h"
-#import "RectUtil.h"
 #import "AppGroup.h"
 #import "LicenseStore.h"
 
@@ -105,7 +104,7 @@ typedef enum : NSUInteger {
         distributionImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_distribution_list"];
         [self.segmentedControl setImage:distributionImage forSegmentAtIndex:ModeDistributionList];
         
-        if (TargetManagerObjc.isBusinessApp) {
+        if (TargetManagerObjC.isBusinessApp) {
             [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContact animated:NO];
             UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
             workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
@@ -114,7 +113,7 @@ typedef enum : NSUInteger {
         }
     }
     else {
-        if (TargetManagerObjc.isBusinessApp) {
+        if (TargetManagerObjC.isBusinessApp) {
             [self.segmentedControl insertSegmentWithTitle:@"work" atIndex:ModeWorkContact animated:NO];
             UIImage *workImage = [BundleUtil imageNamed:@"case.fill"];
             workImage.accessibilityLabel = [BundleUtil localizedStringForKey:@"segmentcontrol_work_contacts"];
@@ -372,9 +371,8 @@ typedef enum : NSUInteger {
         
         groupCell.backgroundColor = [UIColor clearColor];
         
-        EntityManager *entityManager = [EntityManager new];
-        MessagePermission *messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:[MyIdentityStore sharedMyIdentityStore] userSettings:[UserSettings sharedUserSettings] groupManager:[[[BusinessInjector alloc] initWithEntityManager:entityManager] groupManagerObjC] entityManager:entityManager];
-        
+        MessagePermission *messagePermission = [[MessagePermission alloc] initWithMyIdentityStore:[[BusinessInjector ui] myIdentityStore] userSettings:[[BusinessInjector ui] userSettings] groupManager:[[BusinessInjector ui] groupManagerObjC] entityManager:[[BusinessInjector ui] entityManager]];
+
         if ([messagePermission canSendWithGroupID:groupCell.group.groupID groupCreatorIdentity:groupCell.group.groupCreatorIdentity reason:nil]) {
             groupCell.contentView.alpha = 1.0;
             groupCell.userInteractionEnabled = YES;
@@ -458,7 +456,7 @@ typedef enum : NSUInteger {
 - (void)updateAddButtonTitle {
     NSString *addButtonTitle;
     if ([self hasAdditionalText]) {
-        _addTextButton.frame = [RectUtil setWidthOf:_addTextButton.frame width:150.0];
+        _addTextButton.frame = CGRectMake(_addTextButton.frame.origin.x, _addTextButton.frame.origin.y, 150.0, _addTextButton.frame.size.height);
         addButtonTitle = [self trimmedText];
     } else {
         addButtonTitle = [BundleUtil localizedStringForKey:@"addText"];

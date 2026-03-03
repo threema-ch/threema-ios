@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 @testable import ThreemaFramework
 
@@ -42,7 +43,7 @@ class MediatorMessageProtocolMock: MediatorMessageProtocolProtocol {
 
     convenience init() {
         self.init(
-            deviceGroupKeys: MockData.deviceGroupKeys,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
             returnValues: []
         )
     }

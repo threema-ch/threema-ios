@@ -68,10 +68,16 @@ class ThreemaBGTaskManager: NSObject {
             }
             
             let newTask = Task {
-                await task.run()
-                
-                DDLogNotice("\(task.identifier) completed success=\(!Task.isCancelled)")
-                bgTask.setTaskCompleted(success: !Task.isCancelled)
+                do {
+                    try await task.run()
+                    
+                    DDLogNotice("\(task.identifier) completed success=\(!Task.isCancelled)")
+                    bgTask.setTaskCompleted(success: !Task.isCancelled)
+                }
+                catch {
+                    DDLogNotice("\(task.identifier) failed: \(error)")
+                    bgTask.setTaskCompleted(success: false)
+                }
             }
             
             bgTask.expirationHandler = {

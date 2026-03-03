@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Combine
 import Foundation
 import GroupCalls
+import SwiftUI
 import ThreemaFramework
 import UIKit
 
@@ -38,7 +39,12 @@ import UIKit
     private lazy var statusView = UIView(frame: CGRect(x: 0, y: frame.size.height - 2, width: frame.width, height: 2))
     
     private lazy var tapView = UIView(frame: .zero)
-    
+
+    @NotificationPublishedState(
+        Notification.Name(kNotificationNavigationBarColorShouldChange)
+    )
+    private var notificationBarColorShouldChange
+
     // MARK: - Lifecycle
     
     override init(frame: CGRect) {
@@ -53,7 +59,7 @@ import UIKit
     }
     
     private func addObservers() {
-        navigationBarColorShouldChange = AppContainer.defaultValue.notificationBarColorShouldChange
+        navigationBarColorShouldChange = notificationBarColorShouldChange
             .sink { [weak self] _ in
                 self?.updateNavigationBar()
             }
@@ -134,8 +140,8 @@ import UIKit
             }
             // Web
             else if NavigationBarPromptHandler.isWebActive {
-                let webVC = AppDelegate.getSettingsStoryboard().instantiateViewController(identifier: "ThreemaWeb")
-                showViewController(webVC)
+                let vc = UIHostingController(rootView: ThreemaWebSettingsView())
+                showViewController(vc)
             }
             // Group Calls
             else if NavigationBarPromptHandler.isGroupCallActive {

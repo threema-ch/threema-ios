@@ -19,10 +19,12 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 
-class VideoConversionHelper: NSObject {
+final class VideoConversionHelper: NSObject {
     private let userSettings: UserSettingsProtocol
+    private let outputDirectoryURL: URL
 
     // MARK: - Internal Nested Types
     
@@ -33,13 +35,18 @@ class VideoConversionHelper: NSObject {
     }
     
     #if DEBUG
-        init(userSettings: UserSettingsProtocol) {
+        init(
+            userSettings: UserSettingsProtocol,
+            outputDirectoryURL: URL
+        ) {
             self.userSettings = userSettings
+            self.outputDirectoryURL = outputDirectoryURL
         }
     #endif
     
     @objc override init() {
         self.userSettings = UserSettings.shared()
+        self.outputDirectoryURL = FileUtility.shared.appTemporaryDirectory
     }
 
     /// The maximum duration for a video at the lowest possible quality in minutes.
@@ -95,7 +102,7 @@ class VideoConversionHelper: NSObject {
     private func getEstimatedVideoFileSize(for asset: AVAsset) async -> Double? {
         guard let exportSession = getAVAssetExportSession(
             from: asset,
-            outputURL: FileManager.default.temporaryDirectory
+            outputURL: outputDirectoryURL
         ) else {
             DDLogError("No export asset for the video available")
             return nil

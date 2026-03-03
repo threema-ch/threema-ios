@@ -18,25 +18,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CoreData
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
 @testable import ThreemaFramework
 
-class DatabasePreparer {
+public class DatabasePreparer {
     private let objCnx: NSManagedObjectContext
 
-    required init(context: NSManagedObjectContext) {
+    public required init(context: NSManagedObjectContext) {
         self.objCnx = context
     }
-    
+
     /// Save data modifications on DB.
     ///
     /// - Parameters:
     ///    - dbModificationAction: Closure with data modifications
-    func save(dbModificationAction: () -> Void) {
+    public func save(dbModificationAction: () -> Void) {
         do {
             dbModificationAction()
-            
+
             try objCnx.save()
         }
         catch {
@@ -46,29 +48,40 @@ class DatabasePreparer {
     }
 
     @discardableResult
-    func save<T>(_ block: () throws -> T) rethrows -> T {
+    public func save<T>(_ block: () throws -> T) rethrows -> T {
         try objCnx.performAndWait {
             let result = try block()
-            try objCnx.save()
+            do {
+                try objCnx.save()
+            }
+            catch {
+                print("\(error)")
+                throw error
+            }
             return result
         }
     }
 
-    func delete(object: NSManagedObject) {
+    public func delete(object: NSManagedObject) {
         objCnx.delete(object)
     }
 
-    @discardableResult func createBallot(
+    @discardableResult public func createBallot(
         conversation: ConversationEntity,
         ballotID: Data = MockData.generateBallotID()
     ) -> BallotEntity {
-        let ballot = createEntity(objectType: BallotEntity.self)
+        let ballot = BallotEntity(
+            context: objCnx,
+            assessmentType: nil,
+            id: ballotID,
+            state: nil,
+            type: nil
+        )
         ballot.conversation = conversation
-        ballot.id = ballotID
         return ballot
     }
-    
-    @discardableResult func createBallotMessage(
+
+    @discardableResult public func createBallotMessage(
         conversation: ConversationEntity,
         ballot: BallotEntity,
         ballotState: Int = BallotEntity.BallotState.open.rawValue,
@@ -82,14 +95,16 @@ class DatabasePreparer {
         sender: ContactEntity? = nil,
         remoteSentDate: Date? = nil // can be set to nil for outgoing messages
     ) -> BallotMessageEntity {
-        let ballotMessage = createEntity(objectType: BallotMessageEntity.self)
-        ballotMessage.conversation = conversation
+        let ballotMessage = BallotMessageEntity(
+            context: objCnx,
+            id: id,
+            isOwn: isOwn,
+            conversation: conversation
+        )
         ballotMessage.ballot = ballot
         ballotMessage.ballotState = NSNumber(integerLiteral: ballotState)
         ballotMessage.date = date
         ballotMessage.delivered = NSNumber(booleanLiteral: delivered)
-        ballotMessage.id = id
-        ballotMessage.isOwn = NSNumber(booleanLiteral: isOwn)
         ballotMessage.read = NSNumber(booleanLiteral: read)
         ballotMessage.readDate = readDate
         ballotMessage.sent = NSNumber(booleanLiteral: sent)
@@ -98,7 +113,7 @@ class DatabasePreparer {
         return ballotMessage
     }
 
-    @discardableResult func createContact(
+    @discardableResult public func createContact(
         publicKey: Data = MockData.generatePublicKey(),
         identity: String,
         featureMask: Int = 1, // Voice calls
@@ -106,21 +121,27 @@ class DatabasePreparer {
         nickname: String? = nil,
         state: ContactEntity.ContactState = .active
     ) -> ContactEntity {
-        let contact = createEntity(objectType: ContactEntity.self)
-        contact.publicKey = publicKey
-        contact.setIdentity(to: identity)
-        contact.setFeatureMask(to: featureMask)
-        contact.contactVerificationLevel = verificationLevel
+        let contact = ContactEntity(
+            context: objCnx,
+            featureMask: featureMask,
+            forwardSecurityState: NSNumber(integerLiteral: 0),
+            identity: identity,
+            publicKey: publicKey,
+            readReceipts: NSNumber(integerLiteral: 0),
+            typingIndicators: NSNumber(integerLiteral: 0),
+            verificationLevel: NSNumber(integerLiteral: verificationLevel.rawValue),
+            sortOrderFirstName: true
+        )
         contact.contactState = state
-        
+
         if let nickname {
             contact.publicNickname = nickname
         }
-        
+
         return contact
     }
-    
-    @discardableResult func createConversation(
+
+    @discardableResult public func createConversation(
         contactEntity: ContactEntity? = nil,
         groupID: Data? = nil,
         typing: Bool = false,
@@ -129,69 +150,75 @@ class DatabasePreparer {
         visibility: ConversationEntity.Visibility = .default,
         complete: ((ConversationEntity) -> Void)? = nil
     ) -> ConversationEntity {
-        let conversation = createEntity(objectType: ConversationEntity.self)
-        conversation.contact = contactEntity
-        // swiftformat:disable:next acronyms
-        conversation.groupId = groupID
-        conversation.setTyping(to: typing)
-        conversation.unreadMessageCount = NSNumber(integerLiteral: unreadMessageCount)
-        conversation.changeCategory(to: category)
-        conversation.changeVisibility(to: visibility)
- 
+        let conversation = ConversationEntity(
+            context: objCnx,
+            category: category,
+            groupID: groupID,
+            typing: typing,
+            unreadMessageCount: NSNumber(integerLiteral: unreadMessageCount),
+            visibility: visibility,
+            contact: contactEntity
+        )
+
         complete?(conversation)
-        
+
         return conversation
     }
-    
-    @discardableResult func createGroupEntity(groupID: Data, groupCreator: String?) -> GroupEntity {
-        let groupEntity = createEntity(objectType: GroupEntity.self)
-        // swiftformat:disable:next acronyms
-        groupEntity.groupId = groupID
+
+    @discardableResult public func createGroupEntity(groupID: Data, groupCreator: String?) -> GroupEntity {
+        let groupEntity = GroupEntity(
+            context: objCnx,
+            groupID: groupID,
+            state: NSNumber(integerLiteral: 0)
+        )
         groupEntity.groupCreator = groupCreator
-        groupEntity.state = NSNumber(integerLiteral: 0)
         return groupEntity
     }
-    
-    @discardableResult func createDistributionListEntity(id: Int64) -> DistributionListEntity {
-        let distributionListEntity = createEntity(objectType: DistributionListEntity.self)
-        distributionListEntity.distributionListID = id
-        return distributionListEntity
+
+    @discardableResult public func createDistributionListEntity(
+        id: Int64,
+        conversation: ConversationEntity
+    ) -> DistributionListEntity {
+        DistributionListEntity(
+            context: objCnx,
+            distributionListID: id,
+            conversation: conversation
+        )
     }
-    
-    @discardableResult func createImageDataEntity(data: Data, height: Int, width: Int) -> ImageDataEntity {
-        let imageData = createEntity(objectType: ImageDataEntity.self)
-        imageData.data = data
-        imageData.height = Int16(height)
-        imageData.width = Int16(width)
-        return imageData
+
+    @discardableResult public func createImageDataEntity(data: Data, height: Int16, width: Int16) -> ImageDataEntity {
+        ImageDataEntity(
+            context: objCnx,
+            data: data,
+            height: height,
+            width: width
+        )
     }
-    
-    @discardableResult func createAudioDataEntity(data: Data) -> AudioDataEntity {
-        let audioDataEntity = createEntity(objectType: AudioDataEntity.self)
-        audioDataEntity.data = data
-        return audioDataEntity
+
+    @discardableResult public func createAudioDataEntity(data: Data) -> AudioDataEntity {
+        AudioDataEntity(context: objCnx, data: data)
     }
-    
-    @discardableResult func createVideoDataEntity(data: Data) -> VideoDataEntity {
-        let videoDataEntity = createEntity(objectType: VideoDataEntity.self)
-        videoDataEntity.data = data
-        return videoDataEntity
+
+    @discardableResult public func createVideoDataEntity(data: Data) -> VideoDataEntity {
+        VideoDataEntity(context: objCnx, data: data)
     }
-    
-    @discardableResult func createFileDataEntity(data: Data) -> FileDataEntity {
-        let fileDataEntity = createEntity(objectType: FileDataEntity.self)
-        fileDataEntity.data = data
-        return fileDataEntity
+
+    @discardableResult public func createFileDataEntity(data: Data) -> FileDataEntity {
+        FileDataEntity(context: objCnx, data: data)
     }
-    
-    @discardableResult func createAudioMessageEntity(
+
+    @discardableResult public func createAudioMessageEntity(
         conversation: ConversationEntity,
-        duration: Int,
+        duration: Float,
         complete: ((AudioMessageEntity) -> Void)?
     ) -> AudioMessageEntity {
-        let audioMessage = createEntity(objectType: AudioMessageEntity.self)
-        audioMessage.conversation = conversation
-        audioMessage.duration = NSNumber(integerLiteral: duration)
+        let audioMessage = AudioMessageEntity(
+            context: objCnx,
+            id: MockData.generateMessageID(),
+            isOwn: true,
+            duration: duration,
+            conversation: conversation
+        )
         audioMessage.date = Date()
         audioMessage.delivered = NSNumber(booleanLiteral: true)
         audioMessage.read = NSNumber(booleanLiteral: false)
@@ -200,8 +227,8 @@ class DatabasePreparer {
         }
         return audioMessage
     }
-    
-    @discardableResult func createImageMessageEntity(
+
+    @discardableResult public func createImageMessageEntity(
         conversation: ConversationEntity,
         image: ImageDataEntity,
         thumbnail: ImageDataEntity,
@@ -215,14 +242,16 @@ class DatabasePreparer {
         sender: ContactEntity?,
         remoteSentDate: Date? // can be set to nil for outgoing messages
     ) -> ImageMessageEntity {
-        let imageMessageEntity = createEntity(objectType: ImageMessageEntity.self)
-        imageMessageEntity.conversation = conversation
+        let imageMessageEntity = ImageMessageEntity(
+            context: objCnx,
+            id: id,
+            isOwn: isOwn,
+            conversation: conversation
+        )
         imageMessageEntity.image = image
         imageMessageEntity.thumbnail = thumbnail
         imageMessageEntity.date = date
         imageMessageEntity.delivered = NSNumber(booleanLiteral: delivered)
-        imageMessageEntity.id = id
-        imageMessageEntity.isOwn = NSNumber(booleanLiteral: isOwn)
         imageMessageEntity.read = NSNumber(booleanLiteral: read)
         imageMessageEntity.readDate = readDate
         imageMessageEntity.sent = NSNumber(booleanLiteral: sent)
@@ -232,7 +261,7 @@ class DatabasePreparer {
         return imageMessageEntity
     }
 
-    @discardableResult func createLocationMessage(
+    @discardableResult public func createLocationMessage(
         conversation: ConversationEntity,
         accuracy: Double,
         latitude: Double,
@@ -243,17 +272,19 @@ class DatabasePreparer {
         isOwn: Bool,
         sender: ContactEntity? = nil
     ) -> LocationMessageEntity {
-        let locationMessage = createEntity(objectType: LocationMessageEntity.self)
-        locationMessage.conversation = conversation
+        let locationMessage = LocationMessageEntity(
+            context: objCnx,
+            id: id,
+            isOwn: isOwn,
+            latitude: latitude,
+            longitude: longitude,
+            conversation: conversation
+        )
         locationMessage.accuracy = NSNumber(value: accuracy)
-        locationMessage.latitude = NSNumber(value: latitude)
-        locationMessage.longitude = NSNumber(value: longitude)
         locationMessage.poiAddress = poiAddress
         locationMessage.poiName = poiName
-        locationMessage.id = id
         locationMessage.date = Date()
         locationMessage.delivered = NSNumber(booleanLiteral: true)
-        locationMessage.isOwn = NSNumber(booleanLiteral: isOwn)
         locationMessage.read = NSNumber(booleanLiteral: false)
         locationMessage.sent = NSNumber(booleanLiteral: true)
         locationMessage.userack = NSNumber(booleanLiteral: false)
@@ -261,26 +292,28 @@ class DatabasePreparer {
         return locationMessage
     }
 
-    @discardableResult func createSystemMessage(
+    @discardableResult public func createSystemMessage(
         conversation: ConversationEntity,
-        type: Int,
+        type: SystemMessageEntity.SystemMessageEntityType,
         date: Date = Date(),
         id: Data = MockData.generateMessageID()
     ) -> SystemMessageEntity {
-        let systemMessage = createEntity(objectType: SystemMessageEntity.self)
-        systemMessage.conversation = conversation
-        systemMessage.type = NSNumber(integerLiteral: type)
+        let systemMessage = SystemMessageEntity(
+            context: objCnx,
+            id: id,
+            isOwn: true,
+            type: Int16(type.rawValue),
+            conversation: conversation
+        )
         systemMessage.date = date
         systemMessage.delivered = NSNumber(booleanLiteral: false)
-        systemMessage.id = id
-        systemMessage.isOwn = NSNumber(booleanLiteral: true)
         systemMessage.read = NSNumber(booleanLiteral: false)
         systemMessage.sent = NSNumber(booleanLiteral: false)
         systemMessage.userack = NSNumber(booleanLiteral: false)
         return systemMessage
     }
 
-    @discardableResult func createTextMessage(
+    @discardableResult public func createTextMessage(
         conversation: ConversationEntity,
         text: String = "Test message",
         date: Date = Date(),
@@ -295,13 +328,15 @@ class DatabasePreparer {
         sender: ContactEntity?,
         remoteSentDate: Date? // can be set to nil for outgoing messages
     ) -> TextMessageEntity {
-        let textMessage = createEntity(objectType: TextMessageEntity.self)
-        textMessage.conversation = conversation
-        textMessage.text = text
+        let textMessage = TextMessageEntity(
+            context: objCnx,
+            id: id,
+            isOwn: isOwn,
+            text: text,
+            conversation: conversation
+        )
         textMessage.date = date
         textMessage.delivered = NSNumber(booleanLiteral: delivered)
-        textMessage.id = id
-        textMessage.isOwn = NSNumber(booleanLiteral: isOwn)
         textMessage.read = NSNumber(booleanLiteral: read)
         textMessage.readDate = readDate
         textMessage.sent = NSNumber(booleanLiteral: sent)
@@ -311,8 +346,8 @@ class DatabasePreparer {
         textMessage.remoteSentDate = remoteSentDate
         return textMessage
     }
-    
-    @discardableResult func createVideoMessageEntity(
+
+    @discardableResult public func createVideoMessageEntity(
         conversation: ConversationEntity,
         video: VideoDataEntity?,
         duration: Int,
@@ -328,15 +363,17 @@ class DatabasePreparer {
         sender: ContactEntity?,
         remoteSentDate: Date?
     ) -> VideoMessageEntity {
-        let videoMessageEntity = createEntity(objectType: VideoMessageEntity.self)
-        videoMessageEntity.conversation = conversation
+        let videoMessageEntity = VideoMessageEntity(
+            context: objCnx,
+            id: id,
+            isOwn: isOwn,
+            conversation: conversation
+        )
         videoMessageEntity.video = video
         videoMessageEntity.duration = NSNumber(integerLiteral: duration)
         videoMessageEntity.thumbnail = thumbnail
         videoMessageEntity.date = date
         videoMessageEntity.delivered = NSNumber(booleanLiteral: delivered)
-        videoMessageEntity.id = id
-        videoMessageEntity.isOwn = NSNumber(booleanLiteral: isOwn)
         videoMessageEntity.read = NSNumber(booleanLiteral: read)
         videoMessageEntity.readDate = readDate
         videoMessageEntity.sent = NSNumber(booleanLiteral: sent)
@@ -345,8 +382,8 @@ class DatabasePreparer {
         videoMessageEntity.remoteSentDate = remoteSentDate
         return videoMessageEntity
     }
-    
-    @discardableResult func createFileMessageEntity(
+
+    @discardableResult public func createFileMessageEntity(
         conversation: ConversationEntity,
         encryptionKey: Data? = nil,
         blobID: Data? = nil,
@@ -365,34 +402,35 @@ class DatabasePreparer {
         caption: String? = nil,
         userack: Bool = false
     ) -> FileMessageEntity {
-        let fileMessage = createEntity(objectType: FileMessageEntity.self)
-        
-        fileMessage.conversation = conversation
+        let fileMessage = FileMessageEntity(
+            context: objCnx,
+            id: messageID,
+            isOwn: isOwn,
+            conversation: conversation
+        )
+
         fileMessage.encryptionKey = encryptionKey
-        // swiftformat:disable: acronyms
-        fileMessage.blobId = blobID
-        fileMessage.blobThumbnailId = blobThumbnailID
-        // swiftformat:enable: acronyms
+        fileMessage.blobID = blobID
+        fileMessage.blobThumbnailID = blobThumbnailID
         fileMessage.progress = progress
         fileMessage.data = data
         fileMessage.thumbnail = thumbnail
         fileMessage.mimeType = mimeType
         fileMessage.type = type
         fileMessage.caption = caption
+        fileMessage.fileSize = NSNumber(value: 1024)
         
         // Required by Core Data values
-        fileMessage.id = messageID
         fileMessage.date = date
-        fileMessage.isOwn = NSNumber(booleanLiteral: isOwn)
         fileMessage.sent = NSNumber(booleanLiteral: sent)
         fileMessage.delivered = NSNumber(booleanLiteral: delivered)
         fileMessage.read = NSNumber(booleanLiteral: read)
         fileMessage.userack = NSNumber(booleanLiteral: userack)
-        
+
         return fileMessage
     }
 
-    func createGroup(
+    public func createGroup(
         groupID: Data,
         groupCreatorIdentity: String,
         members: [String]
@@ -406,8 +444,7 @@ class DatabasePreparer {
                 ?? createContact(identity: groupCreatorIdentity)
             let groupEntity = createGroupEntity(groupID: groupID, groupCreator: groupCreatorIdentity)
             let conversation = createConversation()
-            // swiftformat:disable:next acronyms
-            conversation.groupId = groupEntity.groupId
+            conversation.groupID = groupEntity.groupID
             conversation.contact = contactEntity
             for identity in members {
                 let member = loadEntity(objectType: ContactEntity.self, predicate: "identity == %@", args: identity)
@@ -417,13 +454,6 @@ class DatabasePreparer {
 
             return (contactEntity, groupEntity, conversation)
         }
-    }
-    
-    private func createEntity<T: NSManagedObject>(objectType: T.Type) -> T {
-        NSEntityDescription.insertNewObject(
-            forEntityName: entityDescription(objectType: objectType).name!,
-            into: objCnx
-        ) as! T
     }
 
     private func loadEntity<T: NSManagedObject>(objectType: T.Type, predicate: String, args: String...) -> T? {

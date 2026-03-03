@@ -23,6 +23,7 @@ import SwiftUIIntrospect
 @_spi(Advanced) import SwiftUIIntrospect
 import ThreemaFramework
 
+@available(*, deprecated, message: "Do not use anymore.")
 protocol MainTabViewRepresentable: View {
     var title: String { get }
     var symbol: UIImage? { get }
@@ -45,6 +46,7 @@ extension MainTabViewRepresentable {
 }
 
 extension View {
+    @available(*, deprecated, message: "Do not use anymore.")
     func registerPopToRoot(with tag: Int) -> some View {
         introspect(.navigationView(style: .stack), on: .iOS(.v15...), customize: { navigationController in
             NotificationCenter.default

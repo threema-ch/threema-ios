@@ -20,7 +20,7 @@
 
 import Foundation
 
-public struct OnPremConfig: Decodable {
+public struct OnPremConfig: Decodable, Sendable {
     let version: String
     let signatureKey: Data
     let refresh: Int

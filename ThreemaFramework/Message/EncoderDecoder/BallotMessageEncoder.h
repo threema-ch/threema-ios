@@ -24,21 +24,31 @@
 #import <ThreemaFramework/GroupBallotCreateMessage.h>
 #import <ThreemaFramework/GroupBallotVoteMessage.h>
 
-@class BallotEntity, BallotChoiceEntity, BallotResultEntity;
-
 NS_ASSUME_NONNULL_BEGIN
 
 @interface BallotMessageEncoder : NSObject
 
-+ (BoxBallotCreateMessage *)encodeCreateMessageForBallot:(BallotEntity *)ballot;
+/**
+ Encode or get abstract ballot create messge of ballot entity.
 
-+ (BoxBallotVoteMessage *)encodeVoteMessageForBallot:(BallotEntity *)ballot;
+ @param ballotEntityObject Object of type `BallotEntity`
+ @return `BoxBallotCreateMessage`
+ */
++ (BoxBallotCreateMessage *)encodeCreateMessageForBallot:(NSObject *)ballotEntityObject;
+
+/**
+ Encode or get abstract ballot vote messge of ballot entity.
+
+ @param ballotEntityObject Object of type `BallotEntity`
+ @return `BoxBallotVoteMessage`
+ */
++ (BoxBallotVoteMessage *)encodeVoteMessageForBallot:(NSObject *)ballotEntityObject;
 
 + (GroupBallotCreateMessage*)groupBallotCreateMessageFrom:(BoxBallotCreateMessage*)boxBallotMessage groupID:(NSData*)groupID groupCreatorIdentity:(NSString*)groupCreatorIdentity;
 
 + (GroupBallotVoteMessage*)groupBallotVoteMessageFrom:(BoxBallotVoteMessage*)boxBallotMessage groupID:(NSData*)groupID groupCreatorIdentity:(NSString*)groupCreatorIdentity;
 
-+ (BOOL)passesSanityCheck:(nullable BallotEntity *) ballot;
++ (BOOL)passesSanityCheck:(nullable NSObject *) ballotEntityObject;
 
 @end
 

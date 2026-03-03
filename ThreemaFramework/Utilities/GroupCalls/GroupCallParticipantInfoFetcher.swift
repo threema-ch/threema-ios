@@ -40,12 +40,12 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
         let entityManager = businessInjector.entityManager
         
         // swiftformat:disable:next conditionalAssignment
-        if let localIdentity = identityStore.identity, localIdentity == id.string {
+        if let localIdentity = identityStore.identity, localIdentity == id.rawValue {
             return identityStore.resolvedGroupCallProfilePicture
         }
         else {
             return entityManager.performAndWait {
-                guard let contactEntity = entityManager.entityFetcher.contact(for: id.string) else {
+                guard let contactEntity = entityManager.entityFetcher.contactEntity(for: id.rawValue) else {
                     return ProfilePictureGenerator.unknownContactGroupCallsImage
                 }
                 let contact = Contact(contactEntity: contactEntity)
@@ -58,13 +58,13 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
         let identityStore = businessInjector.myIdentityStore
         let entityManager = businessInjector.entityManager
         let displayName: String =
-            if let localIdentity = identityStore.identity, localIdentity == id.string {
+            if let localIdentity = identityStore.identity, localIdentity == id.rawValue {
                 #localize("me")
             }
             else {
                 entityManager.performAndWait {
-                    guard let contact = entityManager.entityFetcher.contact(for: id.string) else {
-                        return id.string
+                    guard let contact = entityManager.entityFetcher.contactEntity(for: id.rawValue) else {
+                        return id.rawValue
                     }
                 
                     return contact.displayName
@@ -78,12 +78,12 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
         let identityStore = businessInjector.myIdentityStore
         let entityManager = businessInjector.entityManager
         let idColor: UIColor =
-            if let localIdentity = identityStore.identity, localIdentity == id.string {
-                IDColor.forData(Data(id.string.utf8))
+            if let localIdentity = identityStore.identity, localIdentity == id.rawValue {
+                IDColor.forData(Data(id.rawValue.utf8))
             }
             else {
                 entityManager.performAndWait {
-                    guard let contact = entityManager.entityFetcher.contact(for: id.string) else {
+                    guard let contact = entityManager.entityFetcher.contactEntity(for: id.rawValue) else {
                         return .tintColor
                     }
                 
@@ -102,6 +102,6 @@ public class GroupCallParticipantInfoFetcher: GroupCallParticipantInfoFetcherPro
             return false
         }
         
-        return group.isMember(identity: identity.string)
+        return group.isMember(identity: identity.rawValue)
     }
 }

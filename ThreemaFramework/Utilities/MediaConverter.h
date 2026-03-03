@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)convertVideoWithExportSession:(nullable AVAssetExportSession *)exportSession onCompletion:(void(^)(NSURL * _Nullable url))onCompletion onError:(void(^)(NSError * _Nullable error))onError;
 
 + (nullable AVAssetExportSession *)getAVAssetExportSessionFrom:(nullable AVAsset *)asset outputURL:(nullable NSURL *)outputURL;
-+ (NSURL *)getAssetOutputURL;
++ (nullable NSURL *)getAssetOutputURL;
 
 #pragma mark - Get image as PNG or JPEG
 

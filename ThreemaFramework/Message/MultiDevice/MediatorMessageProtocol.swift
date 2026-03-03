@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 import ThreemaProtocols
 
 enum MediatorMessageProtocolError: Error {

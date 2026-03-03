@@ -28,10 +28,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Hash nonce
 /// - Parameters:
 ///   - nonce: Nonce to hash
-///   - myIdentityStore: Information about our identity
+///   - myIdentity: Information about our identity
 /// - Returns: Hashed nonce if `myIdentityStore` has an `identity`, `nil` otherwise
-+ (nullable NSData *)hashedNonce:(NSData *)nonce myIdentityStore:(id<MyIdentityStoreProtocol>)myIdentityStore;
-
++ (nullable NSData *)hashedNonce:(NSData *)nonce myIdentity:(nullable NSString *)myIdentity;
 @end
 
 NS_ASSUME_NONNULL_END

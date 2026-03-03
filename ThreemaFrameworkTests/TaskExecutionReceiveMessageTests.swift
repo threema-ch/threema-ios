@@ -18,7 +18,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
+
 @testable import ThreemaFramework
 
 class TaskExecutionReceiveMessageTests: XCTestCase {
@@ -29,7 +32,6 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
     private var ddLoggerMock: DDLoggerMock!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
@@ -52,7 +54,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         expectedBoxedMessage.messageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx)
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false)
         )
 
         let expect = expectation(description: "TaskDefinitionReceiveMessage")
@@ -110,7 +112,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             serverConnector: serverConnectorMock
         )
 
@@ -187,6 +189,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         groupManagerMock.getGroupReturns.append(Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -194,7 +197,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         let messageProcessorMock = MessageProcessorMock()
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             groupManager: groupManagerMock,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
@@ -203,8 +206,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
 
         let expectedIncomingGroupTextMessage = GroupTextMessage()
-        // swiftformat:disable:next acronyms
-        expectedIncomingGroupTextMessage.groupID = groupEntity.groupId
+        expectedIncomingGroupTextMessage.groupID = groupEntity.groupID
         expectedIncomingGroupTextMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
         expectedIncomingGroupTextMessage.nonce = MockData.generateMessageNonce()
         expectedIncomingGroupTextMessage.fromIdentity = "ECHOECHO"
@@ -283,6 +285,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         groupManagerMock.getGroupReturns.append(Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: conversation,
             lastSyncRequest: nil
@@ -290,7 +293,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         let messageProcessorMock = MessageProcessorMock()
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             groupManager: groupManagerMock,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
@@ -299,8 +302,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         )
 
         let expectedIncomingGroupRenameMessage = GroupRenameMessage()
-        // swiftformat:disable:next acronyms
-        expectedIncomingGroupRenameMessage.groupID = groupEntity.groupId
+        expectedIncomingGroupRenameMessage.groupID = groupEntity.groupID
         expectedIncomingGroupRenameMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
         expectedIncomingGroupRenameMessage.nonce = MockData.generateMessageNonce()
         expectedIncomingGroupRenameMessage.fromIdentity = "ECHOECHO"
@@ -377,8 +379,8 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -396,7 +398,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
         }
         let messageProcessorMock = MessageProcessorMock()
         let mediatorMessageProtocolMock = MediatorMessageProtocolMock(
-            deviceGroupKeys: MockData.deviceGroupKeys,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
             returnValues: [
                 MediatorMessageProtocolMock.ReflectData(
                     id: expectedReflectID,
@@ -409,7 +411,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             ]
         )
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
@@ -514,7 +516,7 @@ class TaskExecutionReceiveMessageTests: XCTestCase {
             let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
             let messageProcessorMock = MessageProcessorMock()
             let frameworkInjectorMock = BusinessInjectorMock(
-                entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+                entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
                 userSettings: userSettingsMock,
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(),

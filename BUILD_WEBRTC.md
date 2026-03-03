@@ -107,7 +107,7 @@
 1. Build
 
    ```sh
-   tools_webrtc/ios/build_ios_libs.py --output-dir ../out/ --extra-gn-args symbol_level=1 enable_libaom=false rtc_include_dav1d_in_internal_decoder_factory=false rtc_include_ilbc=false
+   tools_webrtc/ios/build_ios_libs.py --output-dir ../out/ --extra-gn-args symbol_level=1 debuggable_apks=false enable_libaom=false rtc_enable_protobuf=false rtc_include_dav1d_in_internal_decoder_factory=false
    ```
 
 2. Remove existing framework and move to correct location
@@ -129,6 +129,7 @@ rm -r WebRTC-build
 
 | iOS App Version    | WebRTC Commit                                                                                                                                     | Patch Commit                                                                                                                                   | macOS Version           | Xcode Version   | WebRTC Binary Version |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | --------------- | --------------------- |
+| 7.0 | [8d78f5de6c27b2c793039989ea381f1428fb0100](https://chromium.googlesource.com/external/webrtc/+/8d78f5de6c27b2c793039989ea381f1428fb0100  ) (m134) | [c1bdc77da1513aa816a6e5d29150b3da8a04c144](https://github.com/threema-ch/webrtc-build-docker/commit/c1bdc77da1513aa816a6e5d29150b3da8a04c144  ) | 15.3.3 (24D81) | 16.3 (16C5032a)    | 134.0				 |
 | 5.9.1 | [41b1493ddb5d98e9125d5cb002fd57ce76ebd8a7](https://chromium.googlesource.com/external/webrtc/+/41b1493ddb5d98e9125d5cb002fd57ce76ebd8a7  ) (m123) | [86a2fd8f10ac57e1ea16e0be37b337976e383338](https://github.com/threema-ch/webrtc-build-docker/commit/86a2fd8f10ac57e1ea16e0be37b337976e383338  ) | 14.4.1 (23E224) | 15.3 (15E204a)    | 123.0				 |
 | 5.9 | [b0cc68e61205fd11a7256a6e85307ec17ad95790](https://chromium.googlesource.com/external/webrtc/+/b0cc68e61205fd11a7256a6e85307ec17ad95790) (m120) | [785df490a6de4b8f0b2496eede260f060c0dd0ee](https://github.com/threema-ch/webrtc-build-docker/commit/785df490a6de4b8f0b2496eede260f060c0dd0ee) | 14.3.1 (23D60) | 15.2 (15C500b)    | 120.0                 |
 | 5.6 | [151be743d4c83671565f9c1eada3f4a0b2e44dea](https://chromium.googlesource.com/external/webrtc/+/151be743d4c83671565f9c1eada3f4a0b2e44dea) (m114) | [07bf304f62e536217dad166ca9a603cad9d61e7e](https://github.com/threema-ch/webrtc-build-docker/commit/07bf304f62e536217dad166ca9a603cad9d61e7e) | 13.5 (22G74) | 14.3.1 (14E300c)    | 114.0                 |

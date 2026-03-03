@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-
+import ThreemaEssentialsTestHelper
 import XCTest
 @testable import ThreemaFramework
 
@@ -29,7 +29,6 @@ class TaskExecutionReflectIncomingMessageTests: XCTestCase {
     private var dbPreparer: DatabasePreparer!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
@@ -89,11 +88,11 @@ class TaskExecutionReflectIncomingMessageTests: XCTestCase {
         let messageSenderMock = MessageSenderMock(doSendReadReceiptContacts: [contactEntity])
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, myIdentityStore: myIdentityStoreMock),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             messageSender: messageSenderMock,
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupKeys: MockData.deviceGroupKeys,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: expectedReflectID,
@@ -163,8 +162,8 @@ class TaskExecutionReflectIncomingMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -184,12 +183,12 @@ class TaskExecutionReflectIncomingMessageTests: XCTestCase {
         let messageSenderMock = MessageSenderMock(doSendReadReceiptContacts: [contactEntity])
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, myIdentityStore: myIdentityStoreMock),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             messageSender: messageSenderMock,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupKeys: MockData.deviceGroupKeys,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: expectedReflectID,

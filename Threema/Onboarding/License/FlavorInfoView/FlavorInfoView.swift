@@ -51,7 +51,7 @@ struct FlavorInfoView: View {
                 }
             }
         }
-        .applyScrollBounceBahaviorIfNeeded()
+        .scrollBounceBehavior(.basedOnSize, axes: [.vertical])
         .background(.black)
         .environment(\.colorScheme, .dark)
     }

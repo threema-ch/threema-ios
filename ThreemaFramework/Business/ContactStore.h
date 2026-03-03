@@ -21,7 +21,6 @@
 #import <Foundation/Foundation.h>
 #import <ThreemaFramework/UserSettings.h>
 
-@class ContactEntity, ConversationEntity;
 @class MediatorSyncableContacts;
 
 typedef NS_CLOSED_ENUM(NSInteger, ContactAcquaintanceLevel) {
@@ -33,7 +32,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 @protocol ContactStoreProtocol <NSObject>
 
-- (nullable ContactEntity *)contactForIdentity:(nullable NSString *)identity
+/**
+ Get contact entity for Threema identity.
+
+ @return Contact object of type `ContactEntity`
+ */
+- (nullable NSObject *)contactForIdentity:(nullable NSString *)identity
     NS_SWIFT_NAME(contact(for:))
     DEPRECATED_MSG_ATTRIBUTE("Use EntityManager to load contact in the right database context");
 
@@ -47,7 +51,15 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)removeProfilePictureFlagForAllContacts;
 - (void)removeProfilePictureRequest:(NSString *)identity;
 
-- (void)addContactWithIdentity:(NSString *)identity verificationLevel:(int32_t)verificationLevel onCompletion:(void(^)(ContactEntity * _Nullable contact, BOOL alreadyExists))onCompletion onError:(nullable void(^)(NSError *error))onError
+/**
+ Add contact or update as none hiden.
+
+ @param identity Threema identity
+ @param verificationLevel Int32
+ @param onCompletion With parameter of type `ContactEntity` and `BOOL` (already exists)
+ @param onError With parameter of type `NSError`
+ */
+- (void)addContactWithIdentity:(NSString *)identity verificationLevel:(int32_t)verificationLevel onCompletion:(void(^)(NSObject * _Nullable, BOOL))onCompletion onError:(nullable void(^)(NSError *))onError
     NS_SWIFT_NAME(addContact(with:verificationLevel:onCompletion:onError:));
 
 - (void)updateContactWithIdentity:(NSString * _Nonnull)identity avatar:(NSData * _Nullable)avatar firstName:(NSString * _Nullable)firstName lastName:(NSString * _Nullable)lastName;
@@ -91,7 +103,20 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)resetEntityManager;
 
-- (void)addWorkContactAndUpdateFeatureMaskWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname csi:(nullable NSString *)csi jobTitle:(nullable NSString *)jobTitle department:(nullable NSString *)department acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(nonnull void(^)(ContactEntity * nonnull))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError
+/** Add or update work contact, if multi device activated contact will be synced.
+
+ @param identity Identity of the contact (will be not validated)
+ @param publicKey Public key it corresponds with the identity (will be not validated)
+ @param firstname First name of the contact
+ @param lastname Last name of the contact
+ @param csi NSString
+ @param jobTitle NSString
+ @param department NSString
+ @param acquaintanceLevel Is `group` contact will be marked as hidden
+ @param onCompletion With parameter of type `ContactEntity` as result of added/updated contact
+ @param onError With parameter of type `NSError`
+ */
+- (void)addWorkContactAndUpdateFeatureMaskWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname csi:(nullable NSString *)csi jobTitle:(nullable NSString *)jobTitle department:(nullable NSString *)department acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel onCompletion:(nonnull void(^)(NSObject * nonnull))onCompletion onError:(nonnull void(^)(NSError * nonnull))onError
     NS_SWIFT_NAME(addWorkContact(with:publicKey:firstname:lastname:csi:jobTitle:department:acquaintanceLevel:onCompletion:onError:));
 
 @end
@@ -105,7 +130,22 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithUserSettings:(id<UserSettingsProtocol>)userSettingsProtocol entityManager:(NSObject *)entityManagerObject;
 #endif
 
-- (void)addContactWithIdentity:(nullable NSString *)identity publicKey:(nullable NSData *)publicKey cnContactId:(nullable NSString *)cnContactId verificationLevel:(int32_t)verificationLevel state:(nullable NSNumber *)state type:(nullable NSNumber *)type featureMask:(nullable NSNumber *)featureMask acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel alerts:(BOOL)alerts onCompletion:(nonnull void(^)(ContactEntity * nullable))onCompletion
+@property (nonatomic, strong, readonly, nonnull) dispatch_queue_t syncContactsQueue;
+
+/** Add or update contact, if multi device activated contact will be synced.
+
+ @param identity Identity of the contact (will be not validated)
+ @param publicKey Public key it corresponds with the identity (will be not validated)
+ @param cnContactId NSString
+ @param verificationLevel Int32
+ @param state NSNumber
+ @param type NSNumber
+ @param featureMask NSNumber
+ @param acquaintanceLevel Is `group` contact will be marked as hidden
+ @param alerts BOOL
+ @param onCompletion With parameter of type `ContactEntity` as result or nil
+ */
+- (void)addContactWithIdentity:(nullable NSString *)identity publicKey:(nullable NSData *)publicKey cnContactId:(nullable NSString *)cnContactId verificationLevel:(int32_t)verificationLevel state:(nullable NSNumber *)state type:(nullable NSNumber *)type featureMask:(nullable NSNumber *)featureMask acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel alerts:(BOOL)alerts onCompletion:(nonnull void(^)(NSObject * nullable))onCompletion
     NS_SWIFT_NAME(addContact(with:publicKey:cnContactID:verificationLevel:state:type:featureMask:acquaintanceLevel:alerts:onCompletion:));
 
 - (nullable NSString *)addWorkContactWithIdentity:(nonnull NSString *)identity publicKey:(nonnull NSData *)publicKey firstname:(nullable NSString *)firstname lastname:(nullable NSString *)lastname csi:(nullable NSString *)csi jobTitle:(nullable NSString *)jobTitle department:(nullable NSString *)department featureMask:(nullable NSNumber *)featureMask acquaintanceLevel:(ContactAcquaintanceLevel)acquaintanceLevel entityManager:(NSObject * _Nonnull)entityManagerObject contactSyncer:(nullable MediatorSyncableContacts *)mediatorSyncableContacts
@@ -113,11 +153,30 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)resetImportedStatus;
 
-- (void)linkContact:(ContactEntity *)contact toCnContactId:(NSString *)cnContactId
+/**
+ Link contact.
+
+ @param contactObject Contact object of type `ContactEntity`
+ @param cnContactId NSString
+ */
+- (void)linkContact:(nonnull NSObject *)contactObject toCnContactId:(NSString *)cnContactId
     NS_SWIFT_NAME(link(_:toCnContactID:));
-- (void)unlinkContact:(ContactEntity *)contact
+
+/**
+ Unlink contact.
+
+ @param contactObject Contact object of type `ContactEntity`
+ */
+- (void)unlinkContact:(nonnull NSObject *)contactObject
     NS_SWIFT_NAME(unlink(_:));
-- (void)upgradeContact:(ContactEntity *)contact toVerificationLevel:(int32_t)verificationLevel
+
+/**
+ Upgrade verfication level of the contact.
+
+ @param contactObject Contact object of type `ContactEntity`
+ @param verificationLevel Int32
+ */
+- (void)upgradeContact:(nonnull NSObject *)contactObject toVerificationLevel:(int32_t)verificationLevel
     NS_SWIFT_NAME(upgrade(_:toVerificationLevel:));
 
 - (void)updateNickname:(nonnull NSString *)identity nickname:(NSString *)nickname;
@@ -130,20 +189,26 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)synchronizeAddressBookForceFullSync:(BOOL)forceFullSync onCompletion:(nullable void(^)(BOOL addressBookAccessGranted))onCompletion onError:(nullable void(^)(NSError * _Nullable error))onError
     NS_SWIFT_NAME(synchronizeAddressBook(forceFullSync:onCompletion:onError:));
 
-- (void)linkedIdentitiesForEmail:(NSString *)email AndMobileNo:(NSString *)mobileNo onCompletion:(void(^)(NSArray *identities))onCompletion
++ (void)linkedIdentitiesForEmail:(NSString *)email AndMobileNo:(NSString *)mobileNo onCompletion:(void(^)(NSArray *identities))onCompletion
     NS_SWIFT_NAME(linkedIdentities(for:and:onCompletion:));
 
-- (nullable NSArray *)allIdentities DEPRECATED_MSG_ATTRIBUTE("Use `allContactIdentities` on `EntityFetcher` instead");
+- (nullable NSArray *)allIdentities DEPRECATED_MSG_ATTRIBUTE("Use `contactIdentities` on `EntityFetcher` instead");
 - (nullable NSArray<NSString *> *)contactsWithFeatureMaskNil;
 - (nullable NSArray *)allContacts;
 
-- (nullable NSArray<NSDictionary<NSString *, NSString *> *> *)cnContactEmailsForContact:(ContactEntity *)contact NS_SWIFT_NAME(cnContactEmails(for:));
-- (nullable NSArray<NSDictionary<NSString *, NSString *> *> *)cnContactPhoneNumbersForContact:(ContactEntity *)contact NS_SWIFT_NAME(cnContactPhoneNumbers(for:));
+/**
+ Get address book email addresses of the contact.
 
-// Just for unit test
-#if DEBUG
-- (NSString*)hashEmailBase64:(NSString*)email;
-#endif
+ @param contactObject Contact object of type `ContactEntity`
+ */
+- (nullable NSArray<NSDictionary<NSString *, NSString *> *> *)cnContactEmailsForContact:(NSObject *)contactObject NS_SWIFT_NAME(cnContactEmails(for:));
+
+/**
+ Get address book phone numbers of the contact.
+
+ @param contactObject Contact object of type `ContactEntity`
+ */
+- (nullable NSArray<NSDictionary<NSString *, NSString *> *> *)cnContactPhoneNumbersForContact:(NSObject *)contactObject NS_SWIFT_NAME(cnContactPhoneNumbers(for:));
 
 @end
 

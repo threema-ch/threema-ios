@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import MBProgressHUD
+import SwiftUI
 import ThreemaMacros
 import UIKit
 
@@ -51,14 +52,25 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     
     private let displayMode: GroupDetailsDisplayMode
 
-    private let group: Group
+    private let group: ThreemaFramework.Group
     private let conversation: ConversationEntity
     
     private weak var groupDetailsViewController: GroupDetailsViewController?
     private weak var tableView: UITableView?
     
     private lazy var businessInjector = BusinessInjector.ui
-    private lazy var mdmSetup = MDMSetup(setup: false)
+    private lazy var mdmSetup = MDMSetup()
+    private lazy var conversationExporter: ConversationExporter? = {
+        guard let groupDetailsViewController else {
+            return nil
+        }
+        
+        return ConversationExporter(
+            viewController: groupDetailsViewController,
+            conversationObjectID: conversation.objectID,
+            withMedia: false
+        )
+    }()
     
     private lazy var photoBrowserWrapper: MWPhotoBrowserWrapper? = {
         if let viewController = groupDetailsViewController {
@@ -85,7 +97,7 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     // MARK: - Lifecycle
     
     init(
-        for group: Group,
+        for group: ThreemaFramework.Group,
         displayMode: GroupDetailsDisplayMode,
         groupDetailsViewController: GroupDetailsViewController,
         tableView: UITableView
@@ -95,10 +107,9 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
         self.groupDetailsViewController = groupDetailsViewController
         self.tableView = tableView
 
-        let em = EntityManager()
+        let em = BusinessInjector.ui.entityManager
         self.conversation = em.entityFetcher.conversationEntity(
-            for: group.groupID,
-            creator: group.groupCreatorIdentity
+            for: group.groupIdentity, myIdentity: BusinessInjector.ui.myIdentityStore.identity
         )!
 
         super.init(tableView: tableView, cellProvider: cellProvider)
@@ -375,7 +386,8 @@ extension GroupDetailsDataSource {
         var conversationDetailsQuickActions = [QuickAction]()
         
         conversationDetailsQuickActions.append(dndQuickAction(in: viewController))
-        if let searchChatQuickAction = searchChatQuickAction(in: viewController, for: conversation) {
+        if !AppLaunchManager.isRemoteSecretEnabled,
+           let searchChatQuickAction = searchChatQuickAction(in: viewController, for: conversation) {
             conversationDetailsQuickActions.append(searchChatQuickAction)
         }
         if let groupCallQuickAction = groupCallQuickAction(in: viewController) {
@@ -489,7 +501,7 @@ extension GroupDetailsDataSource {
         }
         
         businessInjector.entityManager.performAndWait {
-            if self.businessInjector.entityManager.entityFetcher.countBallots(for: self.conversation) > 0 {
+            if self.businessInjector.entityManager.entityFetcher.ballotEntitiesCount(for: self.conversation) > 0 {
                 quickActions.append(contentsOf: self.ballotsQuickAction(for: self.conversation, in: viewController))
             }
         }
@@ -498,12 +510,12 @@ extension GroupDetailsDataSource {
     }
     
     private func hasMedia(for conversation: ConversationEntity) -> Bool {
-        businessInjector.entityManager.entityFetcher.countMediaMessages(for: conversation) > 0
+        businessInjector.entityManager.entityFetcher.mediaMessageCount(for: conversation) > 0
     }
     
     private func hasStarred(in conversation: ConversationEntity) -> Bool {
         businessInjector.entityManager.performAndWait {
-            self.businessInjector.entityManager.entityFetcher.countStarredMessages(in: conversation) > 0
+            self.businessInjector.entityManager.entityFetcher.starredMessageCount(for: conversation) > 0
         }
     }
     
@@ -536,25 +548,12 @@ extension GroupDetailsDataSource {
             title: localizedBallotsString,
             accessibilityIdentifier: "GroupDetailsDataSourceBallotQuickActionButton"
         ) { [weak conversation, weak viewController] _ in
-            guard let weakViewController = viewController else {
+            guard let weakViewController = viewController, let weakConversation = conversation else {
                 return
             }
             
-            guard let ballotViewController = BallotListTableViewController
-                .ballotListViewController(forConversation: conversation)
-            else {
-                UIAlertTemplate.showAlert(
-                    owner: weakViewController,
-                    title: #localize("ballot_load_error"),
-                    message: nil
-                )
-                return
-            }
-            
-            // Encapsulate the `BallotListTableViewController` inside a navigation controller for modal
-            // presentation
-            let navigationController = ThemedNavigationController(rootViewController: ballotViewController)
-            weakViewController.present(navigationController, animated: true)
+            let pollListController = UIHostingController(rootView: ListPollView(conversation: weakConversation))
+            weakViewController.present(pollListController, animated: true)
         }]
     }
     
@@ -601,46 +600,6 @@ extension GroupDetailsDataSource {
             }
         })
         
-        // Show add members cell if editing is possible
-        if group.isOwnGroup {
-            let localizedAddMembersButton = #localize("group_manage_members_button")
-            let addMembersAction = Details.Action(
-                title: localizedAddMembersButton,
-                imageName: "plus"
-            ) { [weak self, weak groupDetailsViewController] cell in
-                guard let strongSelf = self,
-                      let strongGroupDetailsViewController = groupDetailsViewController,
-                      strongSelf.group.isOwnGroup
-                else {
-                    return
-                }
-                
-                let storyboard = UIStoryboard(name: "CreateGroup", bundle: nil)
-                guard let pickGroupMembersViewController = storyboard
-                    .instantiateViewController(
-                        withIdentifier: "PickGroupMembersViewController"
-                    ) as? PickGroupMembersViewController
-                else {
-                    DDLogWarn("Unable to load PickGroupMembersViewController from storyboard")
-                    return
-                }
-                
-                pickGroupMembersViewController.group = strongSelf.group
-                
-                let navigationViewController =
-                    ThemedNavigationController(rootViewController: pickGroupMembersViewController)
-                
-                ModalPresenter.present(
-                    navigationViewController,
-                    on: strongGroupDetailsViewController,
-                    from: cell.frame,
-                    in: strongGroupDetailsViewController.view
-                )
-            }
-            
-            rows.append(.membersAction(addMembersAction))
-        }
-        
         return rows
     }
     
@@ -665,9 +624,9 @@ extension GroupDetailsDataSource {
             let exportConversationAction = Details.Action(
                 title: localizedExportConversationTitle,
                 imageName: "square.and.arrow.up"
-            ) { [weak self, weak groupDetailsViewController] view in
-                guard let strongSelf = self,
-                      let strongGroupDetailsViewController = groupDetailsViewController
+            ) { [weak self] view in
+                guard let self,
+                      let groupDetailsViewController
                 else {
                     return
                 }
@@ -677,17 +636,21 @@ extension GroupDetailsDataSource {
                 let localizedIncludeMediaTitle = #localize("include_media")
                 let localizedExcludeMediaTitle = #localize("without_media")
                 
-                func exportMediaAction(includeMedia: Bool) -> ((UIAlertAction) -> Void) {{ _ in
-                    let exporter = ConversationExporter(
-                        viewController: strongGroupDetailsViewController,
-                        conversationObjectID: strongSelf.conversation.objectID,
-                        withMedia: includeMedia
-                    )
-                    exporter.exportConversation()
-                }}
+                func exportMediaAction(
+                    includeMedia: Bool
+                ) -> ((UIAlertAction) -> Void) {
+                    { [weak self] _ in
+                        guard let exporter = self?.conversationExporter else {
+                            return
+                        }
+                        
+                        exporter.updateWithMedia(to: includeMedia)
+                        exporter.exportConversation()
+                    }
+                }
                 
                 UIAlertTemplate.showSheet(
-                    owner: strongGroupDetailsViewController,
+                    owner: groupDetailsViewController,
                     popOverSource: view,
                     title: localizedTitle,
                     message: localizedMessage,
@@ -882,18 +845,24 @@ extension GroupDetailsDataSource {
                     title: localizedGroupCloneTitle,
                     message: localizedGroupCloneMessage,
                     titleOk: localizedGroupCloneActionButton,
-                    actionOk: { _ in
-                        let storyboard = UIStoryboard(name: "CreateGroup", bundle: nil)
-                        guard let createGroupNavigationController = storyboard
-                            .instantiateInitialViewController() as? CreateGroupNavigationController else {
-                            fatalError("Unable to load CreateGroupNavigationController")
+                    actionOk: { [weak self] _ in
+                        guard let self else {
+                            return
                         }
                         
-                        createGroupNavigationController.cloneGroupID = strongSelf.group.groupID
-                        createGroupNavigationController.cloneGroupCreator = strongSelf.group
-                            .groupCreatorIdentity
-                        
-                        strongGroupDetailsViewController.present(createGroupNavigationController, animated: true)
+                        let onSaveDisplayMode: OnSaveDisplayMode =
+                            if displayMode == .default {
+                                .showDetails
+                            }
+                            else {
+                                .showChat
+                            }
+                        let cloneGroupVC = SelectContactListViewController(
+                            contentSelectionMode: .group(.clone(original: strongSelf.group)),
+                            onSaveDisplayMode: onSaveDisplayMode
+                        )
+                        let navC = UINavigationController(rootViewController: cloneGroupVC)
+                        strongGroupDetailsViewController.present(navC, animated: true)
                     }
                 )
             }
@@ -923,8 +892,8 @@ extension GroupDetailsDataSource {
                     cell = strongSelf.tableView?.cellForRow(at: indexPathForSelectedRow)
                 }
 
-                ConversationsViewControllerHelper.handleDeletion(
-                    of: strongSelf.group.conversation,
+                DeleteConversationAction.execute(
+                    for: strongSelf.group.conversation,
                     owner: strongGroupDetailsViewController,
                     cell: cell,
                     singleFunction: .leaveDissolve
@@ -951,8 +920,8 @@ extension GroupDetailsDataSource {
                     cell = strongSelf.tableView?.cellForRow(at: indexPathForSelectedRow)
                 }
 
-                ConversationsViewControllerHelper.handleDeletion(
-                    of: strongSelf.group.conversation,
+                DeleteConversationAction.execute(
+                    for: strongSelf.group.conversation,
                     owner: strongGroupDetailsViewController,
                     cell: cell,
                     singleFunction: .leaveDissolve
@@ -979,8 +948,8 @@ extension GroupDetailsDataSource {
                 cell = strongSelf.tableView?.cellForRow(at: indexPathForSelectedRow)
             }
                         
-            ConversationsViewControllerHelper.handleDeletion(
-                of: strongSelf.group.conversation,
+            DeleteConversationAction.execute(
+                for: strongSelf.group.conversation,
                 owner: strongGroupDetailsViewController,
                 cell: cell,
                 singleFunction: .delete
@@ -1028,7 +997,7 @@ extension GroupDetailsDataSource {
         for member in group.members {
             let session = try? businessInjector.dhSessionStore.bestDHSession(
                 myIdentity: businessInjector.myIdentityStore.identity,
-                peerIdentity: member.identity.string
+                peerIdentity: member.identity.rawValue
             )
             
             rows.append(

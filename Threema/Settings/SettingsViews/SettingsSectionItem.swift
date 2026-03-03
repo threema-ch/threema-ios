@@ -24,6 +24,8 @@ import ThreemaFramework
 // MARK: - SettingsView.SectionItem
 
 extension SettingsView {
+    
+    @available(*, deprecated, message: "Do not use anymore. Use stock APIs instead.")
     struct SectionItem<
         SettingsLabel: SettingsListItemProtocol,
         ViewDestination: ViewDestinationRepresentable

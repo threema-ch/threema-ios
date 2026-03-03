@@ -22,7 +22,6 @@ import Foundation
 import ThreemaMacros
 import TipKit
 
-@available(iOSApplicationExtension 17.0, *)
 extension TipKitManager {
     
     /// Tip shown when type icon is show for first time

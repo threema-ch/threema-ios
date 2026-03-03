@@ -34,18 +34,18 @@ import ThreemaMacros
         contentUnavailableConfiguration: unavailableConfiguration
     )
     
-    private lazy var refreshAction = ThreemaTableContentUnavailableView
-        .Action(title: #localize("contact_list_button_refresh")) { [weak self] in
-            self?.syncContacts()
-        }
+    private lazy var refreshAction = ThreemaTableContentUnavailableView.Action(
+        title: #localize("contact_list_button_refresh")
+    ) { [weak self] in
+        self?.syncContacts()
+    }
     
     private var unavailableConfiguration: ThreemaTableContentUnavailableView.Configuration {
         ThreemaTableContentUnavailableView.Configuration(
-            title: String
-                .localizedStringWithFormat(
-                    #localize("contact_list_work_contacts_unavailable_title"),
-                    TargetManager.appName
-                ),
+            title: String.localizedStringWithFormat(
+                #localize("contact_list_work_contacts_unavailable_title"),
+                TargetManager.appName
+            ),
             systemImage: "case.fill",
             description: #localize("contact_list_work_contacts_unavailable_description"),
             actions: [refreshAction]
@@ -67,12 +67,13 @@ import ThreemaMacros
     // MARK: - TableView
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-
-        guard let contact = contact(for: indexPath) else {
+        
+        guard let objectID = dataSource.itemIdentifier(for: indexPath) else {
+            tableView.deselectRow(at: indexPath, animated: true)
             return
         }
-        show(SingleDetailsViewController(for: contact, displayStyle: .default), sender: self)
+        
+        itemsDelegate?.didSelect(.contact(objectID: objectID))
     }
     
     override func tableView(
@@ -87,13 +88,13 @@ import ThreemaMacros
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
         
-        let action = UIContextualAction(
-            style: .destructive,
+        let action = DeleteActionFactory(
             title: #localize("delete_contact_button")
-        ) { [weak self] _, _, _ in
+        ) { [weak self] in
             guard let self,
                   let contact = contact(for: indexPath),
-                  let entity = EntityManager().entityFetcher.contact(for: contact.identity.string),
+                  let entity = BusinessInjector.ui.entityManager.entityFetcher
+                  .contactEntity(for: contact.identity.rawValue),
                   let cell = tableView.cellForRow(at: indexPath)
             else {
                 return
@@ -105,8 +106,7 @@ import ThreemaMacros
                     tableView.reloadData()
                 }
             }
-        }
-        action.image = UIImage(systemName: "trash")
+        }.make()
        
         let swipeAction = UISwipeActionsConfiguration(actions: [action])
         swipeAction.performsFirstActionWithFullSwipe = false
@@ -119,23 +119,7 @@ import ThreemaMacros
         }
         var actions: [UIContextualAction] = []
         
-        let messageAction = UIContextualAction(
-            style: .normal,
-            title: #localize("message"),
-            handler: { _, _, handler in
-                NotificationCenter.default.post(
-                    name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                    object: nil,
-                    userInfo: [
-                        kKeyContactIdentity: contact.objcIdentity,
-                        kKeyForceCompose: true,
-                    ]
-                )
-                handler(true)
-            }
-        )
-        messageAction.image = UIImage(resource: .threemaLockBubbleRightFill)
-        messageAction.backgroundColor = .tintColor
+        let messageAction = MessageActionFactory.make(for: contact)
         actions.append(messageAction)
 
         if UserSettings.shared()?.enableThreemaCall == true, contact.supportsCalls {
@@ -145,7 +129,7 @@ import ThreemaMacros
                 handler: { _, _, handler in
                     let action = VoIPCallUserAction(
                         action: .call,
-                        contactIdentity: contact.identity.string,
+                        contactIdentity: contact.identity.rawValue,
                         callID: nil,
                         completion: nil
                     )

@@ -31,7 +31,7 @@ struct NotificationSettingsView: View {
     @State var dndBegin = Date.now
     @State var dndEnd = Date.now
     
-    let disablePreviewToggle = MDMSetup(setup: false).existsMdmKey(MDM_KEY_DISABLE_MESSAGE_PREVIEW)
+    let disablePreviewToggle = MDMSetup().existsMdmKey(MDM_KEY_DISABLE_MESSAGE_PREVIEW)
 
     typealias TimeOfDay = (hour: Int, minute: Int)
     
@@ -84,7 +84,10 @@ struct NotificationSettingsView: View {
                 }
                 .disabled(disablePreviewToggle)
                 
-                ForEach(NotificationType.allCases, id: \.self) { notificationType in
+                let notificationTypes: [NotificationType] = AppLaunchManager.isRemoteSecretEnabled ? NotificationType
+                    .remoteSecretCases : NotificationType.allCases
+                
+                ForEach(notificationTypes, id: \.self) { notificationType in
                     NotificationTypeTitleView(
                         selectedType: $settingsVM.notificationType,
                         notificationType: notificationType
@@ -166,57 +169,28 @@ struct NotificationSettingsView: View {
                                 accessoryText: workingDaysSummary()
                             )
                         }
-                        
-                        if UIDevice.current.userInterfaceIdiom == .pad {
-                            DatePicker(
-                                #localize("settings_notifications_masterDnd_startTime"),
-                                selection: $dndBegin,
-                                displayedComponents: .hourAndMinute
-                            )
-                            .datePickerStyle(.wheel)
-                            .onChange(of: dndBegin) { _ in
-                                didSetStartTime()
-                            }
-                            
-                            DatePicker(
-                                #localize("settings_notifications_masterDnd_endTime"),
-                                selection: $dndEnd,
-                                displayedComponents: .hourAndMinute
-                            )
-                            .datePickerStyle(.wheel)
-                            .onChange(of: dndEnd) { _ in
-                                didSetEndTime()
-                            }
-                            .onAppear {
-                                dndBegin = dateFromTimeString(timeString: settingsVM.masterDndStartTime ?? "00:00")
-                                dndEnd = dateFromTimeString(timeString: settingsVM.masterDndEndTime ?? "00:00")
-                            }
+                        DatePicker(
+                            #localize("settings_notifications_masterDnd_startTime"),
+                            selection: $dndBegin,
+                            displayedComponents: .hourAndMinute
+                        )
+                        .datePickerStyle(.compact)
+                        .onChange(of: dndBegin) { _ in
+                            didSetStartTime()
                         }
                         
-                        else {
-                            DatePicker(
-                                #localize("settings_notifications_masterDnd_startTime"),
-                                selection: $dndBegin,
-                                displayedComponents: .hourAndMinute
-                            )
-                            .datePickerStyle(.compact)
-                            .onChange(of: dndBegin) { _ in
-                                didSetStartTime()
-                            }
-                            
-                            DatePicker(
-                                #localize("settings_notifications_masterDnd_endTime"),
-                                selection: $dndEnd,
-                                displayedComponents: .hourAndMinute
-                            )
-                            .datePickerStyle(.compact)
-                            .onChange(of: dndEnd) { _ in
-                                didSetEndTime()
-                            }
-                            .onAppear {
-                                dndBegin = dateFromTimeString(timeString: settingsVM.masterDndStartTime ?? "00:00")
-                                dndEnd = dateFromTimeString(timeString: settingsVM.masterDndEndTime ?? "00:00")
-                            }
+                        DatePicker(
+                            #localize("settings_notifications_masterDnd_endTime"),
+                            selection: $dndEnd,
+                            displayedComponents: .hourAndMinute
+                        )
+                        .datePickerStyle(.compact)
+                        .onChange(of: dndEnd) { _ in
+                            didSetEndTime()
+                        }
+                        .onAppear {
+                            dndBegin = dateFromTimeString(timeString: settingsVM.masterDndStartTime ?? "00:00")
+                            dndEnd = dateFromTimeString(timeString: settingsVM.masterDndEndTime ?? "00:00")
                         }
                     }
                 }
@@ -362,7 +336,6 @@ private struct SoundPickerView: View {
         }
         
         guard name != "default" else {
-            AudioServicesPlayAlertSound(1007)
             return
         }
         

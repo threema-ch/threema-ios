@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Combine
 import MBProgressHUD
+import ThreemaEssentials
 import ThreemaMacros
 import UIKit
 
@@ -237,7 +238,7 @@ final class ChatSearchController: NSObject {
     init(
         for conversation: ConversationEntity,
         delegate: ChatSearchControllerDelegate,
-        entityManager: EntityManager = EntityManager()
+        entityManager: EntityManager = BusinessInjector.ui.entityManager
     ) {
         self.conversation = conversation
         self.delegate = delegate
@@ -245,16 +246,24 @@ final class ChatSearchController: NSObject {
         
         // We setup a private background context to allow offloading the majority of the search results fetching
         // onto a background thread.
-        let context: TMAManagedObjectContext = DatabaseContext
-            .directBackgroundContext(withPersistentCoordinator: DatabaseManager.db().persistentStoreCoordinator)
-        
-        self.context = context
-
-        self.entityFetcher = EntityFetcher(
-            context,
-            myIdentityStore: BusinessInjector.ui.myIdentityStore
+        let persistenceManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
         )
-        
+        var newContext: ThreemaManagedObjectContext
+        do {
+            newContext = try DatabaseContext.directBackgroundContext(
+                with: persistenceManager.databaseManager.persistentStoreCoordinator
+            )
+        }
+        catch {
+            fatalError("\(error)")
+        }
+
+        self.context = newContext
+        self.entityFetcher = persistenceManager.entityFetcher(with: newContext)
+
         super.init()
     }
     
@@ -264,7 +273,7 @@ final class ChatSearchController: NSObject {
     }
     
     deinit {
-        DatabaseContext.removeDirectBackgroundContext(with: context)
+        DatabaseContext.removeDirectBackgroundContext(context)
     }
     
     // MARK: - Public functions
@@ -284,7 +293,11 @@ final class ChatSearchController: NSObject {
     }
     
     // MARK: - Private functions
-    
+
+    // Cache search text and tokens
+    private var lastSearchText: String?
+    private var lastSearchTokens: [UISearchToken]?
+
     private func setupSearchResultsFetching() {
         
         cancellables.forEach { $0.cancel() }
@@ -300,41 +313,35 @@ final class ChatSearchController: NSObject {
                 guard let searchText else {
                     return
                 }
-                
+
+                let tokens: [UISearchToken] = DispatchQueue.main.sync {
+                    self.searchController.searchBar.searchTextField.tokens
+                }
+
+                // Check has search text or tokens changed
+                if let lastSearchText, let lastSearchTokens {
+                    guard lastSearchText != searchText || lastSearchTokens != tokens else {
+                        return
+                    }
+                }
+
+                lastSearchText = searchText
+                lastSearchTokens = tokens
+
                 DispatchQueue.main.async {
                     let hud = MBProgressHUD.showAdded(to: self.chatSearchResultsViewController.view, animated: true)
                     hud.mode = .indeterminate
                     hud.label.text = #localize("chat_search_searching")
                     hud.removeFromSuperViewOnHide = true
                 }
-                var hasTokens = false
-                DispatchQueue.main.sync {
-                    hasTokens = !self.searchController.searchBar.searchTextField.tokens.isEmpty
-                }
-                
-                // TODO: (IOS-2904) Only fetch object IDs
-                // TODO: (IOS-4469) Simplify
+
                 context.performAndWait {
-                    if !hasTokens {
-                        self.filteredMessageObjectIDs = self.entityFetcher.messagesContaining(
-                            searchText,
-                            in: self.conversation,
-                            filterPredicate: nil,
-                            fetchLimit: ChatViewConfiguration.SearchResultsFetching.maxItemsToFetch
-                        )
-                        .compactMap { $0 as? BaseMessageEntity }
-                        .map(\.objectID)
-                    }
-                    else {
-                        self.filteredMessageObjectIDs = self.entityFetcher.starredMessagesContaining(
-                            searchText,
-                            in: self.conversation,
-                            filterPredicate: nil,
-                            fetchLimit: ChatViewConfiguration.SearchResultsFetching.maxItemsToFetch
-                        )
-                        .compactMap { $0 as? BaseMessageEntity }
-                        .map(\.objectID)
-                    }
+                    self.filteredMessageObjectIDs = self.entityFetcher.matchingMessages(
+                        containing: searchText,
+                        starred: !tokens.isEmpty,
+                        in: self.conversation,
+                        limit: ChatViewConfiguration.SearchResultsFetching.maxItemsToFetch
+                    )
                 }
                 
                 DispatchQueue.main.async {

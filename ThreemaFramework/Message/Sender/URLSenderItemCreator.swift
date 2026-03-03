@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 
 @objc public class URLSenderItemCreator: NSObject {
@@ -68,7 +69,7 @@ import Foundation
         guard let scheme = url.scheme else {
             return false
         }
-        if (scheme != "file") || !FileManager.default.fileExists(atPath: url.relativePath) {
+        if (scheme != "file") || FileUtility.shared.fileExists(at: url) == false {
             return false
         }
         return true

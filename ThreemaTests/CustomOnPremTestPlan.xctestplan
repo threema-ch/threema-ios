@@ -44,7 +44,14 @@
     }
   },
   "testTargets" : [
-
+    {
+      "enabled" : false,
+      "target" : {
+        "containerPath" : "container:Threema.xcodeproj",
+        "identifier" : "2412D2CF2DA63A5A008823F5",
+        "name" : "Custom Onprem Tests"
+      }
+    }
   ],
   "version" : 1
 }

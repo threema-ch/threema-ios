@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
 import PromiseKit
+import RemoteSecretProtocol
 
 // MARK: - Enums
 
@@ -298,7 +299,7 @@ extension HTTPClient: URLSessionTaskDelegate {
         didReceive challenge: URLAuthenticationChallenge
     ) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
         // Log authentication mode and response data if is possible
-        DDLogNotice(
+        DDLogDebug(
             "HttpClient authentication method: \(String(describing: challenge.protectionSpace.authenticationMethod))"
         )
         if let error = task.error {
@@ -343,5 +344,21 @@ extension HTTPClient: GroupCallHTTPClientAdapterProtocol {
         
         return try await urlSessionManager.storedSession(for: nil, createAsBackgroundSession: true)
             .data(for: request, delegate: self)
+    }
+}
+
+// MARK: - RemoteSecretHTTPClientProtocol
+
+extension HTTPClient: RemoteSecretHTTPClientProtocol {
+    public func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        let session = urlSessionManager.storedSession(for: nil, createAsBackgroundSession: true)
+
+        let (data, urlResponse) = try await session.data(for: request, delegate: self)
+        
+        guard let httpURLResponse = urlResponse as? HTTPURLResponse else {
+            throw RemoteSecretHTTPClientProtocolError.invalidResponse
+        }
+        
+        return (data, httpURLResponse)
     }
 }

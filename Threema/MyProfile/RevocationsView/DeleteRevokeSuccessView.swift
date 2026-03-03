@@ -142,6 +142,7 @@ struct DeleteRevokeSuccessView: View {
                     } label: {
                         Text(#localize("my_profile_delete_identity_summary_view_close"))
                             .frame(maxWidth: .infinity)
+                            .foregroundColor(Colors.textProminentButtonWizard.color)
                     }
                     .buttonStyle(.borderedProminent)
                     .padding(.horizontal)

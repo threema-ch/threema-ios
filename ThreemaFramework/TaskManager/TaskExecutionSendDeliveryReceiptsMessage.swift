@@ -40,7 +40,7 @@ final class TaskExecutionSendDeliveryReceiptsMessage: TaskExecution, TaskExecuti
             if task.receiptType == .read {
                 doSendReadReceipt = self.frameworkInjector.entityManager.performAndWait {
                     if let contactEntity = self.frameworkInjector.entityManager.entityFetcher
-                        .contact(for: task.toIdentity) {
+                        .contactEntity(for: task.toIdentity) {
                         return self.frameworkInjector.messageSender.doSendReadReceipt(to: contactEntity)
                     }
                     return false

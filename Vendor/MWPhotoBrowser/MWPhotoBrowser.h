@@ -17,6 +17,7 @@
 #import "MWCaptionView.h"
 ///***** BEGIN THREEMA MODIFICATION: ignore mute switch *********/
 #import <AVKit/AVKit.h>
+#import <CoreData/CoreData.h>
 ///***** END THREEMA MODIFICATION: ignore mute switch *********/
 
 // Debug Logging

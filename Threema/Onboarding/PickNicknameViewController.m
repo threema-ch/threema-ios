@@ -20,14 +20,11 @@
 
 #import "PickNicknameViewController.h"
 #import "MyIdentityStore.h"
-#import "RectUtil.h"
 #import "UIDefines.h"
 #import "ThreemaUtilityObjC.h"
 #import "IntroQuestionView.h"
 #import "MDMSetup.h"
 #import "LicenseStore.h"
-#import "ValidationLogger.h"
-#import "UIImage+ColoredImage.h"
 #import "NibUtil.h"
 
 @interface PickNicknameViewController () <UITextFieldDelegate, IntroQuestionDelegate>
@@ -63,8 +60,7 @@
     [_nicknameTextfield resignFirstResponder];
     
     NSString *nickname = self.nicknameTextfield.text;
-    [MyIdentityStore sharedMyIdentityStore].pushFromName = nickname;
-    [[LicenseStore sharedLicenseStore] performUpdateWorkInfo];
+    self.setupConfiguration.nickname = nickname;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -82,8 +78,8 @@
 }
 
 - (void)updateData {
-    if ([MyIdentityStore sharedMyIdentityStore].pushFromName != nil) {
-        self.nicknameTextfield.text = [MyIdentityStore sharedMyIdentityStore].pushFromName;
+    if (self.setupConfiguration.nickname != nil) {
+        self.nicknameTextfield.text = self.setupConfiguration.nickname;
     }
 }
 
@@ -91,10 +87,10 @@
     [super adaptToSmallScreen];
     
     CGFloat yOffset = -16.0;
-    _descriptionLabel.frame = [RectUtil offsetRect:_descriptionLabel.frame byX:0.0 byY:yOffset];
+    _descriptionLabel.frame = CGRectMake(_descriptionLabel.frame.origin.x, _descriptionLabel.frame.origin.y + yOffset, _descriptionLabel.frame.size.width, _descriptionLabel.frame.size.height);
 
     yOffset = -48.0;
-    _nicknameQuestionView.frame = [RectUtil offsetRect:_nicknameQuestionView.frame byX:0.0 byY:yOffset];
+    _nicknameQuestionView.frame = CGRectMake(_nicknameQuestionView.frame.origin.x, _nicknameQuestionView.frame.origin.y + yOffset, _nicknameQuestionView.frame.size.width, _nicknameQuestionView.frame.size.height);
 }
 
 - (void)setup {
@@ -113,19 +109,19 @@
     
     _titleLabel.text = [BundleUtil localizedStringForKey:@"id_pick_nickname_title"];
     
-    if (TargetManagerObjc.isBusinessApp) {
+    if (TargetManagerObjC.isBusinessApp) {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_pick_nickname_description_work"];
     } else {
         _descriptionLabel.text = [BundleUtil localizedStringForKey:@"id_pick_nickname_description"];
     }
     
     self.moreView.mainView = self.mainContentView;
-    self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_pick_nickname"], TargetManagerObjc.localizedAppName];
+    self.moreView.moreMessageText = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"more_information_pick_nickname"], TargetManagerObjC.localizedAppName];
 
     UITapGestureRecognizer *mainTapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedMainView:)];
     [self.mainContentView addGestureRecognizer:mainTapGesture];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+    MDMSetup *mdmSetup = [MDMSetup new];
     _nicknameTextfield.enabled = ![mdmSetup readonlyProfile];
     
     _nicknameTextfield.tintColor = UIColor.tintColor;
@@ -157,9 +153,9 @@
     
     if (_nicknameQuestionView == nil) {
         _nicknameQuestionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
-        _nicknameQuestionView.questionLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_pick_nickname_question"], TargetManagerObjc.localizedAppName];
+        _nicknameQuestionView.questionLabel.text =[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"id_pick_nickname_question"], TargetManagerObjC.localizedAppName];
         _nicknameQuestionView.delegate = self;
-        _nicknameQuestionView.frame = [RectUtil rect:_nicknameQuestionView.frame centerIn:self.view.frame round:YES];
+        _nicknameQuestionView.frame = [self rect:_nicknameQuestionView.frame centerIn:self.view.frame round:YES];
 
         [self.view addSubview:_nicknameQuestionView];
     }
@@ -242,15 +238,33 @@
         UIViewAnimationOptions options = [ThreemaUtilityObjC animationOptionsFor:notification animationDuration:&animationDuration];
         
         [UIView animateWithDuration:animationDuration delay:0 options:options animations:^{
-            
-            _nicknameView.frame = [RectUtil offsetRect:_nicknameView.frame byX:0.0 byY:diff];
-
+            _nicknameView.frame = CGRectMake(_nicknameView.frame.origin.x, _nicknameView.frame.origin.y + diff, _nicknameView.frame.size.width, _nicknameView.frame.size.height);
         } completion:^(BOOL finished) {}];
     }
 }
 
 - (void)keyboardWillHide:(NSNotification*)aNotification {
-    _nicknameView.frame = [RectUtil setYPositionOf:_nicknameView.frame y:_nicknameViewYOffset];
+    _nicknameView.frame = CGRectMake(_nicknameView.frame.origin.x, _nicknameViewYOffset, _nicknameView.frame.size.width, _nicknameView.frame.size.height);
 }
+
+#pragma mark - Rect
+
+- (CGRect)rect:(CGRect)rect centerIn:(CGRect)outerRect round:(BOOL)round {
+    CGFloat innerWidth = rect.size.width;
+    CGFloat outerWidth = outerRect.size.width;
+    
+    CGFloat innerHeight = rect.size.height;
+    CGFloat outerHeight = outerRect.size.height;
+    
+    CGFloat x = (outerWidth - innerWidth) / 2.0;
+    CGFloat y = (outerHeight - innerHeight) / 2.0;
+    
+    if (round) {
+        x = roundf(x);
+        y = roundf(y);
+    }
+    return CGRectMake(x, y, rect.size.width, rect.size.height);
+}
+
 
 @end

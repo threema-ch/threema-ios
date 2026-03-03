@@ -89,7 +89,7 @@ public struct AppUpdateSteps {
         )
         
         let allContactIdentities = await backgroundBusinessInjector.entityManager.perform {
-            backgroundBusinessInjector.entityManager.entityFetcher.allContactIdentities()
+            backgroundBusinessInjector.entityManager.entityFetcher.contactIdentities()
         }
         
         for contactIdentity in allContactIdentities {
@@ -128,13 +128,11 @@ public struct AppUpdateSteps {
                 setLastUpdate: false
             ) {
                 let systemMessage = backgroundBusinessInjector.entityManager.entityCreator.systemMessageEntity(
-                    for: conversation
+                    for: .fsIllegalSessionState,
+                    in: conversation
                 )
-                systemMessage?.type = NSNumber(value: kSystemMessageFsIllegalSessionState)
-                systemMessage?.remoteSentDate = Date()
-                if systemMessage?.isAllowedAsLastMessage ?? false {
-                    conversation.lastMessage = systemMessage
-                }
+                
+                systemMessage.remoteSentDate = Date()
             }
             else {
                 DDLogNotice("[ForwardSecurity] Can't add status message because conversation is nil")

@@ -128,3 +128,7 @@ SaltyRTC:
 .PHONY: SaltyRTC-clean
 SaltyRTC-clean:
 	cd $(saltyRTC_path); cargo clean
+
+#- Other Makefiles -#
+
+# Conditionally include internal Makefile if it exists

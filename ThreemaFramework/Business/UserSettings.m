@@ -21,15 +21,18 @@
 #import "UserSettings.h"
 #import "AppGroup.h"
 #import "LicenseStore.h"
-#import "DatabaseManager.h"
 #import "ServerConnector.h"
 #import "MyIdentityStore.h"
-#import "ValidationLogger.h"
-#import "EntityCreator.h"
-#import "EntityFetcher.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
-#import "EntityFetcher.h"
 #import "NSString+Hex.h"
+
+@import FileUtility;
+
+#ifdef DEBUG
+static const DDLogLevel ddLogLevel = DDLogLevelAll;
+#else
+static const DDLogLevel ddLogLevel = DDLogLevelNotice;
+#endif
 
 typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
     ThreemaAudioMessagePlaySpeedHalf = 0,
@@ -44,6 +47,14 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
     enum ThreemaAudioMessagePlaySpeed threemaAudioMessagePlaySpeed;
 }
 
+// Appearance
+@synthesize displayOrderFirstName;
+@synthesize hideStaleContacts;
+@synthesize previewLimit;
+@synthesize showGalleryPreview;
+@synthesize showProfilePictures;
+@synthesize useSystemTheme;
+
 @synthesize appMigratedToVersion;
 
 @synthesize sendReadReceipts;
@@ -56,7 +67,6 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize blockUnknown;
 @synthesize enablePoi;
 @synthesize allowOutgoingDonations;
-@synthesize hideStaleContacts;
 
 @synthesize inAppSounds;
 @synthesize inAppVibrate;
@@ -72,13 +82,11 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 
 @synthesize disableBigEmojis;
 @synthesize sendMessageFeedback;
+@synthesize wallpaperType;
 @synthesize wallpaper;
 @synthesize darkTheme;
-@synthesize useSystemTheme;
-@synthesize showProfilePictures;
 
 @synthesize sortOrderFirstName;
-@synthesize displayOrderFirstName;
 
 @synthesize validationLogging;
 @synthesize enableIPv6;
@@ -91,14 +99,10 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize profilePictureContactList;
 @synthesize profilePictureRequestList;
 
-@synthesize showGalleryPreview;
-
 @synthesize enableThreemaCall;
 @synthesize alwaysRelayCalls;
 @synthesize includeCallsInRecents;
 @synthesize enableThreemaGroupCalls;
-
-@synthesize previewLimit;
 
 @synthesize acceptedPrivacyPolicyDate;
 @synthesize acceptedPrivacyPolicyVariant;
@@ -110,7 +114,6 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 @synthesize openPlusIconInChat;
 
 @synthesize enableMultiDevice;
-@synthesize deviceID;
 @synthesize allowSeveralLinkedDevices;
 
 @synthesize safeConfig;
@@ -142,10 +145,10 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 
 @synthesize resetTipKitOnNextLaunch;
 @synthesize jbDetectionDismissed;
-@synthesize contactList2;
 @synthesize ipcCommunicationEnabled;
 @synthesize ipcSecretPrefix;
 @synthesize newNavigationEnabled;
+@synthesize showWorkReferral;
 
 /// Deprecated Keys, please add keys if they are removed:
 /// - `featureFlagEnableNoMIMETypeFileMessagesFilter`
@@ -163,16 +166,20 @@ typedef NS_ENUM(NSInteger, ThreemaAudioMessagePlaySpeed) {
 /// - `BlockCommunication`
 /// - `SendEmojiReactions`
 /// - `DisableProximityMonitoring`
+/// - `ContactList2`
+/// - `ballotLastType`
+/// - `ballotLastAssessmentType`
+/// - `DeviceID`
+/// - `IPCCommunicationEnabled`
 
 static UserSettings *instance;
 
 + (UserSettings*)sharedUserSettings {
-	
-	@synchronized (self) {
-		if (!instance)
-			instance = [[UserSettings alloc] init];
-	}
-	
+    static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+        instance = [UserSettings new];
+    });
+
 	return instance;
 }
 
@@ -198,7 +205,7 @@ static UserSettings *instance;
         BOOL defaultDarkTheme = NO;
         BOOL defaultUseSystemTheme = true;
         BOOL defaultWorkInfoShown = false;
-        if (TargetManagerObjc.isBusinessApp) {
+        if (TargetManagerObjC.isBusinessApp) {
             defaultDarkTheme = YES;
             defaultUseSystemTheme = false;
             defaultWorkInfoShown = true;
@@ -251,7 +258,6 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"OpenPlusIconInChat",
                                         [NSNumber numberWithBool:NO], @"EnableMultiDevice",
                                         [NSNumber numberWithBool:NO], @"AllowSeveralLinkedDevices",
-                                        [NSData data], @"DeviceID",
                                         [NSData data], @"SafeConfig",
                                         [NSNumber numberWithBool:NO], @"SafeIntroShown",
                                         [NSNumber numberWithBool:defaultWorkInfoShown], @"WorkInfoShown",
@@ -271,9 +277,11 @@ static UserSettings *instance;
                                         [NSNumber numberWithBool:NO], @"PartialReactionSupportAlertShown",
                                         [NSNumber numberWithBool:NO], @"ResetTipKitOnNextLaunch",
                                         [NSNumber numberWithBool:NO], @"JBDetectionDismissed",
-                                        [NSNumber numberWithBool:NO], @"ContactList2",
                                         [NSNumber numberWithBool:NO], @"NewNavigationEnabled",
+                                        [NSNumber numberWithBool:YES], @"IPCEnabled",
+                                        [NSNumber numberWithBool:YES], @"showWorkReferral",
                                         [NSData data], @"IPCSecretPrefix",
+                                        [NSNumber numberWithUnsignedInteger:[TargetManagerObjC isBusinessApp] ? WallpaperTypeEmpty : WallpaperTypeThreema], @"WallpaperType",
 
                                      nil];
                                      //Keys `EvaluatedPolicyDomainStateApp` and `EvaluatedPolicyDomainStateShareExtension` are intentionally not set, since we need them to be `nil` the first time.
@@ -333,9 +341,12 @@ static UserSettings *instance;
     }
     showProfilePictures = [defaults boolForKey:@"ShowProfilePictures"];
 
+    wallpaperType = [defaults integerForKey:@"WallpaperType"];
+
     NSString *wallpaperPath = [self wallpaperPath];
-    if ([[NSFileManager defaultManager] fileExistsAtPath:wallpaperPath]) {
+    if ([[FileUtility new] fileExistsAtPath:wallpaperPath]) {
         wallpaper = [NSData dataWithContentsOfFile:wallpaperPath];
+        wallpaperType = WallpaperTypeCustom;
     }
 
     sortOrderFirstName = [defaults boolForKey:@"SortOrderFirstName"];
@@ -373,7 +384,6 @@ static UserSettings *instance;
     openPlusIconInChat = [defaults boolForKey:@"OpenPlusIconInChat"];
 
     enableMultiDevice = [defaults boolForKey:@"EnableMultiDevice"];
-    deviceID = [defaults dataForKey:@"DeviceID"];
     allowSeveralLinkedDevices = [defaults boolForKey:@"AllowSeveralLinkedDevices"];
 
     groupCallsDebugMessages = [defaults boolForKey:@"GroupCallsDebugMessages"];
@@ -413,17 +423,17 @@ static UserSettings *instance;
     partialReactionSupportAlertShown = [defaults boolForKey:@"PartialReactionSupportAlertShown"];
     
     jbDetectionDismissed = [defaults boolForKey:@"JBDetectionDismissed"];
-    contactList2 = [defaults boolForKey:@"ContactList2"];
     newNavigationEnabled = [defaults boolForKey:@"NewNavigationEnabled"];
 
-    if ([ThreemaEnvironment env] == EnvironmentTypeXcode) {
-        ipcCommunicationEnabled = [defaults boolForKey:@"IPCCommunicationEnabled"];
+    if ([ThreemaEnvironment env] != EnvironmentTypeAppStore) {
+        ipcCommunicationEnabled = [defaults boolForKey:@"IPCEnabled"];
     }
     else {
         ipcCommunicationEnabled = false;
     }
 
     ipcSecretPrefix = [defaults objectForKey:@"IPCSecretPrefix"];
+    showWorkReferral = true;
 }
 
 - (void)setAppMigratedToVersion:(NSInteger)newAppMigratedToVersion {
@@ -434,11 +444,11 @@ static UserSettings *instance;
 
 - (void)setSendReadReceipts:(BOOL)newSendReadReceipts {
     sendReadReceipts = newSendReadReceipts;
-    [[ValidationLogger sharedValidationLogger] logString:[NSString stringWithFormat:@"Read receipts bug: set flag to %@", newSendReadReceipts ? @"true" : @"false"]];
+    DDLogNotice(@"Read receipts bug: set flag to %@", newSendReadReceipts ? @"true" : @"false");
 
     [defaults setBool:sendReadReceipts forKey:@"SendReadReceipts"];
     [defaults synchronize];
-    [[ValidationLogger sharedValidationLogger] logString:[NSString stringWithFormat:@"Read receipts bug: It's now set to %@", [defaults boolForKey:@"SendReadReceipts"] ? @"true" : @"false"]];
+    DDLogNotice(@"Read receipts bug: It's now set to %@", [defaults boolForKey:@"SendReadReceipts"] ? @"true" : @"false");
 }
 
 - (void)setSyncContacts:(BOOL)newSyncContacts {
@@ -581,16 +591,22 @@ static UserSettings *instance;
     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowProfilePictureChanged object:nil];
 }
 
+- (void)setWallpaperType:(enum WallpaperType)newWallpaperType {
+    wallpaperType = newWallpaperType;
+    [defaults setObject:[NSNumber numberWithUnsignedInteger:wallpaperType] forKey:@"WallpaperType"];
+    [defaults synchronize];
+}
+
 - (void)setWallpaper:(NSData *)_wallpaper {
     wallpaper = _wallpaper;
     
     if (wallpaper != nil) {
         [wallpaper writeToFile:[self wallpaperPath] atomically:NO];
-        [[ValidationLogger sharedValidationLogger] logString:@"Wallpaper: Set wallpaper"];
+        DDLogNotice(@"Wallpaper: Set wallpaper");
     }
     else {
-        [[NSFileManager defaultManager] removeItemAtPath:[self wallpaperPath] error:nil];
-        [[ValidationLogger sharedValidationLogger] logString:@"Wallpaper: Removed wallpaper"];
+        [[FileUtility new] deleteAtPath:[self wallpaperPath] error:nil];
+        DDLogNotice(@"Wallpaper: Removed wallpaper");
     }
    
     [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationWallpaperChanged object:nil];
@@ -766,12 +782,8 @@ static UserSettings *instance;
     enableMultiDevice = newEnableMultiDevice;
     [defaults setBool:enableMultiDevice forKey:@"EnableMultiDevice"];
     [defaults synchronize];
-}
 
-- (void)setDeviceID:(NSData *)newDeviceID {
-    deviceID = newDeviceID;
-    [defaults setObject:deviceID forKey:@"DeviceID"];
-    [defaults synchronize];
+    [DebugLog logMultiDeviceConfiguration];
 }
 
 - (void)setAllowSeveralLinkedDevices:(BOOL)newAllowSeveralLinkedDevices {
@@ -940,11 +952,6 @@ static UserSettings *instance;
     [defaults synchronize];
 }
 
-- (void)setContactList2:(BOOL)newContactList2 {
-    contactList2 = newContactList2;
-    [defaults setBool:contactList2 forKey:@"ContactList2"];
-    [defaults synchronize];
-}
 - (void)setNewNavigationEnabled:(BOOL)newNewNavigationEnabled {
     newNavigationEnabled = newNewNavigationEnabled;
     [defaults setBool:newNavigationEnabled forKey:@"NewNavigationEnabled"];
@@ -953,13 +960,19 @@ static UserSettings *instance;
 
 - (void)setIpcCommunicationEnabled:(BOOL)newIpcCommunicationEnabled {
     ipcCommunicationEnabled = newIpcCommunicationEnabled;
-    [defaults setBool:ipcCommunicationEnabled forKey:@"IPCCommunicationEnabled"];
+    [defaults setBool:ipcCommunicationEnabled forKey:@"IPCEnabled"];
     [defaults synchronize];
 }
 
 - (void)setIpcSecretPrefix:(NSData *)newIpcSecretPrefix {
     ipcSecretPrefix = newIpcSecretPrefix;
     [defaults setObject:ipcSecretPrefix forKey:@"IPCSecretPrefix"];
+    [defaults synchronize];
+}
+
+- (void)setShowWorkReferral:(BOOL)newShowWorkReferral {
+    showWorkReferral = newShowWorkReferral;
+    [defaults setBool:showWorkReferral forKey:@"ShowWorkReferral"];
     [defaults synchronize];
 }
 

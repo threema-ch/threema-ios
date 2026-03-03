@@ -19,7 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
+
 @testable import ThreemaFramework
 
 class ForwardSecuritySessionTerminatorTests: XCTestCase {
@@ -28,7 +30,6 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
     private var databasePreparer: DatabasePreparer!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema")
 
         let (_, mainContext, _) = DatabasePersistentContext.devNullContext()
@@ -39,7 +40,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
     func testTerminateAllSessionsWithMultipleToTerminate() throws {
         let sessionStore = InMemoryDHSessionStore()
         let messageSenderMock = MessageSenderMock()
-        let entityManager = EntityManager(databaseContext: databaseMainContext)
+        let entityManager = EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false)
         let businessInjectorMock = BusinessInjectorMock(
             entityManager: entityManager,
             messageSender: messageSenderMock
@@ -54,7 +55,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         let terminateIdentity = ThreemaIdentity("AAAAAAAA")
         let terminateContact = databasePreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: terminateIdentity.string
+            identity: terminateIdentity.rawValue
         )
         
         let terminateSession1 = DHSession(
@@ -76,7 +77,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         let keepIdentity = ThreemaIdentity("BBBBBBBB")
         let keepContact = databasePreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: keepIdentity.string
+            identity: keepIdentity.rawValue
         )
         
         let keepSession1 = DHSession(
@@ -108,7 +109,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
     func testTerminateAllSessions() throws {
         let sessionStore = InMemoryDHSessionStore()
         let messageSenderMock = MessageSenderMock()
-        let entityManager = EntityManager(databaseContext: databaseMainContext)
+        let entityManager = EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false)
         let businessInjectorMock = BusinessInjectorMock(
             entityManager: entityManager,
             messageSender: messageSenderMock
@@ -123,7 +124,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         let terminateIdentity = ThreemaIdentity("AAAAAAAA")
         let terminateContact = databasePreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: terminateIdentity.string
+            identity: terminateIdentity.rawValue
         )
         
         let terminateSession1 = DHSession(
@@ -154,7 +155,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
     func testTerminateWithNoSessionToTerminate() throws {
         let sessionStore = InMemoryDHSessionStore()
         let messageSenderMock = MessageSenderMock()
-        let entityManager = EntityManager(databaseContext: databaseMainContext)
+        let entityManager = EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false)
         let businessInjectorMock = BusinessInjectorMock(
             entityManager: entityManager,
             messageSender: messageSenderMock
@@ -169,7 +170,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         let terminateIdentity = ThreemaIdentity("AAAAAAAA")
         let terminateContact = databasePreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: terminateIdentity.string
+            identity: terminateIdentity.rawValue
         )
         
         // Create identity and sessions to be kept
@@ -177,7 +178,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         let keepIdentity = ThreemaIdentity("BBBBBBBB")
         let keepContact = databasePreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: keepIdentity.string
+            identity: keepIdentity.rawValue
         )
         
         let keepSession1 = DHSession(
@@ -208,7 +209,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
     
     func testDeleteAllSessionsWithMultipleToDelete() throws {
         let sessionStore = InMemoryDHSessionStore()
-        let entityManager = EntityManager(databaseContext: databaseMainContext)
+        let entityManager = EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false)
         let businessInjectorMock = BusinessInjectorMock(
             entityManager: entityManager
         )
@@ -222,7 +223,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         let deleteIdentity = ThreemaIdentity("AAAAAAAA")
         let deleteContact = databasePreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: deleteIdentity.string
+            identity: deleteIdentity.rawValue
         )
         
         let deleteSession1 = DHSession(
@@ -244,7 +245,7 @@ class ForwardSecuritySessionTerminatorTests: XCTestCase {
         let keepIdentity = ThreemaIdentity("BBBBBBBB")
         let keepContact = databasePreparer.createContact(
             publicKey: MockData.generatePublicKey(),
-            identity: keepIdentity.string
+            identity: keepIdentity.rawValue
         )
         
         let keepSession1 = DHSession(

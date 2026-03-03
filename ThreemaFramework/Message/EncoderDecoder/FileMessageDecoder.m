@@ -21,7 +21,6 @@
 #import "FileMessageDecoder.h"
 #import "FileMessageKeys.h"
 #import "NSString+Hex.h"
-#import "EntityCreator.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "ThreemaError.h"
 #import "NaClCrypto.h"
@@ -57,8 +56,15 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
     EntityManager *entityManager;
 }
 
-+ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessageEntity *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
-    NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
++ (void)decodeMessageFromBox:(nonnull BoxFileMessage *)message sender:(nullable NSObject *)senderObject conversation:(nonnull NSObject *)conversationObject isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(NSObject *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
+
+    NSAssert(senderObject == nil || [senderObject isKindOfClass:[ContactEntity class]], @"Parameter senderObject must be type of ContactEntity");
+    ContactEntity *sender = (ContactEntity*)senderObject;
+
+    NSAssert([conversationObject isKindOfClass:[ConversationEntity class]], @"Parameter conversationObject must be type of ConversationEntity");
+    ConversationEntity *conversation = (ConversationEntity*)conversationObject;
+
+    NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Parameter entityManagerObject must be type of EntityManager");
 
     FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError sender:sender conversation:conversation timeoutDownloadThumbnail:timeout];
 
@@ -67,7 +73,14 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
     [decoder decodeMessageFromBox:message];
 }
 
-+ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(BaseMessageEntity *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
++ (void)decodeGroupMessageFromBox:(nonnull GroupFileMessage *)message sender:(nullable NSObject *)senderObject conversation:(nonnull NSObject *)conversationObject isReflectedMessage:(BOOL)isReflected timeoutDownloadThumbnail:(int)timeout entityManager:(nonnull NSObject *)entityManagerObject onCompletion:(void (^)(NSObject *))onCompletion onError:(void (^)(NSError * _Nonnull))onError {
+
+    NSAssert(senderObject == nil || [senderObject isKindOfClass:[ContactEntity class]], @"Parameter senderObject must be type of ContactEntity");
+    ContactEntity *sender = (ContactEntity*)senderObject;
+
+    NSAssert([conversationObject isKindOfClass:[ConversationEntity class]], @"Parameter conversationObject must be type of ConversationEntity");
+    ConversationEntity *conversation = (ConversationEntity*)conversationObject;
+
     NSAssert([entityManagerObject isKindOfClass:[EntityManager class]], @"Object must be type of EntityManager");
 
     FileMessageDecoder *decoder = [FileMessageDecoder fileMessageDecoderOnCompletion:onCompletion onError:onError sender:sender conversation:conversation timeoutDownloadThumbnail:timeout];
@@ -234,7 +247,7 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
 
 - (void)createDBMessageWithCompletionInternal:(void(^ _Nonnull)(FileMessageEntity * _Nonnull))onCompletionInternal onErrorInternal:(void(^ _Nonnull)(NSError * _Nonnull))onErrorInternal{
 
-    [entityManager getOrCreateMessageFor:_boxMessage sender:_sender conversation:_conversation thumbnail:nil onCompletion:^(BaseMessageEntity * _Nonnull message) {
+    [entityManager getOrCreateMessageFor:_boxMessage sender:_sender conversation:_conversation thumbnail:nil myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity * _Nonnull message) {
         __block FileMessageEntity *fileMessageEntity;
 
         [entityManager performSyncBlockAndSafe:^{
@@ -295,21 +308,16 @@ typedef void (^ErrorBlock)(NSError * _Nonnull);
     __block FileMessageEntity *fileMessage;
 
     [entityManager performSyncBlockAndSafe:^{
-        fileMessage = [[entityManager entityFetcher] existingObjectWithID:objectID];
+        fileMessage = (FileMessageEntity*)[[entityManager entityFetcher] existingObjectWith:objectID];
         if (fileMessage == nil) {
             onErrorInternal([ThreemaError threemaError:@"Loading file message to update thumbnail failed"]);
             return;
         }
 
         if (fileMessage.thumbnail == nil && thumbnailData) {
-            ImageDataEntity *thumbnail = [entityManager.entityCreator imageDataEntity];
-            thumbnail.data = thumbnailData;
-
             // load image to determine size
             UIImage *thumbnailImage = [UIImage imageWithData:thumbnailData];
-            thumbnail.width = thumbnailImage.size.width;
-            thumbnail.height = thumbnailImage.size.height;
-
+            ImageDataEntity *thumbnail = [entityManager.entityCreator imageDataEntityWithData:thumbnailData size:thumbnailImage.size message:nil];
             fileMessage.thumbnail = thumbnail;
         }
     }];

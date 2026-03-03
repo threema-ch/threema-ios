@@ -29,6 +29,8 @@ public enum LaunchModalType {
     case notificationReminder
     case notificationTypeSelection
     case safeSetupInfo
+    case remoteSecretActivate
+    case remoteSecretDeactivate
     
     /// The view controller belonging to a modal
     func viewController(delegate: LaunchModalManagerDelegate) -> UIViewController {
@@ -37,7 +39,7 @@ public enum LaunchModalType {
             let storyBoard = AppDelegate.getMyIdentityStoryboard()
             let safeSetupNavigationController = storyBoard?
                 .instantiateViewController(withIdentifier: "SafeIntroNavigationController") as! UINavigationController
-            if let mdmSetup = MDMSetup(setup: false),
+            if let mdmSetup = MDMSetup(),
                mdmSetup.isSafeBackupForce() {
                 safeSetupNavigationController.isModalInPresentation = true
             }
@@ -60,6 +62,16 @@ public enum LaunchModalType {
                 .instantiateViewController(withIdentifier: "SafeIntroViewController") as! SafeIntroViewController
             safeIntroViewController.launchModalDelegate = delegate
             return safeIntroViewController
+        
+        case .remoteSecretActivate:
+            let viewModel = RemoteSecretActivateDeactivateViewModel(type: .activate)
+            let view = RemoteSecretActivateDeactivateView(viewModel: viewModel)
+            return UIHostingController(rootView: view)
+            
+        case .remoteSecretDeactivate:
+            let viewModel = RemoteSecretActivateDeactivateViewModel(type: .deactivate)
+            let view = RemoteSecretActivateDeactivateView(viewModel: viewModel)
+            return UIHostingController(rootView: view)
         }
     }
 }

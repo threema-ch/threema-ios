@@ -20,6 +20,8 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import SwiftUI
+import ThreemaFramework
 import ThreemaMacros
 import UIKit
 
@@ -35,8 +37,6 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     let conversation: ConversationEntity
     weak var parentViewController: UIViewController?
     let entityManager: EntityManager
-    // This needs to be a class property to work
-    var fileMessagePreview: FileMessagePreview?
     
     private weak var delegate: MWPhotoBrowserWrapperDelegate?
     
@@ -226,20 +226,20 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         }
     }
     
-    // MARK: - MWVideoDelegate
+    // MARK: MWVideoDelegate
 
     func play(_ video: MediaBrowserVideo!) {
         try? AVAudioSession.sharedInstance().setCategory(.playback)
     }
     
-    func showFile(_ fileMessageEntity: FileMessageEntity!) {
-        fileMessagePreview = FileMessagePreview(for: fileMessageEntity)
-        fileMessagePreview?.show(on: photoBrowser)
+    // MARK: MWFileDelegate
+
+    func showFile(_ fileMessageEntity: FileMessageEntity) {
+        let controller = UIHostingController(rootView: FileMessagePreviewView(fileMessageEntity: fileMessageEntity))
+        photoBrowser?.present(controller, animated: true)
     }
     
-    // MARK: - MWFileDelegate
-
-    func playFileVideo(_ fileMessageEntity: FileMessageEntity!) {
+    func playFileVideo(_ fileMessageEntity: FileMessageEntity) {
         try? AVAudioSession.sharedInstance().setCategory(.playback)
     }
     
@@ -248,7 +248,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
     }
     
     // MARK: - Helpers
-    
+
     private func createPhotoBrowser() -> MWPhotoBrowser? {
         let photoBrowser = MWPhotoBrowser(delegate: self)
         
@@ -338,11 +338,20 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         var finalMessages = [BaseMessageEntity]()
         
         let imageMessages = entityManager.entityFetcher
-            .imageMessages(for: conversation) as? [ImageMessage] ?? [ImageMessage]()
+            .imageMessages(for: conversation) ?? [ImageMessage]()
         let videoMessages = entityManager.entityFetcher
-            .videoMessages(for: conversation) as? [VideoMessage] ?? [VideoMessage]()
+            .videoMessages(for: conversation) ?? [VideoMessage]()
+        
+        let gifMimeType = UTIConverter.mimeType(fromUTI: UTType.gif.identifier)
+        let audioMimeTypes = UTIConverter.renderingAudioMimetypes()
+        
+        var filters = audioMimeTypes
+        if let gifMimeType {
+            filters.append(gifMimeType)
+        }
+        
         let fileMessages = entityManager.entityFetcher
-            .filesMessagesFilteredForPhotoBrowser(for: conversation) as? [FileMessageEntity] ?? [FileMessageEntity]()
+            .fileMessagesForPhotoBrowser(for: conversation, filteredMimeTypes: filters) ?? []
         
         finalMessages.append(contentsOf: imageMessages)
         finalMessages.append(contentsOf: videoMessages)

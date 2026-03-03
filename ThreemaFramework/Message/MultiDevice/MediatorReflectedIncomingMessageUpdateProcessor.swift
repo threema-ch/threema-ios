@@ -83,15 +83,19 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
             let conversation: ConversationEntity
             if let senderIdentity,
                let contactConversation = self.frameworkInjector.entityManager.conversation(
-                   for: senderIdentity.string,
+                   for: senderIdentity.rawValue,
                    createIfNotExisting: false
                ) {
                 conversation = contactConversation
             }
             else if let senderGroupIdentity,
-                    let groupConversation = self.frameworkInjector.entityManager.entityFetcher.conversationEntity(
-                        for: senderGroupIdentity.id,
-                        creator: senderGroupIdentity.creator.string
+                    let groupConversation = self.frameworkInjector.entityManager.entityFetcher
+                    .conversationEntity(
+                        for: GroupIdentity(
+                            id: senderGroupIdentity.id,
+                            creator: ThreemaIdentity(senderGroupIdentity.creator.rawValue)
+                        ),
+                        myIdentity: self.frameworkInjector.myIdentityStore.identity
                     ) {
                 conversation = groupConversation
             }
@@ -105,7 +109,7 @@ class MediatorReflectedIncomingMessageUpdateProcessor {
             let id = messageID.littleEndianData
             if let message = self.frameworkInjector.entityManager.entityFetcher.message(
                 with: id,
-                conversation: conversation
+                in: conversation
             ) {
                 
                 // If it is not a message from myself then update as read and refresh unread badge

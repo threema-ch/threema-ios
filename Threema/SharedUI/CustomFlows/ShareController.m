@@ -21,14 +21,17 @@
 #import "ShareController.h"
 #import "AppDelegate.h"
 #import "UIDefines.h"
-#import "ContactGroupPickerViewController.h"
-#import "BundleUtil.h"
-#import "Old_FileMessageSender.h"
-#import "UTIConverter.h"
-#import "UserSettings.h"
-#import "ThreemaFramework/ThreemaFramework-Swift.h"
+#import <ThreemaFramework/ContactGroupPickerViewController.h>
+#import <ThreemaFramework/UploadProgressDelegate.h>
+#import <ThreemaFramework/BundleUtil.h>
+#import <ThreemaFramework/Old_FileMessageSender.h>
+#import <ThreemaFramework/URLSenderItem.h>
+#import <ThreemaFramework/UTIConverter.h>
+#import <ThreemaFramework/Constants.h>
+#import <ThreemaFramework/ThreemaFramework-Swift.h>
 
 @import CocoaLumberjack;
+@import FileUtility;
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -107,7 +110,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)deleteInboxFile {
     if ([_url.path rangeOfString:@"Documents/Inbox"].location != NSNotFound) {
-        [[NSFileManager defaultManager] removeItemAtURL:_url error:nil];
+        [[FileUtility new] deleteAt:_url error: nil];
     }
 }
 

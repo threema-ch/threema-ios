@@ -126,7 +126,7 @@ public class ProfilePictureGenerator: ProfilePictureGeneratorProtocol {
         else {
             let icon = NSTextAttachment()
             icon.image = image!.withConfiguration(UIImage.SymbolConfiguration(font: font))
-                .withTint(foregroundColor)
+                .withTintColor(foregroundColor)
             iconString = NSAttributedString(attachment: icon)
         }
         
@@ -176,7 +176,7 @@ public class ProfilePictureGenerator: ProfilePictureGeneratorProtocol {
         else {
             let icon = NSTextAttachment()
             icon.image = image!.withConfiguration(UIImage.SymbolConfiguration(font: font))
-                .withTint(foregroundColor)
+                .withTintColor(foregroundColor)
             iconString = NSAttributedString(attachment: icon)
         }
         

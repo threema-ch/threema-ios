@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import PromiseKit
 import UIKit
 
@@ -28,7 +29,7 @@ enum VideoURLSenderItemCreatorError: Error {
     case generalError
 }
 
-@objc protocol VideoConversionProgressDelegate {
+@objc public protocol VideoConversionProgressDelegate {
     @objc func videoExportSession(exportSession: AVAssetExportSession)
 }
 
@@ -36,7 +37,7 @@ enum VideoURLSenderItemCreatorError: Error {
     
     @objc public static let temporaryDirectory = "tmpVideoCreator"
     
-    @objc var encodeProgressDelegate: VideoConversionProgressDelegate?
+    @objc public var encodeProgressDelegate: VideoConversionProgressDelegate?
     @objc var exportSession: AVAssetExportSession?
     
     var timer: Timer? = nil
@@ -52,9 +53,8 @@ enum VideoURLSenderItemCreatorError: Error {
         
     func getExportSession(asset: AVAsset) -> Promise<AVAssetExportSession> {
         Promise { seal in
-            let outputURL = MediaConverter.getAssetOutputURL()
-            
-            guard let exportSession = MediaConverter.getAVAssetExportSession(from: asset, outputURL: outputURL) else {
+            guard let outputURL = MediaConverter.getAssetOutputURL(),
+                  let exportSession = MediaConverter.getAVAssetExportSession(from: asset, outputURL: outputURL) else {
                 DDLogError("Could not get exportSession for asset \(asset.debugDescription)")
                 seal.reject(VideoURLSenderItemCreatorError.couldNotCreateExportSession)
                 return
@@ -149,7 +149,7 @@ enum VideoURLSenderItemCreatorError: Error {
         guard let scheme = videoURL.scheme else {
             return nil
         }
-        if scheme != "file", !FileManager.default.fileExists(atPath: videoURL.absoluteString) {
+        if scheme != "file", FileUtility.shared.fileExists(at: videoURL) == false {
             return nil
         }
         
@@ -178,7 +178,7 @@ enum VideoURLSenderItemCreatorError: Error {
         return senderItem
     }
     
-    @objc func senderItem(from asset: AVAsset, on exportSession: AVAssetExportSession) -> URLSenderItem? {
+    @objc public func senderItem(from asset: AVAsset, on exportSession: AVAssetExportSession) -> URLSenderItem? {
         var senderItem: URLSenderItem?
         let sema = DispatchSemaphore(value: 0)
         
@@ -203,25 +203,26 @@ enum VideoURLSenderItemCreatorError: Error {
     }
     
     @objc public static func writeToTemporaryDirectory(data: Data) -> URL? {
-        let fileManager = FileManager.default
-        let tmpDirectory = fileManager.temporaryDirectory
-        let tmpFolder = tmpDirectory.appendingPathComponent(VideoURLSenderItemCreator.temporaryDirectory)
+        let fileUtility = FileUtility.shared!
+        let tmpFolder = fileUtility.appTemporaryUnencryptedDirectory
+            .appendingPathComponent(VideoURLSenderItemCreator.temporaryDirectory)
         let fileName = SwiftUtils.pseudoRandomString(length: 10)
         let fileURL = tmpFolder.appendingPathComponent(fileName).appendingPathExtension("mp4")
         
         do {
-            try fileManager.createDirectory(at: tmpFolder, withIntermediateDirectories: true, attributes: nil)
+            try fileUtility.mkDir(
+                at: tmpFolder,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
         }
         catch {
             DDLogError("Could not create temporary directory \(error)")
             return nil
         }
         
-        do {
-            try data.write(to: fileURL)
-        }
-        catch {
-            DDLogError("Could not write file \(error)")
+        guard fileUtility.write(contents: data, to: fileURL) else {
+            DDLogError("Could not write video file to temporary directory.")
             return nil
         }
         
@@ -229,12 +230,12 @@ enum VideoURLSenderItemCreatorError: Error {
     }
     
     @objc public static func cleanTemporaryDirectory() -> Bool {
-        let fileManager = FileManager.default
-        let tmpDirectory = fileManager.temporaryDirectory
-        let tmpFolder = tmpDirectory.appendingPathComponent(VideoURLSenderItemCreator.temporaryDirectory)
+        let fileUtility = FileUtility.shared!
+        let tmpFolder = fileUtility.appTemporaryDirectory
+            .appendingPathComponent(VideoURLSenderItemCreator.temporaryDirectory)
         do {
-            if fileManager.fileExists(atPath: tmpFolder.absoluteString) {
-                try fileManager.removeItem(at: tmpFolder)
+            if fileUtility.fileExists(at: tmpFolder) {
+                try fileUtility.delete(at: tmpFolder)
             }
         }
         catch {

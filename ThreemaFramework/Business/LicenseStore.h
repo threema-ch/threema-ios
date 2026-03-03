@@ -25,9 +25,10 @@
 @property (readonly, nullable) NSString *errorMessage;
 @property (readonly, nullable) NSError *error;
 
-@property (nullable) NSString *licenseUsername;
-@property (nullable) NSString *licensePassword;
-@property (nullable) NSString *onPremConfigUrl NS_SWIFT_NAME(onPremConfigURL);
+@property (nullable, readwrite) NSString *licenseUsername;
+@property (nullable, readwrite) NSString *licensePassword;
+@property (nonnull, readwrite) NSString *licenseDeviceID;
+@property (nullable, readwrite) NSString *onPremConfigUrl NS_SWIFT_NAME(onPremConfigURL);
 
 + (nonnull instancetype)sharedLicenseStore;
 - (nonnull instancetype) __unavailable init;

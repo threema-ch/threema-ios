@@ -75,5 +75,7 @@ SUBQUERY(
 	<string>$(GROUP_IDENTIFIER)</string>
 	<key>ThreemaVersionSuffix</key>
 	<string>k</string>
+    <key>UIDesignRequiresCompatibility</key>
+    <true/>
 </dict>
 </plist>

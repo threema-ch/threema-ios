@@ -24,8 +24,7 @@ import Foundation
 
 public final class MessageForwarder {
 
-    private let businessInjector = BusinessInjector()
-    private lazy var old_FileMessageSender = Old_FileMessageSender()
+    private let businessInjector = BusinessInjector.ui
 
     // MARK: - Lifecycle
 
@@ -86,6 +85,9 @@ public final class MessageForwarder {
             
             if let caption = additionalText {
                 item.caption = caption
+            }
+            if let duration = fileMessage.duration {
+                item.duration = duration as NSNumber
             }
             
             Task {

@@ -82,16 +82,17 @@ class ChatBarButton: ThemedCodeButton {
             return
         }
         
-        // Content
         self.sfSymbolName = sfSymbolName
+        
         let image = UIImage(systemName: sfSymbolName)?.withRenderingMode(.alwaysTemplate)
         setImage(image, for: .normal)
         
-        setPreferredSymbolConfiguration(
-            UIImage
-                .SymbolConfiguration(pointSize: buttonConfiguration.scaledSize, weight: .regular, scale: .large),
-            forImageIn: .normal
+        let configuration = UIImage.SymbolConfiguration(
+            pointSize: buttonConfiguration.scaledSize,
+            weight: .regular,
+            scale: .large
         )
+        setPreferredSymbolConfiguration(configuration, forImageIn: .normal)
     }
     
     // MARK: - Updates

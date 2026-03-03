@@ -112,7 +112,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             return false
         }
         return !(
-            WallpaperStore.shared.defaultIsEmptyWallpaper() || WallpaperStore.shared.defaultIsThreemaWallpaper()
+            WallpaperStore.shared.wallpaperType() == .empty || WallpaperStore.shared.wallpaperType() == .threema
         ) ||
             WallpaperStore.shared.hasCustomWallpaper(for: objectID)
     }()
@@ -193,7 +193,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
     // MARK: - Tap Interactions
     
     func show(identity: String) {
-        if let contact = BusinessInjector.ui.entityManager.entityFetcher.contact(for: identity) {
+        if let contact = BusinessInjector.ui.entityManager.entityFetcher.contactEntity(for: identity) {
             let detailsViewController = SingleDetailsViewController(for: Contact(contactEntity: contact))
             let navigationController = ThemedNavigationController(rootViewController: detailsViewController)
             navigationController.modalPresentationStyle = .formSheet
@@ -201,15 +201,7 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
             chatViewController?.present(navigationController, animated: true)
         }
         else if identity == BusinessInjector.ui.myIdentityStore.identity {
-            // TODO: IOS-2927 Refactor `MeContactDetailsViewController` to allow removing `MainStoryboard`
-            let storyboard = UIStoryboard(name: "MainStoryboard", bundle: nil)
-            let vc = storyboard.instantiateViewController(withIdentifier: "meContactDetailsViewController")
-            
-            let navigationController = ModalNavigationController(rootViewController: vc)
-            navigationController.modalPresentationStyle = .formSheet
-            navigationController.showDoneButton = true
-            
-            chatViewController?.present(navigationController, animated: true)
+            NotificationPresenterWrapper.shared.present(type: .meNotAllowed)
         }
         else {
             DDLogError("Can't find contact for tapped mention")
@@ -277,13 +269,9 @@ final class ChatViewTableViewCellDelegate: NSObject, ChatViewTableViewCellDelega
                 markers.star = NSNumber(booleanLiteral: !markers.star.boolValue)
             }
             else {
-                if let newMarker = self.entityManager.entityCreator.messageMarkersEntity() {
-                    newMarker.star = NSNumber(booleanLiteral: true)
-                    message.messageMarkers = newMarker
-                }
-                else {
-                    fatalError()
-                }
+                let newMarker = self.entityManager.entityCreator.messageMarkersEntity()
+                newMarker.star = NSNumber(booleanLiteral: true)
+                message.messageMarkers = newMarker
             }
         }
     }

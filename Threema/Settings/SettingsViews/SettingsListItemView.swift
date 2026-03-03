@@ -21,8 +21,10 @@
 import SwiftUI
 import ThreemaFramework
 
+@available(*, deprecated, message: "Do not use anymore. Use stock APIs instead.")
 protocol SettingsListItemProtocol: View { }
 
+@available(*, deprecated, message: "Do not use anymore. Use stock APIs instead.")
 struct SettingsListItemView: View, SettingsListItemProtocol {
     let cellTitle: String
     let accessoryText: String?
@@ -60,6 +62,7 @@ struct SettingsListItemView: View, SettingsListItemProtocol {
     }
 }
 
+@available(*, deprecated, message: "Do not use anymore. Use stock APIs instead.")
 struct SettingsListImageItemView: View, SettingsListItemProtocol {
     let cellTitle: String
     let subCellTitle: String?
@@ -98,6 +101,7 @@ struct SettingsListImageItemView: View, SettingsListItemProtocol {
     }
 }
 
+@available(*, deprecated, message: "Do not use anymore. Use stock APIs instead.")
 struct CustomImageLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack {

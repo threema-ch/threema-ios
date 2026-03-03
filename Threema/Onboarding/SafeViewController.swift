@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import ThreemaMacros
 import UIKit
 
@@ -27,7 +28,9 @@ import UIKit
     @IBOutlet var descriptionLabel: UILabel!
     @IBOutlet var passwordField: SetupTextField!
     @IBOutlet var passwordAgainField: SetupTextField!
-    @IBOutlet var advancedOptionsButton: UIButton!
+    @IBOutlet var advancedOptionsButton: SetupButton!
+    
+    @objc var setupConfiguration: SetupConfiguration!
     
     var didShowAlert = false
     var didShowConfirm = false
@@ -44,13 +47,15 @@ import UIKit
     var mdmSetup: MDMSetup
     
     required init?(coder aDecoder: NSCoder) {
-        self.mdmSetup = MDMSetup(setup: true)
+        self.mdmSetup = MDMSetup()
 
         super.init(coder: aDecoder)
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        overrideUserInterfaceStyle = .dark
         
         hideKeyboardWhenTappedAround()
 
@@ -68,6 +73,7 @@ import UIKit
         passwordAgainField.delegate = self
         passwordAgainField.placeholder = #localize("password_again")
         advancedOptionsButton.setTitle(#localize("safe_advanced_options"), for: .normal)
+        advancedOptionsButton.cancelStyle = true
         advancedOptionsButton.isHidden = mdmSetup.isSafeBackupForce() || mdmSetup.isSafeBackupServerPreset()
         
         moreView.mainView = mainContentView
@@ -129,8 +135,7 @@ import UIKit
                     }
                 }
                 catch {
-                    ValidationLogger.shared()?
-                        .logString("Threema Safe: Can't check safe password because regex is invalid")
+                    DDLogNotice("Threema Safe: Can't check safe password because regex is invalid")
                     let alert = IntroQuestionViewHelper(parent: self, onAnswer: nil)
                     alert.showAlert(
                         String.localizedStringWithFormat(
@@ -189,43 +194,31 @@ import UIKit
         else if let password = passwordField.text,
                 !password.isEmpty {
 
-            // store custom safe backup server
-            let safeConfigManager = SafeConfigManager()
+            // Keep custom safe backup server
             if let server {
-                safeConfigManager.setServer(server)
-                safeConfigManager.setCustomServer(customServer)
-                safeConfigManager.setServerUser(serverUsername)
-                safeConfigManager.setServerPassword(serverPassword)
-                safeConfigManager.setMaxBackupBytes(maxBackupBytes)
-                safeConfigManager.setRetentionDays(retentionDays)
+                setupConfiguration.safeServer = server
+                setupConfiguration.safeCustomServer = customServer
+                setupConfiguration.safeServerUsername = serverUsername
+                setupConfiguration.safeServerPassword = serverPassword
+                setupConfiguration.safeMaxBackupBytes = maxBackupBytes as NSNumber?
+                setupConfiguration.safeRetentionDays = retentionDays as NSNumber?
             }
             else {
-                safeConfigManager.setServer(nil)
-                safeConfigManager.setCustomServer(nil)
-                safeConfigManager.setServerUser(nil)
-                safeConfigManager.setServerPassword(nil)
-                safeConfigManager.setMaxBackupBytes(nil)
-                safeConfigManager.setRetentionDays(nil)
+                setupConfiguration.safeServer = nil
+                setupConfiguration.safeCustomServer = nil
+                setupConfiguration.safeServerUsername = nil
+                setupConfiguration.safeServerPassword = nil
+                setupConfiguration.safeMaxBackupBytes = nil
+                setupConfiguration.safeRetentionDays = nil
             }
 
             if let validPassword = validatedPassword() {
-                let safeConfigManager = SafeConfigManager()
-                let safeStore = SafeStore(
-                    safeConfigManager: safeConfigManager,
-                    serverApiConnector: ServerAPIConnector(),
-                    groupManager: BusinessInjector.ui.groupManager
-                )
-                let safeManager = SafeManager(
-                    safeConfigManager: safeConfigManager,
-                    safeStore: safeStore,
-                    safeApiService: SafeApiService()
-                )
-                if safeManager.isPasswordBad(password: validPassword) {
+                if SafeManager.isPasswordBad(password: validPassword) {
                     let alert = IntroQuestionViewHelper(parent: self) { _, answer in
                         if answer == .yes {
                             self.didShowConfirm = true
                             // store password temp. just in memory for setup completion process
-                            MyIdentityStore.shared()?.tempSafePassword = self.passwordField.text
+                            self.setupConfiguration.safePassword = validPassword
                             self.containerDelegate.pageLeft()
                         }
                         else {
@@ -245,7 +238,7 @@ import UIKit
                 }
                 
                 // store password temp. just in memory for setup completion process
-                MyIdentityStore.shared()?.tempSafePassword = validPassword
+                setupConfiguration.safePassword = validPassword
                 return true
             }
             
@@ -328,10 +321,11 @@ extension SafeViewController {
                         animationDuration: &animationDuration
                     )
                     UIView.animate(withDuration: animationDuration, delay: 0, options: options, animations: {
-                        self.passwordAgainField.frame = RectUtil.offsetRect(
-                            self.passwordAgainField.frame,
-                            byX: 0.0,
-                            byY: diff
+                        self.passwordAgainField.frame = CGRectMake(
+                            self.passwordAgainField.frame.origin.x,
+                            self.passwordAgainField.frame.origin.y + diff,
+                            self.passwordAgainField.frame.size.width,
+                            self.passwordAgainField.frame.size.height
                         )
                     }) { _ in
                     }
@@ -345,9 +339,11 @@ extension SafeViewController {
         let options = ThreemaUtilityObjC.animationOptions(for: notification, animationDuration: &animationDuration)
         
         UIView.animate(withDuration: animationDuration, delay: 0, options: options, animations: {
-            self.passwordAgainField.frame = RectUtil.setYPositionOf(
-                self.passwordAgainField.frame,
-                y: self.passwordAgainOffset
+            self.passwordAgainField.frame = CGRectMake(
+                self.passwordAgainField.frame.origin.x,
+                self.passwordAgainOffset,
+                self.passwordAgainField.frame.size.width,
+                self.passwordAgainField.frame.size.height
             )
         }) { _ in
             if self.passwordAgainField.isFirstResponder == false {

@@ -35,7 +35,7 @@ class SafeJsonParser {
         
         class User: Codable {
             var privatekey: String
-            // Temporary field for manual pairing of ios and desktop multi device clients
+            // Temporary field for manual pairing of iOS and desktop multi device clients
             var temporaryDeviceGroupKeyTodoRemove: String?
             var nickname: String?
             var profilePic: String?

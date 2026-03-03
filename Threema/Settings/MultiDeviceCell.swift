@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
-import SnapKit
 import ThreemaMacros
 
 class MultiDeviceCell: ThemedCodeStackTableViewCell {

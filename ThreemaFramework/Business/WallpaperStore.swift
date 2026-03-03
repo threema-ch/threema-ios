@@ -19,16 +19,22 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import SwiftUI
 import UIKit
 
-public class WallpaperStore {
-    
-    public static let shared = WallpaperStore()
+public final class WallpaperStore {
+        
+    public static let shared = WallpaperStore(fileUtility: FileUtility.shared)
     
     public lazy var defaultWallPaper: UIImage! = UIImage(resource: .chatBackground)
-        .draw(withTintColor: Colors.backgroundChatLines)
+    
+    let fileUtility: FileUtilityProtocol
+    
+    init(fileUtility: FileUtilityProtocol) {
+        self.fileUtility = fileUtility
+    }
     
     // MARK: - Public Functions
     
@@ -42,11 +48,15 @@ public class WallpaperStore {
         var wallpapers: [String: String] = AppGroup.userDefaults()
             .dictionary(forKey: Constants.wallpaperKey) as? [String: String] ?? [String: String]()
         
-        let filename = wallpapers[key] ?? uniqueFilename()
-        let wallpaperPath: URL = wallpaperPath(filename: filename)
+        guard
+            let filename = wallpapers[key] ?? uniqueFilename(),
+            let wallpaperPath: URL = wallpaperPath(filename: filename)
+        else {
+            return
+        }
         
         let compressed = compressImageData(wallpaper.pngData())
-        FileUtility.shared.write(fileURL: wallpaperPath, contents: compressed)
+        fileUtility.write(contents: compressed, to: wallpaperPath)
         
         wallpapers.updateValue(filename, forKey: key)
         
@@ -73,7 +83,7 @@ public class WallpaperStore {
         
         if let wallpapers = AppGroup.userDefaults().dictionary(forKey: Constants.wallpaperKey),
            let filename = wallpapers[key] as? String,
-           let data = FileUtility.shared.read(fileURL: wallpaperPath(filename: filename)),
+           let data = fileUtility.read(fileURL: wallpaperPath(filename: filename)),
            let wallpaper = UIImage(data: data) {
             return wallpaper
         }
@@ -100,7 +110,7 @@ public class WallpaperStore {
         let wallpapers = AppGroup.userDefaults().dictionary(forKey: Constants.wallpaperKey)
         if var wallpapers, let filename = wallpapers[key] as? String {
             let wallpaperPath = wallpaperPath(filename: filename)
-            FileUtility.shared.delete(at: wallpaperPath)
+            fileUtility.deleteIfExists(at: wallpaperPath)
             wallpapers.removeValue(forKey: key)
             
             setAppDefaults(wallpapers: wallpapers, key: Constants.wallpaperKey)
@@ -116,7 +126,7 @@ public class WallpaperStore {
         if let wallpapers = AppGroup.userDefaults().dictionary(forKey: Constants.wallpaperKey) {
             for wallpaperEntry in wallpapers {
                 let wallpaperPath = wallpaperPath(filename: wallpaperEntry.key)
-                FileUtility.shared.delete(at: wallpaperPath)
+                fileUtility.deleteIfExists(at: wallpaperPath)
             }
         }
         setAppDefaults(wallpapers: Dictionary(), key: Constants.wallpaperKey)
@@ -128,32 +138,21 @@ public class WallpaperStore {
     }
    
     public func currentDefaultWallpaper() -> UIImage? {
-        if let wallpaper = BusinessInjector().userSettings.wallpaper {
-            return UIImage(data: wallpaper)
-        }
-        return nil
-    }
-    
-    public func defaultIsThreemaWallpaper() -> Bool {
-        // Check the default background for light and dark theme
-        if UserSettings.shared().wallpaper == compressImageData(defaultWallPaperDark().pngData()) ||
-            UserSettings.shared().wallpaper == compressImageData(defaultWallPaperLight().pngData()) {
-            return true
-        }
-        else if UserSettings.shared().wallpaper == compressImageData(defaultWallPaperDark(true).pngData()) ||
-            UserSettings.shared().wallpaper == MediaConverter
-            .pngRepresentation(for: defaultWallPaperLight(true)) {
-            // We need this to replace the old default wallpaper with the new one
-            saveDefaultWallpaper(defaultWallPaper)
-            return true
-        }
-        else {
-            return false
+        let businessInjector = BusinessInjector()
+        switch businessInjector.userSettings.wallpaperType {
+        case WallpaperType.empty:
+            return nil
+        case WallpaperType.threema:
+            return defaultWallPaper
+        case WallpaperType.custom:
+            return UIImage(data: businessInjector.userSettings.wallpaper)
+        @unknown default:
+            return nil
         }
     }
     
-    public func defaultIsEmptyWallpaper() -> Bool {
-        UserSettings.shared().wallpaper == nil
+    public func wallpaperType() -> WallpaperType {
+        BusinessInjector().userSettings.wallpaperType
     }
     
     // MARK: - Private Functions
@@ -163,42 +162,34 @@ public class WallpaperStore {
         AppGroup.userDefaults().synchronize()
     }
     
-    private func wallpaperPath(filename: String) -> URL {
-        let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).map(\.path)[0]
-        let docURL = URL(fileURLWithPath: documentsDir)
-        return docURL.appendingPathComponent(filename)
+    private func wallpaperPath(filename: String) -> URL? {
+        fileUtility.appDocumentsDirectory.map {
+            $0.appendingPathComponent(filename)
+        }
     }
     
-    private func uniqueFilename() -> String {
-        let documentsDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).map(\.path)[0]
-        let docURL = URL(fileURLWithPath: documentsDir)
-        return FileUtility.shared.getUniqueFilename(
-            from: Constants.wallpaperKey,
-            directoryURL: docURL,
-            pathExtension: nil
-        )
+    private func uniqueFilename() -> String? {
+        fileUtility.appDocumentsDirectory.map {
+            fileUtility.getUniqueFilename(
+                from: Constants.wallpaperKey,
+                directoryURL: $0,
+                pathExtension: nil
+            )
+        }
     }
-    
-    private func defaultWallPaperDark(_ old: Bool = false) -> UIImage {
-        UIImage(resource: old ? .chatBackgroundOld : .chatBackground)
-            .draw(withTintColor: Colors.backgroundChatLines(colorTheme: .dark))
-    }
-    
-    private func defaultWallPaperLight(_ old: Bool = false) -> UIImage {
-        UIImage(resource: old ? .chatBackgroundOld : .chatBackground)
-            .draw(withTintColor: Colors.backgroundChatLines(colorTheme: .light))
-    }
-    
+        
     /// Compresses de passed in image data until it's smaller than the maximal size defined in the function
     /// - Parameter data: Image data to compress
     /// - Returns: Compressed data or original if is already smaller than size
     private func compressImageData(_ data: Data?) -> Data? {
         let maxSize = 1_500_000
+        
         guard let data, data.count >= maxSize else {
             return data
         }
        
         DDLogInfo("[WallpaperStore] Compressing image data. Original size: \(data.count)")
+        
         guard let compressed = MediaConverter.scaleImageData(
             to: data,
             toMaxSize: max(UIScreen.main.bounds.width, UIScreen.main.bounds.height),
@@ -207,6 +198,7 @@ public class WallpaperStore {
         ) else {
             return data
         }
+        
         DDLogInfo("[WallpaperStore] Compressed image data. Final size: \(compressed.count)")
       
         return compressed

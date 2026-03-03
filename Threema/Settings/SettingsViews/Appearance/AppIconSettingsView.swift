@@ -97,7 +97,8 @@ struct AppIconMenuItem: View {
             
             if icon.iconName == currentlySelected {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.accentColor)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.white, Color.accentColor)
                     .imageScale(.large)
             }
         }

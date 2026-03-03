@@ -44,7 +44,7 @@ class IntroQuestionViewHelper: NSObject, IntroQuestionDelegate {
             alert = NibUtil.loadViewFromNib(withName: "IntroQuestionView") as? IntroQuestionView
             alert?.showOnlyOkButton = true
             alert?.delegate = self
-            alert?.frame = RectUtil.rect(alert!.frame, centerIn: parent.view.frame, round: true)
+            alert?.frame = rect(alert!.frame, centerIn: parent.view.frame, round: true)
             
             parent.view.addSubview(alert!)
         }
@@ -61,7 +61,7 @@ class IntroQuestionViewHelper: NSObject, IntroQuestionDelegate {
         if confirm == nil {
             confirm = NibUtil.loadViewFromNib(withName: "IntroQuestionView") as? IntroQuestionView
             confirm?.delegate = self
-            confirm?.frame = RectUtil.rect(confirm!.frame, centerIn: parent.view.frame, round: true)
+            confirm?.frame = rect(confirm!.frame, centerIn: parent.view.frame, round: true)
 
             parent.view.addSubview(confirm!)
         }
@@ -96,5 +96,23 @@ class IntroQuestionViewHelper: NSObject, IntroQuestionDelegate {
     
     @objc func selectedNo(_ sender: IntroQuestionView) {
         answer(sender, answer: .no)
+    }
+    
+    private func rect(_ rect: CGRect, centerIn outerRect: CGRect, round: Bool) -> CGRect {
+        let innerWidth = rect.size.width
+        let outerWidth = outerRect.size.width
+        
+        let innerHeight = rect.size.height
+        let outerHeight = outerRect.size.height
+        
+        var x: Double = (outerWidth - innerWidth) / 2.0
+        var y: Double = (outerHeight - innerHeight) / 2.0
+        
+        if round {
+            x = roundl(x)
+            y = roundl(y)
+        }
+        
+        return CGRectMake(x, y, rect.size.width, rect.size.height)
     }
 }

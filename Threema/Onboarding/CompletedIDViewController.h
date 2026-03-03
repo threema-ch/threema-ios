@@ -21,6 +21,8 @@
 #import <UIKit/UIKit.h>
 #import "IDCreationPageViewController.h"
 
+@class SetupConfiguration;
+
 @protocol CompletedIDDelegate <NSObject>
 
 -(void)completedIDSetup;
@@ -63,5 +65,7 @@
 - (IBAction)finishAction:(id)sender;
 
 @property (weak) id<CompletedIDDelegate> delegate;
+
+@property (strong) SetupConfiguration *setupConfiguration;
 
 @end

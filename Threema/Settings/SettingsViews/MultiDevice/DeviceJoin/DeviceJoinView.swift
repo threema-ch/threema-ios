@@ -35,7 +35,7 @@ struct DeviceJoinView: View {
     @State private var isMultiDeviceRegistered = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             // Inform about incompatibility between PFS and MD if MD isn't enabled at this point
             // This should not be switched after the view initially appears, otherwise the navigation stack is reset
             // Thus we store the setting from the settings store in this local state.

@@ -28,7 +28,8 @@ public protocol DistributionListManagerProtocol {
         name: String,
         imageData: Data?,
         recipients: Set<Contact>
-    ) throws
+    ) -> DistributionList?
+    
     func distributionList(for conversation: ConversationEntity) -> DistributionList?
     
     // MARK: - Update

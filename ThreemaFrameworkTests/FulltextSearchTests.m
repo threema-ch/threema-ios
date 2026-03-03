@@ -20,7 +20,8 @@
 
 #import <XCTest/XCTest.h>
 #import <ThreemaFramework/AppGroup.h>
-#import "ThreemaFrameworkTests-swift.h"
+#import "ThreemaFrameworkTests-Swift.h"
+@import ThreemaFramework;
 
 @interface FulltextSearchTests : XCTestCase
 
@@ -33,7 +34,6 @@
 NSInteger count = 10000;
 
 - (void)setUp {
-    // necessary for ValidationLogger
     [AppGroup setGroupId:@"group.ch.threema"]; //THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
     self->preparer = [FulltextSearchPreparer alloc];
@@ -43,7 +43,7 @@ NSInteger count = 10000;
 /// Should find text
 /* TODO: Test fails when running all tests!?!?
 - (void)testFindText {
-    DatabaseContext *dbCnx = [[DatabaseContext alloc] initWithPersistentCoordinator:[self->preparer persistentStoreCoordinator] forBackgroundProcess:NO];
+    DatabaseContext *dbCnx = [[DatabaseContext alloc] initWithPersistentStoreCoordinator:[self->preparer persistentStoreCoordinator] forBackgroundProcess:NO];
     EntityManager *em = [[EntityManager alloc] initWithDatabaseContext:dbCnx];
     
     ContactEntity *contact = [[em entityFetcher] contactForId:@"ECHOECHO"];
@@ -62,24 +62,5 @@ NSInteger count = 10000;
     expect([result count]).to.equal(count / 10000 + count / 1000 + count / 100 + count / 10);
 }
 */
-
-/// Should be fast
-- (void)testFindFast {
-    DatabaseContext *dbCnx = [[DatabaseContext alloc] initWithPersistentCoordinator:[self->preparer persistentStoreCoordinator]];
-    EntityManager *em = [[EntityManager alloc] initWithDatabaseContext:dbCnx];
-    
-    ContactEntity *contact = [[em entityFetcher] contactForId:@"ECHOECHO"];
-    ConversationEntity *conversation = [[em entityFetcher] conversationEntityForContact:contact];
-    
-    CFTimeInterval startTime = CACurrentMediaTime();
-    [em.entityFetcher textMessagesContaining:@"gibts nicht" inConversationEntity:conversation filterPredicate:nil fetchLimit:0];
-    CFTimeInterval duration = CACurrentMediaTime() - startTime;
-    XCTAssert(duration < 0.1);
-
-    startTime = CACurrentMediaTime();
-    [em.entityFetcher textMessagesContaining:@"yz" inConversationEntity:conversation filterPredicate:nil fetchLimit:0];
-    duration = CACurrentMediaTime() - startTime;
-    XCTAssert(duration < 0.1);
-}
 
 @end

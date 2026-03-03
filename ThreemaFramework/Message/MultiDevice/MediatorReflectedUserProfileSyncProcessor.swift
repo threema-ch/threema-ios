@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaProtocols
 
 class MediatorReflectedUserProfileSyncProcessor {
@@ -60,6 +61,7 @@ class MediatorReflectedUserProfileSyncProcessor {
         .then { (downloadedBlobData: Data?) -> Promise<Void> in
             let profileStore = ProfileStore(
                 serverConnector: self.frameworkInjector.serverConnector,
+                myIdentity: ThreemaIdentity(self.frameworkInjector.myIdentityStore.identity),
                 myIdentityStore: self.frameworkInjector.myIdentityStore,
                 contactStore: self.frameworkInjector.contactStore,
                 userSettings: self.frameworkInjector.userSettings,

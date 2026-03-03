@@ -62,8 +62,8 @@ class WebUpdateContactRequest: WebAbstractMessage {
     
     func updateContact() {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
-        let entityManager = EntityManager()
-        let updatedContact = entityManager.entityFetcher.contact(for: identity)
+        let entityManager = BusinessInjector.ui.entityManager
+        let updatedContact = entityManager.entityFetcher.contactEntity(for: identity)
         
         if firstName != nil {
             if firstName!.lengthOfBytes(using: .utf8) > 256 {
@@ -83,9 +83,15 @@ class WebUpdateContactRequest: WebAbstractMessage {
         }
         
         entityManager.performAndWaitSave {
-            updatedContact?.setFirstName(to: self.firstName)
-            updatedContact?.setLastName(to: self.lastName)
-            
+            updatedContact?.setFirstName(
+                to: self.firstName,
+                sortOrderFirstName: BusinessInjector.ui.userSettings.sortOrderFirstName
+            )
+            updatedContact?.setLastName(
+                to: self.lastName,
+                sortOrderFirstName: BusinessInjector.ui.userSettings.sortOrderFirstName
+            )
+
             if self.avatar != nil || self.deleteAvatar == true {
                 updatedContact?.imageData = self.avatar
             }

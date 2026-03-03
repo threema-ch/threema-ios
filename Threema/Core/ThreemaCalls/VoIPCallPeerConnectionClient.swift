@@ -52,6 +52,7 @@ protocol VoIPCallPeerConnectionClientProtocol {
 
     func initialize(
         contactIdentity: String,
+        isInitiator: Bool,
         callID: VoIPCallID?,
         peerConnectionParameters: PeerConnectionParameters,
         delegate: VoIPCallPeerConnectionClientDelegate,
@@ -72,7 +73,7 @@ protocol VoIPCallPeerConnectionClientProtocol {
     func stopVideoCall()
 
     func offer(completion: @escaping (_ sdp: RTCSessionDescription?, _ error: VoIPCallSdpPatcher.SdpError?) -> Void)
-    func answer(completion: @escaping (_ sdp: RTCSessionDescription) -> Void)
+    func answer(completion: @escaping (_ sdp: RTCSessionDescription?, _ error: VoIPCallSdpPatcher.SdpError?) -> Void)
     func set(remoteSdp: RTCSessionDescription, completion: @escaping (Error?) -> Void)
     func set(addRemoteCandidate: RTCIceCandidate)
 
@@ -143,6 +144,7 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
     private var statsTimer: Timer?
     private var receivingVideoTimer: Timer?
     
+    private var isInitiator = false
     private var contactIdentity: String?
     
     private let internetReachability = try! Reachability()
@@ -197,6 +199,7 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
     /// - parameter contact: Call contact
     func initialize(
         contactIdentity: String,
+        isInitiator: Bool,
         callID: VoIPCallID?,
         peerConnectionParameters: PeerConnectionParameters,
         delegate: VoIPCallPeerConnectionClientDelegate,
@@ -205,6 +208,8 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
         self.peerConnectionParameters = peerConnectionParameters
         self.delegate = delegate
 
+        self.isInitiator = isInitiator
+        
         VoIPCallPeerConnectionClient
             .defaultRTCConfiguration(peerConnectionParameters: peerConnectionParameters) { result in
                 do {
@@ -254,6 +259,7 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
     func close() {
         peerConnection?.close()
         peerConnection = nil
+        isRemoteVideoActivated = false
         
         do {
             RTCAudioSession.sharedInstance().lockForConfiguration()
@@ -262,6 +268,7 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
         }
         catch {
             DDLogError("Could not set shared session to not active. Error: \(error)")
+            RTCAudioSession.sharedInstance().unlockForConfiguration()
         }
     }
 }
@@ -297,11 +304,6 @@ extension VoIPCallPeerConnectionClient {
             }
             rtcAudioSession.lockForConfiguration()
             do {
-                try rtcAudioSession.setCategory(
-                    AVAudioSession.Category.playAndRecord,
-                    with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
-                )
-                try rtcAudioSession.setMode(.voiceChat)
                 try rtcAudioSession.overrideOutputAudioPort(speakerActive ? .speaker : .none)
                 try rtcAudioSession.setActive(true)
             }
@@ -323,11 +325,6 @@ extension VoIPCallPeerConnectionClient {
                         
             rtcAudioSession.lockForConfiguration()
             do {
-                try rtcAudioSession.setCategory(
-                    AVAudioSession.Category.playAndRecord,
-                    with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
-                )
-                try rtcAudioSession.setMode(.voiceChat)
                 try rtcAudioSession.overrideOutputAudioPort(.none)
                 try rtcAudioSession.setActive(true)
             }
@@ -349,11 +346,6 @@ extension VoIPCallPeerConnectionClient {
             
             rtcAudioSession.lockForConfiguration()
             do {
-                try rtcAudioSession.setCategory(
-                    AVAudioSession.Category.playAndRecord,
-                    with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
-                )
-                try rtcAudioSession.setMode(AVAudioSession.Mode.videoChat)
                 try rtcAudioSession.overrideOutputAudioPort(.speaker)
                 try rtcAudioSession.setActive(true)
             }
@@ -441,7 +433,7 @@ extension VoIPCallPeerConnectionClient {
     
     /// Get the rtc media constraints for the offer or answer
     /// - returns: RTCMediaConstraints for the offer or answer
-    class func mediaConstrains(isVideoCallAvailable: Bool) -> RTCMediaConstraints {
+    class func mediaConstraints(isVideoCallAvailable: Bool) -> RTCMediaConstraints {
         let mandatoryConstraints = [
             kRTCMediaConstraintsOfferToReceiveAudio: kRTCMediaConstraintsValueTrue,
             kRTCMediaConstraintsOfferToReceiveVideo: isVideoCallAvailable ? kRTCMediaConstraintsValueTrue :
@@ -628,15 +620,19 @@ extension VoIPCallPeerConnectionClient {
     /// Configure the audio session category to .playAndRecord in the mode .voiceChat
     private func configureAudioSession() {
         rtcAudioSession.lockForConfiguration()
+
+        let configuration = RTCAudioSessionConfiguration.webRTC()
+        configuration.categoryOptions = [
+            .allowBluetoothA2DP,
+            .duckOthers,
+            .allowBluetooth,
+        ]
+
         do {
-            try rtcAudioSession.setCategory(
-                AVAudioSession.Category.playAndRecord,
-                with: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
-            )
-            try rtcAudioSession.setMode(.voiceChat)
+            try rtcAudioSession.setConfiguration(configuration)
         }
         catch {
-            debugPrint("Error changeing AVAudioSession category: \(error)")
+            DDLogError("VoipCallService: [cid=\(callID?.callID ?? 0)]: Error configuring audio session: \(error)")
         }
         rtcAudioSession.unlockForConfiguration()
     }
@@ -657,12 +653,12 @@ extension VoIPCallPeerConnectionClient {
         let parameters = sender.parameters
         parameters.degradationPreference = NSNumber(value: RTCDegradationPreference.balanced.rawValue)
         for encoding in parameters.encodings {
-            DDLogDebug(
+            DDLogNotice(
                 "VoipCallService: [cid=\(callID?.callID ?? 0)]: Rtp encoding before -> maxBitrateBps: \(encoding.maxBitrateBps ?? 0), maxFramerate: \(encoding.maxFramerate ?? 0)"
             )
             encoding.maxBitrateBps = NSNumber(value: maxBitrate)
             encoding.maxFramerate = NSNumber(value: maxFps)
-            DDLogDebug(
+            DDLogNotice(
                 "VoipCallService: [cid=\(callID?.callID ?? 0)]: Rtp encoding after -> maxBitrateBps: \(encoding.maxBitrateBps ?? 0), maxFramerate: \(encoding.maxFramerate ?? 0)"
             )
         }
@@ -770,34 +766,26 @@ extension VoIPCallPeerConnectionClient {
             DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
             return
         }
-
-        let constrains = VoIPCallPeerConnectionClient
-            .mediaConstrains(isVideoCallAvailable: peerConnectionParameters.isVideoCallAvailable)
-        peerConnection.offer(for: constrains) { sdp, _ in
+        isInitiator = true
+        
+        let constraints = VoIPCallPeerConnectionClient
+            .mediaConstraints(isVideoCallAvailable: peerConnectionParameters.isVideoCallAvailable)
+        peerConnection.offer(for: constraints) { sdp, _ in
             guard let sdp else {
-                completion(nil, nil)
+                completion(nil, VoIPCallSdpPatcher.SdpError(type: .invalidSdp, description: "Sdp is empty"))
                 return
             }
             
             DispatchQueue.main.async {
-                guard let contact = BusinessInjector.ui.entityManager.entityFetcher.contact(for: self.contactIdentity)
-                else {
-                    completion(nil, nil)
-                    return
-                }
-                
-                let bContact = Contact(contactEntity: contact)
-                let extensionConfig: VoIPCallSdpPatcher.RtpHeaderExtensionConfig = FeatureMask.check(
-                    contact: bContact,
-                    for: .o2OVideoCallSupport
-                ) ? .ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER : .DISABLE
+                let extensionConfig: VoIPCallSdpPatcher.RtpHeaderExtensionConfig = peerConnectionParameters
+                    .isVideoCallAvailable ? .ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER : .DISABLE
                 do {
                     let patchedSdpString = try VoIPCallSdpPatcher(extensionConfig)
                         .patch(type: .LOCAL_OFFER, sdp: sdp.sdp)
                     let patchedSdp = RTCSessionDescription(type: sdp.type, sdp: patchedSdpString)
-                    peerConnection.setLocalDescription(patchedSdp, completionHandler: { _ in
+                    peerConnection.setLocalDescription(patchedSdp) { _ in
                         completion(patchedSdp, nil)
-                    })
+                    }
                 }
                 catch let sdpError {
                     completion(nil, sdpError as? VoIPCallSdpPatcher.SdpError)
@@ -806,35 +794,60 @@ extension VoIPCallPeerConnectionClient {
         }
     }
     
-    func answer(completion: @escaping (_ sdp: RTCSessionDescription) -> Void) {
+    func answer(completion: @escaping (_ sdp: RTCSessionDescription?, _ error: VoIPCallSdpPatcher.SdpError?) -> Void) {
         guard let peerConnection, let peerConnectionParameters else {
             assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
             DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
             return
         }
 
-        let constrains = VoIPCallPeerConnectionClient
-            .mediaConstrains(isVideoCallAvailable: peerConnectionParameters.isVideoCallAvailable)
-        peerConnection.answer(for: constrains) { sdp, _ in
+        isInitiator = false
+        let constraints = VoIPCallPeerConnectionClient
+            .mediaConstraints(isVideoCallAvailable: peerConnectionParameters.isVideoCallAvailable)
+        peerConnection.answer(for: constraints) { sdp, _ in
             guard let sdp else {
+                completion(nil, VoIPCallSdpPatcher.SdpError(type: .invalidSdp, description: "Sdp is empty"))
                 return
             }
             
-            peerConnection.setLocalDescription(sdp, completionHandler: { _ in
-                completion(sdp)
-            })
+            DispatchQueue.main.async {
+                let extensionConfig: VoIPCallSdpPatcher.RtpHeaderExtensionConfig = peerConnectionParameters
+                    .isVideoCallAvailable ? .ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER : .DISABLE
+                do {
+                    let patchedSdpString = try VoIPCallSdpPatcher(extensionConfig)
+                        .patch(type: .LOCAL_ANSWER, sdp: sdp.sdp)
+                    let patchedSdp = RTCSessionDescription(type: sdp.type, sdp: patchedSdpString)
+                    peerConnection.setLocalDescription(patchedSdp) { _ in
+                        completion(patchedSdp, nil)
+                    }
+                }
+                catch let sdpError {
+                    completion(nil, sdpError as? VoIPCallSdpPatcher.SdpError)
+                }
+            }
         }
     }
     
     func set(remoteSdp: RTCSessionDescription, completion: @escaping (Error?) -> Void) {
-        guard let peerConnection else {
+        guard let peerConnection, let peerConnectionParameters else {
             assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
             DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
             return
         }
-
-        delegate?.peerconnectionClient(self, startTransportExpectedStableTimer: true)
-        peerConnection.setRemoteDescription(remoteSdp, completionHandler: completion)
+        let type: VoIPCallSdpPatcher.SdpType = isInitiator ? .REMOTE_ANSWER : .REMOTE_OFFER
+        
+        let extensionConfig: VoIPCallSdpPatcher.RtpHeaderExtensionConfig = peerConnectionParameters
+            .isVideoCallAvailable ? .ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER : .DISABLE
+        do {
+            let patchedSdpString = try VoIPCallSdpPatcher(extensionConfig)
+                .patch(type: type, sdp: remoteSdp.sdp)
+            delegate?.peerconnectionClient(self, startTransportExpectedStableTimer: true)
+            let patchedDescription = RTCSessionDescription(type: remoteSdp.type, sdp: patchedSdpString)
+            peerConnection.setRemoteDescription(patchedDescription, completionHandler: completion)
+        }
+        catch let sdpError {
+            completion(nil)
+        }
     }
     
     func set(addRemoteCandidate: RTCIceCandidate) {

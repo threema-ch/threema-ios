@@ -19,19 +19,20 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CoreData
+import ThreemaEssentials
 import XCTest
+
 @testable import ThreemaFramework
 
 class UnreadMessagesTests: XCTestCase {
     
-    private var mainCnx: NSManagedObjectContext!
+    private var mainCnx: ThreemaManagedObjectContext!
     
     private var testDataConversation1: ConversationEntity!
     private var testDataConversation2: ConversationEntity!
     private var testDataConversation3: ConversationEntity!
 
     override func setUpWithError() throws {
-        // necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
         (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
@@ -133,28 +134,26 @@ class UnreadMessagesTests: XCTestCase {
     override func tearDownWithError() throws { }
 
     func testTotalCount() throws {
-        let unreadMessages =
-            UnreadMessages(
-                messageSender: MessageSenderMock(),
-                entityManager: EntityManager(databaseContext: DatabaseContext(
-                    mainContext: mainCnx,
-                    backgroundContext: nil
-                ))
+        let unreadMessages = UnreadMessages(
+            messageSender: MessageSenderMock(),
+            entityManager: EntityManager(
+                databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: nil),
+                isRemoteSecretEnabled: false
             )
+        )
         let count = unreadMessages.totalCount()
         
         XCTAssertEqual(count, 6)
     }
 
     func testTotalCountWithRecalculateConversation1() throws {
-        let unreadMessages =
-            UnreadMessages(
-                messageSender: MessageSenderMock(),
-                entityManager: EntityManager(databaseContext: DatabaseContext(
-                    mainContext: mainCnx,
-                    backgroundContext: nil
-                ))
+        let unreadMessages = UnreadMessages(
+            messageSender: MessageSenderMock(),
+            entityManager: EntityManager(
+                databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: nil),
+                isRemoteSecretEnabled: false
             )
+        )
         let count = unreadMessages.totalCount(doCalcUnreadMessagesCountOf: [testDataConversation1])
 
         XCTAssertEqual(count, 5)
@@ -162,14 +161,13 @@ class UnreadMessagesTests: XCTestCase {
     }
 
     func testTotalCountWithRecalculateAllConversations() throws {
-        let unreadMessages =
-            UnreadMessages(
-                messageSender: MessageSenderMock(),
-                entityManager: EntityManager(databaseContext: DatabaseContext(
-                    mainContext: mainCnx,
-                    backgroundContext: nil
-                ))
+        let unreadMessages = UnreadMessages(
+            messageSender: MessageSenderMock(),
+            entityManager: EntityManager(
+                databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: nil),
+                isRemoteSecretEnabled: false
             )
+        )
         let count = unreadMessages
             .totalCount(doCalcUnreadMessagesCountOf: [
                 testDataConversation1,
@@ -184,16 +182,13 @@ class UnreadMessagesTests: XCTestCase {
     }
 
     func testCountWithRecalculateConversation1() throws {
-        let unreadMessages =
-            UnreadMessages(
-                messageSender: MessageSenderMock(),
-                entityManager: EntityManager(
-                    databaseContext: DatabaseContext(
-                        mainContext: mainCnx,
-                        backgroundContext: nil
-                    )
-                )
+        let unreadMessages = UnreadMessages(
+            messageSender: MessageSenderMock(),
+            entityManager: EntityManager(
+                databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: nil),
+                isRemoteSecretEnabled: false
             )
+        )
         let count = unreadMessages.count(for: testDataConversation1)
 
         XCTAssertEqual(count, 1)

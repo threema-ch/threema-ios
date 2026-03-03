@@ -21,6 +21,7 @@
 import SwiftUI
 import ThreemaFramework
 
+@available(*, deprecated, message: "Do not use anymore.")
 class ThemedTableViewControllerSwiftUI: ThemedTableViewController {
     private static var connectionStateProvider = ConnectionStateProvider()
     private var hostedViewVC: UIViewController
@@ -123,6 +124,7 @@ extension ThemedTableViewControllerSwiftUI {
     }
 }
 
+@available(*, deprecated, message: "Do not use anymore.")
 protocol ThreemaTitleUpdatable: UIViewController {
     func showTitleLogo()
     func showTitleText()
@@ -143,6 +145,7 @@ extension ThemedTableViewControllerSwiftUI: ThreemaTitleUpdatable {
     }
 }
 
+@available(*, deprecated, message: "Do not use anymore.")
 class WrappedView: UIView {
 
     private(set) var view: UIView
@@ -171,6 +174,7 @@ class WrappedView: UIView {
 
 // MARK: - ConnectionStateProvider
 
+@available(*, deprecated, message: "Do not use anymore.")
 class ConnectionStateProvider: ObservableObject {
     @Published var connectionState: ConnectionState = .disconnected
   

@@ -45,15 +45,19 @@ import Foundation
         
         return await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             businessInjector.entityManager.performBlock {
-                guard let call = self.businessInjector.entityManager.entityCreator.callEntity() else {
+                guard let contactEntity = self.businessInjector.entityManager.entityFetcher
+                    .contactEntity(for: self.identity)
+                else {
                     DDLogNotice(
-                        "VoipCallService: [cid=\(callID)]: fatalError"
+                        "[VoipCallService] [cid=\(callID)]: Contact not found, resuming."
                     )
-                    fatalError()
+                    continuation.resume()
+                    return
                 }
+                
+                let call = self.businessInjector.entityManager.entityCreator.callEntity(contactEntity: contactEntity)
                 call.callID = NSNumber(value: callID)
                 call.date = date
-                call.contact = self.businessInjector.entityManager.entityFetcher.contact(for: self.identity)
                 
                 DDLogNotice(
                     "VoipCallService: [cid=\(callID)]: Resume"
@@ -74,7 +78,7 @@ import Foundation
         await withCheckedContinuation { continuation in
             businessInjector.entityManager.performBlock {
                 guard let calls = self.businessInjector.entityManager.entityFetcher
-                    .allCalls(with: identity, callID: callID) as? [CallEntity] else {
+                    .callEntities(with: identity, and: callID) else {
                     DDLogError("Could not fetch calls.")
                     continuation.resume(returning: [CallEntity]())
                     return

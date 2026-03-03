@@ -1,8 +1,15 @@
 <div align="center">
   <!-- Centered README header hack -->
-  <img width="400" src="logo.svg">
+  <!-- Note: Do not replace the obsolete align attribute with inline style, as GitHub may strip it. -->
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="logo_dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="logo_light.svg">
+    <img width="500" src="logo_light.svg" alt="Threema Logo">
+  </picture>
   <br><br>
 </div>
+
+---
 
 # Threema for iOS
 
@@ -60,15 +67,15 @@ If you build the Threema OnPrem target, credentials from the [Threema OnPrem](ht
 
 ## <a name="schemes"></a>Schemes
 
-- `Threema` builds and tests the consumer app. (recommended for local testing)
-- `Threema Work` builds and tests the enterprise version of our app.
-- `Threema OnPrem` builds and tests the OnPrem version of our app.
-- `Threema Green` is only used for development and testing within Threema.
-- `Threema Blue` is only used for development and testing within Threema.
+- `Threema` builds and tests the consumer app (recommended for local testing)
+- `Threema Work` builds and tests the enterprise version of our app
+- `Threema OnPrem` builds and tests the OnPrem version of our app
+- `Threema Green` is only used for development and testing within Threema
+- `Threema Blue` is only used for development and testing within Threema
 
 ## <a name="building"></a>Building
 
-To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (16.3+) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
+To get started you need a [Mac](https://www.apple.com/mac/), [Xcode](https://developer.apple.com/xcode/) (16.4+) and a (free) [Apple Developer Account](https://developer.apple.com/programs/).
 
 ### 1. Install & Build Dependencies
 
@@ -152,13 +159,13 @@ Due to restrictions by Apple, it’s no easy task to offer reproducible builds f
 
 Before digging into the codebase, you should read the [Cryptography Whitepaper](https://threema.com/press-files/2_documentation/cryptography_whitepaper.pdf) to understand the design concepts.
 
-These are the most important groups of the Xcode project:
+These are the most important folders of the Xcode project:
 
 - `ThreemaFramework`: Shared code between the main app and extensions
 - `Threema`: Code of both apps (Threema and Threema Work)
 - `Threema ShareExtension`: Code of share extension
 - `Threema{Framework}Tests`: Test files
-- `GroupCalls`: Code of group calls
+- Various local packages to modularize our code with associated tests
 
 Our dependencies are managed with Swift Package Manager. Additionally we use WebRTC based on binaries hosted on our servers. If you want to build WebRTC yourself see [BUILD_WEBRTC.md](BUILD_WEBRTC.md).
 

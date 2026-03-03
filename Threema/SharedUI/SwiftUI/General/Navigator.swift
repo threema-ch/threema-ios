@@ -20,6 +20,7 @@
 
 import SwiftUI
 
+@available(*, deprecated, message: "Do not use anymore.")
 class Navigator<ViewDestination: ViewDestinationRepresentable>: ObservableObject {
     @Published var path: ViewDestination?
     
@@ -29,6 +30,7 @@ class Navigator<ViewDestination: ViewDestinationRepresentable>: ObservableObject
         self.path = nil
     }
     
+    @available(*, deprecated, message: "Do not use anymore.")
     func navigate(_ destinationPath: ViewDestination?, isLocked: Bool = false) {
         let navigation = {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
@@ -52,6 +54,7 @@ class Navigator<ViewDestination: ViewDestinationRepresentable>: ObservableObject
         }
     }
     
+    @available(*, deprecated, message: "Do not use anymore.")
     func navigate(_ view: some View, isLocked: Bool = false) where ViewDestination == AnyViewDestination {
         navigate(view.anyViewDestination, isLocked: isLocked)
     }

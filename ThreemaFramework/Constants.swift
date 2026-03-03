@@ -61,6 +61,12 @@ public enum Constants {
     public static let appSetupStateKey = kAppSetupStateKey
     
     public static let messageStoringGatewayGroupPrefix = "☁"
+    
+    // Keys to transfer call info from NSE to app
+    public static let notificationExtensionOffer = "NotificationExtensionOffer"
+    public static let notificationExtensionCallerName = "NotificationExtensionCallerName"
+    public static let notificationExtensionRingtoneSoundName = "NotificationExtensionRingtoneSoundName"
+    public static let notificationExtensionCallID = "NotificationExtensionCallID"
 }
 
 extension String {

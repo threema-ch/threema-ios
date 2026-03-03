@@ -21,7 +21,7 @@
 import ThreemaFramework
 
 class ContactPhotoSenderMock: NSObject, ContactPhotoSenderProtocol {
-    
+
     static var numberOfSendProfileRequestCalls = 0
     
     static func sendProfilePictureRequest(_ toIdentity: String) {
@@ -32,7 +32,11 @@ class ContactPhotoSenderMock: NSObject, ContactPhotoSenderProtocol {
         // no-op
     }
     
-    func startWithImage(toMember: ContactEntity, onCompletion: (() -> Void)?, onError: ((Error?) -> Void)? = nil) {
+    func startWithImage(
+        toMember toMemberObject: NSObject,
+        onCompletion: (() -> Void)?,
+        onError: (((any Error)?) -> Void)? = nil
+    ) {
         onCompletion?()
     }
 }

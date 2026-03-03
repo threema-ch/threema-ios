@@ -45,8 +45,18 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
             }
         }
     }
-    
-    // MARK: - Private Properties
+
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitUserInterfaceStyle.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                toggleOrUpdateView()
+            }
+        }
+    }
 
     // MARK: - Views
     
@@ -91,7 +101,12 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
     }()
     
     // MARK: - Configuration Functions
-    
+
+    override init(frame: CGRect = .zero, action: @escaping ThemedCodeButton.Action) {
+        super.init(frame: frame, action: action)
+        setupTraitRegistration()
+    }
+
     override func configureButton() {
         super.configureButton()
         
@@ -103,7 +118,7 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
             bottomAnchor.constraint(equalTo: speedLabelContainer.bottomAnchor),
             trailingAnchor.constraint(equalTo: speedLabelContainer.trailingAnchor),
         ])
-        
+
         /// This could be accessed through the `BusinessInjector` but at the moment there is no reason to
         let currentSpeed = UserSettings.shared().threemaAudioMessagePlaySpeedCurrentValue()
         speedLabel.text = "\(currentSpeed)x"
@@ -115,8 +130,6 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
         DispatchQueue.main.async {
             self.toggleOrUpdateView(animated: false)
         }
-        
-        tintColor = .secondaryLabel
     }
     
     // MARK: - Update Functions
@@ -136,16 +149,20 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
                 resource: .threemaMicFillBadge
             ).applying(
                 configuration: UIImage.SymbolConfiguration(scale: config.micIconSymbolConfigurationScale),
-                paletteColors: [.tintColor, Colors.fillMicrophoneButton, Colors.fillMicrophoneButton]
+                paletteColors: [.tintColor, .secondaryLabel, .secondaryLabel]
             )
+            
             setImage(image, for: .normal)
             return
         }
         
         let image = UIImage(
-            systemName: "mic.fill",
-            withConfiguration: UIImage.SymbolConfiguration(scale: config.micIconSymbolConfigurationScale)
+            systemName: "mic.fill"
+        )?.applying(
+            configuration: UIImage.SymbolConfiguration(scale: config.micIconSymbolConfigurationScale),
+            paletteColors: [.secondaryLabel]
         )
+        
         setImage(image, for: .normal)
     }
     
@@ -192,15 +209,5 @@ final class MessageVoiceMessageSpeedButton: ThemedCodeButton {
         }
         
         accessibilityLabel = "\(currentSpeed)"
-    }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        
-        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
-            return
-        }
-        
-        toggleOrUpdateView()
     }
 }

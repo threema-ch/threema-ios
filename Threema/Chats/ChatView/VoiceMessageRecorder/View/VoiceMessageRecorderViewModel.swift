@@ -28,7 +28,7 @@ import ThreemaFramework
 
 @MainActor
 final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
-    typealias MediaManager = AudioMediaManager<FileUtility>
+    typealias MediaManager = AudioMediaManager
     
     // MARK: - Published properties
     
@@ -70,8 +70,8 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     // and playback but never for recording.
     private var combinedRecordings: (asset: AVAsset, url: URL)?
     // URL containing the current audio file the recorder is using
-    private var recordingURL: URL = MediaManager.audioURL()
-    
+    private var recordingURL: URL = MediaManager.newRecordingAudioURL()
+
     // Helpers to calculate recording time
     private var recorderStartTimeInterval: TimeInterval?
     private var recordedDuration = 0.0
@@ -124,7 +124,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     
     private func configureDraft(draftAudioURL: URL) throws {
         // We copy the draft into temp dir for processingt
-        let copyURl = MediaManager.audioURL()
+        let copyURl = MediaManager.newRecordingAudioURL()
         do {
             try MediaManager.copy(source: draftAudioURL, destination: copyURl)
         }
@@ -194,7 +194,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     
     private func createRecorder() throws -> AVAudioRecorder {
         // We create a new recorder with a new URL
-        let url = MediaManager.audioURL()
+        let url = MediaManager.newRecordingAudioURL()
         let recorder = try AVAudioRecorder(url: url, settings: recordSettings)
         recordingURL = url
         recorder.delegate = self
@@ -220,7 +220,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         // or for sending.
         if let existingRecording = combinedRecordings {
             do {
-                let combinedURL = MediaManager.audioURL()
+                let combinedURL = MediaManager.newRecordingAudioURL()
                 let asset = try MediaManager.concatenateRecordingsAndSave(
                     combine: [existingRecording.url, recordingURL],
                     to: combinedURL
@@ -228,7 +228,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
                     completion?()
                 }
                 combinedRecordings = (asset, combinedURL)
-                recordingURL = MediaManager.audioURL()
+                recordingURL = MediaManager.newRecordingAudioURL()
             }
             catch {
                 DDLogError("[Voice Recorder] Failed to combine recordings: \(error).")
@@ -344,6 +344,14 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
                     webRequestID: nil
                 )
                 self.sendingCompleted()
+            }
+            catch let error as BlobManagerError {
+                guard error != .noteGroupNeedsNoSync else {
+                    self.sendingCompleted()
+                    success()
+                    return
+                }
+                sendingFailed()
             }
             catch {
                 sendingFailed()
@@ -554,26 +562,31 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     func willDismissView() {
         stopRecordTimer()
         terminatePlayer()
-
-        if let combinedRecordings {
-            MediaManager.cleanupFiles(combinedRecordings.url)
-        }
-        MediaManager.cleanupFiles(recordingURL)
+        cleanupFiles()
     }
     
     func saveVoiceMessageRecordingAsDraft() {
         terminateRecorder {
-            guard let combinedRecordings = self.combinedRecordings else {
+            // Moves recording file from tmp to documents folder for draft or the recording file will be deleted
+            guard !AppLaunchManager.isRemoteSecretEnabled, let combinedRecordings = self.combinedRecordings else {
+                self.cleanupFiles()
                 return
             }
             do {
-                let persistentURL = try MediaManager.moveToPersistentDir(from: combinedRecordings.url)
-                MessageDraftStore.shared.saveDraft(.audio(persistentURL), for: self.conversation)
+                let documentsURL = try MediaManager.moveToDocumentsDir(from: combinedRecordings.url)
+                MessageDraftStore.shared.saveDraft(.audio(documentsURL), for: self.conversation)
             }
             catch {
                 DDLogError("[Voice Recorder] Failed to save  draft: \(error).")
             }
         }
+    }
+
+    func cleanupFiles() {
+        if let combinedRecordings {
+            MediaManager.cleanupFile(combinedRecordings.url)
+        }
+        MediaManager.cleanupFile(recordingURL)
     }
 }
 

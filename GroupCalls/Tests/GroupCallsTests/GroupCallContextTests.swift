@@ -277,12 +277,7 @@ final class GroupCallContextTests: XCTestCase {
             
                 try! await groupCallContext.updateParticipants(add: add, remove: [], existingParticipants: true)
                 
-                if #available(iOS 16.0, *) {
-                    try await Task.sleep(for: .seconds(2))
-                }
-                else {
-                    try await Task.sleep(nanoseconds: 1_000_000_000 * 2)
-                }
+                try await Task.sleep(for: .seconds(2))
                 
                 XCTAssertEqual(mockDataChannelCtx.getNumberOfSentMessages(), 1)
                 

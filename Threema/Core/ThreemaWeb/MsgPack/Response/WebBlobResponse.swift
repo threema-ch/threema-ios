@@ -23,10 +23,12 @@ import ThreemaFramework
 
 class WebBlobResponse: WebAbstractMessage {
     
+    private let blobManager = BlobManager.shared
+    
     var id: String
     var messageID: String
     var type: String
-    
+        
     var baseMessage: BaseMessageEntity
     
     init(request: WebBlobRequest, imageMessage: ImageMessageEntity) {
@@ -105,79 +107,12 @@ class WebBlobResponse: WebAbstractMessage {
         )
     }
     
-    func addImage(completion: (() -> Void)?) {
-        let imageMessageEntity = baseMessage as! ImageMessageEntity
-        if imageMessageEntity.image == nil {
-            let loader = ImageMessageLoader()
-            DispatchQueue.main.sync {
-                loader.start(withMessage: imageMessageEntity) { loadedMessage in
-                    let webBlob = WebBlob(imageMessageEntity: loadedMessage as! ImageMessageEntity)
-                    if webBlob.blob != nil {
-                        self.data = webBlob.objectDict()
-                        self.ack?.success = true
-                    }
-                    else {
-                        self.ack?.success = false
-                        self.ack?.error = "internalError"
-                        self.args?.updateValue(self.ack?.error, forKey: "error")
-                    }
-                    self.args?.updateValue(self.ack?.success, forKey: "success")
-                    completion!()
-                } onError: { _ in
-                    self.ack?.success = false
-                    self.ack?.error = "blobDownloadFailed"
-                    self.args?.updateValue(self.ack?.success, forKey: "success")
-                    self.args?.updateValue(self.ack?.error, forKey: "error")
-                    completion!()
-                }
-            }
-        }
-        else {
-            let webBlob = WebBlob(imageMessageEntity: imageMessageEntity)
-            if webBlob.blob != nil {
-                data = webBlob.objectDict()
-                ack?.success = true
-            }
-            else {
-                ack?.success = false
-                ack?.error = "internalError"
-                args?.updateValue(ack?.error, forKey: "error")
-            }
-            args?.updateValue(ack?.success, forKey: "success")
-            completion!()
-        }
-    }
-    
-    func addVideo(completion: (() -> Void)?) {
-        DispatchQueue.main.sync {
-            let videoMessageEntity = self.baseMessage as! VideoMessageEntity
-            if videoMessageEntity.video == nil {
-                let loader = VideoMessageLoader()
-                
-                loader.start(withMessage: videoMessageEntity) { loadedMessage in
-                    let webBlob = WebBlob(videoMessageEntity: loadedMessage as! VideoMessageEntity)
-                    if webBlob.blob != nil {
-                        self.data = webBlob.objectDict()
-                        self.ack?.success = true
-                    }
-                    else {
-                        self.ack?.success = false
-                        self.ack?.error = "internalError"
-                        self.args?.updateValue(self.ack?.error, forKey: "error")
-                    }
-                    self.args?.updateValue(self.ack?.success, forKey: "success")
-                    completion!()
-                    
-                } onError: { _ in
-                    self.ack?.success = false
-                    self.ack?.error = "blobDownloadFailed"
-                    self.args?.updateValue(self.ack?.success, forKey: "success")
-                    self.args?.updateValue(self.ack?.error, forKey: "error")
-                    completion!()
-                }
-            }
-            else {
-                let webBlob = WebBlob(videoMessageEntity: videoMessageEntity)
+    func addImage(completion: @escaping () -> Void) {
+        Task {
+            let result = try await blobManager.syncBlobsThrows(for: baseMessage.objectID)
+            switch result {
+            case .uploaded, .downloaded:
+                let webBlob = WebBlob(imageMessageEntity: baseMessage as! ImageMessageEntity)
                 if webBlob.blob != nil {
                     self.data = webBlob.objectDict()
                     self.ack?.success = true
@@ -187,95 +122,92 @@ class WebBlobResponse: WebAbstractMessage {
                     self.ack?.error = "internalError"
                     self.args?.updateValue(self.ack?.error, forKey: "error")
                 }
+                
+            case .failed, .inProgress:
+                self.ack?.success = false
+                self.ack?.error = "blobDownloadFailed"
                 self.args?.updateValue(self.ack?.success, forKey: "success")
-                completion!()
+                self.args?.updateValue(self.ack?.error, forKey: "error")
             }
+            completion()
         }
     }
     
-    func addAudio(completion: (() -> Void)?) {
-        let audioMessageEntity = baseMessage as! AudioMessageEntity
-        if audioMessageEntity.audio == nil {
-            DispatchQueue.main.sync {
-                let loader = BlobMessageLoader()
-                loader.start(withMessage: audioMessageEntity) { loadedMessage in
-                    let webBlob = WebBlob(audioMessageEntity: loadedMessage as! AudioMessageEntity)
-                    if webBlob.blob != nil {
-                        self.data = webBlob.objectDict()
-                        self.ack?.success = true
-                    }
-                    else {
-                        self.ack?.success = false
-                        self.ack?.error = "internalError"
-                        self.args?.updateValue(self.ack?.error, forKey: "error")
-                    }
-                    self.args?.updateValue(self.ack?.success, forKey: "success")
-                    completion!()
-                } onError: { _ in
-                    self.ack?.success = false
-                    self.ack?.error = "blobDownloadFailed"
-                    self.args?.updateValue(self.ack?.success, forKey: "success")
-                    self.args?.updateValue(self.ack?.error, forKey: "error")
-                    completion!()
+    func addVideo(completion: @escaping () -> Void) {
+        Task {
+            let result = try await blobManager.syncBlobsThrows(for: baseMessage.objectID)
+            switch result {
+            case .uploaded, .downloaded:
+                let webBlob = WebBlob(videoMessageEntity: baseMessage as! VideoMessageEntity)
+                if webBlob.blob != nil {
+                    self.data = webBlob.objectDict()
+                    self.ack?.success = true
                 }
+                else {
+                    self.ack?.success = false
+                    self.ack?.error = "internalError"
+                    self.args?.updateValue(self.ack?.error, forKey: "error")
+                }
+                
+            case .failed, .inProgress:
+                self.ack?.success = false
+                self.ack?.error = "blobDownloadFailed"
+                self.args?.updateValue(self.ack?.success, forKey: "success")
+                self.args?.updateValue(self.ack?.error, forKey: "error")
             }
-        }
-        else {
-            let webBlob = WebBlob(audioMessageEntity: audioMessageEntity)
-            if webBlob.blob != nil {
-                data = webBlob.objectDict()
-                ack?.success = true
-            }
-            else {
-                ack?.success = false
-                ack?.error = "internalError"
-                args?.updateValue(ack?.error, forKey: "error")
-            }
-            args?.updateValue(ack?.success, forKey: "success")
-            completion!()
+            completion()
         }
     }
     
-    func addFile(completion: (() -> Void)?) {
-        let fileMessageEntity = baseMessage as! FileMessageEntity
-        if fileMessageEntity.data == nil {
-            DispatchQueue.main.sync {
-                let loader = BlobMessageLoader()
-                loader.start(withMessage: fileMessageEntity) { loadedMessage in
-                    let webBlob = WebBlob(fileMessageEntity: loadedMessage as! FileMessageEntity)
-                    if webBlob.blob != nil {
-                        self.data = webBlob.objectDict()
-                        self.ack?.success = true
-                    }
-                    else {
-                        self.ack?.success = false
-                        self.ack?.error = "internalError"
-                        self.args?.updateValue(self.ack?.error, forKey: "error")
-                    }
-                    self.args?.updateValue(self.ack?.success, forKey: "success")
-                    completion!()
-                } onError: { _ in
-                    self.ack?.success = false
-                    self.ack?.error = "blobDownloadFailed"
-                    self.args?.updateValue(self.ack?.success, forKey: "success")
-                    self.args?.updateValue(self.ack?.error, forKey: "error")
-                    completion!()
+    func addAudio(completion: @escaping () -> Void) {
+        Task {
+            let result = try await blobManager.syncBlobsThrows(for: baseMessage.objectID)
+            switch result {
+            case .uploaded, .downloaded:
+                let webBlob = WebBlob(audioMessageEntity: baseMessage as! AudioMessageEntity)
+                if webBlob.blob != nil {
+                    self.data = webBlob.objectDict()
+                    self.ack?.success = true
                 }
+                else {
+                    self.ack?.success = false
+                    self.ack?.error = "internalError"
+                    self.args?.updateValue(self.ack?.error, forKey: "error")
+                }
+                
+            case .failed, .inProgress:
+                self.ack?.success = false
+                self.ack?.error = "blobDownloadFailed"
+                self.args?.updateValue(self.ack?.success, forKey: "success")
+                self.args?.updateValue(self.ack?.error, forKey: "error")
             }
+            completion()
         }
-        else {
-            let webBlob = WebBlob(fileMessageEntity: fileMessageEntity)
-            if webBlob.blob != nil {
-                data = webBlob.objectDict()
-                ack?.success = true
+    }
+    
+    func addFile(completion: @escaping () -> Void) {
+        Task {
+            let result = try await blobManager.syncBlobsThrows(for: baseMessage.objectID)
+            switch result {
+            case .uploaded, .downloaded:
+                let webBlob = WebBlob(fileMessageEntity: baseMessage as! FileMessageEntity)
+                if webBlob.blob != nil {
+                    self.data = webBlob.objectDict()
+                    self.ack?.success = true
+                }
+                else {
+                    self.ack?.success = false
+                    self.ack?.error = "internalError"
+                    self.args?.updateValue(self.ack?.error, forKey: "error")
+                }
+                
+            case .failed, .inProgress:
+                self.ack?.success = false
+                self.ack?.error = "blobDownloadFailed"
+                self.args?.updateValue(self.ack?.success, forKey: "success")
+                self.args?.updateValue(self.ack?.error, forKey: "error")
             }
-            else {
-                ack?.success = false
-                ack?.error = "internalError"
-                args?.updateValue(ack?.error, forKey: "error")
-            }
-            args?.updateValue(ack?.success, forKey: "success")
-            completion!()
+            completion()
         }
     }
 }

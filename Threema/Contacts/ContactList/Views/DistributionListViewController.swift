@@ -67,12 +67,13 @@ import ThreemaMacros
     // MARK: - TableView
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
 
-        guard let distributionList = distributionList(for: indexPath) else {
+        guard let objectID = dataSource.itemIdentifier(for: indexPath) else {
+            tableView.deselectRow(at: indexPath, animated: true)
             return
         }
-        show(DistributionListDetailsViewController(for: distributionList, displayStyle: .default), sender: self)
+        
+        itemsDelegate?.didSelect(.distributionList(objectID: objectID))
     }
     
     override func tableView(
@@ -88,13 +89,13 @@ import ThreemaMacros
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
 
-        let action = UIContextualAction(style: .destructive, title: #localize("delete")) { [weak self] _, _, _ in
-            let em = EntityManager()
+        let action = DeleteActionFactory { [weak self] in
+            let em = BusinessInjector.ui.entityManager
             guard
                 let self,
                 let distributionList = distributionList(for: indexPath),
                 let entity = em.entityFetcher
-                .distributionListEntity(forDistributionListID: distributionList.distributionListID as NSNumber)
+                .distributionListEntity(for: distributionList.distributionListID)
             else {
                 return
             }
@@ -114,8 +115,7 @@ import ThreemaMacros
 //                        em.entityDestroyer.delete(distributionListEntity: entity)
 //                    }
             }
-        }
-        action.image = UIImage(systemName: "trash")
+        }.make()
         
         let swipeAction = UISwipeActionsConfiguration(actions: [action])
         swipeAction.performsFirstActionWithFullSwipe = false
@@ -123,30 +123,16 @@ import ThreemaMacros
     }
     
     private func rowActions(for indexPath: IndexPath) -> [UIContextualAction] {
-        guard let distributionList = distributionList(for: indexPath) else {
+        let entityFetcher = BusinessInjector.ui.entityManager.entityFetcher
+        guard let distributionList = distributionList(for: indexPath),
+              // TODO: (IOS-4515) Add legit fetching
+              let conversation = entityFetcher.conversationEntity(
+                  for: distributionList.distributionListID
+              ) else {
             return []
         }
 
-        let messageAction = UIContextualAction(
-            style: .normal,
-            title: #localize("message"),
-            handler: { _, _, handler in
-                // TODO: (IOS-4515) Add legit fetching
-                let conversation = EntityManager().entityFetcher
-                    .conversation(for: distributionList.distributionListID as NSNumber)!
-                NotificationCenter.default.post(
-                    name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                    object: nil,
-                    userInfo: [
-                        kKeyConversation: conversation,
-                        kKeyForceCompose: true,
-                    ]
-                )
-                handler(true)
-            }
-        )
-        messageAction.image = UIImage(resource: .threemaLockBubbleRightFill)
-        messageAction.backgroundColor = .tintColor
+        let messageAction = MessageActionFactory.make(for: conversation)
         
         return [messageAction]
     }

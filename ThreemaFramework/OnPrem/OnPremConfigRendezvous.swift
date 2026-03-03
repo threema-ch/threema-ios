@@ -20,6 +20,6 @@
 
 import Foundation
 
-public struct OnPremConfigRendezvous: Decodable {
+public struct OnPremConfigRendezvous: Decodable, Sendable {
     let url: String
 }

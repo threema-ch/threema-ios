@@ -108,8 +108,7 @@ final class TaskExecutionSendBallotVoteMessage: TaskExecution, TaskExecutionProt
                                 return
                             }
                             
-                            // swiftformat:disable:next acronyms
-                            let creatorID = ballot.creatorId
+                            let creatorID = ballot.creatorID
                             let isIntermediate = ballot.isIntermediate
                             
                             for member in receivingGroupMembers {

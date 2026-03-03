@@ -53,7 +53,7 @@ struct CommonGroupReceiveSteps {
             //     2. Send a [`group-sync-request`](ref:e2e.group-sync-request) to the
             //        group creator, discard the message and abort these steps.
             
-            if groupIdentity.creator.string != myIdentityStore.identity {
+            if groupIdentity.creator.rawValue != myIdentityStore.identity {
                 groupManager.sendSyncRequest(for: groupIdentity)
             }
             
@@ -74,7 +74,7 @@ struct CommonGroupReceiveSteps {
                 // Therefore, the groups are always dissolved when the admin is no longer
                 // Therefore, groups are always dissolved when the admin is no longer
                 // part of the group. This will dissolve unmanaged groups.
-                groupManager.dissolve(groupID: groupIdentity.id, to: Set([sender.string]))
+                groupManager.dissolve(groupID: groupIdentity.id, to: Set([sender.rawValue]))
             }
             else {
                 groupManager.leave(groupWith: groupIdentity, inform: .members([sender]))
@@ -83,7 +83,7 @@ struct CommonGroupReceiveSteps {
             return .discardMessage
         }
         
-        guard group.isMember(identity: sender.string) else {
+        guard group.isMember(identity: sender.rawValue) else {
             // 4. If the sender is not a member of the group:
             //    1. If the user is the creator of the group, send a
             //       [`group-setup`](ref:e2e.group-setup) with an empty members list back
@@ -93,7 +93,7 @@ struct CommonGroupReceiveSteps {
             if group.isSelfCreator {
                 groupManager.sendEmptyMemberList(
                     groupIdentity: groupIdentity,
-                    to: Set([ThreemaIdentity(sender.string)])
+                    to: Set([ThreemaIdentity(sender.rawValue)])
                 )
             }
             

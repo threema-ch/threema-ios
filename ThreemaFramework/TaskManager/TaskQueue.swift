@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 
 /// Queue to run tasks on
@@ -195,6 +196,7 @@ final class TaskQueue {
             
             guard let item else {
                 DDLogNotice("Task queue is empty")
+                frameworkInjector.serverConnector.taskQueueEmpty()
                 return false
             }
             
@@ -233,6 +235,7 @@ final class TaskQueue {
         taskScheduleQueue.async {
             guard let item else {
                 DDLogNotice("Task queue is empty")
+                self.frameworkInjector.serverConnector.taskQueueEmpty()
                 return
             }
             
@@ -454,7 +457,7 @@ final class TaskQueue {
     }
 
     func queuePath() -> URL? {
-        let path = FileUtility.shared.appDataDirectory
+        let path = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())
         return path?.appendingPathComponent("taskQueue", isDirectory: false)
     }
 
@@ -655,9 +658,9 @@ final class TaskQueue {
 
     private func save() {
         if let queuePath = queuePath() {
-            FileUtility.shared.delete(at: queuePath)
+            FileUtility.shared.deleteIfExists(at: queuePath)
             if let queueData = encode(),
-               !FileUtility.shared.write(fileURL: queuePath, contents: queueData) {
+               !FileUtility.shared.write(contents: queueData, to: queuePath) {
                 DDLogError("Could not save queue into file")
             }
         }

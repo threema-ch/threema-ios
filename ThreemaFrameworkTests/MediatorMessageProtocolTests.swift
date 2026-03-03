@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentialsTestHelper
 import XCTest
 @testable import ThreemaFramework
 
@@ -55,7 +56,7 @@ class MediatorMessageProtocolTests: XCTestCase {
         let expectedCreatedAt = Date()
         let expectedNonce = MockData.generateMessageNonce()
 
-        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
+        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockMultiDevice.deviceGroupKeys)
         let envelopeIncomigMessage = mediatorMessageProtocol.getEnvelopeForIncomingMessage(
             type: 0x01,
             body: expectedMessage,
@@ -87,7 +88,7 @@ class MediatorMessageProtocolTests: XCTestCase {
         let message = Data([1])
         let createdAt = Date()
         
-        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
+        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockMultiDevice.deviceGroupKeys)
         let envelopeOutgoingMessage = mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
             type: 0x01,
             body: message,
@@ -95,7 +96,7 @@ class MediatorMessageProtocolTests: XCTestCase {
             receiverIdentity: "ECHOECHO",
             createdAt: createdAt,
             nonce: MockData.generateMessageNonce(),
-            deviceID: MockData.deviceID.paddedLittleEndian()
+            deviceID: MockMultiDevice.deviceID.paddedLittleEndian()
         )
         let encryptedMessage = mediatorMessageProtocol.encodeEnvelope(envelope: envelopeOutgoingMessage)
         

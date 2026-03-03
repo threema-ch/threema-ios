@@ -27,8 +27,8 @@
 #import "MyIdentityStore.h"
 #import "NaClCrypto.h"
 #import "NSString+Hex.h"
-#import "ValidationLogger.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
+@import Keychain;
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelAll;
@@ -38,21 +38,16 @@
 
 #define WORK_APP_ID @"ch.threema.work." // Prefix for ch.threema.work.iapp and ch.threema.work.red.iapp
 #define ONPREM_APP_ID @"ch.threema.onprem."
-#define PERSISTENCE_KEY_LICENSE_USER @"Threema license username"
-#define PERSISTENCE_KEY_LICENSE_PASSWORD @"Threema license password"
-#define PERSISTENCE_KEY_DEVICE_ID @"Threema device ID"
-#define PERSISTENCE_KEY_ONPREM_CONFIG_URL @"Threema OnPrem config URL"
 
 #define LICENSE_CHECK_INTERVAL_S 6*60*60
 #define LICENSE_OFFLINE_INTERVAL_S 24*60*60
 #define DEVICE_ID_LENGTH 16
 
-static LicenseStore *singleton;
-
 @interface LicenseStore ()
 
 @property BOOL didCheckLicense;
 @property dispatch_semaphore_t sema;
+@property NSString *internalDeviceID;
 
 @end
 
@@ -60,17 +55,20 @@ static LicenseStore *singleton;
 
 @synthesize licenseUsername = _licenseUsername;
 @synthesize licensePassword = _licensePassword;
+@synthesize licenseDeviceID;
 @synthesize onPremConfigUrl = _onPremConfigUrl;
 
-+ (nonnull instancetype)sharedLicenseStore {
-    if (singleton == nil) {
-        static dispatch_once_t onceToken;
-        dispatch_once(&onceToken, ^{
-            singleton = [LicenseStore new];
-        });
-    }
+@synthesize internalDeviceID;
 
-    return singleton;
++ (nonnull instancetype)sharedLicenseStore {
+    static LicenseStore *instance;
+
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        instance = [LicenseStore new];
+    });
+
+    return instance;
 }
 
 - (instancetype)init
@@ -80,7 +78,6 @@ static LicenseStore *singleton;
         _didCheckLicense = NO;
         
         _sema = dispatch_semaphore_create(1);
-        [self loadLicense];
     }
     return self;
 }
@@ -115,12 +112,12 @@ static LicenseStore *singleton;
 
 
 - (BOOL)isValid {
-    if (TargetManagerObjc.isBusinessApp) {
+    if (TargetManagerObjC.isBusinessApp) {
         if (_didCheckLicense) {
             if ([self isWithinCheckInterval] == NO) {
                 // force fresh license check
                 _didCheckLicense = NO;
-                [[ValidationLogger sharedValidationLogger] logString:@"License Check: force fresh license check"];
+                DDLogNotice(@"License Check: force fresh license check");
                 return NO;
             }
             return YES;
@@ -130,7 +127,7 @@ static LicenseStore *singleton;
         }
         else {
             // force license check on every app start
-            [[ValidationLogger sharedValidationLogger] logString:@"License Check: it's not valid"];
+            DDLogNotice(@"License Check: it's not valid");
             return NO;
         }
     }
@@ -161,7 +158,7 @@ static LicenseStore *singleton;
         NSString *version = ThreemaUtility.clientVersion;
         
         ServerAPIConnector *connector = [[ServerAPIConnector alloc] init];
-        [connector validateLicenseUsername:_licenseUsername password:_licensePassword appId:appId version:version deviceId:[self deviceId] onCompletion:^(BOOL success, NSDictionary *info) {
+        [connector validateLicenseUsername:_licenseUsername password:_licensePassword appId:appId version:version deviceId:[self licenseDeviceID] onCompletion:^(BOOL success, NSDictionary *info) {
             _error = nil;
             _errorMessage = nil;
             if (success) {
@@ -172,7 +169,7 @@ static LicenseStore *singleton;
                 _didCheckLicense = NO;
                 _errorMessage = info[@"error"];
             }
-            MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+            MDMSetup *mdmSetup = [MDMSetup new];
             [mdmSetup applyCompanyMDMWithCachedThreemaMDMSendForce:false];
             dispatch_semaphore_signal(_sema);
             onCompletion(success);
@@ -194,7 +191,7 @@ static LicenseStore *singleton;
 
 - (void)performUpdateWorkInfoForce:(BOOL)force {
     // Only send the update work info when there is a valid license username and a valid threema id
-    if (!TargetManagerObjc.isBusinessApp || _licenseUsername.length < 1 || !AppSetup.isCompleted) {
+    if (!TargetManagerObjC.isBusinessApp || _licenseUsername.length < 1 || !AppSetup.isCompleted) {
         return;
     }
         
@@ -220,8 +217,6 @@ static LicenseStore *singleton;
     if ([_licenseUsername isEqualToString:licenseUsername] == NO) {
         _licenseUsername = licenseUsername;
         _didCheckLicense = NO;
-        
-        [self saveLicense];
     }
 }
 
@@ -233,8 +228,6 @@ static LicenseStore *singleton;
     if ([_licensePassword isEqualToString:licensePassword] == NO) {
         _licensePassword = licensePassword;
         _didCheckLicense = NO;
-        
-        [self saveLicense];
     }
 }
 
@@ -243,7 +236,7 @@ static LicenseStore *singleton;
 }
 
 - (BOOL)validCustomOnPremConfigUrlWithPredefinedUrl:(NSString *)onPremConfigUrl {
-    if ([TargetManagerObjc isCustomOnPrem]) {
+    if ([TargetManagerObjC isCustomOnPrem]) {
         NSString *formattedOnPremConfigUrl = [self formatOnPremConfigUrl:onPremConfigUrl];
         
         NSString *presetOppfUrl = [BundleUtil objectForInfoDictionaryKey:@"PresetOppfUrl"];
@@ -266,8 +259,6 @@ static LicenseStore *singleton;
         if ([self validCustomOnPremConfigUrlWithPredefinedUrl:formattedOnPremConfigUrl]) {
             _onPremConfigUrl = formattedOnPremConfigUrl;
             _didCheckLicense = NO;
-            
-            [self saveLicense];
         } else {
             // Show Error
         }
@@ -305,36 +296,33 @@ static LicenseStore *singleton;
     _licenseUsername = nil;
     _licensePassword = nil;
     _onPremConfigUrl = nil;
-    [[AppGroup userDefaults] setValue:nil forKey:PERSISTENCE_KEY_LICENSE_USER];
-    [[AppGroup userDefaults] setValue:nil forKey:PERSISTENCE_KEY_LICENSE_PASSWORD];
-    [[AppGroup userDefaults] setValue:nil forKey:PERSISTENCE_KEY_ONPREM_CONFIG_URL];
-    [[AppGroup userDefaults] synchronize];
+
+    NSError *error = nil;
+
+    KeychainManager *keychain = [[BusinessInjector ui] keychainManagerObjC];
+    [keychain deleteLicenseAndReturnError:&error];
+    if (error) {
+        DDLogError(@"Couldn't delete license in Keychain: %@", [error localizedDescription]);
+    }
 }
 
 #pragma mark - private
 
-- (void)loadLicense {
-    _licenseUsername = [[AppGroup userDefaults] stringForKey:PERSISTENCE_KEY_LICENSE_USER];
-    _licensePassword = [[AppGroup userDefaults] stringForKey:PERSISTENCE_KEY_LICENSE_PASSWORD];
-    _onPremConfigUrl = [[AppGroup userDefaults] stringForKey:PERSISTENCE_KEY_ONPREM_CONFIG_URL];
-}
+- (NSString *)licenseDeviceID {
+    if (internalDeviceID == nil) {
+        internalDeviceID = [NSString stringWithHexData:[[NaClCrypto sharedCrypto] randomBytes:DEVICE_ID_LENGTH]];
 
-- (void)saveLicense {
-    [[AppGroup userDefaults] setValue:_licenseUsername forKey:PERSISTENCE_KEY_LICENSE_USER];
-    [[AppGroup userDefaults] setValue:_licensePassword forKey:PERSISTENCE_KEY_LICENSE_PASSWORD];
-    [[AppGroup userDefaults] setValue:_onPremConfigUrl forKey:PERSISTENCE_KEY_ONPREM_CONFIG_URL];
-    [[AppGroup userDefaults] synchronize];
-}
-
-- (NSString*)deviceId {
-    // Obtain device ID from user defaults. If it doesn't exist yet, generate a new random device ID.
-    NSString *deviceId = [[AppGroup userDefaults] stringForKey:PERSISTENCE_KEY_DEVICE_ID];
-    if (deviceId == nil) {
-        deviceId = [NSString stringWithHexData:[[NaClCrypto sharedCrypto] randomBytes:DEVICE_ID_LENGTH]];
-        [[AppGroup userDefaults] setValue:deviceId forKey:PERSISTENCE_KEY_DEVICE_ID];
-        [[AppGroup userDefaults] synchronize];
     }
-    return deviceId;
+    return internalDeviceID;
+}
+
+- (void)setLicenseDeviceID:(NSString *)newLicenseDeviceID {
+    if ([newLicenseDeviceID decodeHex].length == DEVICE_ID_LENGTH) {
+        internalDeviceID = newLicenseDeviceID;
+    }
+    else {
+        internalDeviceID = nil;
+    }
 }
 
 @end

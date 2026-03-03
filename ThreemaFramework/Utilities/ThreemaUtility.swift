@@ -22,6 +22,7 @@ import CocoaLumberjackSwift
 import CoreLocation
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 import ThreemaMacros
 
 public final class ThreemaUtility: NSObject {
@@ -75,9 +76,32 @@ public final class ThreemaUtility: NSObject {
         return "\(version)\(suffix) (\(build)\(ThreemaEnvironment.env().shortDescription))"
     }()
     
+    private static let locale: String = {
+        var language = Locale.current.languageCode ?? "?"
+        // call clientVersionMDMString to save it
+        let mdmDescription = additionalMDMString
+        let countryCode = (Locale.current as NSLocale).object(forKey: .countryCode)
+
+        if AppGroup.getCurrentType() == AppGroupTypeApp {
+            let lang = MyIdentityStore.shared().lastWorkInfoLanguage
+            if language != lang {
+                MyIdentityStore.shared().lastWorkInfoLanguage = language
+            }
+        }
+        else {
+            if let lang = MyIdentityStore.shared().lastWorkInfoLanguage {
+                language = lang
+            }
+        }
+        
+        return "\(language)/\(countryCode ?? "?")"
+    }()
+    
     private static let additionalMDMString: String = {
-        var mdmDescription = MDMSetup().supportDescriptionString() ?? ""
-        if AppGroup.getActiveType() == AppGroupTypeApp {
+        // Here we need MDM without BusinessInjector, becaus at this point RS is not initialized
+        var mdmDescription = MDMSetup(appSetupStateRawValue: AppSetupState.notSetup.rawValue)
+            .supportDescriptionString() ?? ""
+        if AppGroup.getCurrentType() == AppGroupTypeApp {
             let mdmDes = MyIdentityStore.shared().lastWorkInfoMdmDescription
             if mdmDescription != mdmDes {
                 MyIdentityStore.shared().lastWorkInfoMdmDescription = mdmDescription
@@ -92,27 +116,16 @@ public final class ThreemaUtility: NSObject {
         return mdmDescription
     }()
     
+    public static let appInfo = AppInfo(
+        version: appAndBuildVersion,
+        locale: locale,
+        deviceModel: ThreemaUtility.modelName,
+        osVersion: UIDevice.current.systemVersion
+    )
+    
     /// Format: 4.7b2687;de/CH;iPhone7,2;15.1
-    @objc public static let clientVersion: String = {
-        var language = Locale.current.languageCode ?? "?"
-        // call clientVersionMDMString to save it
-        let mdmDescription = additionalMDMString
-        let countryCode = (Locale.current as NSLocale).object(forKey: .countryCode)
-
-        if AppGroup.getActiveType() == AppGroupTypeApp {
-            let lang = MyIdentityStore.shared().lastWorkInfoLanguage
-            if language != lang {
-                MyIdentityStore.shared().lastWorkInfoLanguage = language
-            }
-        }
-        else {
-            if let lang = MyIdentityStore.shared().lastWorkInfoLanguage {
-                language = lang
-            }
-        }
-        
-        return "\(appAndBuildVersion);I;\(language)/\(countryCode ?? "?");\(ThreemaUtility.modelName);\(UIDevice.current.systemVersion)"
-    }()
+    @objc public static let clientVersion =
+        "\(appInfo.version);I;\(appInfo.locale);\(appInfo.deviceModel);\(appInfo.osVersion)"
     
     @objc public static let clientVersionWithMDM: String = {
         if !additionalMDMString.isEmpty {
@@ -148,7 +161,7 @@ public final class ThreemaUtility: NSObject {
     /// Checks if the otherTypeIcon should be hidden for a given contact
     /// - Parameter contact: Contact to check
     /// - Returns: Bool that states if icon should be hidden
-    @available(*, deprecated, message: "Use ContactEntity.showOtherThreemaTypeIcon instead")
+    @available(*, deprecated, renamed: "ContactEntity.showOtherThreemaTypeIcon")
     public static func shouldHideOtherTypeIcon(for contact: ContactEntity?) -> Bool {
         
         guard let contact else {
@@ -173,6 +186,7 @@ public final class ThreemaUtility: NSObject {
     /// - Parameters:
     /// - location: Location to fetch address for
     /// - completionHandler: Returns address or coordinate string
+    @available(swift, obsoleted: 1.0, renamed: "fetchAddress(for:)", message: "Only use from Objective-C")
     @objc static func fetchAddressObjc(for location: CLLocation, completionHandler: @escaping (String) -> Void) {
         fetchAddress(for: location)
             .done { address in
@@ -264,6 +278,25 @@ public final class ThreemaUtility: NSObject {
         )
     }
     
+    /// Fire a local notification when microphone permission is not set or denied
+    /// - Parameter entityManager: EntityManager to load the unread messages count
+    public static func sendMicrophonePermissionErrorLocalNotification(entityManager: EntityManager) {
+        let unreadMessages = UnreadMessages(entityManager: entityManager, taskManager: TaskManager())
+        ThreemaUtility.showLocalNotification(
+            identifier: "microphonePermissionError",
+            title: String.localizedStringWithFormat(
+                #localize("call_voip_not_supported_title"),
+                TargetManager.localizedAppName
+            ),
+            body: String.localizedStringWithFormat(
+                #localize("alert_no_access_message_microphone"),
+                TargetManager.appName
+            ),
+            badge: unreadMessages.totalCount(),
+            userInfo: ["threema": ["cmd": "microphonePermissionError"]]
+        )
+    }
+    
     // MARK: - String Conversions
     
     /// Trims whiteSpaces and newlines as well as (U+FFFC) from string
@@ -349,5 +382,16 @@ public final class ThreemaUtility: NSObject {
         }
         
         return trimmedMessages.map { $0.trimmingCharacters(in: .whitespaces) }
+    }
+    
+    public static func formatDataLength(_ numBytes: Float) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        formatter.allowedUnits = [.useKB, .useMB]
+        formatter.includesUnit = true
+        formatter.includesCount = true
+        formatter.isAdaptive = true
+
+        return formatter.string(fromByteCount: Int64(numBytes))
     }
 }

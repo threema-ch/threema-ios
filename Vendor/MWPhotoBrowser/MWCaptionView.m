@@ -9,6 +9,7 @@
 #import "MWCommon.h"
 #import "MWCaptionView.h"
 #import "MWPhoto.h"
+#import <ThreemaFramework/ThreemaFramework-Swift.h>
 
 static const CGFloat labelPadding = 10;
 

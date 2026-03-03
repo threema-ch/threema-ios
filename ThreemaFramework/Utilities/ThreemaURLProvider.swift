@@ -49,7 +49,13 @@ public enum ThreemaURLProvider {
     public static let workDownload = URL(string: defaultURLString + "/work/download")!
     public static let workInfo = URL(string: defaultURLString + "work_info")!
     public static let privateDownloadAppStore: URL? = URL(string: "itms-apps://itunes.apple.com/app/id578665578")
-       
+    public static let workReferralInviteURL =
+        URL(
+            string: "https://threema.com/threema-work-invitation?referral=" + BusinessInjector.ui.profileStore.profile
+                .myIdentity.rawValue
+        )!
+    public static let workReferralToSURL = URL(string: "https://threema.com/referral-tos")!
+    
     private static let supportFAQURL = URL(string: defaultURLString + "ios/support")!
     private static let deviceJoinDownloadPrivateString = "https://three.ma/md"
     private static let deviceJoinDownloadWorkString = "https://three.ma/mdw"
@@ -109,8 +115,8 @@ public enum ThreemaURLProvider {
 /// Use this class to get your URL to threema.com or threema.com/work
 ///
 /// - returns: URL
-@available(*, deprecated, message: "Only use from Objective-C", renamed: "conversationStore")
-@objc public class ThreemaURLProviderObjc: NSObject {
+@available(swift, obsoleted: 1.0, renamed: "ThreemaURLProvider", message: "Only use from Objective-C")
+public final class ThreemaURLProviderObjC: NSObject {
     @objc public enum ThreemaURLProviderType: Int, RawRepresentable {
         case rogueDeviceInfo
         case multiDeviceReset

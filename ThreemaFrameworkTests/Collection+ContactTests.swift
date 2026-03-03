@@ -18,7 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
+
 @testable import ThreemaFramework
 
 class CollectionContactTests: XCTestCase {
@@ -27,7 +29,6 @@ class CollectionContactTests: XCTestCase {
     var databasePreparer: DatabasePreparer!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema")
         
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
@@ -44,7 +45,7 @@ class CollectionContactTests: XCTestCase {
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC01"
             )
-            contact1.setFirstName(to: "Yeung")
+            contact1.setFirstName(to: "Yeung", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact1))
 
             let contact2 = databasePreparer.createContact(
@@ -58,8 +59,8 @@ class CollectionContactTests: XCTestCase {
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC03"
             )
-            contact3.setFirstName(to: "Ye")
-            contact3.setLastName(to: "ung")
+            contact3.setFirstName(to: "Ye", sortOrderFirstName: true)
+            contact3.setLastName(to: "ung", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact3))
 
             let contact4 = databasePreparer.createContact(
@@ -72,7 +73,7 @@ class CollectionContactTests: XCTestCase {
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC05"
             )
-            contact5.setLastName(to: "Yeung")
+            contact5.setLastName(to: "Yeung", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact5))
 
             let contact6 = databasePreparer.createContact(
@@ -85,8 +86,8 @@ class CollectionContactTests: XCTestCase {
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC07"
             )
-            contact7.setFirstName(to: "Ye")
-            contact7.setLastName(to: "un")
+            contact7.setFirstName(to: "Ye", sortOrderFirstName: true)
+            contact7.setLastName(to: "un", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact7))
 
             let contact8 = databasePreparer.createContact(
@@ -100,46 +101,46 @@ class CollectionContactTests: XCTestCase {
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC09"
             )
-            contact9.setFirstName(to: "Yeung")
-            contact9.setLastName(to: "Yeung")
+            contact9.setFirstName(to: "Yeung", sortOrderFirstName: true)
+            contact9.setLastName(to: "Yeung", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact9))
 
             let contact10 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC10"
             )
-            contact10.setLastName(to: "Yeung")
+            contact10.setLastName(to: "Yeung", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact10))
 
             let contact11 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC11"
             )
-            contact11.setFirstName(to: "Yeung")
+            contact11.setFirstName(to: "Yeung", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact11))
 
             let contact12 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC12"
             )
-            contact12.setFirstName(to: "Ye")
-            contact12.setLastName(to: "un")
+            contact12.setFirstName(to: "Ye", sortOrderFirstName: true)
+            contact12.setLastName(to: "un", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact12))
 
             let contact13 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC13"
             )
-            contact13.setFirstName(to: "Yeung")
-            contact13.setLastName(to: "Yeung")
+            contact13.setFirstName(to: "Yeung", sortOrderFirstName: true)
+            contact13.setLastName(to: "Yeung", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact13))
 
             let contact14 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC14"
             )
-            contact14.setFirstName(to: "Yeu")
-            contact14.setLastName(to: "ng")
+            contact14.setFirstName(to: "Yeu", sortOrderFirstName: true)
+            contact14.setLastName(to: "ng", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact14))
         }
         
@@ -169,7 +170,7 @@ class CollectionContactTests: XCTestCase {
         ]
 
         XCTAssertEqual(expectedIDOrderFirstName.count, sortedContactsFirstName.count)
-        XCTAssertEqual(expectedIDOrderFirstName, sortedContactsFirstName.map(\.identity.string))
+        XCTAssertEqual(expectedIDOrderFirstName, sortedContactsFirstName.map(\.identity.rawValue))
 
         // Run last name order
 
@@ -196,7 +197,7 @@ class CollectionContactTests: XCTestCase {
         ]
 
         XCTAssertEqual(expectedIDOrderLastName.count, sortedContactsLastName.count)
-        XCTAssertEqual(expectedIDOrderLastName, sortedContactsLastName.map(\.identity.string))
+        XCTAssertEqual(expectedIDOrderLastName, sortedContactsLastName.map(\.identity.rawValue))
     }
     
     func testSortedContactsWithSpecialCharacters() {
@@ -207,35 +208,35 @@ class CollectionContactTests: XCTestCase {
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC01"
             )
-            contact1.setLastName(to: "Müller")
+            contact1.setLastName(to: "Müller", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact1))
 
             let contact2 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC02"
             )
-            contact2.setLastName(to: "Muller")
+            contact2.setLastName(to: "Muller", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact2))
 
             let contact3 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC03"
             )
-            contact3.setLastName(to: "ábenā")
+            contact3.setLastName(to: "ábenā", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact3))
 
             let contact4 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC04"
             )
-            contact4.setLastName(to: "Abena")
+            contact4.setLastName(to: "Abena", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact4))
 
             let contact5 = databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
                 identity: "CONTAC05"
             )
-            contact5.setLastName(to: "Mueller")
+            contact5.setLastName(to: "Mueller", sortOrderFirstName: true)
             contacts.append(Contact(contactEntity: contact5))
         }
         
@@ -256,6 +257,6 @@ class CollectionContactTests: XCTestCase {
         ]
 
         XCTAssertEqual(expectedIDOrderFirstName.count, sortedContactsFirstName.count)
-        XCTAssertEqual(expectedIDOrderFirstName, sortedContactsFirstName.map(\.identity.string))
+        XCTAssertEqual(expectedIDOrderFirstName, sortedContactsFirstName.map(\.identity.rawValue))
     }
 }

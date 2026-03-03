@@ -24,7 +24,7 @@ import Foundation
 
 @objc class FulltextSearchPreparer: NSObject, DatabasePreparerProtocol {
     @objc var persistentStoreCoordinator: NSPersistentStoreCoordinator!
-    @objc var objectContext: NSManagedObjectContext!
+    @objc var objectContext: ThreemaManagedObjectContext!
     
     @objc func prepareDatabase() {
         (persistentStoreCoordinator, objectContext, _) = DatabasePersistentContext.devNullContext()

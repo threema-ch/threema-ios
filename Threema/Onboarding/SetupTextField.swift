@@ -35,7 +35,7 @@ import UIKit
 
     @IBInspectable var showIcon: UIImage? {
         didSet {
-            icon.image = showIcon?.withTint(Colors.textSetup)
+            icon.image = showIcon?.withTintColor(Colors.textSetup)
             icon.tintColor = Colors.textSetup
             icon.isHidden = false
             textBackground.frame = CGRect(x: 40, y: 0, width: frame.width - 40, height: frame.height)

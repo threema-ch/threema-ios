@@ -5,8 +5,10 @@ use logging::{LogDispatcher, LogLevel, init_logging};
 
 pub mod crypto;
 pub mod d2d_rendezvous;
+pub mod https;
 pub mod id_backup;
 pub mod logging;
+pub mod remote_secret;
 
 /// Used for (foreign) functions that are considered infallible. In case the foreign function fails,
 /// this error will be propagated back.

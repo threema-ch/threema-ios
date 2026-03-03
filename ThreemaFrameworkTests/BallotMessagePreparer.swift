@@ -19,14 +19,17 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CoreData
-import ThreemaFramework
+import ThreemaEssentialsTestHelper
 import XCTest
+@testable import ThreemaFramework
 
 @objc class BallotMessagePreparer: NSObject, DatabasePreparerProtocol, ResourceLoaderProtocol {
     
     @objc var persistentStoreCoordinator: NSPersistentStoreCoordinator!
-    @objc var objectContext: NSManagedObjectContext!
+    @objc var objectContext: ThreemaManagedObjectContext!
     
+    let groupID: Data = MockData.generateGroupID()
+    let myIdentity = "TESTERID"
     @objc func prepareDatabase() {
         (persistentStoreCoordinator, objectContext, _) = DatabasePersistentContext.devNullContext()
 
@@ -39,9 +42,8 @@ import XCTest
 
             _ = databasePreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = Data([1])
-                    conversation.groupMyIdentity = "TESTERID"
+                    conversation.groupID = self.groupID
+                    conversation.groupMyIdentity = self.myIdentity
                     conversation.contact = contact
                     conversation.groupName = "TestGroup BallotMessageDecoder"
                     conversation.members?.insert(contact)

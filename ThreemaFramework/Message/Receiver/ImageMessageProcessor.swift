@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
+import ThreemaEssentials
 
 @objc class ImageMessageProcessor: NSObject {
     
@@ -139,7 +140,7 @@ import PromiseKit
                         nonce: ThreemaProtocol.nonce01
                     )
                 }
-                else if let imageBlobNonce {
+                else if let imageBlobNonce, let senderPublicKey {
                     imageData = self.myIdentityStore.decryptData(
                         data,
                         withNonce: imageBlobNonce,
@@ -147,40 +148,40 @@ import PromiseKit
                     )
                 }
                 
-                if let imageData {
-                    let image = UIImage(data: imageData)
-                    var thumbnailImage: UIImage?
-                    if let image {
-                        thumbnailImage = MediaConverter.getThumbnailFor(image)
-                    }
+                if let imageData, let image = UIImage(data: imageData) {
                     
+                    let thumbnailImage = MediaConverter.getThumbnailFor(image)
+
                     let thumbnailData = thumbnailImage?
                         .jpegData(compressionQuality: CGFloat(kJPEGCompressionQualityLow))
                     
-                    var message: BaseMessageEntity?
-                    
+                    var conversationCategory: ConversationEntity.Category?
+
                     self.entityManager.performAndWaitSave {
                         guard let conversation = self.entityManager.entityFetcher
-                            .getManagedObject(by: conversationManagedObjectID) as? ConversationEntity,
+                            .managedObject(with: conversationManagedObjectID) as? ConversationEntity,
                             let msg = self.entityManager.entityFetcher
-                            .message(with: imageMessageID, conversation: conversation) as? ImageMessageEntity else {
+                            .message(with: imageMessageID, in: conversation) as? ImageMessageEntity else {
                             seal.reject(
                                 ImageMessageProcessorError
                                     .messageNotFound(message: "message id: \(imageMessageID.hexString)")
                             )
                             return
                         }
-                        message = msg
-                        msg.blobData = imageData
+                        conversationCategory = msg.conversation.conversationCategory
+                        msg.image = self.entityManager.entityCreator.imageDataEntity(
+                            data: imageData,
+                            size: image.size,
+                            message: msg
+                        )
 
-                        if let thumbnailData, let thumbnail = self.entityManager.entityCreator.imageDataEntity() {
-                            thumbnail.data = thumbnailData
-                            if let width = thumbnailImage?.size.width {
-                                thumbnail.width = Int16(width)
-                            }
-                            if let height = thumbnailImage?.size.height {
-                                thumbnail.height = Int16(height)
-                            }
+                        if let thumbnailData, let width = thumbnailImage?.size.width,
+                           let height = thumbnailImage?.size.height {
+                            let thumbnail = self.entityManager.entityCreator.imageDataEntity(
+                                data: thumbnailData,
+                                size: CGSize(width: width, height: height),
+                                message: msg
+                            )
                             
                             msg.thumbnail = thumbnail
                         }
@@ -188,12 +189,10 @@ import PromiseKit
                         // Mark blob as done, if is group message and Multi Device is activated then always on `local`
                         // origin
                         if !msg.isGroupMessage,
-                           // swiftformat:disable:next acronyms
-                           let id = msg.imageBlobId {
+                           let id = msg.imageBlobID {
                             self.blobDownloader.markDownloadDone(for: id, origin: msg.blobOrigin)
                         }
-                        // swiftformat:disable:next acronyms
-                        else if let id = msg.imageBlobId,
+                        else if let id = msg.imageBlobID,
                                 self.userSettings.enableMultiDevice {
                             self.blobDownloader.markDownloadDone(for: id, origin: .local)
                         }
@@ -202,9 +201,8 @@ import PromiseKit
                     }
 
                     // Add to photo library
-                    if let image, self.userSettings.autoSaveMedia,
-                       let message,
-                       message.conversation.conversationCategory != .private {
+                    if self.userSettings.autoSaveMedia,
+                       let conversationCategory, conversationCategory != .private {
                         AlbumManager.shared.save(image: image)
                     }
                 }

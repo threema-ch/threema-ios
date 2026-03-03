@@ -28,7 +28,6 @@ class MarkupParserTests: XCTestCase {
     override func setUp() {
         super.setUp()
         
-        // necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
     }
 

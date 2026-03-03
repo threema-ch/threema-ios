@@ -198,8 +198,8 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     
     private var afterFirstSnapshotApply: (() -> Void)?
     
-    private var observers = [NSManagedObjectID: [NSKeyValueObservation]]()
-    
+    private var observers = [NSManagedObjectID: NSKeyValueObservation]()
+
     private var cancellables = Set<AnyCancellable>()
     
     private lazy var selectedObjectIDs = Set<NSManagedObjectID>()
@@ -570,7 +570,7 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     static func neighbors(
         of messageObjectID: NSManagedObjectID,
         in tableView: UITableView,
-        with entityManager: EntityManager = EntityManager()
+        with entityManager: EntityManager = BusinessInjector.ui.entityManager
     ) -> ChatViewDataSource.MessageNeighbors {
         guard let dataSource = tableView.dataSource as? UITableViewDiffableDataSource<String, CellType> else {
             return .noNeighbors
@@ -652,25 +652,23 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
         guard let message = message(for: id) else {
             return
         }
-        
-        observeMessage(message: message, keyPath: \.messageMarkers?.star) { [weak self] in
-            guard !message.willBeDeleted else {
+
+        observeMessageIfNeeded(message: message, keyPath: \.messageMarkers?.star) { [weak self] in
+            guard !message.willBeDeleted, message.deletedAt == nil else {
                 return
             }
-            
+
             self?.snapshotProvider.applyAdditionalSnapshotForMessage(with: message.objectID)
         }
     }
     
     public func stopObservingMessage(with id: NSManagedObjectID) {
-        guard let messageObservers = observers[id] else {
+        guard let messageObserver = observers[id] else {
             return
         }
-        
-        for messageObserver in messageObservers {
-            messageObserver.invalidate()
-        }
-        
+
+        messageObserver.invalidate()
+
         observers.removeValue(forKey: id)
     }
     
@@ -682,25 +680,21 @@ class ChatViewDataSource: UITableViewDiffableDataSource<String, ChatViewDataSour
     ///   - keyPath: Key path in `BaseMessage` to observe
     ///   - changeHandler: Handler called on each observed change.
     ///                     Don't forget to capture `self` weakly! Dispatched on the main queue.
-    private func observeMessage(
+    private func observeMessageIfNeeded(
         message: BaseMessageEntity,
         keyPath: KeyPath<BaseMessageEntity, some Any>,
         changeHandler: @escaping () -> Void
     ) {
+        guard !observers.keys.contains(message.objectID) else {
+            return
+        }
 
         let observer = message.observe(keyPath) { _, _ in
             // Because `changeHandler` updates UI elements we need to ensure that it runs on the main queue
             DispatchQueue.main.async(execute: changeHandler)
         }
-        
-        if var existingObservers = observers[message.objectID] {
-            existingObservers.append(observer)
-            observers[message.objectID] = existingObservers
-        }
-        else {
-            let newObservers = [observer]
-            observers[message.objectID] = newObservers
-        }
+
+        observers[message.objectID] = observer
     }
 
     // MARK: - Multi-Select

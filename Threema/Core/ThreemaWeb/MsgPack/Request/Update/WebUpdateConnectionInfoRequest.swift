@@ -39,7 +39,7 @@ class WebUpdateConnectionInfoRequest: NSObject {
     func maybeResume(session: WCSession) {
         if let connectionInfoResponse = session.connectionInfoResponse() {
             if connectionInfoResponse.id != id {
-                ValidationLogger.shared().logString("[Threema Web] Wrong connection id, stop session.")
+                DDLogNotice("[Threema Web] Wrong connection id, stop session.")
                 session.stop(close: true, forget: false, sendDisconnect: true, reason: .error)
                 return
             }
@@ -52,7 +52,7 @@ class WebUpdateConnectionInfoRequest: NSObject {
                     }
                     catch {
                         // do error stuff
-                        ValidationLogger.shared().logString("[Threema Web] Could not prune cache: \(error).")
+                        DDLogNotice("[Threema Web] Could not prune cache: \(error).")
                         session.stop(close: true, forget: false, sendDisconnect: true, reason: .error)
                         return
                     }
@@ -60,8 +60,7 @@ class WebUpdateConnectionInfoRequest: NSObject {
                     if session.connectionStatus() == .ready {
                         if context.previousConnectionContext != nil {
                             context.transfer(fromCache: context.previousConnectionContext!.chunkCache.chunks())
-                            ValidationLogger.shared()
-                                .logString("[Threema Web] Transfer \(context.chunkCache.chunks().count) chunks.")
+                            DDLogNotice("[Threema Web] Transfer \(context.chunkCache.chunks().count) chunks.")
                             for chunk in context.chunkCache.chunks() {
                                 session.sendChunk(chunk: chunk!, msgpack: nil, connectionInfo: false)
                             }
@@ -71,7 +70,7 @@ class WebUpdateConnectionInfoRequest: NSObject {
                         session.messageQueue.processQueue()
                         context.runTimer()
                     }
-                    ValidationLogger.shared().logString("[Threema Web] Resume connection.")
+                    DDLogNotice("[Threema Web] Resume connection.")
                     let responseBatteryStatus = WebBatteryStatusUpdate()
                     session.sendMessageToWeb(blacklisted: true, msgpack: responseBatteryStatus.messagePack())
                     DDLogVerbose("[Threema Web] MessagePack -> Send update/batteryStatus")
@@ -80,18 +79,17 @@ class WebUpdateConnectionInfoRequest: NSObject {
             }
             
             if resume == nil {
-                ValidationLogger.shared().logString("[Threema Web] Resume is nil.")
+                DDLogNotice("[Threema Web] Resume is nil.")
             }
             if session.connectionContext() == nil {
-                ValidationLogger.shared().logString("[Threema Web] Connection context is nil.")
+                DDLogNotice("[Threema Web] Connection context is nil.")
             }
             // do not resume
             session.clearAllRequestedLists()
             if session.connectionStatus() == .ready {
-                ValidationLogger.shared()
-                    .logString(
-                        "[Threema Web] Connection state is ready -> process queue and reset previous connection context."
-                    )
+                DDLogNotice(
+                    "[Threema Web] Connection state is ready -> process queue and reset previous connection context."
+                )
                 session.messageQueue.processQueue()
                 session.connectionContext()?.previousConnectionContext = nil
                 session.connectionContext()?.runTimer()

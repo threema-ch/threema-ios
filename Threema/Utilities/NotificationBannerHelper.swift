@@ -20,8 +20,7 @@
 
 import Foundation
 import GroupCalls
-import MarqueeLabel
-import SnapKit
+import NotificationBannerSwift
 import ThreemaFramework
 import ThreemaMacros
 
@@ -31,14 +30,21 @@ import ThreemaMacros
             // Reload CoreData object because of concurrency problem
             let businessInjector = BusinessInjector.ui
             let entityManager = businessInjector.entityManager
-            let message = entityManager.entityFetcher.getManagedObject(by: baseMessage.objectID) as! PreviewableMessage
+            
+            guard let message = entityManager.entityFetcher
+                .managedObject(with: baseMessage.objectID) as? PreviewableMessage else {
+                return
+            }
 
             let profileImageView = ProfilePictureImageView()
             var thumbnailImageView: UIImageView?
             
             var title = message.conversation.displayName
-            
-            if message.conversation.isGroup {
+           
+            if message.conversation.conversationCategory == .private {
+                profileImageView.info = nil
+            }
+            else if message.conversation.isGroup {
                 let group = businessInjector.groupManager.getGroup(conversation: baseMessage.conversation)
                 profileImageView.info = .group(group)
             }
@@ -69,20 +75,10 @@ import ThreemaMacros
             }
             
             let titleFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline)
-            let bodyFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .subheadline)
-            
-            var body = TextStyleUtils.makeMentionsString(forText: message.previewText)
-            
-            if message.isGroupMessage {
-                // Quickfix: Sender should never be `nil` for an incoming group message
-                if let sender = message.sender {
-                    body = "\(sender.displayName): \(body ?? "")"
-                }
-            }
+            let bodyFont = UIFont.preferredFont(forTextStyle: .subheadline)
             
             if message.conversation.conversationCategory == .private {
                 title = #localize("private_message_label")
-                body = " "
                 thumbnailImageView = nil
                 
                 if message.isGroupMessage {
@@ -98,7 +94,7 @@ import ThreemaMacros
                 subtitle: "",
                 titleFont: UIFont.boldSystemFont(ofSize: titleFontDescriptor.pointSize),
                 titleColor: .label,
-                subtitleFont: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
+                subtitleFont: bodyFont,
                 subtitleColor: .label,
                 leftView: profileImageView,
                 rightView: thumbnailImageView,
@@ -106,6 +102,11 @@ import ThreemaMacros
                 colors: CustomBannerColors(),
                 sideViewSize: 50.0
             )
+            
+            banner.transparency = 0.9
+            banner.duration = 3.0
+            banner.applyStyling(cornerRadius: 8)
+            banner.subtitleLabel?.numberOfLines = 2
             
             if let groupID = message.conversation.groupID {
                 banner.identifier = groupID.hexEncodedString()
@@ -121,65 +122,13 @@ import ThreemaMacros
             banner.applyStyling(cornerRadius: 8)
             banner.subtitleLabel?.numberOfLines = 2
             
-            var formattedAttributeString: NSMutableAttributedString?
-            if message.conversation.groupID != nil {
-                var contactString = ""
-                if !message.isKind(of: SystemMessageEntity.self) {
-                    if let sender = message.sender {
-                        contactString = "\(sender.displayName): "
-                    }
-                    else {
-                        contactString = "\(#localize("me")): "
-                    }
-                }
-                
-                let attributed = TextStyleUtils.makeAttributedString(
-                    from: message.previewText,
-                    with: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
-                    textColor: .label,
-                    isOwn: true,
-                    application: UIApplication.shared
-                )
-                let messageAttributedString = NSMutableAttributedString(
-                    attributedString: banner.subtitleLabel!
-                        .applyMarkup(for: attributed)
-                )
-                let attributedContact = TextStyleUtils.makeAttributedString(
-                    from: contactString,
-                    with: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
-                    textColor: .label,
-                    isOwn: true,
-                    application: UIApplication.shared
-                )
-                formattedAttributeString = NSMutableAttributedString(attributedString: attributedContact!)
-                formattedAttributeString?.append(messageAttributedString)
-            }
-            else {
-                let attributed = TextStyleUtils.makeAttributedString(
-                    from: message.previewText,
-                    with: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
-                    textColor: .label,
-                    isOwn: true,
-                    application: UIApplication.shared
-                )
-                formattedAttributeString = NSMutableAttributedString(
-                    attributedString: banner.subtitleLabel!
-                        .applyMarkup(for: attributed)
+            if message.conversation.conversationCategory != .private {
+                banner.subtitleLabel?.attributedText = message.previewAttributedText(
+                    for: .notificationBanner,
+                    settingsStore: businessInjector.settingsStore
                 )
             }
             
-            if message.conversation.conversationCategory == .private {
-                banner.subtitleLabel?.setText(nil)
-            }
-            else {
-                banner.subtitleLabel!.attributedText = TextStyleUtils.makeMentionsAttributedString(
-                    for: formattedAttributeString,
-                    textFont: banner.subtitleLabel!.font,
-                    at: .secondaryLabel.withAlphaComponent(0.6),
-                    messageInfo: 2,
-                    application: UIApplication.shared
-                )
-            }
             banner.onTap = {
                 banner.bannerQueue.dismissAllForced()
                 // Switch to selected conversation
@@ -238,10 +187,11 @@ import ThreemaMacros
         identifier: String
     ) {
         let titleFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline)
-        let bodyFontDescriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .subheadline)
+        let bodyFont = UIFont.preferredFont(forTextStyle: .subheadline)
         
         let businessInjector = BusinessInjector.ui
         let profilePictureView = ProfilePictureImageView()
+        let markupParser = MarkupParser()
         
         if let conversation = businessInjector.entityManager.entityFetcher
             .existingObject(with: conversationManagedObjectID) as? ConversationEntity,
@@ -258,7 +208,7 @@ import ThreemaMacros
             subtitle: body,
             titleFont: UIFont.boldSystemFont(ofSize: titleFontDescriptor.pointSize),
             titleColor: .label,
-            subtitleFont: UIFont.preferredFont(forTextStyle: .title1),
+            subtitleFont: bodyFont,
             subtitleColor: .label,
             leftView: profilePictureView,
             rightView: nil,
@@ -266,25 +216,16 @@ import ThreemaMacros
             colors: CustomBannerColors(),
             sideViewSize: 50.0
         )
-        
         banner.identifier = identifier
         banner.transparency = 0.9
         banner.duration = 3.0
         banner.applyStyling(cornerRadius: 8)
         banner.subtitleLabel?.numberOfLines = 2
         
-        let attributed = TextStyleUtils.makeAttributedString(
-            from: body,
-            with: UIFont.systemFont(ofSize: bodyFontDescriptor.pointSize),
-            textColor: .label,
-            isOwn: true,
-            application: UIApplication.shared
+        let bodyAttributedString = markupParser.previewString(
+            for: body,
+            font: bodyFont
         )
-        let bodyAttributedString = NSMutableAttributedString(
-            attributedString: banner.subtitleLabel!
-                .applyMarkup(for: attributed)
-        )
-        
         banner.subtitleLabel!.attributedText = bodyAttributedString
         
         banner.onTap = {
@@ -292,7 +233,7 @@ import ThreemaMacros
             // switch to selected conversation
             let entityManager = businessInjector.entityManager
             entityManager.performBlock {
-                if let conversation = entityManager.entityFetcher.getManagedObject(by: conversationManagedObjectID) {
+                if let conversation = entityManager.entityFetcher.managedObject(with: conversationManagedObjectID) {
                     NotificationCenter.default.post(
                         name: NSNotification.Name(rawValue: kNotificationShowConversation),
                         object: nil,
@@ -326,22 +267,15 @@ import ThreemaMacros
         
     @objc class func dismissAllNotifications() {
         DispatchQueue.main.async {
-            NotificationBannerQueue.default.removeAll()
+            NotificationBannerQueue.default.dismissAllForced()
         }
     }
     
-    @objc class func dismissAllNotifications(for conversation: ConversationEntity) {
+    /// Dismiss and remove all the banners for the contact (Threema Identity of contact) or the identity of the group
+    /// (GroupID as hex)
+    /// - Parameter identifier: Threema ID or GroupID as hex
+    @objc class func dismissAllNotifications(for identifier: String) {
         DispatchQueue.main.async {
-            var identifier: String?
-            if let groupID = conversation.groupID {
-                identifier = groupID.hexEncodedString()
-            }
-            else if let contact = conversation.contact {
-                identifier = contact.identity
-            }
-            else {
-                return
-            }
             let banners = NotificationBannerQueue.default.banners
             for banner in banners {
                 if banner.identifier == identifier {

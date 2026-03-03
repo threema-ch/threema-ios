@@ -76,6 +76,12 @@ final class LockScreen: NSObject, JKLLockScreenViewControllerDelegate, JKLLockSc
     
     // MARK: - JKLLockScreenViewControllerDelegate & JKLLockScreenViewControllerDataSource
     
+    @available(
+        swift,
+        obsoleted: 1.0,
+        renamed: "presentLockScreenView(viewController:style:enteredCorrectly:enteredIncorrectly:unlockCancelled:didDismissAfterSuccess:)",
+        message: "Only use from Objective-C"
+    )
     @objc func presentLockScreenViewObjC(
         viewController: UIViewController,
         style: UIModalPresentationStyle,
@@ -105,7 +111,7 @@ final class LockScreen: NSObject, JKLLockScreenViewControllerDelegate, JKLLockSc
         self.didDismissAfterSuccess = didDismissAfterSuccess
 
         passCodeViewController.modalPresentationStyle = style
-        
+                        
         // This is used to set a passcode after a safe-restore when tapping on a private conversation
         if KKPasscodeLock.shared().isPasscodeRequired() {
             viewController.present(passCodeViewController, animated: true)
@@ -143,7 +149,7 @@ final class LockScreen: NSObject, JKLLockScreenViewControllerDelegate, JKLLockSc
     }
     
     @objc func shouldEraseApplicationData(_ viewController: JKLLockScreenViewController!) {
-        AppDelegate.shared().eraseApplicationData(viewController)
+        AppDelegate.shared().eraseApplicationData()
     }
 }
 

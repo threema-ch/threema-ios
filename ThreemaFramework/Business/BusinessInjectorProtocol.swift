@@ -19,6 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import Keychain
+import RemoteSecretProtocol
 
 public protocol BusinessInjectorProtocol: AnyObject {
     var runsInBackground: Bool { get }
@@ -30,14 +32,20 @@ public protocol BusinessInjectorProtocol: AnyObject {
     var licenseStore: LicenseStore { get }
     var messageSender: MessageSenderProtocol { get }
     var multiDeviceManager: MultiDeviceManagerProtocol { get }
+    @available(
+        *,
+        deprecated,
+        message: "To get My Identity use profileStore, and for other functions MyIdentityStore directly"
+    )
     var myIdentityStore: MyIdentityStoreProtocol { get }
+    var profileStore: ProfileStoreProtocol { get }
     var serverConnector: ServerConnectorProtocol { get }
     var unreadMessages: UnreadMessagesProtocol { get }
     var messageRetentionManager: MessageRetentionManagerModelProtocol { get }
     var userSettings: UserSettingsProtocol { get }
     var settingsStore: any SettingsStoreProtocol { get }
     var pushSettingManager: PushSettingManagerProtocol { get }
-    var keychainHelper: KeychainHelperProtocol { get }
+    var keychainManager: KeychainManagerProtocol { get }
 
     /// Do work with a background business injector. This runs on the thread of the caller!
     ///

@@ -28,8 +28,11 @@ enum OnPremConfigError: Int, Error {
     case unsupportedVersion
     case badSignature
     case signatureKeyMismatch
+    case missingConfigurationURL
     case configurationMissing
+    case missingLicenseInfo
     case invalidConfigUrl
+    case missingPublicKeys
     case unauthorized
     case missingWorkConfig
     case missingAvatarConfig
@@ -42,6 +45,7 @@ enum OnPremConfigError: Int, Error {
     case unsupportedDomainMatchMode
     case unsupportedDomainSpkisAlgorithm
     case licenseExpired
+    case fetcherReleased
 }
 
 // MARK: - LocalizedError
@@ -50,10 +54,10 @@ extension OnPremConfigError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .badInputOppfData, .missingRendezvousConfig, .missingMapsConfig, .missingMediatorConfig,
-             .missingSafeConfig,
+             .missingSafeConfig, .missingLicenseInfo, .missingConfigurationURL,
              .missingAvatarConfig, .missingWorkConfig, .invalidConfigUrl, .configurationMissing, .signatureKeyMismatch,
              .badSignature, .missingDomainsConfig, .noDomainSpkis, .unsupportedDomainMatchMode,
-             .unsupportedDomainSpkisAlgorithm:
+             .unsupportedDomainSpkisAlgorithm, .missingPublicKeys, .fetcherReleased:
             String.localizedStringWithFormat(
                 #localize("enter_license_onprem_error_config"),
                 TargetManager.appName,

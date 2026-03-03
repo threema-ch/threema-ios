@@ -57,30 +57,17 @@ public class VoIPCallSender {
             msg.toIdentity = answer.contactIdentity
             msg.fromIdentity = myIdentityStore.identity
             msg.isUserInteraction = answer.isUserInteraction
-                                    
-            let logString =
+                        
+            DDLogNotice(
                 "VoipCallService: [cid=\(answer.callID.callID)]: Call answer enqueued to \(answer.contactIdentity ?? "?"): \(answer.action.description())"
-            if answer.action == .call {
-                DDLogNotice(logString)
-            }
-            else {
-                DDLogNotice(logString + "/\(answer.rejectReason?.description() ?? "unknown")")
-            }
+            )
 
             messageSender.sendMessage(abstractMessage: msg, isPersistent: false)
         }
         catch {
-            let logString =
-                "VoipCallService: [cid=\(answer.callID.callID)]: Can't send answer message to \(answer.contactIdentity ?? "?"): \(answer.action.description())"
-            if answer.action == .call {
-                DDLogError(logString + " -> \(error.localizedDescription)")
-            }
-            else {
-                DDLogError(
-                    logString +
-                        "/\(answer.rejectReason?.description() ?? "unknown")  -> \(error.localizedDescription)"
-                )
-            }
+            DDLogError(
+                "VoipCallService: [cid=\(answer.callID.callID)]: Can't send answer message to \(answer.contactIdentity ?? "?") -> \(error.localizedDescription)"
+            )
         }
     }
 

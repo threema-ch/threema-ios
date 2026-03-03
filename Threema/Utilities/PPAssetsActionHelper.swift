@@ -61,6 +61,7 @@ import UIKit
     func assetsActionHelperDidSelectRecordAudio(_ picker: PPAssetsActionHelper)
     func assetsActionHelperDidSelectCreateBallot(_ picker: PPAssetsActionHelper)
     func assetsActionHelperDidSelectShareFile(_ picker: PPAssetsActionHelper)
+    func assetsActionHelperDidSelectShareContact(_ picker: PPAssetsActionHelper)
     func assetsActionHelperDidSelectScanDocument(_ picker: PPAssetsActionHelper)
 
     var conversationIsDistributionList: Bool { get }
@@ -77,6 +78,7 @@ extension PPAssetsActionHelperDelegate {
     func assetsActionHelperDidSelectRecordAudio(_ picker: PPAssetsActionHelper) { }
     func assetsActionHelperDidSelectCreateBallot(_ picker: PPAssetsActionHelper) { }
     func assetsActionHelperDidSelectShareFile(_ picker: PPAssetsActionHelper) { }
+    func assetsActionHelperDidSelectShareContact(_ picker: PPAssetsActionHelper) { }
     func assetsActionHelperDidSelectScanDocument(_ picker: PPAssetsActionHelper) { }
 }
 
@@ -139,18 +141,31 @@ public class PPAssetsActionHelper: NSObject {
             options.append(ballotCreate)
         }
         
-        let shareImage = UIImage(
+        let shareFileImage = UIImage(
             systemName: "doc.fill",
             withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
         )?
             .withTintColor(.tintColor, renderingMode: .alwaysOriginal)
         let shareFile = PPOption(
             withTitle: #localize("share_file"),
-            withIcon: shareImage
+            withIcon: shareFileImage
         ) {
             self.delegate?.assetsActionHelperDidSelectShareFile(self)
         }
         options.append(shareFile)
+        
+        let shareContactImage = UIImage(
+            systemName: "person.fill",
+            withConfiguration: UIImage.SymbolConfiguration(textStyle: .body)
+        )?
+            .withTintColor(.tintColor, renderingMode: .alwaysOriginal)
+        let shareContact = PPOption(
+            withTitle: #localize("share_contact"),
+            withIcon: shareContactImage
+        ) {
+            self.delegate?.assetsActionHelperDidSelectShareContact(self)
+        }
+        options.append(shareContact)
         
         let scanner = PPOption(
             withTitle: #localize("scan_document"),

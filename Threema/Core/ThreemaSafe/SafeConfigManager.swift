@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import Keychain
 import ThreemaEssentials
 
 protocol SafeConfigManagerProtocol {
@@ -55,28 +56,13 @@ protocol SafeConfigManagerProtocol {
 }
 
 @objc class SafeConfigManager: NSObject, SafeConfigManagerProtocol {
-    private let myIdentityStore: MyIdentityStoreProtocol
 
     private static let safeConfigMutationLock = DispatchQueue(label: "safeConfigMutationLock")
     private static var safeConfig: SafeData?
 
-    var keychainHelper: KeychainHelper? {
-        guard let identity = myIdentityStore.identity else {
-            return nil
-        }
+    let keychainManager = KeychainManager(remoteSecretManager: AppLaunchManager.remoteSecretManager)
 
-        return KeychainHelper(identity: ThreemaIdentity(identity))
-    }
-
-    @objc override convenience init() {
-        self.init(myIdentityStore: MyIdentityStore.shared())
-    }
-
-    init(myIdentityStore: MyIdentityStoreProtocol = MyIdentityStore.shared()) {
-        self.myIdentityStore = myIdentityStore
-    }
-
-    // MARK: - safe config
+    // MARK: - Safe config
 
     @objc public func destroy() {
         UserSettings.shared().safeConfig = nil
@@ -138,6 +124,7 @@ protocol SafeConfigManagerProtocol {
         getConfig().maxBackupBytes
     }
     
+    @available(swift, obsoleted: 1.0, renamed: "getMaxBackupBytes()", message: "Only use from Objective-C")
     @objc public func getMaxBackupBytesObjC() -> NSNumber? {
         getConfig().maxBackupBytes as NSNumber?
     }
@@ -152,6 +139,7 @@ protocol SafeConfigManagerProtocol {
         getConfig().retentionDays
     }
     
+    @available(swift, obsoleted: 1.0, renamed: "getRetentionDays()", message: "Only use from Objective-C")
     @objc public func getRetentionDaysObjC() -> NSNumber? {
         getConfig().retentionDays as NSNumber?
     }
@@ -362,84 +350,67 @@ protocol SafeConfigManagerProtocol {
     }
 
     private func loadKeyFromKeychain() -> [UInt8]? {
-        guard let keychainHelper else {
+        do {
+            let key = try keychainManager.loadThreemaSafeKey()
+
+            return key != nil ? Array(key!) : nil
+        }
+        catch {
+            DDLogError("Couldn't load Threema Safe key from Keychain: \(error)")
             return nil
         }
-
-        let (password, _, _) = keychainHelper.load(item: .threemaSafeKey)
-
-        return password != nil ? Array(password!) : nil
     }
 
     private func loadServerFromKeychain() -> (serverUser: String?, serverPassword: String?, server: String?) {
-        guard let keychainHelper else {
+        do {
+            let result = try keychainManager.loadThreemaSafeServer()
+            return (result?.user, result?.password, result?.server)
+        }
+        catch {
+            DDLogError("Couldn't load Threema Safe server from Keychain: \(error)")
             return (nil, nil, nil)
         }
-
-        let result = keychainHelper.load(item: .threemaSafeServer)
-
-        return (
-            serverUser: result.generic != nil ? String(data: result.generic!, encoding: .utf8) : nil,
-            serverPassword: result.password != nil ? String(data: result.password!, encoding: .utf8) : nil,
-            server: result.service
-        )
     }
 
     private func storeInKeychain(key: [UInt8]?) {
-        guard let keychainHelper else {
-            return
-        }
-
         do {
             if let key {
-                try keychainHelper.store(
-                    password: Data(bytes: key, count: key.count),
-                    item: .threemaSafeKey
-                )
+                try keychainManager.storeThreemaSafeKey(key: Data(bytes: key, count: key.count))
             }
             else {
-                try keychainHelper.destroy(item: .threemaSafeKey)
+                try keychainManager.deleteThreemaSafeKey()
             }
         }
         catch {
-            DDLogError("\(error)")
+            DDLogError("Couldn't store Threema Safe key in Keychain: \(error)")
         }
     }
 
     private func storeInKeychain(serverUser: String?, serverPassword: String?, server: String?) {
-        guard let keychainHelper else {
-            return
-        }
-
         do {
             if let serverUser, let serverPassword, let server {
-                try keychainHelper.store(
-                    password: Data(serverPassword.utf8),
-                    generic: Data(serverUser.utf8),
-                    service: server,
-                    item: .threemaSafeServer
-                )
+                try keychainManager.storeThreemaSafeServer(ThreemaSafeServerInfo(
+                    user: serverUser,
+                    password: serverPassword,
+                    server: server
+                ))
             }
             else {
-                try keychainHelper.destroy(item: .threemaSafeServer)
+                try keychainManager.deleteThreemaSafeServer()
             }
         }
         catch {
-            DDLogError("\(error)")
+            DDLogError("Couldn't store Threema Safe server from Keychain: \(error)")
         }
     }
 
     private func destroyKeychain() {
-        guard let keychainHelper else {
-            return
-        }
-
         do {
-            try keychainHelper.destroy(item: .threemaSafeKey)
-            try keychainHelper.destroy(item: .threemaSafeServer)
+            try keychainManager.deleteThreemaSafeKey()
+            try keychainManager.deleteThreemaSafeServer()
         }
         catch {
-            DDLogError("\(error)")
+            DDLogError("Couldn't delete Threema Safe key and server in Keychain: \(error)")
         }
     }
 }

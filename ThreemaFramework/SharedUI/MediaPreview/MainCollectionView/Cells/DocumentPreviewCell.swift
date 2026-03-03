@@ -172,7 +172,7 @@ class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelegate {
                 
                 let uti = UTIConverter.uti(forFileURL: newItem.previewItemURL)
                 let icon = UTIConverter.getDefaultThumbnail(forMimeType: uti)
-                self.smallThumbnailView.image = icon?.withTint(.label)
+                self.smallThumbnailView.image = icon?.withTintColor(.label)
                 self.smallThumbnailView.contentMode = .center
             }
             self.addTapGestureRecognizer(view: self.smallThumbnailView)

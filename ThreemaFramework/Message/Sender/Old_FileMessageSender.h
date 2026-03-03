@@ -22,17 +22,29 @@
 #import <ThreemaFramework/Old_BlobMessageSender.h>
 #import <ThreemaFramework/URLSenderItem.h>
 
-@class FileMessageEntity, ConversationEntity;
-
 @interface Old_FileMessageSender : Old_BlobMessageSender
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation requestId:(NSString *)requestId
+/**
+ @param item URLSenderItem
+ @param conversationObject Object of type `ConversationEntity`
+ @param requestId NSString
+ */
+- (void)sendItem:(URLSenderItem *)item inConversation:(NSObject *)conversationObject requestId:(NSString *)requestId
     NS_SWIFT_NAME(send(_:in:requestID:));
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation requestId:(NSString *)requestId correlationId:(NSString *)correlationId
+/**
+ @param item URLSenderItem
+ @param conversationObject Object of type `ConversationEntity`
+ @param requestId NSString
+ @param correlationId NSString
+ */
+- (void)sendItem:(URLSenderItem *)item inConversation:(NSObject *)conversationObject requestId:(NSString *)requestId correlationId:(NSString *)correlationId
     NS_SWIFT_NAME(send(_:in:requestID:correlationID:));
 
-- (void)retryMessage:(FileMessageEntity *)message;
+/**
+ @param messageObject Object of type `FileMessageEntity`
+ */
+- (void)retryMessage:(NSObject *)messageObject;
 
 + (NSString *)messageForError:(UploadError)error;
 

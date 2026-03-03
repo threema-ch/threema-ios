@@ -37,7 +37,7 @@ class WebConversationUpdate: WebAbstractMessage {
         var index = 0
         
         if let allConversations = businessInjector.entityManager.entityFetcher
-            .allConversationsSorted() as? [ConversationEntity] {
+            .conversationEntitiesSorted() {
             let unarchivedConversations = allConversations
                 .filter { $0.conversationVisibility == .default || $0.conversationVisibility == .pinned }
 

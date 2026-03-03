@@ -76,7 +76,7 @@ import UIKit
             constant: 36
         ))
         
-        // calculate disabled color
+        // Calculate disabled color
         var red: CGFloat = 0
         var green: CGFloat = 0
         var blue: CGFloat = 0

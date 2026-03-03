@@ -27,7 +27,7 @@ import ThreemaFramework
 ///
 /// `NavigationView` with a custom `UINavigationBar` for displaying the `ConnectionState`. The `titleView` is updated
 /// according to the `NavigationBarBrandingMode`.
-///
+@available(*, deprecated, message: "Do not use anymore.")
 struct ThreemaNavigationView<Content: View>: View {
     
     // MARK: - NavigationBarBrandingMode
@@ -250,6 +250,7 @@ extension ThreemaNavigationView {
 /// An observable object that manages the visibility of the navigation bar branding.
 /// It provides actions to show and hide the branding elements. Used *only* for the `.manual` case of
 /// `NavigationBarBrandingMode`.
+@available(*, deprecated, message: "Do not use anymore.")
 class ThreemaNavigationBarBranding: ObservableObject {
     typealias Action = () -> Void
     

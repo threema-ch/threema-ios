@@ -25,12 +25,17 @@ final class ProfileCollectionView: UICollectionView, UICollectionViewDelegate {
     
     // MARK: - Properties
 
-    private weak var coordinator: ProfileCoordinator?
+    private let currentDestinationFetcher: () -> ProfileCoordinator.InternalDestination?
+    private let shouldAllowAutoDeselection: () -> Bool
 
     // MARK: - Lifecycle
 
-    init(coordinator: ProfileCoordinator?) {
-        self.coordinator = coordinator
+    init(
+        currentDestinationFetcher: @escaping () -> ProfileCoordinator.InternalDestination?,
+        shouldAllowAutoDeselection: @escaping () -> Bool
+    ) {
+        self.currentDestinationFetcher = currentDestinationFetcher
+        self.shouldAllowAutoDeselection = shouldAllowAutoDeselection
         
         let layout = UICollectionViewCompositionalLayout { _, layoutEnvironment in
             var config = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
@@ -50,35 +55,25 @@ final class ProfileCollectionView: UICollectionView, UICollectionViewDelegate {
     
     // MARK: - Updates
     
-    func updateSelection(for sizeClass: UIUserInterfaceSizeClass) {
-        if sizeClass == .compact {
+    func updateSelection() {
+        if shouldAllowAutoDeselection() {
             indexPathsForSelectedItems?.forEach {
                 deselectItem(at: $0, animated: false)
             }
         }
         else {
-            guard let destination = coordinator?.currentDestination,
+            guard let destination = currentDestinationFetcher(),
                   let dataSource = dataSource as? ProfileCollectionViewDataSource,
                   let row = ProfileCollectionViewDataSource.Row.row(for: destination),
                   let index = dataSource.indexPathForItem(row) else {
                 return
             }
 
-            selectItem(at: index, animated: false, scrollPosition: .centeredVertically)
+            selectItem(at: index, animated: false, scrollPosition: [])
         }
     }
     
     // MARK: - UICollectionViewDelegate
-    
-    func collectionView(
-        _ collectionView: UICollectionView,
-        willDisplay cell: UICollectionViewCell,
-        forItemAt indexPath: IndexPath
-    ) {
-        if let cell = cell as? ProfileCollectionViewHeaderCell {
-            cell.coordinator = coordinator
-        }
-    }
     
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         indexPath.section != 0

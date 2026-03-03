@@ -86,14 +86,10 @@ struct NotificationReminderView: View {
     // MARK: - Private Functions
 
     private func setReminder() {
-        let settingsURL =
-            if #available(iOS 16.0, *) {
-                URL(string: UIApplication.openNotificationSettingsURLString)!
-            }
-            else {
-                // Fallback on earlier versions
-                URL(string: UIApplication.openSettingsURLString)!
-            }
+        guard let settingsURL = URL(string: UIApplication.openNotificationSettingsURLString) else {
+            NotificationPresenterWrapper.shared.presentError(errorText: #localize("alert_no_access_open_settings"))
+            return
+        }
         UIApplication.shared.open(settingsURL)
     }
 }

@@ -20,7 +20,7 @@
 
 import Foundation
 
-public struct OnPremConfigMaps: Decodable {
+public struct OnPremConfigMaps: Decodable, Sendable {
     let poiNamesURL: String
     let poiAroundURL: String
     

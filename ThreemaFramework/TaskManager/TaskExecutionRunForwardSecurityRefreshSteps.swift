@@ -38,13 +38,13 @@ final class TaskExecutionRunForwardSecurityRefreshSteps: TaskExecution, TaskExec
         
         let leftIdentities = task.contactIdentities.filter {
             // Remove already send, own identity and blocked identities
-            if task.messageAlreadySentTo.keys.contains($0.string) {
+            if task.messageAlreadySentTo.keys.contains($0.rawValue) {
                 return false
             }
-            else if self.frameworkInjector.myIdentityStore.identity == $0.string {
+            else if self.frameworkInjector.myIdentityStore.identity == $0.rawValue {
                 return false
             }
-            else if self.frameworkInjector.userSettings.blacklist.contains($0.string) {
+            else if self.frameworkInjector.userSettings.blacklist.contains($0.rawValue) {
                 return false
             }
             
@@ -93,8 +93,8 @@ final class TaskExecutionRunForwardSecurityRefreshSteps: TaskExecution, TaskExec
             var messages = [ForwardSecurityEnvelopeMessage]()
             
             for contactIdentity in leftIdentities {
-                guard let contactEntity = self.frameworkInjector.entityManager.entityFetcher.contact(
-                    for: contactIdentity.string
+                guard let contactEntity = self.frameworkInjector.entityManager.entityFetcher.contactEntity(
+                    for: contactIdentity.rawValue
                 ) else {
                     DDLogError("[ForwardSecurity] Unable to load contact entity for \(contactIdentity)")
                     continue

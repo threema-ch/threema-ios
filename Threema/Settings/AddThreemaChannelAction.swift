@@ -27,8 +27,8 @@ enum AddThreemaChannelAction {
     private static let threemaChannelIdentity = "*THREEMA"
     
     static func run(in viewController: UIViewController) {
-        if let contact = ContactStore.shared().contact(for: threemaChannelIdentity) {
-            let info = notificationInfo(for: contact)
+        if let contactEntity = ContactStore.shared().contact(for: threemaChannelIdentity) as? ContactEntity {
+            let info = notificationInfo(for: contactEntity)
             showConversation(for: info)
             return
         }
@@ -49,7 +49,7 @@ enum AddThreemaChannelAction {
             with: threemaChannelIdentity,
             verificationLevel: Int32(ContactEntity.VerificationLevel.unverified.rawValue),
             onCompletion: { contact, _ in
-                guard let contact else {
+                guard let contactEntity = contact as? ContactEntity else {
                     UIAlertTemplate.showAlert(
                         owner: viewController,
                         title: #localize("threema_channel_failed"),
@@ -58,11 +58,11 @@ enum AddThreemaChannelAction {
                     return
                 }
                 
-                let info = notificationInfo(for: contact)
+                let info = notificationInfo(for: contactEntity)
                 showConversation(for: info)
                 
                 let initialMessages = createInitialMessages()
-                dispatchInitialMessages(messages: initialMessages, with: contact)
+                dispatchInitialMessages(messages: initialMessages, with: contactEntity)
                 
             }, onError: { error in
                 UIAlertTemplate.showAlert(
@@ -111,7 +111,8 @@ enum AddThreemaChannelAction {
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) {
             let businessInjector = BusinessInjector.ui
 
-            guard let conversation = businessInjector.entityManager.entityFetcher.conversation(for: contact) else {
+            guard let conversation = businessInjector.entityManager.entityFetcher
+                .conversationEntity(for: contact.identity) else {
                 DDLogWarn("Unable to add initial messages to Threema Channel. Reason: conversation not found.")
                 return
             }

@@ -20,8 +20,6 @@
 
 #import "WorkContactTableDataSource.h"
 #import <CoreData/CoreData.h>
-#import "EntityCreator.h"
-#import "EntityFetcher.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "ErrorHandler.h"
 #import "UserSettings.h"
@@ -104,7 +102,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _excludeEchoEcho = excludeEchoEcho;
     
     if (_excludeEchoEcho && _excludeGatewayContacts) {
-        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsNoGatewayNoEchoecho list:ContactListWork members:_selectedWorkContacts];
+        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerFor:ContactTypeNoGatewayNoEchoEcho of:ListTypeWork with:_selectedWorkContacts hideStaleContacts:[UserSettings.sharedUserSettings hideStaleContacts] sortOrderFirstName:[UserSettings.sharedUserSettings sortOrderFirstName] isBusinessApp:TargetManagerObjC.isBusinessApp];
         fetchedResultsController.delegate = _fetchedResultsController.delegate;
         _fetchedResultsController = fetchedResultsController;
         
@@ -114,7 +112,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             [ErrorHandler abortWithError: error];
         }
     } else if (_excludeEchoEcho) {
-        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsNoEchoEcho list:ContactListWork members:_selectedWorkContacts];
+        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerFor:ContactTypeNoEchoEcho of:ListTypeWork with:_selectedWorkContacts hideStaleContacts:[UserSettings.sharedUserSettings hideStaleContacts] sortOrderFirstName:[UserSettings.sharedUserSettings sortOrderFirstName] isBusinessApp:TargetManagerObjC.isBusinessApp];
         fetchedResultsController.delegate = _fetchedResultsController.delegate;
         _fetchedResultsController = fetchedResultsController;
         
@@ -128,7 +126,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)loadGatewayContacts {
     if (_excludeGatewayContacts == NO) {
-        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsGatewayOnly list:ContactListWork members:nil];
+        NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerFor:ContactTypeOnlyGateway of:ListTypeWork with:nil hideStaleContacts:[UserSettings.sharedUserSettings hideStaleContacts] sortOrderFirstName:[UserSettings.sharedUserSettings sortOrderFirstName] isBusinessApp:TargetManagerObjC.isBusinessApp];
         fetchedResultsController.delegate = self;
         _gatewayFetchedResultsController = fetchedResultsController;
         
@@ -145,7 +143,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)setupFetchedResultsControllerWithDelegate:(id<NSFetchedResultsControllerDelegate>)delegate {
     
-    NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerForContactTypes:ContactsNoGateway list:ContactListWork members:_selectedWorkContacts];
+    NSFetchedResultsController *fetchedResultsController = [_entityManager.entityFetcher fetchedResultsControllerFor:ContactTypeNoGateway of:ListTypeWork with:_selectedWorkContacts hideStaleContacts:[UserSettings.sharedUserSettings hideStaleContacts] sortOrderFirstName:[UserSettings.sharedUserSettings sortOrderFirstName] isBusinessApp:TargetManagerObjC.isBusinessApp];
     fetchedResultsController.delegate = delegate;
     _fetchedResultsController = fetchedResultsController;
     
@@ -183,10 +181,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)refreshWorkContactSortIndices {
     for (ContactEntity *contact in _fetchedResultsController.fetchedObjects) {
-        [contact updateSortInitial];
+        [contact updateSortInitialWithSortOrderFirstName:[UserSettings.sharedUserSettings sortOrderFirstName]];
     }
     for (ContactEntity *contact in _gatewayFetchedResultsController.fetchedObjects) {
-        [contact updateSortInitial];
+        [contact updateSortInitialWithSortOrderFirstName:[UserSettings.sharedUserSettings sortOrderFirstName]];
     }
 }
 
@@ -201,18 +199,18 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 -(void)filterByWords:(NSArray *)words {
     if (words) {
-        ContactTypes type = ContactsAll;
+        ContactType type = ContactTypeAll;
         if (_excludeEchoEcho && _excludeGatewayContacts) {
-            type = ContactsNoGatewayNoEchoecho;
+            type = ContactTypeNoGatewayNoEchoEcho;
         }
         else if (_excludeGatewayContacts) {
-            type = ContactsNoGateway;
+            type = ContactTypeNoGateway;
         }
         else if (_excludeEchoEcho) {
-            type = ContactsNoEchoEcho;
+            type = ContactTypeNoEchoEcho;
         }
         
-        _filteredWorkContacts = [_entityManager.entityFetcher contactsFilteredByWords:words forContactTypes:type list:ContactListWork members:_selectedWorkContacts];
+        _filteredWorkContacts = [_entityManager.entityFetcher filteredContactEntitiesBy:words for:type of:ListTypeWork with:_selectedWorkContacts hideStaleContacts:[UserSettings.sharedUserSettings hideStaleContacts]  sortOrderFirstName:[UserSettings.sharedUserSettings sortOrderFirstName]];
     } else {
         _filteredWorkContacts = nil;
     }
@@ -221,15 +219,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 - (NSSet *)selectedConversations {
     NSMutableSet *conversations = [NSMutableSet setWithCapacity:[_selectedWorkContacts count]];
     for (ContactEntity *contact in _selectedWorkContacts) {
-        __block ConversationEntity *conversation = [_entityManager.entityFetcher conversationEntityForContact:contact];
-        if (conversation == nil) {
-            // create & immediately save
-            [_entityManager performSyncBlockAndSafe:^{
-                conversation = [_entityManager.entityCreator conversationEntity];
-                conversation.contact = contact;
-            }];
-        }
-        [conversations addObject:conversation];
+        [_entityManager performSyncBlockAndSafe:^{
+            ConversationEntity *conversation = [_entityManager.entityFetcher conversationEntityFor:contact.identity];
+            if (conversation == nil) {
+                // create & immediately save
+                conversation = [_entityManager.entityCreator conversationEntityWithSetLastUpdate:YES];
+                    conversation.contact = contact;
+            }
+            [conversations addObject:conversation];
+        }];
     }
     return conversations;
 }

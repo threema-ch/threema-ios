@@ -18,13 +18,16 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
+
 @testable import ThreemaFramework
 
 class MessageDecoderTests: XCTestCase {
     
-    private var mainCnx: NSManagedObjectContext!
+    private var mainCnx: ThreemaManagedObjectContext!
     var databaseCnx: DatabaseContext!
 
     override func setUpWithError() throws {
@@ -125,7 +128,7 @@ class MessageDecoderTests: XCTestCase {
 
         let (_, conversation) = createConversation()
         let ballotMessageDecoder =
-            BallotMessageDecoder(EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock))
+            BallotMessageDecoder(EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false))
 
         for result in expectedResults {
             let msg = newBoxBallotCreateMessage(result[2])
@@ -145,9 +148,15 @@ class MessageDecoderTests: XCTestCase {
                 fromBox: boxBallotCreateMessage,
                 sender: nil,
                 conversation: conversation,
-                onCompletion: { message in
-                    ballotMessage = message
-                    expect.fulfill()
+                onCompletion: { messageObject in
+                    do {
+                        let message = try XCTUnwrap(messageObject as? BallotMessageEntity)
+                        ballotMessage = message
+                        expect.fulfill()
+                    }
+                    catch {
+                        XCTFail("\(error)")
+                    }
                 },
                 onError: { error in
                     XCTFail("\(error)")
@@ -192,7 +201,7 @@ class MessageDecoderTests: XCTestCase {
 
         let (_, conversation) = createConversation()
         let ballotMessageDecoder =
-            BallotMessageDecoder(EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock))
+            BallotMessageDecoder(EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false))
 
         for result in expectedResults {
             let msg = newBoxBallotCreateMessage(result[3])
@@ -212,9 +221,15 @@ class MessageDecoderTests: XCTestCase {
                 fromBox: boxBallotCreateMessage,
                 sender: nil,
                 conversation: conversation,
-                onCompletion: { message in
-                    ballotMessage = message
-                    expect.fulfill()
+                onCompletion: { messageObject in
+                    do {
+                        let message = try XCTUnwrap(messageObject as? BallotMessageEntity)
+                        ballotMessage = message
+                        expect.fulfill()
+                    }
+                    catch {
+                        XCTFail("\(error)")
+                    }
                 },
                 onError: { error in
                     XCTFail("\(error)")
@@ -290,7 +305,7 @@ class MessageDecoderTests: XCTestCase {
 
         let (_, conversation) = createConversation()
         let ballotMessageDecoder =
-            BallotMessageDecoder(EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock))
+            BallotMessageDecoder(EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false))
 
         // Initial Incoming Ballot Message
         let initialResult = expectedResults[0]
@@ -311,9 +326,15 @@ class MessageDecoderTests: XCTestCase {
             fromBox: boxBallotCreateInitialMessage,
             sender: nil,
             conversation: conversation,
-            onCompletion: { message in
-                ballotInitialMessage = message
-                expectInitial.fulfill()
+            onCompletion: { messageObject in
+                do {
+                    let message = try XCTUnwrap(messageObject as? BallotMessageEntity)
+                    ballotInitialMessage = message
+                    expectInitial.fulfill()
+                }
+                catch {
+                    XCTFail("\(error)")
+                }
             },
             onError: { error in
                 XCTFail("\(error)")
@@ -486,7 +507,7 @@ class MessageDecoderTests: XCTestCase {
     
     func testDecodeBoxTextMessageQuoted() throws {
         let expectedQuotedMessageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
-        let expectedQuotedText = QuoteUtil.generateText("Muttis diweiss", with: expectedQuotedMessageID)
+        let expectedQuotedText = QuoteUtil.generateText("Muttis diweiss", quotedID: expectedQuotedMessageID)
 
         let msg = BoxTextMessage()
         msg.text = expectedQuotedText
@@ -910,7 +931,7 @@ class MessageDecoderTests: XCTestCase {
     
     func testDecodeGroupTextMessageQuoted() throws {
         let expectedQuotedMessageID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.messageIDLength)
-        let expectedQuotedText = QuoteUtil.generateText("Test text", with: expectedQuotedMessageID)!
+        let expectedQuotedText = QuoteUtil.generateText("Test text", quotedID: expectedQuotedMessageID!)
 
         let msg = GroupTextMessage()
         msg.groupID = Data(BytesUtility.padding([], pad: 0x34, length: ThreemaProtocol.groupIDLength))

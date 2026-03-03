@@ -20,6 +20,7 @@
 
 #import "SplitViewController.h"
 #import "MainTabBarController.h"
+#import <ThreemaFramework/Constants.h>
 
 @interface SplitViewControllerDelegate : NSObject <UISplitViewControllerDelegate>
 
@@ -49,10 +50,6 @@
     [super viewDidLoad];
     
     self.preferredDisplayMode = UISplitViewControllerDisplayModeAllVisible;
-}
-
-- (UIStatusBarStyle)preferredStatusBarStyle {
-    return Colors.preferredStatusBarStyle;
 }
 
 - (BOOL)shouldAutorotate {

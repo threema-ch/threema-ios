@@ -74,43 +74,4 @@ extension Colors {
             UIColor(resource: .gray400)
         }
     }
-    
-    @objc public class func backgroundMention(messageInfo: TextStyleUtilsMessageInfo) -> UIColor {
-        switch messageInfo {
-        case TextStyleUtilsMessageInfoReceivedMessage:
-            backgroundMention
-        case TextStyleUtilsMessageInfoOwnMessage:
-            backgroundMentionOwnMessage
-        case TextStyleUtilsMessageInfoOverview:
-            backgroundMentionOverviewMessage
-        default:
-            backgroundMention
-        }
-    }
-    
-    @objc public class func backgroundMentionMe(messageInfo: TextStyleUtilsMessageInfo) -> UIColor {
-        switch messageInfo {
-        case TextStyleUtilsMessageInfoReceivedMessage:
-            backgroundMentionMe
-        case TextStyleUtilsMessageInfoOwnMessage:
-            backgroundMentionMeOwnMessage
-        case TextStyleUtilsMessageInfoOverview:
-            backgroundMentionMeOverviewMessage
-        default:
-            backgroundMentionMe
-        }
-    }
-    
-    @objc public class func textMentionMe(messageInfo: TextStyleUtilsMessageInfo) -> UIColor {
-        switch messageInfo {
-        case TextStyleUtilsMessageInfoReceivedMessage:
-            textMentionMe
-        case TextStyleUtilsMessageInfoOwnMessage:
-            textMentionMeOwnMessage
-        case TextStyleUtilsMessageInfoOverview:
-            textMentionMeOverviewMessage
-        default:
-            textMentionMe
-        }
-    }
 }

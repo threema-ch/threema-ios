@@ -40,7 +40,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         self.init(callOnCompletion: false)
     }
     
-    func contact(for identity: String?) -> ContactEntity? {
+    func contact(for identity: String?) -> NSObject? {
         contact?.identity == identity ? contact : nil
     }
     
@@ -150,12 +150,12 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
     func resetEntityManager() {
         // no-op
     }
-    
+
     func addContact(
         with identity: String,
         verificationLevel: Int32,
-        onCompletion: @escaping (ContactEntity?, Bool) -> Void,
-        onError: ((Error) -> Void)? = nil
+        onCompletion: @escaping (NSObject?, Bool) -> Void,
+        onError: ((any Error) -> Void)? = nil
     ) {
         // no-op
     }
@@ -169,7 +169,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         jobTitle: String?,
         department: String?,
         acquaintanceLevel: ContactAcquaintanceLevel,
-        onCompletion: @escaping (ContactEntity) -> Void,
+        onCompletion: @escaping (NSObject) -> Void,
         onError: @escaping (any Error) -> Void
     ) {
         // nop-op

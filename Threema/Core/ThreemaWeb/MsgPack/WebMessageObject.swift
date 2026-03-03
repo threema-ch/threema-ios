@@ -285,51 +285,40 @@ class WebMessageObject: NSObject {
         thumbnail = nil
         caption = nil
         statusType = "text"
-        var remainingBody: NSString?
         var quotedIdentity: String = MyIdentityStore.shared().identity
-        // swiftformat:disable:next acronyms
-        if let quotedMessageID = textMessage.quotedMessageId {
-            let entityManager = EntityManager()
-            if let quotedMessage = entityManager.entityFetcher.message(
-                with: quotedMessageID,
-                conversation: textMessage.conversation
-            ) as? PreviewableMessage {
-                if let sender = quotedMessage.sender, !quotedMessage.isOwnMessage {
-                    quotedIdentity = sender.identity
-                }
-                else if let contact = quotedMessage.conversation.contact, !quotedMessage.isOwnMessage {
-                    quotedIdentity = contact.identity
-                }
-                
-                let quotedText = quotedMessage.previewText
-
-                quote = [
-                    "identity": quotedIdentity,
-                    "text": quotedText,
-                    "messageId": quotedMessageID.hexEncodedString(),
-                ]
-                body = textMessage.text
+        
+        guard let quotedMessageID = textMessage.quotedMessageID else {
+            return
+        }
+       
+        let entityManager = BusinessInjector.ui.entityManager
+        if let quotedMessage = entityManager.entityFetcher.message(
+            with: quotedMessageID,
+            in: textMessage.conversation
+        ) as? PreviewableMessage {
+            if let sender = quotedMessage.sender, !quotedMessage.isOwnMessage {
+                quotedIdentity = sender.identity
             }
-            else {
-                quote = [
-                    "identity": "",
-                    "text": #localize("quote_not_found"),
-                    "messageId": quotedMessageID.hexEncodedString(),
-                ]
-                body = textMessage.text
+            else if let contact = quotedMessage.conversation.contact, !quotedMessage.isOwnMessage {
+                quotedIdentity = contact.identity
             }
+            
+            let quotedText = quotedMessage.previewText
+            
+            quote = [
+                "identity": quotedIdentity,
+                "text": quotedText,
+                "messageId": quotedMessageID.hexEncodedString(),
+            ]
+            body = textMessage.text
         }
         else {
-            var quotedIdentity: NSString?
-            
-            if let quotedText = QuoteUtil.parseQuote(
-                fromMessage: textMessage.text,
-                quotedIdentity: &quotedIdentity,
-                remainingBody: &remainingBody
-            ) {
-                quote = ["identity": quotedIdentity!, "text": quotedText]
-                body = remainingBody as String?
-            }
+            quote = [
+                "identity": "",
+                "text": #localize("quote_not_found"),
+                "messageId": quotedMessageID.hexEncodedString(),
+            ]
+            body = textMessage.text
         }
     }
     
@@ -417,8 +406,7 @@ class WebMessageObject: NSObject {
         thumbnail = nil
         
         if fileMessageEntity.thumbnail != nil {
-            // swiftformat:disable:next acronyms
-            if let thumbnailID = fileMessageEntity.blobThumbnailId {
+            if let thumbnailID = fileMessageEntity.blobThumbnailID {
                 if !session.requestedThumbnails(contains: thumbnailID) {
                     let webThumbnail = WebThumbnail(fileMessageEntity, onlyThumbnail: true)
                     thumbnail = webThumbnail.objectDict()
@@ -563,12 +551,6 @@ struct MessageEvents {
                 var event = [String: Any]()
                 event.updateValue("read", forKey: "type")
                 event.updateValue(Int(readDate.timeIntervalSince1970), forKey: "date")
-                events.append(event)
-            }
-            if let userackDate = baseMessage.userackDate {
-                var event = [String: Any]()
-                event.updateValue("acked", forKey: "type")
-                event.updateValue(Int(userackDate.timeIntervalSince1970), forKey: "date")
                 events.append(event)
             }
         }
@@ -824,22 +806,22 @@ struct WebVoip {
     
     init(_ systemMessage: SystemMessageEntity) {
         switch systemMessage.type.intValue {
-        case kSystemMessageCallMissed:
+        case SystemMessageEntity.SystemMessageEntityType.callMissed.rawValue:
             self.status = 1
-        case kSystemMessageCallRejected:
+        case SystemMessageEntity.SystemMessageEntityType.callRejected.rawValue:
             self.status = 3
-        case kSystemMessageCallRejectedBusy:
+        case SystemMessageEntity.SystemMessageEntityType.callRejectedBusy.rawValue:
             self.status = 3
-        case kSystemMessageCallRejectedTimeout:
+        case SystemMessageEntity.SystemMessageEntityType.callRejectedTimeout.rawValue:
             self.status = 3
-        case kSystemMessageCallEnded:
+        case SystemMessageEntity.SystemMessageEntityType.callEnded.rawValue:
             if systemMessage.callDuration() != nil {
                 self.status = 2
             }
             else {
                 self.status = 4
             }
-        case kSystemMessageCallRejectedDisabled:
+        case SystemMessageEntity.SystemMessageEntityType.callRejectedDisabled.rawValue:
             self.status = 3
         default:
             self.status = 2
@@ -850,13 +832,13 @@ struct WebVoip {
         }
 
         switch systemMessage.type.intValue {
-        case kSystemMessageCallRejected:
+        case SystemMessageEntity.SystemMessageEntityType.callRejected.rawValue:
             self.reason = 3
-        case kSystemMessageCallRejectedBusy:
+        case SystemMessageEntity.SystemMessageEntityType.callRejectedBusy.rawValue:
             self.reason = 1
-        case kSystemMessageCallRejectedTimeout:
+        case SystemMessageEntity.SystemMessageEntityType.callRejectedTimeout.rawValue:
             self.reason = 2
-        case kSystemMessageCallRejectedDisabled:
+        case SystemMessageEntity.SystemMessageEntityType.callRejectedDisabled.rawValue:
             self.reason = 4
         default:
             break

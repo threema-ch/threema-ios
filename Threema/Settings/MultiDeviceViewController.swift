@@ -23,12 +23,12 @@ import Foundation
 import SwiftUI
 import ThreemaMacros
 
-class MultiDeviceViewController: ThemedTableViewController {
-    
+final class MultiDeviceViewController: ThemedTableViewController {
+
     // MARK: - Properties
 
-    @IBOutlet var activityIndicator: UIActivityIndicatorView!
-    
+    let activityIndicator = UIActivityIndicatorView(style: .medium)
+
     // MARK: - Private properties
 
     private let refreshControlTableView = UIRefreshControl()
@@ -36,10 +36,23 @@ class MultiDeviceViewController: ThemedTableViewController {
     var thisDevice: DeviceInfo?
     var otherDevices: [DeviceInfo]?
 
+    // MARK: - Init
+
+    init() {
+        super.init(style: .insetGrouped)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        setupViews()
 
         title = #localize("multi_device_linked_devices_title")
         
@@ -128,6 +141,13 @@ class MultiDeviceViewController: ThemedTableViewController {
             title: #localize("multi_device_linked_devices_failed_remove_title"),
             message: #localize("multi_device_linked_devices_failed_remove_message_2")
         )
+    }
+
+    // MARK: - Helpers
+
+    private func setupViews() {
+        tableView.delegate = self
+        tableView.dataSource = self
     }
 
     @objc private func wizardUpdate() {
@@ -258,8 +278,6 @@ struct MultiDeviceViewControllerRepresentable: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
     
     func makeUIViewController(context: Context) -> some UIViewController {
-        let storyboard = UIStoryboard(name: "SettingsStoryboard", bundle: nil)
-        let vc = storyboard.instantiateViewController(identifier: "MultiDeviceViewController")
-        return vc
+        MultiDeviceViewController()
     }
 }

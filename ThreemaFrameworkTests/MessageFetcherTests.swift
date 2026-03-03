@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
@@ -61,7 +62,6 @@ class MessageFetcherTests: XCTestCase {
     ]
     
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema")
         
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
@@ -93,7 +93,7 @@ class MessageFetcherTests: XCTestCase {
         }
         
         let databaseContext = try XCTUnwrap(DatabaseContext(mainContext: mainCnx, backgroundContext: nil))
-        entityManager = EntityManager(databaseContext: databaseContext)
+        entityManager = EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false)
         messageFetcher = MessageFetcher(for: conversation, with: entityManager)
     }
 
@@ -233,8 +233,8 @@ class MessageFetcherTests: XCTestCase {
 
     func testLastDisplayMessageIsSystemMessageFsDebugMessage() throws {
         databasePreparer.save {
-            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageFsDisabledOutgoing)
-            databasePreparer.createSystemMessage(conversation: conversation, type: kFsDebugMessage)
+            databasePreparer.createSystemMessage(conversation: conversation, type: .fsDisabledOutgoing)
+            databasePreparer.createSystemMessage(conversation: conversation, type: .fsDebugMessage)
         }
 
         let result = try XCTUnwrap(messageFetcher.lastDisplayMessage() as? TextMessageEntity)
@@ -247,13 +247,13 @@ class MessageFetcherTests: XCTestCase {
 
     func testLastDisplayMessageCheckIsSystemMessageGroupCreatorLeft() throws {
         databasePreparer.save {
-            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageFsDisabledOutgoing)
-            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageGroupCreatorLeft)
+            databasePreparer.createSystemMessage(conversation: conversation, type: .fsDisabledOutgoing)
+            databasePreparer.createSystemMessage(conversation: conversation, type: .groupCreatorLeft)
         }
 
         let result = try XCTUnwrap(messageFetcher.lastDisplayMessage() as? SystemMessageEntity)
 
-        XCTAssertEqual(kSystemMessageGroupCreatorLeft, result.type.intValue)
+        XCTAssertEqual(SystemMessageEntity.SystemMessageEntityType.groupCreatorLeft.rawValue, result.type.intValue)
     }
     
     // MARK: Last message
@@ -269,23 +269,35 @@ class MessageFetcherTests: XCTestCase {
     
     func testLastMessageIsSystemMessageFsDebugMessage() throws {
         databasePreparer.save {
-            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageFsDisabledOutgoing)
-            databasePreparer.createSystemMessage(conversation: conversation, type: kFsDebugMessage)
+            databasePreparer.createSystemMessage(
+                conversation: conversation,
+                type: SystemMessageEntity.SystemMessageEntityType.fsDisabledOutgoing
+            )
+            databasePreparer.createSystemMessage(
+                conversation: conversation,
+                type: SystemMessageEntity.SystemMessageEntityType.fsDebugMessage
+            )
         }
     
         let result = try XCTUnwrap(messageFetcher.lastMessage() as? SystemMessageEntity)
     
-        XCTAssertEqual(kFsDebugMessage, result.type.intValue)
+        XCTAssertEqual(SystemMessageEntity.SystemMessageEntityType.fsDebugMessage.rawValue, result.type.intValue)
     }
     
     func testLastMessageCheckIsSystemMessageGroupCreatorLeft() throws {
         databasePreparer.save {
-            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageFsDisabledOutgoing)
-            databasePreparer.createSystemMessage(conversation: conversation, type: kSystemMessageGroupCreatorLeft)
+            databasePreparer.createSystemMessage(
+                conversation: conversation,
+                type: SystemMessageEntity.SystemMessageEntityType.fsDisabledOutgoing
+            )
+            databasePreparer.createSystemMessage(
+                conversation: conversation,
+                type: SystemMessageEntity.SystemMessageEntityType.groupCreatorLeft
+            )
         }
     
         let result = try XCTUnwrap(messageFetcher.lastMessage() as? SystemMessageEntity)
     
-        XCTAssertEqual(kSystemMessageGroupCreatorLeft, result.type.intValue)
+        XCTAssertEqual(SystemMessageEntity.SystemMessageEntityType.groupCreatorLeft.rawValue, result.type.intValue)
     }
 }

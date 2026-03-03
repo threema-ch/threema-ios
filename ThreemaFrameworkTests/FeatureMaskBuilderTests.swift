@@ -24,7 +24,6 @@ import XCTest
 final class FeatureMaskBuilderTests: XCTestCase {
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
     }
 

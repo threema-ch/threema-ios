@@ -49,7 +49,7 @@ extension StorageManagementView {
                     return group.profilePicture
                 }
                 else if let contact = conversation.contact,
-                        let contactEntity = entityManager.entityFetcher.contact(for: contact.identity) {
+                        let contactEntity = entityManager.entityFetcher.contactEntity(for: contact.identity) {
                     let businessContact = Contact(contactEntity: contactEntity)
                     return businessContact.profilePicture
                 }
@@ -80,7 +80,7 @@ extension StorageManagementView {
         /// The sorted conversations are then assigned to the `conversations` published property.
         func getAllConversations() -> [ConversationEntity] {
             guard let allConversations = businessInjector.entityManager.entityFetcher
-                .allConversations() as? [ConversationEntity] else {
+                .conversationEntities() else {
                 return []
             }
             return allConversations.filter { $0.conversationCategory == .default }.sorted {

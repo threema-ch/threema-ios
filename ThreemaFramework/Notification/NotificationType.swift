@@ -43,6 +43,8 @@ public enum NotificationType: Equatable, CaseIterable, Hashable {
         }
     }
     
+    public static let remoteSecretCases: [NotificationType] = [.restrictive, .balanced]
+    
     public static func type(for number: NSNumber) -> NotificationType {
         switch number {
         case 0:

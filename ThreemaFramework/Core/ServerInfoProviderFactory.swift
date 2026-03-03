@@ -20,7 +20,7 @@
 
 import Foundation
 
-@objc public class ServerInfoProviderFactory: NSObject {
+public class ServerInfoProviderFactory: NSObject {
     static let serverInfoProvider: ServerInfoProvider =
         if TargetManager.isOnPrem {
             OnPremServerInfoProvider()

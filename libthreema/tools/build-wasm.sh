@@ -53,6 +53,7 @@ fi
 
 # Build library as WASM
 cargo build \
+    --locked \
     -F wasm \
     -p libthreema \
     --target wasm32-unknown-unknown \

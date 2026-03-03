@@ -24,74 +24,128 @@ import Foundation
 /// Preferably use pre-defined types
 public struct PreviewableMessageConfiguration {
     
+    public enum SenderVisibility {
+        case none, basic, userSettings
+    }
+    
+    /// Add leading symbol if needed
+    public let showSymbol: Bool
+
     /// Configuration of the symbol placed in the attributed string
     public let symbolConfiguration: UIImage.SymbolConfiguration
+    
     /// Font of the attributed string
     public let font: UIFont
+    
     /// Tint color of the text and icon in the attributed string
     ///
     /// This is a closure so it uses the correct color depending on the theme as the `Colors` color are not dynamic yet
     public let tintColor: () -> UIColor
+    
+    /// Trim new lines
+    public let trimNewLines: Bool
+    
     /// Count of the characters the attributed string will be trimmed to
     public let trimmingCount: Int
-    /// Bool deciding if the preview string should have the sender as prefix
-    public let includeSender: Bool
+    
+    /// Deciding if and how the preview string should have the sender as prefix
+    public let senderVisibility: SenderVisibility
     
     init(
+        showSymbol: Bool,
         symbolConfiguration: UIImage.SymbolConfiguration,
         font: UIFont,
         tintColor: @escaping () -> UIColor,
+        trimNewLines: Bool,
         trimmingCount: Int,
-        includeSender: Bool = false
+        senderVisibility: SenderVisibility
     ) {
+        self.showSymbol = showSymbol
         self.symbolConfiguration = symbolConfiguration
         self.font = font
         self.tintColor = tintColor
+        self.trimNewLines = trimNewLines
         self.trimmingCount = trimmingCount
-        self.includeSender = includeSender
+        self.senderVisibility = senderVisibility
     }
     
     // MARK: - Pre-defined type configurations
 
     public static let quote = PreviewableMessageConfiguration(
+        showSymbol: true,
         symbolConfiguration: UIImage.SymbolConfiguration(
             textStyle: .caption1,
             scale: .small
         ),
         font: UIFont.preferredFont(forTextStyle: .caption1),
         tintColor: { UIColor.secondaryLabel },
-        trimmingCount: 200
+        trimNewLines: true,
+        trimmingCount: 200,
+        senderVisibility: .none
     )
     
     public static let conversationCell = PreviewableMessageConfiguration(
+        showSymbol: true,
         symbolConfiguration: UIImage.SymbolConfiguration(
             textStyle: .subheadline,
             scale: .small
         ),
         font: UIFont.preferredFont(forTextStyle: .subheadline),
         tintColor: { UIColor.secondaryLabel },
+        trimNewLines: true,
         trimmingCount: 200,
-        includeSender: true
+        senderVisibility: .basic
     )
     
     public static let searchCell = PreviewableMessageConfiguration(
+        showSymbol: true,
         symbolConfiguration: UIImage.SymbolConfiguration(
             textStyle: .subheadline,
             scale: .small
         ),
         font: UIFont.preferredFont(forTextStyle: .subheadline),
         tintColor: { UIColor.secondaryLabel },
+        trimNewLines: true,
         trimmingCount: 200,
-        includeSender: true
+        senderVisibility: .basic
+    )
+    
+    public static let notificationBanner = PreviewableMessageConfiguration(
+        showSymbol: true,
+        symbolConfiguration: UIImage.SymbolConfiguration(
+            textStyle: .subheadline,
+            scale: .small
+        ),
+        font: UIFont.preferredFont(forTextStyle: .subheadline),
+        tintColor: { UIColor.label },
+        trimNewLines: true,
+        trimmingCount: 200,
+        senderVisibility: .basic
+    )
+    
+    public static let pushNotification = PreviewableMessageConfiguration(
+        showSymbol: false,
+        symbolConfiguration: UIImage.SymbolConfiguration(
+            textStyle: .subheadline,
+            scale: .small
+        ),
+        font: UIFont.preferredFont(forTextStyle: .subheadline),
+        tintColor: { UIColor.label },
+        trimNewLines: false,
+        trimmingCount: 200,
+        senderVisibility: .userSettings
     )
     
     public static let `default` = PreviewableMessageConfiguration(
+        showSymbol: true,
         symbolConfiguration: UIImage.SymbolConfiguration(
             textStyle: .caption1,
             scale: .small
         ),
         font: UIFont.preferredFont(forTextStyle: .caption1),
         tintColor: { UIColor.secondaryLabel },
-        trimmingCount: 100
+        trimNewLines: true,
+        trimmingCount: 100,
+        senderVisibility: .none
     )
 }

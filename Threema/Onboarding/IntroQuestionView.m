@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "IntroQuestionView.h"
-#import "BundleUtil.h"
+#import <ThreemaFramework/BundleUtil.h>
 
 @implementation IntroQuestionView
 
@@ -53,10 +53,10 @@
     _okButton.layer.cornerRadius = 3;
     
     _yesButton.backgroundColor = UIColor.tintColor;
-    [_yesButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
+    [_yesButton setTitleColor:UIColor.blackColor forState:UIControlStateNormal];
     _yesButton.accessibilityIdentifier = @"setupYesButton";
     _okButton.backgroundColor = UIColor.tintColor;
-    [_okButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
+    [_okButton setTitleColor:UIColor.blackColor forState:UIControlStateNormal];
     _okButton.accessibilityIdentifier = @"setupOKButton";
 
     _noButton.layer.borderWidth = 1;

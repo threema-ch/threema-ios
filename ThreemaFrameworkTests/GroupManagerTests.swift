@@ -18,7 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import RemoteSecretProtocolTestHelper
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
 
 @testable import ThreemaFramework
@@ -32,9 +34,9 @@ class GroupManagerTests: XCTestCase {
     private let groupPhotoSenderMock = GroupPhotoSenderMock()
     
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
-        
+        AppLaunchManager.remoteSecretManager = RemoteSecretManagerMock()
+
         let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
         databaseCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         databasePreparer = DatabasePreparer(context: mainCnx)
@@ -58,12 +60,14 @@ class GroupManagerTests: XCTestCase {
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            ContactStoreMock(callOnCompletion: true),
-            taskManagerMock,
-            UserSettingsMock(),
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: ContactStoreMock(callOnCompletion: true),
+            taskManager: taskManagerMock,
+            userSettings: UserSettingsMock(),
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         await XCTAssertThrowsAsyncError(
@@ -96,12 +100,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         let (resultGroup, resultNewMembers) = try await groupManager.createOrUpdate(
@@ -123,7 +129,7 @@ class GroupManagerTests: XCTestCase {
         
         let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupCreateMessage)
         XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(task.groupID!))
-        XCTAssertEqual(expectedGroupIdentity.creator.string, task.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, task.groupCreatorIdentity)
         XCTAssertEqual(expectedMembers, task.members)
         let removedMembers = try XCTUnwrap(task.removedMembers)
         XCTAssertTrue(removedMembers.isEmpty)
@@ -152,12 +158,14 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         try await groupManager.createOrUpdateDB(
@@ -184,7 +192,7 @@ class GroupManagerTests: XCTestCase {
 
         let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupCreateMessage)
         XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(task.groupID!))
-        XCTAssertEqual(expectedGroupIdentity.creator.string, task.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, task.groupCreatorIdentity)
         XCTAssertEqual(expectedNewMembers, task.members)
         XCTAssertTrue(task.removedMembers?.isEmpty ?? false)
         XCTAssertEqual(
@@ -213,12 +221,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         try await groupManager.createOrUpdateDB(
@@ -249,7 +259,7 @@ class GroupManagerTests: XCTestCase {
         
         let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupCreateMessage)
         XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(task.groupID!))
-        XCTAssertEqual(expectedGroupIdentity.creator.string, task.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, task.groupCreatorIdentity)
         XCTAssertEqual(expectedNewMembers, task.members)
         XCTAssertEqual(2, task.removedMembers?.filter { $0 == "MEMBER02" || $0 == "MEMBER04" }.count)
         XCTAssertEqual(
@@ -277,14 +287,16 @@ class GroupManagerTests: XCTestCase {
             }
         }
         
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         try await groupManager.createOrUpdateDB(
@@ -298,8 +310,14 @@ class GroupManagerTests: XCTestCase {
         let leavingMembers = expectedMembers.subtracting(expectedNewMembers)
         
         let messageID: Data! = try databasePreparer.save {
-            let stayingContactEntity = try XCTUnwrap(entityManager.entityFetcher.contact(for: expectedNewMembers.first))
-            let leavingContactEntity = try XCTUnwrap(entityManager.entityFetcher.contact(for: leavingMembers.first))
+            let stayingContactEntity = try XCTUnwrap(
+                entityManager.entityFetcher
+                    .contactEntity(for: expectedNewMembers.first!)
+            )
+            let leavingContactEntity = try XCTUnwrap(
+                entityManager.entityFetcher
+                    .contactEntity(for: leavingMembers.first!)
+            )
 
             let conversation = try XCTUnwrap(groupManager.getConversation(for: expectedGroupIdentity))
             let textMessage = self.databasePreparer.createTextMessage(
@@ -335,7 +353,7 @@ class GroupManagerTests: XCTestCase {
         
         let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupCreateMessage)
         XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(task.groupID!))
-        XCTAssertEqual(expectedGroupIdentity.creator.string, task.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, task.groupCreatorIdentity)
         XCTAssertEqual(expectedNewMembers, task.members)
         XCTAssertEqual(2, task.removedMembers?.filter { $0 == "MEMBER02" || $0 == "MEMBER04" }.count)
         XCTAssertEqual(
@@ -346,7 +364,7 @@ class GroupManagerTests: XCTestCase {
         // Only the rejectedBy from the leaving member should be removed
         
         let actualBaseMessage = try XCTUnwrap(
-            entityManager.entityFetcher.message(with: messageID, conversation: resultGrp.conversation)
+            entityManager.entityFetcher.message(with: messageID, in: resultGrp.conversation)
         )
         XCTAssertTrue(actualBaseMessage.sendFailed?.boolValue ?? false)
         XCTAssertEqual(1, actualBaseMessage.rejectedBy?.count ?? -1)
@@ -363,19 +381,21 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
         let expectedMembers: Set<String> = ["MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
 
         for member in expectedMembers.filter({ $0 != myIdentityStoreMock.identity }) {
             databasePreparer.createContact(identity: member)
         }
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            ContactStoreMock(callOnCompletion: true),
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: ContactStoreMock(callOnCompletion: true),
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         await XCTAssertThrowsAsyncError(
@@ -408,19 +428,21 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
 
         for member in expectedMembers.filter({ $0 != myIdentityStoreMock.identity }) {
             databasePreparer.createContact(identity: member)
         }
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            ContactStoreMock(callOnCompletion: true),
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: ContactStoreMock(callOnCompletion: true),
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         await XCTAssertThrowsAsyncError(
@@ -446,7 +468,7 @@ class GroupManagerTests: XCTestCase {
                 }) as? TaskDefinitionSendGroupLeaveMessage
         )
         XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(leaveTask.groupID!))
-        XCTAssertEqual(expectedGroupIdentity.creator.string, leaveTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, leaveTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, leaveTask.fromMember)
         XCTAssertEqual(
             expectedMembers.count,
@@ -477,12 +499,14 @@ class GroupManagerTests: XCTestCase {
             )
 
             let groupManager = GroupManager(
-                myIdentityStoreMock,
-                ContactStoreMock(callOnCompletion: true),
-                TaskManagerMock(),
-                UserSettingsMock(),
-                EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-                groupPhotoSenderMock
+                myIdentityStore: myIdentityStoreMock,
+                contactStore: ContactStoreMock(callOnCompletion: true),
+                taskManager: TaskManagerMock(),
+                userSettings: UserSettingsMock(),
+                entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+                groupPhotoSender: {
+                    self.groupPhotoSenderMock
+                }
             )
 
             guard let initialGrp = try await groupManager.createOrUpdateDB(
@@ -547,14 +571,16 @@ class GroupManagerTests: XCTestCase {
             creator: ThreemaIdentity(expectedGroupCreator)
         )
         
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            ContactStoreMock(callOnCompletion: true),
-            TaskManagerMock(),
-            UserSettingsMock(),
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: ContactStoreMock(callOnCompletion: true),
+            taskManager: TaskManagerMock(),
+            userSettings: UserSettingsMock(),
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let initialGrp = try await groupManager.createOrUpdateDB(
@@ -579,8 +605,8 @@ class GroupManagerTests: XCTestCase {
         XCTAssertFalse(initialGrp.isNoteGroup)
         
         let messageID: Data! = try databasePreparer.save {
-            let member02 = try XCTUnwrap(entityManager.entityFetcher.contact(for: "MEMBER02"))
-            let member03 = try XCTUnwrap(entityManager.entityFetcher.contact(for: "MEMBER03"))
+            let member02 = try XCTUnwrap(entityManager.entityFetcher.contactEntity(for: "MEMBER02"))
+            let member03 = try XCTUnwrap(entityManager.entityFetcher.contactEntity(for: "MEMBER03"))
 
             let conversation = try XCTUnwrap(groupManager.getConversation(for: expectedGroupIdentity))
             let textMessage = self.databasePreparer.createTextMessage(
@@ -619,7 +645,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertFalse(grp.isNoteGroup)
         
         let actualBaseMessage = try XCTUnwrap(
-            entityManager.entityFetcher.message(with: messageID, conversation: grp.conversation)
+            entityManager.entityFetcher.message(with: messageID, in: grp.conversation)
         )
         XCTAssertFalse(actualBaseMessage.sendFailed?.boolValue ?? true)
         XCTAssertEqual(0, actualBaseMessage.rejectedBy?.count ?? -1)
@@ -631,7 +657,7 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
         let expectedInitialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
         for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
             databasePreparer.createContact(identity: member)
         }
@@ -641,12 +667,14 @@ class GroupManagerTests: XCTestCase {
         let error = NSError(domain: NSURLErrorDomain, code: 404)
             
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            ContactStoreMock(callOnCompletion: true, errorHandler: error),
-            TaskManagerMock(),
-            UserSettingsMock(),
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: ContactStoreMock(callOnCompletion: true, errorHandler: error),
+            taskManager: TaskManagerMock(),
+            userSettings: UserSettingsMock(),
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let initialGrp = try await groupManager.createOrUpdateDB(
@@ -699,7 +727,7 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
         let expectedInitialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
         for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
             databasePreparer.createContact(identity: member)
         }
@@ -712,12 +740,14 @@ class GroupManagerTests: XCTestCase {
         let error = NSError(domain: NSURLErrorDomain, code: 404)
             
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            ContactStoreMock(callOnCompletion: true, errorHandler: error),
-            TaskManagerMock(),
-            UserSettingsMock(),
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: ContactStoreMock(callOnCompletion: true, errorHandler: error),
+            taskManager: TaskManagerMock(),
+            userSettings: UserSettingsMock(),
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let initialGrp = try await groupManager.createOrUpdateDB(
@@ -771,7 +801,7 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
         let expectedInitialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
         for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
             databasePreparer.createContact(identity: member)
         }
@@ -782,12 +812,14 @@ class GroupManagerTests: XCTestCase {
         let expectedError = NSError(domain: NSPOSIXErrorDomain, code: 8_765_432_187)
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            ContactStoreMock(callOnCompletion: true, errorHandler: expectedError),
-            TaskManagerMock(),
-            UserSettingsMock(),
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: ContactStoreMock(callOnCompletion: true, errorHandler: expectedError),
+            taskManager: TaskManagerMock(),
+            userSettings: UserSettingsMock(),
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let initialGrp = try await groupManager.createOrUpdateDB(
@@ -841,12 +873,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager: GroupManagerProtocol = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -867,7 +901,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupRenameMessage }.count)
         let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupRenameMessage)
         XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(task.groupID!))
-        XCTAssertEqual(expectedGroupIdentity.creator.string, task.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, task.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, task.fromMember)
         XCTAssertEqual(
             expectedMembers.count,
@@ -899,12 +933,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -930,7 +966,7 @@ class GroupManagerTests: XCTestCase {
         
         let setTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupSetPhotoMessage)
         XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(setTask.groupID!))
-        XCTAssertEqual(expectedGroupIdentity.creator.string, setTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, setTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, setTask.fromMember)
         XCTAssertEqual(
             expectedMembers.count,
@@ -957,7 +993,7 @@ class GroupManagerTests: XCTestCase {
                 }) as? TaskDefinitionSendGroupDeletePhotoMessage
         )
         XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(deleteTask.groupID!))
-        XCTAssertEqual(expectedGroupIdentity.creator.string, deleteTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, deleteTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, deleteTask.fromMember)
         XCTAssertEqual(
             expectedMembers.count,
@@ -985,12 +1021,14 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1007,7 +1045,7 @@ class GroupManagerTests: XCTestCase {
 
         groupManager.leave(
             groupID: expectedGroupIdentity.id,
-            creator: expectedGroupIdentity.creator.string,
+            creator: expectedGroupIdentity.creator.rawValue,
             toMembers: nil,
             systemMessageDate: Date()
         )
@@ -1028,7 +1066,7 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03", "MEMBER04"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
         for member in expectedMembers {
             databasePreparer.save {
                 let contact = databasePreparer.createContact(identity: member)
@@ -1037,12 +1075,14 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1059,7 +1099,7 @@ class GroupManagerTests: XCTestCase {
 
         groupManager.leave(
             groupID: expectedGroupIdentity.id,
-            creator: expectedGroupIdentity.creator.string,
+            creator: expectedGroupIdentity.creator.rawValue,
             toMembers: nil,
             systemMessageDate: Date()
         )
@@ -1067,7 +1107,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupLeaveMessage }.count)
         let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupLeaveMessage)
         XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(task.groupID!))
-        XCTAssertEqual(expectedGroupIdentity.creator.string, task.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, task.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, task.fromMember)
         XCTAssertEqual(
             4,
@@ -1095,18 +1135,20 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
         for member in expectedMembers {
             databasePreparer.createContact(identity: member)
         }
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1121,7 +1163,7 @@ class GroupManagerTests: XCTestCase {
 
         groupManager.leave(
             groupID: expectedGroupIdentity.id,
-            creator: expectedGroupIdentity.creator.string,
+            creator: expectedGroupIdentity.creator.rawValue,
             toMembers: ["MEMBER02"],
             systemMessageDate: Date()
         )
@@ -1129,7 +1171,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(1, taskManagerMock.addedTasks.filter { $0 is TaskDefinitionSendGroupLeaveMessage }.count)
         let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupLeaveMessage)
         XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(task.groupID!))
-        XCTAssertEqual(expectedGroupIdentity.creator.string, task.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, task.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, task.fromMember)
         XCTAssertEqual(1, task.toMembers.count)
         XCTAssertTrue(try XCTUnwrap(task.toMembers).contains("MEMBER02"))
@@ -1145,18 +1187,20 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
         let expectedMembers: Set<String> = ["MEMBER02", "MEMBER03", myIdentityStoreMock.identity]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
         for member in expectedMembers {
             databasePreparer.createContact(identity: member)
         }
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1174,14 +1218,14 @@ class GroupManagerTests: XCTestCase {
 
         groupManager.leave(
             groupID: expectedGroupIdentity.id,
-            creator: expectedGroupIdentity.creator.string,
+            creator: expectedGroupIdentity.creator.rawValue,
             toMembers: nil,
             systemMessageDate: Date()
         )
 
         let grpLeft = try XCTUnwrap(
             groupManager
-                .getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+                .getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
         XCTAssertEqual(3, grpLeft.allMemberIdentities.count)
         XCTAssertTrue(grpLeft.didLeave)
@@ -1214,19 +1258,21 @@ class GroupManagerTests: XCTestCase {
         let leavingMember = "MEMBER03"
         let initialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", leavingMember]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
         for member in initialMembers {
             databasePreparer.createContact(identity: member)
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         try await groupManager.createOrUpdateDB(
@@ -1238,13 +1284,13 @@ class GroupManagerTests: XCTestCase {
 
         groupManager.leaveDB(
             groupID: expectedGroupIdentity.id,
-            creator: expectedGroupIdentity.creator.string,
+            creator: expectedGroupIdentity.creator.rawValue,
             member: leavingMember,
             systemMessageDate: Date()
         )
 
         let group = try XCTUnwrap(
-            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
 
         DDLog.flushLog()
@@ -1262,8 +1308,15 @@ class GroupManagerTests: XCTestCase {
 
         let systemMessageTypes = messageFetcher.messages(at: 0, count: 0)
             .map { ($0 as? SystemMessageEntity)?.type ?? 0 }
-        XCTAssertEqual(3, systemMessageTypes.filter { $0.intValue == kSystemMessageGroupMemberAdd }.count)
-        XCTAssertEqual(kSystemMessageGroupMemberLeave, systemMessageTypes.last?.intValue)
+        XCTAssertEqual(
+            3,
+            systemMessageTypes
+                .filter { $0.intValue == SystemMessageEntity.SystemMessageEntityType.groupMemberAdd.rawValue }.count
+        )
+        XCTAssertEqual(
+            SystemMessageEntity.SystemMessageEntityType.groupMemberLeave.rawValue,
+            systemMessageTypes.last?.intValue
+        )
     }
     
     func testReceiveLeaveFromMemberWithRejectedMessages() async throws {
@@ -1280,19 +1333,21 @@ class GroupManagerTests: XCTestCase {
         let leavingMember = "MEMBER03"
         let initialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", leavingMember]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
         for member in initialMembers {
             databasePreparer.createContact(identity: member)
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         try await groupManager.createOrUpdateDB(
@@ -1303,11 +1358,11 @@ class GroupManagerTests: XCTestCase {
         )
 
         let group = try XCTUnwrap(
-            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
 
         let messageID: Data! = try databasePreparer.save {
-            let leavingContactEntity = try XCTUnwrap(entityManager.entityFetcher.contact(for: leavingMember))
+            let leavingContactEntity = try XCTUnwrap(entityManager.entityFetcher.contactEntity(for: leavingMember))
 
             let conversation = try XCTUnwrap(groupManager.getConversation(for: expectedGroupIdentity))
             let textMessage = self.databasePreparer.createTextMessage(
@@ -1326,7 +1381,7 @@ class GroupManagerTests: XCTestCase {
 
         groupManager.leaveDB(
             groupID: expectedGroupIdentity.id,
-            creator: expectedGroupIdentity.creator.string,
+            creator: expectedGroupIdentity.creator.rawValue,
             member: leavingMember,
             systemMessageDate: Date()
         )
@@ -1340,7 +1395,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertFalse(group.allMemberIdentities.contains(leavingMember))
 
         let actualBaseMessage = try XCTUnwrap(
-            entityManager.entityFetcher.message(with: messageID, conversation: group.conversation)
+            entityManager.entityFetcher.message(with: messageID, in: group.conversation)
         )
         XCTAssertFalse(actualBaseMessage.sendFailed?.boolValue ?? true)
         XCTAssertEqual(0, actualBaseMessage.rejectedBy?.count ?? -1)
@@ -1360,19 +1415,21 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
         for member in expectedMembers {
             databasePreparer.createContact(identity: member)
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         try await groupManager.createOrUpdateDB(
@@ -1384,13 +1441,13 @@ class GroupManagerTests: XCTestCase {
 
         groupManager.leaveDB(
             groupID: expectedGroupIdentity.id,
-            creator: expectedGroupIdentity.creator.string,
-            member: expectedGroupIdentity.creator.string,
+            creator: expectedGroupIdentity.creator.rawValue,
+            member: expectedGroupIdentity.creator.rawValue,
             systemMessageDate: Date()
         )
 
         let group = try XCTUnwrap(
-            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
 
         DDLog.flushLog()
@@ -1399,7 +1456,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertFalse(group.didForcedLeave)
         XCTAssertEqual(3, group.allMemberIdentities.count)
         XCTAssertTrue(group.allMemberIdentities.contains("MEMBER02"))
-        XCTAssertFalse(group.allMemberIdentities.contains(expectedGroupIdentity.creator.string))
+        XCTAssertFalse(group.allMemberIdentities.contains(expectedGroupIdentity.creator.rawValue))
 
         // Check added system messages
 
@@ -1408,8 +1465,16 @@ class GroupManagerTests: XCTestCase {
 
         let systemMessageTypes = messageFetcher.messages(at: 0, count: 0)
             .map { ($0 as? SystemMessageEntity)?.type ?? 0 }
-        XCTAssertEqual(3, systemMessageTypes.filter { $0.intValue == kSystemMessageGroupMemberAdd }.count)
-        XCTAssertEqual(kSystemMessageGroupCreatorLeft, systemMessageTypes.last?.intValue)
+        XCTAssertEqual(
+            3,
+            systemMessageTypes
+                .filter { $0.intValue == SystemMessageEntity.SystemMessageEntityType.groupMemberAdd.rawValue }
+                .count
+        )
+        XCTAssertEqual(
+            SystemMessageEntity.SystemMessageEntityType.groupCreatorLeft.rawValue,
+            systemMessageTypes.last?.intValue
+        )
     }
 
     func testDissolveAsAdmin() async throws {
@@ -1432,12 +1497,14 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1453,12 +1520,12 @@ class GroupManagerTests: XCTestCase {
         groupManager.dissolve(groupID: grp.groupID, to: nil)
 
         let group = try XCTUnwrap(
-            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
 
         XCTAssertTrue(group.didLeave)
         XCTAssertFalse(group.didForcedLeave)
-        XCTAssertFalse(group.allMemberIdentities.contains(expectedGroupIdentity.creator.string))
+        XCTAssertFalse(group.allMemberIdentities.contains(expectedGroupIdentity.creator.rawValue))
         XCTAssertEqual(3, group.allMemberIdentities.count)
 
         let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionGroupDissolve)
@@ -1486,14 +1553,16 @@ class GroupManagerTests: XCTestCase {
             }
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1510,7 +1579,7 @@ class GroupManagerTests: XCTestCase {
         
         let messageID1: Data! = try databasePreparer.save {
             let someContactEntity = try XCTUnwrap(
-                entityManager.entityFetcher.contact(for: expectedMembers.randomElement())
+                entityManager.entityFetcher.contactEntity(for: expectedMembers.randomElement()!)
             )
 
             let textMessage = self.databasePreparer.createTextMessage(
@@ -1527,7 +1596,7 @@ class GroupManagerTests: XCTestCase {
         
         let messageID2: Data! = try databasePreparer.save {
             let someContactEntity = try XCTUnwrap(
-                entityManager.entityFetcher.contact(for: expectedMembers.randomElement())
+                entityManager.entityFetcher.contactEntity(for: expectedMembers.randomElement()!)
             )
 
             let textMessage = self.databasePreparer.createTextMessage(
@@ -1545,12 +1614,12 @@ class GroupManagerTests: XCTestCase {
         groupManager.dissolve(groupID: grp.groupID, to: nil)
 
         let group = try XCTUnwrap(
-            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
 
         XCTAssertTrue(group.didLeave)
         XCTAssertFalse(group.didForcedLeave)
-        XCTAssertFalse(group.allMemberIdentities.contains(expectedGroupIdentity.creator.string))
+        XCTAssertFalse(group.allMemberIdentities.contains(expectedGroupIdentity.creator.rawValue))
         XCTAssertEqual(3, group.allMemberIdentities.count)
 
         let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionGroupDissolve)
@@ -1561,13 +1630,13 @@ class GroupManagerTests: XCTestCase {
         // All rejectedBys should be removed
         
         let actualBaseMessage1 = try XCTUnwrap(
-            entityManager.entityFetcher.message(with: messageID1, conversation: group.conversation)
+            entityManager.entityFetcher.message(with: messageID1, in: group.conversation)
         )
         XCTAssertFalse(actualBaseMessage1.sendFailed?.boolValue ?? true)
         XCTAssertEqual(0, actualBaseMessage1.rejectedBy?.count ?? -1)
         
         let actualBaseMessage2 = try XCTUnwrap(
-            entityManager.entityFetcher.message(with: messageID2, conversation: group.conversation)
+            entityManager.entityFetcher.message(with: messageID2, in: group.conversation)
         )
         XCTAssertFalse(actualBaseMessage2.sendFailed?.boolValue ?? true)
         XCTAssertEqual(0, actualBaseMessage2.rejectedBy?.count ?? -1)
@@ -1590,12 +1659,14 @@ class GroupManagerTests: XCTestCase {
         }
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1611,12 +1682,12 @@ class GroupManagerTests: XCTestCase {
         groupManager.dissolve(groupID: grp.groupID, to: ["MEMBER01", "MEMBER02"])
 
         let group = try XCTUnwrap(
-            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
 
         XCTAssertTrue(group.didLeave)
         XCTAssertFalse(group.didForcedLeave)
-        XCTAssertFalse(group.allMemberIdentities.contains(expectedGroupIdentity.creator.string))
+        XCTAssertFalse(group.allMemberIdentities.contains(expectedGroupIdentity.creator.rawValue))
         XCTAssertEqual(3, group.allMemberIdentities.count)
 
         let task = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionGroupDissolve)
@@ -1634,18 +1705,20 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
         for member in expectedMembers {
             databasePreparer.createContact(identity: member)
         }
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1661,7 +1734,7 @@ class GroupManagerTests: XCTestCase {
         groupManager.dissolve(groupID: grp.groupID, to: nil)
 
         let group = try XCTUnwrap(
-            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
 
         XCTAssertFalse(group.didLeave)
@@ -1691,12 +1764,14 @@ class GroupManagerTests: XCTestCase {
             databasePreparer.createContact(identity: member)
         }
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1712,7 +1787,7 @@ class GroupManagerTests: XCTestCase {
         groupManager.sendEmptyMemberList(groupIdentity: grp.groupIdentity, to: notMembers)
 
         let group = try XCTUnwrap(
-            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+            groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
         
         guard let sendGroupCreateMessage = taskManagerMock.addedTasks.first as? TaskDefinitionSendGroupCreateMessage
@@ -1727,7 +1802,7 @@ class GroupManagerTests: XCTestCase {
         
         XCTAssertEqual(0, sendGroupCreateMessage.members.count)
         XCTAssertEqual(1, sendGroupCreateMessage.toMembers.count)
-        XCTAssertEqual(notMembers.first?.string, sendGroupCreateMessage.toMembers.first)
+        XCTAssertEqual(notMembers.first?.rawValue, sendGroupCreateMessage.toMembers.first)
     }
 
     // Test with blocked contact
@@ -1751,12 +1826,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1784,21 +1861,21 @@ class GroupManagerTests: XCTestCase {
 
         let createMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[1] as? TaskDefinitionSendGroupCreateMessage)
         XCTAssertEqual(expectedGroupIdentity.id, createMessageTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, createMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, createMessageTask.groupCreatorIdentity)
         XCTAssertEqual(expectedMembers, Set(createMessageTask.toMembers))
         XCTAssertNil(createMessageTask.removedMembers)
         XCTAssertEqual(expectedMembers, createMessageTask.members)
         
         let renameMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[2] as? TaskDefinitionSendGroupRenameMessage)
         XCTAssertEqual(expectedGroupIdentity.id, renameMessageTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, renameMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, renameMessageTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, renameMessageTask.fromMember)
         XCTAssertEqual(expectedMembers, Set(renameMessageTask.toMembers))
         XCTAssertNil(renameMessageTask.name)
         
         let setPhotoTask = try XCTUnwrap(taskManagerMock.addedTasks[3] as? TaskDefinitionSendGroupSetPhotoMessage)
         XCTAssertEqual(expectedGroupIdentity.id, setPhotoTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, setPhotoTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, setPhotoTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, setPhotoTask.fromMember)
         XCTAssertEqual(expectedMembers, Set(setPhotoTask.toMembers))
         XCTAssertEqual(groupPhotoSenderMock.blobID, setPhotoTask.blobID)
@@ -1825,12 +1902,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1854,21 +1933,21 @@ class GroupManagerTests: XCTestCase {
 
         let createMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[0] as? TaskDefinitionSendGroupCreateMessage)
         XCTAssertEqual(expectedGroupIdentity.id, createMessageTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, createMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, createMessageTask.groupCreatorIdentity)
         XCTAssertEqual(expectedToMember, Set(createMessageTask.toMembers))
         XCTAssertNil(createMessageTask.removedMembers)
         XCTAssertEqual(expectedMembers, createMessageTask.members)
         
         let renameMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[1] as? TaskDefinitionSendGroupRenameMessage)
         XCTAssertEqual(expectedGroupIdentity.id, renameMessageTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, renameMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, renameMessageTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, renameMessageTask.fromMember)
         XCTAssertEqual(expectedToMember, Set(renameMessageTask.toMembers))
         XCTAssertNil(renameMessageTask.name)
         
         let setPhotoTask = try XCTUnwrap(taskManagerMock.addedTasks[2] as? TaskDefinitionSendGroupDeletePhotoMessage)
         XCTAssertEqual(expectedGroupIdentity.id, setPhotoTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, setPhotoTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, setPhotoTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, setPhotoTask.fromMember)
         XCTAssertEqual(expectedToMember, Set(setPhotoTask.toMembers))
     }
@@ -1894,12 +1973,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1923,7 +2004,7 @@ class GroupManagerTests: XCTestCase {
         
         let createMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[0] as? TaskDefinitionSendGroupCreateMessage)
         XCTAssertEqual(expectedGroupIdentity.id, createMessageTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, createMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, createMessageTask.groupCreatorIdentity)
         XCTAssertEqual(0, createMessageTask.toMembers.count)
         XCTAssertEqual([unknownMember], createMessageTask.removedMembers)
         XCTAssertEqual(expectedMembers, createMessageTask.members)
@@ -1959,14 +2040,16 @@ class GroupManagerTests: XCTestCase {
             databasePreparer.createContact(identity: member)
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -1981,8 +2064,7 @@ class GroupManagerTests: XCTestCase {
 
         await entityManager.performSave {
             if let grpEntity = entityManager.entityFetcher.groupEntity(
-                for: grp.groupID,
-                with: nil
+                for: grp.groupIdentity, myIdentity: myIdentityStoreMock.identity
             ) {
                 grpEntity.lastPeriodicSync = Date(timeIntervalSinceNow: Double(-kGroupPeriodicSyncInterval))
             }
@@ -2008,21 +2090,21 @@ class GroupManagerTests: XCTestCase {
         
         let createMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[1] as? TaskDefinitionSendGroupCreateMessage)
         XCTAssertEqual(expectedGroupIdentity.id, createMessageTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, createMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, createMessageTask.groupCreatorIdentity)
         XCTAssertEqual(expectedMembers, Set(createMessageTask.toMembers))
         XCTAssertNil(createMessageTask.removedMembers)
         XCTAssertEqual(expectedMembers, createMessageTask.members)
         
         let renameMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[2] as? TaskDefinitionSendGroupRenameMessage)
         XCTAssertEqual(expectedGroupIdentity.id, renameMessageTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, renameMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, renameMessageTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, renameMessageTask.fromMember)
         XCTAssertEqual(expectedMembers, Set(renameMessageTask.toMembers))
         XCTAssertNil(renameMessageTask.name)
         
         let setPhotoTask = try XCTUnwrap(taskManagerMock.addedTasks[3] as? TaskDefinitionSendGroupSetPhotoMessage)
         XCTAssertEqual(expectedGroupIdentity.id, setPhotoTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, setPhotoTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, setPhotoTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, setPhotoTask.fromMember)
         XCTAssertEqual(expectedMembers, Set(setPhotoTask.toMembers))
         XCTAssertEqual(groupPhotoSenderMock.blobID, setPhotoTask.blobID)
@@ -2050,14 +2132,16 @@ class GroupManagerTests: XCTestCase {
             databasePreparer.createContact(identity: member)
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         let groupManagerForPreparation = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let grp = try await groupManagerForPreparation.createOrUpdateDB(
@@ -2072,8 +2156,7 @@ class GroupManagerTests: XCTestCase {
 
         entityManager.performAndWaitSave {
             if let grpEntity = entityManager.entityFetcher.groupEntity(
-                for: grp.groupID,
-                with: nil
+                for: grp.groupIdentity, myIdentity: myIdentityStoreMock.identity
             ) {
                 grpEntity.lastPeriodicSync = Date(timeIntervalSinceNow: Double(-kGroupPeriodicSyncInterval))
             }
@@ -2083,12 +2166,14 @@ class GroupManagerTests: XCTestCase {
         try await groupManagerForPreparation.setPhoto(group: grp, imageData: expectedPhoto, sentDate: Date())
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            delayedGroupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                delayedGroupPhotoSenderMock
+            }
         )
         
         // Run
@@ -2105,14 +2190,14 @@ class GroupManagerTests: XCTestCase {
         
         let createMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[1] as? TaskDefinitionSendGroupCreateMessage)
         XCTAssertEqual(expectedGroupIdentity.id, createMessageTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, createMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, createMessageTask.groupCreatorIdentity)
         XCTAssertEqual(expectedMembers, Set(createMessageTask.toMembers))
         XCTAssertNil(createMessageTask.removedMembers)
         XCTAssertEqual(expectedMembers, createMessageTask.members)
         
         let renameMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[2] as? TaskDefinitionSendGroupRenameMessage)
         XCTAssertEqual(expectedGroupIdentity.id, renameMessageTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, renameMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, renameMessageTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, renameMessageTask.fromMember)
         XCTAssertEqual(expectedMembers, Set(renameMessageTask.toMembers))
         XCTAssertNil(renameMessageTask.name)
@@ -2138,14 +2223,16 @@ class GroupManagerTests: XCTestCase {
             databasePreparer.createContact(identity: member)
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            delayedGroupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                delayedGroupPhotoSenderMock
+            }
         )
 
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -2160,8 +2247,7 @@ class GroupManagerTests: XCTestCase {
 
         entityManager.performAndWaitSave {
             if let grpEntity = entityManager.entityFetcher.groupEntity(
-                for: grp.groupID,
-                with: nil
+                for: grp.groupIdentity, myIdentity: myIdentityStoreMock.identity
             ) {
                 grpEntity.lastPeriodicSync = Date(timeIntervalSinceNow: Double(-kGroupPeriodicSyncInterval))
             }
@@ -2181,21 +2267,21 @@ class GroupManagerTests: XCTestCase {
 
         let createMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[0] as? TaskDefinitionSendGroupCreateMessage)
         XCTAssertEqual(expectedGroupIdentity.id, createMessageTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, createMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, createMessageTask.groupCreatorIdentity)
         XCTAssertEqual(expectedMembers, Set(createMessageTask.toMembers))
         XCTAssertNil(createMessageTask.removedMembers)
         XCTAssertEqual(expectedMembers, createMessageTask.members)
 
         let renameMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[1] as? TaskDefinitionSendGroupRenameMessage)
         XCTAssertEqual(expectedGroupIdentity.id, renameMessageTask.groupID)
-        XCTAssertEqual(expectedGroupIdentity.creator.string, renameMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, renameMessageTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, renameMessageTask.fromMember)
         XCTAssertEqual(expectedMembers, Set(renameMessageTask.toMembers))
         XCTAssertNil(renameMessageTask.name)
 
         let deleteTask = try XCTUnwrap(taskManagerMock.addedTasks[2] as? TaskDefinitionSendGroupDeletePhotoMessage)
         XCTAssertTrue(expectedGroupIdentity.id.elementsEqual(deleteTask.groupID!))
-        XCTAssertEqual(expectedGroupIdentity.creator.string, deleteTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, deleteTask.groupCreatorIdentity)
         XCTAssertEqual(myIdentityStoreMock.identity, deleteTask.fromMember)
         XCTAssertEqual(expectedMembers, Set(deleteTask.toMembers))
     }
@@ -2220,14 +2306,16 @@ class GroupManagerTests: XCTestCase {
             databasePreparer.createContact(identity: member)
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            delayedGroupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                delayedGroupPhotoSenderMock
+            }
         )
         guard let grp = try await groupManager.createOrUpdateDB(
             for: expectedGroupIdentity,
@@ -2241,8 +2329,7 @@ class GroupManagerTests: XCTestCase {
 
         entityManager.performAndWaitSave {
             if let grpEntity = entityManager.entityFetcher.groupEntity(
-                for: grp.groupID,
-                with: nil
+                for: grp.groupIdentity, myIdentity: myIdentityStoreMock.identity
             ) {
                 grpEntity.lastPeriodicSync = lastPeriodicSync
             }
@@ -2277,12 +2364,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let expectedGroup = try await groupManager.createOrUpdateDB(
@@ -2297,7 +2386,7 @@ class GroupManagerTests: XCTestCase {
 
         let actualGroup = try XCTUnwrap(
             groupManager
-                .getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+                .getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
         
         XCTAssertEqual(actualGroup.groupIdentity, expectedGroupIdentity)
@@ -2318,12 +2407,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let expectedGroup = try await groupManager.createOrUpdateDB(
@@ -2338,7 +2429,7 @@ class GroupManagerTests: XCTestCase {
 
         let actualGroup = try XCTUnwrap(
             groupManager
-                .getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.string)
+                .getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
 
         XCTAssertEqual(actualGroup.groupIdentity, expectedGroupIdentity)
@@ -2362,12 +2453,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         try await groupManager.createOrUpdateDB(
@@ -2399,12 +2492,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         try await groupManager.createOrUpdateDB(
@@ -2448,12 +2543,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         var expectedGroupIdentities = [GroupIdentity]()
@@ -2546,12 +2643,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let group = try await groupManager.createOrUpdateDB(
@@ -2569,9 +2668,8 @@ class GroupManagerTests: XCTestCase {
         var ballot: BallotEntity!
         databasePreparer.save {
             ballot = databasePreparer.createBallot(conversation: group.conversation)
-            // swiftformat:disable:next acronyms
-            ballot.creatorId = myIdentityStoreMock.identity
-            ballot.state = NSNumber(integerLiteral: BallotState.open.rawValue)
+            ballot.creatorID = myIdentityStoreMock.identity
+            ballot.state = NSNumber(integerLiteral: BallotEntity.BallotState.open.rawValue)
         }
         
         // Test
@@ -2596,7 +2694,7 @@ class GroupManagerTests: XCTestCase {
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         
         let expectedGroupIdentity = GroupIdentity(
             id: MockData.generateGroupID(),
@@ -2604,12 +2702,14 @@ class GroupManagerTests: XCTestCase {
         )
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         
         guard let grp = try await groupManager.createOrUpdateDB(
@@ -2625,8 +2725,7 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(grp.groupID, expectedGroupIdentity.id)
 
         let conversation = entityManager.entityFetcher.conversationEntity(
-            for: grp.groupID,
-            creator: grp.groupIdentity.creator.string
+            for: grp.groupIdentity, myIdentity: myIdentityStoreMock.identity
         )
         
         XCTAssertNotNil(conversation)
@@ -2637,7 +2736,10 @@ class GroupManagerTests: XCTestCase {
         XCTAssertEqual(grp.allMemberIdentities.count, 1)
         XCTAssertTrue(grp.allMemberIdentities.contains(myIdentityStoreMock.identity))
         XCTAssertNil(grp.lastSyncRequest)
-        XCTAssertEqual(lastMessage.type, NSNumber(value: kSystemMessageStartNoteGroupInfo))
+        XCTAssertEqual(
+            lastMessage.type,
+            NSNumber(value: SystemMessageEntity.SystemMessageEntityType.startNoteGroupInfo.rawValue)
+        )
     }
     
     func testAddMemberToNoteGroup() async throws {
@@ -2645,7 +2747,7 @@ class GroupManagerTests: XCTestCase {
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         
         let expectedGroupIdentity = GroupIdentity(
             id: MockData.generateGroupID(),
@@ -2653,12 +2755,14 @@ class GroupManagerTests: XCTestCase {
         )
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         try await groupManager.createOrUpdateDB(
             for: expectedGroupIdentity,
@@ -2682,8 +2786,7 @@ class GroupManagerTests: XCTestCase {
         }
 
         let conversation = entityManager.entityFetcher.conversationEntity(
-            for: grp.groupID,
-            creator: grp.groupIdentity.creator.string
+            for: grp.groupIdentity, myIdentity: myIdentityStoreMock.identity
         )
         XCTAssertNotNil(conversation)
         
@@ -2691,7 +2794,8 @@ class GroupManagerTests: XCTestCase {
         var endNoteGroupInfoCount = 0
         for message in messageFetcher.messages(at: 0, count: messageFetcher.count()) {
             if let tmpMessage = message as? SystemMessageEntity,
-               tmpMessage.type.isEqual(to: NSNumber(value: kSystemMessageEndNoteGroupInfo)) {
+               tmpMessage.type
+               .isEqual(to: NSNumber(value: SystemMessageEntity.SystemMessageEntityType.endNoteGroupInfo.rawValue)) {
                 endNoteGroupInfoCount += 1
             }
         }
@@ -2708,7 +2812,7 @@ class GroupManagerTests: XCTestCase {
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
         
         let expectedGroupIdentity = GroupIdentity(
             id: MockData.generateGroupID(),
@@ -2722,12 +2826,14 @@ class GroupManagerTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         try await groupManager.createOrUpdateDB(
             for: expectedGroupIdentity,
@@ -2746,8 +2852,7 @@ class GroupManagerTests: XCTestCase {
         }
 
         let conversation = entityManager.entityFetcher.conversationEntity(
-            for: grp.groupID,
-            creator: grp.groupIdentity.creator.string
+            for: grp.groupIdentity, myIdentity: myIdentityStoreMock.identity
         )
         XCTAssertNotNil(conversation)
         
@@ -2755,7 +2860,8 @@ class GroupManagerTests: XCTestCase {
         var startNoteGroupInfoCount = 0
         for message in messageFetcher.messages(at: 0, count: messageFetcher.count()) {
             if let tmpMessage = message as? SystemMessageEntity,
-               tmpMessage.type.isEqual(to: NSNumber(value: kSystemMessageStartNoteGroupInfo)) {
+               tmpMessage.type
+               .isEqual(to: NSNumber(value: SystemMessageEntity.SystemMessageEntityType.startNoteGroupInfo.rawValue)) {
                 startNoteGroupInfoCount += 1
             }
         }
@@ -2772,7 +2878,7 @@ class GroupManagerTests: XCTestCase {
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
-        let entityManager = EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock)
+        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
 
         let expectedGroupIdentity = GroupIdentity(
             id: MockData.generateGroupID(),
@@ -2780,12 +2886,14 @@ class GroupManagerTests: XCTestCase {
         )
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            entityManager,
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
         try await groupManager.createOrUpdateDB(
             for: expectedGroupIdentity,
@@ -2815,8 +2923,7 @@ class GroupManagerTests: XCTestCase {
         }
 
         let conversation = entityManager.entityFetcher.conversationEntity(
-            for: grp.groupID,
-            creator: grp.groupIdentity.creator.string
+            for: grp.groupIdentity, myIdentity: myIdentityStoreMock.identity
         )
         XCTAssertNotNil(conversation)
         
@@ -2826,9 +2933,9 @@ class GroupManagerTests: XCTestCase {
         for message in messageFetcher.messages(at: 0, count: messageFetcher.count()) {
             if let tmpMessage = message as? SystemMessageEntity {
                 switch tmpMessage.type.intValue {
-                case kSystemMessageStartNoteGroupInfo:
+                case SystemMessageEntity.SystemMessageEntityType.startNoteGroupInfo.rawValue:
                     startNoteGroupInfoCount += 1
-                case kSystemMessageEndNoteGroupInfo:
+                case SystemMessageEntity.SystemMessageEntityType.endNoteGroupInfo.rawValue:
                     endNoteGroupInfoCount += 1
                 default: break
                 }
@@ -2855,12 +2962,14 @@ class GroupManagerTests: XCTestCase {
         )
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            UserSettingsMock(enableMultiDevice: true),
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: UserSettingsMock(enableMultiDevice: true),
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let noteGroup = try await groupManager.createOrUpdateDB(
@@ -2908,17 +3017,19 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupMembers = Set(["MEMBER01", "MEMBER02", "MEMBER03", myIdentityStoreMock.identity])
 
         databasePreparer.save {
-            databasePreparer.createContact(identity: expectedGroupIdentity.creator.string)
+            databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
             databasePreparer.createContact(identity: "MEMBER02")
         }
 
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            contactStoreMock,
-            taskManagerMock,
-            userSettingsMock,
-            EntityManager(databaseContext: databaseCnx, myIdentityStore: myIdentityStoreMock),
-            groupPhotoSenderMock
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
         )
 
         guard let group = try await groupManager.createOrUpdateDB(
@@ -2932,5 +3043,168 @@ class GroupManagerTests: XCTestCase {
         }
 
         XCTAssertEqual(3, group.numberOfMembers)
+    }
+    
+    func testCreateOrUpdateNewMemberSync() async throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(myIdentityStoreMock.identity)
+        )
+
+        let initialMembers: Set<String> = ["MEMBER01", "MEMBER02"]
+        let newMembers: Set<String> = ["MEMBER03"]
+        let expectedMembers = initialMembers.union(newMembers)
+
+        // Setup stuff
+
+        for member in expectedMembers {
+            databasePreparer.createContact(identity: member)
+        }
+
+        let groupManager = GroupManager(
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
+        )
+
+        guard let group = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: initialMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
+
+        // Test
+
+        let (resultGroup, resultNewMembers) = try await groupManager.createOrUpdate(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date()
+        )
+
+        XCTAssertNotNil(resultGroup)
+        XCTAssertEqual(resultGroup.groupIdentity, expectedGroupIdentity)
+        XCTAssertEqual(resultGroup.allMemberIdentities.count, expectedMembers.count + 1)
+        XCTAssertTrue(resultGroup.allMemberIdentities.contains(myIdentityStoreMock.identity))
+        XCTAssertTrue(resultNewMembers!.contains(newMembers.first!))
+
+        // Validate
+
+        // Create, Rename, DeletePhoto => 3
+        XCTAssertEqual(3, taskManagerMock.addedTasks.count)
+
+        let createMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[0] as? TaskDefinitionSendGroupCreateMessage)
+        XCTAssertEqual(expectedGroupIdentity.id, createMessageTask.groupID)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, createMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedMembers, Set(createMessageTask.toMembers))
+
+        let renameMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[1] as? TaskDefinitionSendGroupRenameMessage)
+        XCTAssertEqual(expectedGroupIdentity.id, renameMessageTask.groupID)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, renameMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(myIdentityStoreMock.identity, renameMessageTask.fromMember)
+        XCTAssertEqual(newMembers, Set(renameMessageTask.toMembers))
+        XCTAssertNil(renameMessageTask.name)
+
+        let setPhotoTask = try XCTUnwrap(taskManagerMock.addedTasks[2] as? TaskDefinitionSendGroupDeletePhotoMessage)
+        XCTAssertEqual(expectedGroupIdentity.id, setPhotoTask.groupID)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, setPhotoTask.groupCreatorIdentity)
+        XCTAssertEqual(myIdentityStoreMock.identity, setPhotoTask.fromMember)
+        XCTAssertEqual(newMembers, Set(setPhotoTask.toMembers))
+    }
+    
+    func testCreateOrUpdateNewMemberSyncWithGroupImage() async throws {
+        let myIdentityStoreMock = MyIdentityStoreMock()
+        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
+        let taskManagerMock = TaskManagerMock()
+        let userSettingsMock = UserSettingsMock()
+
+        let expectedGroupIdentity = GroupIdentity(
+            id: MockData.generateGroupID(),
+            creator: ThreemaIdentity(myIdentityStoreMock.identity)
+        )
+
+        let initialMembers: Set<String> = ["MEMBER01", "MEMBER02"]
+        let newMembers: Set<String> = ["MEMBER03"]
+        let expectedMembers = initialMembers.union(newMembers)
+        let expectedPhoto: Data = try! Data(contentsOf: ResourceLoader.urlResource("Bild-1-0", "jpg")!)
+
+        // Setup stuff
+
+        for member in expectedMembers {
+            databasePreparer.createContact(identity: member)
+        }
+
+        let groupManager = GroupManager(
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: contactStoreMock,
+            taskManager: taskManagerMock,
+            userSettings: userSettingsMock,
+            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            groupPhotoSender: {
+                self.groupPhotoSenderMock
+            }
+        )
+
+        guard let group = try await groupManager.createOrUpdateDB(
+            for: expectedGroupIdentity,
+            members: initialMembers,
+            systemMessageDate: Date(),
+            sourceCaller: .local
+        ) else {
+            XCTFail("Creating group failed")
+            return
+        }
+        
+        try await groupManager.setPhoto(group: group, imageData: expectedPhoto, sentDate: Date(), send: false)
+
+        // Test
+
+        let (resultGroup, resultNewMembers) = try await groupManager.createOrUpdate(
+            for: expectedGroupIdentity,
+            members: expectedMembers,
+            systemMessageDate: Date()
+        )
+
+        XCTAssertNotNil(resultGroup)
+        XCTAssertEqual(resultGroup.groupIdentity, expectedGroupIdentity)
+        XCTAssertEqual(resultGroup.allMemberIdentities.count, expectedMembers.count + 1)
+        XCTAssertTrue(resultGroup.allMemberIdentities.contains(myIdentityStoreMock.identity))
+        XCTAssertTrue(resultNewMembers!.contains(newMembers.first!))
+
+        // Validate
+
+        // Create, Rename, DeletePhoto => 3
+        XCTAssertEqual(3, taskManagerMock.addedTasks.count)
+
+        let createMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[0] as? TaskDefinitionSendGroupCreateMessage)
+        XCTAssertEqual(expectedGroupIdentity.id, createMessageTask.groupID)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, createMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(expectedMembers, Set(createMessageTask.toMembers))
+
+        let renameMessageTask = try XCTUnwrap(taskManagerMock.addedTasks[1] as? TaskDefinitionSendGroupRenameMessage)
+        XCTAssertEqual(expectedGroupIdentity.id, renameMessageTask.groupID)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, renameMessageTask.groupCreatorIdentity)
+        XCTAssertEqual(myIdentityStoreMock.identity, renameMessageTask.fromMember)
+        XCTAssertEqual(newMembers, Set(renameMessageTask.toMembers))
+        XCTAssertNil(renameMessageTask.name)
+
+        let setPhotoTask = try XCTUnwrap(taskManagerMock.addedTasks[2] as? TaskDefinitionSendGroupSetPhotoMessage)
+        XCTAssertEqual(expectedGroupIdentity.id, setPhotoTask.groupID)
+        XCTAssertEqual(expectedGroupIdentity.creator.rawValue, setPhotoTask.groupCreatorIdentity)
+        XCTAssertEqual(myIdentityStoreMock.identity, setPhotoTask.fromMember)
+        XCTAssertEqual(newMembers, Set(setPhotoTask.toMembers))
     }
 }

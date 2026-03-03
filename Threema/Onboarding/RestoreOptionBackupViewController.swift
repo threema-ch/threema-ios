@@ -69,6 +69,7 @@ class RestoreOptionBackupViewController: IDCreationPageViewController {
             #localize("restore_option_safe_keep_data"),
             TargetManager.localizedAppName
         ) : #localize("restore_option_safe")
+        
         idButton.setTitle(#localize("id_backup"), for: .normal)
         idLabel.text = hasDataOnDevice ? String.localizedStringWithFormat(
             #localize("restore_option_id_keep_data"),

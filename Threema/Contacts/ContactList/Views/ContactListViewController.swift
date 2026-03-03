@@ -36,40 +36,45 @@ import ThreemaMacros
         contentUnavailableConfiguration: unavailableConfiguration
     )
     
-    private lazy var syncContactsAction = ThreemaTableContentUnavailableView
-        .Action(title: #localize("contact_list_button_sync")) { [weak self] in
-            self?.syncContacts()
-        }
+    private lazy var syncContactsAction = ThreemaTableContentUnavailableView.Action(
+        title: #localize("contact_list_button_sync")
+    ) { [weak self] in
+        self?.syncContacts()
+    }
     
-    private lazy var addContactAction = ThreemaTableContentUnavailableView
-        .Action(title: #localize("contact_list_button_add")) { [weak self] in
-            guard let delegate = self?.itemsDelegate else {
-                return
-            }
-            delegate.add(.contacts)
+    private lazy var addContactAction = ThreemaTableContentUnavailableView.Action(
+        title: #localize("contact_list_button_add")
+    ) { [weak self] in
+        guard let delegate = self?.itemsDelegate else {
+            return
         }
+        delegate.add(.contacts)
+    }
     
-    private lazy var requestAccessAction = ThreemaTableContentUnavailableView
-        .Action(title: #localize("contact_list_request_action_title")) {
-            Task { @MainActor in
-                _ = try? await CNContactStore().requestAccess(for: .contacts)
-                self.dataSource.contentUnavailableConfiguration = self.unavailableConfiguration
-            }
+    private lazy var requestAccessAction = ThreemaTableContentUnavailableView.Action(
+        title: #localize("contact_list_request_action_title")
+    ) {
+        Task { @MainActor in
+            _ = try? await CNContactStore().requestAccess(for: .contacts)
+            self.dataSource.contentUnavailableConfiguration = self.unavailableConfiguration
         }
+    }
     
-    private lazy var limitedAccessAction = ThreemaTableContentUnavailableView
-        .Action(title: #localize("contact_list_limited_access_action_title")) {
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                Task { await UIApplication.shared.open(url) }
-            }
+    private lazy var limitedAccessAction = ThreemaTableContentUnavailableView.Action(
+        title: #localize("contact_list_limited_access_action_title")
+    ) {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            Task { await UIApplication.shared.open(url) }
         }
+    }
     
-    private lazy var changeAccessInSettingsAction = ThreemaTableContentUnavailableView
-        .Action(title: #localize("contact_list_change_access_in_settings_title")) {
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                Task { await UIApplication.shared.open(url) }
-            }
+    private lazy var changeAccessInSettingsAction = ThreemaTableContentUnavailableView.Action(
+        title: #localize("contact_list_change_access_in_settings_title")
+    ) {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            Task { await UIApplication.shared.open(url) }
         }
+    }
     
     private var unavailableActions: [ThreemaTableContentUnavailableView.Action] {
         var actions = [addContactAction]
@@ -162,12 +167,12 @@ import ThreemaMacros
     // MARK: - TableView
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        
-        guard let contact = contact(for: indexPath) else {
+        guard let objectID = dataSource.itemIdentifier(for: indexPath) else {
+            tableView.deselectRow(at: indexPath, animated: true)
             return
         }
-        show(SingleDetailsViewController(for: contact, displayStyle: .default), sender: self)
+        
+        itemsDelegate?.didSelect(.contact(objectID: objectID))
     }
     
     override func tableView(
@@ -181,13 +186,13 @@ import ThreemaMacros
         _ tableView: UITableView,
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        let action = UIContextualAction(
-            style: .destructive,
+        let action = DeleteActionFactory(
             title: #localize("delete_contact_button")
-        ) { [weak self] _, _, _ in
+        ) { [weak self] in
+            let entityFetcher = BusinessInjector.ui.entityManager.entityFetcher
             guard let self,
                   let contact = contact(for: indexPath),
-                  let entity = EntityManager().entityFetcher.contact(for: contact.identity.string),
+                  let entity = entityFetcher.contactEntity(for: contact.identity.rawValue),
                   let cell = tableView.cellForRow(at: indexPath)
             else {
                 return
@@ -199,8 +204,7 @@ import ThreemaMacros
                     tableView.reloadData()
                 }
             }
-        }
-        action.image = UIImage(systemName: "trash")
+        }.make()
         
         let swipeAction = UISwipeActionsConfiguration(actions: [action])
         swipeAction.performsFirstActionWithFullSwipe = false
@@ -213,44 +217,12 @@ import ThreemaMacros
         }
         var actions: [UIContextualAction] = []
         
-        let messageAction = UIContextualAction(
-            style: .normal,
-            title: #localize("message")
-        ) { _, _, handler in
-            NotificationCenter.default.post(
-                name: NSNotification.Name(rawValue: kNotificationShowConversation),
-                object: nil,
-                userInfo: [
-                    kKeyContactIdentity: contact.objcIdentity,
-                    kKeyForceCompose: true,
-                ]
-            )
-            handler(true)
-        }
-        
-        messageAction.image = UIImage(resource: .threemaLockBubbleRightFill)
-        messageAction.backgroundColor = .tintColor
+        let messageAction = MessageActionFactory.make(for: contact)
         actions.append(messageAction)
         
         if UserSettings.shared()?.enableThreemaCall == true,
            contact.supportsCalls {
-            let callAction = UIContextualAction(
-                style: .normal,
-                title: #localize("call")
-            ) { _, _, handler in
-                let action = VoIPCallUserAction(
-                    action: .call,
-                    contactIdentity: contact.identity.string,
-                    callID: nil,
-                    completion: nil
-                )
-                VoIPCallStateManager.shared.processUserAction(action)
-                    
-                handler(true)
-            }
-            
-            callAction.image = UIImage(resource: .threemaPhoneFill)
-            callAction.backgroundColor = .tintColor
+            let callAction = CallActionFactory.make(for: contact)
             actions.append(callAction)
         }
         

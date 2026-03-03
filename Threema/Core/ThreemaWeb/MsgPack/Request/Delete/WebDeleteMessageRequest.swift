@@ -45,15 +45,15 @@ class WebDeleteMessageRequest: WebAbstractMessage {
         self.messageID = Data(base64Encoded: messageIDBase64, options: .ignoreUnknownCharacters)!
         super.init(message: message)
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         if let identity {
             entityManager.performAndWait {
-                self.conversation = entityManager.entityFetcher.conversationEntity(forIdentity: identity)
+                self.conversation = entityManager.entityFetcher.conversationEntity(for: identity)
             }
         }
         else if let groupID {
             entityManager.performAndWait {
-                self.conversation = entityManager.entityFetcher.legacyConversation(for: groupID)
+                self.conversation = entityManager.entityFetcher.legacyConversationEntity(for: groupID)
             }
         }
         else {
@@ -73,7 +73,7 @@ class WebDeleteMessageRequest: WebAbstractMessage {
         
         businessInjector.entityManager.performAndWaitSave {
             guard let conv = businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: conversation.objectID) as? ConversationEntity else {
+                .managedObject(with: conversation.objectID) as? ConversationEntity else {
                 acknowledgement.success = false
                 acknowledgement.error = "invalidMessage"
                 DDLogError("Could not fetch conversation")
@@ -84,7 +84,7 @@ class WebDeleteMessageRequest: WebAbstractMessage {
               
             guard let message = businessInjector.entityManager.entityFetcher.message(
                 with: self.messageID,
-                conversation: conv
+                in: conv
             ) else {
                 DDLogError("Could not fetch message")
                 acknowledgement.success = false

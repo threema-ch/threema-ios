@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import OSLog
 
@@ -65,18 +66,19 @@ struct AppFilesMigration {
         DDLogNotice("[AppMigration] Files migration to version 6.2.1 started")
         os_signpost(.begin, log: osPOILog, name: "6.2.1 migration")
 
-        if let outgoingQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
-            "outgoingQueue",
-            isDirectory: false
-        ),
-            let taskQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
+        if let appDataDirectory = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID()) {
+            let outgoingQueuePath = appDataDirectory.appendingPathComponent(
+                "outgoingQueue",
+                isDirectory: false
+            )
+            let taskQueuePath = appDataDirectory.appendingPathComponent(
                 "taskQueue",
                 isDirectory: false
-            ) {
+            )
 
-            if !FileUtility.shared.isExists(fileURL: outgoingQueuePath),
-               FileUtility.shared.isExists(fileURL: taskQueuePath) {
-                _ = FileUtility.shared.move(source: taskQueuePath, destination: outgoingQueuePath)
+            if !FileUtility.shared.fileExists(at: outgoingQueuePath),
+               FileUtility.shared.fileExists(at: taskQueuePath) {
+                try FileUtility.shared.move(from: taskQueuePath, to: outgoingQueuePath)
             }
             else {
                 DDLogWarn(
@@ -98,18 +100,19 @@ struct AppFilesMigration {
         DDLogNotice("[AppMigration] Files migration to version 6.3 started")
         os_signpost(.begin, log: osPOILog, name: "6.3 migration")
 
-        if let outgoingQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
-            "outgoingQueue",
-            isDirectory: false
-        ),
-            let taskQueuePath = FileUtility.shared.appDataDirectory?.appendingPathComponent(
+        if let appDataDirectory = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID()) {
+            let outgoingQueuePath = appDataDirectory.appendingPathComponent(
+                "outgoingQueue",
+                isDirectory: false
+            )
+            let taskQueuePath = appDataDirectory.appendingPathComponent(
                 "taskQueue",
                 isDirectory: false
-            ) {
-
-            if FileUtility.shared.isExists(fileURL: outgoingQueuePath),
-               !FileUtility.shared.isExists(fileURL: taskQueuePath) {
-                _ = FileUtility.shared.move(source: outgoingQueuePath, destination: taskQueuePath)
+            )
+            
+            if FileUtility.shared.fileExists(at: outgoingQueuePath),
+               !FileUtility.shared.fileExists(at: taskQueuePath) {
+                try FileUtility.shared.move(from: outgoingQueuePath, to: taskQueuePath)
             }
             else {
                 DDLogWarn(

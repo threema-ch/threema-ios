@@ -43,7 +43,7 @@
 }
 
 + (void)checkUpdateWorkDataForce:(BOOL)force sendForce:(BOOL)sendForce onCompletion:(void(^)(void))onCompletion onError:(void(^)(NSError*))onError {
-    if (!TargetManagerObjc.isBusinessApp) {
+    if (!TargetManagerObjC.isBusinessApp) {
         if (onCompletion != nil) {
             onCompletion();
         }
@@ -75,7 +75,7 @@
         return;
     }
 
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    MDMSetup *mdmSetup = [MDMSetup new];
 
     typedef void (^OnCompletion)();
 
@@ -253,7 +253,7 @@
 }
 
 + (void)checkUpdateThreemaMDM:(void(^)(void))onCompletion onError:(void(^)(NSError*))onError {
-    if (!TargetManagerObjc.isBusinessApp) {
+    if (!TargetManagerObjC.isBusinessApp) {
         DDLogWarn(@"No license is required");
         onCompletion();
         return;
@@ -271,7 +271,7 @@
         [ServerAPIRequest postJSONToWorkAPIPath:@"fetch2" data:request onCompletion:^(id jsonObject) {
             NSDictionary *workData = (NSDictionary*)jsonObject;
         
-            MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:YES];
+            MDMSetup *mdmSetup = [MDMSetup new];
             [mdmSetup applyThreemaMdm:workData sendForce:NO];
         
             onCompletion();

@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "signatureKey": "jae1lgwR3W7YyKiGQlsbdqObG13FR1EvjVci2aDNIi8=",
+  "refresh": 86400,
+  "license": {
+    "expires": "2099-12-31",
+    "count": 100,
+    "id": "DUMMY-00000001"
+  },
+  "chat": {
+    "hostname": "chat.onprem.example.threema.ch",
+    "publicKey": "r9utIHN9ngo21q9OlZcotsQu1f2HwAW2Wi+u6Psp4Wc=",
+    "ports": [
+      5222,
+      443
+    ]
+  },
+  "directory": {
+    "url": "https://onprem.example.threema.ch/directory"
+  },
+  "blob": {
+    "uploadUrl": "https://blob.onprem.example.threema.ch/blob/upload",
+    "downloadUrl": "https://blob-{blobIdPrefix}.onprem.example.threema.ch/blob/{blobId}",
+    "doneUrl": "https://blob-{blobIdPrefix}.onprem.example.threema.ch/blob/{blobId}/done"
+  },
+  "work": {
+    "url": "https://work.onprem.example.threema.ch/"
+  },
+  "avatar": {
+    "url": "https://avatar.onprem.example.threema.ch/"
+  },
+  "safe": {
+    "url": "https://safe.onprem.example.threema.ch/"
+  }
+}
+bj/It2iRhpFf7jsk+9PHyUjNx6V6HWwAlw5FTuZ2MvRtJJ+qTZk3nDwv7ipPxoam3LQw30S+YEyKwLaU46QYBw==

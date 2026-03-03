@@ -19,20 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #include <CommonCrypto/CommonCrypto.h>
-
 #import "URLHandler.h"
-#import "ServerAPIConnector.h"
 #import "AppDelegate.h"
-#import "MyIdentityStore.h"
 #import "UIDefines.h"
-#import "ContactStore.h"
 #import "ShareController.h"
-#import "NSString+Hex.h"
-#import "ScanIdentityController.h"
-#import "LicenseStore.h"
-#import "BundleUtil.h"
-#import "MDMSetup.h"
-#import "WorkDataFetcher.h"
 #import "Threema-Swift.h"
 #import "SplashViewController.h"
 
@@ -45,7 +35,7 @@
 
 + (BOOL)handleURL:(NSURL *)url {
     
-    if ([url.scheme hasPrefix:TargetManagerObjc.appURLScheme]) {
+    if ([url.scheme hasPrefix:TargetManagerObjC.appURLScheme]) {
         
         if ([url.host isEqualToString:@"link_mobileno"]) {
             NSString *code = [url.query stringByReplacingOccurrencesOfString:@"code=" withString:@""];
@@ -121,28 +111,28 @@
     if ([licenseStore isValid] == NO) {
         [licenseStore performLicenseCheckWithCompletion:^(BOOL success) {
             if (success) {
-                if (TargetManagerObjc.isBusinessApp) {
+                if (TargetManagerObjC.isBusinessApp) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:[BundleUtil localizedStringForKey:@"already_licensed"] message:@"" actionOk:nil];
                     });
                 }
             } else {
-                MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:[AppSetup isCompleted]];
-                
+                MDMSetup *mdmSetup = [MDMSetup new];
+
                 NSString *username = [query objectForKey:@"username"][0];
                 NSString *password = [query objectForKey:@"password"][0];
                 NSString *server = [query objectForKey:@"server"][0];
                 BOOL validServer = [[LicenseStore sharedLicenseStore] validCustomOnPremConfigUrlWithPredefinedUrl:server];
                 
                 // show license screen if
-                if (username == nil || password == nil || (server == nil && TargetManagerObjc.isOnPrem) || !validServer) {
+                if (username == nil || password == nil || (server == nil && TargetManagerObjC.isOnPrem) || !validServer) {
                     if (![mdmSetup existsMdmKey:MDM_KEY_LICENSE_USERNAME]) {
                         [licenseStore setLicenseUsername:username];
                     }
                     if (![mdmSetup existsMdmKey:MDM_KEY_LICENSE_PASSWORD]) {
                         [licenseStore setLicensePassword:password];
                     }
-                    if (TargetManagerObjc.isOnPrem && validServer) {
+                    if (TargetManagerObjC.isOnPrem && validServer) {
                         if (![mdmSetup existsMdmKey:MDM_KEY_ONPREM_SERVER]) {
                             [licenseStore setOnPremConfigUrl:server];
                         }
@@ -161,7 +151,7 @@
                     if (![mdmSetup existsMdmKey:MDM_KEY_LICENSE_PASSWORD]) {
                         [licenseStore setLicensePassword:password];
                     }
-                    if (TargetManagerObjc.isOnPrem) {
+                    if (TargetManagerObjC.isOnPrem) {
                         if (![mdmSetup existsMdmKey:MDM_KEY_ONPREM_SERVER]) {
                             [licenseStore setOnPremConfigUrl:server];
                         }
@@ -188,7 +178,7 @@
             }
         }];
     } else {
-        if (TargetManagerObjc.isBusinessApp) {
+        if (TargetManagerObjC.isBusinessApp) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 [UIAlertTemplate showAlertWithOwner:[[AppDelegate sharedAppDelegate] currentTopViewController] title:[BundleUtil localizedStringForKey:@"already_licensed"] message:@"" actionOk:nil];
             });
@@ -196,7 +186,7 @@
     }
 }
 
-+ (void) performLicenseCheckWithLicenseStore:(LicenseStore *)licenseStore {
++ (void)performLicenseCheckWithLicenseStore:(LicenseStore *)licenseStore {
     [licenseStore performLicenseCheckWithCompletion:^(BOOL success) {
         dispatch_async(dispatch_get_main_queue(), ^{
             if (success) {
@@ -232,7 +222,7 @@
     // Check if the "other" app (Work if we are not the Work app, or vice versa) is also installed.
     // If so, we need to prompt the user for what to do.
     BOOL mustDisplayAppChooser = NO;
-    BOOL isWorkApp = TargetManagerObjc.isBusinessApp;
+    BOOL isWorkApp = TargetManagerObjC.isBusinessApp;
     if (isWorkApp) {
         // This is the Work app. Check if the regular app is installed.
         if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"threema://app"]]) {
@@ -302,7 +292,7 @@
 }
 
 + (void)handleAddIdentity:(NSString*)targetId compose:(BOOL)compose query:(NSDictionary*)query {
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:NO];
+    MDMSetup *mdmSetup = [MDMSetup new];
     if ([mdmSetup disableAddContact]) {
         /* Ensure this contact already exists, as we are not allowed to add any new ones */
         if ([[ContactStore sharedContactStore] contactForIdentity:targetId] == nil) {
@@ -315,11 +305,11 @@
     }
     
     /* add this ID to the contacts */
-    [[ContactStore sharedContactStore] addContactWithIdentity:targetId verificationLevel:ContactVerificationLevelUnverified onCompletion:^(ContactEntity *contact, BOOL alreadyExists) {
-        
+    [[ContactStore sharedContactStore] addContactWithIdentity:targetId verificationLevel:ContactVerificationLevelUnverified onCompletion:^(NSObject *contact, BOOL alreadyExists) {
+
         if (compose && [query objectForKey:@"text"][0] != nil) {
             ShareController *shareController = [[ShareController alloc] init];
-            shareController.contact = contact;
+            shareController.contact = (ContactEntity*)contact;
             shareController.text = [query objectForKey:@"text"][0];
             if ([[query objectForKey:@"image"][0] isEqualToString:@"pasteboard"]) {
                 shareController.image = [self decryptPasteboardImageWithKey:[query objectForKey:@"key"][0]];
@@ -350,42 +340,7 @@
 }
 
 + (BOOL)handleShortCutItem:(UIApplicationShortcutItem *)shortCutItem {
-    if ([shortCutItem.type isEqualToString:@"ch.threema.newmessage"]) {
-        [self composeMessage];
-        
-        return YES;
-    } else if ([shortCutItem.type isEqualToString:@"ch.threema.myid"]) {
-        UITabBarController *mainTabBar = [AppDelegate getMainTabBarController];
-        mainTabBar.selectedIndex = kMyIdentityTabBarIndex;
-
-        return YES;
-    } else if ([shortCutItem.type isEqualToString:@"ch.threema.scanid"]) {
-        if ([ScanIdentityController canScan] == NO) {
-            return NO;
-        }
-        
-        MDMSetup *mdmSetup = [[MDMSetup alloc] initWithSetup:false];
-        if (mdmSetup.disableAddContact == true) {
-            return NO;
-        }
-
-        
-        UITabBarController *mainTabBar = [AppDelegate getMainTabBarController];
-        
-        ScanIdentityController *scanController = [[ScanIdentityController alloc] init];
-        scanController.containingViewController = mainTabBar;
-        scanController.expectedIdentity = nil;
-        [scanController startScan];
-        
-        return YES;
-   }
-    
-    return NO;
-}
-
-+ (void)composeMessage {
-    ShareController *shareController = [[ShareController alloc] init];
-    [shareController startShare];
+    return [self handleWithItem:shortCutItem];
 }
 
 + (UIImage*)decryptPasteboardImageWithKey:(NSString*)keyHex {

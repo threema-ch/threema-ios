@@ -18,10 +18,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import RemoteSecretProtocolTestHelper
+import ThreemaEssentials
 import ThreemaFramework
 import XCTest
 
 @testable import Threema
+@testable import ThreemaFramework
 
 class HttpClientDownloadSafeTests: XCTestCase {
     var receivedData: Data?
@@ -29,8 +32,11 @@ class HttpClientDownloadSafeTests: XCTestCase {
     override func setUp() {
         super.setUp()
         
-        // necessary for ValidationLogger
-        AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
+        AppGroup.setGroupID("group.ch.threema")
+        
+        // Workaround to ensure remote secret is initialized
+        let remoteSecretManagerMock = RemoteSecretManagerMock()
+        AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManagerMock)
     }
     
     override func tearDown() {
@@ -39,24 +45,23 @@ class HttpClientDownloadSafeTests: XCTestCase {
     }
     
     func testSafeHttpClientDownloadWithCompletionHandler() {
-        let store = SafeStore(
-            safeConfigManager: SafeConfigManager(),
-            serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
-        )
-        if let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
-           let backupID = store.getBackupID(key: key) {
-            store.getSafeDefaultServer(key: key) { result in
+        if let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
+           let backupID = SafeStore.getBackupID(key: key) {
+            SafeStore.getSafeDefaultServer(key: key) { result in
                 switch result {
                 case let .success(safeServer):
-                    let backupURL = URL(string: "\(safeServer)/backups/\(BytesUtility.toHexString(bytes: backupID))")
+                    let backupURL =
+                        URL(string: "\(safeServer.server)/backups/\(BytesUtility.toHexString(bytes: backupID))")!
                     let client = HTTPClient()
-                    client.downloadData(url: backupURL!, contentType: .octetStream) { data, response, error in
+                    
+                    client.downloadData(url: backupURL, contentType: .octetStream) { data, response, error in
+                        
                         if let error {
                             print("http client download error: \(error)")
                             XCTAssert(false)
                             return
                         }
+                        
                         guard let response = response as? HTTPURLResponse,
                               (200...299).contains(response.statusCode) else {
                             print("http client download wrong state")
@@ -68,7 +73,7 @@ class HttpClientDownloadSafeTests: XCTestCase {
                         }
                         
                         if let encryptedData = data {
-                            let decryptedData = try! store.decryptBackupData(key: key, data: Array(encryptedData))
+                            let decryptedData = try! SafeStore.decryptBackupData(key: key, data: Array(encryptedData))
                             
                             let parser = SafeJsonParser()
                             let safeBackupData = try! parser.getSafeBackupData(from: Data(decryptedData))
@@ -88,13 +93,8 @@ class HttpClientDownloadSafeTests: XCTestCase {
     func testSafeHttpClientDownloadWithDelegate() {
         receivedData = Data()
         
-        let store = SafeStore(
-            safeConfigManager: SafeConfigManager(),
-            serverApiConnector: ServerAPIConnector(),
-            groupManager: GroupManagerMock()
-        )
-        if let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
-           let backupID = store.getBackupID(key: key) {
+        if let key = SafeStore.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar"),
+           let backupID = SafeStore.getBackupID(key: key) {
             let backupURL = URL(string: "https://safe.threema.ch/backups/\(BytesUtility.toHexString(bytes: backupID))")
             let client = HTTPClient()
             client.downloadData(url: backupURL!, delegate: self)
@@ -106,7 +106,7 @@ class HttpClientDownloadSafeTests: XCTestCase {
 
 extension HttpClientDownloadSafeTests: URLSessionDataDelegate {
     
-    // delegate methods
+    // Delegate methods
     
     func urlSession(
         _ session: URLSession,
@@ -135,20 +135,16 @@ extension HttpClientDownloadSafeTests: URLSessionDataDelegate {
                 print("http client download error \(error)")
                 XCTAssert(false)
             }
-            else if let receivedData = self.receivedData {
-                let store = SafeStore(
-                    safeConfigManager: SafeConfigManager(),
-                    serverApiConnector: ServerAPIConnector(),
-                    groupManager: GroupManagerMock()
-                )
-                if let key = store.createKey(identity: "ECHOECHO", safePassword: "shootdeathstar") {
+            else if let receivedData = self.receivedData, let key = SafeStore.createKey(
+                identity: "ECHOECHO",
+                safePassword: "shootdeathstar"
+            ) {
                     
-                    let decryptedData = try! store.decryptBackupData(key: key, data: Array(receivedData))
+                let decryptedData = try! SafeStore.decryptBackupData(key: key, data: Array(receivedData))
 
-                    let parser = SafeJsonParser()
-                    let safeBackupData = try! parser.getSafeBackupData(from: Data(decryptedData))
-                    XCTAssertEqual(1, safeBackupData.info.version)
-                }
+                let parser = SafeJsonParser()
+                let safeBackupData = try! parser.getSafeBackupData(from: Data(decryptedData))
+                XCTAssertEqual(1, safeBackupData.info.version)
             }
         }
     }
@@ -158,7 +154,7 @@ extension HttpClientDownloadSafeTests: URLSessionDataDelegate {
 
 extension HttpClientDownloadSafeTests: URLSessionDelegate {
     
-    // call standard background session handler
+    // Call standard background session handler
     
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
         print("session for download finished")

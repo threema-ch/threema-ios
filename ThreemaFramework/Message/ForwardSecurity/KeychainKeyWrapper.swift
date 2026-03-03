@@ -20,13 +20,11 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import Keychain
 
 /// Encrypt Forward Security keys with a keychain key that cannot be restored on a different device.
 @objc class KeychainKeyWrapper: NSObject, KeyWrapperProtocol {
     public static let unwrappedKeyLength = 32
-    
-    private static let keychainService = "Threema FS wrapping key"
-    private static let keychainAccount = "Threema FS wrapping key"
     
     private var cachedWrappingKey: Data?
     
@@ -79,68 +77,38 @@ import Foundation
         if let wrappingKey = cachedWrappingKey {
             return wrappingKey
         }
-        
+
+        let keychainManager = KeychainManager(remoteSecretManager: AppLaunchManager.remoteSecretManager)
+
         // Check if we already have a wrapping key in the keychain
-        let query = [
-            kSecClass: kSecClassGenericPassword,
-            kSecAttrService: KeychainKeyWrapper.keychainService,
-            kSecAttrAccount: KeychainKeyWrapper.keychainAccount,
-            kSecReturnData: true,
-        ] as CFDictionary
-        
-        var item: AnyObject?
-        
-        let result = SecItemCopyMatching(query, &item)
-        switch result {
-        case errSecItemNotFound:
-            break
-        case errSecSuccess:
-            guard let itemData = item as? Data, itemData.count == kNaClCryptoSymmKeySize else {
-                DDLogError("Bad keychain item data")
+        if let wrappingKey = try keychainManager.loadForwardSecurityWrappingKey() {
+            guard wrappingKey.count == kNaClCryptoSymmKeySize else {
+                DDLogError("Bad Keychain item data")
                 deleteWrappingKey()
                 throw KeyWrappingError.keychainError
             }
-            cachedWrappingKey = itemData
-            return itemData
-        default:
-            DDLogError("Keychain query failed: \(result)")
-            throw KeyWrappingError.keychainError
+
+            cachedWrappingKey = wrappingKey
+            return wrappingKey
         }
-        
+
         // Generate new wrapping key
         let newWrappingKey = NaClCrypto.shared().randomBytes(kNaClCryptoSymmKeySize)!
-        
-        let addQuery = [
-            kSecClass: kSecClassGenericPassword,
-            kSecAttrService: KeychainKeyWrapper.keychainService,
-            kSecAttrAccount: KeychainKeyWrapper.keychainAccount,
-            kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
-            kSecValueData: newWrappingKey,
-        ] as CFDictionary
-        
-        let addResult = SecItemAdd(addQuery, nil)
-        guard addResult == errSecSuccess else {
-            DDLogError("Keychain store failed: \(addResult)")
-            throw KeyWrappingError.keychainError
-        }
-        
+        try keychainManager.storeForwardSecurityWrappingKey(newWrappingKey)
+
         DDLogDebug("Generated new wrapping key")
         cachedWrappingKey = newWrappingKey
-        
         return newWrappingKey
     }
     
     @objc func deleteWrappingKey() {
-        let query = [
-            kSecClass: kSecClassGenericPassword,
-            kSecAttrService: KeychainKeyWrapper.keychainService,
-            kSecAttrAccount: KeychainKeyWrapper.keychainAccount,
-        ] as CFDictionary
-        
-        cachedWrappingKey = nil
-        let result = SecItemDelete(query)
-        if result != errSecSuccess {
-            DDLogError("Couldn't delete wrapping key in keychain: \(result)")
+        let keychainManager = KeychainManager(remoteSecretManager: AppLaunchManager.remoteSecretManager)
+
+        do {
+            try keychainManager.deleteForwardSecurityKey()
+        }
+        catch {
+            DDLogError("Couldn't delete wrapping key in Keychain: \(error)")
         }
     }
 }

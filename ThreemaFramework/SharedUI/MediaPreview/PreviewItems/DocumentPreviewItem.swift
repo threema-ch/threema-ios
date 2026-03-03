@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import PromiseKit
 import QuickLook
@@ -77,7 +78,7 @@ class DocumentPreviewItem: MediaPreviewItem {
                 UIGraphicsBeginImageContextWithOptions(CGSize(width: 50, height: 50), false, 0.0)
                 let inset = (frameSize - size) / 2
                 image.draw(in: CGRect(x: inset, y: inset, width: size, height: size))
-                let finalImage = UIGraphicsGetImageFromCurrentImageContext()!.withTint(.label)!
+                let finalImage = UIGraphicsGetImageFromCurrentImageContext()?.withTintColor(.label)
                 UIGraphicsEndImageContext()
                 
                 seal.resolve(finalImage, nil)

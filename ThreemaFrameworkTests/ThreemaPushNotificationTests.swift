@@ -199,7 +199,6 @@ class ThreemaPushNotificationTests: XCTestCase {
         XCTAssertThrowsError(try ThreemaPushNotification(from: payload)) { error in
             XCTAssertEqual(
                 error as? ThreemaPushNotificationError,
-                // swiftformat:disable:next acronyms
                 .keyNotFoundOrTypeMissmatch(ThreemaPushNotificationDictionary.messageIDKey)
             )
         }

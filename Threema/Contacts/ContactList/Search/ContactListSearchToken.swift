@@ -52,27 +52,35 @@ public enum ContactListSearchToken: ContactListTokenProtocol, Identifiable, Hash
         switch TargetManager.current {
         case .threema, .green:
             if ThreemaEnvironment.distributionListsActive {
-                [.contacts, .groups, .distributionLists]
+                return [.contacts, .groups, .distributionLists]
             }
             else {
-                [.contacts, .groups]
+                return [.contacts, .groups]
             }
             
         case .work, .blue, .onPrem, .customOnPrem:
-            if ThreemaEnvironment.distributionListsActive {
+            guard !AppLaunchManager.isRemoteSecretEnabled else {
                 if BusinessInjector.ui.userSettings.companyDirectory {
-                    [.contacts, .groups, .distributionLists, .directoryContacts]
+                    return [.contacts, .directoryContacts]
                 }
                 else {
-                    [.contacts, .groups, .distributionLists]
+                    return [.contacts]
+                }
+            }
+            if ThreemaEnvironment.distributionListsActive {
+                if BusinessInjector.ui.userSettings.companyDirectory {
+                    return [.contacts, .groups, .distributionLists, .directoryContacts]
+                }
+                else {
+                    return [.contacts, .groups, .distributionLists]
                 }
             }
             else {
                 if BusinessInjector.ui.userSettings.companyDirectory {
-                    [.contacts, .groups, .directoryContacts]
+                    return [.contacts, .groups, .directoryContacts]
                 }
                 else {
-                    [.contacts, .groups]
+                    return [.contacts, .groups]
                 }
             }
         }

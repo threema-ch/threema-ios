@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import ThreemaFramework
 import UIKit
@@ -274,7 +275,7 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ChatViewMessageActions {
         
         // Save handler
         let saveHandler = {
-            guard !MDMSetup(setup: false).disableShareMedia() else {
+            guard !MDMSetup().disableShareMedia() else {
                 DDLogWarn(
                     "[ChatViewAnimatedStickerMessageTableViewCell] Tried to save media, even if MDM disabled it."
                 )
@@ -290,7 +291,7 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ChatViewMessageActions {
         // In the new chat view we always copy the data, regardless if it has a caption because the text can be selected
         // itself.
         let copyHandler = {
-            guard !MDMSetup(setup: false).disableShareMedia() else {
+            guard !MDMSetup().disableShareMedia() else {
                 DDLogWarn(
                     "[ChatViewAnimatedStickerMessageTableViewCell] Tried to copy media, even if MDM disabled it."
                 )
@@ -307,8 +308,19 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ChatViewMessageActions {
         }
         
         // Share
-        let shareItems = [MessageActivityItem(for: message)]
-        
+        let data = BaseMessageEntityMessageShareContentMapper.mapToContent(
+            from: message,
+            fileUtility: FileUtility.shared
+        )
+        let shareHandler = {
+            if let data {
+                [UIActivityHelperFactory.makeItemSource(type: .messageActivity(data))]
+            }
+            else {
+                []
+            }
+        }
+
         // Speak
         var speakText = message.fileMessageType.localizedDescription
         if let caption = message.caption, !caption.isEmpty {
@@ -346,7 +358,7 @@ extension ChatViewAnimatedStickerMessageTableViewCell: ChatViewMessageActions {
             quoteHandler: quoteHandler,
             saveHandler: saveHandler,
             copyHandler: copyHandler,
-            shareItems: shareItems,
+            shareHandler: shareHandler,
             speakText: speakText,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,

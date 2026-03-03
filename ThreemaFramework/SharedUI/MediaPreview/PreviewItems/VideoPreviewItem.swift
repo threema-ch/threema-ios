@@ -24,7 +24,7 @@ import Photos
 import PromiseKit
 import ThreemaMacros
 
-open class VideoPreviewItem: MediaPreviewItem, MediaPreviewItemProtocol {
+open class VideoPreviewItem: MediaPreviewItem {
     public typealias PreviewType = URL
     
     var exportSession: AVAssetExportSession?
@@ -78,8 +78,8 @@ open class VideoPreviewItem: MediaPreviewItem, MediaPreviewItemProtocol {
             }
             
             return self.internalOriginalAsset.then { (asset: AVAsset) -> Promise<URL> in
-                let outputURL = MediaConverter.getAssetOutputURL()
-                guard let exportSession = MediaConverter.getAVAssetExportSession(from: asset, outputURL: outputURL)
+                guard let outputURL = MediaConverter.getAssetOutputURL(),
+                      let exportSession = MediaConverter.getAVAssetExportSession(from: asset, outputURL: outputURL)
                 else {
                     return Promise { $0.reject(MediaPreviewItem.LoadError.unknown) }
                 }
@@ -109,7 +109,8 @@ open class VideoPreviewItem: MediaPreviewItem, MediaPreviewItemProtocol {
         itemURL
     }
     
-    override func freeMemory() {
+    override open func freeMemory() {
+        super.freeMemory()
         video = nil
     }
     

@@ -227,6 +227,12 @@ final class LinkPhoneNumberViewModel: ObservableObject {
             prettyFormat: &formatted
         )
         
+        guard phoneNumber != "***" else {
+            normalizedNumber = "+\(phoneNumber)"
+            formattedNumber = "+\(phoneNumber)"
+            return
+        }
+        
         guard let normalized, let formatted else {
             return
         }

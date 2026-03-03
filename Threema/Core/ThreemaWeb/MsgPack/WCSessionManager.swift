@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import ThreemaEssentials
 import ThreemaFramework
@@ -40,8 +41,9 @@ import ThreemaMacros
         super.init()
         
         // Remove legacy files
-        try? FileManager.default.removeItem(at: allSessionsURL())
-        try? FileManager.default.removeItem(at: runningSessionsURL())
+        let fileUtility = FileUtility.shared!
+        try? fileUtility.delete(at: allSessionsURL())
+        try? fileUtility.delete(at: runningSessionsURL())
     }
     
     public class func isWebHostAllowed(scannedHostName: String, whiteList: String) -> Bool {
@@ -114,8 +116,8 @@ extension WCSessionManager {
             )
             NotificationCenter.default.addObserver(
                 self,
-                selector: #selector(refreshDirtyObjects),
-                name: NSNotification.Name(rawValue: kNotificationDBRefreshedDirtyObject),
+                selector: #selector(changedManagedObjects),
+                name: DatabaseContext.changedManagedObjects,
                 object: nil
             )
             observerAlreadySet = true
@@ -158,12 +160,12 @@ extension WCSessionManager {
     }
     
     private func allSessionsURL() -> URL {
-        let documentDir = FileUtility.shared.appDataDirectory
+        let documentDir = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())
         return documentDir!.appendingPathComponent("AllWCSessions")
     }
     
     private func runningSessionsURL() -> URL {
-        let documentDir = FileUtility.shared.appDataDirectory
+        let documentDir = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())
         return documentDir!.appendingPathComponent("RunningWCSessions")
     }
 }
@@ -185,7 +187,7 @@ extension WCSessionManager {
                     var session: WCSession? = self.sessions[webClientSession.initiatorPermanentPublicKey]
                     
                     if TargetManager.isBusinessApp {
-                        let mdmSetup = MDMSetup(setup: false)!
+                        let mdmSetup = MDMSetup()!
                         if let webHosts = mdmSetup.webHosts() {
                             if WCSessionManager.isWebHostAllowed(
                                 scannedHostName: webClientSession.saltyRTCHost,
@@ -269,7 +271,7 @@ extension WCSessionManager {
                 }
                 
                 if TargetManager.isBusinessApp {
-                    let mdmSetup = MDMSetup(setup: false)!
+                    let mdmSetup = MDMSetup()!
                     if let webHosts = mdmSetup.webHosts() {
                         if WCSessionManager.isWebHostAllowed(
                             scannedHostName: webClientSession.saltyRTCHost,
@@ -452,7 +454,7 @@ extension WCSessionManager {
     }
         
     private func canConnectToWebClient(completionHandler: @escaping ((_ isValid: Bool) -> Void)) {
-        if UserSettings.shared().threemaWeb, !MDMSetup(setup: false).disableWeb() {
+        if UserSettings.shared().threemaWeb, !MDMSetup().disableWeb() {
             if LicenseStore.shared().isValid() == true {
                 completionHandler(true)
             }
@@ -802,7 +804,7 @@ extension WCSessionManager {
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
             guard let currentContact = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: contact.objectID) as? ContactEntity else {
+                .managedObject(with: contact.objectID) as? ContactEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
@@ -839,7 +841,7 @@ extension WCSessionManager {
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
             guard let currentMessage = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: baseMessage.objectID) as? BaseMessageEntity else {
+                .managedObject(with: baseMessage.objectID) as? BaseMessageEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
@@ -913,7 +915,7 @@ extension WCSessionManager {
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
             guard let currentConversation = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: conversation.objectID) as? ConversationEntity else {
+                .managedObject(with: conversation.objectID) as? ConversationEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
@@ -924,18 +926,30 @@ extension WCSessionManager {
                         
             if currentConversation.isGroup {
                 
-                if changedValues.keys.contains("groupName") || changedValues.keys.contains("members") {
+                if changedValues.keys.contains(ConversationEntity.Field.name(
+                    for: .groupName,
+                    encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                )) || changedValues.keys.contains(ConversationEntity.Field.name(
+                    for: .members,
+                    encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                )) {
                     if let group = self.businessInjector.groupManager.getGroup(conversation: currentConversation) {
                         self.responseUpdateGroup(group: group, objectMode: .modified)
                     }
                 }
-                else if changedValues.keys.contains("groupImage"),
-                        let group = self.businessInjector.groupManager.getGroup(conversation: currentConversation) {
+                else if changedValues.keys.contains(ConversationEntity.Field.name(
+                    for: .groupImage,
+                    encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                )),
+                    let group = self.businessInjector.groupManager.getGroup(conversation: currentConversation) {
                     self.responseUpdateAvatar(contact: nil, group: group)
                 }
             }
             else if let contact = currentConversation.contact,
-                    changedValuesForCurrentEvent.keys.contains("typing") {
+                    changedValuesForCurrentEvent.keys.contains(ContactEntity.Field.name(
+                        for: .typing,
+                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                    )) {
                 self.responseUpdateTyping(
                     identity: contact.threemaIdentity,
                     isTyping: currentConversation.typing.boolValue
@@ -943,16 +957,36 @@ extension WCSessionManager {
             }
             
             if (
-                changedValues.keys.contains("lastMessage") || changedValues.keys.contains("visibility") || changedValues
-                    .keys.contains("unreadMessageCount") || changedValues.keys.contains("lastUpdate")
-                    || dirtyObjects
+                changedValues.keys.contains(ConversationEntity.Field.name(
+                    for: .lastMessage,
+                    encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                )) ||
+                    changedValues.keys.contains(ConversationEntity.Field.name(
+                        for: .visibility,
+                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                    )) ||
+                    changedValues.keys.contains(ConversationEntity.Field.name(
+                        for: .unreadMessageCount,
+                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                    )) ||
+                    changedValues.keys.contains(ConversationEntity.Field.name(
+                        for: .lastUpdate,
+                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                    )) ||
+                    dirtyObjects
             ) && currentConversation.lastMessage != nil {
                 let objectMode: WebConversationUpdate.ObjectMode = .modified
                 self.responseUpdateConversation(conversation: currentConversation, objectMode: objectMode)
             }
             else if !conversation.isGroup,
                     let contact = conversation.contact,
-                    changedValues.keys.contains("category") || changedValues.keys.contains("visibility") {
+                    changedValues.keys.contains(ConversationEntity.Field.name(
+                        for: .category,
+                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                    )) || changedValues.keys.contains(ConversationEntity.Field.name(
+                        for: .visibility,
+                        encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+                    )) {
                 self.responseUpdateContact(contact: contact, objectMode: .modified)
             }
             BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
@@ -966,7 +1000,7 @@ extension WCSessionManager {
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
             guard let currentContact = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: contact.objectID) as? ContactEntity else {
+                .managedObject(with: contact.objectID) as? ContactEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
@@ -989,7 +1023,7 @@ extension WCSessionManager {
             
             // Show only chats where lastUpdate is not `nil` to avoid showing chats that only contain system messages
             guard let currentConversation = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: conversation.objectID) as? ConversationEntity,
+                .managedObject(with: conversation.objectID) as? ConversationEntity,
                 currentConversation.lastUpdate != nil else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
@@ -1016,7 +1050,7 @@ extension WCSessionManager {
             timeout: Int(kAppCoreDataProcessMessageBackgroundTaskTime)
         ) {
             guard let currentMessage = self.businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: baseMessage.objectID) as? BaseMessageEntity else {
+                .managedObject(with: baseMessage.objectID) as? BaseMessageEntity else {
                 BackgroundTaskManager.shared.cancelBackgroundTask(key: backgroundKey)
                 return
             }
@@ -1065,7 +1099,10 @@ extension WCSessionManager {
         let identity: String?
         var conversation: ConversationEntity? = baseMessage.conversation
         
-        if changedValues.keys.contains("conversation"), changedValuesForCurrentEvent["conversation"] != nil {
+        if changedValues.keys.contains(BaseMessageEntity.Field.name(
+            for: .conversation,
+            encrypted: AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled
+        )), changedValuesForCurrentEvent["conversation"] != nil {
             conversation = changedValuesForCurrentEvent["conversation"] as? ConversationEntity
         }
         
@@ -1112,8 +1149,7 @@ extension WCSessionManager {
     
     private func processTextMessageResponse(_ baseMessage: BaseMessageEntity, _ id: String) {
         var createTextMessageResponse: WebCreateTextMessageResponse?
-        // swiftformat:disable:next acronyms
-        if let webRequestID = baseMessage.webRequestId, let createTextMessageRequest = webRequestMessage(
+        if let webRequestID = baseMessage.webRequestID, let createTextMessageRequest = webRequestMessage(
             for: webRequestID
         ) as? WebCreateTextMessageRequest {
             createTextMessageResponse = WebCreateTextMessageResponse(
@@ -1124,8 +1160,7 @@ extension WCSessionManager {
         
         let objectMode: WebMessagesUpdate.ObjectMode = .new
         
-        // swiftformat:disable:next acronyms
-        if createTextMessageResponse != nil, let webRequestID = baseMessage.webRequestId {
+        if createTextMessageResponse != nil, let webRequestID = baseMessage.webRequestID {
             DDLogVerbose("[Threema Web] MessagePack -> Send create/textMessage")
             sendMessagePackToRequestedSession(
                 with: webRequestID,
@@ -1180,8 +1215,7 @@ extension WCSessionManager {
         var createFileMessageResponse: WebCreateFileMessageResponse?
         var backgroundIdentifier: String?
         
-        // swiftformat:disable:next acronyms
-        if let webRequestID = baseMessage.webRequestId, let createFileMessageRequest = webRequestMessage(
+        if let webRequestID = baseMessage.webRequestID, let createFileMessageRequest = webRequestMessage(
             for: webRequestID
         ) as? WebCreateFileMessageRequest {
             createFileMessageRequest.ack = WebAbstractMessageAcknowledgement(webRequestID, true, nil)
@@ -1195,8 +1229,7 @@ extension WCSessionManager {
         }
         
         let objectMode: WebMessagesUpdate.ObjectMode = .new
-        // swiftformat:disable:next acronyms
-        if createFileMessageResponse != nil, let webRequestID = baseMessage.webRequestId {
+        if createFileMessageResponse != nil, let webRequestID = baseMessage.webRequestID {
             DDLogVerbose("[Threema Web] MessagePack -> Send create/fileMessage")
             sendMessagePackToRequestedSession(
                 with: webRequestID,
@@ -1309,16 +1342,21 @@ extension WCSessionManager {
     
     @objc func blackListChanged(_ notification: Notification) {
         let identity = notification.object as! String
-        if let contact = businessInjector.entityManager.entityFetcher.contact(for: identity) {
+        if let contact = businessInjector.entityManager.entityFetcher.contactEntity(for: identity) {
             responseUpdateContact(contact: contact, objectMode: .modified)
         }
     }
     
-    @objc func refreshDirtyObjects(_ notification: Notification) {
-        if let objectID = notification.userInfo?[kKeyObjectID] as? NSManagedObjectID {
+    @objc private func changedManagedObjects(_ notification: Notification) {
+        guard let refreshedObjectIDs = notification
+            .userInfo?[DatabaseContext.refreshedObjectIDsKey] as? Set<NSManagedObjectID> else {
+            return
+        }
+
+        for objectID in refreshedObjectIDs {
             if let managedObject = businessInjector.entityManager.entityFetcher
-                .getManagedObject(by: objectID) {
-                DDLogInfo("[t-dirty-objects] Send dirty object to webclient (insert and update): \(objectID)")
+                .managedObject(with: objectID) {
+                DDLogInfo("[dirty-objects] Send dirty object to web client (insert and update): \(objectID)")
                 var insertedObjects = Set<NSManagedObject>()
                 insertedObjects.insert(managedObject)
                 handleInsertedObjects(insertedObjects: insertedObjects)

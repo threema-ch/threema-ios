@@ -22,9 +22,12 @@ import CocoaLumberjackSwift
 import Combine
 import Foundation
 import MBProgressHUD
+import SwiftUI
+import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
+@MainActor
 final class ProfileViewModel: ObservableObject {
     
     @Published var shouldNavigateToSafeSetup = false
@@ -38,28 +41,27 @@ final class ProfileViewModel: ObservableObject {
     @Published private(set) var linkedMobile: String
     @Published private(set) var revocationDetail: String
     @Published private(set) var isThreemaSafeActivated: Bool
- 
+
     private let businessInjector: BusinessInjectorProtocol
     private let safeStore: SafeStore
     private let safeConfigManager: SafeConfigManager
     private let serverAPIConnector: ServerAPIConnector
-    
-    private(set) var mdmSetup = MDMSetup(setup: false)
-    
+    private let deviceCapabilitiesManager: DeviceCapabilitiesManagerProtocol
+
+    private(set) var mdmSetup = MDMSetup()
+
     private lazy var safeManager: SafeManager = .init(
         safeConfigManager: self.safeConfigManager,
         safeStore: self.safeStore,
         safeApiService: SafeApiService()
     )
-    
-    lazy var delegateHandler: DelegateHandler =
-        .init(
-            updateRevocationDetail: loadRevocationDetail,
-            didDismissModal: load
-        ) { [weak self] password in
-            self?.businessInjector.myIdentityStore.backupIdentity(withPassword: password)
-        }
-    
+
+    var canScan: Bool {
+        deviceCapabilitiesManager.supportsRecordingVideo
+    }
+
+    lazy var delegateHandler: DelegateHandler = .init(didDismissModal: load)
+
     var hasProfile: Bool {
         userProfile() != nil
     }
@@ -75,7 +77,7 @@ final class ProfileViewModel: ObservableObject {
     var linkMobileNoPending: Bool {
         businessInjector.myIdentityStore.linkMobileNoPending
     }
-    
+
     public var publicKey: (key: Data, identity: String) {
         (key: businessInjector.myIdentityStore.publicKey, identity: businessInjector.myIdentityStore.identity)
     }
@@ -88,22 +90,26 @@ final class ProfileViewModel: ObservableObject {
         self.init(
             businessInjector: BusinessInjector.ui,
             safeConfigManager: SafeConfigManager(),
-            serverAPIConnector: ServerAPIConnector()
+            serverAPIConnector: ServerAPIConnector(),
+            deviceCapabilitiesManager: DeviceCapabilitiesManager()
         )
     }
     
     init(
         businessInjector: BusinessInjectorProtocol,
         safeConfigManager: SafeConfigManager,
-        serverAPIConnector: ServerAPIConnector
+        serverAPIConnector: ServerAPIConnector,
+        deviceCapabilitiesManager: DeviceCapabilitiesManager
     ) {
         self.businessInjector = businessInjector
         self.safeConfigManager = safeConfigManager
         self.serverAPIConnector = serverAPIConnector
+        self.deviceCapabilitiesManager = deviceCapabilitiesManager
         self.safeStore = .init(
             safeConfigManager: safeConfigManager,
             serverApiConnector: serverAPIConnector,
-            groupManager: businessInjector.groupManager
+            groupManager: businessInjector.groupManager,
+            myIdentityStore: businessInjector.myIdentityStore
         )
         self.nickname = ""
         self.threemaID = ""
@@ -114,15 +120,16 @@ final class ProfileViewModel: ObservableObject {
         self.revocationDetail = "…"
         self.isThreemaSafeActivated = false
         load()
+        addObservers()
     }
     
-    public func share(_ items: [Any]?) {
-        if let activityViewController = ActivityUtil.activityViewController(
-            withActivityItems: items,
-            applicationActivities: nil
-        ),
-            let currentWindow = AppDelegate.shared().currentTopViewController() {
-            
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    public func share(_ items: [Any]) {
+        let activityViewController = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        if let currentWindow = AppDelegate.shared().currentTopViewController() {
             if UIDevice.current.userInterfaceIdiom == .pad {
                 activityViewController.popoverPresentationController?.sourceView = currentWindow.view
                 activityViewController.popoverPresentationController?.sourceRect = CGRectMake(
@@ -136,21 +143,16 @@ final class ProfileViewModel: ObservableObject {
             currentWindow.present(activityViewController, animated: true)
         }
     }
-    
+
     func load() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else {
-                return
-            }
-            loadQRCode()
-            loadNickname()
-            loadLinkedEmail()
-            loadLinkedMobile()
-            profileImage = businessInjector.myIdentityStore.resolvedProfilePicture
-            loadRevocationDetail()
-            
-            isThreemaSafeActivated = safeManager.isActivated
-        }
+        loadQRCode()
+        loadNickname()
+        loadLinkedEmail()
+        loadLinkedMobile()
+        profileImage = businessInjector.myIdentityStore.resolvedProfilePicture
+        loadRevocationDetail()
+
+        isThreemaSafeActivated = safeManager.isActivated
     }
     
     func incomingSync() {
@@ -162,6 +164,30 @@ final class ProfileViewModel: ObservableObject {
                 notificationStyle: .none
             ),
             subtitle: #localize("incoming_profile_sync_message")
+        )
+    }
+
+    func scanAction() {
+        if canAddContact {
+            showQRCodeScanner()
+        }
+        else {
+            UIAlertTemplate.showAlert(
+                owner: topViewController,
+                title: "",
+                message: #localize("disabled_by_device_policy")
+            )
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func addObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(loadRevocationDetail),
+            name: Notification.Name(kRevocationPasswordUIRefresh),
+            object: nil
         )
     }
     
@@ -182,7 +208,7 @@ final class ProfileViewModel: ObservableObject {
                     return
                 }
                 businessInjector.myIdentityStore.linkEmailPending = false
-                self.linkedEmail = businessInjector.myIdentityStore.linkedEmail
+                self.linkedEmail = linkedEmail
             } onError: { _ in }
         }
         else {
@@ -233,7 +259,7 @@ final class ProfileViewModel: ObservableObject {
         return imageData
     }
     
-    private func loadRevocationDetail() {
+    @objc private func loadRevocationDetail() {
         let updateDetail: () -> Void = { [weak self] in
             guard let setDate = self?.businessInjector.myIdentityStore.revocationPasswordSetDate else {
                 self?.revocationDetail = #localize("revocation_password_not_set")
@@ -261,105 +287,90 @@ final class ProfileViewModel: ObservableObject {
         
         updateDetail()
     }
+
+    private var topViewController: UIViewController {
+        AppDelegate.shared().currentTopViewController() ?? .init()
+    }
+
+    private var canAddContact: Bool {
+        if TargetManager.isBusinessApp {
+            mdmSetup?.disableAddContact() == false
+        }
+        else {
+            true
+        }
+    }
+
+    private func showQRCodeScanner() {
+        let model = QRCodeScannerViewModel(
+            mode: .identity,
+            audioSessionManager: AudioSessionManager(),
+            systemFeedbackManager: SystemFeedbackManager(
+                deviceCapabilitiesManager: DeviceCapabilitiesManager(),
+                settingsStore: BusinessInjector.ui.settingsStore
+            ),
+            systemPermissionsManager: SystemPermissionsManager()
+        )
+        let rootView = QRCodeScannerView(model: model)
+        let viewController = UIHostingController(rootView: rootView)
+        let nav = PortraitNavigationController(rootViewController: viewController)
+        model.onCompletion = { [weak self] result
+            in self?.handleScannerResult(result)
+        }
+        model.onCancel = { [weak self] in
+            self?.topViewController.dismiss(animated: true)
+        }
+        topViewController.present(nav, animated: true)
+    }
+
+    private func handleScannerResult(_ result: QRCodeScannerViewModel.QRCodeResult) {
+        switch result {
+        case let .identityContact(identity: id, publicKey: key, expirationDate: date):
+            let model = ContactIdentityProcessingViewModel(
+                expectedIdentity: nil,
+                scannedIdentity: id,
+                scannedPublicKey: key,
+                scannedExpirationDate: date,
+                systemFeedbackManager: SystemFeedbackManager(
+                    deviceCapabilitiesManager: DeviceCapabilitiesManager(),
+                    settingsStore: BusinessInjector.ui.settingsStore
+                )
+            )
+            model.onCompletion = { [weak self] verifiedContact in
+                self?.topViewController.dismiss(animated: true) {
+                    if let verifiedContact {
+                        let name = Notification.Name(kNotificationShowContact)
+                        let userInfo = [kKeyContact: verifiedContact]
+                        NotificationCenter.default.post(name: name, object: nil, userInfo: userInfo)
+                    }
+                }
+            }
+            let rootView = ContactIdentityProcessingView(model: model)
+            let viewController = UIHostingController(rootView: rootView)
+            (topViewController as? UINavigationController)?.pushViewController(viewController, animated: true)
+
+        case let .identityLink(url: url):
+            topViewController.dismiss(animated: true) {
+                URLHandler.handleThreemaDotIDURL(url, hideAppChooser: true)
+            }
+
+        default:
+            break
+        }
+    }
 }
 
 // MARK: - ProfileViewModel.DelegateHandler
 
 extension ProfileViewModel {
     class DelegateHandler: NSObject {
-        
-        fileprivate let revocationHandler = RevocationKeyHandler()
-        private var updateRevocationDetail: () -> Void
-        private var backupIdentity: (String) -> (String?)
         private var didDismissModal: () -> Void
         
-        lazy var revocationKey: PasswordNavigationDelegate = .init(
-            title: #localize("revocation_password"),
-            additionalText: String.localizedStringWithFormat(
-                #localize("revocation_password_description"),
-                TargetManager.localizedAppName
-            ),
-            callback: revocationHandler
-        )
-        
-        lazy var exportID: PasswordNavigationDelegate = .init(
-            additionalText: #localize("password_description_backup"),
-            callback: self
-        )
-        
         init(
-            updateRevocationDetail: @escaping () -> Void,
             didDismissModal: @escaping () -> Void,
-            backupIdentity: @escaping (String) -> String?
         ) {
-            self.updateRevocationDetail = updateRevocationDetail
-            self.backupIdentity = backupIdentity
             self.didDismissModal = didDismissModal
             super.init()
-            revocationHandler.delegate = self
-        }
-    }
-}
-
-// MARK: - ProfileViewModel.DelegateHandler.PasswordNavigationDelegate
-
-extension ProfileViewModel.DelegateHandler {
-    class PasswordNavigationDelegate: NSObject, UINavigationControllerDelegate {
-        var title: String?
-        var additionalText: String?
-        var callback: PasswordCallback?
-        
-        init(title: String? = nil, additionalText: String? = nil, callback: PasswordCallback? = nil) {
-            self.title = title
-            self.additionalText = additionalText
-            self.callback = callback
-        }
-        
-        func navigationController(
-            _ navigationController: UINavigationController,
-            willShow viewController: UIViewController,
-            animated: Bool
-        ) {
-            if let passwordVC = viewController as? BackupPasswordViewController {
-                passwordVC.passwordTitle = title ?? ""
-                passwordVC.passwordAdditionalText = additionalText ?? ""
-            }
-
-            if let passwordVerify = viewController as? BackupPasswordVerifyViewController {
-                passwordVerify.passwordCallback = callback
-            }
-        }
-    }
-}
-
-// MARK: - ProfileViewModel.DelegateHandler + RevocationKeyDelegate
-
-extension ProfileViewModel.DelegateHandler: RevocationKeyDelegate {
-    func revocationKeyChanged() {
-        updateRevocationDetail()
-    }
-}
-
-// MARK: - ProfileViewModel.DelegateHandler + PasswordCallback
-
-extension ProfileViewModel.DelegateHandler: PasswordCallback {
-    func passwordResult(_ password: String, from viewController: UIViewController) {
-        MBProgressHUD.showAdded(to: viewController.view, animated: true)
-        DispatchQueue.global(qos: .default).async {
-            let backupData = self.backupIdentity(password)
-            
-            DispatchQueue.main.async {
-                MBProgressHUD.hide(for: viewController.view, animated: true)
-
-                let storyBoard: UIStoryboard = AppDelegate.getMainStoryboard()
-                let vc = storyBoard
-                    .instantiateViewController(
-                        withIdentifier: "BackupIdentityViewController"
-                    ) as! BackupIdentityViewController
-                vc.backupData = backupData
-
-                viewController.navigationController?.pushViewController(vc, animated: true)
-            }
         }
     }
 }

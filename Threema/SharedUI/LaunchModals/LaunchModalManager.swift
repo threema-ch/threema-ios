@@ -29,7 +29,8 @@ import Foundation
     private lazy var safeStore = SafeStore(
         safeConfigManager: safeConfigManager,
         serverApiConnector: ServerAPIConnector(),
-        groupManager: BusinessInjector.ui.groupManager
+        groupManager: BusinessInjector.ui.groupManager,
+        myIdentityStore: BusinessInjector.ui.myIdentityStore
     )
     private lazy var safeManager = SafeManager(
         safeConfigManager: safeConfigManager,
@@ -50,7 +51,7 @@ import Foundation
                 // No more launch modals to show
                 self.isBeingDisplayed = false
                 
-                if let mdm = MDMSetup(setup: false),
+                if let mdm = MDMSetup(),
                    mdm.existsMdmKey(MDM_KEY_SAFE_PASSWORD) {
                     NotificationCenter.default.post(name: NSNotification.Name(kSafeBackupPasswordCheck), object: nil)
                 }
@@ -84,13 +85,25 @@ import Foundation
         else if checkSafeInto() {
             return .safeSetupInfo
         }
+        else if checkRemoteSecretActivate() {
+            return .remoteSecretActivate
+        }
+        else if checkRemoteSecretDeactivate() {
+            return .remoteSecretDeactivate
+        }
+        else if checkMicForOnPrem() {
+            // We ask mic permission to improve the UX for calls
+            AVAudioApplication.requestRecordPermission { _ in
+                self.didDismiss()
+            }
+        }
         
         return nil
     }
     
     private func checkForceMDMSafeBackup() -> Bool {
         
-        guard let mdmSetup = MDMSetup(setup: false) else {
+        guard let mdmSetup = MDMSetup() else {
             return false
         }
         
@@ -103,7 +116,7 @@ import Foundation
     
     private func checkSafeInto() -> Bool {
         
-        guard let mdmSetup = MDMSetup(setup: false) else {
+        guard let mdmSetup = MDMSetup() else {
             return false
         }
         
@@ -113,6 +126,28 @@ import Foundation
         }
         
         return false
+    }
+    
+    private func checkRemoteSecretActivate() -> Bool {
+        guard let mdmSetup = MDMSetup(),
+              let remoteSecretManager = AppLaunchManager.remoteSecretManager else {
+            return false
+        }
+        
+        return mdmSetup.enableRemoteSecret() && !remoteSecretManager.isRemoteSecretEnabled
+    }
+    
+    private func checkRemoteSecretDeactivate() -> Bool {
+        guard let mdmSetup = MDMSetup(),
+              let remoteSecretManager = AppLaunchManager.remoteSecretManager else {
+            return false
+        }
+        
+        return !mdmSetup.enableRemoteSecret() && remoteSecretManager.isRemoteSecretEnabled
+    }
+    
+    private func checkMicForOnPrem() -> Bool {
+        TargetManager.isOnPrem && AVAudioApplication.shared.recordPermission == .undetermined
     }
 }
 

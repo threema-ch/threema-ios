@@ -24,6 +24,9 @@ import Foundation
 ///
 /// - Note: See caveat in `Hashable` implementation below
 public struct EditHistoryItem {
+    // Internal ID to keep history items unique if all other properties are identical
+    private let id: String
+    
     /// Text of the edit
     public let text: String
     /// Date the edit was made
@@ -32,18 +35,21 @@ public struct EditHistoryItem {
     public let isCurrent: Bool
     
     public init(textMessage: TextMessageEntity) {
+        self.id = textMessage.objectID.uriRepresentation().absoluteString
         self.text = textMessage.text
         self.date = textMessage.lastEditedAt ?? textMessage.displayDate
         self.isCurrent = true
     }
     
     public init(fileMessage: FileMessage) {
+        self.id = fileMessage.objectID.uriRepresentation().absoluteString
         self.text = fileMessage.caption ?? ""
         self.date = fileMessage.lastEditedAt ?? fileMessage.displayDate
         self.isCurrent = true
     }
     
     public init(messageHistoryEntry: MessageHistoryEntryEntity) {
+        self.id = messageHistoryEntry.objectID.uriRepresentation().absoluteString
         self.text = messageHistoryEntry.text ?? ""
         self.date = messageHistoryEntry.editDate
         self.isCurrent = false
@@ -54,7 +60,7 @@ public struct EditHistoryItem {
 
 extension EditHistoryItem: Equatable {
     public static func == (lhs: EditHistoryItem, rhs: EditHistoryItem) -> Bool {
-        lhs.date == rhs.date && lhs.text == rhs.text && lhs.isCurrent == rhs.isCurrent
+        lhs.id == rhs.id && lhs.date == rhs.date && lhs.text == rhs.text && lhs.isCurrent == rhs.isCurrent
     }
 }
 
@@ -66,6 +72,7 @@ extension EditHistoryItem: Equatable {
 
 extension EditHistoryItem: Hashable {
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
         hasher.combine(date)
         hasher.combine(text)
         hasher.combine(isCurrent)

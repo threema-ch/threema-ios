@@ -19,8 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import SwiftProtobuf
+import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
+
 @testable import ThreemaFramework
 
 class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
@@ -34,7 +37,6 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
     private var processor: MediatorReflectedOutgoingMessageProcessor!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
@@ -313,8 +315,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
             )
             let conversation = dbPreparer
                 .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
-                    // swiftformat:disable:next acronyms
-                    conversation.groupId = groupID
+                    conversation.groupID = groupID
                     conversation.contact = groupCreator
                 }
             let groupEntity = dbPreparer.createGroupEntity(
@@ -325,6 +326,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
             group = Group(
                 myIdentityStore: MyIdentityStoreMock(),
                 userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -386,7 +388,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
     }
 
     private func getEnvelopeForOutgoingMessage(abstractMessage: AbstractMessage) throws -> D2d_Envelope {
-        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockData.deviceGroupKeys)
+        let mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockMultiDevice.deviceGroupKeys)
         var envelope = try mediatorMessageProtocol.getEnvelopeForOutgoingMessage(
             type: Int32(abstractMessage.type()),
             body: abstractMessage.body(),
@@ -394,7 +396,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
             receiverIdentity: abstractMessage.toIdentity,
             createdAt: abstractMessage.date,
             nonce: abstractMessage.nonce,
-            deviceID: MockData.deviceID.paddedLittleEndian()
+            deviceID: MockMultiDevice.deviceID.paddedLittleEndian()
         )
 
         if let abstractGroupMessage = abstractMessage as? AbstractGroupMessage {
@@ -415,7 +417,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         -> (frameworkInjectorMock: BusinessInjectorMock, messageStoreMock: MessageStoreMock) {
 
         if let group {
-            let entityManager = EntityManager(databaseContext: dbBackgroundCnx)
+            let entityManager = EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false)
             let groupManagerMock = GroupManagerMock()
             groupManagerMock.getGroupReturns.append(group)
 
@@ -424,12 +426,15 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
                 groupManager: groupManagerMock,
                 unreadMessages: UnreadMessages(
                     messageSender: MessageSenderMock(),
-                    entityManager: EntityManager(databaseContext: dbBackgroundCnx)
+                    entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false)
                 )
             )
         }
         else {
-            frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(databaseContext: dbMainCnx))
+            frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(
+                databaseContext: dbMainCnx,
+                isRemoteSecretEnabled: false
+            ))
         }
 
         return (frameworkInjectorMock, MessageStoreMock())

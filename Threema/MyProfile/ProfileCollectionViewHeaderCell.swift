@@ -21,7 +21,7 @@
 import Foundation
 import ThreemaMacros
 
-class ProfileCollectionViewHeaderCell: UICollectionViewListCell, Reusable {
+final class ProfileCollectionViewHeaderCell: UICollectionViewListCell, Reusable {
     
     // MARK: - Properties
     

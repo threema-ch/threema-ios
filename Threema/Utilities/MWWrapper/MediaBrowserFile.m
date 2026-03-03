@@ -19,11 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "MediaBrowserFile.h"
-#import "FileMessagePreview.h"
-#import "UIImage+ColoredImage.h"
-#import "ThreemaUtilityObjC.h"
-#import "UTIConverter.h"
-#import "BundleUtil.h"
+#import "Threema-Swift.h"
+#import <ThreemaFramework/ThreemaUtilityObjC.h>
+#import <ThreemaFramework/UTIConverter.h>
+#import <ThreemaFramework/BundleUtil.h>
 
 @interface MediaBrowserFile ()
 
@@ -45,6 +44,7 @@
     self = [super init];
     if (self) {
         _fileMessageEntity = fileMessageEntity;
+
         BOOL isRenderingFileMessage = false;
         if (_fileMessageEntity.data != nil) {
             if (_fileMessageEntity.data.data != nil) {
@@ -68,10 +68,10 @@
         }
         
         if (isRenderingFileMessage == false || _underlyingImage == nil) {
-            UIImage *thumbnail = [FileMessagePreview thumbnailForFileMessageEntity:fileMessageEntity];
+            UIImage *thumbnail = [fileMessageEntity previewThumbnail];
             _isUtiPreview = !fileMessageEntity.thumbnail;
             if (fileMessageEntity.thumbnail == nil) {
-                UIImage *colorizedThumbnail = [thumbnail imageWithTint:UIColor.whiteColor];
+                UIImage *colorizedThumbnail = [thumbnail imageWithTintColor:UIColor.whiteColor];
                 _underlyingImage = colorizedThumbnail;
             } else {
                 if ([UTIConverter isGifMimeType:fileMessageEntity.mimeType]) {
@@ -128,7 +128,7 @@
             [_delegate showFile: _fileMessageEntity];
         }
     } else {
-        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+        BlobManagerObjCWrapper *manager = [[BlobManagerObjCWrapper alloc] init];
         [manager syncBlobsFor:_fileMessageEntity.objectID onCompletion:^(enum BlobManagerObjCResult result){
             NSAssert(result != BlobManagerObjCResultUploaded, @"We never upload a file in this case");
             [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_LOADING_DID_END_NOTIFICATION object:self];
@@ -176,10 +176,10 @@
     }
     
     if (_fileMessageEntity.data != nil) {
-        UIImage *thumbnail = [FileMessagePreview thumbnailForFileMessageEntity:_fileMessageEntity];
+        UIImage *thumbnail = [_fileMessageEntity previewThumbnail];
         _isUtiPreview = !_fileMessageEntity.thumbnail;
         if (_fileMessageEntity.thumbnail == nil) {
-            UIImage *colorizedThumbnail = [thumbnail imageWithTint:UIColor.whiteColor];
+            UIImage *colorizedThumbnail = [thumbnail imageWithTintColor:UIColor.whiteColor];
             _underlyingImage = colorizedThumbnail;
         } else {
             if ([UTIConverter isGifMimeType:_fileMessageEntity.mimeType]) {
@@ -200,7 +200,7 @@
 }
 
 - (void)performLoadUnderlyingImageAndNotify {
-    BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+    BlobManagerObjCWrapper *manager = [[BlobManagerObjCWrapper alloc] init];
     [manager syncBlobsFor:_fileMessageEntity.objectID onCompletion:^(enum BlobManagerObjCResult result){
         NSAssert(result != BlobManagerObjCResultUploaded, @"We never upload a file in this case");
         [[NSNotificationCenter defaultCenter] postNotificationName:MWPHOTO_LOADING_DID_END_NOTIFICATION object:self];

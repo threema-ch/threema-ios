@@ -19,6 +19,10 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import Keychain
+import KeychainTestHelper
+import RemoteSecretProtocol
+import RemoteSecretProtocolTestHelper
 @testable import Threema
 
 class BusinessInjectorMock: BusinessInjectorProtocol {
@@ -37,6 +41,8 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
     // MARK: BusinessInjectorProtocol
 
     var runsInBackground: Bool
+    
+    var remoteSecretManager: RemoteSecretManagerProtocol
 
     var contactStore: ContactStoreProtocol
 
@@ -56,6 +62,8 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
 
     var myIdentityStore: MyIdentityStoreProtocol
 
+    var profileStore: any ThreemaFramework.ProfileStoreProtocol
+
     var unreadMessages: UnreadMessagesProtocol
 
     var userSettings: UserSettingsProtocol
@@ -68,10 +76,11 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         
     var pushSettingManager: ThreemaFramework.PushSettingManagerProtocol
 
-    var keychainHelper: KeychainHelperProtocol
+    var keychainManager: KeychainManagerProtocol
 
     init(
         runsInBackground: Bool = false,
+        remoteSecretManager: RemoteSecretManagerProtocol = RemoteSecretManagerMock(),
         contactStore: ContactStoreProtocol = ContactStoreMock(),
         conversationStore: ConversationStoreProtocol = ConversationStoreMock(),
         entityManager: EntityManager,
@@ -81,15 +90,17 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         messageSender: MessageSenderProtocol = MessageSenderMock(),
         multiDeviceManager: MultiDeviceManagerProtocol = MultiDeviceManagerMock(),
         myIdentityStore: MyIdentityStoreProtocol = MyIdentityStoreMock(),
+        profileStore: ProfileStoreProtocol = ProfileStoreMock(),
         unreadMessages: UnreadMessagesProtocol = UnreadMessagesMock(),
         userSettings: UserSettingsProtocol = UserSettingsMock(),
         settingsStore: SettingsStoreProtocol = SettingsStoreMock(),
         serverConnector: ServerConnectorProtocol = ServerConnectorMock(),
         messageRetentionManager: any MessageRetentionManagerModelProtocol = MessageRetentionManagerModelMock(),
         pushSettingManager: PushSettingManagerProtocol = PushSettingManagerMock(),
-        keychainHelper: KeychainHelperProtocol = KeychainHelperMock()
+        keychainManager: KeychainManagerProtocol = KeychainManagerMock()
     ) {
         self.runsInBackground = runsInBackground
+        self.remoteSecretManager = remoteSecretManager
         self.contactStore = contactStore
         self.conversationStore = conversationStore
         self.entityManager = entityManager
@@ -99,12 +110,13 @@ class BusinessInjectorMock: BusinessInjectorProtocol {
         self.messageSender = messageSender
         self.multiDeviceManager = multiDeviceManager
         self.myIdentityStore = myIdentityStore
+        self.profileStore = profileStore
         self.unreadMessages = unreadMessages
         self.userSettings = userSettings
         self.settingsStore = settingsStore
         self.serverConnector = serverConnector
         self.messageRetentionManager = messageRetentionManager
         self.pushSettingManager = pushSettingManager
-        self.keychainHelper = keychainHelper
+        self.keychainManager = keychainManager
     }
 }

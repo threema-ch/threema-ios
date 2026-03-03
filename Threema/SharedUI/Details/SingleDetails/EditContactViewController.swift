@@ -67,7 +67,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     private var firstName: String?
     private var lastName: String?
     
-    private var entityManager = EntityManager()
+    private var entityManager = BusinessInjector.ui.entityManager
     
     private var observerContact: NSKeyValueObservation?
 
@@ -112,8 +112,7 @@ final class EditContactViewController: ThemedCodeModernGroupedTableViewControlle
     /// Create a new edit contact view controller to present modally embedded in a navigation controller
     /// - Parameter contact: Contact to be edited
     init(for contact: ContactEntity) {
-        // swiftformat:disable:next acronyms
-        assert(contact.cnContactId == nil, "Only use with a contact that is not linked to a system contact")
+        assert(contact.cnContactID == nil, "Only use with a contact that is not linked to a system contact")
         
         self.contact = contact
         

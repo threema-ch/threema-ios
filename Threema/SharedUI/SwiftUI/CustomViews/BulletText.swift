@@ -35,7 +35,8 @@ struct BulletText: View {
         } icon: {
             if showIcon {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.accentColor)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.white, Color.accentColor)
             }
         }
         .labelStyle(TrailingLabelStyle())

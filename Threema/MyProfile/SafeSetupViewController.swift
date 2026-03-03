@@ -41,14 +41,15 @@ class SafeSetupViewController: ThemedViewController {
         let safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: BusinessInjector.ui.groupManager
+            groupManager: BusinessInjector.ui.groupManager,
+            myIdentityStore: BusinessInjector.ui.myIdentityStore
         )
         self.safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
             safeStore: safeStore,
             safeApiService: SafeApiService()
         )
-        self.mdmSetup = MDMSetup(setup: false)
+        self.mdmSetup = MDMSetup()
         super.init(coder: aDecoder)
     }
     

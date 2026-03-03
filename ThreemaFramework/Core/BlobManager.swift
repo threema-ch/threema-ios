@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import Foundation
+import ThreemaEssentials
 
 // MARK: - BlobManagerDelegate
 
@@ -59,7 +60,11 @@ public actor BlobManager: BlobManagerProtocol {
         if let entityManager = injectedEntityManager {
             return entityManager
         }
-        return EntityManager(withChildContextForBackgroundProcess: true)
+        return PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).backgroundEntityManager
     }
     
     private var groupManager: GroupManagerProtocol {

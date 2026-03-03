@@ -36,7 +36,8 @@ class WebGroupSyncRequest: WebAbstractMessage {
             do {
                 ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
                 let businessInjector = BusinessInjector.ui
-                guard let conversation = businessInjector.entityManager.entityFetcher.legacyConversation(for: id) else {
+                guard let conversation = businessInjector.entityManager.entityFetcher.legacyConversationEntity(for: id)
+                else {
                     ack!.success = false
                     ack!.error = "invalidGroup"
                     return

@@ -52,7 +52,7 @@ enum ContactListAddItem: MenuItem {
     }
     
     var enabled: Bool {
-        let mdm = MDMSetup(setup: false)
+        let mdm = MDMSetup()
         return switch self {
         case .contacts:
             !(mdm?.disableAddContact() ?? true)

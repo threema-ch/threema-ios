@@ -110,17 +110,15 @@ public class WebAbstractMessage: NSObject {
     ) {
         if session.connectionStatus() != .ready, messageType != "update", messageSubType != "connectionInfo" {
             if messageSubType != nil {
-                ValidationLogger.shared()?
-                    .logString(
-                        "[Threema Web] Message received in invalid state: \(session.connectionStatus()?.rawValue ?? 0) \(messageType) \(messageSubType!)"
-                    )
+                DDLogNotice(
+                    "[Threema Web] Message received in invalid state: \(session.connectionStatus()?.rawValue ?? 0) \(messageType) \(messageSubType!)"
+                )
                 completionHandler(nil, true)
             }
             else {
-                ValidationLogger.shared()?
-                    .logString(
-                        "[Threema Web] Message received in invalid state: \(session.connectionStatus()?.rawValue ?? 0) \(messageType)"
-                    )
+                DDLogNotice(
+                    "[Threema Web] Message received in invalid state: \(session.connectionStatus()?.rawValue ?? 0) \(messageType)"
+                )
                 completionHandler(nil, true)
             }
             return
@@ -184,19 +182,19 @@ public class WebAbstractMessage: NSObject {
             case "thumbnail"?:
                 let requestThumbnail = WebThumbnailRequest(message: self)
                 var conversation: ConversationEntity?
-                let entityManager = EntityManager()
-                
+                let entityManager = BusinessInjector.ui.entityManager
+
                 if requestThumbnail.type == "contact" {
-                    conversation = entityManager.entityFetcher.conversationEntity(forIdentity: requestThumbnail.id)
+                    conversation = entityManager.entityFetcher.conversationEntity(for: requestThumbnail.id)
                 }
                 else {
                     conversation = entityManager.entityFetcher
-                        .legacyConversation(for: requestThumbnail.id.hexadecimal)
+                        .legacyConversationEntity(for: requestThumbnail.id.hexadecimal)
                 }
                 
                 guard let conversation, let baseMessage = entityManager.entityFetcher.message(
                     with: requestThumbnail.messageID,
-                    conversation: conversation
+                    in: conversation
                 ) else {
                     let confirmResponse = WebConfirmResponse(
                         message: requestThumbnail,
@@ -270,8 +268,8 @@ public class WebAbstractMessage: NSObject {
             case "contactDetail"?:
                 let requestContactDetail = WebContactDetailRequest(message: self)
                 var contact: ContactEntity?
-                let entityManager = EntityManager()
-                contact = entityManager.entityFetcher.contact(for: requestContactDetail.identity)
+                let entityManager = BusinessInjector.ui.entityManager
+                contact = entityManager.entityFetcher.contactEntity(for: requestContactDetail.identity)
                 let responseContactDetail = WebContactDetailResponse(
                     contact: contact,
                     contactDetailRequest: requestContactDetail
@@ -293,16 +291,16 @@ public class WebAbstractMessage: NSObject {
                 
                 if requestAck.type == "contact" {
                     conversation = businessInjector.entityManager.entityFetcher
-                        .conversationEntity(forIdentity: requestAck.id)
+                        .conversationEntity(for: requestAck.id)
                 }
                 else {
                     conversation = businessInjector.entityManager.entityFetcher
-                        .legacyConversation(for: requestAck.id.hexadecimal)
+                        .legacyConversationEntity(for: requestAck.id.hexadecimal)
                 }
                 
                 guard let conversation, let baseMessage = businessInjector.entityManager.entityFetcher.message(
                     with: requestAck.messageID,
-                    conversation: conversation
+                    in: conversation
                 ), conversation.objectID == baseMessage.conversation.objectID else {
                     let confirmResponse = WebConfirmResponse(
                         message: requestAck,
@@ -331,19 +329,19 @@ public class WebAbstractMessage: NSObject {
                 return
             case "blob"?:
                 let requestBlob = WebBlobRequest(message: self)
-                let entityManager = EntityManager()
-                
+                let entityManager = BusinessInjector.ui.entityManager
+
                 let conversation: ConversationEntity? =
                     if requestBlob.type == "contact" {
-                        entityManager.entityFetcher.conversationEntity(forIdentity: requestBlob.id)
+                        entityManager.entityFetcher.conversationEntity(for: requestBlob.id)
                     }
                     else {
-                        entityManager.entityFetcher.legacyConversation(for: requestBlob.id.hexadecimal)
+                        entityManager.entityFetcher.legacyConversationEntity(for: requestBlob.id.hexadecimal)
                     }
                 
                 guard let conversation, let baseMessage = entityManager.entityFetcher.message(
                     with: requestBlob.messageID,
-                    conversation: conversation
+                    in: conversation
                 ) else {
                     let confirmResponse = WebConfirmResponse(
                         message: requestBlob,
@@ -535,19 +533,17 @@ public class WebAbstractMessage: NSObject {
                 let updateRequestConnectionInfo = WebUpdateConnectionInfoRequest(message: self)
                 session.connectionContext()?.connectionInfoRequest = updateRequestConnectionInfo
                 if session.connectionStatus() == .connectionInfoSend {
-                    ValidationLogger.shared()?
-                        .logString(
-                            "[Threema Web] ConnectionInfo received maybeResume --> state: \(session.connectionStatus()!.rawValue)"
-                        )
+                    DDLogNotice(
+                        "[Threema Web] ConnectionInfo received maybeResume --> state: \(session.connectionStatus()!.rawValue)"
+                    )
                     session.setWCConnectionStateToReady()
                     updateRequestConnectionInfo.maybeResume(session: session)
                     session.messageQueue.processQueue()
                 }
                 else {
-                    ValidationLogger.shared()?
-                        .logString(
-                            "[Threema Web] ConnectionInfo received and wait for ConnectionInfoResponse --> state: \(session.connectionStatus()!.rawValue)"
-                        )
+                    DDLogNotice(
+                        "[Threema Web] ConnectionInfo received and wait for ConnectionInfoResponse --> state: \(session.connectionStatus()!.rawValue)"
+                    )
                     session.setWCConnectionStateToConnectionInfoReceived()
                 }
                 completionHandler(nil, true)
@@ -600,21 +596,20 @@ public class WebAbstractMessage: NSObject {
                             try context.prune(theirSequenceNumber: sequenceNumber)
                         }
                         else {
-                            ValidationLogger.shared()
-                                .logString("[Threema Web] Could not prune cache: missing sequenceNumber.")
+                            DDLogNotice("[Threema Web] Could not prune cache: missing sequenceNumber.")
                             session.stop(close: true, forget: false, sendDisconnect: true, reason: .error)
                             return
                         }
                     }
                     else {
-                        ValidationLogger.shared().logString("[Threema Web] Could not prune cache: missing context.")
+                        DDLogNotice("[Threema Web] Could not prune cache: missing context.")
                         session.stop(close: true, forget: false, sendDisconnect: true, reason: .error)
                         return
                     }
                 }
                 catch {
                     // do error stuff
-                    ValidationLogger.shared().logString("[Threema Web] Could not prune cache: \(error).")
+                    DDLogNotice("[Threema Web] Could not prune cache: \(error).")
                     session.stop(close: true, forget: false, sendDisconnect: true, reason: .error)
                     return
                 }
@@ -683,11 +678,11 @@ public class WebAbstractMessage: NSObject {
         
         if requestMessage.type == "contact" {
             conversation = businessInjector.entityManager.entityFetcher
-                .conversationEntity(forIdentity: requestMessage.id)
+                .conversationEntity(for: requestMessage.id)
         }
         else {
             conversation = businessInjector.entityManager.entityFetcher
-                .legacyConversation(for: requestMessage.id.hexadecimal)
+                .legacyConversationEntity(for: requestMessage.id.hexadecimal)
         }
         
         guard let conversation else {
@@ -785,17 +780,14 @@ public class WebAbstractMessage: NSObject {
     }
     
     private func buildResponseReceivers(completion: @escaping (_ webResponseReceivers: WebReceiversResponse?) -> Void) {
-        var contactResult: [ContactEntity]?
-        var allGroupConversations: [ConversationEntity]?
-        var responseReceivers: WebReceiversResponse?
-        let entityManager = EntityManager()
-        contactResult = entityManager.entityFetcher.allContacts() as? [ContactEntity]
-        allGroupConversations = (entityManager.entityFetcher.allGroupConversations() as? [ConversationEntity])!
+        let entityManager = BusinessInjector.ui.entityManager
+        let contactResult = entityManager.entityFetcher.contactEntities() ?? []
+        let allGroupConversations = entityManager.entityFetcher.groupConversationEntities() ?? []
         
-        responseReceivers = WebReceiversResponse(
+        let responseReceivers = WebReceiversResponse(
             requestID: requestID,
-            allContacts: contactResult!,
-            allGroupConversations: allGroupConversations!
+            allContacts: contactResult,
+            allGroupConversations: allGroupConversations
         )
         completion(responseReceivers)
     }

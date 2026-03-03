@@ -33,6 +33,13 @@ protocol SenderItemDelegate: AnyObject {
 }
 
 class ItemSender: NSObject {
+
+    private lazy var persistenceManager = PersistenceManager(
+        appGroupID: AppGroup.groupID(),
+        userDefaults: AppGroup.userDefaults(),
+        remoteSecretManager: AppLaunchManager.remoteSecretManager
+    )
+
     private var recipientConversations: Set<ConversationEntity>?
     var itemsToSend: [URL]?
     var textToSend: String?
@@ -236,10 +243,11 @@ class ItemSender: NSObject {
                 textMessage.conversation.visibility = ConversationEntity.Visibility.default
                     .rawValue as NSNumber
             }
-            
-            DatabaseManager.db()?.addDirtyObject(textMessage.conversation)
-            DatabaseManager.db()?.addDirtyObject(textMessage.conversation.lastMessage)
-            
+
+            persistenceManager.dirtyObjectManager.markAsDirty(objectID: textMessage.objectID) {
+                AppGroup.notifySyncNeeded()
+            }
+
             sentItemCount! += 1
             checkIsFinished()
         }
@@ -265,26 +273,32 @@ class ItemSender: NSObject {
 // MARK: - UploadProgressDelegate
 
 extension ItemSender: UploadProgressDelegate {
-    public func blobMessageSenderUploadShouldCancel(_ blobMessageSender: Old_BlobMessageSender!) -> Bool {
+    public func blobMessageSenderUploadShouldCancel(_ blobMessageSender: Old_BlobMessageSender) -> Bool {
         shouldCancel
     }
     
-    public func blobMessageSender(
-        _ blobMessageSender: Old_BlobMessageSender!,
-        uploadProgress progress: NSNumber!,
-        forMessage message: BaseMessageEntity!
+    func blobMessageSender(
+        _ blobMessageSender: Old_BlobMessageSender,
+        uploadProgress progress: NSNumber,
+        forMessage messageObject: NSObject
     ) {
+        let message = messageObject as! BaseMessageEntity
+
         delegate?.setProgress(progress: progress, forItem: message.id)
     }
     
-    public func blobMessageSender(
-        _ blobMessageSender: Old_BlobMessageSender!,
-        uploadSucceededForMessage message: BaseMessageEntity
+    func blobMessageSender(
+        _ blobMessageSender: Old_BlobMessageSender,
+        uploadSucceededForMessage messageObject: NSObject
     ) {
+        let message = messageObject as! BaseMessageEntity
+
         sentItemCount! += 1
         delegate?.finishedItem(item: message.id)
 
-        markDirty(for: message)
+        persistenceManager.dirtyObjectManager.markAsDirty(objectID: message.objectID) {
+            AppGroup.notifySyncNeeded()
+        }
 
         checkIsFinished()
         
@@ -293,9 +307,9 @@ extension ItemSender: UploadProgressDelegate {
         }
     }
     
-    public func blobMessageSender(
-        _ blobMessageSender: Old_BlobMessageSender!,
-        uploadFailedForMessage message: BaseMessageEntity!,
+    func blobMessageSender(
+        _ blobMessageSender: Old_BlobMessageSender,
+        uploadFailedForMessage messageObject: NSObject?,
         error: UploadError
     ) {
         DispatchQueue.global(qos: .userInteractive).async {
@@ -308,18 +322,11 @@ extension ItemSender: UploadProgressDelegate {
         
         delegate?.showAlert(with: errorTitle, message: errorMessage!)
         
-        if error == UploadErrorSendFailed {
-            markDirty(for: message)
-        }
-    }
-    
-    private func markDirty(for message: BaseMessageEntity) {
-        DatabaseManager.db()?.addDirtyObject(message.conversation)
-        DatabaseManager.db()?.addDirtyObject(message)
-        
-        if let fileMessageEntity = message as? FileMessageEntity {
-            DatabaseManager.db()?.addDirtyObject(fileMessageEntity.thumbnail)
-            DatabaseManager.db()?.addDirtyObject(fileMessageEntity.data)
+        if error == UploadErrorSendFailed,
+           let message = messageObject as? BaseMessageEntity {
+            persistenceManager.dirtyObjectManager.markAsDirty(objectID: message.objectID) {
+                AppGroup.notifySyncNeeded()
+            }
         }
     }
 }

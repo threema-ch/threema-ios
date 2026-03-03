@@ -31,6 +31,7 @@ extension SettingsCollectionViewDataSource {
         case desktop
         case status
         case workAdvertising
+        case workReferral
         case social
         case support
         
@@ -47,14 +48,14 @@ extension SettingsCollectionViewDataSource {
                 return devRows
                 
             case .general:
-                return [.privacy, .appearance, .noftifications, .chat, .media, .storage, .passcode, .calls]
+                return [.privacy, .appearance, .notifications, .chat, .media, .storage, .passcode, .calls]
             
             case .desktop:
                 var desktopRows = [Row]()
-                if !MDMSetup(setup: false).disableMultiDevice() {
+                if !MDMSetup().disableMultiDevice() {
                     desktopRows.append(.desktop)
                 }
-                if !MDMSetup(setup: false).disableWeb() {
+                if !MDMSetup().disableWeb() {
                     desktopRows.append(.web)
                 }
                 return desktopRows
@@ -64,11 +65,23 @@ extension SettingsCollectionViewDataSource {
                 if TargetManager.isBusinessApp {
                     statusRows.append(.workLicense)
                 }
+                if AppLaunchManager.remoteSecretManager.isRemoteSecretEnabled {
+                    statusRows.append(.remoteSecretState)
+                }
                 return statusRows
                 
             case .workAdvertising:
                 if TargetManager.current == .threema {
                     return [.workAd]
+                }
+                else {
+                    return []
+                }
+                
+            case .workReferral:
+                if (TargetManager.current == .threema && UserSettings.shared().showWorkReferral) || UserSettings
+                    .shared().showWorkReferral {
+                    return [.workReferral]
                 }
                 else {
                     return []
@@ -139,7 +152,7 @@ extension SettingsCollectionViewDataSource {
         
         case privacy
         case appearance
-        case noftifications
+        case notifications
         case chat
         case media
         case storage
@@ -152,12 +165,14 @@ extension SettingsCollectionViewDataSource {
         case network
         case version
         case workLicense
+        case remoteSecretState
         
         case rate
         case invite
         case channel
         
         case workAd
+        case workReferral
         
         case support
         case policy
@@ -175,7 +190,7 @@ extension SettingsCollectionViewDataSource {
                 #localize("settings_list_privacy_title")
             case .appearance:
                 #localize("settings_list_appearance_title")
-            case .noftifications:
+            case .notifications:
                 #localize("settings_list_notifications_title")
             case .chat:
                 #localize("settings_list_chat_title")
@@ -200,6 +215,8 @@ extension SettingsCollectionViewDataSource {
                 #localize("settings_list_version_title")
             case .workLicense:
                 #localize("settings_list_settings_license_username_title")
+            case .remoteSecretState:
+                #localize("settings_list_remote_secret_title")
             case .rate:
                 String.localizedStringWithFormat(
                     #localize("settings_list_rate"),
@@ -207,6 +224,8 @@ extension SettingsCollectionViewDataSource {
                 )
             case .workAd:
                 #localize("settings_threema_work")
+            case .workReferral:
+                ""
             case .invite:
                 #localize("settings_list_invite_a_friend_title")
             case .channel:
@@ -237,7 +256,7 @@ extension SettingsCollectionViewDataSource {
                 UIImage(systemName: "hand.raised.fill")
             case .appearance:
                 UIImage(systemName: "paintbrush.pointed.fill")
-            case .noftifications:
+            case .notifications:
                 UIImage(systemName: "app.badge.fill")
             case .chat:
                 UIImage(systemName: "bubble.left.and.bubble.right.fill")
@@ -253,7 +272,7 @@ extension SettingsCollectionViewDataSource {
                 UIImage(systemName: "desktopcomputer")
             case .web:
                 UIImage(systemName: "menubar.dock.rectangle")
-            case .network, .version, .workLicense, .workAd:
+            case .network, .version, .workLicense, .workAd, .workReferral, .remoteSecretState:
                 nil
             case .rate:
                 UIImage(systemName: "star.fill")
@@ -284,8 +303,8 @@ extension SettingsCollectionViewDataSource {
                 .privacy
             case .appearance:
                 .appearance
-            case .noftifications:
-                .noftifications
+            case .notifications:
+                .notifications
             case .chat:
                 .chat
             case .media:
@@ -316,6 +335,8 @@ extension SettingsCollectionViewDataSource {
                 .advanced
             case .workInfo:
                 .workAd
+            case .workReferral:
+                .workReferral
             }
         }
     }

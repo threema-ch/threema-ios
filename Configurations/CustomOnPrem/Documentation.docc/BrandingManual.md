@@ -67,7 +67,6 @@ Config file for the app target. Do **NOT CHANGE** these values!
 | `APP_URL_TYPE_IDENTIFIER`                             | URL identifier                                                    | ❌          | ✅        |
 | `ASSETCATALOG_COMPILER_APPICON_NAME`                  | Name of the asset for the app icons                               | ❌          | ✅        |
 | `ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS`    | Only the primary app icon will be included in the built product   | ❌          | ✅        |
-| `INFOPLIST_KEY_UILaunchStoryboardName`                | Name of the storyboard for the launch screen                      | ❌          | ✅        |
 | `PRIVACY_DESCRIPTION_CONTACTS`                        | Description in the alert to get access to contacts                | ❌          | ✅        |
 
 #### CustomOnPremNotificationExtensionConfig.xcconfig
@@ -109,15 +108,18 @@ Path: `SharedResources/AppIcons/CustomOnPrem.xcassets`
 | `AppIcon-image`   | Shown in notification settings, usually same as app icon  | `.png` | 1024x1024 | None              | ✅        |
 | `AppIcon`         | Icon of the app, cannot be referenced directly in app.    | `.png` | 1024x1024 | Any, Dark, Tinted | ✅        |
 
-#### Launch screen
-Path: `SharedResources/LaunchScreens/Images`
 
-| Name                       | Description                       | Type   | Size   | Appearances | Mandatory |
-| -------------------------- | --------------------------------- | :----: | ------ | ----------- | :-------: |
-| `SplashScreenCustomOnPrem` | Used as logo on the launch screen | `.png` | 411×28 | None        | ✅        |
+#### Lock Cover / Launch Screen
 
+Path: `SharedResources/Images/Custom OnPrem Target Symbols.xcassets`
+
+| Name          | Description                                                   | Type   | Size                                                 | Appearances       | Mandatory |
+| ------------- | ------------------------------------------------------------- | :----: | ---------------------------------------------------- | ----------------- | :-------: |
+| `LockCover`   | Shown on cover when passcode is enabled and on launch screen  | `.svg` | We use heights of 20 pixel in the SVG                | None              | ✅        |
 
 ## Colors
+
+#### Target Colors
 Colors used at various places in the app. Colors below are the default for OnPrem.\
 Path: `SharedResources/Colors/TargetColorsCustomOnPrem`
 
@@ -129,3 +131,11 @@ Path: `SharedResources/Colors/TargetColorsCustomOnPrem`
 | `ProminentButtonTextCustomOnPrem` | Text color for the colored buttons                           | `#FFFFFF` | `#000000`                    | ✅        |
 | `CircleButtonCustomOnPrem`        | Color of circle buttons (example: edit contact image)        | `#FCD6DA` | `#quaternarySystemFillColor` | ✅        |
 | `SecondaryCustomOnPrem`           | Secondary color of the app                                   | `#FCDBDE` | `#323232`                    | ✅        |
+
+#### Launch screen
+
+Path: `SharedResources/Colors/SharedColors/Custom`
+
+| Name                       | Description                                  | Universal | Mandatory |
+| -------------------------- | -------------------------------------------- | :-------: | :-------: |
+| `LaunchScreenBackground`   | Color of the background of the launch screen | `#000000` | ✅        |

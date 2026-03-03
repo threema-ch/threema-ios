@@ -20,7 +20,6 @@
 
 #import "BallotMessageDecoder.h"
 #import "BallotKeys.h"
-#import "EntityCreator.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "NSString+Hex.h"
 
@@ -50,12 +49,26 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     return self;
 }
 
-- (void)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessageEntity * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)decodeCreateBallotFromBox:(nonnull BoxBallotCreateMessage *)boxMessage sender:(nullable NSObject *)senderObject conversation:(nonnull NSObject *)conversationObject onCompletion:(void(^ _Nonnull)(NSObject * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+
+    NSAssert(senderObject == nil || [senderObject isKindOfClass:[ContactEntity class]], @"Parameter senderObject must be type of ContactEntity");
+    ContactEntity *sender = (ContactEntity*)senderObject;
+
+    NSAssert([conversationObject isKindOfClass:[ConversationEntity class]], @"Parameter conversationObject must be type of ConversationEntity");
+    ConversationEntity *conversation = (ConversationEntity*)conversationObject;
+
     return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
 }
 
 
-- (void)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessageEntity * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+- (void)decodeCreateBallotFromGroupBox:(nonnull GroupBallotCreateMessage *)boxMessage sender:(nullable NSObject *)senderObject conversation:(nonnull NSObject *)conversationObject onCompletion:(void(^ _Nonnull)(NSObject * _Nullable))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+
+    NSAssert(senderObject == nil || [senderObject isKindOfClass:[ContactEntity class]], @"Parameter senderObject must be type of ContactEntity");
+    ContactEntity *sender = (ContactEntity*)senderObject;
+
+    NSAssert([conversationObject isKindOfClass:[ConversationEntity class]], @"Parameter conversationObject must be type of ConversationEntity");
+    ConversationEntity *conversation = (ConversationEntity*)conversationObject;
+
     return [self decodeBallotCreateMessage:boxMessage sender:sender conversation:conversation onCompletion:onCompletion onError:onError];
 }
 
@@ -86,8 +99,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     return [json objectForKey: JSON_KEY_STATE];
 }
 
-- (void)decodeBallotCreateMessage:(AbstractMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(BallotMessageEntity * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
-    
+- (void)decodeBallotCreateMessage:(AbstractMessage *)boxMessage sender:(nullable ContactEntity *)sender conversation:(nonnull ConversationEntity *)conversation onCompletion:(void(^ _Nonnull)(NSObject * _Nonnull))onCompletion onError:(void(^ _Nonnull)(NSError * _Nonnull))onError {
+
     NSData *ballotId;
     NSData *jsonData;
     if ([boxMessage isKindOfClass:[BoxBallotCreateMessage class]]) {
@@ -102,11 +115,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
     
     /* Create Message in DB */
-    [_entityManager getOrCreateMessageFor:boxMessage sender:sender conversation:conversation thumbnail:nil onCompletion:^(BaseMessageEntity *message) {
+    [_entityManager getOrCreateMessageFor:boxMessage sender:sender conversation:conversation thumbnail:nil myIdentity: [MyIdentityStore.sharedMyIdentityStore identity] onCompletion:^(BaseMessageEntity *message) {
         __block BOOL *thrownError = false;
-        
         [_entityManager performSyncBlockAndSafe:^{
-            BallotEntity *ballot = [_entityManager.entityFetcher ballotEntityForBallotId:ballotId];
+            BallotEntity *ballot = [_entityManager.entityFetcher ballotEntityFor:ballotId];
             NSDate *conversationLastUpdate = conversation.lastUpdate;
             if (ballot != nil) {
                 [self updateExistingBallot:ballot jsonData:jsonData];
@@ -161,7 +173,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (BOOL)decodeVoteForIdentity:(NSString *)contactId ballotId:(NSData *)ballotId jsonData:(NSData *)jsonData {
     
-    BallotEntity *ballot = [_entityManager.entityFetcher ballotEntityForBallotId:ballotId];
+    BallotEntity *ballot = [_entityManager.entityFetcher ballotEntityFor:ballotId];
     
     if (ballot == nil) {
         DDLogError(@"[Ballot] No ballot found for vote");
@@ -186,8 +198,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (BallotEntity *)createNewBallotWithId:(NSData *)ballotId creatorId:(NSString *)creatorId jsonData:(NSData *)jsonData {
-    BallotEntity *ballot = [_entityManager.entityCreator ballot];
-    ballot.id = ballotId;
+    BallotEntity *ballot = [_entityManager.entityCreator ballotEntityWithId:ballotId];
     ballot.creatorId = creatorId;
     ballot.createDate = [NSDate date];
     
@@ -209,8 +220,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         return NO;
     }
     
-    BOOL updatedVote = [ballot hasVoteForIdentity:contactId];
-    
+    BOOL updatedVote = [ballot hasVoteForIdentity:contactId myIdentity:[[MyIdentityStore sharedMyIdentityStore] identity]];
+
     for (NSArray *choice in choiceArray) {
         if ([choice count] != 2 || ![choice isKindOfClass: [NSArray class]] ) {
             //ignore invalid entries
@@ -300,12 +311,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (BallotChoiceEntity *)handleChoiceData:(NSDictionary *)choiceData participantIds: (NSArray *) participantIds forBallot:(BallotEntity *)ballot update:(BOOL)update {
     NSNumber *choiceId = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_ID];
     
-    BallotChoiceEntity *choice = [_entityManager.entityFetcher ballotChoiceForBallotId:ballot.id choiceId:choiceId];
+    BallotChoiceEntity *choice = [_entityManager.entityFetcher ballotChoiceEntityFor:ballot.id and:choiceId];
     
     if (choice == nil) {
         if (!update) {
-            choice = [_entityManager.entityCreator ballotChoice];
-            choice.id = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_ID];
+            choice = [_entityManager.entityCreator ballotChoiceEntityWithBallotEntity:ballot id:[choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_ID]];
         } else {
             DDLogError(@"[Ballot] [%@] Invalid choice for create message: choice result array count does not match participant array count", [NSString stringWithHexData:ballot.id]);
             return choice;
@@ -313,7 +323,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
     
     // We update choices when we receive the final result.
-    choice.ballot = ballot;
     choice.name = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_NAME];
     choice.orderPosition = [choiceData objectForKeyedSubscript: JSON_CHOICE_KEY_ORDER_POSITION];
     

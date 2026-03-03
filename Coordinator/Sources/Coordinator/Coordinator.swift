@@ -20,50 +20,39 @@
 
 import UIKit
 
-public protocol Coordinator<CoordinatorDestination>: AnyObject {
-   
-    associatedtype CoordinatorDestination
+public protocol Coordinator: AnyObject {
     
     // MARK: - Properties
     
     /// Collection of child coordinators to keep track of
     var childCoordinators: [any Coordinator] { get set }
     
-    func rootViewController() -> UIViewController
+    var rootViewController: UIViewController { get }
     
     // MARK: -  Presentation
     
-    /// Pass `Destinations` that cannot be handled by the current coodrinator to parent coordinator using this functions
-    /// - Parameter destination: `Destination` to be handled by parent
-    func show(_ destination: Destination)
-    
-    /// Call this function to pass a `Destination` to be handled by the respective coordinator
-    /// - Parameter destination: `Destination` to be handled by the coordinator
-    func show(_ destination: CoordinatorDestination)
-    
-    /// Use this function to pass a created `UIViewController` to a parent coordinator that knows how to correclty show
-    /// it
-    /// - Parameters:
-    ///   - viewController: `UIViewController` to be shown
-    ///   - style: `CordinatorNavigationStyle` to be used
-    func show(_ viewController: UIViewController, style: CordinatorNavigationStyle)
-    
-    /// Use this function to pass a created `UIViewController` to a parent coordinator that knows how to correclty show
-    /// it
-    /// - Parameters:
-    ///   - items: Items to be forwarded to `UIActivityViewController`
-    ///   - sourceView: `UIView` acting as popover source
-    func shareActivity(_ items: [Any], sourceView: UIView?)
-    
-    /// Use this function to dismiss the currently presented modal
-    func dismiss()
+    /// Initiates the coordinator's flow by creating and presenting its initial view controller.
+    ///
+    /// This method serves as the entry point for the coordinator, responsible for:
+    /// - Instantiating the first view controller in the flow
+    /// - Configuring the view controller with necessary dependencies
+    /// - Presenting or pushing the view controller onto the navigation stack
+    ///
+    /// Call this method when you want to begin the coordinator's managed flow.
+    ///
+    /// - Note: This method should be called only once per coordinator lifecycle to avoid
+    ///         duplicate presentations.
+    ///
+    /// Example:
+    /// ```swift
+    /// let coordinator = LoginCoordinator(navigationController: navController)
+    /// // Begins the login flow
+    /// coordinator.start()
+    /// ```
+    func start()
 }
 
 extension Coordinator {
-    public func show(_ vc: UIViewController) {
-        show(vc, style: .show)
-    }
-    
     /// Removes the given `Coordinator` from it's parents child coordinators
     /// - Parameter child: Child to be removed
     public func childDidFinish(_ child: any Coordinator) {

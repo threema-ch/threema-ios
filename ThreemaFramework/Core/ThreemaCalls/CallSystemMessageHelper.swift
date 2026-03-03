@@ -51,7 +51,7 @@ public enum CallSystemMessageHelper {
     
     public static func addRejectedMessageToConversation(
         contactIdentity: String,
-        reason: Int,
+        reason: SystemMessageEntity.SystemMessageEntityType,
         on businessInjector: BusinessInjectorProtocol,
         messsageCreateCompletion: ((ConversationEntity, SystemMessageEntity) -> Void)? = nil
     ) {
@@ -65,16 +65,14 @@ public enum CallSystemMessageHelper {
                 assertionFailure(msg)
                 return
             }
-            guard let systemMessage = businessInjector.entityManager.entityCreator
-                .systemMessageEntity(for: conversation) else {
-                let msg = "Could not create system message"
-                DDLogError("\(msg)")
-                assertionFailure(msg)
-                return
-            }
+            
+            let systemMessage = businessInjector.entityManager.entityCreator.systemMessageEntity(
+                for: reason,
+                in: conversation,
+                setLastUpdate: true
+            )
             
             businessInjector.entityManager.performAndWaitSave {
-                systemMessage.type = NSNumber(value: reason)
                 let callInfo = [
                     "DateString": DateFormatter.shortStyleTimeNoDate(Date()),
                     "CallInitiator": NSNumber(booleanLiteral: false),
@@ -83,9 +81,6 @@ public enum CallSystemMessageHelper {
                     let callInfoData = try JSONSerialization.data(withJSONObject: callInfo, options: .prettyPrinted)
                     systemMessage.arg = callInfoData
                     systemMessage.isOwn = NSNumber(booleanLiteral: false)
-                    systemMessage.conversation = conversation
-                    conversation.lastMessage = systemMessage
-                    conversation.lastUpdate = Date()
                 }
                 catch {
                     DDLogError("An error occurred: \(error.localizedDescription)")
@@ -114,24 +109,21 @@ public enum CallSystemMessageHelper {
             }
             
             guard let contact = businessInjector.entityManager.entityFetcher
-                .contact(for: hangupMessage.contactIdentity) else {
+                .contactEntity(for: hangupMessage.contactIdentity) else {
                 let msg = "Threema Calls: Can't add rejected message because contact can't be found"
                 DDLogError("\(msg)")
                 assertionFailure(msg)
                 return
             }
             
-            guard let systemMessage = businessInjector.entityManager.entityCreator
-                .systemMessageEntity(for: conversation) else {
-                let msg = "Could not create system message"
-                DDLogError("\(msg)")
-                assertionFailure(msg)
-                return
-            }
+            let systemMessage = businessInjector.entityManager.entityCreator.systemMessageEntity(
+                for: .callMissed,
+                in: conversation,
+                setLastUpdate: true
+            )
             
             businessInjector.entityManager.performAndWaitSave {
                 systemMessage.remoteSentDate = hangupMessage.date
-                systemMessage.type = NSNumber(integerLiteral: kSystemMessageCallMissed)
                 
                 let cont = Contact(contactEntity: contact)
                 systemMessage.forwardSecurityMode = NSNumber(value: cont.forwardSecurityMode.rawValue)
@@ -144,9 +136,6 @@ public enum CallSystemMessageHelper {
                     let callInfoData = try JSONSerialization.data(withJSONObject: callInfo, options: .prettyPrinted)
                     systemMessage.arg = callInfoData
                     systemMessage.isOwn = NSNumber(booleanLiteral: false)
-                    systemMessage.conversation = conversation
-                    conversation.lastMessage = systemMessage
-                    conversation.lastUpdate = Date()
                 }
                 catch {
                     DDLogError("An error occurred: \(error.localizedDescription)")

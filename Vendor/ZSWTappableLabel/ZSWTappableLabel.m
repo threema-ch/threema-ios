@@ -39,6 +39,8 @@ typedef NS_ENUM(NSInteger, ZSWTappableLabelNotifyType) {
 @property (nonatomic) BOOL needsToWatchTouches;
 @property (nonatomic) UILongPressGestureRecognizer *longPressGR;
 @property (nonatomic) BOOL hasCurrentEvent;
+@property id<UITraitChangeRegistration> traitRegistration;
+
 @end
 
 @implementation ZSWTappableLabel
@@ -47,6 +49,7 @@ typedef NS_ENUM(NSInteger, ZSWTappableLabelNotifyType) {
     self = [super initWithFrame:frame];
     if (self) {
         [self tappableLabelCommonInit];
+        [self setupTraitRegistration];
     }
     return self;
 }
@@ -58,8 +61,16 @@ typedef NS_ENUM(NSInteger, ZSWTappableLabelNotifyType) {
         
         // Text was assigned by IB, possibly, so we need to make sure we're running if there's anything useful.
         [self checkForTappableRegions];
+        [self setupTraitRegistration];
     }
     return self;
+}
+
+- (void)dealloc {
+    if (self.traitRegistration) {
+        [self unregisterForTraitChanges:self.traitRegistration];
+        self.traitRegistration = nil;
+    }
 }
 
 - (void)tappableLabelCommonInit {
@@ -94,19 +105,6 @@ typedef NS_ENUM(NSInteger, ZSWTappableLabelNotifyType) {
 - (void)setAccessibilityDelegate:(id<ZSWTappableLabelAccessibilityDelegate>)accessibilityDelegate {
     _accessibilityDelegate = accessibilityDelegate;
     _accessibleElements = nil;
-}
-
-- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
-    [super traitCollectionDidChange:previousTraitCollection];
-    
-    if (self.adjustsFontForContentSizeCategory) {
-        UIContentSizeCategory previousCategory = previousTraitCollection.preferredContentSizeCategory;
-        UIContentSizeCategory currentCategory = self.traitCollection.preferredContentSizeCategory;
-        
-        if (![previousCategory isEqual:currentCategory] || previousCategory != currentCategory) {
-            self.touchHandling = nil;
-        }
-    }
 }
 
 - (ZSWTappableLabelTouchHandling *)createTouchHandlingIfNeeded {
@@ -188,6 +186,29 @@ typedef NS_ENUM(NSInteger, ZSWTappableLabelNotifyType) {
 - (void)performWithTouchHandling:(void(^)(ZSWTappableLabelTouchHandling *th))block {
     ZSWTappableLabelTouchHandling *touchHandling = [self createTouchHandlingIfNeeded];
     block(touchHandling);
+}
+
+- (void)setupTraitRegistration {
+    NSArray<Class> *traits = @[[UITraitPreferredContentSizeCategory class]];
+
+    __weak typeof(self) weakSelf = self;
+    UITraitChangeHandler handler = ^(
+        __kindof id<UITraitEnvironment>  _Nonnull traitEnvironment,
+        UITraitCollection * _Nonnull previousCollection
+    ) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+
+        if (strongSelf.adjustsFontForContentSizeCategory) {
+            UIContentSizeCategory previousCategory = previousCollection.preferredContentSizeCategory;
+            UIContentSizeCategory currentCategory = strongSelf.traitCollection.preferredContentSizeCategory;
+
+            if (![previousCategory isEqual:currentCategory] || previousCategory != currentCategory) {
+                strongSelf.touchHandling = nil;
+            }
+        }
+    };
+    self.traitRegistration = [self registerForTraitChanges:traits withHandler:handler];
 }
 
 #pragma mark - Overloading

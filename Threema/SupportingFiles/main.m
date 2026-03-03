@@ -19,7 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import <UIKit/UIKit.h>
-
 #import "AppDelegate.h"
 
 @interface AppTestDelegate : UIResponder <UIApplicationDelegate>
@@ -29,13 +28,19 @@
 @end
 
 int main(int argc, char *argv[])
-{    
+{
     __strong Class appDelegate;
-    
+
 #ifdef DEBUG
-    if (argc > 1 && [[NSString stringWithUTF8String:argv[1]] isEqualToString:@"-isRunningForTests"]) {
+    NSDictionary *environment = [[NSProcessInfo processInfo] environment];
+    BOOL isRunningPreviews = [environment[@"XCODE_RUNNING_FOR_PREVIEWS"] isEqualToString: @"1"];
+
+    BOOL isRunningTests = argc > 1 && [[NSString stringWithUTF8String:argv[1]] isEqualToString:@"-isRunningForTests"];
+
+    if (isRunningPreviews || isRunningTests) {
         appDelegate = [AppTestDelegate class];
-    } else {
+    }
+    else {
         appDelegate = [AppDelegate class];
     }
 #else

@@ -23,11 +23,9 @@ import Foundation
 import SwiftUI
 import ThreemaMacros
 
-final class ProfileCoordinator: NSObject, Coordinator {
+final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolding {
     
     // MARK: - Internal destination
-
-    typealias CoordinatorDestination = InternalDestination
     
     enum InternalDestination: Equatable {
         case qrCode
@@ -43,55 +41,120 @@ final class ProfileCoordinator: NSObject, Coordinator {
     
     // MARK: - Coordinator
     
-    weak var parentCoordinator: (any Coordinator)?
     var childCoordinators: [any Coordinator] = []
+    var rootViewController: UIViewController {
+        rootNavigationController
+    }
     
-    private(set) var currentDestination: InternalDestination?
+    // MARK: - Routers
     
-    private lazy var rootVC = ProfileViewController(coordinator: self)
+    private let shareActivityRouter: any ShareActivityRouting
+    private let modalRouter: any ModalRouting
+    private let passcodeRouter: any PasscodeRouting
+    
+    var currentDestination: InternalDestination?
+    
+    private lazy var collectionView = ProfileCollectionView { [weak self] in
+        self?.currentDestination
+    } shouldAllowAutoDeselection: { [weak self] in
+        let traitCollection = self?.presentingViewController?.traitCollection
+        return traitCollection?.horizontalSizeClass == .compact
+    }
 
-    // MARK: - Public properties
-    
-    var horizontalSizeClass: UIUserInterfaceSizeClass = .unspecified {
-        didSet {
-            guard oldValue != horizontalSizeClass else {
+    private lazy var dataSource: ProfileCollectionViewDataSource = {
+        let cellProvider: ProfileCollectionViewDataSource.CellProvider =
+            { [weak self] collectionView, indexPath, item in
+            
+                if item == .header {
+                    let cell: ProfileCollectionViewHeaderCell = collectionView.dequeueCell(for: indexPath)
+                    cell.backgroundConfiguration = .clear()
+                    cell.coordinator = self
+                    return cell
+                }
+                else {
+                    guard let cell: UICollectionViewListCell = collectionView.dequeueReusableCell(
+                        withReuseIdentifier: "Default",
+                        for: indexPath
+                    ) as? UICollectionViewListCell else {
+                        return nil
+                    }
+                
+                    var content = cell.defaultContentConfiguration()
+                    content.text = item.title
+                    cell.contentConfiguration = content
+                    cell.accessories = [.disclosureIndicator()]
+                    if let text = item.accessoryText {
+                        cell.accessories.append(.label(text: text))
+                    }
+                    cell.isUserInteractionEnabled = !item.isInteractionDisabled
+                    return cell
+                }
+            }
+        
+        let dataSource = ProfileCollectionViewDataSource(
+            collectionView: collectionView,
+            cellProvider: cellProvider
+        ) { [weak self] in
+            guard let destination = $0.toProfileDestination() else {
                 return
             }
-            horizontalSizeClassDidChange()
+            
+            self?.show(destination)
         }
-    }
+        
+        return dataSource
+    }()
+    
+    private lazy var profileViewController: ProfileViewController = {
+        let viewController = ProfileViewController(
+            collectionView: collectionView,
+            dataSource: dataSource
+        )
+        
+        let item = ThreemaTabBarController.TabBarItem(.profile)
+        viewController.tabBarItem = item.uiTabBarItem
+        viewController.title = item.title
+        
+        return viewController
+    }()
+    
+    private lazy var rootNavigationController = UINavigationController()
+        
+    private lazy var navigationDestinationResetter = NavigationDestinationResetter(
+        rootViewController: profileViewController,
+        destinationHolder: self.eraseToAnyDestinationHolder()
+    )
+    
+    private weak var presentingViewController: UIViewController?
     
     // MARK: - Lifecycle
 
-    init(parentCoodinator: any Coordinator) {
-        self.parentCoordinator = parentCoodinator
-    }
-    
-    func rootViewController() -> UIViewController {
-        rootVC
-    }
-    
-    // MARK: - Updates
-
-    func checkDetailVC() {
-        guard horizontalSizeClass == .regular else {
-            return
-        }
-        
-        show(currentDestination ?? .threemaSafe)
-    }
-    
-    private func horizontalSizeClassDidChange() {
-        rootVC.updateSelection()
+    init(
+        presentingViewController: UIViewController,
+        shareActivityRouter: any ShareActivityRouting,
+        modalRouter: any ModalRouting,
+        passcodeRouter: any PasscodeRouting
+    ) {
+        self.presentingViewController = presentingViewController
+        self.shareActivityRouter = shareActivityRouter
+        self.modalRouter = modalRouter
+        self.passcodeRouter = passcodeRouter
     }
     
     // MARK: - Presentation
     
-    func show(_ destination: Destination) {
-        parentCoordinator?.show(destination)
+    func start() {
+        rootNavigationController.delegate = navigationDestinationResetter
+        
+        /// Due to this coordinator's rootViewController being part of a
+        /// `UITabViewController`, it's not needed to present anything here.
+        /// The rootViewController is added by to the `UITabViewController`'s
+        /// viewControllers in ``AppCoordinator``'s `configureSplitViewController` method.
+        rootNavigationController.setViewControllers(
+            [profileViewController],
+            animated: false
+        )
     }
-    
-    func show(_ destination: Destination.AppDestination.ProfileDestination) { }
     
     func show(_ destination: InternalDestination) {
         guard currentDestination != destination else {
@@ -136,26 +199,18 @@ final class ProfileCoordinator: NSObject, Coordinator {
             currentDestination = destination
         }
         
-        rootVC.updateSelection()
-    }
-    
-    func show(_ viewController: UIViewController, style: CordinatorNavigationStyle) {
-        parentCoordinator?.show(viewController, style: style)
-    }
-    
-    func shareActivity(_ items: [Any], sourceView: UIView?) {
-        parentCoordinator?.shareActivity(items, sourceView: sourceView)
+        profileViewController.updateSelection()
     }
 
     func dismiss() {
-        parentCoordinator?.dismiss()
+        presentingViewController?.presentedViewController?.dismiss(animated: true)
     }
     
     // MARK: - Private functions
     
     private func showQRCode() {
         let vc = UIHostingController(rootView: QrCodeView(coordinator: self))
-        show(vc, style: .modal())
+        modalRouter.present(vc)
     }
     
     private func shareID(sourceView: UIView) {
@@ -165,81 +220,118 @@ final class ProfileCoordinator: NSObject, Coordinator {
         )
         let combinedShareText =
             "\(shareText): \(THREEMA_ID_SHARE_LINK)\(BusinessInjector.ui.myIdentityStore.identity ?? "")"
-        shareActivity([combinedShareText], sourceView: sourceView)
+        shareActivityRouter.present(
+            items: [combinedShareText],
+            sourceView: sourceView
+        )
     }
     
     private func showThreemaSafe() {
-        let vc = UIStoryboard(name: "MyIdentityStoryboard", bundle: nil)
-            .instantiateViewController(identifier: "safeSetupViewController")
-        show(vc, style: .passcode(style: .show))
+        passcodeRouter.requireAuthenticationIfNeeded(onSuccess: { [weak self] in
+            let vc = UIStoryboard(
+                name: "MyIdentityStoryboard",
+                bundle: nil
+            ).instantiateViewController(identifier: "safeSetupViewController")
+            
+            self?.presentingViewController?.show(vc, sender: self)
+        })
     }
     
     private func showPasswordForIDExport() {
-        let vc = UIHostingController(rootView: PasswordCreationView(
-            coordinator: self,
-            title: #localize("profile_id_export"),
-            footer: #localize("password_description_backup")
-        ) { password in
-            self.showExportedID(password: password)
+        passcodeRouter.requireAuthenticationIfNeeded(onSuccess: { [weak self] in
+            let vc = UIHostingController(rootView: PasswordCreationView(
+                coordinator: self,
+                title: #localize("profile_id_export"),
+                footer: #localize("password_description_backup"),
+                passwordCreateButton: #localize("profile_id_export_button")
+            ) { password in
+                self?.showExportedID(password: password)
+            })
+            
+            self?.modalRouter.present(vc)
         })
-        show(vc, style: .passcode(style: .modal()))
     }
     
     private func showExportedID(password: String) {
         let vc = UIHostingController(rootView: IDExportView(coordinator: self, password: password))
-        show(vc, style: .modal())
+        modalRouter.present(vc)
     }
     
     private func showPasswordForRevocation() {
-        let vc = UIHostingController(rootView: PasswordCreationView(
-            coordinator: self,
-            title: #localize("revocation_password"),
-            footer: #localize("revocation_password_description")
-        ) { password in
-            RevocationKeyManager.shared.setPassword(password)
+        passcodeRouter.requireAuthenticationIfNeeded(onSuccess: { [weak self] in
+            let vc = UIHostingController(rootView: PasswordCreationView(
+                coordinator: self,
+                title: #localize("revocation_password"),
+                footer: String.localizedStringWithFormat(
+                    #localize("revocation_password_description"),
+                    TargetManager.localizedAppName
+                ),
+                passwordCreateButton: #localize("revocation_password_button")
+            ) { password in
+                RevocationKeyManager.shared.setPassword(password)
+            })
+            
+            self?.modalRouter.present(vc)
         })
-        
-        show(vc, style: .passcode(style: .modal()))
     }
     
     private func showLinkedPhoneNumber() {
         let vc = UIHostingController(rootView: LinkPhoneNumberDeciderView())
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showLinkMail() {
         let vc = UIHostingController(rootView: LinkEmailDeciderView())
-        show(vc)
+        presentingViewController?.show(vc, sender: self)
     }
     
     private func showPublicKey() {
         let identityStore = BusinessInjector.ui.myIdentityStore
         let view = PublicKeyView(identity: identityStore.identity, publicKey: identityStore.publicKey) { [weak self] in
-            self?.parentCoordinator?.dismiss()
+            self?.dismiss()
         }
         let vc = UIViewController()
         vc.view = view
-        show(vc, style: .modal(stlye: .overFullScreen, transition: .crossDissolve))
+        modalRouter.present(
+            vc,
+            style: .overFullScreen,
+            transition: .crossDissolve
+        )
     }
     
     private func showRevokeDelete() {
         // TODO: (IOS-5213) Disable passcode alert
-        let vc = UIHostingController(rootView: DeleteRevokeView())
-        show(vc, style: .modal(stlye: .overFullScreen))
+        let deleteRevokeView = DeleteRevokeView { [weak self] in
+            self?.dismiss()
+        }
+        
+        let vc = UIHostingController(rootView: deleteRevokeView)
+        modalRouter.present(vc, style: .overFullScreen)
     }
 }
 
-// MARK: - UINavigationControllerDelegate
+// MARK: - ProfileCollectionViewDataSource.Row
 
-extension ProfileCoordinator: UINavigationControllerDelegate {
-    func navigationController(
-        _ navigationController: UINavigationController,
-        didShow viewController: UIViewController,
-        animated: Bool
-    ) {
-        // If we navigate back to the rootVC, we reset the destination
-        if navigationController.topViewController == rootVC, horizontalSizeClass == .compact {
-            currentDestination = nil
+extension ProfileCollectionViewDataSource.Row {
+    fileprivate func toProfileDestination() -> ProfileCoordinator.InternalDestination? {
+        switch self {
+        case .header:
+            assertionFailure("Should not be possible to select.")
+            return nil
+        case .threemaSafe:
+            return .threemaSafe
+        case .idExport:
+            return .idExport
+        case .revocationPassword:
+            return .revocationPassword
+        case .phone:
+            return .linkPhone
+        case .mail:
+            return .linkMail
+        case .publicKey:
+            return .publicKey
+        case .revokeDelete:
+            return .revokeDelete
         }
     }
 }

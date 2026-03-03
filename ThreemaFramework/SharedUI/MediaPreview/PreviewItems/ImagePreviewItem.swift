@@ -108,7 +108,7 @@ open class ImagePreviewItem: MediaPreviewItem {
         return text
     }
     
-    override func freeMemory() {
+    override open func freeMemory() {
         super.freeMemory()
         internalImage = nil
         internalThumbnail = nil

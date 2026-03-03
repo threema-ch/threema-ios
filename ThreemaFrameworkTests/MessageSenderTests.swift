@@ -19,7 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import RemoteSecretProtocolTestHelper
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
 
 @testable import ThreemaFramework
@@ -32,7 +34,7 @@ class MessageSenderTests: XCTestCase {
     private var ddLoggerMock: DDLoggerMock!
     
     private lazy var taskManagerMock = TaskManagerMock()
-    private lazy var entityManager = EntityManager(databaseContext: dbMainCnx)
+    private lazy var entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
     private lazy var blobMessageSender = BlobMessageSender(
         businessInjector: BusinessInjectorMock(entityManager: entityManager),
         taskManager: taskManagerMock
@@ -40,7 +42,8 @@ class MessageSenderTests: XCTestCase {
     
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
-        
+        AppLaunchManager.remoteSecretManager = RemoteSecretManagerMock()
+
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
         dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
         dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
@@ -66,7 +69,7 @@ class MessageSenderTests: XCTestCase {
         
         let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
         let conversation = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
             return dbPreparer.createConversation(contactEntity: contactEntity)
         }
         
@@ -109,7 +112,7 @@ class MessageSenderTests: XCTestCase {
         XCTAssertEqual(taskManagerMock.addedTasks.count, 1)
         let addedSendBaseMessageTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendBaseMessage)
         
-        XCTAssertEqual(addedSendBaseMessageTask.receiverIdentity, expectedThreemaIdentity.string)
+        XCTAssertEqual(addedSendBaseMessageTask.receiverIdentity, expectedThreemaIdentity.rawValue)
         XCTAssertNil(addedSendBaseMessageTask.groupID)
         XCTAssertNil(addedSendBaseMessageTask.groupCreatorIdentity)
         XCTAssertNil(addedSendBaseMessageTask.groupName)
@@ -117,9 +120,10 @@ class MessageSenderTests: XCTestCase {
         
         // Check that a message with the blob was created
         let blobMessage = try XCTUnwrap(
-            entityManager.entityFetcher.ownMessage(
+            entityManager.entityFetcher.message(
                 with: addedSendBaseMessageTask.messageID,
-                conversation: conversation
+                in: conversation,
+                isOwn: true
             ) as? FileMessageProvider
         )
         XCTAssertEqual(blobMessage.blobData, testItemData)
@@ -132,7 +136,7 @@ class MessageSenderTests: XCTestCase {
         let expectedMessageID = MockData.generateMessageID()
 
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             let textMessage = dbPreparer.createTextMessage(
@@ -167,7 +171,7 @@ class MessageSenderTests: XCTestCase {
         XCTAssertEqual(taskManagerMock.addedTasks.count, 1)
         let addedSendBaseMessageTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendBaseMessage)
         
-        XCTAssertEqual(addedSendBaseMessageTask.receiverIdentity, expectedThreemaIdentity.string)
+        XCTAssertEqual(addedSendBaseMessageTask.receiverIdentity, expectedThreemaIdentity.rawValue)
         XCTAssertNil(addedSendBaseMessageTask.groupID)
         XCTAssertNil(addedSendBaseMessageTask.groupCreatorIdentity)
         XCTAssertNil(addedSendBaseMessageTask.groupName)
@@ -183,7 +187,7 @@ class MessageSenderTests: XCTestCase {
         
         let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             
             let fileDataEntity = dbPreparer.createFileDataEntity(data: testItemData)
@@ -230,7 +234,7 @@ class MessageSenderTests: XCTestCase {
         XCTAssertEqual(taskManagerMock.addedTasks.count, 1)
         let addedSendBaseMessageTask = try XCTUnwrap(taskManagerMock.addedTasks.first as? TaskDefinitionSendBaseMessage)
         
-        XCTAssertEqual(addedSendBaseMessageTask.receiverIdentity, expectedThreemaIdentity.string)
+        XCTAssertEqual(addedSendBaseMessageTask.receiverIdentity, expectedThreemaIdentity.rawValue)
         XCTAssertNil(addedSendBaseMessageTask.groupID)
         XCTAssertNil(addedSendBaseMessageTask.groupCreatorIdentity)
         XCTAssertNil(addedSendBaseMessageTask.groupName)
@@ -244,7 +248,7 @@ class MessageSenderTests: XCTestCase {
                 
         let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             return dbPreparer.createFileMessageEntity(conversation: conversation)
         }
@@ -305,8 +309,7 @@ class MessageSenderTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { conversation in
-                // swiftformat:disable:next acronyms
-                conversation.groupId = expectedGroupID
+                conversation.groupID = expectedGroupID
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
                 conversation.members?.formUnion(members)
             }
@@ -326,12 +329,14 @@ class MessageSenderTests: XCTestCase {
         let userSettingMock = UserSettingsMock()
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            ContactStoreMock(),
-            taskManagerMock,
-            userSettingMock,
-            entityManager,
-            GroupPhotoSenderMock()
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: ContactStoreMock(),
+            taskManager: taskManagerMock,
+            userSettings: userSettingMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                GroupPhotoSenderMock()
+            }
         )
         
         let messageSender = MessageSender(
@@ -396,8 +401,7 @@ class MessageSenderTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { conversation in
-                // swiftformat:disable:next acronyms
-                conversation.groupId = expectedGroupID
+                conversation.groupID = expectedGroupID
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
                 conversation.members = Set(members)
             }
@@ -418,12 +422,14 @@ class MessageSenderTests: XCTestCase {
         let userSettingMock = UserSettingsMock()
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            ContactStoreMock(),
-            taskManagerMock,
-            userSettingMock,
-            entityManager,
-            GroupPhotoSenderMock()
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: ContactStoreMock(),
+            taskManager: taskManagerMock,
+            userSettings: userSettingMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                GroupPhotoSenderMock()
+            }
         )
         
         let messageSender = MessageSender(
@@ -492,8 +498,7 @@ class MessageSenderTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             ) { conversation in
-                // swiftformat:disable:next acronyms
-                conversation.groupId = expectedGroupID
+                conversation.groupID = expectedGroupID
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
                 conversation.members = Set(members)
             }
@@ -514,12 +519,14 @@ class MessageSenderTests: XCTestCase {
         let userSettingMock = UserSettingsMock()
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            ContactStoreMock(),
-            taskManagerMock,
-            userSettingMock,
-            entityManager,
-            GroupPhotoSenderMock()
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: ContactStoreMock(),
+            taskManager: taskManagerMock,
+            userSettings: userSettingMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                GroupPhotoSenderMock()
+            }
         )
         
         let messageSender = MessageSender(
@@ -570,18 +577,17 @@ class MessageSenderTests: XCTestCase {
             }
             
             // We create one conversation for the recipients, the rest should be auto created.
-            dbPreparer.createConversation(contactEntity: recipients.first!)
-            
-            let distributionList = dbPreparer.createDistributionListEntity(id: 0)
             let conversation = dbPreparer.createConversation(
+                contactEntity: recipients.first!,
                 typing: false,
                 unreadMessageCount: 0,
                 visibility: .default
             ) { conversation in
-                conversation.distributionList = distributionList
                 conversation.members = Set(recipients)
             }
-            
+
+            dbPreparer.createDistributionListEntity(id: 0, conversation: conversation)
+
             return conversation
         }
 
@@ -681,7 +687,7 @@ class MessageSenderTests: XCTestCase {
         let expectedReadDate = Date()
 
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             return dbPreparer.createTextMessage(
@@ -702,7 +708,7 @@ class MessageSenderTests: XCTestCase {
             userSettings: UserSettingsMock(),
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
 
         await messageSender.sendUserAck(for: message, toIdentity: expectedThreemaIdentity)
@@ -715,7 +721,7 @@ class MessageSenderTests: XCTestCase {
                     return false
                 }
                 return task.receiptType == .ack &&
-                    task.toIdentity == expectedThreemaIdentity.string &&
+                    task.toIdentity == expectedThreemaIdentity.rawValue &&
                     task.receiptMessageIDs.contains(expectedMessageID) &&
                     task.receiptReadDates.isEmpty
             }.count
@@ -728,7 +734,7 @@ class MessageSenderTests: XCTestCase {
         let expectedReadDate = Date()
 
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             return dbPreparer.createTextMessage(
@@ -762,7 +768,7 @@ class MessageSenderTests: XCTestCase {
                     return false
                 }
                 return task.receiptType == .read &&
-                    task.toIdentity == expectedThreemaIdentity.string &&
+                    task.toIdentity == expectedThreemaIdentity.rawValue &&
                     task.receiptMessageIDs.contains(expectedMessageID) &&
                     task.receiptReadDates.contains(expectedReadDate)
             }.count
@@ -773,7 +779,7 @@ class MessageSenderTests: XCTestCase {
         let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
 
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
             return dbPreparer.createTextMessage(
                 conversation: conversation,
@@ -805,7 +811,7 @@ class MessageSenderTests: XCTestCase {
         let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
 
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
             contactEntity.readReceipt = .doNotSend
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
@@ -839,7 +845,7 @@ class MessageSenderTests: XCTestCase {
         let expectedReadDate = Date()
 
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
             contactEntity.readReceipt = .doNotSend
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
@@ -855,8 +861,8 @@ class MessageSenderTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
 
         let messageSender = MessageSender(
@@ -880,7 +886,7 @@ class MessageSenderTests: XCTestCase {
                     return false
                 }
                 return task.receiptType == .read &&
-                    task.toIdentity == expectedThreemaIdentity.string &&
+                    task.toIdentity == expectedThreemaIdentity.rawValue &&
                     task.receiptMessageIDs.contains(expectedMessageID) &&
                     task.receiptReadDates.contains(expectedReadDate)
             }.count
@@ -895,14 +901,13 @@ class MessageSenderTests: XCTestCase {
         let expectedThreemaIdentity = ThreemaIdentity("ECHOECHO")
 
         let (groupEntity, message) = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
 
             let groupEntity = dbPreparer.createGroupEntity(
                 groupID: expectedGroupIdentity.id,
                 groupCreator: nil
             )
-            // swiftformat:disable:next acronyms
-            let conversation = dbPreparer.createConversation(groupID: groupEntity.groupId)
+            let conversation = dbPreparer.createConversation(groupID: groupEntity.groupID)
             return (groupEntity, dbPreparer.createTextMessage(
                 conversation: conversation,
                 isOwn: false,
@@ -915,6 +920,7 @@ class MessageSenderTests: XCTestCase {
         groupManagerMock.getGroupReturns.append(Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: UserSettingsMock(),
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: message.conversation,
             lastSyncRequest: nil
@@ -946,14 +952,13 @@ class MessageSenderTests: XCTestCase {
         let expectedReadDate = Date()
 
         let (groupEntity, message) = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
 
             let groupEntity = dbPreparer.createGroupEntity(
                 groupID: expectedGroupIdentity.id,
                 groupCreator: nil
             )
-            // swiftformat:disable:next acronyms
-            let conversation = dbPreparer.createConversation(groupID: groupEntity.groupId)
+            let conversation = dbPreparer.createConversation(groupID: groupEntity.groupID)
             return (groupEntity, dbPreparer.createTextMessage(
                 conversation: conversation,
                 id: expectedMessageID,
@@ -967,13 +972,14 @@ class MessageSenderTests: XCTestCase {
         let userSettingsMock = UserSettingsMock(enableMultiDevice: true)
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         let groupManagerMock = GroupManagerMock()
         groupManagerMock.getGroupReturns.append(Group(
             myIdentityStore: MyIdentityStoreMock(),
             userSettings: userSettingsMock,
+            pushSettingManager: PushSettingManagerMock(),
             groupEntity: groupEntity,
             conversation: message.conversation,
             lastSyncRequest: nil
@@ -1000,7 +1006,7 @@ class MessageSenderTests: XCTestCase {
                     return false
                 }
                 print(task.groupID == expectedGroupIdentity.id)
-                print(task.groupCreatorIdentity == expectedGroupIdentity.creator.string)
+                print(task.groupCreatorIdentity == expectedGroupIdentity.creator.rawValue)
                 print(task.receiptMessageIDs.contains(expectedMessageID))
 
                 return task.receiptType == .read &&
@@ -1017,8 +1023,7 @@ class MessageSenderTests: XCTestCase {
 
         var objectID: NSManagedObjectID!
         dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
-            // swiftformat:disable:next acronyms
-            conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+            conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
             objectID = conversation.objectID
         }
         let expectation = XCTestExpectation()
@@ -1055,8 +1060,7 @@ class MessageSenderTests: XCTestCase {
 
         var objectID: NSManagedObjectID!
         dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
-            // swiftformat:disable:next acronyms
-            conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+            conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
             conversation.changeCategory(to: .private)
             objectID = conversation.objectID
         }
@@ -1075,7 +1079,7 @@ class MessageSenderTests: XCTestCase {
 
         messageSender.donateInteractionForOutgoingMessage(
             in: objectID,
-            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx)
+            backgroundEntityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false)
         ).done { success in
             if success {
                 XCTFail("Donations are not allowed")
@@ -1097,8 +1101,7 @@ class MessageSenderTests: XCTestCase {
 
         var objectID: NSManagedObjectID!
         dbPreparer.createConversation(typing: false, unreadMessageCount: 100, visibility: .default) { conversation in
-            // swiftformat:disable:next acronyms
-            conversation.groupId = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+            conversation.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
             objectID = conversation.objectID
         }
         
@@ -1118,7 +1121,7 @@ class MessageSenderTests: XCTestCase {
         messageSender.donateInteractionForOutgoingMessage(
             in: objectID,
             backgroundEntityManager: EntityManager(
-                databaseContext: dbBackgroundCnx
+                databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false
             )
         ).done { _ in
             // We don't care about success here and only check the absence of a certain log message below
@@ -1163,7 +1166,7 @@ class MessageSenderTests: XCTestCase {
         let reaction = Emoji.abacus
         
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
             contactEntity.setFeatureMask(to: 1)
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
@@ -1186,7 +1189,7 @@ class MessageSenderTests: XCTestCase {
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         let result = try await messageSender.sendReaction(
             to: message.objectID,
@@ -1209,7 +1212,7 @@ class MessageSenderTests: XCTestCase {
         let reaction = Emoji.thumbsUp
         
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
             contactEntity.setFeatureMask(to: 1)
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
@@ -1232,7 +1235,7 @@ class MessageSenderTests: XCTestCase {
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         let result = try await messageSender.sendReaction(
             to: message.objectID,
@@ -1251,7 +1254,7 @@ class MessageSenderTests: XCTestCase {
         XCTAssertFalse(taskManagerMock.addedTasks.isEmpty)
         XCTAssertEqual(1, addedTasks.count)
         XCTAssertEqual(ReceiptType.ack, testTask.receiptType)
-        XCTAssertEqual(expectedThreemaIdentity.string, testTask.toIdentity)
+        XCTAssertEqual(expectedThreemaIdentity.rawValue, testTask.toIdentity)
         
         XCTAssertEqual(result, .success)
     }
@@ -1268,7 +1271,7 @@ class MessageSenderTests: XCTestCase {
         let reaction = Emoji.thumbsUp
         
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
             contactEntity.setFeatureMask(to: 1)
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
@@ -1300,7 +1303,7 @@ class MessageSenderTests: XCTestCase {
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         let result = try await messageSender.sendReaction(
             to: message.objectID,
@@ -1322,7 +1325,7 @@ class MessageSenderTests: XCTestCase {
         let reaction = Emoji.abacus
         
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
             contactEntity.setFeatureMask(to: 2024)
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
@@ -1345,7 +1348,7 @@ class MessageSenderTests: XCTestCase {
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         let result = try await messageSender.sendReaction(
             to: message.objectID,
@@ -1365,7 +1368,7 @@ class MessageSenderTests: XCTestCase {
         XCTAssertEqual(1, addedTasks.count)
         XCTAssertEqual(reaction.data(), testTask.reaction.apply)
         XCTAssertEqual(Data(), testTask.reaction.withdraw)
-        XCTAssertEqual(expectedThreemaIdentity.string, testTask.receiverIdentity)
+        XCTAssertEqual(expectedThreemaIdentity.rawValue, testTask.receiverIdentity)
     }
     
     /// Situation:
@@ -1380,7 +1383,7 @@ class MessageSenderTests: XCTestCase {
         let reaction = Emoji.abacus
         
         let message = dbPreparer.save {
-            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.string)
+            let contactEntity = dbPreparer.createContact(identity: expectedThreemaIdentity.rawValue)
             contactEntity.setFeatureMask(to: 2024)
 
             let conversation = dbPreparer.createConversation(contactEntity: contactEntity)
@@ -1412,7 +1415,7 @@ class MessageSenderTests: XCTestCase {
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: dbMainCnx)
+            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
         )
         
         let result = try await messageSender.sendReaction(
@@ -1434,7 +1437,7 @@ class MessageSenderTests: XCTestCase {
         XCTAssertEqual(1, addedTasks.count)
         XCTAssertEqual(Data(), testTask.reaction.apply)
         XCTAssertEqual(reaction.data(), testTask.reaction.withdraw)
-        XCTAssertEqual(expectedThreemaIdentity.string, testTask.receiverIdentity)
+        XCTAssertEqual(expectedThreemaIdentity.rawValue, testTask.receiverIdentity)
     }
     
     /// Situation:
@@ -1473,6 +1476,7 @@ class MessageSenderTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -1544,6 +1548,7 @@ class MessageSenderTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -1630,6 +1635,7 @@ class MessageSenderTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -1646,12 +1652,14 @@ class MessageSenderTests: XCTestCase {
         }
         
         let groupManager = GroupManager(
-            myIdentityStoreMock,
-            ContactStoreMock(),
-            taskManagerMock,
-            userSettingMock,
-            entityManager,
-            GroupPhotoSenderMock()
+            myIdentityStore: myIdentityStoreMock,
+            contactStore: ContactStoreMock(),
+            taskManager: taskManagerMock,
+            userSettings: userSettingMock,
+            entityManager: entityManager,
+            groupPhotoSender: {
+                GroupPhotoSenderMock()
+            }
         )
     
         let messageSender = MessageSender(
@@ -1724,6 +1732,7 @@ class MessageSenderTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -1823,6 +1832,7 @@ class MessageSenderTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -1905,6 +1915,7 @@ class MessageSenderTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -1977,6 +1988,7 @@ class MessageSenderTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil

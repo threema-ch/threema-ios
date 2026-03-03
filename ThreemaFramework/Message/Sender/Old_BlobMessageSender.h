@@ -20,18 +20,17 @@
 
 #import <Foundation/Foundation.h>
 #import <ThreemaFramework/BlobOrigin.h>
-#import <ThreemaFramework/ExternalStorageInfo.h>
 #import <ThreemaFramework/UploadProgressDelegate.h>
 #import <ThreemaFramework/Old_BlobUploadDelegate.h>
 #import <ThreemaFramework/URLSenderItem.h>
 
-@class ConversationEntity;
-
 @protocol BlobData;
 @interface Old_BlobMessageSender : NSObject <Old_BlobUploadDelegate>
 
-@property BaseMessageEntity<BlobData> *message;
-@property ConversationEntity *conversation;
+/// Type of `BaseMessageEntity<BlobData>` (or `FileMessageEntity`???)
+@property NSObject *messageObject;
+/// Type of `ConversationEntity`
+@property NSObject *conversationObject;
 @property NSString *fileNameFromWeb;
 
 @property id<UploadProgressDelegate> uploadProgressDelegate;
@@ -42,7 +41,11 @@
 
 #pragma mark - abstract methods
 
-- (void)sendItem:(URLSenderItem *)item inConversation:(ConversationEntity *)conversation;
+/**
+ @param item URLSenderItem
+ @param conversationObject Object of type `ConversationEntity`
+*/
+- (void)sendItem:(URLSenderItem *)item inConversation:(NSObject *)conversationObject;
 
 - (void)sendMessage:(NSArray *)bolbIds;
 

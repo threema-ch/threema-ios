@@ -19,19 +19,26 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import ZipArchive
 
-class ZipFileContainer: NSObject {
-    private var zipFilePath: String
-    private var password: String
-    private var zipFile: SSZipArchive
+final class ZipFileContainer: NSObject {
+    private var zipFilePath = String()
+    private let password: String
+    private let zipFile: SSZipArchive
+    private let fileUtility: FileUtilityProtocol
     
     static let directoryPath = NSTemporaryDirectory() + "Export/"
     
-    init(password: String, name: String) {
-        self.zipFilePath = ZipFileContainer.getZipFilePath(name: name)
+    init(
+        password: String,
+        name: String,
+        fileUtility: FileUtilityProtocol = FileUtility.shared
+    ) {
         self.password = password
+        self.fileUtility = fileUtility
+        self.zipFilePath = ZipFileContainer.makeZipFilePath(name: name, fileUtility: fileUtility)
         self.zipFile = SSZipArchive(path: zipFilePath)
         zipFile.open()
         super.init()
@@ -64,11 +71,10 @@ class ZipFileContainer: NSObject {
     
     func deleteFile() {
         zipFile.close()
-        let fileManager = FileManager.default
         
-        if fileManager.isDeletableFile(atPath: zipFilePath) {
+        if fileUtility.isDeletableFile(atPath: zipFilePath) {
             do {
-                try fileManager.removeItem(atPath: zipFilePath)
+                try fileUtility.delete(atPath: zipFilePath)
             }
             catch {
                 DDLogError("Unable to delete chat export from temporary files.")
@@ -76,11 +82,10 @@ class ZipFileContainer: NSObject {
         }
     }
     
-    static func cleanFiles() {
-        let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: directoryPath) {
+    static func cleanFiles(fileUtility: FileUtilityProtocol = FileUtility.shared) {
+        if fileUtility.fileExists(atPath: directoryPath) {
             do {
-                try fileManager.removeItem(atPath: directoryPath)
+                try fileUtility.delete(atPath: directoryPath)
             }
             catch let error as NSError {
                 DDLogError("Error: \(error.localizedDescription)")
@@ -91,11 +96,10 @@ class ZipFileContainer: NSObject {
     func getURLWithFileName(fileName: String) -> URL? {
         zipFile.close()
         
-        let path = ZipFileContainer.getZipFilePath(name: fileName)
-        let fileManager = FileManager.default
+        let path = ZipFileContainer.makeZipFilePath(name: fileName, fileUtility: fileUtility)
 
         do {
-            try fileManager.moveItem(atPath: zipFilePath, toPath: path)
+            try fileUtility.move(fromPath: zipFilePath, toPath: path)
             return NSURL.fileURL(withPath: path)
         }
         catch {
@@ -105,15 +109,15 @@ class ZipFileContainer: NSObject {
         return nil
     }
     
-    private static func getZipFilePath(name: String) -> String {
-        ZipFileContainer.getDirectoryPath() + name + ".zip"
+    private static func makeZipFilePath(name: String, fileUtility: FileUtilityProtocol) -> String {
+        ZipFileContainer.makeDirectoryPath(fileUtility: fileUtility) + name + ".zip"
     }
     
-    private static func getDirectoryPath() -> String {
-        let fileManager = FileManager.default
-        if !fileManager.fileExists(atPath: directoryPath) {
+    private static func makeDirectoryPath(fileUtility: FileUtilityProtocol) -> String {
+        let directoryPath = ZipFileContainer.directoryPath
+        if !fileUtility.fileExists(atPath: directoryPath) {
             do {
-                try fileManager.createDirectory(
+                try fileUtility.mkDir(
                     atPath: directoryPath,
                     withIntermediateDirectories: true,
                     attributes: nil

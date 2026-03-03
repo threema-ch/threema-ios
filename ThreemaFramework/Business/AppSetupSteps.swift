@@ -118,7 +118,7 @@ public struct AppSetupSteps: Sendable {
         // 5.  Let `solicited-contacts` be a copy of `contacts` [...]
         DDLogNotice("Fetch solicited contacts")
         let solicitedContactIdentities = await backgroundBusinessInjector.entityManager.perform {
-            backgroundBusinessInjector.entityManager.entityFetcher.allSolicitedContactIdentities()
+            backgroundBusinessInjector.entityManager.entityFetcher.solicitedContactIdentities()
         }
         
         DDLogNotice("Fetched \(solicitedContactIdentities.count) solicited contacts")

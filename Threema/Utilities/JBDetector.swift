@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 
 @objc class JBDetector: NSObject {
@@ -108,10 +109,10 @@ import Foundation
     }
     
     private func checkPaths() throws {
-        for path in pathsToCheck {
-            guard !FileManager.default.fileExists(atPath: path) else {
-                throw JBError.fileAtPathExists
-            }
+        for path in pathsToCheck where FileUtility.shared.fileExists(
+            at: URL(fileURLWithPath: path)
+        ) {
+            throw JBError.fileAtPathExists
         }
     }
     
@@ -121,7 +122,7 @@ import Foundation
             let path = "/private/file.txt"
             let text = "Text"
             try text.write(toFile: path, atomically: true, encoding: String.Encoding.utf8)
-            try FileManager.default.removeItem(atPath: path)
+            try FileUtility.shared.delete(at: URL(fileURLWithPath: path))
         }
         catch {
             // If one of the above throws, the device is likely not jailbroken.

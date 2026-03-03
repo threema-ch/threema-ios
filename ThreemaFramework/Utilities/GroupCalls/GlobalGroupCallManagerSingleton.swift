@@ -100,7 +100,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
         let identity = ThreemaIdentity(businessInjector.myIdentityStore.identity)
         let localContactModel = ContactModel(
             identity: identity,
-            nickname: businessInjector.myIdentityStore.pushFromName ?? identity.string
+            nickname: businessInjector.myIdentityStore.pushFromName ?? identity.rawValue
         )
         
         self.groupCallManager = GroupCallManager(
@@ -145,10 +145,10 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
         
         // We fetch all calls, that could still be running, from the db an insert them into an array
         let storedGroupCalls = await entityManager.perform {
-            entityManager.entityFetcher.allGroupCallEntities()
+            entityManager.entityFetcher.groupCallEntities()
         }
         
-        guard !storedGroupCalls.isEmpty else {
+        guard let storedGroupCalls, !storedGroupCalls.isEmpty else {
             DDLogNotice("[GroupCall] [DB] No stored calls found.")
             return
         }
@@ -156,7 +156,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
         // TODO: (IOS-4677) Is this what we want?
         // If group calls are disabled, we delete all stored entities.
         guard currentBusinessInjector.settingsStore.enableThreemaGroupCalls,
-              !MDMSetup(setup: false).disableGroupCalls() else {
+              !MDMSetup().disableGroupCalls() else {
             DDLogVerbose("[GroupCall] GroupCalls are not enabled. Deleting all stored entities.")
             deleteGroupCallEntities(storedGroupCalls)
             return
@@ -172,8 +172,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
                 guard let group = groupCallEntity.group,
                       let creatorIdentity = group.groupCreator ?? self.currentBusinessInjector
                       .myIdentityStore.identity,
-                      // swiftformat:disable:next acronyms
-                      let fetchedGroup = groupManager.getGroup(group.groupId, creator: creatorIdentity)
+                      let fetchedGroup = groupManager.getGroup(group.groupID, creator: creatorIdentity)
                 else {
                     invalidGroupCalls.append(groupCallEntity)
                     continue
@@ -257,7 +256,7 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
     ) async {
        
         guard currentBusinessInjector.settingsStore.enableThreemaGroupCalls else {
-            if !MDMSetup(setup: false).disableGroupCalls() {
+            if !MDMSetup().disableGroupCalls() {
                 postGroupCallStartSystemMessage(in: groupConversationObjectID, by: senderIdentity)
             }
             DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
@@ -384,18 +383,16 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             }
             
             var displayName = identity
-            if let contact = currentEntityManager.entityFetcher.contact(for: identity) {
+            if let contact = currentEntityManager.entityFetcher.contactEntity(for: identity) {
                 displayName = contact.displayName
             }
             
-            guard let dbSystemMessage = currentEntityManager.entityCreator
-                .systemMessageEntity(for: fetchedConversation) else {
-                return
-            }
+            let dbSystemMessage = currentEntityManager.entityCreator.systemMessageEntity(
+                for: .groupCallStartedBy,
+                in: fetchedConversation
+            )
             
-            dbSystemMessage.type = NSNumber(value: kSystemMessageGroupCallStartedBy)
             dbSystemMessage.arg = Data(displayName.utf8)
-            fetchedConversation.lastMessage = dbSystemMessage
         }
     }
     
@@ -411,39 +408,47 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             DDLogVerbose("[GroupCall] GroupCalls are not enabled. Skip.")
             return
         }
-        let addedObject: NSManagedObjectID? = await currentBusinessInjector.entityManager.performSave {
+        let addedObjectID: NSManagedObjectID? = await currentBusinessInjector.entityManager.performSave {
 
-            guard let groupEntity = self.currentBusinessInjector.entityManager.entityFetcher.groupEntity(
-                for: wrappedMessage.groupIdentity.id,
-                with: wrappedMessage.groupIdentity.creator.string
-            ) else {
+            guard let groupEntity = self.currentBusinessInjector.entityManager.entityFetcher
+                .groupEntity(
+                    for: wrappedMessage.groupIdentity,
+                    myIdentity: self.currentBusinessInjector.myIdentityStore.identity
+                ) else {
                 DDLogError("[GroupCall] Could not find group entity for group call message.")
                 return nil
             }
-            // swiftformat:disable:next acronyms
-            assert(!groupEntity.groupId.isEmpty)
+
+            assert(!groupEntity.groupID.isEmpty)
             
             // Setup group call
             let groupCallEntity = self.currentBusinessInjector.entityManager.entityCreator.groupCallEntity()
-            groupCallEntity?.group = groupEntity
-            groupCallEntity?.gck = wrappedMessage.startMessage.gck
-            groupCallEntity?.protocolVersion = NSNumber(value: wrappedMessage.startMessage.protocolVersion)
-            groupCallEntity?.sfuBaseURL = wrappedMessage.startMessage.sfuBaseURL
-            groupCallEntity?.startMessageReceiveDate = receiveDate
+            groupCallEntity.group = groupEntity
+            groupCallEntity.gck = wrappedMessage.startMessage.gck
+            groupCallEntity.protocolVersion = NSNumber(value: wrappedMessage.startMessage.protocolVersion)
+            groupCallEntity.sfuBaseURL = wrappedMessage.startMessage.sfuBaseURL
+            groupCallEntity.startMessageReceiveDate = receiveDate
             
             DDLogNotice("[GroupCall] [DB] Saved group call to database.")
             
-            return groupCallEntity?.objectID
+            return groupCallEntity.objectID
         }
         
         // Mark entity as dirty
         currentBusinessInjector.entityManager.performBlock {
-            guard let addedObject else {
+            guard let addedObjectID else {
                 DDLogError("[GroupCall] Could not mark added group call as dirty.")
                 return
             }
             
-            DatabaseManager().addDirtyObjectID(addedObject)
+            let dirtyObjectManager = PersistenceManager(
+                appGroupID: AppGroup.groupID(),
+                userDefaults: AppGroup.userDefaults(),
+                remoteSecretManager: AppLaunchManager.remoteSecretManager
+            ).dirtyObjectManager
+            dirtyObjectManager.markAsDirty(objectID: addedObjectID) {
+                AppGroup.notifySyncNeeded()
+            }
         }
     }
     
@@ -589,7 +594,7 @@ extension GlobalGroupCallManagerSingleton {
         let taskDefinition = TaskDefinitionSendGroupCallStartMessage(
             group: group,
             from: frameworkInjector.myIdentityStore.identity,
-            to: group.members.map(\.identity.string),
+            to: group.members.map(\.identity.rawValue),
             groupCallStartMessage: message,
             sendContactProfilePicture: true
         )
@@ -606,10 +611,10 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerDatabaseDelegateProto
         
         // TODO: (IOS-4070) Do not fetch all group calls, instead create a delete request matching the values we compare below.
         let storedGroupCalls = entityManager.performAndWait {
-            entityManager.entityFetcher.allGroupCallEntities()
+            entityManager.entityFetcher.groupCallEntities()
         }
         
-        guard !storedGroupCalls.isEmpty else {
+        guard let storedGroupCalls, !storedGroupCalls.isEmpty else {
             DDLogNotice("[GroupCall] [DB] No stored calls found.")
             return
         }
@@ -634,16 +639,16 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerDatabaseDelegateProto
                 guard sfuBaseURL == proposedGroupCall.sfuBaseURL.absoluteString else {
                     continue
                 }
-                // swiftformat:disable:next acronyms
-                guard group.groupId == proposedGroupCall.groupRepresentation.groupIdentity.id else {
+
+                guard group.groupID == proposedGroupCall.groupRepresentation.groupIdentity.id else {
                     continue
                 }
                 
                 let remoteAdminsAreEqual = group.groupCreator == proposedGroupCall
-                    .groupRepresentation.groupIdentity.creator.string
+                    .groupRepresentation.groupIdentity.creator.rawValue
                 let localAdminsAreEqual = (
                     group.groupCreator == nil &&
-                        proposedGroupCall.groupRepresentation.groupIdentity.creator.string ==
+                        proposedGroupCall.groupRepresentation.groupIdentity.creator.rawValue ==
                         self.currentBusinessInjector.myIdentityStore.identity
                 )
                 
@@ -693,7 +698,7 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerSingletonDelegate {
     public func sendStartCallMessage(_ wrappedMessage: WrappedGroupCallStartMessage) async throws {
         guard let group = currentBusinessInjector.groupManager.getGroup(
             wrappedMessage.groupIdentity.id,
-            creator: wrappedMessage.groupIdentity.creator.string
+            creator: wrappedMessage.groupIdentity.creator.rawValue
         ) else {
             return
         }
@@ -713,10 +718,11 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerSingletonDelegate {
         }
         
         currentBusinessInjector.entityManager.performBlock {
-            guard let conversation = self.currentBusinessInjector.entityManager.entityFetcher.conversationEntity(
-                for: groupModel.groupIdentity.id,
-                creator: groupModel.groupIdentity.creator.string
-            ) else {
+            guard let conversation = self.currentBusinessInjector.entityManager.entityFetcher
+                .conversationEntity(
+                    for: groupModel.groupIdentity,
+                    myIdentity: self.currentBusinessInjector.myIdentityStore.identity
+                ) else {
                 return
             }
             
@@ -724,14 +730,14 @@ extension GlobalGroupCallManagerSingleton: GroupCallManagerSingletonDelegate {
                 uiDelegate.newBannerForStartGroupCall(
                     conversationManagedObjectID: conversation.objectID,
                     title: #localize("private_message_label"),
-                    body: " ",
+                    body: "",
                     identifier: groupModel.groupIdentity.id.hexString
                 )
                 return
             }
             
             guard let contact = self.currentBusinessInjector.entityManager.entityFetcher
-                .contact(for: senderThreemaID.string) else {
+                .contactEntity(for: senderThreemaID.rawValue) else {
                 return
             }
             

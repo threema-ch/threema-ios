@@ -21,58 +21,63 @@
 import CocoaLumberjackSwift
 import Foundation
 import Gzip
+import Keychain
+import RemoteSecret
 import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
 @objc class SafeStore: NSObject {
+    
+    // MARK: - Static properties
+    
+    public static let masterKeyLength = 64
+    private static let backupIDLength = 32
+    private static let encryptionKeyLength = 32
+    
+    // MARK: - Properties
+    
     private let safeConfigManager: SafeConfigManagerProtocol
     private let serverApiConnector: ServerAPIConnector
     private let groupManager: GroupManagerProtocol
+    private let myIdentityStore: MyIdentityStoreProtocol
     
-    @objc public let masterKeyLength = 64
-    private let backupIDLength = 32
-    private let encryptionKeyLength = 32
+    // MARK: - Lifecycle
     
-    enum SafeError: Error {
-        case invalidMasterKey
-        case invalidData
-        case invalidURL
-        case badMasterKey
-        case restoreError(message: String)
-        case restoreFailed(message: String)
-    }
-
     init(
         safeConfigManager: SafeConfigManagerProtocol,
         serverApiConnector: ServerAPIConnector,
-        groupManager: GroupManagerProtocol
+        groupManager: GroupManagerProtocol,
+        myIdentityStore: MyIdentityStoreProtocol
     ) {
         self.safeConfigManager = safeConfigManager
         self.serverApiConnector = serverApiConnector
         self.groupManager = groupManager
+        self.myIdentityStore = myIdentityStore
     }
     
     // NSObject thereby not the whole SafeConfigManagerProtocol interface must be like @objc
     @objc convenience init(
         safeConfigManagerAsObject safeConfigManager: NSObject,
         serverApiConnector: ServerAPIConnector,
-        groupManager: GroupManager
+        groupManager: GroupManager,
+        myIdentityStore: MyIdentityStore
     ) {
         self.init(
             safeConfigManager: safeConfigManager as! SafeConfigManagerProtocol,
             serverApiConnector: serverApiConnector,
-            groupManager: groupManager
+            groupManager: groupManager,
+            myIdentityStore: myIdentityStore
         )
     }
     
-    // MARK: - keys and encryption
+    // MARK: - Keys and encryption
     
     /// Create/derive Threema Safe backup key
     /// - Parameters:
     ///   - identity: Threema ID
     ///   - safePassword: Password entered by the user when activating the backup
-    func createKey(identity: String, safePassword: String?) -> [UInt8]? {
+    static func createKey(identity: String, safePassword: String?) -> [UInt8]? {
         guard let safePassword,
               !safePassword.isEmpty else {
             return nil
@@ -80,7 +85,7 @@ import ThreemaMacros
         let pPassword = UnsafeMutablePointer<Int8>(strdup(safePassword))
         let pSalt = UnsafeMutablePointer<Int8>(strdup(identity))
         
-        let pOut = UnsafeMutablePointer<CUnsignedChar>.allocate(capacity: masterKeyLength)
+        let pOut = UnsafeMutablePointer<CUnsignedChar>.allocate(capacity: SafeStore.masterKeyLength)
         
         defer {
             pPassword?.deallocate()
@@ -92,36 +97,36 @@ import ThreemaMacros
             return nil
         }
         
-        return Array(UnsafeMutableBufferPointer(start: pOut, count: masterKeyLength))
+        return Array(UnsafeMutableBufferPointer(start: pOut, count: SafeStore.masterKeyLength))
     }
-
-    func getBackupID(key: [UInt8]) -> [UInt8]? {
-        if key.count == masterKeyLength {
+    
+    static func getBackupID(key: [UInt8]) -> [UInt8]? {
+        if key.count == SafeStore.masterKeyLength {
             return Array(key[0..<backupIDLength])
         }
         return nil
     }
     
-    func getEncryptionKey(key: [UInt8]) -> [UInt8]? {
-        if key.count == masterKeyLength {
-            return Array(key[masterKeyLength - encryptionKeyLength..<masterKeyLength])
+    static func getEncryptionKey(key: [UInt8]) -> [UInt8]? {
+        if key.count == SafeStore.masterKeyLength {
+            return Array(key[SafeStore.masterKeyLength - encryptionKeyLength..<SafeStore.masterKeyLength])
         }
         return nil
     }
     
     func encryptBackupData(key: [UInt8], data: [UInt8]) throws -> [UInt8] {
-        guard key.count == masterKeyLength else {
-            throw SafeError.invalidMasterKey
+        guard key.count == SafeStore.masterKeyLength else {
+            throw SafeError.backupError(.invalidKey)
         }
         guard !data.isEmpty else {
-            throw SafeError.invalidData
+            throw SafeError.backupError(.encryptionFailed)
         }
         
-        let backupID = getBackupID(key: key)
-        let encryptionKey = getEncryptionKey(key: key)
+        let backupID = SafeStore.getBackupID(key: key)
+        let encryptionKey = SafeStore.getEncryptionKey(key: key)
         
         guard backupID != nil, encryptionKey != nil else {
-            throw SafeError.invalidMasterKey
+            throw SafeError.backupError(.invalidID)
         }
         
         let unencryptedData = Data(data)
@@ -143,25 +148,25 @@ import ThreemaMacros
             return Array(encryptedBackup)
         }
         else {
-            throw SafeError.invalidData
+            throw SafeError.backupError(.invalidData)
         }
     }
     
-    func decryptBackupData(key: [UInt8], data: [UInt8]) throws -> [UInt8] {
-        guard key.count == masterKeyLength else {
-            throw SafeError.invalidMasterKey
+    static func decryptBackupData(key: [UInt8], data: [UInt8]) throws -> [UInt8] {
+        guard key.count == SafeStore.masterKeyLength else {
+            throw SafeError.restoreError(.invalidMasterKey)
         }
         guard !data.isEmpty else {
-            throw SafeError.invalidData
+            throw SafeError.restoreError(.invalidData)
         }
         
-        let backupID = getBackupID(key: key)
+        let backupID = SafeStore.getBackupID(key: key)
         let encryptionKey = getEncryptionKey(key: key)
         
         guard backupID != nil, encryptionKey != nil else {
-            throw SafeError.invalidMasterKey
+            throw SafeError.restoreError(.invalidClientKey)
         }
-
+        
         let nonce = data[0...23]
         let encryptedData = data[24...data.count - 1]
         
@@ -177,11 +182,7 @@ import ThreemaMacros
         return Array(uncompressedData)
     }
     
-    func isDateOlderThenDays(date: Date?, days: Int) -> Bool {
-        date == nil || (date != nil && (date!.addingTimeInterval(TimeInterval(86400 * days)) < Date()))
-    }
-    
-    // MARK: - safe server
+    // MARK: - Safe server
     
     /// Checks Threema Safe server has changed. Server can defined thru MDM or default server for OnPrem thru OPPF file.
     /// - Parameters:
@@ -202,7 +203,7 @@ import ThreemaMacros
                 return
             }
             
-            getSafeDefaultServer(key: safeConfigManager.getKey()!) { result in
+            SafeStore.getSafeDefaultServer(key: safeConfigManager.getKey()!) { result in
                 switch result {
                 case let .success(safeServer):
                     completion(self.safeConfigManager.getServer() != safeServer.server.absoluteString)
@@ -250,16 +251,16 @@ import ThreemaMacros
             }
         }
         else {
-            getSafeDefaultServer(key: key, completion: completion)
+            SafeStore.getSafeDefaultServer(key: key, completion: completion)
         }
     }
     
-    func getSafeDefaultServer(
+    static func getSafeDefaultServer(
         key: [UInt8],
         completion: @escaping (Swift.Result<(serverUser: String?, serverPassword: String?, server: URL), Error>) -> Void
     ) {
-        guard let backupID = getBackupID(key: key) else {
-            completion(.failure(SafeError.badMasterKey))
+        guard let backupID = SafeStore.getBackupID(key: key) else {
+            completion(.failure(SafeError.backupError(.invalidKey)))
             return
         }
         
@@ -300,7 +301,7 @@ import ThreemaMacros
         if server.user != nil || server.password != nil {
             user = server.user?.removingPercentEncoding
             password = server.password?.removingPercentEncoding
-
+            
             if let startServerURL = server.absoluteString.firstIndex(of: "@") {
                 serverURL = URL(
                     string: httpProtocol + server
@@ -320,35 +321,34 @@ import ThreemaMacros
         else {
             serverURL = server
         }
-
+        
         return (serverUser: user, serverPassword: password, server: serverURL!)
     }
-
-    // MARK: - back up and restore data
-
+    
+    // MARK: - Backup
+    
     /// Get all backup data.
     /// - Parameter backupDeviceGroupKey: If false then DGK will not included in backup data (DGK must only included for
     /// device linking)
     /// - Returns: Backup data
     func backupData(backupDeviceGroupKey: Bool = false) -> [UInt8]? {
         // get identity
-        if MyIdentityStore.shared().keySecret() == nil {
+        guard let privateKey = myIdentityStore.clientKey else {
             return nil
         }
-        let jUser = SafeJsonParser.SafeBackupData
-            .User(privatekey: MyIdentityStore.shared().keySecret().base64EncodedString())
-
+        let jUser = SafeJsonParser.SafeBackupData.User(privatekey: privateKey.base64EncodedString())
+        
         if backupDeviceGroupKey {
-            let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: MyIdentityStore.shared())
+            let deviceGroupKeyManager = DeviceGroupKeyManager()
             if let dgk = deviceGroupKeyManager.dgk {
                 jUser.temporaryDeviceGroupKeyTodoRemove = dgk.base64EncodedString()
             }
         }
-
-        jUser.nickname = MyIdentityStore.shared().pushFromName
+        
+        jUser.nickname = myIdentityStore.pushFromName
         
         // get identity profile picture and its settings
-        if let profilePicture = MyIdentityStore.shared().profilePicture {
+        if let profilePicture = myIdentityStore.profilePicture {
             if let imageData = profilePicture["ProfilePicture"] as? Data {
                 jUser.profilePic = downscaleImageAsBase64(data: imageData, max: 400)
             }
@@ -369,8 +369,8 @@ import ThreemaMacros
         
         // get identity linking, backup only email or mobile no is verified
         var jLinks = [SafeJsonParser.SafeBackupData.User.Link]()
-        if let mobileNo = MyIdentityStore.shared().linkedMobileNo,
-           !MyIdentityStore.shared().linkMobileNoPending {
+        if let mobileNo = myIdentityStore.linkedMobileNo,
+           !myIdentityStore.linkMobileNoPending {
             
             jLinks.append(SafeJsonParser.SafeBackupData.User.Link(type: "mobile", value: mobileNo))
         }
@@ -382,16 +382,19 @@ import ThreemaMacros
             jUser.links = jLinks
         }
         
-        let privateEntityManager = EntityManager(withChildContextForBackgroundProcess: true)
-
-        // get contacts
+        let privateEntityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).backgroundEntityManager
+        
+        // Get contacts
         var jContacts = [SafeJsonParser.SafeBackupData.Contact]()
         privateEntityManager.performAndWait {
-            let allContacts = privateEntityManager.entityFetcher.allContacts() ?? []
-            for item in allContacts {
-                // do not backup me as contact
-                if let contact = item as? ContactEntity,
-                   contact.identity != MyIdentityStore.shared()?.identity {
+            let allContacts = privateEntityManager.entityFetcher.contactEntities() ?? []
+            for contact in allContacts {
+                // Do not backup me as contact
+                if contact.identity != MyIdentityStore.shared().identity {
                     
                     let jContact = SafeJsonParser.SafeBackupData.Contact(
                         identity: contact.identity,
@@ -426,8 +429,8 @@ import ThreemaMacros
                     
                     jContact.readReceipts = contact.readReceipt.rawValue
                     jContact.typingIndicators = contact.typingIndicator.rawValue
-
-                    if let conversation = privateEntityManager.entityFetcher.conversation(for: contact),
+                    
+                    if let conversation = privateEntityManager.entityFetcher.conversationEntity(for: contact.identity),
                        let lastUpdate = conversation.lastUpdate {
                         jContact.lastUpdate = lastUpdate.millisecondsSince1970
                     }
@@ -437,17 +440,16 @@ import ThreemaMacros
             }
         }
         
-        // get groups
+        // Get groups
         var jGroups = [SafeJsonParser.SafeBackupData.Group]()
         privateEntityManager.performAndWait {
-            let conversations = privateEntityManager.entityFetcher.allGroupConversations() ?? []
+            let conversations = privateEntityManager.entityFetcher.groupConversationEntities() ?? []
             
-            for item in conversations {
-                guard let conversation = item as? ConversationEntity,
-                      let groupID = conversation.groupID,
+            for conversation in conversations {
+                guard let groupID = conversation.groupID,
                       let group = self.groupManager.getGroup(
                           groupID,
-                          creator: conversation.contact?.identity ?? MyIdentityStore.shared().identity
+                          creator: conversation.contact?.identity ?? self.myIdentityStore.identity
                       )
                 else {
                     continue
@@ -456,7 +458,7 @@ import ThreemaMacros
                 let id = group.groupID.hexString
                 let creator: String =
                     if group.isOwnGroup {
-                        MyIdentityStore.shared().identity
+                        self.myIdentityStore.identity
                     }
                     else {
                         group.groupCreatorIdentity
@@ -464,12 +466,12 @@ import ThreemaMacros
                 
                 let name = group.name ?? ""
                 let members = Array(group.allMemberIdentities)
-
+                
                 var lastUpdate: UInt64?
                 if let date = conversation.lastUpdate {
                     lastUpdate = date.millisecondsSince1970
                 }
-
+                
                 let jGroup = SafeJsonParser.SafeBackupData.Group(
                     id: id,
                     creator: creator,
@@ -479,12 +481,12 @@ import ThreemaMacros
                     lastUpdate: lastUpdate,
                     private: conversation.conversationCategory == .private
                 )
-
+                
                 jGroups.append(jGroup)
             }
         }
-
-        // get settings
+        
+        // Get settings
         let jSettings = SafeJsonParser.SafeBackupData.Settings()
         jSettings.syncContacts = UserSettings.shared().syncContacts
         jSettings.blockUnknown = UserSettings.shared().blockUnknown
@@ -511,180 +513,122 @@ import ThreemaMacros
         }
         safeBackupData.settings = jSettings
         
-        // print(parser.getJsonAsString(from: safeBackupData)!)
         return parser.getJsonAsBytes(from: safeBackupData)!
     }
     
+    // MARK: - Restore
+    
     func restoreData(
-        identity: String,
-        data: [UInt8],
-        onlyIdentity: Bool,
-        completionHandler: @escaping (SafeError?) -> Swift.Void
-    ) throws {
+        safeBackupData: SafeJsonParser.SafeBackupData,
+        onlyIdentity: Bool
+    ) async throws {
         
-        // print(String(bytes: data, encoding: .utf8)!)
-        
+        DDLogNotice("[ThreemaSafe Restore] Restoring user data")
+
         // Check backup version
-        let parser = SafeJsonParser()
-        var safeBackupData: SafeJsonParser.SafeBackupData
-
-        do {
-            safeBackupData = try parser.getSafeBackupData(from: Data(data))
-        }
-        catch let error as DecodingError {
-            // Log more informations about the parser error
-            switch error {
-            case let .typeMismatch(_, value):
-                throw SafeError
-                    .restoreFailed(
-                        message: "\(error.localizedDescription) (TypeMissmatch: \(value.debugDescription), \(self.allKeys(from: value.codingPath)))"
-                    )
-            case let .valueNotFound(_, value):
-                throw SafeError
-                    .restoreFailed(
-                        message: "\(error.localizedDescription) (ValueNotFound: \(value.debugDescription), \(self.allKeys(from: value.codingPath)))"
-                    )
-            case let .keyNotFound(_, value):
-                throw SafeError
-                    .restoreFailed(
-                        message: "\(error.localizedDescription) (KeyNotFound: \(value.debugDescription), \(self.allKeys(from: value.codingPath)))"
-                    )
-            case let .dataCorrupted(context):
-                throw SafeError
-                    .restoreFailed(
-                        message: "\(error.localizedDescription) (DataCorrupted: \(context.debugDescription), \(context.codingPath)"
-                    )
-            default:
-                throw SafeError.restoreFailed(message: error.localizedDescription)
-            }
-        }
-        
         guard safeBackupData.info.version == 1 else {
-            throw SafeError.restoreFailed(message: #localize("safe_version_mismatch"))
+            DDLogError("[ThreemaSafe Restore] Safe version mismatch")
+            throw SafeError.restoreError(.versionMismatch)
         }
         
-        // Restore identity store
-        guard let privateKey = safeBackupData.user?.privatekey,
-              let secretKey = Data(base64Encoded: privateKey) else {
+        if let key = safeBackupData.user?.temporaryDeviceGroupKeyTodoRemove,
+           let dgk = Data(base64Encoded: key) {
+            let deviceGroupKeyManager = DeviceGroupKeyManager()
+            deviceGroupKeyManager.store(dgk: dgk)
+        }
+        
+        if let nickname = safeBackupData.user?.nickname {
+            myIdentityStore.pushFromName = nickname
+        }
+        
+        // Use MDM configuration for linking ID, if exists. Otherwise get linking configuration from Threema
+        // Safe backup
+        let mdmSetup = MDMSetup()!
+        if mdmSetup.existsMdmKey(MDM_KEY_LINKED_PHONE) ||
+            mdmSetup.existsMdmKey(MDM_KEY_LINKED_EMAIL) ||
+            mdmSetup.readonlyProfile() {
+            if let createIDPhone = myIdentityStore.createIDPhone,
+               !createIDPhone.isEmpty {
                 
-            DDLogError("Private key could not be restored")
-            throw SafeError.restoreFailed(message: #localize("safe_no_backup_found"))
-        }
-        
-        MyIdentityStore.shared().restore(fromBackup: identity, withSecretKey: secretKey, onCompletion: {
-            // Store identity in keychain
-            MyIdentityStore.shared().storeInKeychain()
-
-            if let key = safeBackupData.user?.temporaryDeviceGroupKeyTodoRemove,
-               let dgk = Data(base64Encoded: key) {
-                let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: MyIdentityStore.shared())
-                deviceGroupKeyManager.store(dgk: dgk)
+                let normalizer: PhoneNumberNormalizer! = PhoneNumberNormalizer.sharedInstance()
+                var prettyMobileNo: NSString?
+               
+                if let mobileNo = normalizer.phoneNumber(
+                    toE164: myIdentityStore.createIDPhone,
+                    withDefaultRegion: PhoneNumberNormalizer.userRegion(),
+                    prettyFormat: &prettyMobileNo
+                ),
+                    !mobileNo.isEmpty {
+                    
+                    link(mobileNo: mobileNo)
+                }
             }
-
-            self.serverApiConnector.update(MyIdentityStore.shared(), onCompletion: { () in
-                MyIdentityStore.shared().storeInKeychain()
-
-                AppSetup.state = .identityAdded
+            
+            if let createIDEmail = myIdentityStore.createIDEmail,
+               !createIDEmail.isEmpty {
                 
-                if let nickname = safeBackupData.user?.nickname {
-                    MyIdentityStore.shared().pushFromName = nickname
-                }
+                link(email: createIDEmail)
+            }
+        }
+        else {
+            if let links = safeBackupData.user?.links,
+               !links.isEmpty {
                 
-                // Use MDM configuration for linking ID, if exists. Otherwise get linking configuration from Threema
-                // Safe backup
-                let mdmSetup = MDMSetup(setup: true)!
-                if mdmSetup.existsMdmKey(MDM_KEY_LINKED_PHONE) || mdmSetup
-                    .existsMdmKey(MDM_KEY_LINKED_EMAIL) || mdmSetup.readonlyProfile() {
-                    if let createIDPhone = MyIdentityStore.shared()?.createIDPhone,
-                       !createIDPhone.isEmpty {
-                        
-                        let normalizer: PhoneNumberNormalizer! = PhoneNumberNormalizer.sharedInstance()
-                        var prettyMobileNo: NSString?
-                        if let mobileNo = normalizer.phoneNumber(
-                            toE164: MyIdentityStore.shared()?.createIDPhone,
-                            withDefaultRegion: PhoneNumberNormalizer.userRegion(),
-                            prettyFormat: &prettyMobileNo
-                        ),
-                            !mobileNo.isEmpty {
-                            
-                            self.link(mobileNo: mobileNo)
-                        }
-                    }
-                    
-                    if let createIDEmail = MyIdentityStore.shared()?.createIDEmail,
-                       !createIDEmail.isEmpty {
-                        
-                        self.link(email: createIDEmail)
-                    }
-                }
-                else {
-                    if let links = safeBackupData.user?.links,
-                       !links.isEmpty {
-                        
-                        for link in links {
-                            if link.type == "mobile" {
-                                if var linkMobile = link.value {
-                                    if !linkMobile.starts(with: "+") {
-                                        linkMobile = "+\(linkMobile)"
-                                    }
-                                    let numbers = self.localizedMobileNo("+\(linkMobile)")
-                                    if let mobileNo = numbers.mobileNo {
-                                        self.link(mobileNo: mobileNo)
-                                    }
-                                }
+                for link in links {
+                    if link.type == "mobile" {
+                        if var linkMobile = link.value {
+                            if !linkMobile.starts(with: "+") {
+                                linkMobile = "+\(linkMobile)"
                             }
-                            if link.type == "email",
-                               let email = link.value {
-                                
-                                self.link(email: email)
+                            let numbers = localizedMobileNo("+\(linkMobile)")
+                            if let mobileNo = numbers.mobileNo {
+                                self.link(mobileNo: mobileNo)
                             }
                         }
                     }
+                    if link.type == "email",
+                       let email = link.value {
+                        
+                        self.link(email: email)
+                    }
                 }
-                
-                // Restore profile picture
-                if let profilePic = safeBackupData.user?.profilePic,
-                   let profilePicData = Data(base64Encoded: profilePic) {
-                    
-                    let profilePicture: NSMutableDictionary = MyIdentityStore.shared()
-                        .profilePicture != nil ? MyIdentityStore.shared()
-                        .profilePicture : NSMutableDictionary(dictionary: ["ProfilePicture": profilePicData])
-                    
-                    MyIdentityStore.shared().profilePicture = profilePicture
-                }
-                
-                if onlyIdentity {
-                    self.setProfilePictureRequestList()
-                    
-                    completionHandler(nil)
-                }
-                else {
-                    self.restoreUserSettings(safeBackupData: safeBackupData)
-                    self.restoreContactsAndGroups(
-                        identity: identity,
-                        safeBackupData: safeBackupData,
-                        completionHandler: completionHandler
-                    )
-                }
-                
-                LicenseStore.shared().performUpdateWorkInfo()
-                
-                AppSetup.state = .identitySetupComplete
-                
-            }, onError: { _ in
-                DDLogError("Safe restore error:update identity store failed")
-                completionHandler(
-                    SafeError
-                        .restoreFailed(message: #localize("safe_no_backup_found"))
-                )
-            })
-        }) { _ in
-            DDLogError("Safe restore error:update restore identity store failed")
-            completionHandler(
-                SafeError
-                    .restoreFailed(message: #localize("safe_no_backup_found"))
+            }
+        }
+        
+        // Restore profile picture
+        if let profilePic = safeBackupData.user?.profilePic,
+           let profilePicData = Data(base64Encoded: profilePic) {
+            
+            let profilePicture: NSMutableDictionary = myIdentityStore
+                .profilePicture ?? NSMutableDictionary(dictionary: ["ProfilePicture": profilePicData])
+            
+            MyIdentityStore.shared().profilePicture = profilePicture
+        }
+        
+        if onlyIdentity {
+            setProfilePictureRequestList()
+        }
+        else {
+            DDLogNotice("[ThreemaSafe Restore] Restoring user settings")
+            restoreUserSettings(safeBackupData: safeBackupData)
+            
+            let entityManager = BusinessInjector.ui.entityManager
+            
+            try await restoreContacts(
+                entityManager: entityManager,
+                safeBackupData: safeBackupData
+            )
+            
+            await restoreGroups(
+                entityManager: entityManager,
+                safeBackupData: safeBackupData
             )
         }
+        
+        DDLogNotice("[ThreemaSafe Restore] Updating work info in license store")
+        LicenseStore.shared().performUpdateWorkInfo()
+        
+        AppSetup.state = .identitySetupComplete
     }
     
     private func restoreUserSettings(safeBackupData: SafeJsonParser.SafeBackupData) {
@@ -716,9 +660,9 @@ import ThreemaMacros
         else {
             userSettings.sendProfilePicture = SendProfilePictureNone
         }
-
+        
         // Restore settings, contacts and groups
-        let mdmSetup = MDMSetup(setup: true)!
+        let mdmSetup = MDMSetup()!
         let settings = safeBackupData.settings!
         userSettings.safeIntroShown = true
         if !mdmSetup.existsMdmKey(MDM_KEY_CONTACT_SYNC) {
@@ -742,281 +686,279 @@ import ThreemaMacros
         }
     }
     
-    private func restoreContactsAndGroups(
-        identity: String,
-        safeBackupData: SafeJsonParser.SafeBackupData,
-        completionHandler: @escaping (SafeError?) -> Swift.Void
-    ) {
-        
-        let entityManager = EntityManager()
+    private func restoreContacts(
+        entityManager: EntityManager,
+        safeBackupData: SafeJsonParser.SafeBackupData
+    ) async throws {
+        DDLogNotice("[ThreemaSafe Restore] Restoring contacts")
 
-        if let bContacts = safeBackupData.contacts {
-    
-            var fetchIdentities = [String]()
-            for bContact in bContacts {
-                if let identity = bContact.identity {
-                    fetchIdentities.append(identity)
+        guard let backupContacts = safeBackupData.contacts else {
+            DDLogNotice("[ThreemaSafe Restore] No contacts to restore")
+            return
+        }
+        
+        // Fetch info for identities
+        let backupContactsIdentities = backupContacts.compactMap(\.identity)
+        
+        guard !backupContactsIdentities.isEmpty else {
+            return
+        }
+        
+        DDLogNotice("[ThreemaSafe Restore] Fetching contact identities")
+        let (fetchedIdentities, publicKeys, featureMasks, states, types) = try await serverApiConnector
+            .fetchBulkIdentityInfo(backupContactsIdentities)
+        
+        guard let fetchedIdentities, !fetchedIdentities.isEmpty else {
+            DDLogNotice("[ThreemaSafe Restore] Fetched contact identities are empty")
+            return
+        }
+        
+        DDLogNotice("[ThreemaSafe Restore] Restoring contact entities")
+        for (index, id) in fetchedIdentities.enumerated() {
+            // Get contact from backup that matches id from fetched id's
+            let backupContact = backupContacts.first {
+                if let identity = $0.identity, identity.uppercased() == id as? String {
+                    return true
+                }
+                return false
+            }
+            
+            guard let backupContact, let backupContactIdentity = backupContact.identity else {
+                continue
+            }
+            
+            // Do not restore me as contact
+            guard backupContactIdentity.uppercased() != myIdentityStore.identity.uppercased() else {
+                continue
+            }
+            
+            guard let publicKey = publicKeys?[index] as? Data else {
+                continue
+            }
+            
+            var contactForConversation: ContactEntity?
+            
+            // Check is contact already stored, could be when Threema MDM sync was running (it's a bug, should not
+            // before restore is finished)
+            try entityManager.performAndWaitSave {
+                if let contact = entityManager.entityFetcher.contactEntity(for: backupContactIdentity) {
+                    contact.contactVerificationLevel = ContactEntity
+                        .VerificationLevel(
+                            rawValue: backupContact.verification ?? ContactEntity
+                                .VerificationLevel.unverified.rawValue
+                        ) ?? .unverified
+                    contact.setFirstName(
+                        to: backupContact.firstname,
+                        sortOrderFirstName: BusinessInjector.ui.userSettings.sortOrderFirstName
+                    )
+                    contact.setLastName(
+                        to: backupContact.lastname,
+                        sortOrderFirstName: BusinessInjector.ui.userSettings.sortOrderFirstName
+                    )
+                    contact.publicNickname = backupContact.nickname
+                    
+                    contactForConversation = contact
+                }
+                else {
+                    let contact = try entityManager.getOrCreateContact(
+                        identity: backupContactIdentity.uppercased(),
+                        publicKey: publicKey,
+                        sortOrderFirstName: BusinessInjector.ui.userSettings
+                            .sortOrderFirstName
+                    )
+                    
+                    contact.contactVerificationLevel = ContactEntity
+                        .VerificationLevel(
+                            rawValue: backupContact.verification ?? ContactEntity
+                                .VerificationLevel.unverified.rawValue
+                        ) ??
+                        .unverified
+                    contact.setFirstName(
+                        to: backupContact.firstname,
+                        sortOrderFirstName: BusinessInjector.ui.userSettings
+                            .sortOrderFirstName
+                    )
+                    contact.setLastName(
+                        to: backupContact.lastname,
+                        sortOrderFirstName: BusinessInjector.ui.userSettings
+                            .sortOrderFirstName
+                    )
+                    contact.publicNickname = backupContact.nickname
+                    
+                    if let createdAt = backupContact.createdAt,
+                       createdAt != 0 {
+                        contact
+                            .createdAt =
+                            Date(timeIntervalSince1970: Double(createdAt) / 1000)
+                    }
+                    else {
+                        contact.createdAt = nil
+                    }
+                    
+                    if let hidden = backupContact.hidden {
+                        contact.isHidden = hidden
+                    }
+                    
+                    contact.readReceipt =
+                        if let readReceipts = backupContact.readReceipts {
+                            ContactEntity.ReadReceipt(rawValue: readReceipts) ?? .default
+                        }
+                        else {
+                            .default
+                        }
+                    
+                    contact.typingIndicator =
+                        if let typingIndicators = backupContact
+                            .typingIndicators {
+                            ContactEntity
+                                .TypingIndicator(rawValue: typingIndicators) ?? .default
+                        }
+                        else {
+                            .default
+                        }
+                    
+                    if let workVerified = backupContact.workVerified {
+                        contact.workContact = workVerified ? 1 : 0
+                    }
+                    else {
+                        contact.workContact = 0
+                    }
+                    
+                    if let featureMasks,
+                       let featureMask = featureMasks[index] as? Int {
+                        contact.setFeatureMask(to: featureMask)
+                    }
+                    
+                    if let states,
+                       let state = states[index] as? Int {
+                        contact.contactState = ContactEntity
+                            .ContactState(rawValue: state) ?? .active
+                    }
+                    if let types, let type = types[index] as? Int {
+                        if type == 1 {
+                            ContactStore.shared()
+                                .addAsWork(
+                                    identities: NSOrderedSet(array: [
+                                        contact
+                                            .identity,
+                                    ]),
+                                    contactSyncer: nil
+                                )
+                        }
+                    }
+                    
+                    contactForConversation = contact
                 }
             }
             
-            serverApiConnector.fetchBulkIdentityInfo(
-                fetchIdentities,
-                onCompletion: { identities, publicKeys, featureMasks, states, types in
-                
-                    var index = 0
-                    for id in identities! {
-                        var bContact: SafeJsonParser.SafeBackupData.Contact?
-                        if bContacts.contains(where: { c -> Bool in
-                            if let identity = c.identity,
-                               identity.uppercased() == id as! String {
-                            
-                                bContact = c
-                                return true
-                            }
-                            return false
-                        }) {
-                            // Do not restore me as contact
-                            if let bContact,
-                               let contactIdentity = bContact.identity,
-                               contactIdentity.uppercased() != identity.uppercased() {
-
-                                if let publicKey = publicKeys?[index] as? Data {
-                                    var contactForConversation: ContactEntity?
-
-                                    // check is contact already stored, could be when Threema MDM sync was running (it's
-                                    // a bug, should not before restore is finished)
-                                    if let contact = entityManager.entityFetcher.contact(for: bContact.identity) {
-                                        entityManager.performAndWaitSave {
-                                            contact.contactVerificationLevel = ContactEntity
-                                                .VerificationLevel(
-                                                    rawValue: bContact.verification ?? ContactEntity
-                                                        .VerificationLevel.unverified.rawValue
-                                                ) ?? .unverified
-                                            contact.setFirstName(to: bContact.firstname)
-                                            contact.setLastName(to: bContact.lastname)
-                                            contact.publicNickname = bContact.nickname
-                                        }
-
-                                        contactForConversation = contact
-                                    }
-                                    else {
-                                        entityManager.performAndWaitSave {
-                                            if let contact = entityManager.entityCreator.contact(),
-                                               let bIdentity = bContact.identity {
-                                                contact.setIdentity(to: bIdentity.uppercased())
-                                                contact.contactVerificationLevel = ContactEntity
-                                                    .VerificationLevel(
-                                                        rawValue: bContact.verification ?? ContactEntity
-                                                            .VerificationLevel.unverified.rawValue
-                                                    ) ??
-                                                    .unverified
-                                                contact.setFirstName(to: bContact.firstname)
-                                                contact.setLastName(to: bContact.lastname)
-                                                contact.publicNickname = bContact.nickname
-                                                
-                                                if let createdAt = bContact.createdAt,
-                                                   createdAt != 0 {
-                                                    contact
-                                                        .createdAt =
-                                                        Date(timeIntervalSince1970: Double(createdAt) / 1000)
-                                                }
-                                                else {
-                                                    contact.createdAt = nil
-                                                }
-                                                
-                                                if let hidden = bContact.hidden {
-                                                    contact.isHidden = hidden
-                                                }
-                                            
-                                                contact.readReceipt =
-                                                    if let readReceipts = bContact.readReceipts {
-                                                        ContactEntity.ReadReceipt(rawValue: readReceipts) ?? .default
-                                                    }
-                                                    else {
-                                                        .default
-                                                    }
-
-                                                contact.typingIndicator =
-                                                    if let typingIndicators = bContact
-                                                        .typingIndicators {
-                                                        ContactEntity
-                                                            .TypingIndicator(rawValue: typingIndicators) ?? .default
-                                                    }
-                                                    else {
-                                                        .default
-                                                    }
-                                            
-                                                if let workVerified = bContact.workVerified {
-                                                    contact.workContact = workVerified ? 1 : 0
-                                                }
-                                                else {
-                                                    contact.workContact = 0
-                                                }
-                                                contact.publicKey = publicKey
-                                            
-                                                if let featureMasks,
-                                                   let featureMask = featureMasks[index] as? Int {
-                                                    contact.setFeatureMask(to: featureMask)
-                                                }
-                                                if let states,
-                                                   let state = states[index] as? Int {
-                                                    contact.contactState = ContactEntity
-                                                        .ContactState(rawValue: state) ?? .active
-                                                }
-                                                if let types,
-                                                   let type = types[index] as? Int {
-                                                    if type == 1 {
-                                                        ContactStore.shared()
-                                                            .addAsWork(
-                                                                identities: NSOrderedSet(array: [
-                                                                    contact
-                                                                        .identity,
-                                                                ]),
-                                                                contactSyncer: nil
-                                                            )
-                                                    }
-                                                }
-
-                                                contactForConversation = contact
-                                            }
-                                        }
-                                    }
-
-                                    // Create conversation if last update set or the contact is private
-                                    if let contactForConversation,
-                                       bContact.lastUpdate != nil || bContact.private ?? false {
-                                        entityManager.performAndWaitSave {
-                                            if let conversation = entityManager.conversation(
-                                                forContact: contactForConversation,
-                                                createIfNotExisting: true,
-                                                setLastUpdate: false
-                                            ) {
-
-                                                if let lastUpdate = bContact.lastUpdate {
-                                                    conversation.lastUpdate = Date(millisecondsSince1970: lastUpdate)
-                                                }
-
-                                                if let isPrivate = bContact.private, isPrivate {
-                                                    conversation.changeCategory(to: .private)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+            // Create conversation if last update set or the contact is private
+            if let contactForConversation,
+               backupContact.lastUpdate != nil || backupContact.private ?? false {
+                entityManager.performAndWaitSave {
+                    if let conversation = entityManager.conversation(
+                        forContact: contactForConversation,
+                        createIfNotExisting: true,
+                        setLastUpdate: false
+                    ) {
+                        
+                        if let lastUpdate = backupContact.lastUpdate {
+                            conversation.lastUpdate = Date(millisecondsSince1970: lastUpdate)
                         }
-                    
-                        index += 1
+                        
+                        if let isPrivate = backupContact.private, isPrivate {
+                            conversation.changeCategory(to: .private)
+                        }
                     }
-                
-                    if index > 0 {
-                        self.setProfilePictureRequestList()
-
-                        self.restoreGroups(
-                            identity: identity,
-                            safeBackupData: safeBackupData,
-                            entityManager: entityManager
-                        )
-                    }
-                
-                    completionHandler(nil)
-                }
-            ) { error in
-                if let error {
-                    DDLogError("Safe error while request identities:\(error.localizedDescription)")
-                    completionHandler(
-                        SafeError
-                            .restoreError(message: String.localizedStringWithFormat(
-                                #localize("safe_restore_error"),
-                                TargetManager.localizedAppName
-                            ))
-                    )
                 }
             }
         }
-        else {
-            DDLogError("Contact list was nil")
-            completionHandler(nil)
-        }
+        
+        setProfilePictureRequestList()
     }
     
     private func restoreGroups(
-        identity: String,
+        entityManager: EntityManager,
         safeBackupData: SafeJsonParser.SafeBackupData,
-        entityManager: EntityManager
-    ) {
-        if let bGroups = safeBackupData.groups {
-            for bGroup in bGroups {
-                if let groupID = bGroup.id,
-                   let groupCreator = bGroup.creator,
-                   let members = bGroup.members {
+    ) async {
+        DDLogNotice("[ThreemaSafe Restore] Restoring groups")
+
+        guard let backupGroups = safeBackupData.groups else {
+            DDLogNotice("[ThreemaSafe Restore] No groups to restore")
+            return
+        }
+        
+        for backupGroup in backupGroups {
+            guard let groupID = backupGroup.id,
+                  let groupCreator = backupGroup.creator,
+                  let members = backupGroup.members else {
+                DDLogWarn("[ThreemaSafe Restore] Safe restore group id, creator or members missing")
+                continue
+            }
+            
+            do {
+                guard let group = try await groupManager.createOrUpdateDB(
+                    for: GroupIdentity(
+                        id: Data(BytesUtility.toBytes(hexString: groupID)!),
+                        creator: ThreemaIdentity(groupCreator)
+                    ),
+                    members: Set<String>(members.map { $0.uppercased() }),
+                    systemMessageDate: nil,
+                    sourceCaller: .local
+                ) else {
+                    DDLogWarn("[ThreemaSafe Restore] Restoring group failed")
+                    return
+                }
+                
+                var category: ConversationEntity.Category = .default
+                
+                if let isPrivate = backupGroup.private,
+                   isPrivate {
+                    category = .private
+                }
+                
+                await entityManager.performSave {
+                    group.conversation.groupName = backupGroup.groupname
+                    group.conversation.changeCategory(to: category)
                     
-                    Task { @MainActor in
-                        do {
-                            guard let group = try await groupManager.createOrUpdateDB(
-                                for: GroupIdentity(
-                                    id: Data(BytesUtility.toBytes(hexString: groupID)!),
-                                    creator: ThreemaIdentity(groupCreator)
-                                ),
-                                members: Set<String>(members.map { $0.uppercased() }),
-                                systemMessageDate: nil,
-                                sourceCaller: .local
-                            ) else {
-                                DDLogWarn("Safe restore group could not be created")
-                                return
-                            }
-
-                            var category: ConversationEntity.Category = .default
-
-                            if let isPrivate = bGroup.private,
-                               isPrivate {
-                                category = .private
-                            }
-
-                            await entityManager.performSave {
-                                group.conversation.groupName = bGroup.groupname
-                                group.conversation.changeCategory(to: category)
-
-                                if let lastUpdate = bGroup.lastUpdate {
-                                    group.conversation.lastUpdate = Date(millisecondsSince1970: lastUpdate)
-                                }
-                            }
-
-                            // No sync is needed as this will be done in the `AppUpdateSteps`
-                        }
-                        catch {
-                            DDLogError("Safe restore group failed: \(error)")
-                        }
+                    if let lastUpdate = backupGroup.lastUpdate {
+                        group.conversation.lastUpdate = Date(millisecondsSince1970: lastUpdate)
                     }
                 }
-                else {
-                    DDLogWarn("Safe restore group id, creator or members missing")
-                }
+                
+                // No sync is needed as this will be done in the `AppUpdateSteps`
+            }
+            catch {
+                DDLogWarn("[ThreemaSafe Restore] Restoring group failed with error: \(error)")
             }
         }
     }
-
+    
     private func setProfilePictureRequestList() {
-        if let userSettings = UserSettings.shared() {
-            var profilePicRequest = [String]()
-            
-            let entityManager = EntityManager()
-            if let contacts = entityManager.entityFetcher.allContacts() as? [ContactEntity] {
+        DDLogNotice(
+            "[ThreemaSafe Restore] Restoring profile picture request list"
+        )
+        guard let userSettings = UserSettings.shared() else {
+            return
+        }
+        var profilePicRequest = [String]()
+        
+        let entityManager = BusinessInjector.ui.entityManager
+        entityManager.performAndWait {
+            if let contacts = entityManager.entityFetcher.contactEntities() {
                 for contact in contacts {
-                    if contact.identity != "ECHOECHO", contact.identity != MyIdentityStore.shared()?.identity {
+                    if contact.identity != "ECHOECHO", contact.identity != self.myIdentityStore.identity {
                         profilePicRequest.append(contact.identity)
                     }
                 }
             }
-        
-            userSettings.profilePictureRequestList = profilePicRequest
         }
+        
+        userSettings.profilePictureRequestList = profilePicRequest
     }
     
     private func downscaleImageAsBase64(data: Data, max: CGFloat) -> String? {
         if let image = UIImage(data: data) {
-        
-            // downscale profile picture to max. size and quality 60, if is necessary
+            // Downscale profile picture to max. size and quality 60, if is necessary
             if image.size.height > max || image.size.width > max {
                 var newHeight: CGFloat
                 var newWidth: CGFloat
@@ -1051,7 +993,7 @@ import ThreemaMacros
         return newImage
     }
     
-    func localizedMobileNo(_ mobileNo: String) -> (mobileNo: String?, prettyMobileNo: String?) {
+    private func localizedMobileNo(_ mobileNo: String) -> (mobileNo: String?, prettyMobileNo: String?) {
         if !mobileNo.isEmpty {
             let normalizer: PhoneNumberNormalizer! = PhoneNumberNormalizer.sharedInstance()
             var prettyMobileNo: NSString?
@@ -1067,29 +1009,23 @@ import ThreemaMacros
     }
     
     private func link(mobileNo: String) {
-        serverApiConnector.linkMobileNo(with: MyIdentityStore.shared(), mobileNo: mobileNo, onCompletion: { _ in
-            DDLogInfo("Safe restore linking mobile no with identity successfull")
-        }, onError: { _ in
-            DDLogError("Safe restore linking mobile no with identity failed")
-        })
+        serverApiConnector.linkMobileNo(
+            with: myIdentityStore as? MyIdentityStore,
+            mobileNo: mobileNo,
+            onCompletion: { _ in
+                DDLogInfo("Safe restore linking mobile no with identity successfull")
+            },
+            onError: { _ in
+                DDLogError("Safe restore linking mobile no with identity failed")
+            }
+        )
     }
     
     private func link(email: String) {
-        serverApiConnector.linkEmail(with: MyIdentityStore.shared(), email: email, onCompletion: { _ in
+        serverApiConnector.linkEmail(with: myIdentityStore as? MyIdentityStore, email: email, onCompletion: { _ in
             DDLogInfo("Safe restore linking email with identity successfull")
         }, onError: { _ in
             DDLogError("Safe restore linking email with identity failed")
         })
-    }
-    
-    /// Get all keys from the CodingKey array
-    /// - Parameter codingKeys: CodingKey array
-    /// - Returns: A array with all keys
-    private func allKeys(from codingKeys: [CodingKey]) -> [String] {
-        var allKeys = [String]()
-        for codingKey in codingKeys {
-            allKeys.append(codingKey.stringValue)
-        }
-        return allKeys
     }
 }

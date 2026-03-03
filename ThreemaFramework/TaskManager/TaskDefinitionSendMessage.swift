@@ -80,10 +80,10 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         self.groupCreatorIdentity = group.groupCreatorIdentity
         self.groupName = group.name
         if let groupReceivers {
-            self.receivingGroupMembers = Set(groupReceivers.map(\.string))
+            self.receivingGroupMembers = Set(groupReceivers.map(\.rawValue))
         }
         else {
-            self.receivingGroupMembers = Set(group.members.map(\.identity.string))
+            self.receivingGroupMembers = Set(group.members.map(\.identity.rawValue))
         }
         self.isNoteGroup = group.isNoteGroup
         self.sendContactProfilePicture = sendContactProfilePicture
@@ -98,7 +98,7 @@ class TaskDefinitionSendMessage: TaskDefinition, TaskDefinitionSendMessageNonceP
         self.groupCreatorIdentity = group?.groupCreatorIdentity
         self.groupName = group?.name
         if let groupMembers = group?.members {
-            self.receivingGroupMembers = Set(groupMembers.map(\.identity.string))
+            self.receivingGroupMembers = Set(groupMembers.map(\.identity.rawValue))
         }
         self.isNoteGroup = group?.isNoteGroup
         self.sendContactProfilePicture = sendContactProfilePicture

@@ -19,8 +19,6 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "GatewayAvatarMaker.h"
-#import "EntityCreator.h"
-#import "EntityFetcher.h"
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
 #import "AppGroup.h"
 #import "HTTPSURLLoader.h"
@@ -114,7 +112,7 @@
 
 - (EntityManager *)entityManager {
     if (_entityManager == nil) {
-        _entityManager = [[EntityManager alloc] init];
+        _entityManager = [[BusinessInjector ui] entityManager];
     }
     
     return _entityManager;
@@ -134,7 +132,7 @@
 }
 
 - (void)loadCache {
-    NSArray *gatewayContacts = [self.entityManager.entityFetcher allGatewayContacts];
+    NSArray *gatewayContacts = [self.entityManager.entityFetcher gatewayContactEntities];
 
     if ([gatewayContacts count] > 0) {
         for (ContactEntity *contact in gatewayContacts) {
@@ -174,7 +172,7 @@
     __block BOOL hasChanged = NO;
 
     [self.entityManager performBlockAndWait:^{
-        ContactEntity *contact = [self.entityManager.entityFetcher contactForId:identity];
+        ContactEntity *contact = [self.entityManager.entityFetcher contactEntityFor:identity];
 
         if ((image && [contact.imageData isEqualToData:image] == NO) || (image == nil && contact.imageData)) {
             [self.entityManager performSyncBlockAndSafe:^{

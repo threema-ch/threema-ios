@@ -31,6 +31,15 @@ public final class GroupCell: ThemedCodeTableViewCell {
     
     // MARK: - Public properties
     
+    override public func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        
+        guard hasCheckmark else {
+            return
+        }
+        checkMarkView.isChecked = selected
+    }
+    
     public var size = CellConfiguration.Size.small {
         didSet {
             guard size != oldValue else {
@@ -39,6 +48,12 @@ public final class GroupCell: ThemedCodeTableViewCell {
             
             configuration = CellConfiguration(size: size)
             sizeDidChange()
+        }
+    }
+    
+    public var hasCheckmark = false {
+        didSet {
+            checkMarkView.isHidden = !hasCheckmark
         }
     }
     
@@ -91,7 +106,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
     
     private lazy var nameLabel: UILabel = {
         let label = UILabel()
-            
+        
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
@@ -103,7 +118,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
     
     private lazy var topMetadataLabel: UILabel = {
         let label = UILabel()
-    
+        
         label.textAlignment = .right
         label.font = .preferredFont(forTextStyle: .footnote)
         label.textColor = .secondaryLabel
@@ -118,12 +133,19 @@ public final class GroupCell: ThemedCodeTableViewCell {
         
         label.font = .preferredFont(forTextStyle: .footnote)
         label.textColor = .secondaryLabel
-
+        
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 2
         }
         
         return label
+    }()
+    
+    private lazy var checkMarkView: CustomCellCheckMarkAccessoryView = {
+        let view = CustomCellCheckMarkAccessoryView()
+        view.isHidden = !hasCheckmark
+        
+        return view
     }()
     
     // MARK: Layout stacks
@@ -147,17 +169,17 @@ public final class GroupCell: ThemedCodeTableViewCell {
     
     private lazy var textStack: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [firstLineStack, membersListLabel])
-
+        
         stackView.spacing = configuration.verticalSpacing
         stackView.axis = .vertical
         stackView.distribution = .equalSpacing
         stackView.alignment = .fill
-
+        
         return stackView
     }()
     
     private lazy var containerStack: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [profilePictureView, textStack])
+        let stackView = UIStackView(arrangedSubviews: [profilePictureView, textStack, checkMarkView])
         
         stackView.axis = .horizontal
         stackView.distribution = .fill

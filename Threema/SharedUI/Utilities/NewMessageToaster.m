@@ -22,7 +22,6 @@
 #import "UserSettings.h"
 #import "AppDelegate.h"
 #import "UIDefines.h"
-#import "TextStyleUtils.h"
 #import "Threema-Swift.h"
 
 #ifdef DEBUG
@@ -41,7 +40,7 @@
         queue = [NSMutableArray array];
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(newMessageReceived:) name:IncomingMessageManager.inAppNotificationNewMessage object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(conversationOpened:) name:@"ThreemaConversationOpened" object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(conversationOpened:) name:kNotificationOpenedConversation object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
     }
     return self;
@@ -57,12 +56,16 @@
 
     NSManagedObjectID *messageObjectID = (NSManagedObjectID *)notification.object;
     if (messageObjectID) {
-        EntityManager *entityManager = [EntityManager new];
+        EntityManager *entityManager = [[BusinessInjector ui] entityManager];
         [entityManager performBlock:^{
-            BaseMessageEntity *message = [[entityManager entityFetcher] existingObjectWithID:messageObjectID];
-
+            BaseMessageEntity *message = (BaseMessageEntity *)[[entityManager entityFetcher] existingObjectWith:messageObjectID];
+            
+            if(message == nil){
+                return;
+            }
+            
             // don't show toast for suppressed group ids
-            if (![PushSettingManagerObjc canSendPushFor:message entityManager:entityManager]) {
+            if (![PushSettingManagerObjC canSendPushFor:message entityManager:entityManager]) {
                 return;
             }
 
@@ -103,9 +106,9 @@
 }
 
 - (void)conversationOpened:(NSNotification*)notification {
-    ConversationEntity *conversation = notification.object;
-    if (conversation != nil) {
-        [NotificationBannerHelper dismissAllNotificationsFor:conversation];
+    NSString *identifier = notification.object;
+    if (identifier != nil) {
+        [NotificationBannerHelper dismissAllNotificationsFor:identifier];
     }
 }
 

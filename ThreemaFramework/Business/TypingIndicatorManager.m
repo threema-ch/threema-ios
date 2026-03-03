@@ -19,7 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "TypingIndicatorManager.h"
-#import "ThreemaFramework/ThreemaFramework-swift.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #ifdef DEBUG
   static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -69,9 +69,9 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         /* Fetch all Conversations that are currently typing, and reset the typing
          indicator if it was received too long ago */
-        EntityManager *entityManager = [[EntityManager alloc] init];
+        EntityManager *entityManager = [[BusinessInjector ui] entityManager];
         [entityManager performBlockAndWait:^{
-            NSArray *conversations = [entityManager.entityFetcher allConversations];
+            NSArray *conversations = [entityManager.entityFetcher conversationEntities];
             if (conversations == nil) {
                 DDLogError(@"No conversations found");
                 return;
@@ -81,7 +81,7 @@
                 for (ConversationEntity *conversation in conversations) {
                     if (conversation.typing.boolValue && ((conversation.lastTypingStart != nil && [conversation.lastTypingStart timeIntervalSinceNow] < -kTypingIndicatorTimeout))) {
                         DDLogVerbose(@"Reset typing indicator on conversation with %@", conversation.contact.identity);
-                        [conversation setTypingTo:NO];
+                        conversation.typing = @NO;
                     }
                 }
             }];
@@ -91,14 +91,14 @@
 
 - (void)setTypingIndicatorForIdentity:(NSString*)identity typing:(BOOL)typing {
     dispatch_async(dispatch_get_main_queue(), ^{
-        EntityManager *entityManager = [[EntityManager alloc] init];
-        ConversationEntity *conversation = [entityManager.entityFetcher conversationEntityForIdentity:identity];
+        EntityManager *entityManager = [[BusinessInjector ui] entityManager];
+        ConversationEntity *conversation = [entityManager.entityFetcher conversationEntityFor:identity];
         if (conversation == nil) {
             DDLogInfo(@"No conversation with identity %@ found", identity);
             return;
         }
         
-        [conversation setTypingTo:typing];
+        conversation.typing = [NSNumber numberWithBool:typing];
     });
 }
 

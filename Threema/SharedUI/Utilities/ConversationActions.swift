@@ -65,7 +65,7 @@ class ConversationActions: NSObject {
         await businessInjector.runInBackground { backgroundBusinessInjector in
             await backgroundBusinessInjector.entityManager.perform {
                 if let conv = backgroundBusinessInjector.entityManager.entityFetcher
-                    .getManagedObject(by: conversation.objectID) as? ConversationEntity {
+                    .managedObject(with: conversation.objectID) as? ConversationEntity {
                     _ = backgroundBusinessInjector.unreadMessages.read(
                         for: conv,
                         isAppInBackground: isAppInBackground
@@ -83,15 +83,15 @@ class ConversationActions: NSObject {
         }
     }
     
-    /// Reads all unread messages of a conversation if read receipts are enabled, also updates the unread messages count
+    /// Reads all unread messages of all conversation if read receipts are enabled, also updates the unread messages
+    /// count
     /// - Parameters:
-    ///   - conversation: ConversationEntity to read messages for
     ///   - isAppInBackground: If app is in background, default gets current status from AppDelegate
     func readAll(isAppInBackground: Bool) async {
         await businessInjector.runInBackground { backgroundBusinessInjector in
             await backgroundBusinessInjector.entityManager.perform {
                 if let conversations = backgroundBusinessInjector.entityManager.entityFetcher
-                    .allConversations() as? [ConversationEntity] {
+                    .conversationEntities() {
                     Task {
                         for conversation in conversations {
                             await self.read(conversation, isAppInBackground: isAppInBackground)
@@ -118,13 +118,15 @@ class ConversationActions: NSObject {
 
         return businessInjector.runInBackgroundAndWait { backgroundBusinessInjector in
             backgroundBusinessInjector.entityManager.performAndWait {
-                let conversation = backgroundBusinessInjector.entityManager.entityFetcher
-                    .getManagedObject(by: conversationObjectID) as! ConversationEntity
+                guard let conversation = backgroundBusinessInjector.entityManager.entityFetcher
+                    .managedObject(with: conversationObjectID) as? ConversationEntity else {
+                    return 0
+                }
 
                 var messages = [BaseMessageEntity]()
                 for messageObjectID in messageObjectIDs {
                     if let message = backgroundBusinessInjector.entityManager.entityFetcher
-                        .getManagedObject(by: messageObjectID) as? BaseMessageEntity {
+                        .managedObject(with: messageObjectID) as? BaseMessageEntity {
                         messages.append(message)
                     }
                 }

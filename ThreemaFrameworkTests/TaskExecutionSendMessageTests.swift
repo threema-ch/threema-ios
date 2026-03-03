@@ -20,7 +20,9 @@
 
 import CocoaLumberjackSwift
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
+
 @testable import ThreemaFramework
 
 class TaskExecutionSendMessageTests: XCTestCase {
@@ -33,7 +35,6 @@ class TaskExecutionSendMessageTests: XCTestCase {
     override func setUpWithError() throws {
         PromiseKitConfiguration.configurePromiseKit()
 
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
@@ -41,7 +42,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
         dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
         dbPreparer = DatabasePreparer(context: mainCnx)
         entityManager =
-            EntityManager(databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx))
+            EntityManager(
+                databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx),
+                isRemoteSecretEnabled: false
+            )
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -55,7 +59,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
     func testExecuteTextMessageWithoutReflectingConnectionStateDisconnected() async throws {
         let serverConnectorMock = ServerConnectorMock(connectionState: .disconnected)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             serverConnector: serverConnectorMock
         )
 
@@ -121,7 +125,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let baseMessage = await frameworkInjectorMock.entityManager.perform {
             frameworkInjectorMock.entityManager.entityFetcher.message(
                 with: messageID,
-                conversation: conversation
+                in: conversation
             )
         }
         XCTAssertFalse(try XCTUnwrap(baseMessage as? TextMessageEntity).sent.boolValue)
@@ -130,7 +134,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
     func testExecuteTextMessageWithoutReflecting() async throws {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             serverConnector: serverConnectorMock
         )
 
@@ -188,7 +192,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             try XCTUnwrap(
                 entityManager.entityFetcher.message(
                     with: messageID,
-                    conversation: conversation
+                    in: conversation
                 ) as? TextMessageEntity
             ).sent.boolValue
         )
@@ -197,7 +201,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
     func testExecuteTextMessageWithoutReflectingToInvalidContact() async throws {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             serverConnector: serverConnectorMock
         )
 
@@ -263,7 +267,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         try entityManager.performAndWait {
             let textMessage = try XCTUnwrap(
                 self.entityManager.entityFetcher
-                    .message(with: messageID, conversation: conversation)
+                    .message(with: messageID, in: conversation)
             )
             XCTAssertFalse(textMessage.sent.boolValue)
         }
@@ -281,8 +285,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -302,11 +306,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
         }
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupKeys: MockData.deviceGroupKeys,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: expectedMessageReflectID,
@@ -385,7 +389,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         try await entityManager.perform {
             let textMessage = try XCTUnwrap(
                 self.entityManager.entityFetcher
-                    .message(with: messageID, conversation: conversation)
+                    .message(with: messageID, in: conversation)
             )
             XCTAssertTrue(textMessage.sent.boolValue)
             XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
@@ -406,8 +410,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"], enableMultiDevice: true)
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -428,12 +432,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupKeys: MockData.deviceGroupKeys,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: expectedMessageReflectID,
@@ -463,8 +467,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            // swiftformat:disable:next acronyms
-            conversation.groupId = groupEntity.groupId
+            conversation.groupID = groupEntity.groupID
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = members
 
@@ -483,6 +486,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -534,7 +538,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         try entityManager.performAndWait {
             let textMessage = try XCTUnwrap(
                 self.entityManager.entityFetcher
-                    .message(with: messageID, conversation: conversation)
+                    .message(with: messageID, in: conversation)
             )
             XCTAssertTrue(textMessage.sent.boolValue)
             XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
@@ -555,8 +559,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"], enableMultiDevice: true)
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -577,12 +581,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupKeys: MockData.deviceGroupKeys,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: expectedMessageReflectID,
@@ -616,8 +620,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            // swiftformat:disable:next acronyms
-            conversation.groupId = groupEntity.groupId
+            conversation.groupID = groupEntity.groupID
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = members
 
@@ -636,6 +639,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -693,7 +697,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         try entityManager.performAndWait {
             let textMessage = try XCTUnwrap(
                 self.entityManager.entityFetcher
-                    .message(with: messageID, conversation: conversation)
+                    .message(with: messageID, in: conversation)
             )
             XCTAssertTrue(textMessage.sent.boolValue)
             XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
@@ -714,8 +718,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let userSettingsMock = UserSettingsMock(blacklist: ["MEMBER02"], enableMultiDevice: true)
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -735,12 +739,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupKeys: MockData.deviceGroupKeys,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock.ReflectData(
                         id: expectedMessageReflectID,
@@ -770,8 +774,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            // swiftformat:disable:next acronyms
-            conversation.groupId = groupEntity.groupId
+            conversation.groupID = groupEntity.groupID
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = members
 
@@ -790,6 +793,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -841,7 +845,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         try entityManager.performAndWait {
             let textMessage = try XCTUnwrap(
                 self.entityManager.entityFetcher
-                    .message(with: messageID, conversation: conversation)
+                    .message(with: messageID, in: conversation)
             )
             XCTAssertEqual(textMessage.remoteSentDate, expectedMessageReflectedAt)
         }
@@ -853,7 +857,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             serverConnector: serverConnectorMock
         )
 
@@ -874,8 +878,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            // swiftformat:disable:next acronyms
-            conversation.groupId = groupEntity.groupId
+            conversation.groupID = groupEntity.groupID
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = Set(members)
 
@@ -895,6 +898,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let group = Group(
                 myIdentityStore: frameworkInjectorMock.myIdentityStore,
                 userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -932,7 +936,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         )
         
         let baseMessage = await frameworkInjectorMock.entityManager.perform {
-            frameworkInjectorMock.entityManager.entityFetcher.message(with: messageID, conversation: conversation)
+            frameworkInjectorMock.entityManager.entityFetcher.message(with: messageID, in: conversation)
         }
         let textMessage = try XCTUnwrap(baseMessage as? TextMessageEntity)
         XCTAssertTrue(textMessage.sent.boolValue)
@@ -949,7 +953,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             serverConnector: serverConnectorMock
         )
 
@@ -974,8 +978,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             )
-            // swiftformat:disable:next acronyms
-            conversation.groupId = groupEntity.groupId
+            conversation.groupID = groupEntity.groupID
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = Set(members)
 
@@ -996,6 +999,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let group = Group(
                 myIdentityStore: frameworkInjectorMock.myIdentityStore,
                 userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -1033,7 +1037,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         )
 
         let baseMessage = await frameworkInjectorMock.entityManager.perform {
-            frameworkInjectorMock.entityManager.entityFetcher.message(with: messageID, conversation: conversation)
+            frameworkInjectorMock.entityManager.entityFetcher.message(with: messageID, in: conversation)
         }
         let textMessage = try XCTUnwrap(baseMessage as? TextMessageEntity)
         XCTAssertTrue(textMessage.sent.boolValue)
@@ -1053,7 +1057,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             serverConnector: serverConnectorMock
         )
 
@@ -1078,8 +1082,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 unreadMessageCount: 0,
                 visibility: .default
             )
-            // swiftformat:disable:next acronyms
-            conversation.groupId = groupEntity.groupId
+            conversation.groupID = groupEntity.groupID
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = Set(members)
 
@@ -1100,6 +1103,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let group = Group(
                 myIdentityStore: frameworkInjectorMock.myIdentityStore,
                 userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -1136,7 +1140,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             serverConnectorMock.sendMessageCalls.filter { $0.messageID.elementsEqual(messageID) }.count
         )
         let baseMessage = await frameworkInjectorMock.entityManager.perform {
-            frameworkInjectorMock.entityManager.entityFetcher.message(with: messageID, conversation: conversation)
+            frameworkInjectorMock.entityManager.entityFetcher.message(with: messageID, in: conversation)
         }
         let textMessage = try XCTUnwrap(baseMessage as? TextMessageEntity)
         XCTAssertTrue(textMessage.sent.boolValue)
@@ -1151,7 +1155,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         )
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock
@@ -1177,14 +1181,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            // swiftformat:disable:next acronyms
-            conversation.groupId = groupEntity.groupId
+            conversation.groupID = groupEntity.groupID
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = members
 
             return Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -1224,8 +1228,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         serverConnectorMock.reflectMessageClosure = { _ in
             if serverConnectorMock.connectionState == .loggedIn {
@@ -1251,14 +1255,13 @@ class TaskExecutionSendMessageTests: XCTestCase {
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
             entityManager: EntityManager(
-                databaseContext: dbBackgroundCnx,
-                myIdentityStore: myIdentityStoreMock
+                databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false
             ),
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupKeys: MockData.deviceGroupKeys,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock
                         .ReflectData(
@@ -1282,8 +1285,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-            // swiftformat:disable:next acronyms
-            conversation.groupId = groupEntity.groupId
+            conversation.groupID = groupEntity.groupID
             conversation.groupMyIdentity = myIdentityStoreMock.identity
             /// See `GroupManager` line 227 for why this has to be nil
             conversation.contact = nil
@@ -1303,6 +1305,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let group = Group(
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: UserSettingsMock(),
+                pushSettingManager: PushSettingManagerMock(),
                 groupEntity: groupEntity,
                 conversation: conversation,
                 lastSyncRequest: nil
@@ -1352,7 +1355,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         try await frameworkInjectorMock.entityManager.perform {
             let baseMessage = frameworkInjectorMock.entityManager.entityFetcher.message(
                 with: messageID,
-                conversation: conversation
+                in: conversation
             )
             let textMessage = try XCTUnwrap(baseMessage as? TextMessageEntity)
             XCTAssertTrue(textMessage.sent.boolValue)
@@ -1379,8 +1382,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
             let serverConnectorMock = ServerConnectorMock(
                 connectionState: .loggedIn,
-                deviceID: MockData.deviceID,
-                deviceGroupKeys: MockData.deviceGroupKeys
+                deviceID: MockMultiDevice.deviceID,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys
             )
             serverConnectorMock.reflectMessageClosure = { _ in
                 if serverConnectorMock.connectionState == .loggedIn {
@@ -1401,12 +1404,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let myIdentityStoreMock = MyIdentityStoreMock()
             XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
             let frameworkInjectorMock = BusinessInjectorMock(
-                entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+                entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: UserSettingsMock(enableMultiDevice: true),
                 serverConnector: serverConnectorMock,
                 mediatorMessageProtocol: MediatorMessageProtocolMock(
-                    deviceGroupKeys: MockData.deviceGroupKeys,
+                    deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                     returnValues: [
                         MediatorMessageProtocolMock.ReflectData(
                             id: expectedMessageReflectID,
@@ -1437,8 +1440,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
                 let conversation = dbPreparer
                     .createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
-                // swiftformat:disable:next acronyms
-                conversation.groupId = groupEntity.groupId
+                conversation.groupID = groupEntity.groupID
                 conversation.groupName = broadcastGroupTest[0] as? String
                 conversation.contact = members.first(where: { $0.identity == "*ADMIN01" })
                 conversation.members = members
@@ -1458,6 +1460,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 let group = Group(
                     myIdentityStore: myIdentityStoreMock,
                     userSettings: UserSettingsMock(),
+                    pushSettingManager: PushSettingManagerMock(),
                     groupEntity: groupEntity,
                     conversation: conversation,
                     lastSyncRequest: nil
@@ -1516,7 +1519,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             try entityManager.performAndWait {
                 let textMessage = try XCTUnwrap(
                     self.entityManager.entityFetcher
-                        .message(with: messageID, conversation: conversation)
+                        .message(with: messageID, in: conversation)
                 )
                 XCTAssert(textMessage.sent.boolValue)
                 XCTAssertEqual(
@@ -1533,8 +1536,8 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .disconnected,
-            deviceID: MockData.deviceID,
-            deviceGroupKeys: MockData.deviceGroupKeys
+            deviceID: MockMultiDevice.deviceID,
+            deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         serverConnectorMock.reflectMessageClosure = { _ in
@@ -1544,11 +1547,11 @@ class TaskExecutionSendMessageTests: XCTestCase {
             ) as? NSError
         }
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx),
+            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
-                deviceGroupKeys: MockData.deviceGroupKeys,
+                deviceGroupKeys: MockMultiDevice.deviceGroupKeys,
                 returnValues: [
                     MediatorMessageProtocolMock
                         .ReflectData(
@@ -1620,7 +1623,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         try entityManager.performAndWait {
             let textMessage = try XCTUnwrap(
                 self.entityManager.entityFetcher
-                    .message(with: messageID, conversation: conversation)
+                    .message(with: messageID, in: conversation)
             )
             XCTAssertEqual(textMessage.sent.boolValue, false)
         }

@@ -26,7 +26,7 @@ struct NotificationTypeSelectionView: View {
 
     @State var showPreview: Bool
     @State var selectedType: NotificationType
-    let disablePreviewToggle = MDMSetup(setup: false).existsMdmKey(MDM_KEY_DISABLE_MESSAGE_PREVIEW)
+    let disablePreviewToggle = MDMSetup().existsMdmKey(MDM_KEY_DISABLE_MESSAGE_PREVIEW)
     @ObservedObject var settingsStore: SettingsStore
     
     private let cornerRadius = 20.0
@@ -56,7 +56,10 @@ struct NotificationTypeSelectionView: View {
                 .multilineTextAlignment(.center)
                 .padding(.bottom, 4)
                 
-                ForEach(NotificationType.allCases, id: \.self) { notificationType in
+                let notificationTypes: [NotificationType] = AppLaunchManager.isRemoteSecretEnabled ? NotificationType
+                    .remoteSecretCases : NotificationType.allCases
+                
+                ForEach(notificationTypes, id: \.self) { notificationType in
                     NotificationTypeView(
                         selectedType: $selectedType,
                         showPreview: $showPreview,

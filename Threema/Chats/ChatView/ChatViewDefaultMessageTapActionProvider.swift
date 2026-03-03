@@ -19,7 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
+import SwiftUI
 import ThreemaEssentials
 import ThreemaFramework
 
@@ -31,8 +33,6 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
     
     private weak var chatViewController: ChatViewController?
     private let entityManager: EntityManager
-    // This needs to be a class property to work
-    var fileMessagePreview: FileMessagePreview?
 
     private lazy var photoBrowserWrapper = MWPhotoBrowserWrapper(
         for: chatViewController!.conversation,
@@ -92,9 +92,9 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
                     guard let fileMessageEntity = fileMessage as? FileMessageEntity else {
                         return
                     }
-                    
-                    fileMessagePreview = FileMessagePreview(for: fileMessageEntity)
-                    fileMessagePreview?.show(on: chatViewController?.navigationController)
+                    let controller =
+                        UIHostingController(rootView: FileMessagePreviewView(fileMessageEntity: fileMessageEntity))
+                    chatViewController?.present(controller, animated: true)
                 case let .video(videoMessage):
                     play(videoMessage: videoMessage)
                 case .animatedImage, .animatedSticker:
@@ -160,23 +160,27 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
     }
     
     private func showLocationDetails(locationMessage: LocationMessageEntity) {
-        // Opens the location of a location message in a modal
-        guard let locationVC = LocationViewController(locationMessage: locationMessage) else {
-            return
-        }
-        let modalNavController = ModalNavigationController(rootViewController: locationVC)
-        modalNavController.showLeftDoneButton = true
-        chatViewController?.present(modalNavController, animated: true)
+        let locationVC = UIHostingController(rootView: LocationView(entity: locationMessage))
+        chatViewController?.present(locationVC, animated: true)
     }
     
     private func showBallot(ballotMessage: BallotMessageEntity) {
         // Opens the ballot of a ballot message in a modal
-        entityManager.performBlock {
-            if let ballot = ballotMessage.ballot,
-               let fetchedBallot = self.entityManager.entityFetcher.ballotEntity(for: ballot.id) {
-                BallotDispatcher.showViewController(
-                    forBallot: fetchedBallot,
-                    on: self.chatViewController?.navigationController
+        entityManager.performBlock { [weak self] in
+            if let self,
+               let ballot = ballotMessage.ballot,
+               let fetchedBallot = entityManager.entityFetcher.ballotEntity(for: ballot.id) {
+                let view =
+                    if ballot.isClosed {
+                        AnyView(ResultPollView(poll: ballot))
+                    }
+                    else {
+                        AnyView(VotePollView(poll: ballot))
+                    }
+                
+                chatViewController?.present(
+                    UIHostingController(rootView: view),
+                    animated: true
                 )
             }
         }
@@ -262,7 +266,7 @@ extension ChatViewDefaultMessageTapActionProvider: AVPlayerViewControllerDelegat
         }
         
         // Delete temporary file that was played if there was any
-        FileUtility.shared.delete(at: temporaryFileToCleanUp)
+        FileUtility.shared.deleteIfExists(at: temporaryFileToCleanUp)
         temporaryFileToCleanUp = nil
     }
 }

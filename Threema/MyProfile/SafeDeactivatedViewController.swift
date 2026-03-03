@@ -53,7 +53,7 @@ class SafeDeactivatedViewController: ThemedViewController {
         super.updateColors()
                 
         introCircle.backgroundColor = UIColor(red: 235.0 / 255.0, green: 235.0 / 255.0, blue: 235.0 / 255.0, alpha: 1.0)
-        let explainImage = UIImage(systemName: "info.circle")?.withTint(.tintColor)
+        let explainImage = UIImage(systemName: "info.circle")?.withTintColor(.tintColor)
         explainButton.setImage(explainImage, for: .normal)
     }
 }

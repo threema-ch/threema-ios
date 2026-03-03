@@ -19,8 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "PhotoCaptionView.h"
-#import "RectUtil.h"
-#import "TextStyleUtils.h"
+#import "Threema-Swift.h"
 
 #define PADDING 10.0
 
@@ -46,13 +45,15 @@
         _textView.scrollEnabled = YES;
         _textView.backgroundColor = [UIColor clearColor];
         _textView.selectable = NO;
+        _textView.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+
         
-        _textView.text = [TextStyleUtils makeMentionsStringForText:caption];
+        MarkupParser *parser = [[MarkupParser alloc] init];
+        _textView.attributedText = [parser makeMentionsForMWWrapperAttributedStringFor:caption];
                 
         CGFloat maxHeight = 200.0;
-        CGSize textSize = [_textView.text boundingRectWithSize:CGSizeMake(self.frame.size.width, maxHeight)
+        CGSize textSize = [_textView.attributedText boundingRectWithSize:CGSizeMake(self.frame.size.width, maxHeight)
                                                        options:NSStringDrawingUsesLineFragmentOrigin
-                                                    attributes:@{NSFontAttributeName:_textView.font}
                                                        context:nil].size;
         CGSize size = CGSizeMake(textSize.width, textSize.height);
         _textView.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y + 2.0, self.frame.size.width, size.height);

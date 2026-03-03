@@ -22,7 +22,7 @@ import Foundation
 import ThreemaFramework
 
 class UserSettingsMock: NSObject, UserSettingsProtocol {
-
+   
     override init() {
         // no-op
     }
@@ -83,6 +83,8 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
 
     var syncExclusionList: [Any]! = [Any]()
 
+    var hideStaleContacts = false
+
     var sortOrderFirstName = true
 
     var sendProfilePicture: SendProfilePicture = .init(0)
@@ -134,6 +136,8 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
 
     var keepMessagesDays = -1
 
+    var safeConfig: Data!
+
     var safeIntroShown = false
 
     var contactList2 = false
@@ -145,4 +149,20 @@ class UserSettingsMock: NSObject, UserSettingsProtocol {
     var ipcSecretPrefix: Data!
     
     var companyDirectory = false
+
+    var darkTheme = false
+
+    var useSystemTheme = true
+
+    var showProfilePictures = true
+
+    var displayOrderFirstName = true
+
+    var showGalleryPreview = true
+
+    var previewLimit: Float = 0.0
+    
+    var wallpaperType: WallpaperType = .threema
+    
+    var showWorkReferral = false
 }

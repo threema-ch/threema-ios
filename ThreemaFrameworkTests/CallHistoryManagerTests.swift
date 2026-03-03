@@ -18,7 +18,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import XCTest
+
 @testable import ThreemaFramework
 
 class CallHistoryManagerTests: XCTestCase {
@@ -26,7 +29,6 @@ class CallHistoryManagerTests: XCTestCase {
     private var databaseBackgroundCnx: DatabaseContext!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
@@ -44,14 +46,16 @@ class CallHistoryManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false),
             userSettings: userSettingsMock
         )
         
-        businessInjectorMock.entityManager.performSyncBlockAndSafe {
-            let contact = businessInjectorMock.entityManager.entityCreator.contact()
-            contact?.setIdentity(to: "ECHOECHO")
-            contact?.publicKey = MockData.generatePublicKey()
+        businessInjectorMock.entityManager.performAndWaitSave {
+            _ = businessInjectorMock.entityManager.entityCreator.contactEntity(
+                identity: "ECHOECHO",
+                publicKey: MockData.generatePublicKey(),
+                sortOrderFirstName: true
+            )
         }
         
         let manager = CallHistoryManager(identity: "ECHOECHO", businessInjector: businessInjectorMock)
@@ -84,14 +88,16 @@ class CallHistoryManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainCnx),
+            entityManager: EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false),
             userSettings: userSettingsMock
         )
         
-        businessInjectorMock.entityManager.performSyncBlockAndSafe {
-            let contact = businessInjectorMock.entityManager.entityCreator.contact()
-            contact?.setIdentity(to: "ECHOECHO")
-            contact?.publicKey = MockData.generatePublicKey()
+        businessInjectorMock.entityManager.performAndWaitSave {
+            _ = businessInjectorMock.entityManager.entityCreator.contactEntity(
+                identity: "ECHOECHO",
+                publicKey: MockData.generatePublicKey(),
+                sortOrderFirstName: true
+            )
         }
         
         let manager = CallHistoryManager(identity: "ECHOECHO", businessInjector: businessInjectorMock)

@@ -22,22 +22,43 @@ import SwiftUI
 import ThreemaMacros
 
 struct PasswordCreationView: View {
+    
+    private enum Field: Hashable, Equatable {
+        case password
+        case confirmation
+    }
+    
+    @Environment(\.dismiss) private var dismiss
+    
+    @FocusState private var focus: Field?
+
     weak var coordinator: ProfileCoordinator?
     let title: String
     let footer: String
+    let passwordCreateButton: String
+    let onPasswordCreated: (String) -> Void
+    let onDismiss: (() -> Void)?
     
-    let passwordCreated: (String) -> Void
-    init(coordinator: ProfileCoordinator?, title: String, footer: String, passwordCreated: @escaping (String) -> Void) {
+    init(
+        coordinator: ProfileCoordinator?,
+        title: String,
+        footer: String,
+        passwordCreateButton: String,
+        onPasswordCreated: @escaping (String) -> Void,
+        onDismiss: (() -> Void)? = nil
+    ) {
         self.coordinator = coordinator
         self.title = title
         self.footer = footer
-        self.passwordCreated = passwordCreated
+        self.passwordCreateButton = passwordCreateButton
+        self.onPasswordCreated = onPasswordCreated
+        self.onDismiss = onDismiss
     }
     
     @State private var password = ""
     @State private var confirmationPassword = ""
     
-    @State private var showLenghtAlert = false
+    @State private var showLengthAlert = false
     @State private var showMismatchAlert = false
     
     var body: some View {
@@ -45,9 +66,16 @@ struct PasswordCreationView: View {
         List {
             Section {
                 SecureField(#localize("Password"), text: $password)
+                    .focused($focus, equals: .password)
+                    .submitLabel(.next)
+                    .onSubmit {
+                        focus = .confirmation
+                    }
+                
                 SecureField(#localize("password_again"), text: $confirmationPassword)
+                    .focused($focus, equals: .confirmation)
             } header: {
-                Text(#localize("Password"))
+                Text(#localize("safe_configure_choose_password_title"))
             }
             footer: {
                 Text(footer)
@@ -63,7 +91,7 @@ struct PasswordCreationView: View {
         } message: {
             Text(#localize("password_mismatch_message"))
         }
-        .alert(#localize("password_too_short_title"), isPresented: $showLenghtAlert) {
+        .alert(#localize("password_too_short_title"), isPresented: $showLengthAlert) {
             Button(role: .cancel) {
                 // No-op
             } label: {
@@ -77,7 +105,13 @@ struct PasswordCreationView: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button {
-                    coordinator?.dismiss()
+                    // swiftformat:disable preferKeyPath
+                    let dismissAction = coordinator.map {
+                        $0.dismiss
+                    } ?? onDismiss ?? dismiss.callAsFunction
+                    // swiftformat:enable preferKeyPath
+                    
+                    dismissAction()
                 } label: {
                     Text(#localize("cancel"))
                 }
@@ -86,10 +120,13 @@ struct PasswordCreationView: View {
                 Button {
                     donePressed()
                 } label: {
-                    Text(#localize("Done"))
-                        .disabled(password.isEmpty || confirmationPassword.isEmpty)
+                    Text(passwordCreateButton)
                 }
+                .disabled(password.isEmpty || confirmationPassword.isEmpty)
             }
+        }
+        .onAppear {
+            focus = .password
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
@@ -101,15 +138,30 @@ struct PasswordCreationView: View {
             return
         }
         else if password.count < 8 {
-            showLenghtAlert = true
+            showLengthAlert = true
             return
         }
         
-        coordinator?.dismiss()
-        passwordCreated(password)
+        // swiftformat:disable preferKeyPath
+        let dismissAction = coordinator.map {
+            $0.dismiss
+        } ?? onDismiss ?? dismiss.callAsFunction
+        dismissAction()
+        // swiftformat:enable preferKeyPath
+        
+        onPasswordCreated(password)
     }
 }
 
 #Preview {
-    PasswordCreationView(coordinator: nil, title: "Preview", footer: "Footer") { _ in }
+    NavigationView {
+        PasswordCreationView(
+            coordinator: nil,
+            title: "Preview",
+            footer: "Footer",
+            passwordCreateButton: "Export"
+        ) { _ in
+            // no-op
+        }
+    }
 }

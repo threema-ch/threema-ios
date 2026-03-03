@@ -20,11 +20,13 @@
 
 import Combine
 import Foundation
+import ThreemaEssentials
 import XCTest
 @testable import Threema
+@testable import ThreemaFramework
 
 class ChatViewSnapshotProviderTests: XCTestCase {
-    var objCnx: TMAManagedObjectContext!
+    var objCnx: ThreemaManagedObjectContext!
     
     private var databaseMainCnx: DatabaseContext!
     private var databaseBackgroundCnx: DatabaseContext!
@@ -36,7 +38,6 @@ class ChatViewSnapshotProviderTests: XCTestCase {
         
         (_, objCnx, _) = DatabasePersistentContext.devNullContext()
 
-        // necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
         let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
@@ -49,8 +50,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     }
     
     func testBasicSetup() {
-        let entityManager = EntityManager(databaseContext: databaseMainCnx)
-        _ = EntityManager(databaseContext: databaseBackgroundCnx)
+        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
+        _ = EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
         
         let conversation = createContactAndConversation(
             entityManager: entityManager,
@@ -113,8 +114,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     }
     
     func testBasicPublish() {
-        let entityManager = EntityManager(databaseContext: databaseMainCnx)
-        _ = EntityManager(databaseContext: databaseBackgroundCnx)
+        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
+        _ = EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
         
         let conversation = createContactAndConversation(
             entityManager: entityManager,
@@ -226,8 +227,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     }
     
     func basicUnreadMessageLine() {
-        let entityManager = EntityManager(databaseContext: databaseMainCnx)
-        _ = EntityManager(databaseContext: databaseBackgroundCnx)
+        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
+        _ = EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
         
         let conversation = createContactAndConversation(
             entityManager: entityManager,
@@ -380,8 +381,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     
     // TODO: (IOS-3875) Timeout
     func testUnreadMessageLineStillLastAfterNewMessageSent() {
-        let entityManager = EntityManager(databaseContext: databaseMainCnx)
-        _ = EntityManager(databaseContext: databaseBackgroundCnx)
+        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
+        _ = EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
         
         let conversation = createContactAndConversation(
             entityManager: entityManager,
@@ -468,7 +469,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                 },
                 {
                     entityManager.performAndWaitSave {
-                        conversation.setTyping(to: true)
+                        conversation.typing = true
                         self.internalInitialSetupCompleted = true
                         typingIndicatorInformationProvider.currentlyTyping = true
                     }
@@ -544,7 +545,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
                 {
                     entityManager.performAndWaitSave {
                         typingIndicatorInformationProvider.currentlyTyping = false
-                        conversation.setTyping(to: false)
+                        conversation.typing = false
                     }
                 }
             ),
@@ -610,9 +611,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     }
     
     private func createMessage(in conversation: ConversationEntity, entityManager: EntityManager) {
-        entityManager.performAndWaitSave {
-            let textMessage = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)!
-            textMessage.text = "Hello World"
+        _ = entityManager.performAndWaitSave {
+            entityManager.entityCreator.textMessageEntity(text: "Hello World", in: conversation, setLastUpdate: true)
         }
     }
     
@@ -621,13 +621,15 @@ class ChatViewSnapshotProviderTests: XCTestCase {
         var contact: ContactEntity!
         
         entityManager.performAndWaitSave {
-            contact = entityManager.entityCreator.contact()!
-            contact.setIdentity(to: identity)
+            contact = entityManager.entityCreator.contactEntity(
+                identity: identity,
+                publicKey: BytesUtility.generateRandomBytes(length: Int(32))!,
+                sortOrderFirstName: true
+            )
             contact.contactVerificationLevel = .unverified
             contact.publicNickname = identity
             contact.isHidden = false
             contact.workContact = 0
-            contact.publicKey = BytesUtility.generateRandomBytes(length: Int(32))!
         }
         
         let conversation = entityManager.conversation(

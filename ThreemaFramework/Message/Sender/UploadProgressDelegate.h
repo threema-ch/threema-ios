@@ -27,16 +27,30 @@ typedef enum UploadError {
     UploadErrorCancelled
 } UploadError;
 
-@class Old_BlobMessageSender, BaseMessageEntity;
+@class Old_BlobMessageSender;
 
 @protocol UploadProgressDelegate <NSObject>
 
-- (BOOL)blobMessageSenderUploadShouldCancel:(Old_BlobMessageSender*)blobMessageSender;
+- (BOOL)blobMessageSenderUploadShouldCancel:(nonnull Old_BlobMessageSender *)blobMessageSender;
 
-- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadProgress:(NSNumber *)progress forMessage:(BaseMessageEntity *)message;
+/**
+ @param blobMessageSender Old_BlobMessageSender
+ @param progress NSNumber
+ @param messageObject Object of type `BaseMessageEntity`
+ */
+- (void)blobMessageSender:(nonnull Old_BlobMessageSender *)blobMessageSender uploadProgress:(nonnull NSNumber *)progress forMessage:(nonnull NSObject *)messageObject;
 
-- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadFailedForMessage:(BaseMessageEntity *)message error:(UploadError)error;
+/**
+ @param blobMessageSender Old_BlobMessageSender
+ @param messageObject Object of type `BaseMessageEntity`
+ @param error UploadError
+ */
+- (void)blobMessageSender:(nonnull Old_BlobMessageSender *)blobMessageSender uploadFailedForMessage:(nullable NSObject *)messageObject error:(UploadError)error;
 
-- (void)blobMessageSender:(Old_BlobMessageSender*)blobMessageSender uploadSucceededForMessage:(BaseMessageEntity *)message;
+/**
+ @param blobMessageSender Old_BlobMessageSender
+ @param messageObject Object of type `BaseMessageEntity`
+ */
+- (void)blobMessageSender:(nonnull Old_BlobMessageSender *)blobMessageSender uploadSucceededForMessage:(nonnull NSObject *)messageObject;
 
 @end

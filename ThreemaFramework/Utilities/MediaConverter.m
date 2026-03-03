@@ -22,8 +22,9 @@
 #import "UIImage+Resize.h"
 #import "UserSettings.h"
 #import "UIDefines.h"
-#import "ValidationLogger.h"
-#import <ThreemaFramework/ThreemaFramework-Swift.h>
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
+
+@import FileUtility;
 
 #ifdef DEBUG
 static const DDLogLevel ddLogLevel = DDLogLevelVerbose;
@@ -196,7 +197,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         if (exportSession.status == AVAssetExportSessionStatusCompleted) {
             onCompletion(exportSession.outputURL);
         } else {
-            [[NSFileManager defaultManager] removeItemAtURL:exportSession.outputURL error:nil];
+            [[FileUtility new] deleteAt:exportSession.outputURL error:nil];
             onError(exportSession.error);
         }
     }];
@@ -204,9 +205,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 + (NSURL *)getAssetOutputURL {
     NSString *filename = [NSString stringWithFormat:@"%f-%u.%@", [[NSDate date] timeIntervalSinceReferenceDate], arc4random(), MEDIA_EXTENSION_VIDEO];
-    NSString *tmpfile = [NSTemporaryDirectory() stringByAppendingPathComponent:filename];
-    NSURL *outputURL = [NSURL fileURLWithPath:tmpfile];
-    return outputURL;
+    NSURL *tmpfileURL = [[[FileUtility new] appTemporaryUnencryptedDirectory] URLByAppendingPathComponent:filename];
+    return tmpfileURL;
 }
 
 + (AVAssetExportSession *)getAVAssetExportSessionFrom:(AVAsset *) asset outputURL:(NSURL *)outputURL {

@@ -85,7 +85,7 @@ class RestoreSafeForgotIDViewController: IDCreationPageViewController {
            let mobileNo = mobileNumberField.text,
            !email.isEmpty || !mobileNo.isEmpty {
             
-            ContactStore.shared().linkedIdentities(for: email, and: mobileNo) { [weak self] result in
+            ContactStore.linkedIdentities(for: email, and: mobileNo) { [weak self] result in
                 defer { self?.isSearchingIdentity = false }
                 guard let strongSelf = self else {
                     return

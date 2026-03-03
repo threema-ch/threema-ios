@@ -163,9 +163,14 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                let fromIdentity = processedMsg.fromIdentity,
                !self.frameworkInjector.userSettings.blacklist.contains(fromIdentity),
                self.frameworkInjector.userSettings.enableThreemaCall,
-               self.frameworkInjector.pushSettingManager.canMasterDndSendPush() {
-                // Do not ack message if it's a VoIP message in the notification extension
-                // But only if threema call is enabled and master dnd can receive messages
+               self.frameworkInjector.pushSettingManager.canMasterDndSendPush(),
+               AVAudioApplication.shared.recordPermission == .granted || ProcessInfoHelper
+               .isRunningForTests {
+                // In the context of Framework tests, setting the permission is not feasible.
+                // Consequently, we must disregard this guard.
+                
+                // Do not ack message if it's a VoIP message in the notification extension and threema call is enabled
+                // But only if master dnd can receive messages or record permission is not set yet
             }
             else {
                 // Ack message
@@ -202,7 +207,10 @@ final class TaskExecutionReceiveMessage: TaskExecution, TaskExecutionProtocol {
                         // Unarchive conversation if message type can unarchive a conversation and is archived
                         if processedMsg.canUnarchiveConversation(),
                            let conversation = self.frameworkInjector.entityManager
-                           .conversation(forMessage: processedMsg),
+                           .conversation(
+                               forMessage: processedMsg,
+                               myIdentity: self.frameworkInjector.myIdentityStore.identity
+                           ),
                            conversation.conversationVisibility == .archived {
                             self.frameworkInjector.conversationStore.unarchive(conversation)
                         }

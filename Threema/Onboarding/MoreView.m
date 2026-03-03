@@ -19,10 +19,9 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "MoreView.h"
-#import "BundleUtil.h"
 #import "UIDefines.h"
-#import "RectUtil.h"
-#import "UIImage+ColoredImage.h"
+#import <ThreemaFramework/BundleUtil.h>
+#import "Threema-Swift.h"
 
 #define X_OFFSET 36.0
 #define Y_OFFSET_MESSAGE 28.0
@@ -123,12 +122,12 @@
     _messageLabel.hidden = NO;
     _messageLabel.alpha = 0.0;
     
-    CGRect buttonRect = [RectUtil rect:_okButton.frame centerHorizontalIn:self.frame round:YES];
+    CGRect buttonRect = [self rect:_okButton.frame centerHorizontalIn:self.frame round:YES];
     _okButton.frame = buttonRect;
     
-    CGRect rect = [RectUtil offsetAndResizeRect:self.frame byX:0 byY:-(CGRectGetMinY(_okButton.frame))];
+    CGRect rect = CGRectMake(self.frame.origin.x, self.frame.origin.y + -(CGRectGetMinY(_okButton.frame)), self.frame.size.width, self.frame.size.height - -(CGRectGetMinY(_okButton.frame)));
     CGFloat width = CGRectGetMaxX(_mainView.frame) - rect.origin.x - 2 * X_PADDING;
-    rect = [RectUtil setWidthOf:rect width:width];
+    rect = CGRectMake(rect.origin.x, rect.origin.y, width, rect.size.height);
     if (_centerMoreView) {
         rect = CGRectMake((self.window.frame.size.width - rect.size.width)/2, (_mainView.frame.size.height - rect.size.height)/2, rect.size.width, rect.size.height);
         _okButton.frame = CGRectMake((rect.size.width - buttonRect.size.width)/2, buttonRect.origin.y, buttonRect.size.width, buttonRect.size.height);
@@ -179,5 +178,18 @@
         [self showMoreView];
     }
 }
+
+- (CGRect)rect:(CGRect)rect centerHorizontalIn:(CGRect)outerRect round:(BOOL)round {
+    CGFloat innerWidth = rect.size.width;
+    CGFloat outerWidth = outerRect.size.width;
+    
+    CGFloat x = (outerWidth - innerWidth) / 2.0;
+    if (round)
+        x = roundf(x);
+    CGFloat y = rect.origin.y;
+    
+    return CGRectMake(x, y, rect.size.width, rect.size.height);
+}
+
 
 @end

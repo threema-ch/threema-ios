@@ -242,7 +242,7 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
        
         // Quote stack view displaying / hiding
         // swiftformat:disable:next acronyms
-        if textMessage?.quotedMessageId != nil {
+        if textMessage?.quotedMessageID != nil {
             containerView.addSubview(messageQuoteStackView)
             NSLayoutConstraint.deactivate(contentStackViewConstraints)
             NSLayoutConstraint.activate(messageQuoteStackViewConstraints)
@@ -302,8 +302,7 @@ final class ChatViewTextMessageTableViewCell: ChatViewBaseTableViewCell, Measura
     // MARK: - Action Functions
     
     @objc func quoteViewTapped() {
-        // swiftformat:disable:next acronyms
-        guard let quotedMessageID = textMessageAndNeighbors?.message.quotedMessageId else {
+        guard let quotedMessageID = textMessageAndNeighbors?.message.quotedMessageID else {
             return
         }
         chatViewTableViewCellDelegate?.quoteTapped(on: quotedMessageID)
@@ -362,7 +361,12 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageActions {
             UIPasteboard.general.string = message.text
             NotificationPresenterWrapper.shared.present(type: .copySuccess)
         }
-        
+
+        // Share
+        let shareHandler = {
+            [message.text as Any]
+        }
+
         // Details
         let detailsHandler: Provider.DefaultHandler = {
             self.chatViewTableViewCellDelegate?.showDetails(for: message.objectID)
@@ -392,7 +396,7 @@ extension ChatViewTextMessageTableViewCell: ChatViewMessageActions {
             quoteHandler: quoteHandler,
             editHandler: editHandler,
             copyHandler: copyHandler,
-            shareItems: [message.text as Any],
+            shareHandler: shareHandler,
             speakText: message.text,
             detailsHandler: detailsHandler,
             selectHandler: selectHandler,

@@ -21,19 +21,9 @@
 #import <Foundation/Foundation.h>
 #import "BlobOrigin.h"
 
-@protocol HTTPSURLLoaderDelegate <NSObject>
-
-- (BOOL)httpsLoaderShouldCancel;
-
-- (void)httpsLoaderReceivedData:(NSData *)totalData;
-
-@end
-
 @interface HTTPSURLLoader : NSObject <NSURLConnectionDataDelegate>
 
 @property NSDictionary *responseHeaderFields;
-
-@property id<HTTPSURLLoaderDelegate> delegate;
 
 - (void)startWithBlobId:(NSData*)blobId origin:(BlobOrigin)origin onCompletion:(void (^)(NSData *))onCompletion onError:(void (^)(NSError *))onError;
 

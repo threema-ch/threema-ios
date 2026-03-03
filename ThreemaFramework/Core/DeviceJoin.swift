@@ -131,7 +131,7 @@ public final class DeviceJoin {
         
         // Generate new device group key if multi-device was disabled before
         let deviceGroupKey: Data?
-        let deviceGroupKeyManager = DeviceGroupKeyManager(myIdentityStore: businessInjector.myIdentityStore)
+        let deviceGroupKeyManager = DeviceGroupKeyManager()
         let localWasMultiDeviceRegistered = businessInjector.settingsStore.isMultiDeviceRegistered
         wasMultiDeviceRegistered = localWasMultiDeviceRegistered
         if !localWasMultiDeviceRegistered {
@@ -316,7 +316,10 @@ public final class DeviceJoin {
             $0.cspHashedNonces = cspNonces
             // $0.d2DHashedNonces // IOS-3978: Send nonces from D2D scope
 
-            $0.mdmParameters = gatherMdmParameters()
+            // Only set MDM parameters for business apps. Otherwise they should not be present
+            if TargetManager.isBusinessApp {
+                $0.mdmParameters = gatherMdmParameters()
+            }
         }
         
         try checkCancellation(of: task)
@@ -350,7 +353,7 @@ public final class DeviceJoin {
     
     private func gatherUserProfileAndSendPictureIfNeeded(over connection: EncryptedRendezvousConnection) async throws
         -> Sync_UserProfile {
-        var (userProfile, profilePicture) = ProfileStore().profile().asSyncUserProfile
+        var (userProfile, profilePicture) = ProfileStore().profile.asSyncUserProfile
         if let profilePicture {
             let profilePictureCommonImage = try await sendBlobImage(data: profilePicture, over: connection)
             userProfile.profilePicture.updated = profilePictureCommonImage
@@ -409,16 +412,15 @@ public final class DeviceJoin {
         // Load groups from Core Data and map them to business objects
         let allGroups = try await businessInjector.entityManager.perform {
             guard let allGroupConversations = self.businessInjector.entityManager.entityFetcher
-                .allGroupConversations() else {
+                .groupConversationEntities() else {
                 throw Error.failedToGatherData
             }
                     
             var groups = [Group]()
             groups.reserveCapacity(allGroupConversations.count)
             
-            for anyGroupConversation in allGroupConversations {
-                guard let groupConversation = anyGroupConversation as? ConversationEntity,
-                      let groupID = groupConversation.groupID,
+            for groupConversation in allGroupConversations {
+                guard let groupID = groupConversation.groupID,
                       let groupCreator = groupConversation.contact?.identity ?? self.businessInjector.myIdentityStore
                       .identity,
                       let group = self.businessInjector.groupManager.getGroup(groupID, creator: groupCreator)
@@ -471,7 +473,7 @@ public final class DeviceJoin {
 
     private func gatherIdentityData() throws -> Join_EssentialData.IdentityData {
         guard let identity = businessInjector.myIdentityStore.identity,
-              let privateClientKey = businessInjector.myIdentityStore.keySecret() else {
+              let privateClientKey = businessInjector.myIdentityStore.clientKey else {
             throw Error.failedToGatherData
         }
         
@@ -505,7 +507,7 @@ public final class DeviceJoin {
     
     private func gatherCSPNonces() async throws -> [Data] {
         try await businessInjector.entityManager.perform {
-            guard let allNonceEntities = self.businessInjector.entityManager.entityFetcher.allNonceEntities() else {
+            guard let allNonceEntities = self.businessInjector.entityManager.entityFetcher.nonceEntities() else {
                 throw Error.failedToGatherData
             }
             
@@ -524,7 +526,7 @@ public final class DeviceJoin {
     }
 
     private func gatherMdmParameters() -> Sync_MdmParameters {
-        MDMSetup(setup: false).mdmParameters()
+        MDMSetup().mdmParameters()
     }
 
     private func sendBlobImage(
@@ -632,7 +634,7 @@ public final class DeviceJoin {
     
     private func pfsEnabledContacts() async -> [ContactEntity] {
         await businessInjector.entityManager.perform {
-            guard let allContacts = self.businessInjector.entityManager.entityFetcher.allContacts() as? [ContactEntity]
+            guard let allContacts = self.businessInjector.entityManager.entityFetcher.contactEntities()
             else {
                 return []
             }
@@ -659,20 +661,15 @@ public final class DeviceJoin {
                 
                 // Post system message
                 guard let conversation = self.businessInjector.entityManager.entityFetcher
-                    .conversationEntity(forIdentity: contact.identity) else {
+                    .conversationEntity(for: contact.identity) else {
                     // If we don't have a conversation don't post a system message
                     continue
                 }
-                guard let systemMessage = self.businessInjector.entityManager.entityCreator
-                    .systemMessageEntity(for: conversation) else {
-                    DDLogNotice("Unable to create system message for changing PFS state")
-                    continue
-                }
-                systemMessage.type = NSNumber(value: kSystemMessageFsDisabledOutgoing)
+                let systemMessage = self.businessInjector.entityManager.entityCreator.systemMessageEntity(
+                    for: .fsDisabledOutgoing,
+                    in: conversation
+                )
                 systemMessage.remoteSentDate = Date()
-                if systemMessage.isAllowedAsLastMessage {
-                    conversation.lastMessage = systemMessage
-                }
             }
         }
     }
@@ -714,7 +711,7 @@ public final class DeviceJoin {
         
         DDLogNotice("Fetch solicited contacts")
         let solicitedContactIdentities = await businessInjector.entityManager.perform {
-            self.businessInjector.entityManager.entityFetcher.allSolicitedContactIdentities()
+            self.businessInjector.entityManager.entityFetcher.solicitedContactIdentities()
         }
         
         await ForwardSecurityRefreshSteps().run(for: solicitedContactIdentities.map {

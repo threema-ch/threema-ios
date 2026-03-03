@@ -43,30 +43,42 @@ public actor PushSettingManager: PushSettingManagerProtocol {
     private let userSettings: UserSettingsProtocol
     private let groupManager: GroupManagerProtocol
     private let entityManager: EntityManager
+    private let markupParser: MarkupParser
     private let taskManager: TaskManagerProtocol
     private let isWorkApp: Bool
 
     init(
-        _ userSettings: UserSettingsProtocol,
-        _ groupManager: GroupManagerProtocol,
-        _ entityManager: EntityManager,
-        _ taskManager: TaskManagerProtocol,
-        _ isWorkApp: Bool
+        userSettings: UserSettingsProtocol,
+        groupManager: GroupManagerProtocol,
+        entityManager: EntityManager,
+        markupParser: MarkupParser,
+        taskManager: TaskManagerProtocol,
+        isWorkApp: Bool
     ) {
         self.userSettings = userSettings
         self.groupManager = groupManager
         self.entityManager = entityManager
+        self.markupParser = markupParser
         self.taskManager = taskManager
         self.isWorkApp = isWorkApp
     }
 
-    init(entityManager: EntityManager = EntityManager(), taskManager: TaskManagerProtocol = TaskManager()) {
+    init(
+        entityManager: EntityManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        ).entityManager,
+        markupParser: MarkupParser = MarkupParser(),
+        taskManager: TaskManagerProtocol = TaskManager()
+    ) {
         self.init(
-            UserSettings.shared(),
-            GroupManager(entityManager: entityManager, taskManager: taskManager),
-            entityManager,
-            taskManager,
-            TargetManager.isBusinessApp
+            userSettings: UserSettings.shared(),
+            groupManager: GroupManager(entityManager: entityManager, taskManager: taskManager),
+            entityManager: entityManager,
+            markupParser: markupParser,
+            taskManager: taskManager,
+            isWorkApp: TargetManager.isBusinessApp
         )
     }
 
@@ -123,8 +135,7 @@ public actor PushSettingManager: PushSettingManagerProtocol {
            let baseMessage = pendingUserNotification.baseMessage,
            let group = entityManager.entityFetcher.groupEntity(for: baseMessage.conversation) {
             let creator = group.groupCreator ?? MyIdentityStore.shared().identity
-            // swiftformat:disable:next acronyms
-            return find(forGroup: GroupIdentity(id: group.groupId, creator: ThreemaIdentity(creator!)))
+            return find(forGroup: GroupIdentity(id: group.groupID, creator: ThreemaIdentity(creator!)))
         }
         
         else if let groupCallMessage = pendingUserNotification.abstractMessage as? GroupCallStartMessage {
@@ -166,17 +177,17 @@ public actor PushSettingManager: PushSettingManagerProtocol {
                 if let identity = pushSetting.identity {
                     var pushSetting = pushSetting
                     let mediatorSyncableContacts = MediatorSyncableContacts(
-                        userSettings,
-                        self,
-                        TaskManager(),
-                        entityManager
+                        userSettings: userSettings,
+                        pushSettingManager: self,
+                        taskManager: TaskManager(),
+                        entityManager: entityManager
                     )
                     mediatorSyncableContacts.updateNotificationSound(
-                        identity: identity.string,
+                        identity: identity.rawValue,
                         isMuted: pushSetting.muted
                     )
                     mediatorSyncableContacts.updateNotificationTrigger(
-                        identity: identity.string,
+                        identity: identity.rawValue,
                         type: pushSetting.type,
                         expiresAt: pushSetting.periodOffTillDate
                     )
@@ -184,10 +195,10 @@ public actor PushSettingManager: PushSettingManagerProtocol {
                 }
                 else if let groupIdentity = pushSetting.groupIdentity {
                     let mediatorSyncableGroup = MediatorSyncableGroup(
-                        userSettings,
-                        self,
-                        taskManager,
-                        groupManager
+                        userSettings: userSettings,
+                        pushSettingManager: self,
+                        taskManager: taskManager,
+                        groupManager: groupManager
                     )
                     await mediatorSyncableGroup.updateNotificationSound(
                         identity: groupIdentity,
@@ -232,20 +243,20 @@ public actor PushSettingManager: PushSettingManagerProtocol {
 
     /// Should we show a notification for this base message?
     public nonisolated func canSendPush(for message: BaseMessageEntity) -> Bool {
-        entityManager.performAndWait {
-            guard !message.isOwnMessage else {
+        entityManager.performAndWait { [weak self] in
+            guard let self, !message.isOwnMessage else {
                 return false
             }
 
             if message.isGroupMessage {
-                guard let group = self.groupManager.getGroup(conversation: message.conversation) else {
+                guard let group = groupManager.getGroup(conversation: message.conversation) else {
                     return false
                 }
 
-                var pushSetting = self.find(forGroup: group.groupIdentity)
+                var pushSetting = find(forGroup: group.groupIdentity)
                 if pushSetting.type == .offPeriod || pushSetting.type == .off {
                     if pushSetting.mentioned {
-                        if !TextStyleUtils.isMeOrAllMention(inText: message.contentToCheckForMentions()) {
+                        if !markupParser.isMeOrAllMention(in: message.contentToCheckForMentions() ?? "") {
                             return false
                         }
                     }
@@ -256,7 +267,7 @@ public actor PushSettingManager: PushSettingManagerProtocol {
             }
             else {
                 if let sender = message.sender ?? message.conversation.contact {
-                    var pushSetting = self.find(forContact: ThreemaIdentity(sender.identity))
+                    var pushSetting = find(forContact: ThreemaIdentity(sender.identity))
                     return !(pushSetting.type == .offPeriod || pushSetting.type == .off)
                 }
             }
@@ -314,6 +325,12 @@ public actor PushSettingManager: PushSettingManagerProtocol {
 
     private func encode(_ pushSettings: [PushSetting]) throws {
         let encoder = JSONEncoder()
+        
+        // TODO: (IOS-5620) Replace with injected encoder
+        // Get constant ordering for tests
+        #if DEBUG
+            encoder.outputFormatting = [.sortedKeys]
+        #endif
 
         let items = try pushSettings.map { item in
             try encoder.encode(item)
@@ -322,18 +339,10 @@ public actor PushSettingManager: PushSettingManagerProtocol {
     }
 }
 
-@objc public class PushSettingManagerObjc: NSObject {
-    @available(*, deprecated, message: "Use PushSettingManager instead")
+@available(swift, obsoleted: 1.0, renamed: "PushSettingManager", message: "Only use from Objective-C")
+public final class PushSettingManagerObjC: NSObject {
     @objc public static func canSendPush(for message: BaseMessageEntity, entityManager: EntityManager) -> Bool {
         BusinessInjector(entityManager: entityManager)
             .pushSettingManager.canSendPush(for: message)
-    }
-
-    @available(*, deprecated, message: "Use PushSettingManager instead")
-    @objc public static func delete(threemaIdentity identity: String, entityManager: EntityManager) {
-        Task {
-            await BusinessInjector(entityManager: entityManager)
-                .pushSettingManager.delete(forContact: ThreemaIdentity(identity))
-        }
     }
 }

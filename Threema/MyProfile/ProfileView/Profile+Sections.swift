@@ -104,15 +104,13 @@ extension ProfileView {
     struct LinkedDataSection: View {
         @EnvironmentObject var model: ProfileViewModel
         
+        @State private var isShowingLinkedPhoneNumberSheet = false
+        @State private var isShowingLinkedEmailSheet = false
+        
         var body: some View {
             Section {
-                ModalNavigationLink(destination: {
-                    viewController(
-                        model.linkMobileNoPending
-                            ? "enterCodeViewController"
-                            : "linkMobileNoViewController"
-                    )
-                    .wrappedModalNavigationView
+                BindedModalNavigationLink(isPresented: $isShowingLinkedPhoneNumberSheet, destination: {
+                    linkedPhoneNumberSheet
                 }, label: {
                     ListItem(
                         title: #localize("profile_linked_phone"),
@@ -120,9 +118,8 @@ extension ProfileView {
                     )
                 }, onDismiss: model.load, fullscreen: false)
                 
-                ModalNavigationLink(destination: {
-                    viewController("linkEmailViewController")
-                        .wrappedModalNavigationView
+                BindedModalNavigationLink(isPresented: $isShowingLinkedEmailSheet, destination: {
+                    linkedEmailSheet
                 }, label: {
                     ListItem(
                         title: #localize("profile_linked_email"),
@@ -133,6 +130,35 @@ extension ProfileView {
                 Text(String(format: #localize("myprofile_link_email_phone_footer"), TargetManager.appName))
             }
             .disabled(model.readOnlyProfile)
+        }
+        
+        @ViewBuilder
+        var linkedPhoneNumberSheet: some View {
+            wrappedLinkingSheet(dismissBinding: $isShowingLinkedPhoneNumberSheet) {
+                LinkPhoneNumberDeciderView()
+            }
+        }
+
+        @ViewBuilder
+        var linkedEmailSheet: some View {
+            wrappedLinkingSheet(dismissBinding: $isShowingLinkedEmailSheet) {
+                LinkEmailDeciderView()
+            }
+        }
+        
+        @ViewBuilder
+        func wrappedLinkingSheet(dismissBinding: Binding<Bool>, @ViewBuilder content: () -> some View) -> some View {
+            NavigationView {
+                content()
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(#localize("md_wizard_close")) {
+                                dismissBinding.wrappedValue = false
+                            }
+                        }
+                    }
+            }
         }
     }
     
@@ -184,7 +210,15 @@ extension ProfileView {
     // MARK: - IDSection
     
     struct IDSection: View {
+        
+        private struct PasswordWrapper: Identifiable {
+            let id = UUID()
+            let value: String
+        }
+        
         @EnvironmentObject var model: ProfileViewModel
+        
+        @State private var exportIDPassword: PasswordWrapper?
         
         var body: some View {
             Section {
@@ -194,6 +228,12 @@ extension ProfileView {
                     ListItem(
                         title: #localize("profile_id_export")
                     )
+                }
+                .sheet(item: $exportIDPassword, onDismiss: { exportIDPassword = nil }) { password in
+                    NavigationView {
+                        IDExportView(password: password.value)
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
                 }
                 .disabled(model.disableBackups)
                 if !TargetManager.isOnPrem {
@@ -211,31 +251,52 @@ extension ProfileView {
         }
         
         var revocationKey: some View {
-            ProfileView
-                .viewController(
-                    "backupPasswordViewController",
-                    from: "CreatePassword"
-                )
-                .wrappedModalNavigationView(
-                    delegate: model.delegateHandler.revocationKey
-                )
+            passwordInput(
+                title: #localize("revocation_password"),
+                footer: String.localizedStringWithFormat(
+                    #localize("revocation_password_description"),
+                    TargetManager.localizedAppName
+                ),
+                passwordCreateButton: #localize("revocation_password_button")
+            ) { password in
+                RevocationKeyManager.shared.setPassword(password)
+            }
         }
         
         var exportID: some View {
-            ProfileView
-                .viewController(
-                    "backupPasswordViewController",
-                    from: "CreatePassword"
-                )
-                .wrappedModalNavigationView(
-                    delegate: model.delegateHandler.exportID
-                )
+            passwordInput(
+                title: #localize("profile_id_export"),
+                footer: #localize("password_description_backup"),
+                passwordCreateButton: #localize("profile_id_export_button")
+            ) { password in
+                exportIDPassword = PasswordWrapper(value: password)
+            }
         }
         
         @ViewBuilder
         private var footer: some View {
             if model.disableBackups || model.readOnlyProfile {
                 Text(#localize("disabled_by_device_policy"))
+            }
+        }
+        
+        @ViewBuilder
+        private func passwordInput(
+            title: String,
+            footer: String,
+            passwordCreateButton: String,
+            _ onPasswordSet: @escaping (String) -> Void
+        ) -> some View {
+            NavigationView {
+                PasswordCreationView(
+                    coordinator: nil,
+                    title: title,
+                    footer: footer,
+                    passwordCreateButton: passwordCreateButton,
+                ) { password in
+                    onPasswordSet(password)
+                }
+                .navigationBarTitleDisplayMode(.inline)
             }
         }
     }
@@ -269,6 +330,7 @@ extension ProfileView {
 
     struct RemoveIDAndDataSection: View {
         @EnvironmentObject var model: ProfileViewModel
+        var onDismiss: () -> Void
         
         @State private var isAlertPresented = false
         
@@ -297,7 +359,7 @@ extension ProfileView {
                 }
                 else {
                     ModalNavigationLink(destination: {
-                        DeleteRevokeView()
+                        DeleteRevokeView(onDismiss: onDismiss)
                     }, label: {
                         label
                     }, onDismiss: model.load, fullscreen: true)

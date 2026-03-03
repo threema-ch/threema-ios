@@ -18,6 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentialsTestHelper
 import XCTest
 @testable import ThreemaFramework
 @testable import ThreemaProtocols
@@ -26,10 +27,9 @@ class FeatureMaskTests: XCTestCase {
     private var deviceGroupKeys: DeviceGroupKeys!
 
     override func setUpWithError() throws {
-        // Necessary for ValidationLogger
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        deviceGroupKeys = MockData.deviceGroupKeys
+        deviceGroupKeys = MockMultiDevice.deviceGroupKeys
     }
 
     override func tearDownWithError() throws { }
@@ -176,8 +176,7 @@ class FeatureMaskTests: XCTestCase {
                     groupCreator: myIdentityStoreMock.identity
                 )
                 let conversation = dbPreparer.createConversation()
-                // swiftformat:disable:next acronyms
-                conversation.groupId = group.groupId
+                conversation.groupID = group.groupID
                 conversation.members = Set(members)
 
                 let message = dbPreparer.createTextMessage(
@@ -195,7 +194,7 @@ class FeatureMaskTests: XCTestCase {
             XCTAssertEqual(test.unsupported.count, result.unsupported.count)
             for identity in test.unsupported {
                 XCTAssertTrue(
-                    result.unsupported.map(\.identity.string).contains(identity)
+                    result.unsupported.map(\.identity.rawValue).contains(identity)
                 )
             }
         }

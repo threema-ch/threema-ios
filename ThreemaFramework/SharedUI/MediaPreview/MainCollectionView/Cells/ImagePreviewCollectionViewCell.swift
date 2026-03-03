@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FLAnimatedImage
 import ThreemaMacros
 import UIKit
 
@@ -97,7 +98,7 @@ class ImagePreviewCollectionViewCell: ScreenWidthSizedCell, UIScrollViewDelegate
         loadingView.backgroundColor = .secondarySystemBackground
         backgroundColor = .secondarySystemBackground
         
-        gifPlayImageView.image = gifPlayImageView.image?.draw(withTintColor: .white)
+        gifPlayImageView.image = gifPlayImageView.image?.withTintColor(.white)
     }
     
     func showLoadingScreen() {

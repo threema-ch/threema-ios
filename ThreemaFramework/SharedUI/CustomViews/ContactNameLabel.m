@@ -21,15 +21,17 @@
 #import "ContactNameLabel.h"
 #import "UserSettings.h"
 #import "BundleUtil.h"
-#import "ThreemaFramework/ThreemaFramework-swift.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 @implementation ContactNameLabel
 
-- (void)setContact:(ContactEntity*)contact {
-    
-    _contact = contact;
-    
-    if (_contact.isActive || _contact == nil) {
+- (void)setContactObject:(NSObject*)contactObject {
+    _contactObject = contactObject;
+
+    NSAssert(_contactObject == nil || [_contactObject isKindOfClass:[ContactEntity class]], @"Parameter _contactObject must be type of ContactEntity");
+    ContactEntity *contact = (ContactEntity*)_contactObject;
+
+    if (contact.isActive || contact == nil) {
         self.textColor = UIColor.labelColor;
     } else {
         self.textColor = UIColor.secondaryLabelColor;
@@ -115,14 +117,18 @@
 }
 
 - (BOOL)isBlacklisted {
-    return [[UserSettings sharedUserSettings].blacklist containsObject:_contact.identity];
+    NSAssert(_contactObject == nil || [_contactObject isKindOfClass:[ContactEntity class]], @"Parameter _contactObject must be type of ContactEntity");
+    ContactEntity *contact = (ContactEntity*)_contactObject;
+    return [[UserSettings sharedUserSettings].blacklist containsObject:contact.identity];
 }
 
 - (NSString *)accessibilityLabel {
+    NSAssert(_contactObject == nil || [_contactObject isKindOfClass:[ContactEntity class]], @"Parameter _contactObject must be type of ContactEntity");
+    ContactEntity *contact = (ContactEntity*)_contactObject;
     NSString *appendix = @"";
     if ([self isBlacklisted]) {
         appendix = [BundleUtil localizedStringForKey:@"blocked"];
-    } else if (_contact != nil && _contact.isActive == NO) {
+    } else if (contact != nil && contact.isActive == NO) {
         appendix = [BundleUtil localizedStringForKey:@"inactive"];
     }
     

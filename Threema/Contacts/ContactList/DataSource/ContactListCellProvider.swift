@@ -58,6 +58,26 @@ struct ContactListCellProvider: ContactListCellProviderProtocol {
     }
 }
 
+struct ContactListSelectionCellProvider: ContactListCellProviderProtocol {
+    func dequeueCell(
+        for indexPath: IndexPath,
+        and contact: Contact?,
+        in tableView: UITableView
+    ) -> ContactCell? {
+        guard let contact else {
+            DDLogError("[ContactListSelectionCellProvider] Unable to load contact.")
+            return tableView.dequeueCell(for: indexPath) as ContactCell
+        }
+
+        return (tableView.dequeueCell(for: indexPath) as ContactCell).then {
+            $0.selectionStyle = .none
+            $0.hasCheckmark = true
+            $0.isSelected = false
+            $0.content = .contact(contact)
+        }
+    }
+}
+
 struct GroupListCellProvider: ContactListCellProviderProtocol {
     func dequeueCell(
         for indexPath: IndexPath,

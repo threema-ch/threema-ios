@@ -29,7 +29,7 @@ class WebConversationsResponse: WebAbstractMessage {
 
         let businessInjector = BusinessInjector.ui
         let allConversations = businessInjector.entityManager.entityFetcher
-            .allConversationsSorted() as? [ConversationEntity]
+            .conversationEntitiesSorted()
 
         // Fetch only chats where lastUpdate is not `nil` to avoid showing chats that only contain system messages
         let unarchivedConversations = allConversations?

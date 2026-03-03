@@ -34,7 +34,8 @@
 
 @interface MDMSetup (Testing)
 
-- (MDMSetup*)initMockupWithIsBusinessApp:(BOOL)isBusinessApp setup:(BOOL)setup;
+- (MDMSetup*)initWithAppSetupStateRawValue:(NSInteger)appSetupStateRawValue isBusinessApp:(BOOL)businessApp;
+- (MDMSetup*)initWithAppSetupStateRawValue:(NSInteger)appSetupStateRawValue isBusinessApp:(BOOL)businessApp isOnPrem:(BOOL)onPrem;
 
 @end
 
@@ -45,14 +46,14 @@
     UserSettings* _mockUserSettings;
     __strong Class _mockLicenseStoreClass;
     LicenseStore* _mockLicenseStore;
-    
+
     NSNumber *_yes;
     NSNumber *_no;
 }
 
 - (void)setUp {
     [super setUp];
-    
+
     _mockUserSettingsClass = mockClass([UserSettings class]);
     _mockUserSettings = mock([UserSettings class]);
     stubSingleton(_mockUserSettingsClass, sharedUserSettings);
@@ -67,7 +68,7 @@
     _mockMyIdentityStore = mock([MyIdentityStore class]);
     stubSingleton(_mockMyIdentityStoreClass, sharedMyIdentityStore);
     [given([MyIdentityStore sharedMyIdentityStore]) willReturn:_mockMyIdentityStore];
-    
+
     [self delMdm];
 
     _yes = [[NSNumber alloc] initWithUnsignedInt:1];
@@ -79,7 +80,7 @@
     stopMocking(_mockUserSettingsClass);
     _mockUserSettings = nil;
     _mockUserSettingsClass = nil;
-    
+
     stopMocking(_mockLicenseStore);
     stopMocking(_mockLicenseStoreClass);
     _mockLicenseStore = nil;
@@ -89,7 +90,7 @@
     stopMocking(_mockMyIdentityStoreClass);
     _mockMyIdentityStore = nil;
     _mockMyIdentityStoreClass = nil;
-    
+
     [self delMdm];
 
     [super tearDown];
@@ -129,8 +130,8 @@
     NSDictionary* companyMdm = [NSDictionary dictionaryWithObjects:objects forKeys:keys count:count];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
+
     [mdmSetup loadLicenseInfo];
 
     [verify(_mockLicenseStore) setLicenseUsername:@"tester"];
@@ -141,7 +142,7 @@
     // Company-MDM
     [self setMdm:[self getAllMdmParameters:NO] threemaMdm:nil];
 
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     [mdmSetup loadRenewableValues];
     
     [verify(_mockLicenseStore) setLicenseUsername:@"tester"];
@@ -193,8 +194,8 @@
     // Company-MDM
     [self setMdm:[self getAllMdmParameters:NO] threemaMdm:nil];
 
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
+
     [mdmSetup loadIDCreationValues];
     
     [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
@@ -251,7 +252,7 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objects forKeys:keys count:count];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
     BOOL result = [mdmSetup hasIDBackup];
     
     XCTAssertTrue(result);
@@ -273,7 +274,7 @@
 
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:threemaMdm}};
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     // Threema MDM can't set the license username and password
@@ -339,7 +340,7 @@
     
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:threemaMdm}};
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     // Threema MDM can't set the license username and password
@@ -402,7 +403,7 @@
     
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:threemaMdm}};
    
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     // Threema MDM can't set the license username and password
@@ -473,7 +474,7 @@
     
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:threemaMdm}};
    
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     // Threema MDM can't set the license username and password
@@ -538,7 +539,7 @@
     // NO "new" Threema-MDM
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{}};
    
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
 
     [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
@@ -598,7 +599,7 @@
     // NO "new" Threema-MDM
     NSDictionary *workData = @{};
    
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
 
     [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()];
@@ -665,7 +666,7 @@
     
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
    
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     [verify(_mockLicenseStore) setLicenseUsername:@"company-tester"];
@@ -735,7 +736,7 @@
     
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
    
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     [verify(_mockLicenseStore) setLicenseUsername:@"company-tester"];
@@ -794,8 +795,8 @@
     NSDictionary *oldWorkData = @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:[self getAllMdmParameters:YES]};
     [self setMdm:nil threemaMdm:oldWorkData];
 
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:NO setup:NO];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:NO];
+
     [verifyCount(_mockLicenseStore, times(0)) setLicenseUsername:anything()]; // not reset
     [verifyCount(_mockLicenseStore, times(0)) setLicensePassword:anything()]; // not reset
     
@@ -852,8 +853,8 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
+
     XCTAssertTrue([mdmSetup isSafeBackupDisable]);
     XCTAssertFalse([mdmSetup isSafeBackupForce]);
     XCTAssertFalse([mdmSetup isSafeBackupPasswordPreset]);
@@ -873,8 +874,8 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
+
     XCTAssertFalse([mdmSetup isSafeBackupDisable]);
     XCTAssertFalse([mdmSetup isSafeBackupForce]);
     XCTAssertFalse([mdmSetup isSafeBackupServerPreset]);
@@ -895,8 +896,8 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
+
     XCTAssertEqual(keep_message_days, [mdmSetup keepMessagesDays]);
 }
 
@@ -908,8 +909,8 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
+
     XCTAssertFalse([mdmSetup isSafeBackupDisable]);
     XCTAssertTrue([mdmSetup isSafeBackupForce]);
     XCTAssertFalse([mdmSetup isSafeBackupServerPreset]);
@@ -929,8 +930,8 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
+
     XCTAssertFalse([mdmSetup isSafeBackupDisable]);
     XCTAssertFalse([mdmSetup isSafeBackupForce]);
     XCTAssertTrue([mdmSetup isSafeBackupServerPreset]);
@@ -950,8 +951,8 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
+
     XCTAssertFalse([mdmSetup isSafeBackupDisable]);
     XCTAssertTrue([mdmSetup isSafeBackupForce]);
     XCTAssertTrue([mdmSetup isSafeBackupServerPreset]);
@@ -971,8 +972,8 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
+
     XCTAssertFalse([mdmSetup isSafeBackupDisable]);
     XCTAssertFalse([mdmSetup isSafeBackupForce]);
     XCTAssertFalse([mdmSetup isSafeBackupServerPreset]);
@@ -992,8 +993,8 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
+
     XCTAssertFalse([mdmSetup isSafeBackupDisable]);
     XCTAssertFalse([mdmSetup isSafeBackupForce]);
     XCTAssertFalse([mdmSetup isSafeBackupServerPreset]);
@@ -1013,8 +1014,8 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
+
     XCTAssertFalse([mdmSetup isSafeBackupDisable]);
     XCTAssertFalse([mdmSetup isSafeBackupForce]);
     XCTAssertTrue([mdmSetup isSafeBackupServerPreset]);
@@ -1034,8 +1035,8 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     [self setMdm:companyMdm threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
+
     XCTAssertFalse([mdmSetup isSafeBackupDisable]);
     XCTAssertFalse([mdmSetup isSafeBackupForce]);
     XCTAssertTrue([mdmSetup isSafeBackupServerPreset]);
@@ -1051,7 +1052,7 @@
     // Company-MDM
     [self setMdm:[self getAllMdmParameters:NO] threemaMdm:nil];
 
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     [mdmSetup loadIDCreationValues];
     
     [self setMdm:nil threemaMdm:nil];
@@ -1070,7 +1071,7 @@
     // Company-MDM
     [self setMdm:[self getAllMdmParameters:NO] threemaMdm:nil];
 
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     [mdmSetup loadIDCreationValues];
     
     id keysCompanyMdm[] = { MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY };
@@ -1094,7 +1095,7 @@
     // Company-MDM
     [self setMdm:[self getAllMdmParameters:YES] threemaMdm:nil];
 
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     [mdmSetup loadIDCreationValues];
         
     [self setEmptyMDM];
@@ -1113,8 +1114,8 @@
     NSDictionary *workData = @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:[self getAllMdmParameters:YES]};
     [self setMdm:nil threemaMdm:workData];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
+
     XCTAssertEqualObjects([mdmSetup supportDescriptionString], @"m");
 }
 
@@ -1122,8 +1123,8 @@
     NSDictionary *workData = @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:[self getAllMdmParameters:YES]};
     [self setMdm:workData threemaMdm:workData];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
+
     XCTAssertEqualObjects([mdmSetup supportDescriptionString], @"me");
 }
 
@@ -1131,8 +1132,8 @@
     NSDictionary *workData = @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:[self getAllMdmParameters:YES]};
     [self setMdm:workData threemaMdm:nil];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
+
     XCTAssertEqualObjects([mdmSetup supportDescriptionString], @"e");
 }
 
@@ -1141,13 +1142,13 @@
     NSDictionary *companyWorkData = @{};
     [self setMdm:companyWorkData threemaMdm:threemaWorkData];
     
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
-    
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
+
     XCTAssertNil([mdmSetup supportDescriptionString]);
 }
 
 - (void)testEmptySupportDescriptionString2 {
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:NO];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES];
     
     XCTAssertNil([mdmSetup supportDescriptionString]);
 }
@@ -1168,7 +1169,7 @@
 
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
    
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     XCTAssertTrue([mdmSetup hasIDBackup]);
@@ -1194,7 +1195,7 @@
 
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
    
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     [verify(_mockLicenseStore) setLicenseUsername:@"new-tester"];
@@ -1216,7 +1217,7 @@
 
     NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
    
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
     [mdmSetup applyThreemaMdm:workData sendForce:NO];
     
     XCTAssertFalse([mdmSetup hasIDBackup]);
@@ -1236,8 +1237,8 @@
     NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
     [self setMdm:companyMdm threemaMdm:nil];
       
-    MDMSetup *mdmSetup = [[MDMSetup alloc] initMockupWithIsBusinessApp:YES setup:YES];
-        
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES];
+
     XCTAssertNil([mdmSetup webHosts]);
     XCTAssertNil([mdmSetup safePassword]);
     XCTAssertNil([mdmSetup safeServerUrl]);
@@ -1246,6 +1247,145 @@
     XCTAssertNil([mdmSetup safeRestoreId]);
     XCTAssertNil([mdmSetup safePasswordPattern]);
     XCTAssertNil([mdmSetup safePasswordMessage]);
+}
+
+- (void)testRemoteSecretInCompanyMDMForSetup {
+    id keysCompanyMdm[] = {MDM_KEY_ENABLE_REMOTE_SECRET};
+    id objectsCompanyMdm[] = { @"1" };
+    NSUInteger countCompanyMdm = sizeof(objectsCompanyMdm) / sizeof(id);
+    NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
+    [self setMdm:companyMdm threemaMdm:nil];
+      
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES isOnPrem:YES];
+
+    XCTAssertTrue([mdmSetup enableRemoteSecret]);
+}
+
+- (void)testRemoteSecretInThreemaMDMForSetup {
+    id keysMdm[] = {MDM_KEY_ENABLE_REMOTE_SECRET};
+    id objectsMdm[] = { @1 };
+    NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
+    NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
+
+    NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
+   
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES isOnPrem:YES];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
+        
+    XCTAssertTrue([mdmSetup enableRemoteSecret]);
+}
+
+- (void)testRemoteSecretInThreemaMDMWithCompanyMDMForSetup {
+    // Company-MDM and NO "old" Threema-MDM
+    id keysCompanyMdm[] = {MDM_KEY_ENABLE_REMOTE_SECRET};
+    id objectsCompanyMdm[] = { @0 };
+    NSUInteger countCompanyMdm = sizeof(objectsCompanyMdm) / sizeof(id);
+    NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
+    [self setMdm:companyMdm threemaMdm:nil];
+    
+    // "new" Threema-MDM (override is false)
+    id keysMdm[] = { MDM_KEY_ENABLE_REMOTE_SECRET };
+    id objectsMdm[] = { @1 };
+    NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
+    NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
+
+    NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@false,MDM_KEY_THREEMA_PARAMS:mdm}};
+   
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateNotSetup isBusinessApp:YES isOnPrem:YES];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
+    
+    XCTAssertFalse([mdmSetup enableRemoteSecret]);
+}
+
+- (void)testRemoteSecretInCompanyMDM {
+    id keysCompanyMdm[] = {MDM_KEY_ENABLE_REMOTE_SECRET};
+    id objectsCompanyMdm[] = { @"1" };
+    NSUInteger countCompanyMdm = sizeof(objectsCompanyMdm) / sizeof(id);
+    NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
+    [self setMdm:companyMdm threemaMdm:nil];
+      
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES isOnPrem:YES];
+
+    XCTAssertTrue([mdmSetup enableRemoteSecret]);
+}
+
+- (void)testRemoteSecretInThreemaMDM {
+    id keysMdm[] = {MDM_KEY_ENABLE_REMOTE_SECRET};
+    id objectsMdm[] = { @1 };
+    NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
+    NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
+    NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
+
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES isOnPrem:YES];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
+        
+    XCTAssertTrue([mdmSetup enableRemoteSecret]);
+}
+
+- (void)testRemoteSecretInThreemaMDMWithCompanyMDM {
+    // Company-MDM and NO "old" Threema-MDM
+    id keysCompanyMdm[] = {MDM_KEY_ENABLE_REMOTE_SECRET};
+    id objectsCompanyMdm[] = { @0 };
+    NSUInteger countCompanyMdm = sizeof(objectsCompanyMdm) / sizeof(id);
+    NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
+    [self setMdm:companyMdm threemaMdm:nil];
+    
+    // "new" Threema-MDM (override)
+    id keysMdm[] = { MDM_KEY_ENABLE_REMOTE_SECRET };
+    id objectsMdm[] = { @1 };
+    NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
+    NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
+
+    NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
+   
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES isOnPrem:YES];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
+    
+    XCTAssertTrue([mdmSetup enableRemoteSecret]);
+}
+
+- (void)testRemoteSecretInWorkEnviorement {
+    // MDM_KEY_ENABLE_REMOTE_SECRET should not be possible with work flavor
+    id keysCompanyMdm[] = {MDM_KEY_ENABLE_REMOTE_SECRET};
+    id objectsCompanyMdm[] = { @1 };
+    NSUInteger countCompanyMdm = sizeof(objectsCompanyMdm) / sizeof(id);
+    NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
+    [self setMdm:companyMdm threemaMdm:nil];
+    
+    // "new" Threema-MDM (override)
+    id keysMdm[] = { MDM_KEY_ENABLE_REMOTE_SECRET };
+    id objectsMdm[] = { @1 };
+    NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
+    NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
+
+    NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
+       
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:YES isOnPrem:NO];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
+    
+    XCTAssertFalse([mdmSetup enableRemoteSecret]);
+}
+
+- (void)testRemoteSecretInPrivateEnviorement {
+    // MDM_KEY_ENABLE_REMOTE_SECRET should not be possible with private flavor
+    id keysCompanyMdm[] = {MDM_KEY_ENABLE_REMOTE_SECRET};
+    id objectsCompanyMdm[] = { @1 };
+    NSUInteger countCompanyMdm = sizeof(objectsCompanyMdm) / sizeof(id);
+    NSDictionary *companyMdm = [NSDictionary dictionaryWithObjects:objectsCompanyMdm forKeys:keysCompanyMdm count:countCompanyMdm];
+    [self setMdm:companyMdm threemaMdm:nil];
+    
+    // "new" Threema-MDM (override)
+    id keysMdm[] = { MDM_KEY_ENABLE_REMOTE_SECRET };
+    id objectsMdm[] = { @1 };
+    NSUInteger countMdm = sizeof(objectsMdm) / sizeof(id);
+    NSDictionary *mdm = [NSDictionary dictionaryWithObjects:objectsMdm forKeys:keysMdm count:countMdm];
+
+    NSDictionary *workData = @{MDM_KEY_THREEMA_CONFIGURATION: @{MDM_KEY_THREEMA_OVERRIDE:@true,MDM_KEY_THREEMA_PARAMS:mdm}};
+       
+    MDMSetup *mdmSetup = [[MDMSetup alloc] initWithAppSetupStateRawValue:AppSetupStateComplete isBusinessApp:NO isOnPrem:NO];
+    [mdmSetup applyThreemaMdm:workData sendForce:NO];
+    
+    XCTAssertFalse([mdmSetup enableRemoteSecret]);
 }
 
 - (NSDictionary*)getAllMdmParameters:(BOOL)isThreemaMdm  {

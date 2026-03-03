@@ -115,7 +115,9 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
 
     // MARK: ConnectionStateDelegate
 
-    func changed(connectionState state: ConnectionState) { }
+    func changed(connectionState state: ConnectionState) {
+        // no-op
+    }
     
     func registerTaskExecutionTransactionDelegate(delegate: TaskExecutionTransactionDelegate) {
         taskExecutionTransactionDelegate = delegate
@@ -195,19 +197,27 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
 
     // MARK: - MessageProcessorDelegate
     
-    func beforeDecode() { }
+    func beforeDecode() {
+        // no-op
+    }
 
     func changedManagedObjectID(_ objectID: NSManagedObjectID) {
         // no-op
     }
     
-    func incomingMessageStarted(_ message: AbstractMessage) { }
+    func incomingMessageStarted(_ message: AbstractMessage) {
+        // no-op
+    }
     
-    func incomingMessageChanged(_ message: AbstractMessage, baseMessage: BaseMessageEntity) { }
+    func incomingMessageChanged(_ message: AbstractMessage, baseMessageEntity baseMessageEntityObject: NSObject) {
+        // no-op
+    }
 
-    func incomingMessageFinished(_ message: AbstractMessage) { }
+    func incomingMessageFinished(_ message: AbstractMessage) {
+        // no-op
+    }
 
-    func readMessage(inConversations: Set<ConversationEntity>?) {
+    func readMessage(inConversations: Set<AnyHashable>?) {
         // no-op
     }
     
@@ -227,11 +237,17 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
         messageProcessorDelegate?.taskQueueEmpty()
     }
     
-    func chatQueueDry() { }
-    
-    func reflectionQueueDry() { }
+    func chatQueueDry() {
+        // no-op
+    }
+
+    func reflectionQueueDry() {
+        // no-op
+    }
         
-    func processTypingIndicator(_ message: TypingIndicatorMessage) { }
+    func processTypingIndicator(_ message: TypingIndicatorMessage) {
+        // no-op
+    }
     
     func processVoIPCall(
         _ message: NSObject,

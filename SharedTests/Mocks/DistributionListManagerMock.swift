@@ -27,8 +27,8 @@ class DistributionListManagerMock: NSObject, DistributionListManagerProtocol {
         name: String,
         imageData: Data?,
         recipients: Set<Contact>
-    ) throws {
-        // No-op
+    ) -> DistributionList? {
+        nil
     }
     
     func distributionList(for conversation: ConversationEntity) -> DistributionList? {

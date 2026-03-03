@@ -84,7 +84,7 @@
       </EnvironmentVariables>
       <TestPlans>
          <TestPlanReference
-            reference = "container:ThreemaTests/Threema Work.xctestplan"
+            reference = "container:ThreemaTests/ThreemaWorkTestPlan.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
@@ -172,7 +172,7 @@
       </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "AppStore"
+      buildConfiguration = "AdHoc"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"

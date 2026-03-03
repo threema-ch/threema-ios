@@ -320,7 +320,7 @@ extension GroupCallContext {
             }
             catch {
                 DDLogError(
-                    "[Group Call] Could not decode message for pending participant with participantID: \(pendingParticipant.participantID.id) and threemaID: \(pendingParticipant.threemaIdentity?.string ?? "nil"). Dropping participant."
+                    "[Group Call] Could not decode message for pending participant with participantID: \(pendingParticipant.participantID.id) and threemaID: \(pendingParticipant.threemaIdentity?.rawValue ?? "nil"). Dropping participant."
                 )
                 return .dropPendingParticipant(pendingParticipant.participantID)
             }
@@ -340,7 +340,7 @@ extension GroupCallContext {
             }
             catch {
                 DDLogError(
-                    "[Group Call] Could not decode message for joined participant with participantID: \(joinedParticipant.participantID.id) and threemaID: \(joinedParticipant.threemaIdentity.string). Ignoring it."
+                    "[Group Call] Could not decode message for joined participant with participantID: \(joinedParticipant.participantID.id) and threemaID: \(joinedParticipant.threemaIdentity.rawValue). Ignoring it."
                 )
                 messageResponse = .none
             }
@@ -590,7 +590,7 @@ extension GroupCallContext {
         for joinedRemoteParticipant in joinedRemoteParticipants {
             var normalParticipant = Groupcall_CallState.Participant.Normal()
             
-            normalParticipant.identity = joinedRemoteParticipant.threemaIdentity.string
+            normalParticipant.identity = joinedRemoteParticipant.threemaIdentity.rawValue
             normalParticipant.nickname = joinedRemoteParticipant.nickname
             
             var stateParticipant = Groupcall_CallState.Participant()
@@ -602,7 +602,7 @@ extension GroupCallContext {
         // We also need to add the local participant
         let localParticipant = participantState.localParticipant
         var localNormalParticipant = Groupcall_CallState.Participant.Normal()
-        localNormalParticipant.identity = localParticipant.threemaIdentity.string
+        localNormalParticipant.identity = localParticipant.threemaIdentity.rawValue
         localNormalParticipant.nickname = localParticipant.nickname
         
         var localStateParticipant = Groupcall_CallState.Participant()

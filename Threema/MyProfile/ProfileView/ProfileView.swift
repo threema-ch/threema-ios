@@ -26,6 +26,7 @@ import ThreemaMacros
 
 struct ProfileView: View {
     @ObservedObject var model = ProfileViewModel()
+    var onDismiss: () -> Void
     
     private let businessInjector = BusinessInjector.ui
     
@@ -37,7 +38,7 @@ struct ProfileView: View {
                 IDSection()
                 LinkedDataSection()
                 PublicKeySection()
-                RemoveIDAndDataSection()
+                RemoveIDAndDataSection(onDismiss: onDismiss)
             }
             .navigationDestination(for: AnyViewDestination.self)
             .toolbar {
@@ -75,10 +76,10 @@ struct ProfileView: View {
     
     @ViewBuilder
     private var rightBarButtonItem: some View {
-        if ScanIdentityController.canScan() {
-            Button(action: scanAction, label: {
+        if model.canScan {
+            Button(action: model.scanAction) {
                 Image(systemName: "qrcode.viewfinder")
-            })
+            }
             .tint(.accentColor)
             .accessibilityLabel(#localize("scan_identity"))
         }
@@ -99,37 +100,10 @@ struct ProfileView: View {
             )
         }
         else {
-            let vc = ProfileView.viewController("editProfileViewController")
+            let vc = EditProfileViewController()
             let mvc = ModalNavigationController(rootViewController: vc)
             mvc.modalDelegate = model.delegateHandler
             ModalPresenter.present(mvc, on: topViewController)
         }
-    }
-    
-    private func scanAction() {
-        guard let topViewController else {
-            return
-        }
-        
-        guard let disableAddContact = model.mdmSetup?.disableAddContact(), disableAddContact else {
-            let scanIdentity = ScanIdentityController()
-            scanIdentity.containingViewController = topViewController
-            scanIdentity.startScan()
-            
-            businessInjector.contactStore
-                .synchronizeAddressBook(
-                    forceFullSync: true,
-                    ignoreMinimumInterval: false,
-                    onCompletion: nil
-                )
-            
-            return
-        }
-        
-        UIAlertTemplate.showAlert(
-            owner: topViewController,
-            title: "",
-            message: #localize("disabled_by_device_policy")
-        )
     }
 }

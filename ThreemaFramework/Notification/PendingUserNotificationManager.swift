@@ -19,9 +19,11 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
 import Intents
 import PromiseKit
+import ThreemaEssentials
 
 public enum UserNotificationStage: String, CaseIterable {
     case initial
@@ -68,11 +70,13 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     private static var processedUserNotifications: [String]?
     private static let processedQueue = DispatchQueue(label: "ch.threema.PendingUserNotificationManager.processedQueue")
 
+    public static let processedUserNotificationsFileName = "ProcessedUserNotifications"
+
     required init(
-        _ userNotificationManager: UserNotificationManagerProtocol,
-        _ userNotificationCenterManager: UserNotificationCenterManagerProtocol,
-        _ pushSettingManager: PushSettingManagerProtocol,
-        _ entityManager: EntityManager
+        userNotificationManager: UserNotificationManagerProtocol,
+        userNotificationCenterManager: UserNotificationCenterManagerProtocol,
+        pushSettingManager: PushSettingManagerProtocol,
+        entityManager: EntityManager
     ) {
         self.userNotificationManager = userNotificationManager
         self.userNotificationCenterManager = userNotificationCenterManager
@@ -84,15 +88,15 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     }
     
     public convenience init(
-        _ userNotificationManager: UserNotificationManagerProtocol,
-        _ pushSettingManager: PushSettingManagerProtocol,
-        _ entityManager: EntityManager
+        userNotificationManager: UserNotificationManagerProtocol,
+        pushSettingManager: PushSettingManagerProtocol,
+        entityManager: EntityManager
     ) {
         self.init(
-            userNotificationManager,
-            UserNotificationCenterManager(),
-            pushSettingManager,
-            entityManager
+            userNotificationManager: userNotificationManager,
+            userNotificationCenterManager: UserNotificationCenterManager(),
+            pushSettingManager: pushSettingManager,
+            entityManager: entityManager
         )
     }
     
@@ -280,10 +284,10 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
             
             var notification = UNMutableNotificationContent()
             userNotificationManager.applyContent(
-                userNotificationContent,
-                &notification,
-                silent,
-                pendingUserNotification.baseMessage
+                from: userNotificationContent,
+                to: &notification,
+                silent: silent,
+                baseMessage: pendingUserNotification.baseMessage
             )
                         
             let businessInjector = BusinessInjector()
@@ -493,11 +497,14 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
 
     /// Loads the lists of pending and processed user notifications.
     public func loadAll() {
+        let fileUtility = FileUtility.shared!
+        
         // Processed
         PendingUserNotificationManager.processedQueue.sync {
-            guard FileManager.default.fileExists(atPath: PendingUserNotificationManager.pathProcessedUserNotifications),
-                  let data = FileUtility.shared
-                  .read(fileURL: URL(fileURLWithPath: PendingUserNotificationManager.pathProcessedUserNotifications))
+            guard fileUtility.fileExists(atPath: PendingUserNotificationManager.pathProcessedUserNotifications),
+                  let data = fileUtility.read(fileURL: URL(
+                      fileURLWithPath: PendingUserNotificationManager.pathProcessedUserNotifications
+                  ))
             else {
                 return
             }
@@ -507,8 +514,9 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 from: data
             ) as? [String] else {
                 DDLogError("[Push] File of processed user notifications could not be decoded, removing file")
-                try? FileManager.default
-                    .removeItem(atPath: PendingUserNotificationManager.pathProcessedUserNotifications)
+                try? fileUtility.delete(
+                    atPath: PendingUserNotificationManager.pathProcessedUserNotifications
+                )
                 return
             }
             
@@ -521,9 +529,10 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 return
             }
             
-            guard FileManager.default.fileExists(atPath: PendingUserNotificationManager.pathPendingUserNotifications),
-                  let data = FileUtility.shared
-                  .read(fileURL: URL(fileURLWithPath: PendingUserNotificationManager.pathPendingUserNotifications))
+            guard fileUtility.fileExists(atPath: PendingUserNotificationManager.pathPendingUserNotifications),
+                  let data = fileUtility.read(fileURL: URL(
+                      fileURLWithPath: PendingUserNotificationManager.pathPendingUserNotifications
+                  ))
             else {
                 return
             }
@@ -539,7 +548,7 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 from: data
             ) as? [PendingUserNotification] else {
                 DDLogError("[Push] File of pending user notifications could not be decoded, removing file")
-                try? FileManager.default.removeItem(atPath: PendingUserNotificationManager.pathPendingUserNotifications)
+                try? fileUtility.delete(atPath: PendingUserNotificationManager.pathPendingUserNotifications)
                 return
             }
             
@@ -562,9 +571,15 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                 if pendingUserNotification.baseMessage == nil,
                    let baseMessageID = pendingUserNotification.baseMessageID,
                    let abstractMessage = pendingUserNotification.abstractMessage,
-                   let conversation = entityManager.conversation(forMessage: abstractMessage) {
-                    pendingUserNotification.baseMessage = self.entityManager
-                        .entityFetcher.message(with: baseMessageID, conversation: conversation)
+                   let conversation = entityManager.conversation(
+                       forMessage: abstractMessage,
+                       myIdentity: MyIdentityStore.shared().identity
+                   ) {
+                    pendingUserNotification.baseMessage =
+                        self.entityManager.entityFetcher.message(
+                            with: baseMessageID,
+                            in: conversation
+                        )
                 }
                 
                 PendingUserNotificationManager.pendingUserNotifications?.append(pendingUserNotification)
@@ -596,9 +611,11 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     }
     
     fileprivate static func savePendingUserNotifications() {
+        let fileUtility = FileUtility.shared!
+        
         do {
-            if FileManager.default.fileExists(atPath: pathPendingUserNotifications) {
-                try FileManager.default.removeItem(atPath: pathPendingUserNotifications)
+            if fileUtility.fileExists(atPath: pathPendingUserNotifications) {
+                try fileUtility.delete(atPath: pathPendingUserNotifications)
             }
         }
         catch {
@@ -614,7 +631,10 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                     withRootObject: pendingUserNotifications,
                     requiringSecureCoding: true
                 )
-                try archivedData.write(to: URL(fileURLWithPath: pathPendingUserNotifications))
+                fileUtility.write(
+                    contents: archivedData,
+                    to: URL(fileURLWithPath: pathPendingUserNotifications)
+                )
             }
         }
         catch {
@@ -625,9 +645,11 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     }
     
     private static func saveProcessedUserNotifications() {
+        let fileUtility = FileUtility.shared!
+        
         do {
-            if FileManager.default.fileExists(atPath: pathProcessedUserNotifications) {
-                try FileManager.default.removeItem(atPath: pathProcessedUserNotifications)
+            if fileUtility.fileExists(atPath: pathProcessedUserNotifications) {
+                try fileUtility.delete(atPath: pathProcessedUserNotifications)
             }
         }
         catch {
@@ -643,7 +665,10 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
                     withRootObject: processedUserNotifications,
                     requiringSecureCoding: true
                 )
-                try archivedData.write(to: URL(fileURLWithPath: pathProcessedUserNotifications))
+                fileUtility.write(
+                    contents: archivedData,
+                    to: URL(fileURLWithPath: pathProcessedUserNotifications)
+                )
             }
         }
         catch {
@@ -656,7 +681,8 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     static var pathPendingUserNotifications: String {
         var path: String?
         if path == nil {
-            path = FileUtility.shared.appDataDirectory!.appendingPathComponent("PendingUserNotifications").path
+            path = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())!
+                .appendingPathComponent("PendingUserNotifications").path
         }
         return path!
     }
@@ -664,7 +690,8 @@ public class PendingUserNotificationManager: NSObject, PendingUserNotificationMa
     static var pathProcessedUserNotifications: String {
         var path: String?
         if path == nil {
-            path = FileUtility.shared.appDataDirectory!.appendingPathComponent("ProcessedUserNotifications").path
+            path = FileUtility.shared.appDataDirectory(appGroupID: AppGroup.groupID())!
+                .appendingPathComponent(processedUserNotificationsFileName).path
         }
         return path!
     }

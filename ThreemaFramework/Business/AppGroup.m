@@ -19,8 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "AppGroup.h"
-#import "DatabaseManager.h"
-#import "ValidationLogger.h"
+#import "ThreemaFramework/ThreemaFramework-Swift.h"
 
 #define KEY_APP_GROUP_TYPE_APP @"AppGroupTypeApp"
 #define KEY_APP_GROUP_TYPE_NOTIFICATION_EXTENSION @"AppGroupTypeNotificationExtension"
@@ -48,6 +47,8 @@ static NSString *appId;
 static NSString *groupId;
 static CFStringRef appSyncNotificationKey;
 
+static void observerCallback(void);
+
 @implementation AppGroup
 
 + (void)setAppId:(NSString *)newAppId {
@@ -74,6 +75,10 @@ static CFStringRef appSyncNotificationKey;
 + (void)setActive:(BOOL)active forType:(AppGroupType)type {
     NSAssert(appId != nil, @"appId not set, you need to set an id for the app or extension");
 
+    if (type == AppGroupTypeNone) {
+        return;
+    }
+
     // Log AppGroupType, because of connection problem (Notification Extension steals connection from App and contrary)
     DDLogWarn(@"Set AppGroupType %@ to active: %@", [AppGroup nameForType:type], active == YES ? @"YES" : @"NO");
 
@@ -91,8 +96,11 @@ static CFStringRef appSyncNotificationKey;
     else if ([defaults boolForKey:KEY_APP_GROUP_TYPE_SHARE_EXTENSION]) {
         return AppGroupTypeShareExtension;
     }
-    else {
+    else if ([defaults boolForKey:KEY_APP_GROUP_TYPE_APP]) {
         return AppGroupTypeApp;
+    }
+    else {
+        return AppGroupTypeNone;
     }
 }
 
@@ -122,8 +130,42 @@ static CFStringRef appSyncNotificationKey;
     }
 }
 
++ (void)setMeActive {
+    if ([AppGroup getCurrentType] == AppGroupTypeApp) {
+        [AppGroup setActive:YES forType:AppGroupTypeApp];
+        [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
+        [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
+    }
+    else if ([AppGroup getCurrentType] == AppGroupTypeNotificationExtension) {
+        [AppGroup setActive:NO forType:AppGroupTypeApp];
+        [AppGroup setActive:YES forType:AppGroupTypeNotificationExtension];
+        [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
+    }
+    else if ([AppGroup getCurrentType] == AppGroupTypeShareExtension) {
+        [AppGroup setActive:NO forType:AppGroupTypeApp];
+        [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
+        [AppGroup setActive:YES forType:AppGroupTypeShareExtension];
+    }
+    else {
+        [AppGroup setActive:NO forType:AppGroupTypeApp];
+        [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
+        [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
+    }
+}
+
++ (void)setMeInactive {
+    [AppGroup setActive:NO forType:[AppGroup getCurrentType]];
+}
+
 + (BOOL)amIActive {
    return [AppGroup getCurrentType] == [AppGroup getActiveType];
+}
+
++ (BOOL)areOthersActive {
+    if ([AppGroup getActiveType] == AppGroupTypeNone || [AppGroup getActiveType] == [AppGroup getCurrentType]) {
+        return NO;
+    }
+    return YES;
 }
 
 + (NSUserDefaults *)userDefaults {
@@ -189,13 +231,6 @@ static CFStringRef appSyncNotificationKey;
 
 #pragma mark - inter app communication as seen in (https://developer.apple.com/videos/wwdc/2015/?id=224)
 
-static void observerCallback() {
-    // Call refresh of dirty objects with NO to not remove them from NSUserDefault.
-    // Because of different processes of the Notification Extension (adding dirty objects)
-    // and the App (refresh and remove dirty objects) it's not guaranty that en dirty object has refreshed.
-    [[DatabaseManager dbManager] refreshDirtyObjects: NO];
-};
-
 + (void)registerAppGroupSyncObserver {
     if ([AppGroup getCurrentType] != AppGroupTypeApp) {
         // Otherwise notification gets consumed by extension
@@ -226,3 +261,9 @@ static void observerCallback() {
 }
 
 @end
+
+// The definition of this global C function should be outside of AppGroup implementation
+
+static void observerCallback(void) {
+    [AppGroup refreshDirtyObjects];
+};

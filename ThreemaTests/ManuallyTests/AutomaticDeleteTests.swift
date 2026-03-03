@@ -24,15 +24,25 @@ import XCTest
 
 final class AutomaticDeleteTests: XCTestCase {
 
+    private var managedObjectContext: NSManagedObjectContext!
+
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
+
+        (_, managedObjectContext, _) = DatabasePersistentContext.devNullContext()
     }
 
     /// 1. Create Messages for every `OlderThanOption` case excluding `forever` and `everything`.
     /// 2. Delete Messages on each Iteration and test if the amount before and after matches the desired output.
     func testLoadAndAutomaticDeleteTextMessages() async throws {
         // Setup
-        let entityManager = EntityManager()
+        let entityManager =
+            EntityManager(
+                databaseContext: DatabaseContext(
+                    mainContext: managedObjectContext as! ThreemaManagedObjectContext
+                ),
+                isRemoteSecretEnabled: false
+            )
         let testBundle = Bundle(for: DBLoadTests.self)
         guard let textsPath = testBundle.url(forResource: "test_texts", withExtension: "json") else {
             XCTFail("Cannot find file with test texts")
@@ -46,7 +56,7 @@ final class AutomaticDeleteTests: XCTestCase {
         let createConversation = { (contact: String) -> ConversationEntity in
             var conversation: ConversationEntity?
             entityManager.performAndWaitSave {
-                if let contact = entityManager.entityFetcher.contact(for: contact) {
+                if let contact = entityManager.entityFetcher.contactEntity(for: contact) {
                     conversation = entityManager.conversation(forContact: contact, createIfNotExisting: true)
                 }
             }
@@ -58,8 +68,11 @@ final class AutomaticDeleteTests: XCTestCase {
             for index in 0..<total {
                 let calendar = Calendar.current
                 let date = calendar.date(byAdding: .day, value: -(index + 1), to: option.date ?? Date.currentDate)!
-                let message = entityManager.entityCreator.textMessageEntity(for: conversation, setLastUpdate: true)!
-                message.text = "\(index) - \(texts[index % texts.count])"
+                let message = entityManager.entityCreator.textMessageEntity(
+                    text: "\(index) - \(texts[index % texts.count])",
+                    in: conversation,
+                    setLastUpdate: true
+                )
                 message.date = date
                 message.sender = conversation.contact
                 message.sent = true

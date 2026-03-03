@@ -20,6 +20,7 @@
 
 import CocoaLumberjackSwift
 import CoreServices
+import FileUtility
 import Foundation
 import PromiseKit
 import UIKit
@@ -200,7 +201,7 @@ public class ImageURLSenderItemCreator: NSObject {
         guard let scheme = url.scheme else {
             return nil
         }
-        if (scheme != "file") || !FileManager.default.fileExists(atPath: url.relativePath) {
+        if (scheme != "file") || FileUtility.shared.fileExists(at: url) == false {
             return nil
         }
         
@@ -252,7 +253,7 @@ public class ImageURLSenderItemCreator: NSObject {
         deprecated,
         message: "Is only available for to support legacy Objective-C code. Please use any of the other functions"
     )
-    @objc func senderItem(fromImage image: UIImage) -> URLSenderItem? {
+    @objc public func senderItem(fromImage image: UIImage) -> URLSenderItem? {
         guard let image = MediaConverter.scale(image, toMaxSize: imageMaxSize(image)) else {
             return nil
         }

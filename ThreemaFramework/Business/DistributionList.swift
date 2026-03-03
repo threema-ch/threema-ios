@@ -59,12 +59,14 @@ public class DistributionList: NSObject {
     
     @objc public private(set) dynamic var willBeDeleted = false
     
+    public private(set) var usesNonGeneratedProfilePicture = false
+    
     // MARK: - Private properties
     
     // Tokens for entity subscriptions, will be removed when is deallocated
     private var subscriptionTokens = [EntityObserver.SubscriptionToken]()
     
-    private var distributionListImageData: Data? {
+    public private(set) var distributionListImageData: Data? {
         didSet {
             updateProfilePicture()
         }
@@ -181,9 +183,11 @@ public class DistributionList: NSObject {
     
     private func resolveProfilePicture() -> UIImage {
         if let distributionListImageData, let image = UIImage(data: distributionListImageData) {
+            usesNonGeneratedProfilePicture = true
             return image
         }
         
+        usesNonGeneratedProfilePicture = false
         return ProfilePictureGenerator.generateImage(for: .distributionList, color: idColor)
     }
 }

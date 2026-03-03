@@ -55,14 +55,15 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
         self.safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: BusinessInjector.ui.groupManager
+            groupManager: BusinessInjector.ui.groupManager,
+            myIdentityStore: BusinessInjector.ui.myIdentityStore
         )
         self.safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
             safeStore: safeStore,
             safeApiService: SafeApiService()
         )
-        self.mdmSetup = MDMSetup(setup: false)
+        self.mdmSetup = MDMSetup()
         super.init(coder: aDecoder)
     }
     
@@ -171,13 +172,14 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
     }
     
     private func checkPasswordAndActivate() {
-        guard mdmSetup.safePassword() == nil else {
-            activate(safePassword: mdmSetup.safePassword())
+        
+        if let mdmSafePassword = mdmSetup.safePassword() {
+            activate(safePassword: mdmSafePassword)
             return
         }
         
         if let safePassword = validatedPassword() {
-            if safeManager.isPasswordBad(password: safePassword) {
+            if SafeManager.isPasswordBad(password: safePassword) {
                 UIAlertTemplate.showConfirm(
                     owner: self,
                     popOverSource: passwordField,
@@ -233,8 +235,8 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                 maxBackupBytes: self.maxBackupBytes != nil ? NSNumber(integerLiteral: self.maxBackupBytes!) : nil,
                 retentionDays: self.retentionDays != nil ? NSNumber(integerLiteral: self.retentionDays!) : nil
             ) { error in
-                if let safeError = error as? SafeManager.SafeError {
-                    DDLogError("\(safeError.errorDescription ?? safeError.localizedDescription)")
+                if let safeError = error as? SafeError {
+                    DDLogError("[Threema Safe] Activation failed with error: \(safeError.description)")
                     DispatchQueue.main.async {
                         UIAlertTemplate.showAlert(
                             owner: self,
@@ -242,7 +244,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                                 #localize("safe_error_preparing"),
                                 TargetManager.localizedAppName
                             ),
-                            message: safeError.errorDescription ?? safeError.localizedDescription
+                            message: safeError.description
                         )
                     }
                 }
@@ -307,8 +309,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     }
                 }
                 catch {
-                    ValidationLogger.shared()?
-                        .logString("Threema Safe: Can't check safe password because regex is invalid")
+                    DDLogNotice("Threema Safe: Can't check safe password because regex is invalid")
                     UIAlertTemplate.showAlert(
                         owner: self,
                         title: #localize("Password"),
@@ -352,7 +353,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
     private func validateServer(completion: @escaping (Bool) -> Void) {
         if mdmSetup.isSafeBackupServerPreset() {
             // server is given by MDM
-            let mdmSetup = MDMSetup(setup: false)
+            let mdmSetup = MDMSetup()
             customServer = mdmSetup?.safeServerURL()
             serverUser = mdmSetup?.safeServerUsername()
             serverPassword = mdmSetup?.safeServerPassword()
@@ -372,12 +373,13 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
             return
         }
         else {
-            // server is WebDAV
+            // Server is WebDAV
             let safeConfigManager = SafeConfigManager()
             let safeStore = SafeStore(
                 safeConfigManager: SafeConfigManager(),
                 serverApiConnector: ServerAPIConnector(),
-                groupManager: BusinessInjector.ui.groupManager
+                groupManager: BusinessInjector.ui.groupManager,
+                myIdentityStore: BusinessInjector.ui.myIdentityStore
             )
             
             if let customServer = serverField.text, let customServerURL = URL(string: customServer) {
@@ -388,7 +390,7 @@ class SafeSetupPasswordViewController: ThemedTableViewController {
                     safeApiService: SafeApiService()
                 )
                 
-                safeManager.testServer(
+                SafeManager.testServer(
                     serverURL: customServerURL,
                     user: serverUserNameField.text,
                     password: serverPasswordField.text

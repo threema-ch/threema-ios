@@ -19,19 +19,24 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CoreData
+import ThreemaEssentialsTestHelper
 import XCTest
+
 @testable import ThreemaFramework
 
 final class ConversationStoreTests: XCTestCase {
 
-    private var mainCnx: NSManagedObjectContext!
+    private var mainCnx: ThreemaManagedObjectContext!
     private var entityManager: EntityManager!
     
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
         
         (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        entityManager = EntityManager(databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: nil))
+        entityManager = EntityManager(
+            databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: nil),
+            isRemoteSecretEnabled: false
+        )
     }
 
     func testUnpinConversationPinned() throws {
@@ -248,7 +253,7 @@ final class ConversationStoreTests: XCTestCase {
         conversationStore.unmarkAllPrivateConversations()
 
         let conversations = try XCTUnwrap(
-            entityManager.entityFetcher.allConversations() as? [ConversationEntity]
+            entityManager.entityFetcher.conversationEntities()
         )
         XCTAssertTrue(conversations.filter { $0.conversationCategory == .private }.isEmpty)
         let tasks = try XCTUnwrap(taskManagerMock.addedTasks as? [TaskDefinitionUpdateContactSync])

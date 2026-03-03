@@ -44,7 +44,8 @@ extension BlobManagerResult {
 }
 
 /// Wraps the BlobManager to make it usable in Obj-C code, should only be used when new chat view is active
-@objc public class BlobManagerObjcWrapper: NSObject {
+@available(swift, obsoleted: 1.0, renamed: "BlobManager", message: "Only use from Objective-C")
+public final class BlobManagerObjCWrapper: NSObject {
     
     /// Start automatic download of blobs in passed object
     /// - Parameter messageID: NSManagedObjectID of message to be synced

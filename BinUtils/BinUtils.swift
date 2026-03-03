@@ -196,8 +196,8 @@ func isBigEndianFromMandatoryByteOrderFirstCharacter(_ format: String) -> Bool {
 }
 
 // akin to struct.calcsize(fmt)
-func numberOfBytesInFormat(_ format: String) -> Int {
-    
+func numberOfBytesInFormat(_ format: String) throws -> Int {
+
     var numberOfBytes = 0
     
     var n = 0 // repeat counter
@@ -239,7 +239,7 @@ func numberOfBytesInFormat(_ format: String) -> Int {
         case "P":
             numberOfBytes += MemoryLayout<Int>.size * repeatCount
         default:
-            assertionFailure("-- unsupported format \(c)")
+            throw BinUtilsError.unsupportedFormat(character: c)
         }
         
         n = 0
@@ -248,8 +248,8 @@ func numberOfBytesInFormat(_ format: String) -> Int {
     return numberOfBytes
 }
 
-func formatDoesMatchDataLength(_ format: String, data: Data) -> Bool {
-    let sizeAccordingToFormat = numberOfBytesInFormat(format)
+func formatDoesMatchDataLength(_ format: String, data: Data) throws -> Bool {
+    let sizeAccordingToFormat = try numberOfBytesInFormat(format)
     let dataLength = data.count
     if sizeAccordingToFormat != dataLength {
         print("format \"\(format)\" expects \(sizeAccordingToFormat) bytes but data is \(dataLength) bytes")
@@ -409,9 +409,15 @@ public func unpack(
     )
     
     let isBigEndian = isBigEndianFromMandatoryByteOrderFirstCharacter(format)
-    
-    if formatDoesMatchDataLength(format, data: data) == false {
-        throw BinUtilsError.formatDoesMatchDataLength(format: format, dataSize: data.count)
+
+    do {
+        let matchesDataLength = try formatDoesMatchDataLength(format, data: data)
+        if matchesDataLength == false {
+            throw BinUtilsError.formatDoesMatchDataLength(format: format, dataSize: data.count)
+        }
+    }
+    catch {
+        throw error
     }
     
     var a: [Unpackable] = []

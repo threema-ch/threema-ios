@@ -91,7 +91,7 @@ public class ForwardSecuritySessionTerminator {
     /// - Returns: `true` if there existed any sessions that were terminated
     public func terminateAllSessions(with identity: String, cause: CspE2eFs_Terminate.Cause) throws -> Bool {
         try businessInjector.entityManager.performAndWaitSave {
-            guard let contact = self.businessInjector.entityManager.entityFetcher.contact(for: identity) else {
+            guard let contact = self.businessInjector.entityManager.entityFetcher.contactEntity(for: identity) else {
                 return false
             }
             
@@ -110,7 +110,7 @@ public class ForwardSecuritySessionTerminator {
         
         let identity = contact.identity
         businessInjector.entityManager.performAndWaitSave {
-            guard let contact = self.businessInjector.entityManager.entityFetcher.contact(for: identity) else {
+            guard let contact = self.businessInjector.entityManager.entityFetcher.contactEntity(for: identity) else {
                 return
             }
             

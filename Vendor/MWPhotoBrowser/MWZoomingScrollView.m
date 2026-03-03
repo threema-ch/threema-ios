@@ -17,6 +17,7 @@
 #import "MWPhoto.h"
 #import "MWPhotoBrowserPrivate.h"
 #import "UIImage+MWPhotoBrowser.h"
+#import <ThreemaFramework/ThreemaFramework-Swift.h>
 
 // Private methods and properties
 @interface MWZoomingScrollView () {

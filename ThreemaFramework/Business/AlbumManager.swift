@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Photos
 import UIKit
 
@@ -45,7 +46,7 @@ import UIKit
     public func save(_ item: SaveMediaItem, showNotifications: Bool = true, autosave: Bool = false) {
         
         defer {
-            FileUtility.shared.delete(at: item.url)
+            FileUtility.shared.deleteIfExists(at: item.url)
         }
         
         // Check access, requests if not yet granted
@@ -242,8 +243,8 @@ import UIKit
         return nil
     }
     
-    @available(*, deprecated, message: "Use `saveMediaItem(_ item: SaveMediaItem)` instead")
-    @objc func savedImage(_ im: UIImage, error: Error?, context: UnsafeMutableRawPointer?) {
+    @available(*, deprecated, renamed: "saveMediaItem(_:)")
+    @objc private func savedImage(_ im: UIImage, error: Error?, context: UnsafeMutableRawPointer?) {
         if error != nil {
             guard let err = error else {
                 DDLogError(generalError)
@@ -256,7 +257,7 @@ import UIKit
         }
     }
     
-    @available(*, deprecated, message: "Use `saveMediaItem(_ item: SaveMediaItem)` instead")
+    @available(*, deprecated, renamed: "saveMediaItem(_:)")
     @objc public func save(image: UIImage) {
         func saveIt(_ validAssets: PHAssetCollection) {
             PHPhotoLibrary.shared().performChanges({
@@ -311,86 +312,8 @@ import UIKit
         }
     }
     
-    @available(*, deprecated, message: "Use `saveMediaItem(_ item: SaveMediaItem)` instead")
-    @objc public func save(url: URL, isVideo: Bool, completionHandler: @escaping ((_ success: Bool) -> Void)) {
-        func saveIt(_ validAssets: PHAssetCollection) {
-            PHPhotoLibrary.shared().performChanges({
-                let assetChangeRequest: PHAssetChangeRequest? =
-                    if isVideo == true {
-                        PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
-                    }
-                    else {
-                        PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url)
-                    }
-                
-                if let assetPlaceHolder = assetChangeRequest?.placeholderForCreatedAsset {
-                    if let albumChangeRequest = PHAssetCollectionChangeRequest(for: validAssets) {
-                        let enumeration: NSArray = [assetPlaceHolder]
-                        albumChangeRequest.addAssets(enumeration)
-                    }
-                }
-            }, completionHandler: { success, error in
-                if success {
-                    DDLogNotice(self.successMessage)
-                    completionHandler(true)
-                }
-                else {
-                    guard let err = error else {
-                        DDLogError(self.generalError)
-                        return
-                    }
-                    DDLogError(self.writeErrorMessage + "\(err.localizedDescription)")
-                    completionHandler(false)
-                }
-            })
-        }
-        checkAuthorizationWithHandler { authorizationState in
-            if authorizationState == .full {
-                if let validAssets = self.fetchAssetCollectionForAlbum() { // Album already exists
-                    saveIt(validAssets)
-                }
-                else {
-                    PHPhotoLibrary.shared().performChanges({
-                        PHAssetCollectionChangeRequest
-                            .creationRequestForAssetCollection(
-                                withTitle: AlbumManager
-                                    .albumName
-                            ) // create an asset collection with the album name
-                    }) { success, error in
-                        if success, let validAssets = self.fetchAssetCollectionForAlbum() {
-                            saveIt(validAssets)
-                        }
-                        else {
-                            guard let err = error else {
-                                DDLogError(self.generalError)
-                                return
-                            }
-                            DDLogError(self.writeErrorMessage + "\(err.localizedDescription)")
-                        }
-                    }
-                }
-            }
-            else if authorizationState == .write || authorizationState == .potentialWrite {
-                if isVideo {
-                    self.saveMovieFromURL(movieURL: url)
-                }
-                else {
-                    guard let data = try? Data(contentsOf: url) else {
-                        DDLogError(self.writeErrorMessage)
-                        return
-                    }
-                    let image = UIImage(data: data)!
-                    UIImageWriteToSavedPhotosAlbum(image, self, #selector(self.savedImage), nil)
-                }
-            }
-            else {
-                DDLogNotice(self.permissionNotGrantedMessage)
-            }
-        }
-    }
-    
-    @available(*, deprecated, message: "Use `saveMediaItem(_ item: SaveMediaItem)` instead")
-    @objc func saveMovieFromURL(movieURL: URL) {
+    @available(*, deprecated, renamed: "saveMediaItem(_:)")
+    private func saveMovieFromURL(movieURL: URL) {
         PHPhotoLibrary.shared().performChanges({
             PHAssetCreationRequest.creationRequestForAssetFromVideo(atFileURL: movieURL)
         }) { success, error in
@@ -407,7 +330,7 @@ import UIKit
         }
     }
     
-    @available(*, deprecated, message: "Use `saveMediaItem(_ item: SaveMediaItem)` instead")
+    @available(*, deprecated, renamed: "saveMediaItem(_:)")
     @objc public func saveMovieToLibrary(movieURL: URL, completionHandler: @escaping ((_ success: Bool) -> Void)) {
         func saveIt(_ validAssets: PHAssetCollection) {
             PHPhotoLibrary.shared().performChanges({

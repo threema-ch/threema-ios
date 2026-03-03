@@ -18,14 +18,15 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import ThreemaEssentials
 import XCTest
-
 @testable import Threema
+@testable import ThreemaFramework
 
 class ChatProfileViewTests: XCTestCase {
     
-    private var managedObjectContext: NSManagedObjectContext!
-    
+    private var managedObjectContext: ThreemaManagedObjectContext!
+
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
         
@@ -67,12 +68,18 @@ class ChatProfileViewTests: XCTestCase {
     func testBasicInitialization() throws {
         let (contact, conversation) = createConversation()
         let businessContact = Contact(contactEntity: contact)
-        contact.setFirstName(to: "Emily")
-        
+        contact.setFirstName(to: "Emily", sortOrderFirstName: true)
+
         let expectedAccessibilityLabel =
             "\(contact.displayName). \(businessContact.verificationLevelAccessibilityLabel)"
 
-        let chatProfileView = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+        let chatProfileView = ChatProfileView(
+            for: conversation,
+            entityManager: EntityManager(
+                databaseContext: DatabaseContext(mainContext: managedObjectContext),
+                isRemoteSecretEnabled: false
+            )
+        ) {
             // no-op
         }
         
@@ -85,11 +92,17 @@ class ChatProfileViewTests: XCTestCase {
         let (contact, conversation) = createConversation()
         let businessContact = Contact(contactEntity: contact)
 
-        let chatProfileView = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+        let chatProfileView = ChatProfileView(
+            for: conversation,
+            entityManager: EntityManager(
+                databaseContext: DatabaseContext(mainContext: managedObjectContext),
+                isRemoteSecretEnabled: false
+            )
+        ) {
             // no-op
         }
         
-        conversation.contact!.setFirstName(to: "Emily")
+        conversation.contact!.setFirstName(to: "Emily", sortOrderFirstName: true)
         let expectedAccessibilityLabel =
             "\(contact.displayName). \(businessContact.verificationLevelAccessibilityLabel)"
         
@@ -102,7 +115,13 @@ class ChatProfileViewTests: XCTestCase {
         let (contact, conversation) = createConversation()
         let businessContact = Contact(contactEntity: contact)
 
-        let chatProfileView = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+        let chatProfileView = ChatProfileView(
+            for: conversation,
+            entityManager: EntityManager(
+                databaseContext: DatabaseContext(mainContext: managedObjectContext),
+                isRemoteSecretEnabled: false
+            )
+        ) {
             // no-op
         }
         
@@ -136,8 +155,7 @@ class ChatProfileViewTests: XCTestCase {
                 visibility: .default
             ) { conversation in
                 // Needed such that `conversation.isGroup()` returns true
-                // swiftformat:disable:next acronyms
-                conversation.groupId = groupID
+                conversation.groupID = groupID
                 
                 conversation.groupName = groupName
                 conversation.members = Set(members)
@@ -151,7 +169,13 @@ class ChatProfileViewTests: XCTestCase {
         let groupName = "Group1"
         
         let conversation = createGroupConversation()
-        let chatProfileView = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+        let chatProfileView = ChatProfileView(
+            for: conversation,
+            entityManager: EntityManager(
+                databaseContext: DatabaseContext(mainContext: managedObjectContext),
+                isRemoteSecretEnabled: false
+            )
+        ) {
             // no-op
         }
         
@@ -164,7 +188,13 @@ class ChatProfileViewTests: XCTestCase {
     
     func testObserveMembersChange() throws {
         let conversation = createGroupConversation()
-        _ = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+        _ = ChatProfileView(
+            for: conversation,
+            entityManager: EntityManager(
+                databaseContext: DatabaseContext(mainContext: managedObjectContext),
+                isRemoteSecretEnabled: false
+            )
+        ) {
             // no-op
         }
         
@@ -176,26 +206,38 @@ class ChatProfileViewTests: XCTestCase {
     
     func testObserveMemberNameChange() throws {
         let conversation = createGroupConversation()
-        _ = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+        _ = ChatProfileView(
+            for: conversation,
+            entityManager: EntityManager(
+                databaseContext: DatabaseContext(mainContext: managedObjectContext),
+                isRemoteSecretEnabled: false
+            )
+        ) {
             // no-op
         }
         
         let contact = try XCTUnwrap(conversation.members?.first)
-        contact.setLastName(to: "1stMember")
-        
+        contact.setLastName(to: "1stMember", sortOrderFirstName: true)
+
         // As the members list label is private we cannot assert anything.
         // This test just checks if there are any crashes due to the observers.
     }
     
     func testDoNotObserveRemovedMemberNameChange() throws {
         let conversation = createGroupConversation()
-        _ = ChatProfileView(for: conversation, entityManager: EntityManager()) {
+        _ = ChatProfileView(
+            for: conversation,
+            entityManager: EntityManager(
+                databaseContext: DatabaseContext(mainContext: managedObjectContext),
+                isRemoteSecretEnabled: false
+            )
+        ) {
             // no-op
         }
         
         let contact = try XCTUnwrap(conversation.members?.removeFirst())
-        contact.setLastName(to: "1stRemovedMember")
-        
+        contact.setLastName(to: "1stRemovedMember", sortOrderFirstName: true)
+
         // As the members list label is private we cannot assert anything.
         // This test just checks if there are any crashes due to the observers.
     }

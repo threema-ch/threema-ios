@@ -38,23 +38,43 @@ class PublicServerInfoProvider: ServerInfoProvider {
         if ipv6 {
             keyName += "v6"
         }
-        return BundleUtil.object(forInfoDictionaryKey: keyName) as! String
+        guard let chatServerNamePrefix = BundleUtil.object(forThreemaFrameworkConfigurationKey: keyName) as? String
+        else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: \(keyName)")
+        }
+        return chatServerNamePrefix
     }
 
     private func chatServerNameSuffix(ipv6: Bool) -> String {
-        BundleUtil.object(forInfoDictionaryKey: "ThreemaServerNameSuffix") as! String
+        guard let chatServerNameSuffix = BundleUtil
+            .object(forThreemaFrameworkConfigurationKey: "ThreemaServerNameSuffix") as? String else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaServerNameSuffix")
+        }
+        return chatServerNameSuffix
     }
 
     private func chatServerPorts() -> [Int] {
-        BundleUtil.object(forInfoDictionaryKey: "ThreemaServerPorts") as! [Int]
+        guard let chatServerPorts = BundleUtil
+            .object(forThreemaFrameworkConfigurationKey: "ThreemaServerPorts") as? [Int] else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaServerPorts")
+        }
+        return chatServerPorts
     }
 
     private func chatServerPublicKey() -> Data {
-        BundleUtil.object(forInfoDictionaryKey: "ThreemaServerPublicKey") as! Data
+        guard let chatServerPublicKey = BundleUtil
+            .object(forThreemaFrameworkConfigurationKey: "ThreemaServerPublicKey") as? Data else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaServerPublicKey")
+        }
+        return chatServerPublicKey
     }
 
     private func chatServerPublicKeyAlt() -> Data {
-        BundleUtil.object(forInfoDictionaryKey: "ThreemaServerAltPublicKey") as! Data
+        guard let chatServerPublicKeyAlt = BundleUtil
+            .object(forThreemaFrameworkConfigurationKey: "ThreemaServerAltPublicKey") as? Data else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaServerAltPublicKey")
+        }
+        return chatServerPublicKeyAlt
     }
 
     func directoryServer(ipv6: Bool, completionHandler: @escaping (DirectoryServerInfo?, Error?) -> Void) {
@@ -65,8 +85,14 @@ class PublicServerInfoProvider: ServerInfoProvider {
         if TargetManager.isBusinessApp {
             keyName += "Work"
         }
-
-        completionHandler(DirectoryServerInfo(url: BundleUtil.object(forInfoDictionaryKey: keyName) as! String), nil)
+        
+        guard let directoryServer = BundleUtil.object(forThreemaFrameworkConfigurationKey: keyName) as? String else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: \(keyName)")
+        }
+        completionHandler(
+            DirectoryServerInfo(url: directoryServer),
+            nil
+        )
     }
 
     func blobServer(ipv6: Bool, completionHandler: @escaping (BlobServerInfo?, Error?) -> Void) {
@@ -78,23 +104,26 @@ class PublicServerInfoProvider: ServerInfoProvider {
     }
 
     private func blobServerDownloadURL(ipv6: Bool) -> String {
-        blobServerURL(infoKeyPrefix: "ThreemaBlobURL", ipv6: ipv6)
+        blobServerURL(threemaFrameworkConfigurationKeyPrefix: "ThreemaBlobURL", ipv6: ipv6)
     }
 
     private func blobServerUploadURL(ipv6: Bool) -> String {
-        blobServerURL(infoKeyPrefix: "ThreemaBlobUploadURL", ipv6: ipv6)
+        blobServerURL(threemaFrameworkConfigurationKeyPrefix: "ThreemaBlobUploadURL", ipv6: ipv6)
     }
 
     private func blobServerDoneURL(ipv6: Bool) -> String {
-        blobServerURL(infoKeyPrefix: "ThreemaBlobDoneURL", ipv6: ipv6)
+        blobServerURL(threemaFrameworkConfigurationKeyPrefix: "ThreemaBlobDoneURL", ipv6: ipv6)
     }
 
-    private func blobServerURL(infoKeyPrefix: String, ipv6: Bool) -> String {
-        var keyName = infoKeyPrefix
+    private func blobServerURL(threemaFrameworkConfigurationKeyPrefix: String, ipv6: Bool) -> String {
+        var keyName = threemaFrameworkConfigurationKeyPrefix
         if ipv6 {
             keyName += "v6"
         }
-        return BundleUtil.object(forInfoDictionaryKey: keyName) as! String
+        guard let blobServerURL = BundleUtil.object(forThreemaFrameworkConfigurationKey: keyName) as? String else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: \(keyName)")
+        }
+        return blobServerURL
     }
 
     func workServer(ipv6: Bool, completionHandler: @escaping (WorkServerInfo?, Error?) -> Void) {
@@ -103,19 +132,35 @@ class PublicServerInfoProvider: ServerInfoProvider {
             keyName += "v6"
         }
 
-        completionHandler(WorkServerInfo(url: BundleUtil.object(forInfoDictionaryKey: keyName) as! String), nil)
+        guard let workServer = BundleUtil.object(forThreemaFrameworkConfigurationKey: keyName) as? String else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: \(keyName)")
+        }
+        completionHandler(
+            WorkServerInfo(url: workServer),
+            nil
+        )
     }
 
     func avatarServer(ipv6: Bool, completionHandler: @escaping (AvatarServerInfo?, Error?) -> Void) {
+        guard let avatarServer = BundleUtil.object(forThreemaFrameworkConfigurationKey: "ThreemaAvatarURL") as? String
+        else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaAvatarURL")
+        }
         completionHandler(
-            AvatarServerInfo(url: BundleUtil.object(forInfoDictionaryKey: "ThreemaAvatarURL") as! String),
+            AvatarServerInfo(
+                url: avatarServer
+            ),
             nil
         )
     }
 
     func safeServer(ipv6: Bool, completionHandler: @escaping (SafeServerInfo?, Error?) -> Void) {
+        guard let safeServer = BundleUtil.object(forThreemaFrameworkConfigurationKey: "ThreemaSafeURL") as? String
+        else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaSafeURL")
+        }
         completionHandler(
-            SafeServerInfo(url: BundleUtil.object(forInfoDictionaryKey: "ThreemaSafeURL") as! String),
+            SafeServerInfo(url: safeServer),
             nil
         )
     }
@@ -124,28 +169,52 @@ class PublicServerInfoProvider: ServerInfoProvider {
         deviceGroupIDFirstByteHex: String,
         completionHandler: @escaping (MediatorServerInfo?, Error?) -> Void
     ) {
+        guard let threemaMediatorServerURL = BundleUtil
+            .object(forThreemaFrameworkConfigurationKey: "ThreemaMediatorServerURL") as? String else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaMediatorServerURL")
+        }
+        guard let threemaMediatorBlobURL = BundleUtil
+            .object(forThreemaFrameworkConfigurationKey: "ThreemaMediatorBlobURL") as? String else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaMediatorBlobURL")
+        }
+        guard let threemaMediatorBlobUploadURL = BundleUtil
+            .object(forThreemaFrameworkConfigurationKey: "ThreemaMediatorBlobUploadURL") as? String else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaMediatorBlobUploadURL")
+        }
+        guard let threemaMediatorBlobDoneURL = BundleUtil
+            .object(forThreemaFrameworkConfigurationKey: "ThreemaMediatorBlobDoneURL") as? String else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaMediatorBlobDoneURL")
+        }
         completionHandler(MediatorServerInfo(
             deviceGroupIDFirstByteHex: deviceGroupIDFirstByteHex,
-            url: BundleUtil.object(forInfoDictionaryKey: "ThreemaMediatorServerURL") as! String,
+            url: threemaMediatorServerURL,
             blob: BlobServerInfo(
-                downloadURL: BundleUtil.object(forInfoDictionaryKey: "ThreemaMediatorBlobURL") as! String,
-                uploadURL: BundleUtil.object(forInfoDictionaryKey: "ThreemaMediatorBlobUploadURL") as! String,
-                doneURL: BundleUtil.object(forInfoDictionaryKey: "ThreemaMediatorBlobDoneURL") as! String
+                downloadURL: threemaMediatorBlobURL,
+                uploadURL: threemaMediatorBlobUploadURL,
+                doneURL: threemaMediatorBlobDoneURL
             )
         ), nil)
     }
 
     func webServer(ipv6: Bool, completionHandler: @escaping (WebServerInfo?, Error?) -> Void) {
+        guard let threemaWebURL = BundleUtil.object(forThreemaFrameworkConfigurationKey: "ThreemaWebURL") as? String
+        else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaWebURL")
+        }
         completionHandler(WebServerInfo(
-            url: BundleUtil.object(forInfoDictionaryKey: "ThreemaWebURL") as! String,
+            url: threemaWebURL,
             overrideSaltyRtcHost: nil,
             overrideSaltyRtcPort: nil
         ), nil)
     }
 
     func rendezvousServer(completionHandler: @escaping (RendezvousServerInfo?, Error?) -> Void) {
+        guard let threemaRendezvousServerURL = BundleUtil
+            .object(forThreemaFrameworkConfigurationKey: "ThreemaRendezvousServerURL") as? String else {
+            fatalError("[PublicServerInfoProvider] Missing configuration key: ThreemaRendezvousServerURL")
+        }
         completionHandler(RendezvousServerInfo(
-            url: BundleUtil.object(forInfoDictionaryKey: "ThreemaRendezvousServerURL") as! String
+            url: threemaRendezvousServerURL
         ), nil)
     }
 
@@ -154,9 +223,12 @@ class PublicServerInfoProvider: ServerInfoProvider {
     }
     
     func mapsServer(completionHandler: @escaping (MapsServerInfo?, Error?) -> Void) {
-        guard let poiNamesURL = BundleUtil.object(forInfoDictionaryKey: "ThreemaPOINamesURL") as? String,
-              let poiAroundURL = BundleUtil.object(forInfoDictionaryKey: "ThreemaPOIAroundURL") as? String else {
-            assertionFailure("ThreemaPOINamesURL and ThreemaPOIAroundURL must be set in Info.plist")
+        guard let poiNamesURL = BundleUtil.object(forThreemaFrameworkConfigurationKey: "ThreemaPOINamesURL") as? String,
+              let poiAroundURL = BundleUtil
+              .object(forThreemaFrameworkConfigurationKey: "ThreemaPOIAroundURL") as? String else {
+            assertionFailure(
+                "ThreemaPOINamesURL and ThreemaPOIAroundURL must be set in ThreemaFrameworkConfiguration.plist"
+            )
             completionHandler(nil, nil)
             return
         }

@@ -77,8 +77,11 @@ extension PreviewableMessage {
     /// Creates an attributed string with a leading icon to be used in defined place
     /// - Parameter type: Place where attributed string will be used
     /// - Returns: NSAttributedString containing the preview text and optionally a Symbol
-    public func previewAttributedText(for configuration: PreviewableMessageConfiguration = .default)
-        -> NSAttributedString {
+    public func previewAttributedText(
+        for configuration: PreviewableMessageConfiguration = .default,
+        settingsStore: SettingsStoreProtocol
+    ) -> NSAttributedString {
+        
         // Trim text as Swift string to prevent emoji cropping
         var trimmedString = String(previewText.prefix(configuration.trimmingCount))
         
@@ -86,27 +89,30 @@ extension PreviewableMessage {
         if deletedAt != nil {
             trimmedString = "_\(trimmedString)_"
         }
-            
+        
         let parsedString = MarkupParser().previewString(for: trimmedString, font: configuration.font)
         let configuredAttributedText = NSMutableAttributedString(attributedString: parsedString)
-        configuredAttributedText.mutableString.replaceOccurrences(
-            of: " \n",
-            with: "\n",
-            options: [],
-            range: NSMakeRange(0, configuredAttributedText.length)
-        )
-        configuredAttributedText.mutableString.replaceOccurrences(
-            of: "\n ",
-            with: "\n",
-            options: [],
-            range: NSMakeRange(0, configuredAttributedText.length)
-        )
-        configuredAttributedText.mutableString.replaceOccurrences(
-            of: "\n",
-            with: " ",
-            options: [],
-            range: NSMakeRange(0, configuredAttributedText.length)
-        )
+        
+        if configuration.trimNewLines {
+            configuredAttributedText.mutableString.replaceOccurrences(
+                of: " \n",
+                with: "\n",
+                options: [],
+                range: NSMakeRange(0, configuredAttributedText.length)
+            )
+            configuredAttributedText.mutableString.replaceOccurrences(
+                of: "\n ",
+                with: "\n",
+                options: [],
+                range: NSMakeRange(0, configuredAttributedText.length)
+            )
+            configuredAttributedText.mutableString.replaceOccurrences(
+                of: "\n",
+                with: " ",
+                options: [],
+                range: NSMakeRange(0, configuredAttributedText.length)
+            )
+        }
         
         configuredAttributedText.removeAttribute(
             NSAttributedString.Key.link,
@@ -118,17 +124,13 @@ extension PreviewableMessage {
         )
         
         // If the message was remotely deleted, or no symbol was found, we return the text without one
-        if deletedAt == nil, let image = previewSymbol {
+        if configuration.showSymbol, deletedAt == nil, let image = previewSymbol {
             // Create string containing icon
             let icon = NSTextAttachment()
-            var tintColor: UIColor? = previewSymbolTintColor
-            
-            if previewSymbolTintColor == nil {
-                tintColor = configuration.tintColor()
-            }
-            
+            let tintColor: UIColor = previewSymbolTintColor ?? configuration.tintColor()
+                        
             icon.image = image.withConfiguration(configuration.symbolConfiguration)
-                .withTint(tintColor)
+                .withTintColor(tintColor)
             
             let iconString = NSAttributedString(attachment: icon)
             
@@ -139,21 +141,53 @@ extension PreviewableMessage {
         }
         
         // Add the sender name if specified in PreviewableMessageConfiguration
-        let shouldShowName = configuration.includeSender &&
-            conversation.isGroup &&
-            !(self is SystemMessageEntity) // TODO: We might need to update this for group calls
-        
-        if shouldShowName {
-            let attributedName =
-                if let name = sender?.displayName {
-                    NSAttributedString(string: "\(name): ")
-                }
-                else {
-                    NSAttributedString(string: "\(#localize("me")): ")
-                }
-            configuredAttributedText.insert(attributedName, at: 0)
+        if let prefix = senderPrefix(
+            visibility: configuration.senderVisibility,
+            conversation: conversation,
+            settingsStore: settingsStore
+        ) {
+            configuredAttributedText.insert(prefix, at: 0)
         }
         
         return configuredAttributedText
+    }
+    
+    private func senderPrefix(
+        visibility: PreviewableMessageConfiguration.SenderVisibility,
+        conversation: ConversationEntity,
+        settingsStore: SettingsStoreProtocol
+    ) -> NSAttributedString? {
+        
+        // No prefix needed for non-group chats or system messages
+        guard conversation.isGroup, !(self is SystemMessageEntity) else {
+            return nil
+        }
+        
+        switch visibility {
+        case .none:
+            return nil
+        case .basic:
+            return if let name = sender?.displayName {
+                NSAttributedString(string: "\(name): ")
+            }
+            else {
+                NSAttributedString(string: "\(#localize("me")): ")
+            }
+        case .userSettings:
+            let notificationType = settingsStore.notificationType
+            
+            switch notificationType {
+            case .restrictive:
+                return NSAttributedString(
+                    string: "\(sender?.publicNickname ?? sender?.identity ?? #localize("unknown")): "
+                )
+                
+            case .balanced:
+                return NSAttributedString(string: "\(sender?.displayName ?? #localize("unknown")): ")
+                
+            case .complete:
+                return nil
+            }
+        }
     }
 }

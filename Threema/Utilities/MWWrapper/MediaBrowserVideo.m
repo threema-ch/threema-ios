@@ -21,7 +21,6 @@
 #import "MediaBrowserVideo.h"
 #import <AVFoundation/AVFoundation.h>
 #import <MediaPlayer/MediaPlayer.h> 
-#import "VideoMessageLoader.h"
 #import "NSString+Hex.h"
 #import "BundleUtil.h"
 #import "ThreemaFramework.h"
@@ -75,7 +74,7 @@
     if (_message.video != nil) {
         [self play];
     } else {
-        BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+        BlobManagerObjCWrapper *manager = [[BlobManagerObjCWrapper alloc] init];
         [manager syncBlobsFor:_message.objectID onCompletion:^(enum BlobManagerObjCResult result){
             NSAssert(result != BlobManagerObjCResultUploaded, @"We never upload a file in this case");
             [self postCompleteNotification];
@@ -134,7 +133,7 @@
 }
 
 - (void)performLoadUnderlyingImageAndNotify {
-    BlobManagerObjcWrapper *manager = [[BlobManagerObjcWrapper alloc] init];
+    BlobManagerObjCWrapper *manager = [[BlobManagerObjCWrapper alloc] init];
     [manager syncBlobsFor:_message.objectID onCompletion:^(enum BlobManagerObjCResult result){
         NSAssert(result != BlobManagerObjCResultUploaded, @"We never upload a file in this case");
         [self postCompleteNotification];

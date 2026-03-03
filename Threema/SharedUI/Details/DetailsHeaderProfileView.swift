@@ -272,31 +272,29 @@ final class DetailsHeaderProfileView: UIStackView {
             return
         }
         
-        if #available(iOS 17, *) {
-            let typeTip = TipKitManager.ThreemaTypeTip()
-            let threemaTypeTipView = TipUIView(typeTip, arrowEdge: .top)
-            threemaTypeTipView.backgroundColor = .tertiarySystemBackground
-            threemaTypeTipView.translatesAutoresizingMaskIntoConstraints = false
-            
-            tipObservationTask = tipObservationTask ?? Task(priority: .userInitiated) { @MainActor in
-                for await shouldDisplay in typeTip.shouldDisplayUpdates {
-                    if shouldDisplay {
-                        addSubview(threemaTypeTipView)
-                        
-                        NSLayoutConstraint.activate([
-                            threemaTypeTipView.topAnchor
-                                .constraint(equalTo: profilePictureView.typeIconImageView.bottomAnchor),
-                            threemaTypeTipView.leadingAnchor
-                                .constraint(greaterThanOrEqualTo: safeAreaLayoutGuide.leadingAnchor),
-                            threemaTypeTipView.trailingAnchor
-                                .constraint(lessThanOrEqualTo: safeAreaLayoutGuide.trailingAnchor),
-                            threemaTypeTipView.centerXAnchor
-                                .constraint(equalTo: profilePictureView.typeIconImageView.centerXAnchor),
-                        ])
-                    }
-                    else {
-                        threemaTypeTipView.removeFromSuperview()
-                    }
+        let typeTip = TipKitManager.ThreemaTypeTip()
+        let threemaTypeTipView = TipUIView(typeTip, arrowEdge: .top)
+        threemaTypeTipView.backgroundColor = .tertiarySystemBackground
+        threemaTypeTipView.translatesAutoresizingMaskIntoConstraints = false
+        
+        tipObservationTask = tipObservationTask ?? Task(priority: .userInitiated) { @MainActor in
+            for await shouldDisplay in typeTip.shouldDisplayUpdates {
+                if shouldDisplay {
+                    addSubview(threemaTypeTipView)
+                    
+                    NSLayoutConstraint.activate([
+                        threemaTypeTipView.topAnchor
+                            .constraint(equalTo: profilePictureView.typeIconImageView.bottomAnchor),
+                        threemaTypeTipView.leadingAnchor
+                            .constraint(greaterThanOrEqualTo: safeAreaLayoutGuide.leadingAnchor),
+                        threemaTypeTipView.trailingAnchor
+                            .constraint(lessThanOrEqualTo: safeAreaLayoutGuide.trailingAnchor),
+                        threemaTypeTipView.centerXAnchor
+                            .constraint(equalTo: profilePictureView.typeIconImageView.centerXAnchor),
+                    ])
+                }
+                else {
+                    threemaTypeTipView.removeFromSuperview()
                 }
             }
         }

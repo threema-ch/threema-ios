@@ -22,7 +22,13 @@ import ThreemaFramework
 
 class ContactListProvider: CoreDataContactListProvider<ContactEntity, Contact> {
     init() {
-        super.init(at: \.contactsResultController) {
+        super.init(
+            fetchedResultsController: BusinessInjector.ui.entityManager.entityFetcher
+                .contactsResultController(
+                    sortOrderFirstName: BusinessInjector.ui.userSettings.sortOrderFirstName,
+                    hideStaleContacts: BusinessInjector.ui.userSettings.hideStaleContacts
+                )
+        ) {
             Contact(contactEntity: $0)
         }
     }
@@ -30,7 +36,13 @@ class ContactListProvider: CoreDataContactListProvider<ContactEntity, Contact> {
 
 class WorkContactListProvider: CoreDataContactListProvider<ContactEntity, Contact> {
     init() {
-        super.init(at: \.workContactsResultController) {
+        super.init(
+            fetchedResultsController: BusinessInjector.ui.entityManager.entityFetcher
+                .workContactsResultController(
+                    sortOrderFirstName: BusinessInjector.ui.userSettings.sortOrderFirstName,
+                    hideStaleContacts: BusinessInjector.ui.userSettings.hideStaleContacts
+                )
+        ) {
             Contact(contactEntity: $0)
         }
     }
@@ -38,7 +50,7 @@ class WorkContactListProvider: CoreDataContactListProvider<ContactEntity, Contac
 
 class GroupListProvider: CoreDataContactListProvider<ConversationEntity, Group> {
     init() {
-        super.init(at: \.groupsResultController) {
+        super.init(fetchedResultsController: BusinessInjector.ui.entityManager.entityFetcher.groupsResultController()) {
             BusinessInjector.ui.groupManager.getGroup(conversation: $0)
         }
     }
@@ -46,7 +58,10 @@ class GroupListProvider: CoreDataContactListProvider<ConversationEntity, Group> 
 
 class DistributionListProvider: CoreDataContactListProvider<DistributionListEntity, DistributionList> {
     init() {
-        super.init(at: \.distributionListsResultController) {
+        super.init(
+            fetchedResultsController: BusinessInjector.ui.entityManager.entityFetcher
+                .distributionListsResultController()
+        ) {
             DistributionList(distributionListEntity: $0)
         }
     }

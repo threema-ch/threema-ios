@@ -21,6 +21,7 @@
 import CocoaLumberjackSwift
 import PromiseKit
 import ThreemaEssentials
+import ThreemaEssentialsTestHelper
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -1073,7 +1074,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         supported: Bool
     ) throws {
         message.groupID = groupIdentity.id
-        message.groupCreator = groupIdentity.creator.string
+        message.groupCreator = groupIdentity.creator.rawValue
         
         do {
             let (_, outerMessage) = try aliceContext.fsmp.makeMessage(
@@ -1241,7 +1242,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
     
     private func makeAliceContext(localSupportedVersionRange: CspE2eFs_VersionRange = ThreemaEnvironment.fsVersion) {
         aliceContext = makeTestUserContext(
-            myIdentity: aliceIdentity.string,
+            myIdentity: aliceIdentity.rawValue,
             mySecretKey: Data(base64Encoded: "2Hi7lA4boz9eLl0ozdeb2uKj2+i/wD2PUTRczwshp1Y=")!,
             peerIdentity: "BBBBBBBB",
             peerPublicKey: Data(base64Encoded: "oUEC0jPaUjqLqfEUXlCSSndLmwSg6d4/qA9XKKIJfSs=")!,
@@ -1253,7 +1254,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         bobContext = makeTestUserContext(
             myIdentity: "BBBBBBBB",
             mySecretKey: Data(base64Encoded: "WE2g/Mu8jeGHMUX0pqyCP+ypW6gCu2xEBKESOyqgbn0=")!,
-            peerIdentity: aliceIdentity.string,
+            peerIdentity: aliceIdentity.rawValue,
             peerPublicKey: Data(base64Encoded: "CkgZmn3tqLS1YQHk2IF46hFK5ZdPhzayZjooLIvWxFo=")!,
             localSupportedVersionRange: ThreemaEnvironment.fsVersion
         )
@@ -1422,7 +1423,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         XCTAssertEqual(groupMessage.text, expectedMessage)
         XCTAssertEqual(groupMessage.forwardSecurityMode, expectedMode)
         XCTAssertEqual(groupMessage.groupID, expectedGroupIdentity.id)
-        XCTAssertEqual(groupMessage.groupCreator, expectedGroupIdentity.creator.string)
+        XCTAssertEqual(groupMessage.groupCreator, expectedGroupIdentity.creator.rawValue)
     }
     
     private func makeEncapTextMessage(
@@ -1450,7 +1451,7 @@ class ForwardSecurityMessageProcessorTests: XCTestCase {
         groupTextMessage.text = text
         groupTextMessage.toIdentity = senderContext.peerContact.identity
         groupTextMessage.groupID = groupIdentity.id
-        groupTextMessage.groupCreator = groupIdentity.creator.string
+        groupTextMessage.groupCreator = groupIdentity.creator.rawValue
         return try senderContext.fsmp.makeMessage(receiver: senderContext.peerContact, innerMessage: groupTextMessage)
     }
     

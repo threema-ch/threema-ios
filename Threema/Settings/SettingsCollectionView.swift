@@ -25,12 +25,17 @@ final class SettingsCollectionView: UICollectionView, UICollectionViewDelegate {
     
     // MARK: - Properties
 
-    private weak var coordinator: SettingsCoordinator?
+    private let currentDestinationFetcher: () -> SettingsCoordinator.InternalDestination?
+    private let shouldAllowAutoDeselection: () -> Bool
 
     // MARK: - Lifecycle
 
-    init(coordinator: SettingsCoordinator?) {
-        self.coordinator = coordinator
+    init(
+        currentDestinationFetcher: @escaping () -> SettingsCoordinator.InternalDestination?,
+        shouldAllowAutoDeselection: @escaping () -> Bool
+    ) {
+        self.currentDestinationFetcher = currentDestinationFetcher
+        self.shouldAllowAutoDeselection = shouldAllowAutoDeselection
         
         let layout = UICollectionViewCompositionalLayout { _, layoutEnvironment in
             let config = UICollectionLayoutListConfiguration(appearance: .insetGrouped)
@@ -50,13 +55,13 @@ final class SettingsCollectionView: UICollectionView, UICollectionViewDelegate {
     // MARK: - Updates
     
     func updateSelection(for sizeClass: UIUserInterfaceSizeClass) {
-        if sizeClass == .compact {
+        if shouldAllowAutoDeselection() {
             indexPathsForSelectedItems?.forEach {
                 deselectItem(at: $0, animated: false)
             }
         }
         else {
-            guard let destination = coordinator?.currentDestination,
+            guard let destination = currentDestinationFetcher(),
                   let dataSource = dataSource as? SettingsCollectionViewDataSource,
                   let row = SettingsCollectionViewDataSource.Row.row(for: destination),
                   let index = dataSource.indexPathForItem(row) else {

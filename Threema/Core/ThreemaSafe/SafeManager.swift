@@ -19,43 +19,46 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+import FileUtility
 import Foundation
+import ThreemaEssentials
+import ThreemaFramework
 import ThreemaMacros
 
 @objc class SafeManager: NSObject {
     
-    private var safeConfigManager: SafeConfigManagerProtocol
-    private var safeStore: SafeStore
-    private var safeApiService: SafeApiService
-    private let userSettings: UserSettingsProtocol
-    private var logger: ValidationLogger
-
+    // MARK: - Static poperties
+    
     // Trigger safe backup states
     private static var backupObserver: NSObjectProtocol?
     private static var backupDelay: Timer?
     private static let backupProcessLock = DispatchQueue(label: "backupProcessLock")
     private static var backupProcessStart = false
     private static var backupIsRunning = false
+    
+    // MARK: - Properties
+    
+    private var safeConfigManager: SafeConfigManagerProtocol
+    private var safeStore: SafeStore
+    private var safeApiService: SafeApiService
+    private let userSettings: UserSettingsProtocol
+
     private var backupForce = false
 
     private var checksum: [UInt8]?
 
-    enum SafeError: Error {
-        case activateFailed(message: String)
-        case backupFailed(message: String)
-        case restoreError(message: String)
-        case restoreFailed(message: String)
-        
-        public var errorDescription: String? {
-            switch self {
-            case let .activateFailed(message),
-                 let .backupFailed(message: message),
-                 let .restoreError(message: message),
-                 let .restoreFailed(message: message):
-                localizedDescription + " [\(message)]"
-            }
+    var isActivated: Bool {
+        if let key = safeConfigManager.getKey() {
+            return key.count == SafeStore.masterKeyLength
         }
+        return false
     }
+    
+    var isBackupRunning: Bool {
+        SafeManager.backupIsRunning
+    }
+    
+    // MARK: - Lifecycle
     
     init(
         safeConfigManager: SafeConfigManagerProtocol,
@@ -67,31 +70,23 @@ import ThreemaMacros
         self.safeStore = safeStore
         self.safeApiService = safeApiService
         self.userSettings = userSettings
-        self.logger = ValidationLogger.shared()
     }
     
     convenience init(groupManager: GroupManagerProtocol) {
-        let safeConfigManager = SafeConfigManager()
+        let configManager = SafeConfigManager()
         let serverAPIConnector = ServerAPIConnector()
         let safeAPIService = SafeApiService()
-        let safeStore = SafeStore(
-            safeConfigManager: safeConfigManager,
+        let store = SafeStore(
+            safeConfigManager: configManager,
             serverApiConnector: serverAPIConnector,
-            groupManager: groupManager
+            groupManager: groupManager,
+            myIdentityStore: MyIdentityStore.shared()
         )
-        self.init(safeConfigManager: safeConfigManager, safeStore: safeStore, safeApiService: safeAPIService)
+        self.init(safeConfigManager: configManager, safeStore: store, safeApiService: safeAPIService)
     }
     
     @objc convenience init(groupManager: GroupManager) {
-        let safeConfigManager = SafeConfigManager()
-        let serverAPIConnector = ServerAPIConnector()
-        let safeAPIService = SafeApiService()
-        let safeStore = SafeStore(
-            safeConfigManager: safeConfigManager,
-            serverApiConnector: serverAPIConnector,
-            groupManager: groupManager
-        )
-        self.init(safeConfigManager: safeConfigManager, safeStore: safeStore, safeApiService: safeAPIService)
+        self.init(groupManager: groupManager as GroupManagerProtocol)
     }
     
     // NSObject thereby not the whole SafeConfigManagerProtocol interface must be like @objc
@@ -107,21 +102,12 @@ import ThreemaMacros
         )
     }
     
-    @objc var isActivated: Bool {
-        if let key = safeConfigManager.getKey() {
-            return key.count == safeStore.masterKeyLength
-        }
-        return false
-    }
-    
-    var isBackupRunning: Bool {
-        SafeManager.backupIsRunning
-    }
+    // MARK: - Activation
     
     /// Activate safe with the MDM configuration. If the Threema Safe password is missing,
     /// a dialog for entering the password is displayed.
-    @objc func activateThroughMDM() {
-        guard let mdm = MDMSetup(setup: false) else {
+    func activateThroughMDM() {
+        guard let mdm = MDMSetup() else {
             return
         }
 
@@ -170,7 +156,7 @@ import ThreemaMacros
         retentionDays: NSNumber?,
         completion: @escaping (Error?) -> Void
     ) {
-        guard let key = safeStore.createKey(identity: identity, safePassword: safePassword) else {
+        guard let key = SafeStore.createKey(identity: identity, safePassword: safePassword) else {
             completion(ThreemaProtocolError.safePasswordEmpty)
             return
         }
@@ -186,24 +172,36 @@ import ThreemaMacros
             completion: completion
         )
     }
-    
-    func credentialsChanged() -> Bool {
-        guard let mdm = MDMSetup(setup: false) else {
-            return false
-        }
         
-        let current = safeConfigManager.getKey()
-        let poss = safeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: mdm.safePassword())
-        return current != poss
-    }
-    
-    func isSafePasswordDefinedByAdmin() -> Bool {
-        guard let mdm = MDMSetup(setup: false), mdm.safePassword() != nil else {
-            return false
+    func activate(
+        identity: String,
+        safePassword: String?,
+        customServer: String?,
+        serverUser: String?,
+        serverPassword: String?,
+        server: String?,
+        maxBackupBytes: NSNumber?,
+        retentionDays: NSNumber?
+    ) async throws {
+        // swiftformat:disable:next all
+        return try await withCheckedThrowingContinuation { continuation in
+            self.activate(
+                identity: identity,
+                safePassword: safePassword,
+                customServer: customServer,
+                serverUser: serverUser,
+                serverPassword: serverPassword,
+                server: server,
+                maxBackupBytes: maxBackupBytes,
+                retentionDays: retentionDays
+            ) { error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                continuation.resume()
+            }
         }
-        let current = safeConfigManager.getKey()
-        let poss = safeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: mdm.safePassword())
-        return current == poss
     }
     
     private func activate(
@@ -236,16 +234,16 @@ import ThreemaMacros
             completion(nil)
         }
         else {
-            safeStore.getSafeDefaultServer(key: key) { result in
+            SafeStore.getSafeDefaultServer(key: key) { result in
                 switch result {
                 case let .success(safeServer):
-                    self.testServer(
+                    SafeManager.testServer(
                         serverURL: safeServer.server,
                         user: safeServer.serverUser,
                         password: safeServer.serverPassword
                     ) { errorMessage, maxBackupBytes, retentionDays in
                         if let errorMessage {
-                            completion(SafeError.activateFailed(message: "Test default server: \(errorMessage)"))
+                            completion(SafeError.nestedError(.resolvingDefaultServerFailed, message: errorMessage))
                         }
                         else {
                             self.safeConfigManager.setKey(key)
@@ -271,6 +269,8 @@ import ThreemaMacros
         }
     }
     
+    // MARK: - Deactivation
+    
     @objc func deactivate() {
         if let observer = SafeManager.backupObserver {
             SafeManager.backupObserver = nil
@@ -282,7 +282,7 @@ import ThreemaMacros
         }
         
         if let key = safeConfigManager.getKey(),
-           let backupID = safeStore.getBackupID(key: key) {
+           let backupID = SafeStore.getBackupID(key: key) {
             
             safeStore.getSafeServer(key: key) { result in
                 switch result {
@@ -295,7 +295,7 @@ import ThreemaMacros
                         password: safeServer.serverPassword,
                         completion: { errorMessage in
                             if let errorMessage {
-                                self.logger.logString("Safe backup could not be deleted: \(errorMessage)")
+                                DDLogError("Safe backup could not be deleted: \(errorMessage)")
                             }
                         }
                     )
@@ -325,7 +325,9 @@ import ThreemaMacros
         }
     }
 
-    func isPasswordBad(password: String) -> Bool {
+    // MARK: - Password checks
+    
+    static func isPasswordBad(password: String) -> Bool {
         if password.count < 8 {
             return true
         }
@@ -336,7 +338,7 @@ import ThreemaMacros
         return checkPasswordToFile(password: password)
     }
 
-    private func checkPasswordToFile(password: String) -> Bool {
+    private static func checkPasswordToFile(password: String) -> Bool {
         
         guard let filePath = Bundle.main.path(forResource: "bad_passwords", ofType: "txt"),
               let fileHandle = FileHandle(forReadingAtPath: filePath) else {
@@ -393,7 +395,7 @@ import ThreemaMacros
         return false
     }
     
-    private func checkPasswordToRegEx(password: String) -> Bool {
+    private static func checkPasswordToRegEx(password: String) -> Bool {
         let checks = [
             "(.)\\1+", // do not allow single repeating characters
             "^[0-9]{1,15}$",
@@ -432,9 +434,11 @@ import ThreemaMacros
         return regExMatches == 1
     }
     
-    @objc func setBackupReminder() {
+    // MARK: - Reminder
+    
+    func setBackupReminder() {
         
-        // remove safe backup notification anyway
+        // Remove safe backup notification anyway
         let notificationKey = "safe-backup-notification"
         let oneDayInSeconds = 24 * 60 * 60
         
@@ -509,19 +513,21 @@ import ThreemaMacros
         }
     }
     
+    // MARK: - Server
+    
     /// Tests a given server URL for Threema Safe
     /// - Parameters:
     ///   - serverURL: Server URL to test
     ///   - user: User name for basic authentication
     ///   - password: Password for basic authentication
     ///   - completion: Closure that accepts (errorMessage: String?, maxBackupDays: Int?, retentionDays: Int?)
-    func testServer(
+    static func testServer(
         serverURL: URL,
         user: String?,
         password: String?,
         completion: @escaping (String?, Int?, Int?) -> Void
     ) {
-        safeApiService.testServer(
+        SafeApiService().testServer(
             server: serverURL,
             user: user,
             password: password
@@ -566,42 +572,47 @@ import ThreemaMacros
                     }
                 }
                 else {
-                    self.logger.logString("Error while apply Threema Safe server: could not calculate server")
+                    DDLogError("Error while apply Threema Safe server: could not calculate server")
                 }
             }
 
             if let server, let serverURL = URL(string: server) {
                 doApply(user, password, serverURL)
             }
-            else {
-                safeStore.getSafeDefaultServer(key: safeConfigManager.getKey()!) { result in
+            else if let key = safeConfigManager.getKey() {
+                SafeStore.getSafeDefaultServer(key: key) { result in
                     switch result {
                     case let .success(safeServer):
                         doApply(safeServer.serverUser, safeServer.serverPassword, safeServer.server)
                     case let .failure(error):
-                        self.logger.logString("Cannot obtain default server: \(error)")
+                        DDLogError("Cannot obtain default server: \(error)")
                     }
                 }
+            }
+            else {
+                DDLogError("Error while apply Threema Safe server: Key is missing")
             }
         }
     }
 
+    // MARK: - Backup execution
+
     func startBackupForDeviceLinking(password: String) async throws {
 
-        guard !isPasswordBad(password: password) else {
-            throw SafeError.backupFailed(message: "This password is bad, please try another")
+        guard !SafeManager.isPasswordBad(password: password) else {
+            throw SafeError.BackupError.badPassword
         }
 
-        guard let key = safeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: password) else {
-            throw SafeError.backupFailed(message: "Missing backup key")
+        guard let key = SafeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: password) else {
+            throw SafeError.backupError(.invalidKey)
         }
 
-        guard let backupID = safeStore.getBackupID(key: key) else {
-            throw SafeError.backupFailed(message: "Missing backup ID")
+        guard let backupID = SafeStore.getBackupID(key: key) else {
+            throw SafeError.backupError(.invalidID)
         }
 
         guard let data = safeStore.backupData(backupDeviceGroupKey: true) else {
-            throw SafeError.backupFailed(message: "Missing backup data")
+            throw SafeError.backupError(.invalidData)
         }
 
         return try await withCheckedThrowingContinuation { continuation in
@@ -610,26 +621,26 @@ import ThreemaMacros
                 case let .success(safeServer):
                     let safeBackupURL = safeServer.server
                         .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
-                    self.testServer(
+                    SafeManager.testServer(
                         serverURL: safeServer.server,
                         user: safeServer.serverUser,
                         password: safeServer.serverPassword
                     ) { errorMessage, maxBackupBytes, _ in
 
-                        if let error = errorMessage {
-                            continuation.resume(throwing: SafeError.backupFailed(message: error))
+                        if let errorMessage {
+                            continuation.resume(
+                                throwing: SafeError.nestedError(
+                                    .resolvingDefaultServerFailed,
+                                    message: errorMessage
+                                )
+                            )
                         }
 
                         // Encrypt backup data and upload it
                         do {
                             let encryptedData = try self.safeStore.encryptBackupData(key: key, data: data)
                             guard encryptedData.count < maxBackupBytes ?? 524_288 else {
-                                continuation.resume(
-                                    throwing: SafeError
-                                        .backupFailed(
-                                            message: #localize("safe_upload_size_exceeded")
-                                        )
-                                )
+                                continuation.resume(throwing: SafeError.BackupError.backupTooBig)
                                 return
                             }
 
@@ -640,10 +651,9 @@ import ThreemaMacros
                                 encryptedData: encryptedData
                             ) { _, error in
                                 if let error {
-                                    continuation.resume(throwing: SafeError.backupFailed(
-                                        message: error
-                                            .contains("Payload Too Large") ? #localize("safe_upload_size_exceeded") :
-                                            "\(#localize("safe_upload_failed")) (\(error))"
+                                    continuation.resume(throwing: SafeError.nestedError(
+                                        SafeError.unknownError(message: "Upload failed"),
+                                        message: "Error: \(error)"
                                     ))
                                 }
                                 else {
@@ -653,20 +663,20 @@ import ThreemaMacros
                         }
                         catch {
                             continuation
-                                .resume(throwing: SafeError.backupFailed(message: "Encryption of backup failed."))
+                                .resume(throwing: SafeError.BackupError.encryptionFailed)
                         }
                     }
 
                 case let .failure(error):
-                    continuation.resume(throwing: SafeError.backupFailed(message: "Invalid safe server url \(error)"))
+                    continuation.resume(throwing: SafeError.nestedError(.invalidURL, message: "Error: \(error)"))
                 }
             }
         }
     }
 
     func deleteBackupForDeviceLinking(password: String) {
-        if let key = safeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: password),
-           let backupID = safeStore.getBackupID(key: key) {
+        if let key = SafeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: password),
+           let backupID = SafeStore.getBackupID(key: key) {
 
             safeStore.getSafeServer(key: key) { result in
                 switch result {
@@ -679,7 +689,7 @@ import ThreemaMacros
                         password: safeServer.serverPassword,
                         completion: { errorMessage in
                             if let errorMessage {
-                                self.logger.logString("Safe backup could not be deleted: \(errorMessage)")
+                                DDLogError("Safe backup could not be deleted: \(errorMessage)")
                             }
                         }
                     )
@@ -693,14 +703,14 @@ import ThreemaMacros
         
         do {
             if let key = safeConfigManager.getKey(),
-               let backupID = safeStore.getBackupID(key: key) {
+               let backupID = SafeStore.getBackupID(key: key) {
 
                 // get backup data and and its checksum
                 if let data = safeStore.backupData() {
                     checksum = BytesUtility.sha1(data: Data(data))
                     
                     // do backup is forced or if data has changed or last backup (nearly) out of date
-                    if force || safeConfigManager.getLastChecksum() != checksum || safeStore.isDateOlderThenDays(
+                    if force || safeConfigManager.getLastChecksum() != checksum || isDateOlderThenDays(
                         date: safeConfigManager.getLastBackup(),
                         days: safeConfigManager.getRetentionDays() ?? 180 / 2
                     ) {
@@ -726,24 +736,24 @@ import ThreemaMacros
                     }
                 }
                 else {
-                    throw SafeError.backupFailed(message: "Missing private key")
+                    throw SafeError.backupError(.invalidKey)
                 }
             }
             else {
-                throw SafeStore.SafeError.invalidMasterKey
+                throw SafeError.backupError(.invalidKey)
             }
         }
-        catch let SafeError.backupFailed(message) {
-            self.logger.logString(message)
+        catch let error as SafeError {
+            DDLogError("\(error.description)")
             
             self.safeConfigManager
-                .setLastResult("\(#localize("safe_unsuccessful")): \(message)")
+                .setLastResult("\(#localize("safe_unsuccessful")): \(error.description)")
 
             completionHandler()
         }
         catch {
-            logger.logString(error.localizedDescription)
-            
+            DDLogError("\(error)")
+
             safeConfigManager
                 .setLastResult(
                     "\(#localize("safe_unsuccessful")): \(error.localizedDescription)"
@@ -766,14 +776,14 @@ import ThreemaMacros
                 let safeBackupURL = safeServer.server
                     .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
                 
-                testServer(
+                SafeManager.testServer(
                     serverURL: safeServer.server,
                     user: safeServer.serverUser,
                     password: safeServer.serverPassword
                 ) { errorMessage, maxBackupBytes, retentionDays in
                     do {
                         if let errorMessage {
-                            throw SafeError.backupFailed(message: errorMessage)
+                            throw SafeError.unknownError(message: errorMessage)
                         }
                         else {
                             self.safeConfigManager.setMaxBackupBytes(maxBackupBytes)
@@ -795,8 +805,8 @@ import ThreemaMacros
                                 encryptedData: encryptedData
                             ) { _, errorMessage in
                                 if let errorMessage {
-                                    self.logger.logString(errorMessage)
-                                    
+                                    DDLogError(errorMessage)
+
                                     self.safeConfigManager
                                         .setLastResult(
                                             errorMessage
@@ -817,16 +827,15 @@ import ThreemaMacros
                             }
                         }
                         else {
-                            throw SafeError
-                                .backupFailed(message: #localize("safe_upload_size_exceeded"))
+                            throw SafeError.BackupError.backupTooBig
                         }
                     }
                     catch {
                         if let safeError = error as? SafeError {
-                            self.logger.logString(safeError.errorDescription)
+                            DDLogError(safeError.description)
                         }
                         else {
-                            self.logger.logString(error.localizedDescription)
+                            DDLogError("\(error)")
                         }
                         
                         self.safeConfigManager
@@ -838,12 +847,12 @@ import ThreemaMacros
                     }
                 }
             case let .failure(error):
-                throw SafeError.backupFailed(message: "Invalid safe server url \(error)")
+                throw SafeError.nestedError(SafeError.invalidURL, message: "Error: \(error)")
             }
         }
         catch {
-            logger.logString(error.localizedDescription)
-            
+            DDLogError("\(error)")
+
             safeConfigManager
                 .setLastResult(
                     "\(#localize("safe_unsuccessful")): \(error.localizedDescription)"
@@ -854,218 +863,34 @@ import ThreemaMacros
     }
     
     func startRestore(
-        identity: String,
-        safePassword: String,
-        customServer: String?,
-        serverUser: String?,
-        serverPassword: String?,
-        server: String?,
-        restoreIdentityOnly: Bool,
-        activateSafeAnyway: Bool,
-        completionHandler: @escaping (SafeError?) -> Void
-    ) {
+        safeBackupData: SafeJsonParser.SafeBackupData,
+        onlyIdentity: Bool
+    ) async throws {
+        DDLogNotice("[ThreemaSafe Restore] Starting restore of data")
         
-        if let key = safeStore.createKey(identity: identity, safePassword: safePassword),
-           let backupID = safeStore.getBackupID(key: key) {
-            
-            if let server,
-               !server.isEmpty {
-
-                startRestoreFromURL(
-                    backupID: backupID,
-                    key: key,
-                    identity: identity,
-                    customServer: customServer,
-                    serverUser: serverUser,
-                    serverPassword: serverPassword,
-                    server: URL(string: server)!,
-                    restoreIdentityOnly: restoreIdentityOnly,
-                    activateSafeAnyway: activateSafeAnyway,
-                    completionHandler: completionHandler
-                )
-            }
-            else {
-                safeStore.getSafeDefaultServer(key: key) { result in
-                    switch result {
-                    case let .success(safeServer):
-                        self.startRestoreFromURL(
-                            backupID: backupID,
-                            key: key,
-                            identity: identity,
-                            customServer: customServer,
-                            serverUser: serverUser,
-                            serverPassword: serverPassword,
-                            server: safeServer.server,
-                            restoreIdentityOnly: restoreIdentityOnly,
-                            activateSafeAnyway: activateSafeAnyway,
-                            completionHandler: completionHandler
-                        )
-                    case let .failure(error):
-                        completionHandler(SafeError.restoreFailed(message: "Cannot get default server: \(error)"))
-                    }
-                }
-            }
-        }
-        else {
-            completionHandler(
-                SafeError
-                    .restoreFailed(message: #localize("safe_no_backup_found"))
-            )
-        }
-    }
-    
-    private func startRestoreFromURL(
-        backupID: [UInt8],
-        key: [UInt8],
-        identity: String,
-        customServer: String?,
-        serverUser: String?,
-        serverPassword: String?,
-        server: URL,
-        restoreIdentityOnly: Bool,
-        activateSafeAnyway: Bool,
-        completionHandler: @escaping (SafeError?) -> Void
-    ) {
-        let backupURL = server
-            .appendingPathComponent("backups/\(BytesUtility.toHexString(bytes: backupID))")
+        try await safeStore.restoreData(
+            safeBackupData: safeBackupData,
+            onlyIdentity: onlyIdentity
+        )
         
-        var decryptedData: [UInt8]?
-        
-        let safeApiService = SafeApiService()
-        safeApiService.download(
-            backup: backupURL,
-            user: serverUser,
-            password: serverPassword
-        ) { comp in
+        // Reset app migration and start a new run
+        let businessInjector = BusinessInjector.ui
+        if AppMigrationVersion.isMigrationRequired(userSettings: businessInjector.userSettings) {
             do {
-                let encryptedData = try comp()
-                    
-                if encryptedData != nil {
-                    decryptedData = try self.safeStore.decryptBackupData(key: key, data: Array(encryptedData!))
-                        
-                    try? self.safeStore.restoreData(
-                        identity: identity,
-                        data: decryptedData!,
-                        onlyIdentity: restoreIdentityOnly
-                    ) { error in
-                        if let error {
-                            switch error {
-                            case let .restoreError(message):
-                                completionHandler(SafeError.restoreError(message: message))
-                            case let .restoreFailed(message):
-                                completionHandler(SafeError.restoreFailed(message: message))
-                            default: break
-                            }
-                        }
-                        else {
-                                    
-                            // Reset app migration and start a new run
-                            let businessInjector = BusinessInjector.ui
-                            if AppMigrationVersion
-                                .isMigrationRequired(userSettings: businessInjector.userSettings) {
-                                do {
-                                    try AppMigration(reset: true).run()
-                                }
-                                catch {
-                                    let msg = String.localizedStringWithFormat(
-                                        #localize("safe_activation_app_migration_failed_error_message"),
-                                        TargetManager.localizedAppName
-                                    )
-                                    completionHandler(SafeError.restoreError(message: msg))
-                                    return
-                                }
-                            }
-                                    
-                            if !restoreIdentityOnly || activateSafeAnyway {
-                                // activate Threema Safe
-                                self.activate(
-                                    key: key,
-                                    customServer: customServer,
-                                    serverUser: serverUser,
-                                    serverPassword: serverPassword,
-                                    server: server.absoluteString,
-                                    maxBackupBytes: nil,
-                                    retentionDays: nil
-                                ) { error in
-                                    if error != nil {
-                                        completionHandler(
-                                            SafeError.restoreError(message: String.localizedStringWithFormat(
-                                                #localize("safe_activation_failed"),
-                                                TargetManager.localizedAppName
-                                            ))
-                                        )
-                                    }
-                                    else {
-                                        // show Threema Safe-Intro
-                                        UserSettings.shared()?.safeIntroShown = false
-                                        // trigger backup
-                                        NotificationCenter.default.post(
-                                            name: NSNotification.Name(kSafeBackupTrigger),
-                                            object: nil
-                                        )
-                                        completionHandler(nil)
-                                    }
-                                }
-                            }
-                            else {
-                                // show Threema Safe-Intro
-                                UserSettings.shared()?.safeIntroShown = false
-                                // trigger backup
-                                NotificationCenter.default.post(
-                                    name: NSNotification.Name(kSafeBackupTrigger),
-                                    object: nil
-                                )
-                                completionHandler(nil)
-                            }
-                        }
-                    }
-                }
-            }
-            catch let SafeApiService.SafeApiError.requestFailed(message) {
-                completionHandler(
-                    SafeError
-                        .restoreFailed(
-                            message: "\(#localize("safe_no_backup_found")) (\(message))"
-                        )
-                )
-            }
-            catch let SafeStore.SafeError.restoreFailed(message) {
-                completionHandler(SafeError.restoreFailed(message: message))
-                    
-                if let decryptedData,
-                   let json = try? JSONSerialization.jsonObject(
-                       with: Data(decryptedData),
-                       options: .mutableContainers
-                   ),
-                   var json = json as? [String: Any],
-                   var user = json["user"] as? [String: Any] {
-                    // Remove sensitive data
-                    if user.removeValue(forKey: "privatekey") != nil {
-                        json["user"] = user
-
-                        if let dataWithoutPrimaryKey = try? JSONSerialization.data(withJSONObject: json),
-                           let dataWithoutPrimaryKeyString = String(bytes: dataWithoutPrimaryKey, encoding: .utf8) {
-                            // Save decrypted backup data into application documents folder, for analyzing failures
-                            _ = FileUtility.shared.write(
-                                fileURL: FileUtility.shared.appDocumentsDirectory?
-                                    .appendingPathComponent("safe-backup.json"),
-                                text: dataWithoutPrimaryKeyString
-                            )
-                        }
-                    }
-                }
+                try AppMigration(reset: true).run()
             }
             catch {
-                completionHandler(
-                    SafeError
-                        .restoreFailed(message: #localize("safe_no_backup_found"))
+                let msg = String.localizedStringWithFormat(
+                    #localize("safe_activation_app_migration_failed_error_message"),
+                    TargetManager.localizedAppName
                 )
+                throw SafeError.unknownError(message: msg)
             }
         }
     }
     
     @objc func initTrigger() {
-                
+        
         guard isActivated else {
             return
         }
@@ -1079,7 +904,7 @@ import ThreemaMacros
                 queue: nil
             ) { notification in
                 if !AppDelegate.shared().isAppInBackground(), self.isActivated {
-                        
+                    
                     // start background task to give time to create backup file, if the app is going into background
                     BackgroundTaskManager.shared.newBackgroundTask(
                         key: kSafeBackgroundTask,
@@ -1111,20 +936,18 @@ import ThreemaMacros
             }
         }
             
-        if safeConfigManager.getIsTriggered() || safeStore
-            .isDateOlderThenDays(date: safeConfigManager.getLastBackup(), days: 1) {
+        if safeConfigManager.getIsTriggered() || isDateOlderThenDays(date: safeConfigManager.getLastBackup(), days: 1) {
             NotificationCenter.default.post(name: NSNotification.Name(kSafeBackupTrigger), object: nil)
         }
             
         // Show alert once a day, if is last successful backup older than 7 days
         if safeConfigManager.getLastResult() != #localize("safe_successful"),
            safeConfigManager.getLastBackup() != nil,
-           safeStore.isDateOlderThenDays(date: safeConfigManager.getLastBackup(), days: 7) {
+           isDateOlderThenDays(date: safeConfigManager.getLastBackup(), days: 7) {
                 
             DDLogWarn("WARNING Threema Safe backup not successfully since 7 days or more")
-            logger.logString("WARNING Threema Safe backup not successfully since 7 days or more")
-            
-            if safeStore.isDateOlderThenDays(date: safeConfigManager.getLastAlertBackupFailed(), days: 1),
+
+            if isDateOlderThenDays(date: safeConfigManager.getLastAlertBackupFailed(), days: 1),
                let topViewController = AppDelegate.shared()?.currentTopViewController(),
                let seconds = safeConfigManager.getLastBackup()?.timeIntervalSinceNow,
                let days = Double(exactly: seconds / 86400)?.rounded(FloatingPointRoundingRule.up) {
@@ -1162,13 +985,13 @@ import ThreemaMacros
                     self.safeConfigManager
                         .setLastResult("\(#localize("safe_unsuccessful")): is already running")
                 }
-                else if !self.backupForce, SafeManager.backupIsRunning || !self.safeStore.isDateOlderThenDays(
+                else if !self.backupForce, SafeManager.backupIsRunning || !self.isDateOlderThenDays(
                     date: self.safeConfigManager.getLastBackup(),
                     days: 1
                 ) {
                     
                     self.safeConfigManager.setIsTriggered(true)
-                    self.logger.logString("Safe backup just triggered")
+                    DDLogNotice("Safe backup just triggered")
                 }
                 else {
                     SafeManager.backupProcessStart = true
@@ -1178,8 +1001,8 @@ import ThreemaMacros
             }
 
             if SafeManager.backupProcessStart {
-                self.logger.logString("Safe backup start, force \(self.backupForce)")
-                
+                DDLogNotice("Safe backup start, force \(self.backupForce)")
+
                 self.startBackup(force: self.backupForce) {
                     SafeManager.backupProcessLock.sync {
                         SafeManager.backupIsRunning = false
@@ -1191,7 +1014,7 @@ import ThreemaMacros
                         NotificationCenter.default.post(name: NSNotification.Name(kSafeBackupUIRefresh), object: nil)
                     }
                     
-                    self.logger.logString("Safe backup completed")
+                    DDLogNotice("Safe backup completed")
                 }
             }
             else {
@@ -1207,7 +1030,7 @@ import ThreemaMacros
     /// Checks Threema Safe configuration for Threema Work and OnPrem
     @objc func performThreemaSafeLaunchChecks() {
         guard TargetManager.isBusinessApp,
-              let mdm = MDMSetup(setup: false) else {
+              let mdm = MDMSetup() else {
             return
         }
         // We abort if we are currently creating a backup, e.g. from app setup
@@ -1232,5 +1055,32 @@ import ThreemaMacros
                 self.activateThroughMDM()
             }
         }
+    }
+    
+    // MARK: - MDM
+
+    func credentialsChanged() -> Bool {
+        guard let mdm = MDMSetup() else {
+            return false
+        }
+        
+        let current = safeConfigManager.getKey()
+        let poss = SafeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: mdm.safePassword())
+        return current != poss
+    }
+    
+    func isSafePasswordDefinedByAdmin() -> Bool {
+        guard let mdm = MDMSetup(), mdm.safePassword() != nil else {
+            return false
+        }
+        let current = safeConfigManager.getKey()
+        let poss = SafeStore.createKey(identity: MyIdentityStore.shared().identity, safePassword: mdm.safePassword())
+        return current == poss
+    }
+    
+    // MARK: - Helpers
+    
+    private func isDateOlderThenDays(date: Date?, days: Int) -> Bool {
+        date == nil || (date != nil && (date!.addingTimeInterval(TimeInterval(86400 * days)) < Date()))
     }
 }

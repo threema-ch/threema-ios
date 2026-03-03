@@ -46,13 +46,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 @property DistributionListDetailsViewController *distributionListDetailViewController;
 
 @property ContactsViewController *contactsViewController;
-@property ConversationsViewController *conversationsViewController;
+@property Old_ConversationsViewController *conversationsViewController;
 @property ArchivedConversationsViewController *archivedConversationsViewController;
 
 @property PortraitNavigationController *contactsNavigationController;
 @property PortraitNavigationController *conversationsNavigationController;
-
-@property ThemedNavigationController *contactList2ViewController;
 
 @property UIViewController *settingsViewController;
 @property UIViewController *profileViewController;
@@ -63,6 +61,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 @property NSUInteger currentIndex;
 
 @property BOOL isFirstAppearance;
+
 @end
 
 @implementation MainTabBarController
@@ -77,6 +76,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(selectedGroup:) name:kNotificationShowGroup object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(selectedDistributionList:) name:kNotificationShowDistributionList object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(selectedConversation:) name:kNotificationShowConversation object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showMyIdentity:) name:kNotificationShowProfile object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deletedConversation:) name:kNotificationDeletedConversation object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deletedContact:) name:kNotificationDeletedContact object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showSafeSetup:) name:kSafeSetupUI object:nil];
@@ -90,11 +90,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     _coverView.frame = self.view.bounds;
     _coverView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
-    [self setupSwiftUITabs];
-    if([[UserSettings sharedUserSettings] contactList2]) {
-        [self setupContactList2];
-    }
-    
+    [self setupTabs];
+    [self setupTraitRegistration];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -144,8 +141,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     
     _settingsViewController = nil;
     _profileViewController = nil;
-    
-    _contactList2ViewController = nil;
 }
 
 - (BOOL)shouldAutorotate {
@@ -155,19 +150,26 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return YES;
 }
 
--(void)setupSwiftUITabs {
+-(void)setupTabs {
     NSMutableArray *vcs = [[NSMutableArray alloc]initWithArray:self.viewControllers];
+    _conversationsViewController = [[Old_ConversationsViewController alloc] init];
+    _conversationsNavigationController = [[PortraitNavigationController alloc] initWithNavigationBarClass:[StatusNavigationBar class] toolbarClass:nil];
+    [_conversationsNavigationController setViewControllers:@[_conversationsViewController]];
     _settingsViewController = SwiftUIAdapter.createSettingsView;
-    _profileViewController = SwiftUIAdapter.createProfileView;
+    _profileViewController = [SwiftUIAdapter createProfileViewOnDismiss:^{
+        [self dismissViewControllerAnimated:YES completion:nil];
+    }];
+    
+    [vcs addObject:_conversationsNavigationController];
     [vcs addObject:_profileViewController];
     [vcs addObject:_settingsViewController];
+    
     [self setViewControllers:vcs animated:NO];
-}
--(void)setupContactList2 {
-    NSMutableArray *vcs = [[NSMutableArray alloc]initWithArray:self.viewControllers];
-    _contactList2ViewController = [[ContactListNavigationViewController alloc] init];
-    [vcs addObject:_contactList2ViewController];
-    [self setViewControllers:vcs animated:NO];
+    
+    // Set the title for the first tab, as this is still set in the storyboard without any translations
+    self.viewControllers.firstObject.tabBarItem.title = [BundleUtil localizedStringForKey:@"contacts"];
+    
+    return;
 }
 
 -(UIInterfaceOrientationMask)supportedInterfaceOrientations {
@@ -193,9 +195,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 
 - (void)setSelectedIndex:(NSUInteger)selectedIndex {
     // fallback for when setting share extension inactive fails for some reason (crash etc.)
-    [AppGroup setActive:NO forType:AppGroupTypeNotificationExtension];
-    [AppGroup setActive:NO forType:AppGroupTypeShareExtension];
-    
+    if (UserSettings.sharedUserSettings.ipcCommunicationEnabled == NO) {
+        [AppGroup setMeActive];
+    }
+
     if (SYSTEM_IS_IPAD == NO) {
         [super setSelectedIndex:selectedIndex];
         return;
@@ -234,16 +237,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)switchToChats {
-    if (_conversationsViewController == nil) {
-        _conversationsViewController = (ConversationsViewController *)[self loadViewControllerNamed:@"conversationsViewController"];
-        _conversationsNavigationController = [[PortraitNavigationController alloc] initWithNavigationBarClass:[StatusNavigationBar class] toolbarClass:nil];
-        [_conversationsNavigationController setViewControllers:@[_conversationsViewController]];
-    }
+    _conversationsViewController = [[Old_ConversationsViewController alloc] init];
+    _conversationsNavigationController = [[PortraitNavigationController alloc] initWithNavigationBarClass:[StatusNavigationBar class] toolbarClass:nil];
+    [_conversationsNavigationController setViewControllers:@[_conversationsViewController]];
+    
     
     self.splitViewController.viewControllers = @[
         _conversationsNavigationController,
         self
     ];
+    
     [self switchConversation:nil notification:nil];
 }
 
@@ -329,8 +332,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)showMyIdentity {
-    [self showModal: SwiftUIAdapter.createProfileView];
-    return;
+    UIViewController *profileViewController = [SwiftUIAdapter createProfileViewOnDismiss:^{
+        [self.presentedViewController dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [self showModal: profileViewController];
 }
 
 - (void)showSettings {
@@ -349,11 +354,15 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (UIViewController *)loadSettingsControllerNamed:(NSString *)viewControllerName {
-    return SwiftUIAdapter.createProfileView;
+    return [SwiftUIAdapter createProfileViewOnDismiss:^{
+        [self.presentedViewController dismissViewControllerAnimated:YES completion:nil];
+    }];
 }
 
 - (UIViewController *)loadMyIdentityController {
-    return SwiftUIAdapter.createProfileView;
+    return [SwiftUIAdapter createProfileViewOnDismiss:^{
+        [self.presentedViewController dismissViewControllerAnimated:YES completion:nil];
+    }];
 }
 
 - (void)showModal:(UIViewController *)viewController {
@@ -432,12 +441,6 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)selectedContact:(NSNotification*)notification {
-    
-    if (notification.userInfo[@"fromURL"] == nil && self.selectedIndex == kChatTabBarIndex) {
-        // This means we don't come from an URL and we scanned an ID from the chat-details and we don't want to change tabs
-        return;
-    }
-    
     ContactEntity *contact = [notification.userInfo objectForKey:kKeyContact];
     
     _groupDetailViewController = nil;
@@ -513,11 +516,13 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 -(void)showThreemaSafe {
-    UIViewController *notificationViewController = [SwiftUIAdapter createProfileView];
-    
     if(SYSTEM_IS_IPAD) {
         UIViewController *profile = _profileViewController;
         ModalNavigationController *navigationController = [[ModalNavigationController alloc] init];
+        UIViewController *notificationViewController = [SwiftUIAdapter createProfileViewOnDismiss:^{
+            [self.presentedViewController dismissViewControllerAnimated:YES completion:nil];
+        }];
+        
         navigationController.showDoneButton = YES;
         navigationController.dismissOnTapOutside = YES;
         navigationController.modalDelegate = self;
@@ -531,6 +536,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         [self setSelectedIndex:kMyIdentityTabBarIndex];
         [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationShowSafeSetup object:nil userInfo:nil];
     }
+}
+
+- (void)showMyIdentity:(NSNotification*)notification {
+    [self setSelectedIndex: kMyIdentityTabBarIndex];
 }
 
 - (void)selectedConversation:(NSNotification*)notification {
@@ -561,8 +570,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 [_archivedConversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
                 [self setSelectedViewController:_conversationsNavigationController];
                 
-            } else if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]) {
-                _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
+            } else if ([_conversationsNavigationController.topViewController isKindOfClass:[Old_ConversationsViewController class]]) {
+                _conversationsViewController = (Old_ConversationsViewController *)_conversationsNavigationController.topViewController;
                 [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
                 [self setSelectedViewController:_conversationsNavigationController];
             }
@@ -577,8 +586,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
                 
                 [_conversationsNavigationController popToRootViewControllerAnimated:NO];
                 // There is a race condition during pop, so we need to check again.
-                if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]) {
-                    _conversationsViewController = (ConversationsViewController *)_conversationsNavigationController.topViewController;
+                if ([_conversationsNavigationController.topViewController isKindOfClass:[Old_ConversationsViewController class]]) {
+                    _conversationsViewController = (Old_ConversationsViewController *)_conversationsNavigationController.topViewController;
                     [_conversationsViewController displayChatWithChatViewController: chatViewController animated:YES];
                     [self setSelectedViewController:_conversationsNavigationController];
                 }
@@ -619,12 +628,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     __block ContactEntity *notificationContact = [info objectForKey:kKeyContact];
     __block NSString *notificationContactIdentity = [info objectForKey:kKeyContactIdentity];
     if (conversation == nil) {
-        EntityManager *entityManager = [[EntityManager alloc] init];
+        EntityManager *entityManager = [[BusinessInjector ui] entityManager];
         if (notificationContact == nil) {
             conversation = [entityManager conversationFor:notificationContactIdentity createIfNotExisting:YES];
         } else {
             [entityManager performSyncBlockAndSafe:^{
-                ContactEntity *contact = (ContactEntity *)[entityManager.entityFetcher getManagedObjectById:notificationContact.objectID];
+                ContactEntity *contact = (ContactEntity *)[entityManager.entityFetcher managedObjectWith:notificationContact.objectID];
                 if (contact) {
                     conversation = [entityManager conversationForContact:contact createIfNotExisting:YES];
                 }
@@ -747,12 +756,18 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self setSelectedIndex:index];
 }
 
-- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
-    [super traitCollectionDidChange:previousTraitCollection];
-    
-    if ([[UserSettings sharedUserSettings] useSystemTheme] && [[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground) {
-        if ([self.traitCollection hasDifferentColorAppearanceComparedToTraitCollection:previousTraitCollection]) {
-            if (self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
+- (void)setupTraitRegistration {
+    NSArray<Class> *traits = @[[UITraitUserInterfaceStyle class]];
+
+    __weak typeof(self) weakSelf = self;
+    UITraitChangeHandler handler = ^(
+        __kindof id<UITraitEnvironment>  _Nonnull traitEnvironment,
+        UITraitCollection * _Nonnull previousCollection
+    ) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+        if (self.traitCollection.userInterfaceStyle != previousCollection.userInterfaceStyle) {
+            if (strongSelf.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
                 if (Colors.theme != ThemeDark) {
                     [Colors setTheme:ThemeDark];
                 }
@@ -763,9 +778,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             }
             [[NotificationPresenterWrapper shared] colorChanged];
         }
-    }
+    };
+    [self registerForTraitChanges:traits withHandler:handler];
 }
-
 
 # pragma mark - JKLLockscreen Delegate
 // Used for private chats on iPad
@@ -802,7 +817,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     vc.delegate = self;
     vc.lockScreenMode = LockScreenModeNew;
 
-    [UIAlertTemplate showAlertWithOwner:self.viewControllers[kChatTabBarIndex] title:[BundleUtil localizedStringForKey:@"privateChat_alert_title"] message:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privateChat_setup_alert_message"], TargetManagerObjc.localizedAppName] titleOk:[BundleUtil localizedStringForKey:@"privateChat_code_alert_confirm"] actionOk:^(UIAlertAction * _Nonnull action) {
+    [UIAlertTemplate showAlertWithOwner:self.viewControllers[kChatTabBarIndex] title:[BundleUtil localizedStringForKey:@"privateChat_alert_title"] message:[NSString stringWithFormat:[BundleUtil localizedStringForKey:@"privateChat_setup_alert_message"], TargetManagerObjC.localizedAppName] titleOk:[BundleUtil localizedStringForKey:@"privateChat_code_alert_confirm"] actionOk:^(UIAlertAction * _Nonnull action) {
         
         [self.viewControllers[kChatTabBarIndex].view addSubview: _coverView];
         
@@ -824,7 +839,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     [self removeCoverView];
     UINavigationController *navigationController = self.viewControllers[kChatTabBarIndex];
     
-    if ([_conversationsNavigationController.topViewController isKindOfClass:[ConversationsViewController class]]
+    if ([_conversationsNavigationController.topViewController isKindOfClass:[Old_ConversationsViewController class]]
         && _conversationsViewController != nil
         && _conversationsViewController.selectedConversation != nil) {
         ConversationEntity *conversation = _conversationsViewController.selectedConversation;
@@ -844,7 +859,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 }
 
 - (void)shouldEraseApplicationData:(JKLLockScreenViewController *)viewController{
-    [[AppDelegate sharedAppDelegate] eraseApplicationData:viewController];
+    [[AppDelegate sharedAppDelegate] eraseApplicationData];
 }
 
 - (BOOL)allowTouchIDLockScreenViewController:(JKLLockScreenViewController *)lockScreenViewController{

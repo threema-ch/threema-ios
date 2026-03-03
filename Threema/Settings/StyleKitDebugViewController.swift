@@ -20,7 +20,7 @@
 
 import UIKit
 
-class StyleKitDebugViewController: UIViewController {
+final class StyleKitDebugViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()

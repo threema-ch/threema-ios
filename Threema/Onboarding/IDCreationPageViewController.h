@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ThreemaFramework.h"
+#import "PageContentViewController.h"
 #import "MoreView.h"
 
 @interface IDCreationPageViewController : PageContentViewController

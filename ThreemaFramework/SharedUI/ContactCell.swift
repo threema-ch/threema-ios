@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import CocoaLumberjackSwift
+
 import ThreemaMacros
 import UIKit
 
@@ -37,6 +38,15 @@ public final class ContactCell: ThemedCodeTableViewCell {
     
     // MARK: - Public properties
     
+    override public func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        
+        guard hasCheckmark else {
+            return
+        }
+        checkMarkView.isChecked = selected
+    }
+    
     public var size = CellConfiguration.Size.small {
         didSet {
             guard size != oldValue else {
@@ -45,6 +55,12 @@ public final class ContactCell: ThemedCodeTableViewCell {
             
             configuration = CellConfiguration(size: size)
             sizeDidChange()
+        }
+    }
+    
+    public var hasCheckmark = false {
+        didSet {
+            checkMarkView.isHidden = !hasCheckmark
         }
     }
     
@@ -101,7 +117,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
     
     private lazy var nameLabel: ContactNameLabel = {
         let label = ContactNameLabel()
-            
+        
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
@@ -115,7 +131,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
         let imageView = UIImageView()
         
         imageView.contentMode = .scaleAspectFit
-                
+        
         return imageView
     }()
     
@@ -140,6 +156,13 @@ public final class ContactCell: ThemedCodeTableViewCell {
         label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         
         return label
+    }()
+    
+    private lazy var checkMarkView: CustomCellCheckMarkAccessoryView = {
+        let view = CustomCellCheckMarkAccessoryView()
+        view.isHidden = !hasCheckmark
+        
+        return view
     }()
     
     // MARK: Layout stacks
@@ -194,17 +217,17 @@ public final class ContactCell: ThemedCodeTableViewCell {
     
     private lazy var textStack: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [firstLineStack, secondLineStack])
-
+        
         stackView.spacing = configuration.verticalSpacing
         stackView.axis = .vertical
         stackView.distribution = .equalSpacing
         stackView.alignment = .fill
-
+        
         return stackView
     }()
     
     private lazy var containerStack: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [profilePictureView, textStack])
+        let stackView = UIStackView(arrangedSubviews: [profilePictureView, textStack, checkMarkView])
         
         stackView.axis = .horizontal
         stackView.distribution = .fill
@@ -217,7 +240,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
     
     override public func configureCell() {
         super.configureCell()
-            
+        
         sizeDidChange()
         
         // Type icon configuration
@@ -249,11 +272,11 @@ public final class ContactCell: ThemedCodeTableViewCell {
     // MARK: - Reuse configuration
     
     private func configureMeCell() {
-        let profile = ProfileStore().profile()
+        let profile = ProfileStore().profile
         
         profilePictureView.info = .me
         otherThreemaTypeIcon.isHidden = true
-        nameLabel.contact = nil // #localize("me")
+        nameLabel.contactObject = nil // #localize("me")
         verificationLevelImageView.image = nil
         verificationLevelImageView.accessibilityLabel = nil
         
@@ -270,11 +293,11 @@ public final class ContactCell: ThemedCodeTableViewCell {
     }
     
     private func configureContactCell(for contact: Contact) {
-        let em = BusinessInjector().entityManager
+        let em = BusinessInjector.ui.entityManager
         em.performBlock {
-            if let contactEntity = em.entityFetcher.contact(for: contact.identity.string) {
+            if let contactEntity = em.entityFetcher.contactEntity(for: contact.identity.rawValue) {
                 self.profilePictureView.info = .contact(contact)
-                self.nameLabel.contact = contactEntity
+                self.nameLabel.contactObject = contactEntity
                 self.otherThreemaTypeIcon.isHidden = !contactEntity.showOtherThreemaTypeIcon
             }
             else {
@@ -282,10 +305,10 @@ public final class ContactCell: ThemedCodeTableViewCell {
                     "Can't find contact entity to set the profile picture, type icon and name. It will show 'me' as contact name"
                 )
                 self.otherThreemaTypeIcon.isHidden = true
-                self.nameLabel.contact = nil
+                self.nameLabel.contactObject = nil
             }
         }
-
+        
         verificationLevelImageView.image = contact.verificationLevelImageSmall
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             verificationLevelImageView.image = contact.verificationLevelImage
@@ -294,7 +317,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
         
         var nickname = ""
         if let publicNickname = contact.publicNickname,
-           publicNickname != contact.identity.string {
+           publicNickname != contact.identity.rawValue {
             nickname = "~\(publicNickname)"
         }
         
@@ -314,12 +337,12 @@ public final class ContactCell: ThemedCodeTableViewCell {
                     department
                 }
                 else {
-                    contact.identity.string
+                    contact.identity.rawValue
                 }
         }
         else {
             metadataLabel.text = nickname
-            identityLabel.text = contact.identity.string
+            identityLabel.text = contact.identity.rawValue
         }
         
         if contact.isActive {

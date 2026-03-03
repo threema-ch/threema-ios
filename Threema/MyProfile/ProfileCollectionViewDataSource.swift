@@ -21,7 +21,7 @@
 import Foundation
 import ThreemaMacros
 
-class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
+final class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
     ProfileCollectionViewDataSource.Section,
     ProfileCollectionViewDataSource.Row
 > {
@@ -29,40 +29,17 @@ class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
 
     private let businessInjector = BusinessInjector.ui
     private weak var collectionView: UICollectionView?
-    private weak var coordinator: ProfileCoordinator?
-    
-    private let cellProvider: ProfileCollectionViewDataSource.CellProvider = { collectionView, indexPath, item in
-        
-        if item == .header {
-            let cell: ProfileCollectionViewHeaderCell = collectionView.dequeueCell(for: indexPath)
-            cell.backgroundConfiguration = .clear()
-            return cell
-        }
-        else {
-            guard let cell: UICollectionViewListCell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: "Default",
-                for: indexPath
-            ) as? UICollectionViewListCell else {
-                return nil
-            }
-            
-            var content = cell.defaultContentConfiguration()
-            content.text = item.title
-            cell.contentConfiguration = content
-            cell.accessories = [.disclosureIndicator()]
-            if let text = item.accessoryText {
-                cell.accessories.append(.label(text: text))
-            }
-            cell.isUserInteractionEnabled = !item.isInteractionDisabled
-            return cell
-        }
-    }
+    private let onSelection: (Row) -> Void
 
     // MARK: - Lifecycle
     
-    init(collectionView: UICollectionView, coordinator: ProfileCoordinator?) {
+    init(
+        collectionView: UICollectionView,
+        cellProvider: @escaping CellProvider,
+        onSelection: @escaping (Row) -> Void
+    ) {
         self.collectionView = collectionView
-        self.coordinator = coordinator
+        self.onSelection = onSelection
         
         super.init(collectionView: collectionView, cellProvider: cellProvider)
         
@@ -82,20 +59,18 @@ class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
     }
     
     private func configureFooters() {
-        let registration = UICollectionView
-            .SupplementaryRegistration<UICollectionViewListCell>(
-                elementKind: UICollectionView
-                    .elementKindSectionFooter
-            ) { supplementaryView, _, indexPath in
+        let registration = UICollectionView.SupplementaryRegistration<UICollectionViewListCell>(
+            elementKind: UICollectionView.elementKindSectionFooter
+        ) { [weak self] supplementaryView, _, indexPath in
             
-                guard let section = self.sectionIdentifier(for: indexPath.section) else {
-                    return
-                }
-                var content = UIListContentConfiguration.groupedFooter()
-                content.text = section.footerText
-
-                supplementaryView.contentConfiguration = content
+            guard let section = self?.sectionIdentifier(for: indexPath.section) else {
+                return
             }
+            var content = UIListContentConfiguration.groupedFooter()
+            content.text = section.footerText
+            
+            supplementaryView.contentConfiguration = content
+        }
         
         supplementaryViewProvider = { collectionView, elementKind, indexPath -> UICollectionReusableView? in
             if elementKind == UICollectionView.elementKindSectionFooter {
@@ -166,28 +141,11 @@ class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
     }
     
     func didSelectItem(at indexPath: IndexPath) {
-        guard let coordinator, let identifier = itemIdentifier(for: indexPath) else {
+        guard let identifier = itemIdentifier(for: indexPath) else {
             return
         }
         
-        switch identifier {
-        case .header:
-            assertionFailure(" Should not be possible to select.")
-        case .threemaSafe:
-            coordinator.show(.threemaSafe)
-        case .idExport:
-            coordinator.show(.idExport)
-        case .revocationPassword:
-            coordinator.show(.revocationPassword)
-        case .phone:
-            coordinator.show(.linkPhone)
-        case .mail:
-            coordinator.show(.linkMail)
-        case .publicKey:
-            coordinator.show(.publicKey)
-        case .revokeDelete:
-            coordinator.show(.revokeDelete)
-        }
+        onSelection(identifier)
     }
     
     private func addObservers() {

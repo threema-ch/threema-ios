@@ -31,7 +31,7 @@ class WebMessagesResponse: WebAbstractMessage {
     
     init(requestMessage: WebMessagesRequest, session: WCSession) {
         
-        let entityManager = EntityManager()
+        let entityManager = BusinessInjector.ui.entityManager
         var conversation: ConversationEntity?
         
         let maxMessageCount = Int(kWebPageSize)
@@ -40,10 +40,10 @@ class WebMessagesResponse: WebAbstractMessage {
         self.type = requestMessage.type
         self.identity = requestMessage.id
         if type == "contact" {
-            conversation = entityManager.entityFetcher.conversationEntity(forIdentity: requestMessage.id)
+            conversation = entityManager.entityFetcher.conversationEntity(for: requestMessage.id)
         }
         else {
-            conversation = entityManager.entityFetcher.legacyConversation(for: requestMessage.id.hexadecimal)
+            conversation = entityManager.entityFetcher.legacyConversationEntity(for: requestMessage.id.hexadecimal)
         }
         
         if let conversation {

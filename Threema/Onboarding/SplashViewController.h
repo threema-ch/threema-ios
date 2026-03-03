@@ -24,7 +24,6 @@
 
 @interface SplashViewController : IDCreationPageViewController
 
-@property (weak, nonatomic) IBOutlet UIView *bgView;
 @property (weak, nonatomic) IBOutlet UIImageView *threemaLogoView;
 
 @property (weak, nonatomic) IBOutlet UIView *containerView;

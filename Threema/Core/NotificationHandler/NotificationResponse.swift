@@ -64,15 +64,19 @@ class NotificationResponse: NSObject {
                 self.notificationIdentifier = kAppPushReplyBackgroundTask
             }
 
-            let entityManager = EntityManager()
+            let entityManager = businessInjector.entityManager
 
             if let threemaDict, let groupIDString = threemaDict["groupId"] as? String,
                let groupCreator = threemaDict["groupCreator"] as? String,
                let groupID = Data(base64Encoded: groupIDString) {
-                self.conversation = entityManager.entityFetcher.conversationEntity(for: groupID, creator: groupCreator)
+                self.conversation = entityManager.entityFetcher.groupConversationEntity(
+                    for: groupID,
+                    creatorID: groupCreator,
+                    myIdentity: businessInjector.myIdentityStore.identity
+                )
             }
             else if let threemaDict, let senderIdentity = threemaDict["from"] as? String {
-                self.conversation = entityManager.entityFetcher.conversationEntity(forIdentity: senderIdentity)
+                self.conversation = entityManager.entityFetcher.conversationEntity(for: senderIdentity)
             }
             else {
                 DDLogError("Could not find conversation for push notification")
@@ -111,8 +115,7 @@ class NotificationResponse: NSObject {
         ) {
             // connect all running sessions
             if WCSessionManager.shared.isRunningWCSession() {
-                ValidationLogger.shared()?
-                    .logString("[Threema Web] handleNotificationResponse --> connect all running sessions")
+                DDLogNotice("[Threema Web] handleNotificationResponse --> connect all running sessions")
             }
             WCSessionManager.shared.connectAllRunningSessions()
             
@@ -124,29 +127,26 @@ class NotificationResponse: NSObject {
         if categoryIdentifier == NotificationActionProvider
             .Category.singleCategory.rawValue || categoryIdentifier == NotificationActionProvider.Category.groupCategory
             .rawValue {
-            AppGroup.setActive(false, for: AppGroupTypeNotificationExtension)
-            AppGroup.setActive(false, for: AppGroupTypeShareExtension)
+
+            if !businessInjector.userSettings.ipcCommunicationEnabled {
+                AppGroup.setMeActive()
+            }
 
             if actionIdentifier == NotificationActionProvider.Action.replyAction.rawValue {
-                businessInjector.serverConnector.connect(initiator: .notificationHandler)
                 handleReplyMessage()
             }
             else if NotificationActionProvider.Action.isEmojiAction(identifier: actionIdentifier) {
-                businessInjector.serverConnector.connect(initiator: .notificationHandler)
                 handleEmojiReply(identifier: actionIdentifier)
             }
             else {
-                businessInjector.serverConnector.connect(initiator: .app)
                 notificationManager.handleThreemaNotification(
                     payload: userInfo,
                     receivedWhileRunning: AppDelegate.shared().active
                 )
-                finishResponse()
             }
         }
         else if categoryIdentifier == NotificationActionProvider.Category.callCategory.rawValue {
             if actionIdentifier == NotificationActionProvider.Action.replyAction.rawValue {
-                businessInjector.serverConnector.connect(initiator: .notificationHandler)
                 handleReplyMessageToMissedCaller()
             }
             else if actionIdentifier == NotificationActionProvider.Action.callBackAction.rawValue {
@@ -183,12 +183,12 @@ class NotificationResponse: NSObject {
             return
         }
         
-        ServerConnectorHelper.waitUntilConnected(timeout: 20) {
+        ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .notificationHandler, timeout: 20) {
             Task { @MainActor in
                 if let messageID = self.messageID, let conversation = self.conversation,
                    let baseMessage = self.businessInjector.entityManager.entityFetcher.message(
                        with: messageID.decodeHex(),
-                       conversation: conversation
+                       in: conversation
                    ) {
                     let conversation = baseMessage.conversation
                     if !baseMessage.isGroupMessage,
@@ -225,7 +225,7 @@ class NotificationResponse: NSObject {
             return
         }
 
-        ServerConnectorHelper.waitUntilConnected(timeout: 20) {
+        ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .notificationHandler, timeout: 20) {
             Task { @MainActor in
                 if let conversation = self.conversation {
                     _ = await self.businessInjector.messageSender.sendTextMessage(
@@ -253,7 +253,7 @@ class NotificationResponse: NSObject {
             return
         }
         
-        ServerConnectorHelper.waitUntilConnected(timeout: 20) {
+        ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .notificationHandler, timeout: 20) {
             guard let messageID = self.messageID, let conversation = self.conversation else {
                 self.sendReactionError()
                 self.finishResponse()
@@ -266,7 +266,7 @@ class NotificationResponse: NSObject {
                     (NSManagedObjectID?, Bool, BaseMessageEntity?) = await entityManager.perform {
                         let baseMessage = entityManager.entityFetcher.message(
                             with: messageID.decodeHex(),
-                            conversation: conversation
+                            in: conversation
                         )
                         return (baseMessage?.objectID, baseMessage?.isGroupMessage ?? false, baseMessage)
                     }
@@ -332,8 +332,8 @@ class NotificationResponse: NSObject {
             return
         }
 
-        ServerConnectorHelper.waitUntilConnected(timeout: 20) {
-            if let contact = self.businessInjector.entityManager.entityFetcher.contact(for: identity) {
+        ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .notificationExtension, timeout: 20) {
+            if let contact = self.businessInjector.entityManager.entityFetcher.contactEntity(for: identity) {
                 var callID: VoIPCallID?
                 if let threemaDict = self.threemaDict {
                     if let tmpCallID = threemaDict["callId"] {
@@ -366,7 +366,8 @@ class NotificationResponse: NSObject {
             safeStore: SafeStore(
                 safeConfigManager: safeConfig,
                 serverApiConnector: ServerAPIConnector(),
-                groupManager: businessInjector.groupManager
+                groupManager: businessInjector.groupManager,
+                myIdentityStore: businessInjector.myIdentityStore
             ),
             safeApiService: SafeApiService()
         )

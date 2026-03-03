@@ -50,7 +50,8 @@ class DeviceLinking: NSObject {
         self.safeStore = SafeStore(
             safeConfigManager: safeConfigManager,
             serverApiConnector: ServerAPIConnector(),
-            groupManager: businessInjector.groupManager
+            groupManager: businessInjector.groupManager,
+            myIdentityStore: businessInjector.myIdentityStore
         )
         self.safeManager = SafeManager(
             safeConfigManager: safeConfigManager,
@@ -75,7 +76,7 @@ class DeviceLinking: NSObject {
     private(set) var threemaSafePassword: String?
 
     func generateDeviceGroupKey() throws {
-        guard DeviceGroupKeyManager(myIdentityStore: businessInjector.myIdentityStore).create() != nil else {
+        guard DeviceGroupKeyManager().create() != nil else {
             throw DeviceLinkingError.noDeviceGroupKey
         }
     }
@@ -101,11 +102,9 @@ class DeviceLinking: NSObject {
     func blockCommunicationAndDisconnect() async {
         // Block communication setting was removed
 
-        if let webClientSessions = businessInjector.entityManager.entityFetcher.allActiveWebClientSessions() {
+        if let webClientSessions = businessInjector.entityManager.entityFetcher.activeWebClientSessionEntities() {
             for session in webClientSessions {
-                if let session = session as? WebClientSessionEntity {
-                    WCSessionManager.shared.stopSession(session)
-                }
+                WCSessionManager.shared.stopSession(session)
             }
         }
 
@@ -203,7 +202,7 @@ class DeviceLinking: NSObject {
         case .testFlight:
             if !TargetManager.isSandbox {
                 // Disable it if we downgrade consumer, work or onprem from 5.0
-                if AppInfo.version.major < 5 {
+                if AppVersionInfo.version.major < 5 {
                     autoDisableMultiDevice()
                 }
             }
@@ -234,11 +233,7 @@ class DeviceLinking: NSObject {
                         let alertText = BundleUtil
                             .localizedString(forKey: "multi_device_linked_devices_failed_remove_message_2")
                         let info = [kKeyMessage: alertText]
-                        NotificationCenter.default.post(
-                            name: NSNotification.Name(kNotificationErrorConnectionFailed),
-                            object: nil,
-                            userInfo: info
-                        )
+                        NotificationCenter.default.post(name: .errorConnectionFailed, object: nil, userInfo: info)
                     }
             }
         }

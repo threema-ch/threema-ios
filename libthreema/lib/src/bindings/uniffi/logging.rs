@@ -1,10 +1,4 @@
 //! Logging utility to forward logging.
-
-#![expect(
-    missing_docs,
-    reason = "False positive: https://github.com/mozilla/uniffi-rs/pull/2478"
-)]
-
 use std::{io, sync::Arc};
 
 use tracing::{Level, debug};

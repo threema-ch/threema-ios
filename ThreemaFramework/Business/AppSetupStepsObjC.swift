@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-@available(*, deprecated, renamed: "AppSetupSteps", message: "Only use from Objective-C code")
+@available(swift, obsoleted: 1.0, renamed: "AppSetupSteps", message: "Only use from Objective-C")
 public class AppSetupStepsObjC: NSObject {
     let appSetupSteps = AppSetupSteps()
     

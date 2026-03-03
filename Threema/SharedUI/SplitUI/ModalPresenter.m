@@ -19,6 +19,8 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 #import "ModalPresenter.h"
+#import <UIKit/UIKit.h>
+#import <ThreemaFramework/Constants.h>
 
 @implementation ModalPresenter
 

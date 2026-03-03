@@ -26,6 +26,10 @@ extension View {
         AppDelegate.shared().currentTopViewController()
     }
     
+    var presentingViewController: UIViewController? {
+        topViewController?.presentingViewController
+    }
+    
     var asAnyView: AnyView {
         AnyView(self)
     }
@@ -55,21 +59,25 @@ extension View {
     func applyIf(_ condition: Bool, apply: (Self) -> some View) -> some View {
         condition ? apply(self).asAnyView : asAnyView
     }
-    
-    func applyScrollBounceBahaviorIfNeeded() -> AnyView {
-        if #available(iOS 16.4, *) {
-            self.scrollBounceBehavior(.basedOnSize, axes: [.vertical]).asAnyView
-        }
-        else {
-            asAnyView
-        }
-    }
-    
+        
     func threemaNavigationBar(_ title: String) -> some View {
         ignoresSafeArea(.all)
             .navigationBarTitle(
                 title,
                 displayMode: .inline
             )
+    }
+    
+    func loadingOverlay(_ isLoading: Bool) -> some View {
+        overlay {
+            if isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(.ultraThinMaterial.opacity(0.9))
+                    .edgesIgnoringSafeArea(.all)
+                    .controlSize(.large)
+            }
+        }
+        .allowsHitTesting(!isLoading)
     }
 }

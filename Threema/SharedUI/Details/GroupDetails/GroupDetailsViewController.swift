@@ -45,7 +45,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
                     return
                 }
                 
-                presentFullscreen(image: group.profilePicture)
+                FullscreenImageViewController.present(for: group.profilePicture, on: self)
             },
             quickActions: actions,
             mediaAndPollsQuickActions: mediaStarredAndPollActions()
@@ -64,13 +64,13 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     // Display style of the chosen mode
     private let displayStyle: DetailsDisplayStyle
     
-    private lazy var entityManager = EntityManager()
+    private lazy var entityManager = BusinessInjector.ui.entityManager
     
     private var observers = [NSKeyValueObservation]()
-    
+
     // Backwards compatibility
     
-    @available(*, deprecated, message: "Only use this for old code to keep it working")
+    @available(swift, obsoleted: 1.0, message: "Only use from old Objective-C code to keep it working")
     @objc var _group: Group {
         group
     }
@@ -92,21 +92,16 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     ) {
         self.displayMode = displayMode
         self.delegate = delegate
-        
         self.group = group
-        
         self.displayStyle = displayStyle
-
         super.init()
+        setupTraitRegistration()
     }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         configureTableView()
-        
         addObservers()
-        
         configureHeader()
         dataSource.configureData()
     }
@@ -120,7 +115,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
         // Call it here to ensure we have the correct constraints
         updateHeaderLayout(animated: false)
     }
-    
+
     override func willMove(toParent parent: UIViewController?) {
         super.willMove(toParent: parent)
         
@@ -134,11 +129,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
         
         delegate?.detailsDidDisappear()
     }
-    
-    deinit {
-        DDLogDebug("\(#function)")
-    }
-    
+
     // MARK: - Configuration
 
     private func addObservers() {
@@ -242,7 +233,7 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     // MARK: - Actions
     
     @objc private func editButtonTapped() {
-        let editGroupViewController = EditGroupViewController(for: group)
+        let editGroupViewController = CreateEditGroupDistributionViewController(for: .group(.edit(group: group)))
         let themedNavigationController = ThemedNavigationController(rootViewController: editGroupViewController)
         themedNavigationController.modalPresentationStyle = .formSheet
         
@@ -258,20 +249,20 @@ final class GroupDetailsViewController: ThemedCodeModernGroupedTableViewControll
     @objc private func preferredContentSizeCategoryDidChange() {
         updateHeaderLayout()
     }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
 
-        if previousTraitCollection?.verticalSizeClass != traitCollection.verticalSizeClass {
-            // This will be called on rotation
-            updateHeaderLayout()
+    private func setupTraitRegistration() {
+        let traits: [UITrait] = [UITraitUserInterfaceStyle.self, UITraitPreferredContentSizeCategory.self]
+        registerForTraitChanges(traits) { [weak self] (_: Self, previous) in
+            guard let self else {
+                return
+            }
+            if previous.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+                updateHeaderLayout()
+            }
+            if previous.userInterfaceStyle != traitCollection.userInterfaceStyle {
+                dataSource.refresh(sections: [.members])
+            }
         }
-        
-        guard traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle else {
-            return
-        }
-        
-        dataSource.refresh(sections: [.members])
     }
 }
 

@@ -1232,7 +1232,11 @@ extension ChatViewController {
             detailsViewController = SingleDetailsViewController(for: conversation, delegate: self)
         }
         
-        let navigationController = ModalNavigationController(rootViewController: detailsViewController)
+        let navigationController = ModalNavigationController(
+            navigationBarClass: StatusNavigationBar.self,
+            toolbarClass: nil
+        )
+        navigationController.setViewControllers([detailsViewController], animated: false)
         navigationController.modalPresentationStyle = .formSheet
         navigationController.modalDelegate = self
         
@@ -1267,13 +1271,7 @@ extension ChatViewController {
             return
         }
         // We assume that the contact supports calls
-        let action = VoIPCallUserAction(
-            action: .call,
-            contactIdentity: contact.identity,
-            callID: nil,
-            completion: nil
-        )
-        VoIPCallStateManager.shared.processUserAction(action)
+        VoIPCallStateManager.shared.startCall(callee: contact.identity)
     }
     
     @objc private func showBallots() {

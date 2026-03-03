@@ -285,11 +285,11 @@ public final class ThreemaUtility: NSObject {
         ThreemaUtility.showLocalNotification(
             identifier: "microphonePermissionError",
             title: String.localizedStringWithFormat(
-                #localize("call_voip_not_supported_title"),
+                #localize("notification_no_access_microphone_title"),
                 TargetManager.localizedAppName
             ),
             body: String.localizedStringWithFormat(
-                #localize("alert_no_access_message_microphone"),
+                #localize("notification_no_access_microphone_body"),
                 TargetManager.appName
             ),
             badge: unreadMessages.totalCount(),

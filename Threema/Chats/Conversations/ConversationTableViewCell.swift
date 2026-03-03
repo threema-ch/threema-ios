@@ -208,7 +208,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         label.textColor = .secondaryLabel
         label.numberOfLines = 2
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        
+
         label.adjustsFontForContentSizeCategory = true
         
         return label
@@ -367,7 +367,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         removeAllObjectObservers()
         NotificationCenter.default.removeObserver(self)
     }
-    
+
     // MARK: - Internal state
     
     private(set) var conversation: ConversationEntity? {
@@ -537,6 +537,9 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     }
     
     public func updateLastMessagePreview() {
+        defer {
+            updateLayout()
+        }
         updateAccessibility()
 
         guard let conversation else {
@@ -597,7 +600,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         updatePinImage()
     }
     
-    func height() -> CGFloat {
+    private func height() -> CGFloat {
         let label = UILabel()
         label.font = UIFont.preferredFont(forTextStyle: Configuration.previewTextStyle)
         label.numberOfLines = 2
@@ -608,7 +611,12 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
                 
         return label.sizeThatFits(CGSize(width: CGFLOAT_MAX, height: CGFLOAT_MAX)).height
     }
-    
+
+    private func updateLayout() {
+        setNeedsLayout()
+        layoutIfNeeded()
+    }
+
     private func updateSeparatorInset() {
         guard !traitCollection.preferredContentSizeCategory.isAccessibilityCategory else {
             separatorInset = .zero
@@ -1080,7 +1088,7 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
             strongSelf.layoutSubviews()
         }
     }
-    
+
     private func addAllObjectObservers() {
         observeConversation(\.lastMessage, callOnCreation: false) { [weak self] in
 

@@ -334,22 +334,9 @@ class NotificationResponse: NSObject {
 
         ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .notificationExtension, timeout: 20) {
             if let contact = self.businessInjector.entityManager.entityFetcher.contactEntity(for: identity) {
-                var callID: VoIPCallID?
-                if let threemaDict = self.threemaDict {
-                    if let tmpCallID = threemaDict["callId"] {
-                        callID = VoIPCallID(callID: tmpCallID as? UInt32)
-                    }
+                VoIPCallStateManager.shared.startCall(callee: contact.identity) {
+                    self.finishResponse()
                 }
-
-                let action = VoIPCallUserAction(
-                    action: .call,
-                    contactIdentity: contact.identity,
-                    callID: callID,
-                    completion: {
-                        self.finishResponse()
-                    }
-                )
-                VoIPCallStateManager.shared.processUserAction(action)
             }
             else {
                 self.finishResponse()

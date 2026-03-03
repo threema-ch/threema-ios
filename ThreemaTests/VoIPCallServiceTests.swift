@@ -38,7 +38,12 @@ final class VoIPCallServiceTests: XCTestCase {
     func testPeerConnectionClientDidChangeConnectionState() throws {
         let voIPCallPeerConnectionClientMock = VoIPCallPeerConnectionClientMock()
 
+        let callID = VoIPCallID.generate()
         let voIPCallService = VoIPCallService(
+            callPartnerIdentity: "TESTERID",
+            callID: callID,
+            delegate: nil,
+            callKitManager: VoIPCallKitManager(),
             businessInjector: BusinessInjectorMock(
                 entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
             ),

@@ -22,7 +22,7 @@ import Foundation
 
 @objc public class VoIPCallRingingMessage: NSObject {
     public var contactIdentity: String!
-    public var callID: VoIPCallID
+    public let callID: VoIPCallID
     public var completion: (() -> Void)?
 
     init(callID: VoIPCallID, completion: (() -> Void)?) {
@@ -45,9 +45,9 @@ extension VoIPCallRingingMessage: VoIPCallMessageProtocol {
         case generateJson(error: Error)
     }
         
-    static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any]) -> T where T: VoIPCallMessageProtocol {
-        let tmpCallID = VoIPCallID(callID: dictionary[VoIPCallConstants.callIDKey] as? UInt32)
-        return VoIPCallRingingMessage(callID: tmpCallID, completion: nil) as! T
+    public static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any]) -> T where T: VoIPCallMessageProtocol {
+        let callID = VoIPCallID(callID: dictionary[VoIPCallConstants.callIDKey] as! UInt32)
+        return VoIPCallRingingMessage(callID: callID, completion: nil) as! T
     }
     
     public func encodeAsJson() throws -> Data {

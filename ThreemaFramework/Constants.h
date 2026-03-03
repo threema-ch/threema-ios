@@ -126,7 +126,7 @@
 #define kAppAckBackgroundTaskTime 2
 #define kAppCoreDataSaveBackgroundTaskTime 15
 #define kAppSendingBackgroundTaskTime 170
-#define kAppVoIPIncomCallBackgroundTaskTime 80
+#define kAppVoIPIncomingCallBackgroundTaskTime 80
 #define kAppCoreDataProcessMessageBackgroundTaskTime 10
 
 static NSString * const kNotificationProfilePictureChanged = @"ProfilePictureChanged";

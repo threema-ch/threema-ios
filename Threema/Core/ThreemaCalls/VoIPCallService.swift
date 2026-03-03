@@ -26,141 +26,315 @@ import ThreemaFramework
 import ThreemaMacros
 
 protocol VoIPCallServiceDelegate: AnyObject {
-    func callServiceFinishedProcess()
+    func prependCallQueueElement(_ element: VoIPCallIDProtocol)
+    func finishedProcessingCallQueueElement()
+    func callFinished()
 }
 
-final class VoIPCallService: NSObject {
-    
-    private let voIPCallSender: VoIPCallSender
-    
-    private let kIncomingCallTimeout = 60.0
-    private let kCallFailedTimeout = 10.0
-    private let kEndedDelay = 5.0
-    
-    @objc public enum CallState: Int, RawRepresentable, Equatable {
-        case idle
-        case sendOffer
-        case receivedOffer
-        case outgoingRinging
-        case incomingRinging
-        case sendAnswer
-        case receivedAnswer
-        case initializing
-        case calling
-        case reconnecting
-        case ended
-        case remoteEnded
-        case rejected
-        case rejectedBusy
-        case rejectedTimeout
-        case rejectedDisabled
-        case rejectedOffHours
-        case rejectedUnknown
-        case microphoneDisabled
-        
-        var active: Bool {
-            self != .idle
+final class VoIPCallService {
+
+    private struct VoIPCallStateMachine {
+        enum VoIPCallStateMachineError: Error {
+            case elementTypeNotSupported
+            case discardUserActionCallIDNotEqual(action: VoIPCallUserAction, callID: VoIPCallID)
+            case discardMessageCallIDNotEqual(message: VoIPCallMessageProtocol, callID: VoIPCallID)
+            case unknownVoIPCallMessageType
         }
-        
-        /// Return the string of the current state for the debug log
-        /// - Returns: String of the current state
-        func description() -> String {
-            switch self {
-            case .idle: "IDLE"
-            case .sendOffer: "SENDOFFER"
-            case .receivedOffer: "RECEIVEDOFFER"
-            case .outgoingRinging: "RINGING"
-            case .incomingRinging: "RINGING"
-            case .sendAnswer: "SENDANSWER"
-            case .receivedAnswer: "RECEIVEDANSWER"
-            case .initializing: "INITIALIZING"
-            case .calling: "CALLING"
-            case .reconnecting: "RECONNECTING"
-            case .ended: "ENDED"
-            case .remoteEnded: "REMOTEENDED"
-            case .rejected: "REJECTED"
-            case .rejectedBusy: "REJECTEDBUSY"
-            case .rejectedTimeout: "REJECTEDTIMEOUT"
-            case .rejectedDisabled: "REJECTEDDISABLED"
-            case .rejectedOffHours: "REJECTEDOFFHOURS"
-            case .rejectedUnknown: "REJECTEDUNKNOWN"
-            case .microphoneDisabled: "MICROPHONEDISABLED"
+
+        let callService: VoIPCallService
+
+        func process(_ element: VoIPCallIDProtocol) throws {
+            if let action = element as? VoIPCallUserAction {
+                try process(action)
+            }
+            else if let message = element as? VoIPCallMessageProtocol {
+                try process(message)
+            }
+            else {
+                throw VoIPCallStateMachineError.elementTypeNotSupported
             }
         }
-        
-        /// Get the localized string for the current state
-        /// - Returns: Current localized call state string
-        func localizedString() -> String {
-            switch self {
-            case .idle: #localize("call_status_idle")
-            case .sendOffer: #localize("call_status_wait_ringing")
-            case .receivedOffer: #localize("call_status_wait_ringing")
-            case .outgoingRinging: #localize("call_status_ringing")
-            case .incomingRinging: String.localizedStringWithFormat(
-                    #localize("call_status_incom_ringing"),
-                    TargetManager.localizedAppName
+
+        private func process(_ action: VoIPCallUserAction) throws {
+            guard action.callID == callService.callID else {
+                return try processCallIDNotEqual(action)
+            }
+
+            switch action.action {
+            case .call:
+                log(expectedState: .idle, for: action)
+                callService.processUserAction(action)
+                
+            case .accept, .acceptCallKit:
+                log(expectedState: .incomingRinging, for: action)
+                callService.processUserAction(action)
+                
+            case .reject, .rejectDisabled, .rejectTimeout, .rejectBusy, .rejectOffHours, .rejectUnknown:
+                log(for: action)
+                callService.processUserAction(action)
+                
+            case .end:
+                log(for: action)
+                callService.processUserAction(action)
+                
+            case .speakerOn:
+                log(for: action)
+                if callService.state != .idle {
+                    callService.processUserAction(action)
+                }
+                else {
+                    action.completion?()
+                    callService.delegate?.callFinished()
+                }
+                
+            case .speakerOff:
+                log(for: action)
+                if callService.state != .idle {
+                    callService.processUserAction(action)
+                }
+                else {
+                    action.completion?()
+                    callService.delegate?.callFinished()
+                }
+                
+            case .muteAudio:
+                log(for: action)
+                if callService.state != .idle {
+                    callService.processUserAction(action)
+                }
+                else {
+                    action.completion?()
+                    callService.delegate?.callFinished()
+                }
+                 
+            case .unmuteAudio:
+                log(for: action)
+                if callService.state != .idle {
+                    callService.processUserAction(action)
+                }
+                else {
+                    action.completion?()
+                    callService.delegate?.callFinished()
+                }
+            }
+        }
+
+        private func process(_ message: VoIPCallMessageProtocol) throws {
+            guard message.callID.callID == callService.callID.callID else {
+                return try processCallIDNotEqual(message)
+            }
+
+            if let offer = message as? VoIPCallOfferMessage {
+                log(expectedStates: [.idle], for: offer)
+                callService.processVoIPCallMessage(offer)
+            }
+            else if let answer = message as? VoIPCallAnswerMessage {
+                log(expectedStates: [.sendOffer, .outgoingRinging], for: answer)
+                if callService.state != .idle {
+                    callService.processVoIPCallMessage(answer)
+                }
+                else {
+                    message.completion?()
+                    callService.delegate?.callFinished()
+                }
+            }
+            else if let ringing = message as? VoIPCallRingingMessage {
+                log(expectedStates: [.sendOffer], for: ringing)
+                if callService.state != .idle {
+                    callService.processVoIPCallMessage(ringing)
+                }
+                else {
+                    message.completion?()
+                    callService.delegate?.callFinished()
+                }
+            }
+            else if let hangup = message as? VoIPCallHangupMessage {
+                log(expectedStates: nil, for: hangup)
+                if callService.state != .idle {
+                    callService.processVoIPCallMessage(hangup)
+                }
+                else {
+                    message.completion?()
+                    callService.delegate?.callFinished()
+                }
+            }
+            else if let ice = message as? VoIPCallIceCandidatesMessage {
+                log(
+                    expectedStates: [
+                        .sendOffer,
+                        .outgoingRinging,
+                        .receivedAnswer,
+                        .initializing,
+                        .calling,
+                        .reconnecting,
+                        .receivedOffer,
+                        .incomingRinging,
+                        .sendAnswer,
+                    ],
+                    for: ice
                 )
-            case .sendAnswer: #localize("call_status_ringing")
-            case .receivedAnswer: #localize("call_status_ringing")
-            case .initializing: #localize("call_status_initializing")
-            case .calling: #localize("call_status_calling")
-            case .reconnecting: #localize("call_status_reconnecting")
-            case .ended: #localize("call_end")
-            case .remoteEnded: #localize("call_end")
-            case .rejected: #localize("call_rejected")
-            case .rejectedBusy: #localize("call_rejected_busy")
-            case .rejectedTimeout: #localize("call_rejected_timeout")
-            case .rejectedDisabled: String.localizedStringWithFormat(
-                    #localize("call_rejected_disabled"),
-                    TargetManager.localizedAppName
+                if callService.state != .idle {
+                    callService.processVoIPCallMessage(ice)
+                }
+                else {
+                    message.completion?()
+                    callService.delegate?.callFinished()
+                }
+            }
+            else {
+                throw VoIPCallStateMachineError.unknownVoIPCallMessageType
+            }
+        }
+
+        private func processCallIDNotEqual(_ action: VoIPCallUserAction) throws {
+            throw VoIPCallStateMachineError.discardUserActionCallIDNotEqual(action: action, callID: callService.callID)
+        }
+
+        private func processCallIDNotEqual(_ message: VoIPCallMessageProtocol) throws {
+            if let offer = message as? VoIPCallOfferMessage {
+                log(expectedStates: [.idle], for: offer)
+
+                if offer.contactIdentity == callService.callPartnerIdentity,
+                   callService.state == .reconnecting || callService.state == .calling {
+                    DDLogNotice(
+                        "VoipCallService: [cid=\(callService.callID.callID)]: Received offer from same identity \(callService.callPartnerIdentity) for different call with id \(offer.callID.callID). Replacing call."
+                    )
+                    callService.cancelCall()
+                    callService.delegate?.prependCallQueueElement(message)
+                    callService.delegate?.callFinished()
+                }
+                else {
+                    let action = VoIPCallUserAction(
+                        action: .rejectBusy,
+                        contactIdentity: offer.contactIdentity!,
+                        callID: offer.callID,
+                        completion: offer.completion
+                    )
+
+                    callService.rejectCall(action: action)
+                    offer.completion?()
+                    
+                    if offer.contactIdentity == callService.callPartnerIdentity {
+                        callService.delegate?.callFinished()
+                    }
+                }
+            }
+            else if let answer = message as? VoIPCallAnswerMessage {
+                log(expectedStates: [.sendOffer, .outgoingRinging], for: answer)
+                answer.completion?()
+            }
+            else if let ice = message as? VoIPCallIceCandidatesMessage {
+                log(
+                    expectedStates: [
+                        .sendOffer,
+                        .outgoingRinging,
+                        .receivedAnswer,
+                        .initializing,
+                        .calling,
+                        .reconnecting,
+                        .receivedOffer,
+                        .incomingRinging,
+                        .sendAnswer,
+                    ],
+                    for: ice
                 )
-            case .rejectedOffHours: #localize("call_rejected")
-            case .rejectedUnknown: #localize("call_rejected")
-            case .microphoneDisabled: #localize("call_mic_access")
+                ice.completion?()
+            }
+            else {
+                throw VoIPCallStateMachineError.discardMessageCallIDNotEqual(
+                    message: message,
+                    callID: callService.callID
+                )
+            }
+        }
+
+        private func log(expectedState: CallState? = nil, for action: VoIPCallUserAction) {
+            if let expectedState, callService.state != expectedState {
+                DDLogWarn(
+                    "VoipCallService: [cid=\(callService.callID.callID)]: Wrong state \(callService.state.description()) to process user action \(action)"
+                )
+            }
+            else {
+                DDLogNotice(
+                    "VoipCallService: [cid=\(callService.callID.callID)]: Process action \(action.action) on actual state \(callService.state.description())"
+                )
+            }
+        }
+
+        private func log(expectedStates: [CallState]? = nil, for message: VoIPCallMessageProtocol) {
+            if callService.callID != message.callID {
+                DDLogError(
+                    "VoipCallService: [cid=\(callService.callID.callID)]: Call ID is not equals with incoming message Call ID \(message.callID.callID)"
+                )
+            }
+            else if let expectedStates, !expectedStates.contains(callService.state) {
+                DDLogWarn(
+                    "VoipCallService: [cid=\(callService.callID.callID)]: Wrong state \(callService.state.description()) to process message \(message)"
+                )
+            }
+            else {
+                DDLogNotice(
+                    "VoipCallService: [cid=\(callService.callID.callID)]: Process message \(message) on actual state \(callService.state.description())"
+                )
             }
         }
     }
+
+    private let voIPCallSender: VoIPCallSender
+    
+    private let kIncomingCallTimeout = 60.0
+    private let kOutgoingRingingCallTimeout = 65.0
+    private let kInitializingCallTimeout = 60.0
+    private let kCallFailedTimeout = 10.0
+    private let kEndedDelay = 5.0
     
     weak var delegate: VoIPCallServiceDelegate?
     
     private var peerConnectionClient: VoIPCallPeerConnectionClientProtocol
-    private var callKitManager: VoIPCallKitManager?
+    private let callKitManager: VoIPCallKitManager
     private var threemaVideoCallAvailable = false
     private var callViewController: CallViewController?
 
     private var state: CallState = .idle {
         didSet {
+            DDLogNotice(
+                "VoipCallService: [cid=\(callID)]: State changed from \(oldValue.description()) to  \(state.description())"
+            )
+            
             invalidateTimers(state: state)
             callViewController?.voIPCallStatusChanged(state: state, oldState: oldValue)
             handleLocalNotification()
+            
             switch state {
             case .idle:
                 localAddedIceCandidates.removeAll()
                 localRelatedAddresses.removeAll()
-                receivedIcecandidatesMessages.removeAll()
+                receivedIceCandidatesMessages.removeAll()
+                
             case .initializing:
                 handleLocalIceCandidates([])
+                
             default:
-                // do nothing
                 break
             }
+            
             addCallMessageToConversation(oldCallState: oldValue)
             handleTones(state: state, oldState: oldValue)
         }
     }
 
     private var audioPlayer: AVAudioPlayer?
-    private var contactIdentity: String?
-    private var callID: VoIPCallID?
+    private let callPartnerIdentity: String
+    let callID: VoIPCallID
     private var alreadyAccepted = false {
         didSet {
             callViewController?.alreadyAccepted = alreadyAccepted
         }
     }
 
-    private var callInitiator = false {
+    private var callStartedBySelf = false {
         didSet {
-            callViewController?.isCallInitiator = callInitiator
+            callViewController?.callStartedBySelf = callStartedBySelf
         }
     }
 
@@ -169,23 +343,33 @@ final class VoIPCallService: NSObject {
     private var videoActive = false
     private var isReceivingVideo = false {
         didSet {
-            callViewController?.isReceivingRemoteVideo = isReceivingVideo
+            guard oldValue != isReceivingVideo, let callViewController else {
+                return
+            }
+            
+            DDLogDebug(
+                "VoipCallService: [cid=\(callID.callID)]: Change receiving video to \(isReceivingVideo)"
+            )
+            callViewController.isReceivingRemoteVideo = isReceivingVideo
         }
     }
 
     private var shouldShowCellularCallWarning = false {
         didSet {
-            if let callViewController {
-                DDLogDebug(
-                    "VoipCallService: [cid=\(callID?.callID ?? 0)]: Should show cellular warning -> \(shouldShowCellularCallWarning)"
-                )
-                callViewController.shouldShowCellularCallWarning = shouldShowCellularCallWarning
+            guard oldValue != shouldShowCellularCallWarning, let callViewController else {
+                return
             }
+   
+            DDLogDebug(
+                "VoipCallService: [cid=\(callID.callID)]: Change show cellular warning to \(shouldShowCellularCallWarning)"
+            )
+            callViewController.shouldShowCellularCallWarning = shouldShowCellularCallWarning
         }
     }
     
     private var initCallTimeoutTimer: Timer?
     private var incomingCallTimeoutTimer: Timer?
+    private var outgoingRingingCallTimeoutTimer: Timer?
     private var callDurationTimer: Timer?
     private var callDurationTime = 0
     private var callFailedTimer: Timer?
@@ -198,8 +382,8 @@ final class VoIPCallService: NSObject {
     private var localAddedIceCandidates = [RTCIceCandidate]()
     private var localRelatedAddresses: Set<String> = []
     private var receivedIceCandidatesLockQueue = DispatchQueue(label: "VoIPCallReceivedIceCandidatesLockQueue")
-    private var receivedIcecandidatesMessages = [VoIPCallIceCandidatesMessage]()
-    private var receivedUnknowCallIcecandidatesMessages = [String: [VoIPCallIceCandidatesMessage]]()
+    private var receivedIceCandidatesMessages = [VoIPCallIceCandidatesMessage]()
+    private var receivedUnknownCallIceCandidatesMessages = [String: [VoIPCallIceCandidatesMessage]]()
     
     private var localRenderer: RTCVideoRenderer?
     private var remoteRenderer: RTCVideoRenderer?
@@ -216,226 +400,60 @@ final class VoIPCallService: NSObject {
         let b2 = callViewController?.navigationController?.presentingViewController?
             .presentedViewController == callViewController?.navigationController
         let b = b1 && b2
-        // Check whether our callViewController has a tabbarcontroller which has a tabbarcontroller. Nesting two
+        // Check whether our callViewController has a tab bar controller which has a tab bar controller. Nesting two
         // tabBarControllers is only possible in the state presented modally
         let c = callViewController?.tabBarController?.presentingViewController is UITabBarController
         return a || b || c
     }
     
-    private var audioRouteChangeObserver: NSObjectProtocol?
-
     private let businessInjector: BusinessInjectorProtocol
 
-    required init(
-        businessInjector: BusinessInjectorProtocol,
-        peerConnectionClient: VoIPCallPeerConnectionClientProtocol
+    // MARK: - Lifecycle
+
+    init(
+        callPartnerIdentity: String,
+        callID: VoIPCallID,
+        delegate: VoIPCallServiceDelegate?,
+        callKitManager: VoIPCallKitManager,
+        businessInjector: BusinessInjectorProtocol = BusinessInjector.ui,
+        peerConnectionClient: VoIPCallPeerConnectionClientProtocol = VoIPCallPeerConnectionClient()
     ) {
+        self.callPartnerIdentity = callPartnerIdentity
+        self.callID = callID
+        self.delegate = delegate
+        self.callKitManager = callKitManager
+       
         self.businessInjector = businessInjector
         self.voIPCallSender = VoIPCallSender(
             messageSender: businessInjector.messageSender,
             myIdentityStore: businessInjector.myIdentityStore
         )
         self.peerConnectionClient = peerConnectionClient
-        super.init()
-        
-        self.audioRouteChangeObserver = NotificationCenter.default.addObserver(
-            forName: AVAudioSession.routeChangeNotification,
-            object: nil,
-            queue: nil
-        ) { [weak self] n in
-            guard let self else {
-                return
-            }
-            if state != .idle {
-                var isBluetoothAvailable = false
-                if let inputs = AVAudioSession.sharedInstance().availableInputs {
-                    for input in inputs {
-                        if input.portType == AVAudioSession.Port.bluetoothA2DP || input.portType == AVAudioSession.Port
-                            .bluetoothHFP || input.portType == AVAudioSession.Port.bluetoothLE {
-                            isBluetoothAvailable = true
-                        }
-                    }
-                }
-                guard let info = n.userInfo,
-                      let value = info[AVAudioSessionRouteChangeReasonKey] as? UInt,
-                      let reason = AVAudioSession.RouteChangeReason(rawValue: value) else {
-                    return
-                }
-                
-                switch reason {
-                case .categoryChange:
-                    let currentRoute = AVAudioSession.sharedInstance().currentRoute
-                    
-                    for output in currentRoute.outputs {
-                        switch output.portType {
-                        case .builtInReceiver:
-                            if isBluetoothAvailable {
-                                self.speakerActive = false
-                                try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
-                            }
-                            if speakerActive {
-                                try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
-                            }
-                        case .builtInSpeaker:
-                            if isBluetoothAvailable {
-                                self.speakerActive = true
-                                try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
-                            }
-                            if !speakerActive {
-                                try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
-                            }
-                        case .headphones:
-                            try? AVAudioSession.sharedInstance()
-                                .overrideOutputAudioPort(speakerActive ? .speaker : .none)
-                        case .bluetoothA2DP, .bluetoothHFP, .bluetoothLE:
-                            break
-                        default: break
-                        }
-                    }
-                default: break
-                }
-            }
-        }
-    }
-    
-    override convenience init() {
-        self.init(
-            businessInjector: BusinessInjector.ui,
-            peerConnectionClient: VoIPCallPeerConnectionClient()
-        )
-    }
-    
-    convenience init(callKitManager: VoIPCallKitManager) {
-        self.init(
-            businessInjector: BusinessInjector.ui,
-            peerConnectionClient: VoIPCallPeerConnectionClient()
-        )
-        self.callKitManager = callKitManager
-    }
-    
-    deinit {
-        if let observer = audioRouteChangeObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
-    }
-}
 
-extension VoIPCallService {
-    // MARK: Public functions
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(observeAudioRoutes),
+            name: AVAudioSession.routeChangeNotification,
+            object: nil
+        )
+        
+        callKitManager.delegate = self
+    }
+
+    // MARK: - Public functions
     
-    /// Start process to handle the message
-    /// - parameter element: Message
-    func startProcess(element: Any) {
-        if let action = element as? VoIPCallUserAction {
-            switch action.action {
-            case .call:
-                if ProcessInfoHelper.isRunningForScreenshots {
-                    callInitiator = true
-                    contactIdentity = action.contactIdentity
-                    presentCallViewController()
-                    delegate?.callServiceFinishedProcess()
-                    action.completion?()
-                    return
-                }
-                
-                startCallAsInitiator(action: action, completion: {
-                    self.delegate?.callServiceFinishedProcess()
-                    action.completion?()
-                    
-                })
-            case .accept, .acceptCallKit:
-                alreadyAccepted = true
-                acceptIncomingCall(action: action) {
-                    self.delegate?.callServiceFinishedProcess()
-                    action.completion?()
-                }
-            case .reject, .rejectDisabled, .rejectTimeout, .rejectBusy, .rejectOffHours, .rejectUnknown:
-                rejectCall(action: action)
-                delegate?.callServiceFinishedProcess()
-                action.completion?()
-            case .end:
-                if ProcessInfoHelper.isRunningForScreenshots {
-                    dismissCallView()
-                    delegate?.callServiceFinishedProcess()
-                    action.completion?()
-                    return
-                }
-                DDLogNotice("Threema call: HangupBug -> Send hangup for end action")
-                if state == .sendOffer || state == .outgoingRinging || state == .sendAnswer || state ==
-                    .receivedAnswer ||
-                    state == .initializing || state == .calling || state == .reconnecting {
-                    RTCAudioSession.sharedInstance().isAudioEnabled = false
-                    let hangupMessage = VoIPCallHangupMessage(
-                        contactIdentity: action.contactIdentity,
-                        callID: action.callID!,
-                        completion: nil
-                    )
-                    voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
-                    state = .ended
-                    callKitManager?.endCall()
-                    dismissCallView()
-                    disconnectPeerConnection()
-                }
-                delegate?.callServiceFinishedProcess()
-                action.completion?()
-            case .speakerOn:
-                speakerActive = true
-                peerConnectionClient.speakerOn()
-                delegate?.callServiceFinishedProcess()
-                action.completion?()
-            case .speakerOff:
-                speakerActive = false
-                peerConnectionClient.speakerOff()
-                delegate?.callServiceFinishedProcess()
-                action.completion?()
-            case .muteAudio:
-                peerConnectionClient.muteAudio(completion: {
-                    self.delegate?.callServiceFinishedProcess()
-                    action.completion?()
-                })
-            case .unmuteAudio:
-                peerConnectionClient.unmuteAudio(completion: {
-                    self.delegate?.callServiceFinishedProcess()
-                    action.completion?()
-                })
-            case .hideCallScreen:
-                dismissCallView()
-                delegate?.callServiceFinishedProcess()
-                action.completion?()
-            }
+    /// Processes an element from the call queue
+    /// - parameter element: `VoIPCallUserAction` or `VoIPCallMessageProtocol`
+    func processCallQueueElement(_ element: VoIPCallIDProtocol) {
+        do {
+            let callStateMachine = VoIPCallStateMachine(callService: self)
+            try callStateMachine.process(element)
         }
-        else if let offer = element as? VoIPCallOfferMessage {
-            handleOfferMessage(offer: offer, completion: {
-                offer.completion?()
-                self.delegate?.callServiceFinishedProcess()
-            })
-        }
-        else if let answer = element as? VoIPCallAnswerMessage {
-            handleAnswerMessage(answer: answer, completion: {
-                answer.completion?()
-                self.delegate?.callServiceFinishedProcess()
-            })
-        }
-        else if let ringing = element as? VoIPCallRingingMessage {
-            handleRingingMessage(ringing: ringing, completion: {
-                ringing.completion?()
-                self.delegate?.callServiceFinishedProcess()
-            })
-        }
-        else if let hangup = element as? VoIPCallHangupMessage {
-            handleHangupMessage(hangup: hangup, completion: {
-                hangup.completion?()
-                self.delegate?.callServiceFinishedProcess()
-            })
-        }
-        else if let ice = element as? VoIPCallIceCandidatesMessage {
-            handleIceCandidatesMessage(ice: ice) {
-                ice.completion?()
-                self.delegate?.callServiceFinishedProcess()
-            }
-        }
-        else {
-            delegate?.callServiceFinishedProcess()
+        catch {
+            DDLogError(
+                "VoipCallService: [cid=\(callID.callID)]: State machine failed while processing element: \(element). Error: \(error)"
+            )
+            delegate?.finishedProcessingCallQueueElement()
         }
     }
     
@@ -445,22 +463,14 @@ extension VoIPCallService {
         state
     }
     
-    /// Get the current call contact
-    /// - Returns: Contact or nil
-    func currentContactIdentity() -> String? {
-        contactIdentity
+    func currentCallPartnerIdentity() -> String {
+        callPartnerIdentity
     }
 
     /// Get the current callID
     /// - Returns: VoIPCallID or nil
-    func currentCallID() -> VoIPCallID? {
+    func currentCallID() -> VoIPCallID {
         callID
-    }
-    
-    /// Is initiator of the current call
-    /// - Returns: true or false
-    func isCallInitiator() -> Bool {
-        callInitiator
     }
     
     /// Is the current call muted
@@ -475,20 +485,13 @@ extension VoIPCallService {
         speakerActive
     }
     
-    /// Is the current call already accepted
-    /// - Returns: true or false
-    func isCallAlreadyAccepted() -> Bool {
-        alreadyAccepted
-    }
-    
     /// Present the CallViewController
     func presentCallViewController() {
-        if let identity = contactIdentity,
-           alreadyAccepted || ProcessInfoHelper.isRunningForScreenshots {
+        if alreadyAccepted || ProcessInfoHelper.isRunningForScreenshots {
             presentCallView(
-                contactIdentity: identity,
+                contactIdentity: callPartnerIdentity,
                 alreadyAccepted: alreadyAccepted,
-                isCallInitiator: callInitiator,
+                callStartedBySelf: callStartedBySelf,
                 isThreemaVideoCallAvailable: threemaVideoCallAvailable,
                 videoActive: videoActive,
                 receivingVideo: isReceivingVideo,
@@ -497,16 +500,11 @@ extension VoIPCallService {
         }
     }
     
-    /// Dismiss the CallViewController
-    func dismissCallViewController() {
-        dismissCallView()
-    }
-    
     /// Set the RTC audio session from CallKit
-    /// - parameter callKitAudioSession: AVAudioSession from callkit
-    func setRTCAudioSession(_ callKitAudioSession: AVAudioSession) {
-        handleTones(state: .calling, oldState: .calling)
-        RTCAudioSession.sharedInstance().audioSessionDidActivate(callKitAudioSession)
+    /// - parameter audioSession: AVAudioSession from CallKit
+    func setRTCAudio(_ audioSession: AVAudioSession) {
+        handleTones(state: state, oldState: state)
+        RTCAudioSession.sharedInstance().audioSessionDidActivate(audioSession)
     }
     
     /// Configure the audio session and set RTC audio active
@@ -514,21 +512,8 @@ extension VoIPCallService {
         peerConnectionClient.activateRTCAudio(speakerActive: speakerActive)
     }
     
-    /// Updates the initial call reported from the push kit notification
-    /// - Parameters:
-    ///   - manager: `VoIPCallKitManager` used to report the call initially
-    func updateInitialCall(using manager: VoIPCallKitManager) {
-        if let callKitManager, callKitManager.uuid != nil {
-            callKitManager.endCall()
-        }
-        
-        callKitManager = manager
-        
-        VoIPCallStateManager.shared.preCallHandling = true
-    }
-    
     /// Start capture local video
-    func startCaptureLocalVideo(renderer: RTCVideoRenderer, useBackCamera: Bool, switchCamera: Bool = false) {
+    func startCaptureLocalVideo(renderer: RTCVideoRenderer, useBackCamera: Bool = false, switchCamera: Bool = false) {
         localRenderer = renderer
         videoActive = true
         peerConnectionClient.startCaptureLocalVideo(
@@ -582,10 +567,187 @@ extension VoIPCallService {
     func networkIsRelayed() -> Bool {
         peerConnectionClient.networkIsRelayed
     }
-}
 
-extension VoIPCallService {
-    // MARK: Private functions
+    // MARK: - Private functions
+    
+    @objc private func observeAudioRoutes(_ notification: Notification) {
+        guard state != .idle else {
+            return
+        }
+        
+        guard let info = notification.userInfo,
+              let value = info[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: value) else {
+            return
+        }
+        
+        var isBluetoothAvailable = false
+        if let inputs = AVAudioSession.sharedInstance().availableInputs {
+            for input in inputs {
+                if input.portType == AVAudioSession.Port.bluetoothA2DP ||
+                    input.portType == AVAudioSession.Port.bluetoothHFP ||
+                    input.portType == AVAudioSession.Port.bluetoothLE {
+                    isBluetoothAvailable = true
+                    continue
+                }
+            }
+        }
+            
+        switch reason {
+        case .categoryChange:
+            let currentRoute = AVAudioSession.sharedInstance().currentRoute
+                
+            for output in currentRoute.outputs {
+                switch output.portType {
+                case .builtInReceiver:
+                    if isBluetoothAvailable {
+                        speakerActive = false
+                        try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
+                    }
+                    if speakerActive {
+                        try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
+                    }
+                    
+                case .builtInSpeaker:
+                    if isBluetoothAvailable {
+                        speakerActive = true
+                        try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
+                    }
+                    if !speakerActive {
+                        try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.none)
+                    }
+                    
+                case .headphones:
+                    try? AVAudioSession.sharedInstance()
+                        .overrideOutputAudioPort(speakerActive ? .speaker : .none)
+
+                case .bluetoothA2DP, .bluetoothHFP, .bluetoothLE:
+                    break
+                    
+                default:
+                    break
+                }
+            }
+            
+        default:
+            break
+        }
+    }
+
+    private func processUserAction(_ action: VoIPCallUserAction) {
+        switch action.action {
+        case .call:
+            if ProcessInfoHelper.isRunningForScreenshots {
+                callStartedBySelf = true
+                presentCallViewController()
+                delegate?.finishedProcessingCallQueueElement()
+                action.completion?()
+                return
+            }
+            
+            startCallAsInitiator(action: action) {
+                self.delegate?.finishedProcessingCallQueueElement()
+                action.completion?()
+            }
+        
+        case .accept, .acceptCallKit:
+            alreadyAccepted = true
+            acceptIncomingCall(action: action) {
+                self.delegate?.finishedProcessingCallQueueElement()
+                action.completion?()
+            }
+        
+        case .reject, .rejectDisabled, .rejectTimeout, .rejectBusy, .rejectOffHours, .rejectUnknown:
+            rejectCall(action: action)
+            delegate?.callFinished()
+            action.completion?()
+        
+        case .end:
+            if ProcessInfoHelper.isRunningForScreenshots {
+                dismissCallView()
+                delegate?.finishedProcessingCallQueueElement()
+                action.completion?()
+                return
+            }
+
+            DDLogNotice("VoipCallService: [cid=\(callID.callID)]: Send hangup for end action")
+            if state == .sendOffer || state == .outgoingRinging || state == .sendAnswer || state ==
+                .receivedAnswer ||
+                state == .initializing || state == .calling || state == .reconnecting {
+                RTCAudioSession.sharedInstance().isAudioEnabled = false
+                let hangupMessage = VoIPCallHangupMessage(
+                    contactIdentity: action.contactIdentity,
+                    callID: action.callID,
+                    completion: nil
+                )
+                voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
+                state = .ended
+                callKitManager.endCall(with: action.callID)
+                dismissCallView()
+                disconnectPeerConnection()
+            }
+
+            delegate?.callFinished()
+            action.completion?()
+        
+        case .speakerOn:
+            speakerActive = true
+            peerConnectionClient.speakerOn()
+            delegate?.finishedProcessingCallQueueElement()
+            action.completion?()
+        
+        case .speakerOff:
+            speakerActive = false
+            peerConnectionClient.speakerOff()
+            delegate?.finishedProcessingCallQueueElement()
+            action.completion?()
+        
+        case .muteAudio:
+            peerConnectionClient.muteAudio {
+                self.delegate?.finishedProcessingCallQueueElement()
+                action.completion?()
+            }
+        
+        case .unmuteAudio:
+            peerConnectionClient.unmuteAudio {
+                self.delegate?.finishedProcessingCallQueueElement()
+                action.completion?()
+            }
+        }
+    }
+    
+    private func processVoIPCallMessage(_ message: VoIPCallMessageProtocol) {
+        if let offer = message as? VoIPCallOfferMessage {
+            handleOfferMessage(offer: offer) {
+                offer.completion?()
+                self.delegate?.finishedProcessingCallQueueElement()
+            }
+        }
+        else if let answer = message as? VoIPCallAnswerMessage {
+            handleAnswerMessage(answer: answer) {
+                answer.completion?()
+                self.delegate?.finishedProcessingCallQueueElement()
+            }
+        }
+        else if let ringing = message as? VoIPCallRingingMessage {
+            handleRingingMessage(ringing: ringing) {
+                ringing.completion?()
+                self.delegate?.finishedProcessingCallQueueElement()
+            }
+        }
+        else if let hangup = message as? VoIPCallHangupMessage {
+            handleHangupMessage(hangup: hangup) {
+                hangup.completion?()
+                self.delegate?.finishedProcessingCallQueueElement()
+            }
+        }
+        else if let ice = message as? VoIPCallIceCandidatesMessage {
+            handleIceCandidatesMessage(ice: ice) {
+                ice.completion?()
+                self.delegate?.finishedProcessingCallQueueElement()
+            }
+        }
+    }
     
     /// When the current call state is idle and the permission is granted to the microphone, it will create the peer
     /// client and add the offer.
@@ -595,13 +757,8 @@ extension VoIPCallService {
     /// - parameter offer: VoIPCallOfferMessage
     /// - parameter completion: Completion block
     private func handleOfferMessage(offer: VoIPCallOfferMessage, completion: @escaping (() -> Void)) {
-        // We're logging this twice as a quick fix for compatibility with Android style logging
-        DDLogNotice(
-            "VoipCallService: [cid=\(offer.callID.callID)]: Handle new call with \(offer.contactIdentity ?? "?"), we are the callee"
-        )
-        DDLogNotice(
-            "VoipCallService: [cid=\(offer.callID.callID)]: Call offer received from \(offer.contactIdentity ?? "?")"
-        )
+
+        DDLogNotice("VoipCallService: [cid=\(offer.callID.callID)]: Processing offer message")
         
         // Store call in temporary call history
         storeCallInTempHistory(offer: offer)
@@ -640,7 +797,6 @@ extension VoIPCallService {
         if state == .idle, !NavigationBarPromptHandler.isGroupCallActive {
             if !businessInjector.pushSettingManager.canMasterDndSendPush() {
                 DDLogWarn("VoipCallService: [cid=\(offer.callID.callID)]: Master DND active, reject the call")
-                contactIdentity = offer.contactIdentity
                 let action = VoIPCallUserAction(
                     action: .rejectOffHours,
                     contactIdentity: offer.contactIdentity!,
@@ -664,47 +820,35 @@ extension VoIPCallService {
             else {
                 ringtoneSound = "silent.mp3"
             }
-                
-            if ThreemaEnvironment.supportsCallKit(), callKitManager == nil {
-                callKitManager = VoIPCallKitManager()
-            }
-                
-            // If a call was already reported, it was the initial call launched when the app was in background. So
-            // we update the caller.
-            if let uuid = callKitManager?.uuid {
-                DDLogNotice(
-                    "VoipCallService: [cid=\(offer.callID.callID)]: updateReportedIncomingCall"
-                )
-                callKitManager?.updateReportedIncomingCall(
-                    uuid: uuid,
-                    contactIdentity: offer.contactIdentity!,
-                    ringtoneSound: ringtoneSound
-                )
-            }
-            else {
-                DDLogNotice(
-                    "VoipCallService: [cid=\(offer.callID.callID)]: reportIncomingCall"
-                )
-                callKitManager?.reportIncomingCall(
-                    uuid: UUID(),
-                    callID: offer.callID,
-                    contactIdentity: offer.contactIdentity!,
-                    displayName: nil,
-                    ringtoneSound: ringtoneSound,
-                    completion: { succeeded in
-                        if !succeeded {
-                            DDLogError("Report incoming call failed, call is starting anyway")
-                        }
+
+            callKitManager.reportIncomingCall(
+                with: offer.callID,
+                callPartnerIdentity: offer.contactIdentity!,
+                ringtoneSound: ringtoneSound,
+                businessInjector: businessInjector,
+                completion: { error in
+                    if error != nil {
+                        // Reporting call to call kit failed, we reject with an unknown reason.
+                        let action = VoIPCallUserAction(
+                            action: .rejectUnknown,
+                            contactIdentity: offer.contactIdentity!,
+                            callID: offer.callID,
+                            completion: offer.completion
+                        )
+                        self.rejectCall(action: action)
                     }
-                )
-            }
+
+                    DispatchQueue.global().async {
+                        completion()
+                    }
+                }
+            )
+
             AVAudioApplication.requestRecordPermission { granted in
                 if granted {
-                    self.contactIdentity = offer.contactIdentity
                     self.alreadyAccepted = false
                     self.state = .receivedOffer
                     self.incomingOffer = offer
-                    self.callID = offer.callID
                     self.videoActive = false
                     self.isReceivingVideo = false
                     self.localRenderer = nil
@@ -716,8 +860,8 @@ extension VoIPCallService {
                         "VoipCallService: [cid=\(offer.callID.callID)]: connectWait"
                     )
                         
-                    /// Make sure that the connection is not prematurely disconnected when the app is put into the
-                    /// background
+                    // Make sure that the connection is not prematurely disconnected when the app is put into the
+                    // background
                     self.businessInjector.serverConnector.connectWait(initiator: .threemaCall)
 
                     DDLogNotice(
@@ -743,7 +887,7 @@ extension VoIPCallService {
                         self.presentCallView(
                             contactIdentity: offer.contactIdentity!,
                             alreadyAccepted: false,
-                            isCallInitiator: false,
+                            callStartedBySelf: false,
                             isThreemaVideoCallAvailable: self.threemaVideoCallAvailable,
                             videoActive: false,
                             receivingVideo: false,
@@ -757,9 +901,8 @@ extension VoIPCallService {
                 }
                 else {
                     DDLogWarn("VoipCallService: [cid=\(offer.callID.callID)]: Audio is not granted")
-                    self.contactIdentity = offer.contactIdentity
                     self.state = .microphoneDisabled
-                    // reject call because there is no permission for the microphone
+                    // Reject call because there is no permission for the microphone
                     self.state = .rejectedDisabled
                     let action = VoIPCallUserAction(
                         action: .rejectUnknown,
@@ -769,13 +912,13 @@ extension VoIPCallService {
                     )
                     self.rejectCall(action: action, closeCallView: false)
                     
-                    // show notification that incoming call can't connect because mic is not granted
-                    NotificationManager
-                        .sendMicrophonePermissionErrorLocalNotification(
-                            entityManager: self.businessInjector
-                                .entityManager
-                        )
+                    // Show alert if mic permission is not granted
+                    if let rootVC = AppDelegate.keyWindow?.rootViewController {
+                        UIAlertTemplate.showOpenSettingsAlert(owner: rootVC, noAccessAlertType: .microphone)
+                    }
+                    
                     self.disconnectPeerConnection()
+                    self.delegate?.callFinished()
                     completion()
                 }
             }
@@ -784,7 +927,7 @@ extension VoIPCallService {
             DDLogWarn(
                 "VoipCallService: [cid=\(offer.callID.callID)]: Current state is not IDLE (\(state.description()))"
             )
-            if contactIdentity == offer.contactIdentity, state == .incomingRinging {
+            if callPartnerIdentity == offer.contactIdentity, state == .incomingRinging {
                 DDLogNotice("Threema call: handleOfferMessage -> same contact as the current call")
                 if !businessInjector.pushSettingManager.canMasterDndSendPush(), appRunsInBackground {
                     DDLogNotice(
@@ -809,7 +952,7 @@ extension VoIPCallService {
             }
             else {
                 // reject call because it's the wrong state
-                let reason: VoIPCallUserAction.Action = contactIdentity == offer
+                let reason: VoIPCallUserAction.Action = callPartnerIdentity == offer
                     .contactIdentity ? .rejectUnknown : .rejectBusy
                 let action = VoIPCallUserAction(
                     action: reason,
@@ -825,41 +968,42 @@ extension VoIPCallService {
     
     private func startIncomingCallTimeoutTimer() {
         DispatchQueue.main.async {
-            if let offer = self.incomingOffer {
-                self.invalidateIncomingCallTimeout()
-                self.incomingCallTimeoutTimer = Timer.scheduledTimer(
-                    withTimeInterval: self.kIncomingCallTimeout,
-                    repeats: false,
-                    block: { _ in
-                        BackgroundTaskManager.shared.newBackgroundTask(
-                            key: kAppVoIPBackgroundTask,
-                            timeout: Int(kAppVoIPBackgroundTaskTime)
-                        ) { [weak self] in
-                            guard let self else {
-                                return
-                            }
-                            
-                            guard offer.callID == incomingOffer?.callID else {
-                                DDLogError(
-                                    "Trying to run background task for call with ID \(offer.callID), but current incoming offer call ID is \(incomingOffer?.callID ?? VoIPCallID(callID: nil))"
-                                )
-                                return
-                            }
-                            
-                            businessInjector.serverConnector.connect(initiator: .threemaCall)
-
-                            callKitManager?.timeoutCall()
-                            let action = VoIPCallUserAction(
-                                action: .rejectTimeout,
-                                contactIdentity: offer.contactIdentity!,
-                                callID: offer.callID,
-                                completion: offer.completion
-                            )
-                            rejectCall(action: action)
-                            invalidateIncomingCallTimeout()
-                        }
+            guard let offer = self.incomingOffer else {
+                return
+            }
+            
+            self.invalidateIncomingCallTimeout()
+            self.incomingCallTimeoutTimer = Timer.scheduledTimer(
+                withTimeInterval: self.kIncomingCallTimeout,
+                repeats: false
+            ) { _ in
+                BackgroundTaskManager.shared.newBackgroundTask(
+                    key: kAppVoIPBackgroundTask,
+                    timeout: Int(kAppVoIPBackgroundTaskTime)
+                ) { [weak self] in
+                    guard let self else {
+                        return
                     }
-                )
+                        
+                    guard offer.callID == incomingOffer?.callID else {
+                        DDLogError(
+                            "Trying to run background task for call with ID \(offer.callID), but current incoming offer call ID is \(incomingOffer?.callID ?? VoIPCallID(callID: 0))"
+                        )
+                        return
+                    }
+                        
+                    businessInjector.serverConnector.connect(initiator: .threemaCall)
+
+                    callKitManager.timeoutCall(with: offer.callID)
+                    let action = VoIPCallUserAction(
+                        action: .rejectTimeout,
+                        contactIdentity: offer.contactIdentity!,
+                        callID: offer.callID,
+                        completion: offer.completion
+                    )
+                    rejectCall(action: action)
+                    invalidateIncomingCallTimeout()
+                }
             }
         }
     }
@@ -870,120 +1014,112 @@ extension VoIPCallService {
     /// - parameter answer: VoIPCallAnswerMessage
     /// - parameter completion: Completion block
     private func handleAnswerMessage(answer: VoIPCallAnswerMessage, completion: @escaping (() -> Void)) {
-        let logString =
-            "VoipCallService: [cid=\(answer.callID.callID)]: Call answer received from \(answer.contactIdentity ?? "?"): \(answer.action.description())"
-        if answer.action == .call {
-            DDLogNotice(logString)
-        }
-        else {
-            DDLogNotice(logString + "/\(answer.rejectReason?.description() ?? "unknown")")
-        }
         
-        if let identity = contactIdentity {
-            if callInitiator {
-                if let callID, state == .sendOffer || state == .outgoingRinging,
-                   identity == answer.contactIdentity, callID.isSame(answer.callID) {
-                    state = .receivedAnswer
-                    if answer.action == VoIPCallAnswerMessage.MessageAction.reject {
-                        // call is rejected
-                        switch answer.rejectReason {
-                        case .busy?:
-                            state = .rejectedBusy
-                        case .timeout?:
-                            state = .rejectedTimeout
-                        case .reject?:
-                            state = .rejected
-                        case .disabled?:
-                            state = .rejectedDisabled
-                        case .offHours?:
-                            state = .rejectedOffHours
-                        case .none:
-                            state = .rejected
-                        case .some(.unknown):
-                            state = .rejectedUnknown
-                        }
-                        callKitManager?.rejectCall()
-                        dismissCallView(rejected: true, completion: {
-                            self.disconnectPeerConnection()
-                            completion()
-                        })
+        DDLogNotice("VoipCallService: [cid=\(answer.callID.callID)]: Processing answer message")
+        
+        if callStartedBySelf {
+            if state == .sendOffer || state == .outgoingRinging,
+               callPartnerIdentity == answer.contactIdentity,
+               callID.callID == answer.callID.callID {
+                state = .receivedAnswer
+                if answer.action == VoIPCallAnswerMessage.MessageAction.reject {
+                    // Call was rejected
+                    switch answer.rejectReason {
+                    case .busy?:
+                        state = .rejectedBusy
+                    case .timeout?:
+                        state = .rejectedTimeout
+                    case .reject?:
+                        state = .rejected
+                    case .disabled?:
+                        state = .rejectedDisabled
+                    case .offHours?:
+                        state = .rejectedOffHours
+                    case .none:
+                        state = .rejected
+                    case .some(.unknown):
+                        state = .rejectedUnknown
                     }
-                    else {
-                        // handle answer
-                        state = .receivedAnswer
-                        if answer.isVideoAvailable, UserSettings.shared().enableVideoCall {
-                            threemaVideoCallAvailable = true
-                            callViewController?.enableThreemaVideoCall()
-                        }
-                        else {
-                            threemaVideoCallAvailable = false
-                            callViewController?.disableThreemaVideoCall()
-                        }
-                        if let remoteSdp = answer.answer {
-                            peerConnectionClient.set(remoteSdp: remoteSdp, completion: { error in
-                                if error == nil {
-                                    switch self.state {
-                                    case .idle, .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging,
-                                         .sendAnswer, .receivedAnswer:
-                                        self.state = .initializing
-                                    default:
-                                        break
-                                    }
-                                }
-                                else {
-                                    DDLogError(
-                                        "VoipCallService: [cid=\(answer.callID.callID)]: Can't add remote sdp to the peerConnection"
-                                    )
-                                    let hangupMessage = VoIPCallHangupMessage(
-                                        contactIdentity: self.contactIdentity!,
-                                        callID: self.callID!,
-                                        completion: nil
-                                    )
-                                    self.voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
-                                    self.state = .rejectedUnknown
-                                    self.dismissCallView()
-                                    self.disconnectPeerConnection()
-                                }
-                                completion()
-                            })
-                        }
-                        else {
-                            DDLogError("VoipCallService: [cid=\(answer.callID.callID)]: Remote sdp is empty")
-                            let hangupMessage = VoIPCallHangupMessage(
-                                contactIdentity: contactIdentity!,
-                                callID: self.callID!,
-                                completion: nil
-                            )
-                            voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
-                            state = .rejectedUnknown
-                            dismissCallView()
-                            disconnectPeerConnection()
-                            completion()
-                        }
+                    dismissCallView(rejected: true) {
+                        self.callKitManager.endCall(with: answer.callID)
+                        self.disconnectPeerConnection()
+                        self.delegate?.callFinished()
+                        completion()
                     }
                 }
                 else {
-                    if identity == answer.contactIdentity {
-                        DDLogWarn(
-                            "VoipCallService: [cid=\(answer.callID.callID)]: Current state is wrong (\(state.description())) or callId is different to \(callID?.callID ?? 0)"
-                        )
+                    // Handle answer
+                    state = .receivedAnswer
+                    if answer.isVideoAvailable, UserSettings.shared().enableVideoCall {
+                        threemaVideoCallAvailable = true
+                        callViewController?.enableThreemaVideoCall()
                     }
                     else {
-                        DDLogWarn(
-                            "VoipCallService: [cid=\(answer.callID.callID)]: Answer contact (\(answer.contactIdentity ?? "?") is different to current call contact (\(identity)"
-                        )
+                        threemaVideoCallAvailable = false
+                        callViewController?.disableThreemaVideoCall()
                     }
-                    completion()
+                    if let remoteSdp = answer.answer {
+                        peerConnectionClient.set(remoteSdp: remoteSdp) { error in
+                            if error == nil {
+                                switch self.state {
+                                case .idle, .sendOffer, .receivedOffer, .outgoingRinging, .incomingRinging,
+                                     .sendAnswer, .receivedAnswer:
+                                    self.state = .initializing
+                                default:
+                                    break
+                                }
+                            }
+                            else {
+                                DDLogError(
+                                    "VoipCallService: [cid=\(answer.callID.callID)]: Can't add remote sdp to the peerConnection"
+                                )
+                                let hangupMessage = VoIPCallHangupMessage(
+                                    contactIdentity: self.callPartnerIdentity,
+                                    callID: self.callID,
+                                    completion: nil
+                                )
+                                self.voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
+                                self.state = .rejectedUnknown
+                                self.dismissCallView()
+                                self.disconnectPeerConnection()
+                                self.delegate?.callFinished()
+                            }
+                            completion()
+                        }
+                    }
+                    else {
+                        DDLogError("VoipCallService: [cid=\(answer.callID.callID)]: Remote sdp is empty")
+                        let hangupMessage = VoIPCallHangupMessage(
+                            contactIdentity: callPartnerIdentity,
+                            callID: callID,
+                            completion: nil
+                        )
+                        voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
+                        state = .rejectedUnknown
+                        dismissCallView()
+                        disconnectPeerConnection()
+                        delegate?.callFinished()
+                        completion()
+                    }
                 }
             }
             else {
-                // We are not the initiator so we can ignore this message
-                DDLogWarn("VoipCallService: [cid=\(answer.callID.callID)]: No initiator, ignore this answer")
+                if callPartnerIdentity == answer.contactIdentity {
+                    DDLogWarn(
+                        "VoipCallService: [cid=\(answer.callID.callID)]: Current state is wrong (\(state.description())) or callID is different to \(callID.callID)"
+                    )
+                }
+                else {
+                    DDLogWarn(
+                        "VoipCallService: [cid=\(answer.callID.callID)]: Answer contact (\(answer.contactIdentity ?? "?") is different to current call contact (\(callPartnerIdentity)"
+                    )
+                }
                 completion()
             }
         }
         else {
-            DDLogWarn("VoipCallService: [cid=\(answer.callID.callID)]: No contact set for currenct call")
+            // We are not the initiator so we can ignore this message
+            DDLogWarn("VoipCallService: [cid=\(answer.callID.callID)]: No initiator, ignore this answer")
             completion()
         }
     }
@@ -994,86 +1130,124 @@ extension VoIPCallService {
     /// - parameter ringing: VoIPCallRingingMessage
     /// - parameter completion: Completion block
     private func handleRingingMessage(ringing: VoIPCallRingingMessage, completion: @escaping (() -> Void)) {
-        DDLogNotice(
-            "VoipCallService: [cid=\(ringing.callID.callID)]: Call ringing message received from \(ringing.contactIdentity ?? "?")"
-        )
-        if let identity = contactIdentity {
-            if let callID, identity == ringing.contactIdentity, callID.isSame(ringing.callID) {
-                switch state {
-                case .sendOffer:
-                    state = .outgoingRinging
-                default:
-                    DDLogWarn(
-                        "VoipCallService: [cid=\(ringing.callID.callID)]: Wrong state (\(state.description())) to handle ringing message"
-                    )
-                }
-            }
-            else {
+        DDLogNotice("VoipCallService: [cid=\(ringing.callID.callID)]: Processing ringing message")
+        
+        if callPartnerIdentity == ringing.contactIdentity,
+           callID.callID == ringing.callID.callID {
+            switch state {
+            case .sendOffer:
+                state = .outgoingRinging
+                startOutgoingRingingCallTimeoutTimer()
+            default:
                 DDLogWarn(
-                    "VoipCallService: [cid=\(ringing.callID.callID)]: Ringing contact (\(ringing.contactIdentity ?? "?") is different to current call contact (\(identity)"
+                    "VoipCallService: [cid=\(ringing.callID.callID)]: Wrong state (\(state.description())) to handle ringing message"
                 )
             }
         }
         else {
-            DDLogWarn("VoipCallService: [cid=\(ringing.callID.callID)]: No contact set for currenct call")
+            DDLogWarn(
+                "VoipCallService: [cid=\(ringing.callID.callID)]: Ringing contact (\(ringing.contactIdentity ?? "?") is different to current call contact (\(callPartnerIdentity)"
+            )
         }
+        
         completion()
+    }
+    
+    private func startOutgoingRingingCallTimeoutTimer() {
+        guard state == .outgoingRinging else {
+            return
+        }
+        
+        DispatchQueue.main.async {
+            self.invalidateOutgoingRingingCallTimeout()
+            self.outgoingRingingCallTimeoutTimer = Timer.scheduledTimer(
+                withTimeInterval: self.kOutgoingRingingCallTimeout,
+                repeats: false
+            ) { [weak self] _ in
+                guard let self else {
+                    return
+                }
+                BackgroundTaskManager.shared.newBackgroundTask(
+                    key: kAppVoIPBackgroundTask,
+                    timeout: Int(kOutgoingRingingCallTimeout)
+                ) {
+                        
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        RTCAudioSession.sharedInstance().isAudioEnabled = false
+                            
+                        DDLogNotice(
+                            "VoipCallService: [cid=\(self.callID)]: Call ringing timeout"
+                        )
+                        let hangupMessage = VoIPCallHangupMessage(
+                            contactIdentity: self.callPartnerIdentity,
+                            callID: self.callID,
+                            completion: nil
+                        )
+                        self.voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
+                            
+                        self.state = .ended
+                        self.disconnectPeerConnection()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
+                            self.dismissCallView(rejected: false) {
+                                self.callKitManager.endCall(with: self.callID)
+                                self.invalidateInitCallTimeout()
+                                self.delegate?.callFinished()
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     
     /// Handle add or remove received remote ice candidates (IpV6 candidates will be removed)
     /// - parameter ice: VoIPCallIceCandidatesMessage
     /// - parameter completion: Completion block
     private func handleIceCandidatesMessage(ice: VoIPCallIceCandidatesMessage, completion: @escaping (() -> Void)) {
-        DDLogNotice(
-            "VoipCallService: [cid=\(ice.callID.callID)]: Call ICE candidate message received from \(ice.contactIdentity ?? "?") (\(ice.candidates.count) candidates)"
-        )
+        DDLogNotice("VoipCallService: [cid=\(ice.callID.callID)]: Processing ICE candidate message")
         
         for candidate in ice.candidates {
             DDLogNotice("VoipCallService: [cid=\(ice.callID.callID)]: Incoming ICE candidate: \(candidate.sdp)")
         }
-        if let identity = contactIdentity {
-            if let callID, identity == ice.contactIdentity, callID.isSame(ice.callID) {
-                switch state {
-                case .sendOffer, .outgoingRinging, .sendAnswer, .receivedAnswer, .initializing, .calling, .reconnecting:
-                    if !ice.removed {
-                        for candidate in ice.candidates {
-                            if shouldAdd(candidate: candidate, local: false) == (true, nil) {
-                                peerConnectionClient.set(addRemoteCandidate: candidate)
-                            }
+        if callPartnerIdentity == ice.contactIdentity,
+           callID.callID == ice.callID.callID {
+            switch state {
+            case .sendOffer, .outgoingRinging, .sendAnswer, .receivedAnswer, .initializing, .calling, .reconnecting:
+                if !ice.removed {
+                    for candidate in ice.candidates {
+                        if shouldAdd(candidate: candidate, local: false) == (true, nil) {
+                            peerConnectionClient.set(addRemoteCandidate: candidate)
                         }
-                        completion()
                     }
-                    else {
-                        // ICE candidate messages are currently allowed to have a "removed" flag. However, this is
-                        // non-standard.
-                        // When receiving an VoIP ICE Candidate (0x62) message with removed set to true, discard the
-                        // message
-                        completion()
-                    }
-                case .receivedOffer, .incomingRinging:
-                    // add to local array
-                    receivedIceCandidatesLockQueue.sync {
-                        receivedIcecandidatesMessages.append(ice)
-                        completion()
-                    }
-                default:
-                    DDLogWarn(
-                        "VoipCallService: [cid=\(ice.callID.callID)]: Wrong state (\(state.description())) to handle ICE candidates message"
-                    )
                     completion()
                 }
-            }
-            else {
-                addUnknownCallIcecandidatesMessages(message: ice)
-                DDLogNotice(
-                    "VoipCallService: [cid=\(ice.callID.callID)]: ICE candidates contact (\(ice.contactIdentity ?? "?") is different to current call contact (\(identity)"
+                else {
+                    // ICE candidate messages are currently allowed to have a "removed" flag. However, this is
+                    // non-standard.
+                    // When receiving an VoIP ICE Candidate (0x62) message with removed set to true, discard the
+                    // message
+                    completion()
+                }
+                
+            case .receivedOffer, .incomingRinging:
+                // add to local array
+                receivedIceCandidatesLockQueue.sync {
+                    receivedIceCandidatesMessages.append(ice)
+                    completion()
+                }
+                
+            default:
+                DDLogWarn(
+                    "VoipCallService: [cid=\(ice.callID.callID)]: Wrong state (\(state.description())) to handle ICE candidates message"
                 )
                 completion()
             }
         }
         else {
-            addUnknownCallIcecandidatesMessages(message: ice)
-            DDLogWarn("VoipCallService: [cid=\(ice.callID.callID)]: No contact set for currenct call")
+            addUnknownCallIceCandidatesMessages(message: ice)
+            DDLogNotice(
+                "VoipCallService: [cid=\(ice.callID.callID)]: ICE candidates contact (\(ice.contactIdentity ?? "?") is different to current call contact (\(callPartnerIdentity)"
+            )
             completion()
         }
     }
@@ -1086,51 +1260,38 @@ extension VoIPCallService {
     /// - parameter hangup: VoIPCallHangupMessage
     /// - parameter completion: Completion block
     private func handleHangupMessage(hangup: VoIPCallHangupMessage, completion: @escaping (() -> Void)) {
-        DDLogNotice(
-            "VoipCallService: [cid=\(hangup.callID.callID)]: Call hangup message received from \(hangup.contactIdentity ?? "?")"
-        )
+        DDLogNotice("VoipCallService: [cid=\(hangup.callID.callID)]: Processing hangup message")
         
-        if let identity = contactIdentity {
-            if let callID, identity == hangup.contactIdentity, callID.isSame(hangup.callID) {
-                switch state {
-                case .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .initializing, .calling,
-                     .reconnecting:
-                    RTCAudioSession.sharedInstance().isAudioEnabled = false
-                    state = .remoteEnded
-                    callKitManager?.endCall()
-                    dismissCallView()
-                    disconnectPeerConnection()
-                default:
-                    DDLogWarn(
-                        "VoipCallService: [cid=\(hangup.callID.callID)]: Wrong state (\(state.description())) to handle hangup message"
-                    )
-                }
-            }
-            else {
-                DDLogNotice(
-                    "VoipCallService: [cid=\(hangup.callID.callID)]: Hangup contact (\(hangup.contactIdentity ?? "?") is different to current call contact (\(identity)"
+        if callPartnerIdentity == hangup.contactIdentity, callID.callID == hangup.callID.callID {
+            switch state {
+            case .receivedOffer, .outgoingRinging, .incomingRinging, .sendAnswer, .initializing, .calling,
+                 .reconnecting:
+                cancelCall()
+            default:
+                DDLogWarn(
+                    "VoipCallService: [cid=\(hangup.callID.callID)]: Wrong state (\(state.description())) to handle hangup message"
                 )
+                delegate?.callFinished()
             }
         }
         else {
-            DDLogWarn("VoipCallService: [cid=\(hangup.callID.callID)]: Hangup received")
-            // If we receive a hangup message without having had a call with this callID in any state,
-            // we assume that it belonged to a missed call whose other messages were already dropped by the server.
-            let businessInjector = BusinessInjector.ui
-            CallSystemMessageHelper
-                .maybeAddMissedCallNotificationToConversation(
-                    with: hangup,
-                    on: businessInjector
-                ) { conversation, systemMessage in
-                    if let conversation, systemMessage != nil {
-                        ConversationActions(businessInjector: businessInjector).unarchive(conversation)
-                        NotificationManager(businessInjector: businessInjector).updateUnreadMessagesCount()
-                    }
-                }
+            DDLogNotice(
+                "VoipCallService: [cid=\(hangup.callID.callID)]: Hangup contact (\(hangup.contactIdentity ?? "?") is different to current call contact (\(callPartnerIdentity)"
+            )
+            delegate?.callFinished()
         }
+
         completion()
     }
-    
+
+    private func cancelCall() {
+        RTCAudioSession.sharedInstance().isAudioEnabled = false
+        state = .remoteEnded
+        callKitManager.endCall(with: callID)
+        dismissCallView()
+        disconnectPeerConnection()
+    }
+
     /// Handle a new outgoing call if Threema calls are enabled and permission for microphone is granted.
     /// It will present the CallViewController.
     /// - parameter action: VoIPCallUserAction
@@ -1148,7 +1309,7 @@ extension VoIPCallService {
             if state == .idle {
                 AVAudioApplication.requestRecordPermission { granted in
                     if granted {
-                        self.callInitiator = true
+                        self.callStartedBySelf = true
                         
                         let entityManager = self.businessInjector.entityManager
                         
@@ -1159,7 +1320,6 @@ extension VoIPCallService {
                             }
                         }
                         
-                        self.contactIdentity = action.contactIdentity
                         ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaCall, timeout: 20) {
                             self.createPeerConnectionForInitiator(action: action, completion: completion)
                         } onTimeout: {
@@ -1188,7 +1348,7 @@ extension VoIPCallService {
             else {
                 // do nothing because it's the wrong state
                 DDLogWarn(
-                    "VoipCallService: [cid=\(action.callID?.callID ?? 0)]: Wrong state (\(state.description())) to start call as initiator"
+                    "VoipCallService: [cid=\(action.callID.callID)]: Wrong state (\(state.description())) to start call as initiator"
                 )
                 showCallActiveAlert()
                 completion()
@@ -1239,32 +1399,33 @@ extension VoIPCallService {
                     
                     let answerMessage = VoIPCallAnswerMessage(
                         action: .call,
-                        contactIdentity: action.contactIdentity,
                         answer: sdp,
                         rejectReason: nil,
                         features: nil,
                         isVideoAvailable: self.threemaVideoCallAvailable,
                         isUserInteraction: true,
-                        callID: self.callID!,
+                        callID: self.callID,
                         completion: nil
                     )
+                    answerMessage.contactIdentity = action.contactIdentity
+                    
                     self.voIPCallSender.sendVoIPCall(answer: answerMessage)
                     
                     if action.action != .acceptCallKit {
-                        self.callKitManager?.callAccepted()
+                        self.callKitManager.callAccepted(with: self.callID)
                     }
                     self.receivedIceCandidatesLockQueue.sync {
                         if let receivedCandidatesBeforeCall = self
-                            .receivedUnknowCallIcecandidatesMessages[action.contactIdentity] {
+                            .receivedUnknownCallIceCandidatesMessages[action.contactIdentity] {
                             for ice in receivedCandidatesBeforeCall {
-                                if ice.callID.callID == self.callID?.callID {
-                                    self.receivedIcecandidatesMessages.append(ice)
+                                if ice.callID.callID == self.callID.callID {
+                                    self.receivedIceCandidatesMessages.append(ice)
                                 }
                             }
-                            self.receivedUnknowCallIcecandidatesMessages.removeAll()
+                            self.receivedUnknownCallIceCandidatesMessages.removeAll()
                         }
                         
-                        for message in self.receivedIcecandidatesMessages {
+                        for message in self.receivedIceCandidatesMessages {
                             if !message.removed {
                                 for candidate in message.candidates {
                                     if self.shouldAdd(candidate: candidate, local: false) == (true, nil) {
@@ -1273,7 +1434,7 @@ extension VoIPCallService {
                                 }
                             }
                         }
-                        self.receivedIcecandidatesMessages.removeAll()
+                        self.receivedIceCandidatesMessages.removeAll()
                     }
                     completion()
                 })
@@ -1281,11 +1442,12 @@ extension VoIPCallService {
             else {
                 // dismiss call view because it's the wrong state
                 DDLogWarn(
-                    "VoipCallService: [cid=\(action.callID?.callID ?? 0)]: Wrong state (\(self.state.description())) to accept incoming call action"
+                    "VoipCallService: [cid=\(action.callID.callID)]: Wrong state (\(self.state.description())) to accept incoming call action"
                 )
-                self.callKitManager?.answerFailed()
+                self.callKitManager.answerFailed()
                 self.dismissCallView()
                 self.disconnectPeerConnection()
+                self.delegate?.callFinished()
                 completion()
                 return
             }
@@ -1299,168 +1461,180 @@ extension VoIPCallService {
     private func createPeerConnectionForInitiator(action: VoIPCallUserAction, completion: @escaping (() -> Void)) {
         let entityManager = businessInjector.entityManager
         entityManager.performBlock {
-            guard let contactIdentity = self.contactIdentity,
-                  let contact = entityManager.entityFetcher.contactEntity(for: contactIdentity) else {
+            guard let contact = entityManager.entityFetcher.contactEntity(for: self.callPartnerIdentity) else {
                 completion()
                 return
             }
-            FeatureMask.check(identities: [contactIdentity], for: Int(FEATURE_MASK_VOIP_VIDEO)) { unsupportedContacts in
-                self.threemaVideoCallAvailable = false
-                if unsupportedContacts.isEmpty && UserSettings.shared().enableVideoCall {
-                    self.threemaVideoCallAvailable = true
-                }
-                self.peerConnectionClient.close()
-                let forceTurn: Bool = contact.contactVerificationLevel == .unverified ||
-                    UserSettings.shared()?.alwaysRelayCalls == true
-                let peerConnectionParameters = PeerConnectionParameters(
-                    isVideoCallAvailable: self.threemaVideoCallAvailable,
-                    videoCodecHwAcceleration: self.threemaVideoCallAvailable,
-                    forceTurn: forceTurn,
-                    gatherContinually: true,
-                    allowIpv6: UserSettings.shared().enableIPv6,
-                    isDataChannelAvailable: false
-                )
-                self.callID = VoIPCallID.generate()
-                
-                // Store call in temporary call history
-                Task { @MainActor in
-                    guard let callID = self.callID else {
-                        DDLogVerbose("Cannot store call in call history because the callID was set to nil again")
-                        return
+            
+            FeatureMask
+                .check(
+                    identities: [self.callPartnerIdentity],
+                    for: Int(FEATURE_MASK_VOIP_VIDEO)
+                ) { unsupportedContacts in
+                    self.threemaVideoCallAvailable = false
+                    if unsupportedContacts.isEmpty, UserSettings.shared().enableVideoCall {
+                        self.threemaVideoCallAvailable = true
                     }
-                    await CallHistoryManager(
-                        identity: action.contactIdentity,
-                        businessInjector: self.businessInjector
-                    ).store(callID: callID.callID, date: Date())
-                }
-                
-                DDLogNotice(
-                    "VoipCallService: [cid=\(self.callID!.callID)]: Handle new call with \(contactIdentity), we are the caller"
-                )
-                
-                if contact.contactVerificationLevel == .unverified {
-                    DDLogNotice("VoipCallService: [cid=\(self.callID!.callID)]: Force TURN since contact is unverified")
-                }
-                if let userSettings = UserSettings.shared(), userSettings.alwaysRelayCalls == true {
-                    DDLogNotice("VoipCallService: [cid=\(self.callID!.callID)]: Force TURN as requested by user")
-                }
-                
-                guard ServerConnector.shared().connectionState == .connected || ServerConnector.shared()
-                    .connectionState == .loggedIn else {
-                    self.callID = nil
-                    self.noInternetConnectionError()
-                    completion()
-                    return
-                }
-
-                self.peerConnectionClient.initialize(
-                    contactIdentity: contactIdentity,
-                    isInitiator: true,
-                    callID: self.callID,
-                    peerConnectionParameters: peerConnectionParameters,
-                    delegate: self
-                ) { error in
-                    if let error {
-                        self.callID = nil
-                        self.callCantCreateOffer(error: error)
-                        completion()
-                        return
-                    }
-
-                    if ThreemaEnvironment.supportsCallKit(), self.callKitManager == nil {
-                        self.callKitManager = VoIPCallKitManager()
-                    }
-
-                    self.peerConnectionClient.offer { sdp, sdpError in
-                        if sdpError != nil {
-                            self.callID = nil
-                            self.callCantCreateOffer(error: error)
-                            completion()
-                            return
-                        }
-                        guard let sdp, let callID = self.callID else {
-                            self.callID = nil
-                            self.callCantCreateOffer(error: nil)
-                            completion()
-                            return
-                        }
-
-                        let offerMessage = VoIPCallOfferMessage(
-                            offer: sdp,
-                            contactIdentity: self.contactIdentity,
-                            features: nil,
-                            isVideoAvailable: self.threemaVideoCallAvailable,
-                            callID: callID,
-                            completion: nil
+                    self.peerConnectionClient.close()
+                    LocalNetworkPermissionChecker().checkLocalNetworkPermission { granted in
+                        
+                        let forceTurn = !granted ||
+                            contact.contactVerificationLevel == .unverified ||
+                            UserSettings.shared()?.alwaysRelayCalls == true
+                        
+                        let peerConnectionParameters = PeerConnectionParameters(
+                            isVideoCallAvailable: self.threemaVideoCallAvailable,
+                            videoCodecHwAcceleration: self.threemaVideoCallAvailable,
+                            forceTurn: forceTurn,
+                            gatherContinually: true,
+                            allowIpv6: UserSettings.shared().enableIPv6,
+                            isDataChannelAvailable: false
                         )
-                        self.voIPCallSender.sendVoIPCall(offer: offerMessage)
-                        self.state = .sendOffer
-                        DispatchQueue.main.async {
-                            self.initCallTimeoutTimer = Timer.scheduledTimer(
-                                withTimeInterval: self.kIncomingCallTimeout,
-                                repeats: false
-                            ) { _ in
-                                BackgroundTaskManager.shared.newBackgroundTask(
-                                    key: kAppVoIPBackgroundTask,
-                                    timeout: Int(kAppPushBackgroundTaskTime)
-                                ) {
-                                    DispatchQueue.global(qos: .userInitiated).async {
-                                        RTCAudioSession.sharedInstance().isAudioEnabled = false
-
-                                        if let callID = self.callID {
-                                            DDLogNotice("VoipCallService: [cid=\(callID)]: Call ringing timeout")
-                                            let hangupMessage = VoIPCallHangupMessage(
-                                                contactIdentity: contactIdentity,
-                                                callID: callID,
-                                                completion: nil
-                                            )
-                                            self.voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
-                                        }
-                                        else {
-                                            assertionFailure("This should not have happened.")
-                                            DDLogError("VoipCallService: [cid=CID WAS NIL]: Call ringing timeout")
-                                        }
-
-                                        self.state = .ended
-                                        self.disconnectPeerConnection()
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
-                                            self.dismissCallView(rejected: false) {
-                                                self.callKitManager?.endCall()
-                                                self.invalidateInitCallTimeout()
-
-                                                guard let rootVC = AppDelegate.keyWindow?.rootViewController else {
-                                                    return
-                                                }
-                                                    
-                                                UIAlertTemplate.showAlert(
-                                                    owner: rootVC,
-                                                    title: String.localizedStringWithFormat(
-                                                        #localize("call_voip_not_supported_title"),
-                                                        TargetManager.localizedAppName
-                                                    ),
-                                                    message: #localize("call_contact_not_reachable")
+                        
+                        // Store call in temporary call history
+                        Task { @MainActor in
+                            await CallHistoryManager(
+                                identity: action.contactIdentity,
+                                businessInjector: self.businessInjector
+                            ).store(callID: self.callID.callID, date: Date())
+                        }
+                        
+                        DDLogNotice(
+                            "VoipCallService: [cid=\(self.callID.callID)]: Handle new call with \(self.callPartnerIdentity), we are the caller"
+                        )
+                        
+                        if contact.contactVerificationLevel == .unverified {
+                            DDLogNotice(
+                                "VoipCallService: [cid=\(self.callID.callID)]: Force TURN since contact is unverified"
+                            )
+                        }
+                        if let userSettings = UserSettings.shared(), userSettings.alwaysRelayCalls == true {
+                            DDLogNotice("VoipCallService: [cid=\(self.callID.callID)]: Force TURN as requested by user")
+                        }
+                        
+                        guard ServerConnector.shared().connectionState == .connected || ServerConnector.shared()
+                            .connectionState == .loggedIn else {
+                            self.noInternetConnectionError()
+                            completion()
+                            return
+                        }
+                        
+                        self.peerConnectionClient.initialize(
+                            contactIdentity: self.callPartnerIdentity,
+                            isInitiator: true,
+                            callID: self.callID,
+                            peerConnectionParameters: peerConnectionParameters,
+                            delegate: self
+                        ) { error in
+                            if let error {
+                                self.callCantCreateOffer(error: error)
+                                completion()
+                                return
+                            }
+                            
+                            // TODO: (IOS-5856) Handle much higher in hierarchy
+                            if !ThreemaEnvironment.supportsCallKit() {
+                                return
+                            }
+                            
+                            self.peerConnectionClient.offer {
+                                sdp,
+                                    sdpError in
+                                if sdpError != nil {
+                                    self.callCantCreateOffer(error: error)
+                                    completion()
+                                    return
+                                }
+                                guard let sdp else {
+                                    self.callCantCreateOffer(error: nil)
+                                    completion()
+                                    return
+                                }
+                                
+                                let offerMessage = VoIPCallOfferMessage(
+                                    offer: sdp,
+                                    features: nil,
+                                    isVideoAvailable: self.threemaVideoCallAvailable,
+                                    callID: self.callID,
+                                    completion: nil
+                                )
+                                offerMessage.contactIdentity = self.callPartnerIdentity
+                                
+                                self.voIPCallSender.sendVoIPCall(offer: offerMessage)
+                                self.state = .sendOffer
+                                DispatchQueue.main.async {
+                                    self.initCallTimeoutTimer = Timer.scheduledTimer(
+                                        withTimeInterval: self.kInitializingCallTimeout,
+                                        repeats: false
+                                    ) { _ in
+                                        BackgroundTaskManager.shared.newBackgroundTask(
+                                            key: kAppVoIPBackgroundTask,
+                                            timeout: Int(kAppPushBackgroundTaskTime)
+                                        ) {
+                                            DispatchQueue.global(qos: .userInitiated).async {
+                                                RTCAudioSession.sharedInstance().isAudioEnabled = false
+                                                
+                                                DDLogNotice(
+                                                    "VoipCallService: [cid=\(self.callID)]: Call initalizing timeout"
                                                 )
+                                                let hangupMessage = VoIPCallHangupMessage(
+                                                    contactIdentity: self.callPartnerIdentity,
+                                                    callID: self.callID,
+                                                    completion: nil
+                                                )
+                                                self.voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
+                                                
+                                                self.state = .ended
+                                                self.disconnectPeerConnection()
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
+                                                    self.dismissCallView(rejected: false) {
+                                                        self.callKitManager.endCall(with: self.callID)
+                                                        self.invalidateInitCallTimeout()
+                                                        self.delegate?.callFinished()
+                                                        
+                                                        guard let rootVC = AppDelegate.keyWindow?.rootViewController
+                                                        else {
+                                                            return
+                                                        }
+                                                        
+                                                        UIAlertTemplate.showAlert(
+                                                            owner: rootVC,
+                                                            title: String.localizedStringWithFormat(
+                                                                #localize("call_voip_not_supported_title"),
+                                                                TargetManager.localizedAppName
+                                                            ),
+                                                            message: #localize("call_contact_not_reachable"),
+                                                            titleOk: #localize("try_again"), actionOk: { _ in
+                                                                VoIPCallStateManager.shared
+                                                                    .startCall(callee: self.callPartnerIdentity)
+                                                            }
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
+                                self.alreadyAccepted = true
+                                self.presentCallView(
+                                    contactIdentity: self.callPartnerIdentity,
+                                    alreadyAccepted: true,
+                                    callStartedBySelf: true,
+                                    isThreemaVideoCallAvailable: self.threemaVideoCallAvailable,
+                                    videoActive: false,
+                                    receivingVideo: false,
+                                    viewWasHidden: false
+                                )
+                                self.callKitManager.startCall(
+                                    with: self.callID,
+                                    for: self.callPartnerIdentity,
+                                    businessInjector: self.businessInjector
+                                )
+                                completion()
                             }
                         }
-                        self.alreadyAccepted = true
-                        self.presentCallView(
-                            contactIdentity: self.contactIdentity!,
-                            alreadyAccepted: true,
-                            isCallInitiator: true,
-                            isThreemaVideoCallAvailable: self.threemaVideoCallAvailable,
-                            videoActive: false,
-                            receivingVideo: false,
-                            viewWasHidden: false
-                        )
-                        self.callKitManager?.startCall(for: self.contactIdentity!)
-                        completion()
                     }
                 }
-            }
         }
     }
     
@@ -1483,7 +1657,7 @@ extension VoIPCallService {
             }
             
             FeatureMask.check(identities: Set([identity]), for: Int(FEATURE_MASK_VOIP_VIDEO)) { _ in
-                if self.incomingOffer?.isVideoAvailable ?? false && UserSettings.shared().enableVideoCall {
+                if self.incomingOffer?.isVideoAvailable ?? false, UserSettings.shared().enableVideoCall {
                     self.threemaVideoCallAvailable = true
                     self.callViewController?.enableThreemaVideoCall()
                 }
@@ -1492,45 +1666,48 @@ extension VoIPCallService {
                     self.callViewController?.disableThreemaVideoCall()
                 }
                 
-                let forceTurn = contact.contactVerificationLevel == .unverified ||
-                    UserSettings
-                    .shared().alwaysRelayCalls
-                let peerConnectionParameters = PeerConnectionParameters(
-                    isVideoCallAvailable: self.threemaVideoCallAvailable,
-                    videoCodecHwAcceleration: self.threemaVideoCallAvailable,
-                    forceTurn: forceTurn,
-                    gatherContinually: true,
-                    allowIpv6: UserSettings.shared().enableIPv6,
-                    isDataChannelAvailable: false
-                )
-
-                self.peerConnectionClient.initialize(
-                    contactIdentity: identity,
-                    isInitiator: false,
-                    callID: offer.callID,
-                    peerConnectionParameters: peerConnectionParameters,
-                    delegate: self
-                ) { error in
-                    if let error {
-                        DDLogError("Can't instantiate client: \(error)")
-                        return
-                    }
-
-                    self.peerConnectionClient.set(remoteSdp: offer.offer!, completion: { error in
+                LocalNetworkPermissionChecker().checkLocalNetworkPermission { granted in
+                    let forceTurn = !granted ||
+                        contact.contactVerificationLevel == .unverified ||
+                        UserSettings.shared().alwaysRelayCalls
+                    
+                    let peerConnectionParameters = PeerConnectionParameters(
+                        isVideoCallAvailable: self.threemaVideoCallAvailable,
+                        videoCodecHwAcceleration: self.threemaVideoCallAvailable,
+                        forceTurn: forceTurn,
+                        gatherContinually: true,
+                        allowIpv6: UserSettings.shared().enableIPv6,
+                        isDataChannelAvailable: false
+                    )
+                    
+                    self.peerConnectionClient.initialize(
+                        contactIdentity: identity,
+                        isInitiator: false,
+                        callID: offer.callID,
+                        peerConnectionParameters: peerConnectionParameters,
+                        delegate: self
+                    ) { error in
                         if let error {
-                            // reject because we can't add offer
-                            DDLogError("We can't add the offer \(error))")
-                            let action = VoIPCallUserAction(
-                                action: .reject,
-                                contactIdentity: identity,
-                                callID: offer.callID,
-                                completion: offer.completion
-                            )
-                            self.rejectCall(action: action)
+                            DDLogError("Can't instantiate client: \(error)")
+                            return
                         }
-
-                        completion()
-                    })
+                        
+                        self.peerConnectionClient.set(remoteSdp: offer.offer!, completion: { error in
+                            if let error {
+                                // reject because we can't add offer
+                                DDLogError("We can't add the offer \(error))")
+                                let action = VoIPCallUserAction(
+                                    action: .reject,
+                                    contactIdentity: identity,
+                                    callID: offer.callID,
+                                    completion: offer.completion
+                                )
+                                self.rejectCall(action: action)
+                            }
+                            
+                            completion()
+                        })
+                    }
                 }
             }
         }
@@ -1541,21 +1718,8 @@ extension VoIPCallService {
         // remove peerConnection
         
         func reset() {
-            audioPlayer?.pause()
+            audioPlayer?.stop()
             peerConnectionClient.close()
-            
-            contactIdentity = nil
-            callID = nil
-            threemaVideoCallAvailable = false
-            alreadyAccepted = false
-            callInitiator = false
-            audioMuted = false
-            speakerActive = false
-            videoActive = false
-            isReceivingVideo = false
-            incomingOffer = nil
-            localRenderer = nil
-            remoteRenderer = nil
             
             DispatchQueue.main.async {
                 NavigationBarPromptHandler.isCallActiveInBackground = false
@@ -1571,10 +1735,24 @@ extension VoIPCallService {
                 Timer.scheduledTimer(
                     withTimeInterval: self.kEndedDelay,
                     repeats: false,
-                    block: { _ in
-                        if self.state == .idle {
-                            self.businessInjector.serverConnector.disconnect(initiator: .threemaCall)
+                    block: { [weak self] _ in
+                        guard let self, state == .idle else {
+                            return
                         }
+
+                        // Maybe is better not do a disconnect here, because after a possible disconnect
+                        // no further (VoIP) messages will be processed
+                        businessInjector.serverConnector.disconnect(initiator: .threemaCall)
+                        threemaVideoCallAvailable = false
+                        alreadyAccepted = false
+                        callStartedBySelf = false
+                        audioMuted = false
+                        speakerActive = false
+                        videoActive = false
+                        isReceivingVideo = false
+                        incomingOffer = nil
+                        localRenderer = nil
+                        remoteRenderer = nil
                     }
                 )
             }
@@ -1589,11 +1767,11 @@ extension VoIPCallService {
     /// Present the CallViewController on the main thread.
     /// - parameter contact: Contact of the call
     /// - parameter alreadyAccepted: Set to true if the call was already accepted
-    /// - parameter isCallInitiator: If user is the call initiator
+    /// - parameter callStartedBySelf: If user is the call initiator
     private func presentCallView(
         contactIdentity: String,
         alreadyAccepted: Bool,
-        isCallInitiator: Bool,
+        callStartedBySelf: Bool,
         isThreemaVideoCallAvailable: Bool,
         videoActive: Bool,
         receivingVideo: Bool,
@@ -1605,6 +1783,7 @@ extension VoIPCallService {
             if self.callViewController == nil {
                 let callStoryboard = UIStoryboard(name: "CallStoryboard", bundle: nil)
                 let callVC = callStoryboard.instantiateInitialViewController() as! CallViewController
+                callVC.delegate = self
                 self.callViewController = callVC
                 viewWasHidden = false
             }
@@ -1625,11 +1804,14 @@ extension VoIPCallService {
                 self.showCallViewIfActive(
                     presentingVC: presentingVC,
                     viewWasHidden: viewWasHidden,
-                    isCallInitiator: isCallInitiator,
+                    callStartedBySelf: callStartedBySelf,
                     isThreemaVideoCallAvailable: isThreemaVideoCallAvailable,
                     receivingVideo: receivingVideo,
                     completion: completion
                 )
+            }
+            else {
+                completion?()
             }
         }
     }
@@ -1651,7 +1833,7 @@ extension VoIPCallService {
     private func showCallViewIfActive(
         presentingVC: UIViewController?,
         viewWasHidden: Bool,
-        isCallInitiator: Bool,
+        callStartedBySelf: Bool,
         isThreemaVideoCallAvailable: Bool,
         receivingVideo: Bool,
         completion: (() -> Void)? = nil
@@ -1661,9 +1843,9 @@ extension VoIPCallService {
            !isModal {
             callViewController!.viewWasHidden = viewWasHidden
             callViewController!.voIPCallStatusChanged(state: state, oldState: state)
-            callViewController!.contactIdentity = contactIdentity
+            callViewController!.contactIdentity = callPartnerIdentity
             callViewController!.alreadyAccepted = alreadyAccepted
-            callViewController!.isCallInitiator = isCallInitiator
+            callViewController!.callStartedBySelf = callStartedBySelf
             callViewController!.threemaVideoCallAvailable = isThreemaVideoCallAvailable
             callViewController!.isLocalVideoActive = videoActive
             callViewController!.isReceivingRemoteVideo = receivingVideo
@@ -1674,13 +1856,14 @@ extension VoIPCallService {
             presentingVC?.present(callViewController!, animated: false, completion: {
                 // need to check is fresh start, then we have to set isReceivingRemotVideo again to show the video of
                 // the remote
-                if !viewWasHidden, !isCallInitiator {
+                if !viewWasHidden, !callStartedBySelf {
                     self.callViewController!.isReceivingRemoteVideo = receivingVideo
                 }
-                if completion != nil {
-                    completion!()
-                }
+                completion?()
             })
+        }
+        else {
+            completion?()
         }
     }
     
@@ -1732,6 +1915,9 @@ extension VoIPCallService {
                     object: self.callDurationTime
                 )
             }
+            else {
+                completion?()
+            }
         }
     }
     
@@ -1746,75 +1932,94 @@ extension VoIPCallService {
         switch action.action {
         case .rejectDisabled:
             reason = .disabled
-            if action.contactIdentity == contactIdentity {
+            if action.contactIdentity == callPartnerIdentity {
                 state = .rejectedDisabled
             }
         case .rejectTimeout:
             reason = .timeout
-            if action.contactIdentity == contactIdentity {
+            if action.contactIdentity == callPartnerIdentity {
                 state = .rejectedTimeout
             }
         case .rejectBusy:
             reason = .busy
-            if action.contactIdentity == contactIdentity {
+            if action.contactIdentity == callPartnerIdentity {
                 state = .rejectedBusy
             }
         case .rejectOffHours:
             reason = .offHours
-            if action.contactIdentity == contactIdentity {
+            if action.contactIdentity == callPartnerIdentity {
                 state = .rejectedOffHours
             }
         case .rejectUnknown:
             reason = .unknown
-            if action.contactIdentity == contactIdentity {
+            if action.contactIdentity == callPartnerIdentity {
                 state = .rejectedUnknown
             }
         default:
-            if action.contactIdentity == contactIdentity {
+            if action.contactIdentity == callPartnerIdentity {
                 state = .rejected
             }
         }
         
         let answer = VoIPCallAnswerMessage(
             action: .reject,
-            contactIdentity: action.contactIdentity,
             answer: nil,
             rejectReason: reason,
             features: nil,
             isVideoAvailable: UserSettings.shared().enableVideoCall,
             isUserInteraction: false,
-            callID: action.callID ?? VoIPCallID(callID: nil),
+            callID: action.callID,
             completion: nil
         )
+        answer.contactIdentity = action.contactIdentity
         voIPCallSender.sendVoIPCall(answer: answer)
-        if contactIdentity == action.contactIdentity {
-            callKitManager?.rejectCall()
+        if callPartnerIdentity == action.contactIdentity {
+            callKitManager.endCall(with: callID)
             if closeCallView == true {
-                // remove peerConnection
+                // Remove peerConnection
                 dismissCallView()
                 disconnectPeerConnection()
             }
         }
         else {
-            addRejectedMessageToConversation(contactIdentity: action.contactIdentity, reason: .callMissed)
+            addRejectedMessageToConversation(for: action.contactIdentity, reason: .callMissed)
         }
     }
     
     /// It will check the current call state and play the correct tone if it's needed
-    private func handleTones(state: VoIPCallService.CallState, oldState: VoIPCallService.CallState) {
+    private func handleTones(state: CallState, oldState: CallState) {
         if ProcessInfoHelper.isRunningForScreenshots {
             return
         }
+        
         switch state {
         case .outgoingRinging, .incomingRinging:
-            if callInitiator {
-                let soundFilePath = BundleUtil.path(forResource: "ringing-tone-ch-fade", ofType: "mp3")
-                let soundURL = URL(fileURLWithPath: soundFilePath!)
-                setupAudioSession()
-                playSound(soundURL: soundURL, loops: -1)
+            guard callStartedBySelf else {
+                return
             }
+            
+            let soundFilePath = BundleUtil.path(forResource: "ringing-tone-ch-fade", ofType: "mp3")
+            let soundURL = URL(fileURLWithPath: soundFilePath!)
+            setupAudioSession()
+            playSound(soundURL: soundURL, loops: -1)
+            
+        case .sendOffer:
+            guard callStartedBySelf else {
+                return
+            }
+            
+            // We only play the call sound after CallKit activated the audio session
+            if state == .sendOffer, oldState != .sendOffer {
+                break
+            }
+            
+            let soundFilePath = BundleUtil.path(forResource: "threema_initializing", ofType: "mp3")
+            let soundURL = URL(fileURLWithPath: soundFilePath!)
+            setupAudioSession()
+            playSound(soundURL: soundURL, loops: -1)
+            
         case .rejected, .rejectedBusy, .rejectedTimeout, .rejectedOffHours, .rejectedUnknown, .rejectedDisabled:
-            if !businessInjector.pushSettingManager.canMasterDndSendPush() || !isCallInitiator() {
+            if !businessInjector.pushSettingManager.canMasterDndSendPush() || !callStartedBySelf {
                 // do not play sound if dnd mode is active and user is not the call initiator
                 audioPlayer?.stop()
             }
@@ -1824,38 +2029,35 @@ extension VoIPCallService {
                 setupAudioSession()
                 playSound(soundURL: soundURL, loops: 0)
             }
+            
         case .ended, .remoteEnded:
-            if oldState != .incomingRinging {
-                let soundFilePath = BundleUtil.path(forResource: "threema_hangup", ofType: "mp3")
-                let soundURL = URL(fileURLWithPath: soundFilePath!)
-                setupAudioSession()
-                playSound(soundURL: soundURL, loops: 0)
-            }
-            else {
+            guard oldState != .incomingRinging else {
                 audioPlayer?.stop()
+                break
             }
-        case .calling:
-            if oldState != .reconnecting {
-                let soundFilePath = BundleUtil.path(forResource: "threema_pickup", ofType: "mp3")
-                let soundURL = URL(fileURLWithPath: soundFilePath!)
-                setupAudioSession()
-                playSound(soundURL: soundURL, loops: 0)
-            }
-            else {
-                audioPlayer?.stop()
-            }
+            
+            let soundFilePath = BundleUtil.path(forResource: "threema_hangup", ofType: "mp3")
+            let soundURL = URL(fileURLWithPath: soundFilePath!)
+            setupAudioSession()
+            playSound(soundURL: soundURL, loops: 0)
+            
         case .reconnecting:
             let soundFilePath = BundleUtil.path(forResource: "threema_problem", ofType: "mp3")
             let soundURL = URL(fileURLWithPath: soundFilePath!)
             setupAudioSession()
             playSound(soundURL: soundURL, loops: -1)
-        case .idle:
-            break
-        case .sendOffer, .receivedOffer, .sendAnswer, .receivedAnswer, .initializing:
-            // do nothing
-            break
-        case .microphoneDisabled:
-            // do nothing
+            
+        case .calling:
+            let soundFilePath = BundleUtil.path(forResource: "threema_pickup", ofType: "mp3")
+            let soundURL = URL(fileURLWithPath: soundFilePath!)
+            setupAudioSession()
+            playSound(soundURL: soundURL, loops: 0)
+            
+        case .idle, .receivedAnswer:
+            audioPlayer?.stop()
+            
+        case .receivedOffer, .sendAnswer, .microphoneDisabled, .initializing:
+            // Do nothing
             break
         }
     }
@@ -1896,10 +2098,18 @@ extension VoIPCallService {
     /// - parameter soundURL: URL of the sound file
     /// - parameter loop: -1 for endless
     /// - parameter playOnSpeaker: True or false if should play the tone over the speaker
+    /// - Note: Some CallKit functions interfere with playing sounds.
     private func playSound(soundURL: URL, loops: Int) {
+        // Do not override if we are already playing given url
+        if let audioPlayer, audioPlayer.url == soundURL, audioPlayer.isPlaying {
+            return
+        }
+        
         audioPlayer?.stop()
+        
         do {
             let player = try AVAudioPlayer(contentsOf: soundURL, fileTypeHint: AVFileType.mp3.rawValue)
+            player.prepareToPlay()
             player.numberOfLoops = loops
             audioPlayer = player
             player.play()
@@ -1919,49 +2129,76 @@ extension VoIPCallService {
             invalidateCallDuration()
             invalidateCallFailedTimer()
             invalidateTransportExpectedStableTimer()
+            invalidateOutgoingRingingCallTimeout()
+            
         case .sendOffer:
             invalidateCallFailedTimer()
+            invalidateOutgoingRingingCallTimeout()
+            
         case .receivedOffer:
             invalidateInitCallTimeout()
             invalidateCallFailedTimer()
-        case .outgoingRinging, .incomingRinging:
+            invalidateOutgoingRingingCallTimeout()
+            
+        case .outgoingRinging:
             invalidateInitCallTimeout()
             invalidateCallFailedTimer()
+            
+        case .incomingRinging:
+            invalidateInitCallTimeout()
+            invalidateCallFailedTimer()
+            invalidateOutgoingRingingCallTimeout()
+            
         case .sendAnswer:
             invalidateInitCallTimeout()
             invalidateIncomingCallTimeout()
             invalidateCallFailedTimer()
+            invalidateOutgoingRingingCallTimeout()
+            
         case .receivedAnswer:
             invalidateInitCallTimeout()
             invalidateCallFailedTimer()
+            invalidateOutgoingRingingCallTimeout()
+            
         case .initializing:
             invalidateInitCallTimeout()
             invalidateIncomingCallTimeout()
+            invalidateOutgoingRingingCallTimeout()
+            
         case .calling:
             invalidateInitCallTimeout()
             invalidateIncomingCallTimeout()
             invalidateCallFailedTimer()
             invalidateTransportExpectedStableTimer()
+            invalidateOutgoingRingingCallTimeout()
+            
         case .reconnecting:
             invalidateInitCallTimeout()
             invalidateIncomingCallTimeout()
+            invalidateOutgoingRingingCallTimeout()
+            
         case .ended, .remoteEnded:
             invalidateInitCallTimeout()
             invalidateIncomingCallTimeout()
             invalidateCallFailedTimer()
             invalidateTransportExpectedStableTimer()
+            invalidateOutgoingRingingCallTimeout()
+            
         case .rejected, .rejectedBusy, .rejectedTimeout, .rejectedDisabled, .rejectedOffHours, .rejectedUnknown:
             invalidateInitCallTimeout()
             invalidateCallDuration()
             invalidateIncomingCallTimeout()
             invalidateCallFailedTimer()
             invalidateTransportExpectedStableTimer()
+            invalidateOutgoingRingingCallTimeout()
+            
         case .microphoneDisabled:
             invalidateInitCallTimeout()
             invalidateCallDuration()
             invalidateIncomingCallTimeout()
             invalidateCallFailedTimer()
             invalidateTransportExpectedStableTimer()
+            
         @unknown default:
             break
         }
@@ -1969,36 +2206,66 @@ extension VoIPCallService {
     
     /// Invalidate the incoming call timer
     private func invalidateIncomingCallTimeout() {
-        incomingCallTimeoutTimer?.invalidate()
+        guard let timer = incomingCallTimeoutTimer else {
+            return
+        }
+        DDLogNotice("VoipCallService: [cid=\(callID)]: Invalidating incoming call timer")
+        timer.invalidate()
         incomingCallTimeoutTimer = nil
+    }
+    
+    /// Invalidate the incoming call timer
+    private func invalidateOutgoingRingingCallTimeout() {
+        guard let timer = outgoingRingingCallTimeoutTimer else {
+            return
+        }
+        DDLogNotice("VoipCallService: [cid=\(callID)]: Invalidating outgoing ringing call timer")
+        timer.invalidate()
+        outgoingRingingCallTimeoutTimer = nil
     }
     
     /// Invalidate the init call timer
     private func invalidateInitCallTimeout() {
-        initCallTimeoutTimer?.invalidate()
+        guard let timer = initCallTimeoutTimer else {
+            return
+        }
+        DDLogNotice("VoipCallService: [cid=\(callID)]: Invalidating init call timer")
+        timer.invalidate()
         initCallTimeoutTimer = nil
     }
     
     /// Invalidate the call duration timer and set the callDurationTime to 0
     private func invalidateCallDuration() {
-        callDurationTimer?.invalidate()
+        guard let timer = callDurationTimer else {
+            return
+        }
+        DDLogNotice("VoipCallService: [cid=\(callID)]: Invalidating call duration timer")
+        timer.invalidate()
         callDurationTimer = nil
         callDurationTime = 0
     }
     
     /// Invalidate the call failed timer
     private func invalidateCallFailedTimer() {
-        callFailedTimer?.invalidate()
+        guard let timer = callFailedTimer else {
+            return
+        }
+        DDLogNotice("VoipCallService: [cid=\(callID)]: Invalidating call failed timer")
+        timer.invalidate()
         callFailedTimer = nil
     }
     
     /// Invalidate the transport expected stable
     private func invalidateTransportExpectedStableTimer() {
-        transportExpectedStableTimer?.invalidate()
+        guard let timer = transportExpectedStableTimer else {
+            return
+        }
+        DDLogNotice("VoipCallService: [cid=\(callID)]: Invalidating call stable timer")
+        timer.invalidate()
         transportExpectedStableTimer = nil
     }
     
-    /// Add icecandidate to local array if it's in the correct state. Start a timer to send candidates as packets all
+    /// Add ice candidate to local array if it's in the correct state. Start a timer to send candidates as packets all
     /// 0.05 seconds
     /// - parameter candidate: RTCIceCandidate
     private func handleLocalIceCandidates(_ candidates: [RTCIceCandidate]) {
@@ -2015,24 +2282,25 @@ extension VoIPCallService {
         switch state {
         case .sendOffer, .outgoingRinging, .receivedAnswer, .initializing, .calling, .reconnecting:
             addCandidateToLocalArray(candidates)
-            let seperatedCandidates = localAddedIceCandidates.take(localAddedIceCandidates.count)
-            if !seperatedCandidates.isEmpty {
+            let separatedCandidates = localAddedIceCandidates.take(localAddedIceCandidates.count)
+            if !separatedCandidates.isEmpty {
                 let message = VoIPCallIceCandidatesMessage(
                     removed: false,
-                    candidates: seperatedCandidates,
-                    contactIdentity: contactIdentity,
-                    callID: callID!,
+                    candidates: separatedCandidates,
+                    callID: callID,
                     completion: nil
                 )
+                message.contactIdentity = callPartnerIdentity
                 voIPCallSender.sendVoIPCall(iceCandidates: message)
             }
             localAddedIceCandidates.removeAll()
+            
         case .idle, .receivedOffer, .incomingRinging, .sendAnswer:
             addCandidateToLocalArray(candidates)
+            
         case .ended, .remoteEnded, .rejected, .rejectedBusy, .rejectedTimeout, .rejectedOffHours, .rejectedUnknown,
              .rejectedDisabled, .microphoneDisabled:
-            // do nothing
-            
+            // Do nothing
             break
         }
     }
@@ -2052,7 +2320,7 @@ extension VoIPCallService {
         let ip = parts[4]
         if ip == "127.0.0.1" || ip == "::1" {
             DDLogNotice(
-                "VoipCallService: [cid=\(callID?.callID ?? 0)]: Discarding loopback candidate: \(candidate.sdp)"
+                "VoipCallService: [cid=\(callID.callID)]: Discarding loopback candidate: \(candidate.sdp)"
             )
             return (false, "loopback")
         }
@@ -2060,7 +2328,7 @@ extension VoIPCallService {
         // Discard IPv6 if disabled
         if UserSettings.shared()?.enableIPv6 == false && ip.contains(":") {
             DDLogNotice(
-                "VoipCallService: [cid=\(callID?.callID ?? 0)]: Discarding local IPv6 candidate: \(candidate.sdp)"
+                "VoipCallService: [cid=\(callID.callID)]: Discarding local IPv6 candidate: \(candidate.sdp)"
             )
             return (false, "ipv6_disabled")
         }
@@ -2082,7 +2350,7 @@ extension VoIPCallService {
             // Important: This only works as long as we don't do ICE restarts and don't add further relay transport types!
             if localRelatedAddresses.contains(relatedAddress) {
                 DDLogNotice(
-                    "VoipCallService: [cid=\(callID?.callID ?? 0)]: Discarding local relay candidate (duplicate related address: \(relatedAddress)): \(candidate.sdp)"
+                    "VoipCallService: [cid=\(callID.callID)]: Discarding local relay candidate (duplicate related address: \(relatedAddress)): \(candidate.sdp)"
                 )
                 return (false, "duplicate_related_addr")
             }
@@ -2122,20 +2390,15 @@ extension VoIPCallService {
     }
     
     private func addMissedCall() {
-        
-        guard let identity = contactIdentity else {
-            DDLogError("Cannot add missed call without identity")
-            return
-        }
-        
         DispatchQueue.main.async {
             guard AppDelegate.shared().isAppInBackground(),
-                  !self.isCallInitiator(),
+                  !self.callStartedBySelf,
                   self.callDurationTime == 0 else {
                 return
             }
 
-            let pushSetting = self.businessInjector.pushSettingManager.find(forContact: ThreemaIdentity(identity))
+            let pushSetting = self.businessInjector.pushSettingManager
+                .find(forContact: ThreemaIdentity(self.callPartnerIdentity))
             let canSendPush = pushSetting.canSendPush()
             
             guard canSendPush else {
@@ -2158,12 +2421,12 @@ extension VoIPCallService {
             var contact: ContactEntity?
             
             self.businessInjector.entityManager.performAndWait {
-                contact = self.businessInjector.entityManager.entityFetcher.contactEntity(for: identity)
+                contact = self.businessInjector.entityManager.entityFetcher.contactEntity(for: self.callPartnerIdentity)
             }
             guard let contact else {
                 return
             }
-            notification.userInfo = ["threema": ["cmd": "missedcall", "from": identity]]
+            notification.userInfo = ["threema": ["cmd": "missedcall", "from": self.callPartnerIdentity]]
             
             if case .restrictive = notificationType {
                 if let publicNickname = contact.publicNickname,
@@ -2171,7 +2434,7 @@ extension VoIPCallService {
                     notification.title = publicNickname
                 }
                 else {
-                    notification.title = identity
+                    notification.title = self.callPartnerIdentity
                 }
             }
             else {
@@ -2181,24 +2444,24 @@ extension VoIPCallService {
             notification.body = #localize("call_missed")
             
             // Group notification together with others from the same contact
-            notification.threadIdentifier = "SINGLE-\(identity)"
+            notification.threadIdentifier = "SINGLE-\(self.callPartnerIdentity)"
             
             if case .complete = notificationType,
                let interaction = IntentCreator(
                    userSettings: self.businessInjector.userSettings,
                    entityManager: self.businessInjector.entityManager
                ).inSendMessageIntentInteraction(
-                   for: identity,
+                   for: self.callPartnerIdentity,
                    direction: .incoming
                ) {
                 self.showRichMissedCallNotification(
                     interaction: interaction,
-                    identifier: identity,
+                    identifier: self.callPartnerIdentity,
                     content: notification
                 )
             }
             else {
-                self.showRegularMissedCallNotification(with: identity, content: notification)
+                self.showRegularMissedCallNotification(with: self.callPartnerIdentity, content: notification)
             }
         }
     }
@@ -2280,17 +2543,14 @@ extension VoIPCallService {
                 return
             }
             
-            guard let identity = contactIdentity else {
-                return
-            }
-            
             var messageRead = true
             var systemMessage: SystemMessageEntity?
             
             entityManager.performAndWaitSave {
-                guard let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                guard let conversation = entityManager
+                    .conversation(for: self.callPartnerIdentity, createIfNotExisting: true) else {
                     DDLogError(
-                        "[VoipCallService] Conversation not found for callID: \(self.currentCallID()?.callID ?? 0)"
+                        "[VoipCallService] Conversation not found for callID: \(self.callID)"
                     )
                     return
                 }
@@ -2302,13 +2562,13 @@ extension VoIPCallService {
                 
                 var callInfo = [
                     "DateString": DateFormatter.shortStyleTimeNoDate(Date()),
-                    "CallInitiator": NSNumber(booleanLiteral: self.isCallInitiator()),
+                    "CallInitiator": NSNumber(booleanLiteral: self.callStartedBySelf),
                 ] as [String: Any]
                 if self.callDurationTime > 0 {
                     callInfo["CallTime"] = DateFormatter.timeFormatted(self.callDurationTime)
                 }
                 
-                if !self.isCallInitiator(),
+                if !self.callStartedBySelf,
                    self.callDurationTime == 0 {
                     messageRead = false
                     conversation.lastUpdate = Date.now
@@ -2317,9 +2577,9 @@ extension VoIPCallService {
                 do {
                     let callInfoData = try JSONSerialization.data(withJSONObject: callInfo, options: .prettyPrinted)
                     systemMessage?.arg = callInfoData
-                    systemMessage?.isOwn = NSNumber(booleanLiteral: self.isCallInitiator())
+                    systemMessage?.isOwn = NSNumber(booleanLiteral: self.callStartedBySelf)
                     
-                    if let contact = entityManager.entityFetcher.contactEntity(for: identity) {
+                    if let contact = entityManager.entityFetcher.contactEntity(for: self.callPartnerIdentity) {
                         let cont = Contact(contactEntity: contact)
                         systemMessage?.forwardSecurityMode = NSNumber(value: cont.forwardSecurityMode.rawValue)
                     }
@@ -2333,7 +2593,7 @@ extension VoIPCallService {
                 }
                 catch {
                     DDLogError(
-                        "VoipCallService: [cid=\(self.currentCallID()?.callID ?? 0)]: Can't add call info to system message"
+                        "VoipCallService: [cid=\(self.callID)]: Can't add call info to system message"
                     )
                 }
             }
@@ -2346,71 +2606,73 @@ extension VoIPCallService {
         case .rejected:
             // add call message
             entityManager.performAndWait {
-                guard let identity = self.contactIdentity,
-                      let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                guard let conversation = entityManager
+                    .conversation(for: self.callPartnerIdentity, createIfNotExisting: true) else {
                     return
                 }
-                self.addRejectedMessageToConversation(contactIdentity: identity, reason: .callRejected)
+                self.addRejectedMessageToConversation(for: self.callPartnerIdentity, reason: .callRejected)
                 utilities.unarchive(conversation)
             }
         case .rejectedTimeout:
             // add call message
             entityManager.performAndWait {
-                guard let identity = self.contactIdentity,
-                      let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                guard let conversation = entityManager
+                    .conversation(for: self.callPartnerIdentity, createIfNotExisting: true) else {
                     return
                 }
                 let reason: SystemMessageEntity.SystemMessageEntityType = self
-                    .isCallInitiator() ? .callRejectedTimeout : .callMissed
-                self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
+                    .callStartedBySelf ? .callRejectedTimeout : .callMissed
+                self.addRejectedMessageToConversation(for: self.callPartnerIdentity, reason: reason)
                 utilities.unarchive(conversation)
             }
         case .rejectedBusy:
             entityManager.performAndWait {
                 // add call message
-                guard let identity = self.contactIdentity,
-                      let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                guard let conversation = entityManager
+                    .conversation(for: self.callPartnerIdentity, createIfNotExisting: true) else {
                     return
                 }
                 let reason: SystemMessageEntity.SystemMessageEntityType = self
-                    .isCallInitiator() ? .callRejectedBusy : .callMissed
-                self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
+                    .callStartedBySelf ? .callRejectedBusy : .callMissed
+                self.addRejectedMessageToConversation(for: self.callPartnerIdentity, reason: reason)
                 utilities.unarchive(conversation)
             }
         case .rejectedOffHours:
             entityManager.performAndWait {
                 // add call message
-                guard let identity = self.contactIdentity,
-                      let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                guard let conversation = entityManager
+                    .conversation(for: self.callPartnerIdentity, createIfNotExisting: true) else {
                     return
                 }
                 let reason: SystemMessageEntity.SystemMessageEntityType = self
-                    .isCallInitiator() ? .callRejectedOffHours : .callMissed
-                self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
+                    .callStartedBySelf ? .callRejectedOffHours : .callMissed
+                self.addRejectedMessageToConversation(for: self.callPartnerIdentity, reason: reason)
                 utilities.unarchive(conversation)
             }
         case .rejectedUnknown:
             entityManager.performAndWait {
                 // add call message
-                guard let identity = self.contactIdentity,
-                      let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                guard let conversation = entityManager
+                    .conversation(for: self.callPartnerIdentity, createIfNotExisting: true) else {
                     return
                 }
                 let reason: SystemMessageEntity.SystemMessageEntityType = self
-                    .isCallInitiator() ? .callRejectedUnknown : .callMissed
-                self.addRejectedMessageToConversation(contactIdentity: identity, reason: reason)
+                    .callStartedBySelf ? .callRejectedUnknown : .callMissed
+                self.addRejectedMessageToConversation(for: self.callPartnerIdentity, reason: reason)
                 utilities.unarchive(conversation)
             }
         case .rejectedDisabled:
             // add call message
             entityManager.performAndWait {
-                if self.callInitiator {
-                    guard let identity = self.contactIdentity,
-                          let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                if self.callStartedBySelf {
+                    guard let conversation = entityManager.conversation(
+                        for: self.callPartnerIdentity,
+                        createIfNotExisting: true
+                    ) else {
                         return
                     }
                     self.addRejectedMessageToConversation(
-                        contactIdentity: identity,
+                        for: self.callPartnerIdentity,
                         reason: .callRejectedDisabled
                     )
                     utilities.unarchive(conversation)
@@ -2418,8 +2680,8 @@ extension VoIPCallService {
             }
         case .microphoneDisabled:
             entityManager.performAndWait {
-                guard let identity = self.contactIdentity,
-                      let conversation = entityManager.conversation(for: identity, createIfNotExisting: true) else {
+                guard let conversation = entityManager
+                    .conversation(for: self.callPartnerIdentity, createIfNotExisting: true) else {
                     return
                 }
                 utilities.unarchive(conversation)
@@ -2428,27 +2690,27 @@ extension VoIPCallService {
     }
     
     private func addRejectedMessageToConversation(
-        contactIdentity: String,
+        for callPartnerIdentity: String,
         reason: SystemMessageEntity.SystemMessageEntityType
     ) {
         var systemMessage: SystemMessageEntity?
         
         let entityManager = businessInjector.entityManager
         entityManager.performAndWaitSave {
-            if let conversation = entityManager.conversation(for: contactIdentity, createIfNotExisting: true),
-               let contact = entityManager.entityFetcher.contactEntity(for: contactIdentity) {
+            if let conversation = entityManager.conversation(for: callPartnerIdentity, createIfNotExisting: true),
+               let contact = entityManager.entityFetcher.contactEntity(for: callPartnerIdentity) {
                 systemMessage = entityManager.entityCreator.systemMessageEntity(
                     for: reason,
                     in: conversation
                 )
                 let callInfo = [
                     "DateString": DateFormatter.shortStyleTimeNoDate(Date()),
-                    "CallInitiator": NSNumber(booleanLiteral: self.isCallInitiator()),
+                    "CallInitiator": NSNumber(booleanLiteral: self.callStartedBySelf),
                 ] as [String: Any]
                 do {
                     let callInfoData = try JSONSerialization.data(withJSONObject: callInfo, options: .prettyPrinted)
                     systemMessage?.arg = callInfoData
-                    systemMessage?.isOwn = NSNumber(booleanLiteral: self.isCallInitiator())
+                    systemMessage?.isOwn = NSNumber(booleanLiteral: self.callStartedBySelf)
                     
                     let cont = Contact(contactEntity: contact)
                     systemMessage?.forwardSecurityMode = NSNumber(value: cont.forwardSecurityMode.rawValue)
@@ -2482,16 +2744,16 @@ extension VoIPCallService {
         }
     }
     
-    private func addUnknownCallIcecandidatesMessages(message: VoIPCallIceCandidatesMessage) {
+    private func addUnknownCallIceCandidatesMessages(message: VoIPCallIceCandidatesMessage) {
         receivedIceCandidatesLockQueue.sync {
             guard let identity = message.contactIdentity else {
                 return
             }
-            if var contactCandidates = receivedUnknowCallIcecandidatesMessages[identity] {
+            if var contactCandidates = receivedUnknownCallIceCandidatesMessages[identity] {
                 contactCandidates.append(message)
             }
             else {
-                receivedUnknowCallIcecandidatesMessages[identity] = [message]
+                receivedUnknownCallIceCandidatesMessages[identity] = [message]
             }
         }
     }
@@ -2506,49 +2768,71 @@ extension VoIPCallService {
     private func callFailed() {
         if !peerWasConnected {
             // show error as notification
-            if let identity = contactIdentity {
-                let hangupMessage = VoIPCallHangupMessage(contactIdentity: identity, callID: callID!, completion: nil)
-                voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage)
-            }
+            let hangupMessage = VoIPCallHangupMessage(
+                contactIdentity: callPartnerIdentity,
+                callID: callID,
+                completion: nil
+            )
+            voIPCallSender.sendVoIPCallHangup(hangupMessage: hangupMessage, wait: false)
+
             NotificationPresenterWrapper.shared.present(type: .connectedCallError)
-        }
-        else {
-            NotificationPresenterWrapper.shared.present(type: .notConnectedCallError)
         }
         
         invalidateCallFailedTimer()
         invalidateTransportExpectedStableTimer()
         handleTones(state: .ended, oldState: .reconnecting)
-        callKitManager?.endCall()
-        dismissCallView()
+        dismissCallView {
+            self.callKitManager.endCall(with: self.callID)
+            guard self.peerWasConnected, let rootVC = AppDelegate.keyWindow?.rootViewController else {
+                return
+            }
+        
+            UIAlertTemplate.showAlert(
+                owner: rootVC,
+                title: String.localizedStringWithFormat(
+                    #localize("call_voip_not_supported_title"),
+                    TargetManager.localizedAppName
+                ),
+                message: #localize("call_disconnected"),
+                titleOk: #localize("try_again"), actionOk: { _ in
+                    VoIPCallStateManager.shared
+                        .startCall(callee: self.callPartnerIdentity)
+                }
+            )
+        }
         disconnectPeerConnection()
+        delegate?.callFinished()
     }
     
     private func callCantCreateOffer(error: Error?) {
         DDLogNotice(
-            "VoipCallService: [cid=\(callID?.callID ?? 0)]: Can't create offer (\(error?.localizedDescription ?? "error is missing")"
+            "VoipCallService: [cid=\(callID.callID)]: Can't create offer (\(error?.localizedDescription ?? "error is missing")"
         )
         NotificationPresenterWrapper.shared.present(type: .callCreationError)
         invalidateCallFailedTimer()
         invalidateTransportExpectedStableTimer()
         handleTones(state: .ended, oldState: .reconnecting)
-        callKitManager?.endCall()
-        dismissCallView()
+        dismissCallView {
+            self.callKitManager.endCall(with: self.callID)
+        }
         disconnectPeerConnection()
+        delegate?.callFinished()
     }
     
     /// Displays a no internet message and cancels the call
     private func noInternetConnectionError() {
         DDLogNotice(
-            "VoipCallService: [cid=\(callID?.callID ?? 0)]: Can't create offer (no internet connection)"
+            "VoipCallService: [cid=\(callID.callID)]: Can't create offer (no internet connection)"
         )
         NotificationPresenterWrapper.shared.present(type: .noConnection)
         invalidateCallFailedTimer()
         invalidateTransportExpectedStableTimer()
+        dismissCallView {
+            self.callKitManager.endCall(with: self.callID)
+        }
         handleTones(state: .ended, oldState: .reconnecting)
-        callKitManager?.endCall()
-        dismissCallView()
         disconnectPeerConnection()
+        delegate?.callFinished()
     }
 }
 
@@ -2561,7 +2845,7 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
             // for intermittent FAILED states.
             if self.transportExpectedStableTimer != nil {
                 DDLogError(
-                    "VoipCallService: [cid=\(self.callID?.callID ?? 0)]: transportExpectedStableTimer was already running!"
+                    "VoipCallService: [cid=\(self.callID.callID)]: transportExpectedStableTimer was already running!"
                 )
                 self.transportExpectedStableTimer?.invalidate()
                 self.transportExpectedStableTimer = nil
@@ -2584,15 +2868,13 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         for candidate in removedCandidates {
             let reason = shouldAdd(candidate: candidate, local: true).1 ?? "unknown"
             DDLogNotice(
-                "VoipCallService: [cid=\(callID?.callID ?? 0)]: Ignoring local ICE candidate (\(reason)): \(candidate.sdp)"
+                "VoipCallService: [cid=\(callID.callID)]: Ignoring local ICE candidate (\(reason)): \(candidate.sdp)"
             )
         }
     }
     
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, addedCandidate: RTCIceCandidate) {
-        if contactIdentity != nil {
-            handleLocalIceCandidates([addedCandidate])
-        }
+        handleLocalIceCandidates([addedCandidate])
     }
     
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, changeState: CallState) {
@@ -2638,12 +2920,11 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         let oldState = self.state
         
         switch state {
-        case .new:
-            break
         case .connecting:
             if self.state != .sendOffer, self.state != .outgoingRinging, self.state != .incomingRinging {
                 self.state = .initializing
             }
+            
         case .connected:
             invalidateCallFailedTimer()
             invalidateTransportExpectedStableTimer()
@@ -2653,7 +2934,7 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
                 self.state = .calling
                 DispatchQueue.main.async {
                     self.callDurationTime = 0
-                    self.callDurationTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: { _ in
+                    self.callDurationTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
                         self.callDurationTime = self.callDurationTime + 1
                         if self.state == .calling {
                             self.callViewController?.voIPCallDurationChanged(self.callDurationTime)
@@ -2661,7 +2942,7 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
                         else {
                             self.callViewController?.voIPCallStatusChanged(state: self.state, oldState: self.state)
                             DDLogWarn(
-                                "VoipCallService: [cid=\(self.callID?.callID ?? 0)]: State is connected, but shows something different \(self.state.description())"
+                                "VoipCallService: [cid=\(self.callID.callID)]: State is connected, but shows something different \(self.state.description())"
                             )
                         }
                         if NavigationBarPromptHandler.isCallActiveInBackground == true {
@@ -2670,15 +2951,16 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
                                 object: self.callDurationTime
                             )
                         }
-                    })
+                    }
                 }
                 callViewController?.startDebugMode(connection: client.peerConnection)
-                callKitManager?.callConnected()
+                callKitManager.callConnected(with: callID)
             }
             else {
                 self.state = .calling
             }
             activateRTCAudio()
+            
         case .failed:
             if callFailedTimer != nil {
                 invalidateCallFailedTimer()
@@ -2687,10 +2969,11 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
             
             if transportExpectedStableTimer == nil {
                 DDLogError(
-                    "VoipCallService: [cid=\(callID?.callID ?? 0)]: transportExpectedStableFuture is nil as transport connection state moved into FAILED"
+                    "VoipCallService: [cid=\(callID.callID)]: transportExpectedStableFuture is nil as transport connection state moved into FAILED"
                 )
                 callFailed()
             }
+            
         case .disconnected:
             if callFailedTimer == nil {
                 self.state = .reconnecting
@@ -2707,14 +2990,17 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
                     )
                 }
             }
-        case .closed:
+            
+        case .new, .closed:
             break
+            
         @unknown default:
             break
         }
+        
         if oldState != self.state {
             DDLogNotice(
-                "VoipCallService: [cid=\(callID?.callID ?? 0)]: Call state change from \(oldState.description()) to \(self.state.description())"
+                "VoipCallService: [cid=\(callID.callID)]: Call state change from \(oldState.description()) to \(self.state.description())"
             )
         }
     }
@@ -2758,6 +3044,14 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         }
     }
 }
+
+// MARK: - VoIPCallKitManagerDelegate
+
+extension VoIPCallService: VoIPCallKitManagerDelegate { }
+
+// MARK: - CallViewControllerDelegate
+
+extension VoIPCallService: CallViewControllerDelegate { }
 
 extension Array {
     func take(_ elementsCount: Int) -> [Element] {

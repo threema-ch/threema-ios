@@ -97,6 +97,13 @@ import Foundation
                 self.didDismiss()
             }
         }
+        // Check this always as last
+        else if checkNetworkForOnPrem() {
+            // We ask for local network permission to improve the UX for calls
+            LocalNetworkPermissionChecker().checkLocalNetworkPermission { _ in
+                // no op
+            }
+        }
         
         return nil
     }
@@ -148,6 +155,10 @@ import Foundation
     
     private func checkMicForOnPrem() -> Bool {
         TargetManager.isOnPrem && AVAudioApplication.shared.recordPermission == .undetermined
+    }
+    
+    private func checkNetworkForOnPrem() -> Bool {
+        TargetManager.isOnPrem
     }
 }
 

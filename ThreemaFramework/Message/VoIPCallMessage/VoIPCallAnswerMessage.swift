@@ -61,7 +61,7 @@ import WebRTC
     }
     
     public let action: MessageAction
-    public var contactIdentity: String?
+    public var contactIdentity: String!
     public var answer: RTCSessionDescription?
     public var completion: (() -> Void)?
     public let callID: VoIPCallID
@@ -72,7 +72,6 @@ import WebRTC
     
     public init(
         action: MessageAction,
-        contactIdentity: String?,
         answer: RTCSessionDescription?,
         rejectReason: MessageRejectReason?,
         features: [String: Any?]?,
@@ -82,7 +81,6 @@ import WebRTC
         completion: (() -> Void)?
     ) {
         self.action = action
-        self.contactIdentity = contactIdentity
         self.answer = answer
         self.rejectReason = rejectReason
         self.completion = completion
@@ -91,6 +89,18 @@ import WebRTC
         self.isUserInteraction = isUserInteraction
         self.callID = callID
         super.init()
+    }
+    
+    public func description() -> String {
+        switch action {
+        case .reject:
+            guard let rejectReason else {
+                return ".reject.description()/unkown"
+            }
+            return "\(MessageAction.reject.description())/\(rejectReason.description())"
+        case .call:
+            return MessageAction.call.description()
+        }
     }
 }
 
@@ -109,7 +119,7 @@ extension VoIPCallAnswerMessage: VoIPCallMessageProtocol {
         case generateJson(error: Error)
     }
 
-    static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any]) -> T where T: VoIPCallMessageProtocol {
+    public static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any]) -> T where T: VoIPCallMessageProtocol {
         let tmpAction: MessageAction = VoIPCallAnswerMessage
             .MessageAction(rawValue: dictionary[VoIPCallAnswerMessage.kActionKey] as! Int)!
         var tmpRejectReason: VoIPCallAnswerMessage.MessageRejectReason?
@@ -130,17 +140,16 @@ extension VoIPCallAnswerMessage: VoIPCallMessageProtocol {
             }
         }
         
-        let tmpCallID = VoIPCallID(callID: dictionary[VoIPCallConstants.callIDKey] as? UInt32)
+        let callID = VoIPCallID(callID: dictionary[VoIPCallConstants.callIDKey] as! UInt32)
         
         return VoIPCallAnswerMessage(
             action: tmpAction,
-            contactIdentity: nil,
             answer: tmpAnswer,
             rejectReason: tmpRejectReason,
             features: tmpFeatures,
             isVideoAvailable: isVideoAvailable,
             isUserInteraction: false,
-            callID: tmpCallID,
+            callID: callID,
             completion: nil
         ) as! T
     }
@@ -164,16 +173,13 @@ extension VoIPCallAnswerMessage: VoIPCallMessageProtocol {
     public func encodeAsJson() throws -> Data {
         var json = [AnyHashable: Any]()
         if answer != nil {
-            let extensionConfig: VoIPCallSdpPatcher
-                .RtpHeaderExtensionConfig = isVideoAvailable ? .ENABLE_WITH_ONE_AND_TWO_BYTE_HEADER : .DISABLE
-            json = try [
+            json = [
                 VoIPCallConstants.callIDKey: callID.callID,
                 VoIPCallAnswerMessage.kActionKey: action.rawValue,
                 VoIPCallAnswerMessage
                     .kAnswerKey: [
                         VoIPCallAnswerMessage.kRTCSessionDescriptionTypeKey: stringForType(),
-                        VoIPCallAnswerMessage.kRTCSessionDescriptionSdpKey: VoIPCallSdpPatcher(extensionConfig)
-                            .patch(type: .LOCAL_ANSWER, sdp: answer!.sdp),
+                        VoIPCallAnswerMessage.kRTCSessionDescriptionSdpKey: answer?.sdp,
                     ],
                 VoIPCallAnswerMessage.kRejectReasonKey: rejectReason ?? 0,
             ]

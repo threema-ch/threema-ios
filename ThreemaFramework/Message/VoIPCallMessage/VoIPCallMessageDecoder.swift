@@ -34,16 +34,14 @@ import Foundation
         from: BoxVoIPCallHangupMessage,
         contactIdentity: String
     ) -> VoIPCallHangupMessage? {
-        let msg: VoIPCallHangupMessage? =
-            if let jsonData = from.jsonData {
-                decode(jsonData)
-            }
-            else {
-                VoIPCallHangupMessage(callID: VoIPCallID(callID: nil), completion: nil)
-            }
-        msg?.contactIdentity = contactIdentity
-        msg?.date = from.date
         
+        guard let jsonData = from.jsonData, let msg: VoIPCallHangupMessage = decode(jsonData) else {
+            DDLogError("[VoipCallMessageDecoder] No JSON data to decode hangup message from id: \(from)")
+            return nil
+        }
+        
+        msg.contactIdentity = contactIdentity
+        msg.date = from.date
         return msg
     }
     
@@ -56,15 +54,13 @@ import Foundation
         from: BoxVoIPCallRingingMessage,
         contactIdentity: String
     ) -> VoIPCallRingingMessage? {
-        let msg: VoIPCallRingingMessage? =
-            if let jsonData = from.jsonData {
-                decode(jsonData)
-            }
-            else {
-                VoIPCallRingingMessage(callID: VoIPCallID(callID: nil), completion: nil)
-            }
-        msg?.contactIdentity = contactIdentity
         
+        guard let jsonData = from.jsonData, let msg: VoIPCallRingingMessage = decode(jsonData) else {
+            DDLogError("[VoipCallMessageDecoder] No JSON data to decode ringing message from id: \(from)")
+            return nil
+        }
+        
+        msg.contactIdentity = contactIdentity
         return msg
     }
     

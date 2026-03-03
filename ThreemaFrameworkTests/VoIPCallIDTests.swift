@@ -33,16 +33,6 @@ class VoIPCallIDTests: XCTestCase {
         super.tearDown()
     }
     
-    func testNegativeCallID() {
-        let callID = VoIPCallID(callID: -1 as? UInt32)
-        XCTAssertEqual(0, callID.callID)
-    }
-    
-    func testToBigCallID() {
-        let callID = VoIPCallID(callID: 99_999_999_999 as? UInt32)
-        XCTAssertEqual(0, callID.callID)
-    }
-    
     func testShortCallID() {
         let callID = VoIPCallID(callID: 3)
         XCTAssertEqual(3, callID.callID)

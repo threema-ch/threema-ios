@@ -20,303 +20,316 @@
 
 import CallKit
 import CocoaLumberjackSwift
+import Collections
 import Foundation
 import ThreemaFramework
 import ThreemaMacros
 import UserNotifications
 
-@objc class VoIPCallStateManager: NSObject {
-    
+@objc final class VoIPCallStateManager: NSObject {
+
     @objc static let shared = VoIPCallStateManager()
-    
-    private var callQueue = Queue<Any>()
-    private let lockQueue = DispatchQueue(label: "CallManagerLockQueue")
-    private let managerQueue = DispatchQueue(label: "CallManagerProcessQueue")
-    
-    private var callService = VoIPCallService()
-    
-    private let preCallHandlingTimeout = 5
-    
-    @objc override required init() {
-        super.init()
-        callService.delegate = self
-    }
-    
-    /// Indicates that we have started handling a call but have not yet processed any message related to any call
-    @objc public var preCallHandling = false {
+
+    private let callKitManager: VoIPCallKitManager
+
+    /// Contains `VoIPCallMessage` and `VoIPCallUserAction`
+    private var callQueue = Deque<VoIPCallIDProtocol>()
+    private let callQueueQueue = DispatchQueue(label: "ch.threema.VoIPCallStateManager.callQueueQueue")
+    private let callServiceQueue = DispatchQueue(label: "ch.threema.VoIPCallStateManager.callServiceQueue")
+
+    private var callService: VoIPCallService? {
         didSet {
-            if preCallHandling {
-                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(preCallHandlingTimeout)) {
-                    if self.preCallHandling {
-                        DDLogError(
-                            "preCallHandling is taking longer than five seconds! Current state is \(self.callService.currentState()) callID \(String(describing: self.callService.currentCallID()))"
-                        )
-                    }
-                }
+            if let callService {
+                DDLogNotice("VoipCallService: [cid=\(callService.callID.callID)]: Created new call service")
+            }
+            else if let oldValue {
+                DDLogNotice("VoipCallService: [cid=\(oldValue.callID.callID)]: Removed call service")
             }
         }
     }
-    
+
+    // MARK: - Lifecycle
+
+    @objc override required init() {
+        self.callKitManager = VoIPCallKitManager()
+        super.init()
+    }
+
+    // MARK: - Public functions
+
     /// Get the current state of a call
     /// - Returns: CallState
-    @objc func currentCallState() -> VoIPCallService.CallState {
-        callService.currentState()
+    @objc func currentCallState() -> CallState {
+        callService?.currentState() ?? .idle
     }
-    
-    /// Get the current identity of a call
-    /// - Returns: identity
-    @objc func currentContactIdentity() -> String? {
-        callService.currentContactIdentity()
+
+    func isCallServiceInitialized() -> Bool {
+        callServiceQueue.sync {
+            callService != nil
+        }
     }
-    
-    /// Get the current callID of a call
-    /// - Returns: VoIPCallID
-    @objc func currentCallID() -> VoIPCallID? {
-        callService.currentCallID()
-    }
-    
-    /// Is initiator of the current call
-    /// - Returns: true or false
-    @objc func isCallInitiator() -> Bool {
-        callService.isCallInitiator()
-    }
-    
-    /// Is the current call muted
-    /// - Returns: true or false
-    @objc func isCallMuted() -> Bool {
-        callService.isCallMuted()
-    }
-    
-    /// Is the speaker for the current call active
-    /// - Returns: true or false
-    @objc func isSpeakerActive() -> Bool {
-        callService.isSpeakerActive()
-    }
-    
-    /// Set the rtc audio session
-    /// - parameter audioSession: audio session from callkit
-    @objc func setRTCAudio(_ audioSession: AVAudioSession) {
-        callService.setRTCAudioSession(audioSession)
-    }
-    
-    /// Set the audio session for RTC active
-    /// - parameter audioSession: Set the audio session from callkit
-    @objc func activateRTCAudio() {
-        callService.activateRTCAudio()
-    }
-    
-    /// Is the current call already accepted
-    /// - Returns: true or false
-    @objc func isCallAlreadyAccepted() -> Bool {
-        callService.isCallAlreadyAccepted()
-    }
-    
+
     /// Present the CallViewController
     @objc func presentCallViewController() {
-        callService.presentCallViewController()
+        callService?.presentCallViewController()
     }
-    
-    /// Dismiss the CallViewController
-    @objc func dismissCallViewController() {
-        callService.dismissCallViewController()
-    }
-    
-    /// Start capture local video
-    @objc func startCaptureLocalVideo(
-        renderer: RTCVideoRenderer,
-        useBackCamera: Bool = false,
-        switchCamera: Bool = false
-    ) {
-        callService.startCaptureLocalVideo(renderer: renderer, useBackCamera: useBackCamera, switchCamera: switchCamera)
-    }
-    
-    /// End capture local video
-    @objc func endCaptureLocalVideo(switchCamera: Bool = false) {
-        callService.endCaptureLocalVideo(switchCamera: switchCamera)
-    }
-    
-    /// Get local video
-    @objc func localVideoRenderer() -> RTCVideoRenderer? {
-        callService.localVideoRenderer()
-    }
-    
-    /// Start render remote video
-    @objc func renderRemoteVideo(to renderer: RTCVideoRenderer) {
-        callService.renderRemoteVideo(to: renderer)
-    }
-    
-    /// End capture local video
-    @objc func endRemoteVideo() {
-        callService.endRemoteVideo()
-    }
-    
-    /// Get remote video
-    @objc func remoteVideoRenderer() -> RTCVideoRenderer? {
-        callService.remoteVideoRenderer()
-    }
-    
-    /// Get peer video quality profile
-    func remoteVideoQualityProfile() -> CallsignalingProtocol.ThreemaVideoCallQualityProfile? {
-        callService.remoteVideoQualityProfile()
-    }
-    
-    /// Get peer is using turn server
-    func networkIsRelayed() -> Bool {
-        callService.networkIsRelayed()
-    }
-        
+
+    // MARK: - Local user actions
+
     /// Add a user action to the process queue
     /// - parameter action: VoIPCallUserAction
-    @objc func processUserAction(_ action: VoIPCallUserAction) {
-        addMessageToQueue(message: action)
+    func addActionToCallQueue(_ action: VoIPCallUserAction) {
+        addElementToCallQueue(action)
     }
+    
+    // MARK: - Local call start
+    
+    /// Starts a 1:1 with the given identity. Assumes callee supports 1:1 calls.
+    /// - Parameters:
+    ///   - callee: Identity of the callee
+    ///   - onCompletion: Completion handler
+    func startCall(callee: String, onCompletion: (() -> Void)? = nil) {
+        let callID = VoIPCallID.generate()
+        let action = VoIPCallUserAction(
+            action: .call,
+            contactIdentity: callee,
+            callID: callID,
+            completion: onCompletion
+        )
+        DDLogNotice(
+            "VoipCallService: [cid=\(callID.callID)]: Handle new call with \(callee), we are the caller"
+        )
+        
+        DDLogNotice(
+            "VoipCallService: [cid=\(callID.callID)]: Enqueuing start call action"
+        )
+        
+        addElementToCallQueue(action)
+    }
+
+    // MARK: - Call message handling
 
     /// Add a incoming call offer to the process queue
     /// - parameter offer: VoIPCallOfferMessage
     /// - parameter identity: Identity from the offer
     /// - parameter completion: Completion block
-    @objc func incomingCallOffer(offer: VoIPCallOfferMessage, identity theIdentity: String, completion: (() -> Void)?) {
+    func incomingCallOffer(offer: VoIPCallOfferMessage, identity: String, completion: (() -> Void)?) {
+        DDLogNotice(
+            "VoipCallService: [cid=\(offer.callID.callID)]: Handle new call with \(identity), we are the callee"
+        )
+
+        DDLogNotice(
+            "VoipCallService: [cid=\(offer.callID.callID)]: Call offer received from \(identity)"
+        )
+
         BackgroundTaskManager.shared.newBackgroundTask(
             key: kAppVoIPIncomCallBackgroundTask,
-            timeout: Int(kAppVoIPIncomCallBackgroundTaskTime)
+            timeout: Int(kAppVoIPIncomingCallBackgroundTaskTime)
         ) {
-            if completion != nil {
-                offer.completion = completion
-            }
-            offer.contactIdentity = theIdentity
-            self.addMessageToQueue(message: offer)
+            offer.completion = completion
+            offer.contactIdentity = identity
+            DDLogNotice("VoipCallService: [cid=\(offer.callID.callID)]: Enqueuing call offer message")
+            self.addElementToCallQueue(offer)
         }
     }
-    
+
     /// Add a incoming call answer to the process queue
     /// - parameter answer: VoIPCallAnswerMessage
     /// - parameter identity: Identity from the answer
     /// - parameter completion: Completion block
-    @objc func incomingCallAnswer(
+    func incomingCallAnswer(
         answer: VoIPCallAnswerMessage,
-        identity theIdentity: String,
+        identity: String,
         completion: @escaping () -> Void
     ) {
+        DDLogNotice(
+            "VoipCallService: [cid=\(answer.callID.callID)]: Call answer received from \(identity): \(answer.description())"
+        )
+
         BackgroundTaskManager.shared.newBackgroundTask(
             key: kAppVoIPBackgroundTask,
             timeout: Int(kAppPushBackgroundTaskTime)
         ) {
             answer.completion = completion
-            answer.contactIdentity = theIdentity
-            self.addMessageToQueue(message: answer)
+            answer.contactIdentity = identity
+            DDLogNotice("VoipCallService: [cid=\(answer.callID.callID)]: Enqueuing call answer message")
+            self.addElementToCallQueue(answer)
         }
     }
-    
-    /// Updates the initial call reported from the push kit notification
-    /// - Parameter manager: `VoIPCallKitManager` used to report the call initially
-    func updateInitialIncomingCall(using manager: VoIPCallKitManager) {
-        callService.updateInitialCall(using: manager)
-    }
 
-    /// Start and cancel call (for deprecated/invalid VoIP pushes) over CallKit, because for any VoIP received,
-    /// `CXProvider.reportNewIncomingCall` must be called
-    static func startAndCancelCall(from localizedName: String, completion: @escaping () -> Void) {
-        let update = CXCallUpdate()
-        update.remoteHandle = CXHandle(type: .generic, value: localizedName)
-        update.supportsDTMF = false
-        update.supportsHolding = false
-        update.supportsGrouping = false
-        update.supportsUngrouping = false
-        update.hasVideo = false
-        
-        let config = CXProviderConfiguration()
-        config.supportsVideo = true
-        config.maximumCallGroups = 1
-        config.maximumCallsPerCallGroup = 1
-        config.includesCallsInRecents = false
-
-        let uuid = UUID()
-        
-        let provider = CXProvider(configuration: config)
-        provider.reportNewIncomingCall(with: uuid, update: update) { _ in
-            Task { @MainActor in
-                let localizedMessage = #localize("new_message_db_requires_migration")
-                NotificationManager.showThreemaWebError(title: TargetManager.appName, body: localizedMessage)
-            }
-            
-            provider.reportCall(with: uuid, endedAt: Date(), reason: .failed)
-            completion()
-        }
-
-        // Prevent ringing
-        provider.reportCall(with: uuid, endedAt: .now, reason: .failed)
-    }
-    
     /// Add a incoming ringing message to the process queue
     /// - parameter ringing: VoIPCallRingingMessage
-    @objc func incomingCallRinging(ringing: VoIPCallRingingMessage) {
+    func incomingCallRinging(ringing: VoIPCallRingingMessage) {
+        DDLogNotice(
+            "VoipCallService: [cid=\(ringing.callID.callID)]: Call ringing message received from \(ringing.contactIdentity ?? "?")"
+        )
+
         BackgroundTaskManager.shared.newBackgroundTask(
             key: kAppVoIPBackgroundTask,
             timeout: Int(kAppPushBackgroundTaskTime)
         ) {
-            self.addMessageToQueue(message: ringing)
+            DDLogNotice("VoipCallService: [cid=\(ringing.callID.callID)]: Enqueuing call ringing message")
+            self.addElementToCallQueue(ringing)
         }
     }
-    
-    /// Add a incoming hangup message to the process queue
-    /// - parameter hangup: VoIPCallHangupMessage
-    @objc func incomingCallHangup(hangup: VoIPCallHangupMessage) {
-        BackgroundTaskManager.shared.newBackgroundTask(
-            key: kAppVoIPBackgroundTask,
-            timeout: Int(kAppPushBackgroundTaskTime)
-        ) {
-            self.addMessageToQueue(message: hangup)
-        }
-    }
-    
+
     /// Add a incoming ice candidates message to the process queue
     /// - parameter candidates: VoIPCallIceCandidatesMessage
     /// - parameter identity: Identity from the ice candidates
     /// - parameter completion: Completion block
-    @objc func incomingIceCandidates(
+    func incomingIceCandidates(
         candidates: VoIPCallIceCandidatesMessage,
-        identity theIdentity: String,
+        identity: String,
         completion: (() -> Void)?
     ) {
+        DDLogNotice(
+            "VoipCallService: [cid=\(candidates.callID.callID)]: Call ICE candidate message received from \(identity) (\(candidates.candidates.count) candidates)"
+        )
+
         BackgroundTaskManager.shared.newBackgroundTask(
             key: kAppVoIPBackgroundTask,
             timeout: Int(kAppPushBackgroundTaskTime)
         ) {
-            if completion != nil {
-                candidates.completion = completion
-            }
-            candidates.contactIdentity = theIdentity
-            self.addMessageToQueue(message: candidates)
+            candidates.completion = completion
+            candidates.contactIdentity = identity
+            DDLogNotice("VoipCallService: [cid=\(candidates.callID.callID)]: Enqueuing ICE candidate message")
+            self.addElementToCallQueue(candidates)
         }
     }
-}
 
-extension VoIPCallStateManager {
-    // MARK: Private functions
-    
-    /// Add a message to the process queue and start process
-    /// - parameter message: Any message
-    private func addMessageToQueue(message: Any) {
-        var queueCountBefore = 0
-        lockQueue.sync {
-            queueCountBefore = callQueue.elements.count
-            callQueue.enqueue(message)
-        }
-        if queueCountBefore == 0 {
-            processQueue()
+    /// Add a incoming hangup message to the process queue
+    /// - parameter hangup: VoIPCallHangupMessage
+    func incomingCallHangup(hangup: VoIPCallHangupMessage) {
+        DDLogNotice(
+            "VoipCallService: [cid=\(hangup.callID.callID)]: Call hangup message received from \(hangup.contactIdentity ?? "?")"
+        )
+
+        BackgroundTaskManager.shared.newBackgroundTask(
+            key: kAppVoIPBackgroundTask,
+            timeout: Int(kAppPushBackgroundTaskTime)
+        ) {
+            DDLogNotice("VoipCallService: [cid=\(hangup.callID.callID)]: Enqueuing hangup message")
+            self.addElementToCallQueue(hangup)
         }
     }
-    
-    /// Start the process queue on CallService
-    private func processQueue() {
-        var element: Any?
-        lockQueue.sync {
-            element = callQueue.dequeue()
-        }
-        if let element {
-            managerQueue.async {
-                self.callService.startProcess(element: element)
+
+    // MARK: - CallKit
+
+    /// Incoming from background
+    /// - Parameters:
+    ///   - callID: Unique call ID
+    ///   - callPartnerIdentity: Caller identity
+    ///   - callPartnerName: Caller name
+    ///   - ringtoneSound: Filename of ringtone to be used
+    ///   - completion: Completion handler returns a task to update call
+    func newIncomingCallFromBackground(
+        with callID: VoIPCallID,
+        callPartnerIdentity: String,
+        callPartnerName: String?,
+        ringtoneSound: String,
+        completion: @escaping (@escaping () -> Void) -> Void
+    ) {
+        callKitManager.reportIncomingCall(
+            with: callID,
+            callPartnerIdentity: callPartnerIdentity,
+            callPartnerName: callPartnerName,
+            ringtoneSound: ringtoneSound
+        ) { _ in
+            // Task to update call when business is ready
+            let task: (() -> Void) = {
+                Task { @MainActor in
+                    PersistenceManager(
+                        appGroupID: AppGroup.groupID(),
+                        userDefaults: AppGroup.userDefaults(),
+                        remoteSecretManager: AppLaunchManager.remoteSecretManager
+                    ).dirtyObjectManager.refreshDirtyObjects(reset: true)
+
+                    if ServerConnector.shared().connectionState == .disconnected {
+                        ServerConnector.shared().isAppInBackground = AppDelegate.shared().isAppInBackground()
+                        ServerConnector.shared().connectWait(initiator: .threemaCall)
+                    }
+
+                    self.callServiceQueue.async {
+                        // If another call already running, send reject busy
+                        if let callService = self.callService, callService.callID.callID != callID.callID {
+                            self.callKitManager.endCall(with: callID)
+                            let action = VoIPCallUserAction(
+                                action: .rejectBusy,
+                                contactIdentity: callPartnerIdentity,
+                                callID: callID,
+                                completion: { }
+                            )
+
+                            BackgroundTaskManager.shared.newBackgroundTask(
+                                key: kAppVoIPBackgroundTask,
+                                timeout: Int(kAppPushBackgroundTaskTime)
+                            ) {
+                                DDLogNotice(
+                                    "VoipCallService: [cid=\(callID.callID)]: Another call is active. Enqueuing reject message"
+                                )
+                                self.addElementToCallQueue(action)
+                            }
+                        }
+                    }
+                }
             }
+
+            completion(task)
+        }
+    }
+
+    /// Start and cancel call (for deprecated/invalid VoIP pushes) over CallKit, because for any VoIP received,
+    /// `CXProvider.reportNewIncomingCall` must be called
+    func startAndCancelCall(from localizedName: String, completion: @escaping () -> Void) {
+        callKitManager.startAndCancelCall(from: localizedName, completion: completion)
+    }
+
+    // MARK: - State machine management
+
+    /// Add a message to the process queue and start process
+    /// - parameter element: `VoIPCallUserAction` or `VoIPCallMessageProtocol`
+    private func addElementToCallQueue(_ element: VoIPCallIDProtocol) {
+
+        guard element is VoIPCallUserAction || element is VoIPCallMessageProtocol else {
+            DDLogError(
+                "[CallStateManager] Tried to add element that is not VoIPCallUserAction or VoIPCallMessageProtocol to callQueue: \(element)"
+            )
+            assertionFailure()
+            return
+        }
+
+        let callQueueCount = callQueueQueue.sync {
+            callQueue.append(element)
+            return callQueue.count
+        }
+        if callQueueCount == 1 {
+            processNextElementInCallQueue()
+        }
+    }
+
+    private func processNextElementInCallQueue() {
+        let element = callQueueQueue.sync {
+            callQueue.popFirst()
+        }
+        if let element, let contactIdentity = element.contactIdentity {
+            callServiceQueue.async {
+                if self.callService == nil {
+                    DDLogNotice("VoipCallStateManager: [cid=\(element.callID.callID)]: Initialize VoIPCallService")
+                    self.callService = VoIPCallService(
+                        callPartnerIdentity: contactIdentity,
+                        callID: element.callID,
+                        delegate: self,
+                        callKitManager: self.callKitManager
+                    )
+                }
+                self.callService?.processCallQueueElement(element)
+            }
+        }
+    }
+
+    private func resetCallService() {
+        callServiceQueue.async {
+            self.callService = nil
         }
     }
 }
@@ -324,56 +337,19 @@ extension VoIPCallStateManager {
 // MARK: - VoIPCallServiceDelegate
 
 extension VoIPCallStateManager: VoIPCallServiceDelegate {
-    /// Delegate from VoIPCallServiceDelegate
-    /// Process next message if queue is not empty
-    func callServiceFinishedProcess() {
-        defer {
-            preCallHandling = false
-        }
-        
-        if !callQueue.elements.isEmpty {
-            processQueue()
+    func prependCallQueueElement(_ element: VoIPCallIDProtocol) {
+        callQueueQueue.sync {
+            callQueue.prepend(element)
         }
     }
-}
 
-protocol Enqueuable {
-    associatedtype Element
-    mutating func enqueue(_ element: Element)
-    func peek() -> Element?
-    mutating func dequeue() -> Element?
-    mutating func removeAll()
-}
+    func finishedProcessingCallQueueElement() {
+        processNextElementInCallQueue()
+    }
 
-struct Queue<T>: Enqueuable {
-    typealias Element = T
-    
-    var elements = [Element]()
-    
-    mutating func enqueue(_ element: Element) {
-        elements.append(element)
-    }
-    
-    func peek() -> Element? {
-        elements.first
-    }
-    
-    mutating func dequeue() -> Element? {
-        guard elements.isEmpty == false else {
-            return nil
-        }
-        return elements.removeFirst()
-    }
-    
-    mutating func removeAll() {
-        elements.removeAll()
-    }
-}
-
-// MARK: - CustomStringConvertible
-
-extension Queue: CustomStringConvertible {
-    var description: String {
-        "\(elements)"
+    func callFinished() {
+        DDLogNotice("[CallStateManager] Call finished, resetting service")
+        resetCallService()
+        processNextElementInCallQueue()
     }
 }

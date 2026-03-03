@@ -101,7 +101,9 @@ struct ProfileView: View {
         }
         else {
             let vc = EditProfileViewController()
-            let mvc = ModalNavigationController(rootViewController: vc)
+            let mvc = ModalNavigationController(navigationBarClass: StatusNavigationBar.self, toolbarClass: nil)
+            mvc.setViewControllers([vc], animated: false)
+
             mvc.modalDelegate = model.delegateHandler
             ModalPresenter.present(mvc, on: topViewController)
         }

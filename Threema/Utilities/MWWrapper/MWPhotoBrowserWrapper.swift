@@ -325,7 +325,8 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
         }
 
         // Open photo browser
-        let navCon = ModalNavigationController(rootViewController: photoBrowser)
+        let navCon = ModalNavigationController(navigationBarClass: StatusNavigationBar.self, toolbarClass: nil)
+        navCon.setViewControllers([photoBrowser], animated: false)
         navCon.modalDelegate = self
         if UIDevice.current.userInterfaceIdiom == .pad {
             navCon.modalPresentationStyle = .overFullScreen

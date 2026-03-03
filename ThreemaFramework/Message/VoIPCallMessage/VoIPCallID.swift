@@ -18,27 +18,21 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import CocoaLumberjackSwift
 import Foundation
 
 @objc public class VoIPCallID: NSObject {
-    public var callID: UInt32
+    public let callID: UInt32
     
-    public init(callID: UInt32?) {
-        guard let callID else {
-            self.callID = 0
-            return
-        }
+    public init(callID: UInt32) {
         self.callID = callID
     }
     
-    /// Compare callIDs. Also return true if receivedCallID is 0.
-    /// - parameter receivedCallID: VoIPCallID
-    /// - returns: true or false
-    public func isSame(_ receivedCallID: VoIPCallID) -> Bool {
-        callID == receivedCallID.callID || receivedCallID.callID == 0
+    public static func generate() -> VoIPCallID {
+        VoIPCallID(callID: UInt32.random(in: 0...UInt32.max))
     }
     
-    public class func generate() -> VoIPCallID {
-        VoIPCallID(callID: UInt32.random(in: 0...UInt32.max))
+    override public func isEqual(_ object: Any?) -> Bool {
+        callID == (object as? VoIPCallID)?.callID
     }
 }

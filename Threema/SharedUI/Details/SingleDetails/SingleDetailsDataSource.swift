@@ -543,13 +543,7 @@ extension SingleDetailsDataSource {
                 ) { [weak self, weak viewController] unsupportedContacts in
                     if let strongSelf = self, unsupportedContacts.isEmpty == true {
                         // Happy path: Start call
-                        let action = VoIPCallUserAction(
-                            action: .call,
-                            contactIdentity: strongSelf.contact.identity,
-                            callID: nil,
-                            completion: nil
-                        )
-                        VoIPCallStateManager.shared.processUserAction(action)
+                        VoIPCallStateManager.shared.startCall(callee: strongSelf.contact.identity)
                     }
                     else if let viewController {
                         // Calls not supported for this contact

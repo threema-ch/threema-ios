@@ -23,34 +23,21 @@ import WebRTC
 
 @objc public class VoIPCallOfferMessage: NSObject {
     public var offer: RTCSessionDescription?
-    public var contactIdentity: String?
+    public var contactIdentity: String!
     public var completion: (() -> Void)?
-    public var callID: VoIPCallID
+    public let callID: VoIPCallID
     
     var features: [String: Any?]?
     public var isVideoAvailable: Bool
     
-    override init() {
-        self.offer = nil
-        self.contactIdentity = nil
-        self.completion = nil
-        self.features = nil
-        self.isVideoAvailable = false
-        self.callID = VoIPCallID(callID: 0)
-        super.init()
-    }
-    
     public init(
         offer: RTCSessionDescription?,
-        contactIdentity: String?,
         features: [String: Any?]?,
         isVideoAvailable: Bool,
         callID: VoIPCallID,
         completion: (() -> Void)?
     ) {
-        
         self.offer = offer
-        self.contactIdentity = contactIdentity
         self.completion = completion
         self.features = features
         self.isVideoAvailable = isVideoAvailable
@@ -73,7 +60,7 @@ extension VoIPCallOfferMessage: VoIPCallMessageProtocol {
         case generateJson(error: Error)
     }
 
-    static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any]) -> T where T: VoIPCallMessageProtocol {
+    public static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any]) -> T where T: VoIPCallMessageProtocol {
         var tmpOffer: RTCSessionDescription?
         if let offerKey = dictionary[VoIPCallOfferMessage.kOfferKey] {
             tmpOffer = RTCSessionDescription.description(from: offerKey as! [AnyHashable: Any])
@@ -87,13 +74,12 @@ extension VoIPCallOfferMessage: VoIPCallMessageProtocol {
                 isVideoAvailable = true
             }
         }
-        let tmpCallID = VoIPCallID(callID: dictionary[kCallID] as? UInt32)
+        let callID = VoIPCallID(callID: dictionary[kCallID] as? UInt32 ?? 0)
         return VoIPCallOfferMessage(
             offer: tmpOffer,
-            contactIdentity: nil,
             features: tmpFeatures,
             isVideoAvailable: isVideoAvailable,
-            callID: tmpCallID,
+            callID: callID,
             completion: nil
         ) as! T
     }

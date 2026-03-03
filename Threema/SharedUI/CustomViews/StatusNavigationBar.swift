@@ -82,6 +82,7 @@ import UIKit
         statusView.isHidden = true
         addSubview(statusView)
         updateStatusView()
+        updateNavigationBar()
     }
     
     // MARK: - Private Functions

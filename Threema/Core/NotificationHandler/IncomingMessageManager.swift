@@ -186,6 +186,18 @@ import ThreemaFramework
                     return
                 }
                 
+                // For group calls there is no base message, so we need to check the abstract message to find out if we
+                // need to play a sound. LPaying sound logic should generally be moved to `NotificationBannerHelper`.
+                if pendingUserNotification.stage == .abstract,
+                   let message = pendingUserNotification.abstractMessage as? GroupCallStartMessage,
+                   message.receivedAfterInitialQueueSend,
+                   pushSettingManager.canMasterDndSendPush(),
+                   let pushSetting = pushSettingManager.pushSetting(for: pendingUserNotification),
+                   pushSetting.canSendPush(),
+                   !pushSetting.muted {
+                    self.notificationManager.playReceivedMessageSound()
+                }
+                    
                 if let message = pendingUserNotification.baseMessage,
                    message.deletedAt == nil,
                    pendingUserNotification.stage == .final,

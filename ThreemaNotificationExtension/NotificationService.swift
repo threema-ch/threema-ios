@@ -1065,7 +1065,6 @@ extension NotificationService: MessageProcessorDelegate {
         let reason: VoIPCallAnswerMessage.MessageRejectReason = rejectReason
         let answer = VoIPCallAnswerMessage(
             action: .reject,
-            contactIdentity: offer.contactIdentity,
             answer: nil,
             rejectReason: reason,
             features: nil,
@@ -1074,6 +1073,7 @@ extension NotificationService: MessageProcessorDelegate {
             callID: offer.callID,
             completion: nil
         )
+        answer.contactIdentity = offer.contactIdentity
         voIPCallSender.sendVoIPCall(answer: answer)
         
         guard let contactIdentity = offer.contactIdentity else {

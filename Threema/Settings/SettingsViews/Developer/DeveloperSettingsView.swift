@@ -257,17 +257,7 @@ struct DeveloperSettingsView: View {
                     ) {
                         Button {
                             if ThreemaEnvironment.env() == .xcode {
-                                let keychainManager = KeychainManager(
-                                    remoteSecretManager: AppLaunchManager.remoteSecretManager
-                                )
-                                
-                                try? keychainManager.deleteIdentity()
-                                try? keychainManager.deleteDeviceCookie()
-                                try? KeychainManager.deleteMultiDeviceGroupKey()
-                                try? keychainManager.deleteMultiDeviceID()
-                                try? keychainManager.deleteForwardSecurityKey()
-                                try? keychainManager.deleteThreemaSafeKey()
-                                try? keychainManager.deleteThreemaSafeServer()
+                                try? KeychainManager.deleteAllThisDeviceOnlyItems()
                                 
                                 exit(1)
                             }

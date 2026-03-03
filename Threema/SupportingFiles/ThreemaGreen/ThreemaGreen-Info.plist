@@ -165,5 +165,9 @@
 	<true/>
     <key>UIDesignRequiresCompatibility</key>
     <true/>
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_privacy-check._tcp</string>
+    </array>
 </dict>
 </plist>

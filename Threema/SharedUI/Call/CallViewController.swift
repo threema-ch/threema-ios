@@ -24,6 +24,24 @@ import ThreemaFramework
 import ThreemaMacros
 import WebRTC
 
+protocol CallViewControllerDelegate: AnyObject {
+    func currentCallID() -> VoIPCallID
+    func isCallMuted() -> Bool
+    func isSpeakerActive() -> Bool
+    func startCaptureLocalVideo(
+        renderer: RTCVideoRenderer,
+        useBackCamera: Bool,
+        switchCamera: Bool
+    )
+    func endCaptureLocalVideo(switchCamera: Bool)
+    func localVideoRenderer() -> RTCVideoRenderer?
+    func renderRemoteVideo(to renderer: RTCVideoRenderer)
+    func remoteVideoRenderer() -> RTCVideoRenderer?
+    func endRemoteVideo()
+    func remoteVideoQualityProfile() -> CallsignalingProtocol.ThreemaVideoCallQualityProfile?
+    func networkIsRelayed() -> Bool
+}
+
 class CallViewController: UIViewController {
     @IBOutlet private var contentView: UIView!
     @IBOutlet private var contactLabel: UILabel!
@@ -83,7 +101,7 @@ class CallViewController: UIViewController {
     }
 
     var alreadyAccepted = false
-    var isCallInitiator = false
+    var callStartedBySelf = false
     var isTesting = false
     var viewWasHidden = false
     var threemaVideoCallAvailable = false
@@ -132,11 +150,12 @@ class CallViewController: UIViewController {
     
     private var audioRouteChangeObserver: NSObjectProtocol?
     private var enterForegroundObserver: NSObjectProtocol?
+    weak var delegate: CallViewControllerDelegate?
 
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
-        
+    
     deinit {
         if let audioObserver = audioRouteChangeObserver {
             NotificationCenter.default.removeObserver(audioObserver)
@@ -316,7 +335,7 @@ class CallViewController: UIViewController {
         super.viewWillAppear(animated)
                 
         NavigationBarPromptHandler.isCallActiveInBackground = false
-        muteButton.isSelected = VoIPCallStateManager.shared.isCallMuted()
+        muteButton.isSelected = delegate?.isCallMuted() ?? false
 
         UIApplication.shared.isIdleTimerDisabled = true
         setupView()
@@ -364,7 +383,7 @@ class CallViewController: UIViewController {
             didRotateDevice = false
             updateGradientBackground()
 
-            if let remoteRenderer = VoIPCallStateManager.shared.remoteVideoRenderer() as? RTCMTLVideoView {
+            if let remoteRenderer = delegate?.remoteVideoRenderer() as? RTCMTLVideoView {
                 updateRemoteVideoContentMode(videoView: remoteRenderer)
             }
         }
@@ -386,10 +405,11 @@ class CallViewController: UIViewController {
 extension CallViewController {
     // MARK: Public functions
     
-    func voIPCallStatusChanged(state: VoIPCallService.CallState, oldState: VoIPCallService.CallState) {
-        if isTesting == true {
+    func voIPCallStatusChanged(state: CallState, oldState: CallState) {
+        guard !isTesting, oldState != .ended else {
             return
         }
+        
         var timerString = ""
         switch state {
         case .idle:
@@ -487,7 +507,7 @@ extension CallViewController {
                                     var statsString = stats.getShortRepresentation()
                                     if self.threemaVideoCallAvailable {
                                         statsString +=
-                                            "\n\n\(CallsignalingProtocol.printDebugQualityProfiles(remoteProfile: VoIPCallStateManager.shared.remoteVideoQualityProfile(), networkIsRelayed: VoIPCallStateManager.shared.networkIsRelayed()))"
+                                            "\n\n\(CallsignalingProtocol.printDebugQualityProfiles(remoteProfile: self.delegate?.remoteVideoQualityProfile(), networkIsRelayed: self.delegate?.networkIsRelayed() ?? false))"
                                     }
                                     self.debugLabel.text = statsString
                                 }
@@ -643,8 +663,8 @@ extension CallViewController {
         hideButton.layer.shadowOpacity = 0.2
         hideButton.layer.masksToBounds = false
                         
-        if isTesting == true {
-            setupForIncomCallTest()
+        if isTesting {
+            setupForIncomingCallTest()
         }
     }
     
@@ -678,13 +698,13 @@ extension CallViewController {
                     self.voIPCallStatusChanged(state: .microphoneDisabled, oldState: .microphoneDisabled)
                 }
                 else {
-                    self.endButton?.isHidden = !self.isCallInitiator && !self.alreadyAccepted
-                    self.acceptButton?.isHidden = self.isCallInitiator || self.alreadyAccepted
-                    self.rejectButton?.isHidden = self.isCallInitiator || self.alreadyAccepted
-                    self.muteButton?.isHidden = !self.isCallInitiator && !self.alreadyAccepted
-                    self.phoneButtonsGradientView?.isHidden = !self.isCallInitiator && !self.alreadyAccepted
-                    self.phoneButtonsGradientView?.isHidden = !self.isCallInitiator && !self.alreadyAccepted
-                    self.speakerButton?.isHidden = !self.isCallInitiator && !self.alreadyAccepted
+                    self.endButton?.isHidden = !self.callStartedBySelf && !self.alreadyAccepted
+                    self.acceptButton?.isHidden = self.callStartedBySelf || self.alreadyAccepted
+                    self.rejectButton?.isHidden = self.callStartedBySelf || self.alreadyAccepted
+                    self.muteButton?.isHidden = !self.callStartedBySelf && !self.alreadyAccepted
+                    self.phoneButtonsGradientView?.isHidden = !self.callStartedBySelf && !self.alreadyAccepted
+                    self.phoneButtonsGradientView?.isHidden = !self.callStartedBySelf && !self.alreadyAccepted
+                    self.speakerButton?.isHidden = !self.callStartedBySelf && !self.alreadyAccepted
                     
                     self.endButton?.isEnabled = true
                     self.acceptButton?.isEnabled = true
@@ -716,7 +736,7 @@ extension CallViewController {
                 #localize("call_camera_activate_button")
                 
             cameraButton?.alpha = 1.0
-            cameraButton?.isHidden = !isCallInitiator && !alreadyAccepted
+            cameraButton?.isHidden = !callStartedBySelf && !alreadyAccepted
             cameraSwitchButton?
                 .isHidden =
                 !(
@@ -747,7 +767,7 @@ extension CallViewController {
                 cameraButton?.setImage(cameraButtonImage, for: .selected)
                 cameraButton?.setImage(cameraButtonImage, for: .highlighted)
                 cameraButton?.accessibilityLabel = #localize("call_camera_deactivate_button")
-                cameraButton?.isHidden = isCallInitiator && !UserSettings.shared().enableVideoCall
+                cameraButton?.isHidden = callStartedBySelf && !UserSettings.shared().enableVideoCall
                 cameraButton?.alpha = 0.9
             }
             else {
@@ -763,7 +783,7 @@ extension CallViewController {
         }
     }
     
-    private func setupForIncomCallTest() {
+    private func setupForIncomingCallTest() {
         DispatchQueue.main.async {
             self.endButton.isHidden = true
             self.acceptButton.isHidden = false
@@ -887,7 +907,7 @@ extension CallViewController {
             localRenderer.videoContentMode = .scaleAspectFill
             localRenderer.delegate = self
             
-            VoIPCallStateManager.shared.startCaptureLocalVideo(
+            self.delegate?.startCaptureLocalVideo(
                 renderer: localRenderer,
                 useBackCamera: useBackCamera,
                 switchCamera: switchCamera
@@ -923,11 +943,11 @@ extension CallViewController {
     }
     
     private func endLocalVideo(switchCamera: Bool = false) {
-        VoIPCallStateManager.shared.endCaptureLocalVideo(switchCamera: switchCamera)
+        delegate?.endCaptureLocalVideo(switchCamera: switchCamera)
         
         DispatchQueue.main.async {
             if self.isReceivingRemoteVideo {
-                if let remoteRenderer = VoIPCallStateManager.shared.remoteVideoRenderer() {
+                if let remoteRenderer = self.delegate?.remoteVideoRenderer() {
                     if self.localVideoView.subviews.first == remoteRenderer as? UIView {
                         if !switchCamera {
                             self.moveEmbedView(
@@ -961,7 +981,7 @@ extension CallViewController {
             let remoteRenderer = RTCMTLVideoView(frame: remoteVideoView?.frame ?? CGRect.zero)
             remoteRenderer.videoContentMode = .scaleAspectFill
             remoteRenderer.delegate = self
-            VoIPCallStateManager.shared.renderRemoteVideo(to: remoteRenderer)
+            delegate?.renderRemoteVideo(to: remoteRenderer)
             
             DDLogNotice("[Call Debug] Starting remote video with frame: \(remoteVideoView?.frame ?? .zero)")
             return remoteRenderer
@@ -971,10 +991,10 @@ extension CallViewController {
             if self.viewIfLoaded?.window != nil {
                 self.profilePictureView.isHidden = true
                 
-                let remoteRenderer = VoIPCallStateManager.shared
+                let remoteRenderer = self.delegate?
                     .remoteVideoRenderer() as? RTCMTLVideoView ?? createNewRemoteVideoView()
                 
-                if !self.isLocalVideoActive || self.localVideoView.subviews.first == VoIPCallStateManager.shared
+                if !self.isLocalVideoActive || self.localVideoView.subviews.first == self.delegate?
                     .localVideoRenderer() as? UIView {
                     if let remoteVideoView = self.remoteVideoView,
                        remoteVideoView.subviews.first != remoteRenderer {
@@ -983,7 +1003,7 @@ extension CallViewController {
                     }
                 }
                 else {
-                    if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer() as? UIView,
+                    if let localRenderer = self.delegate?.localVideoRenderer() as? UIView,
                        let remoteVideoView = self.remoteVideoView,
                        localRenderer != self.localVideoView.subviews.first || remoteRenderer != remoteVideoView
                        .subviews.first,
@@ -998,7 +1018,7 @@ extension CallViewController {
                         self.flipLocalRenderer()
                         self.updateVideoViews()
                     }
-                    else if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer() as? UIView,
+                    else if let localRenderer = self.delegate?.localVideoRenderer() as? UIView,
                             let remoteVideoView = self.remoteVideoView,
                             let localVideoView = self.localVideoView {
                         if localVideoView.subviews.first == localRenderer {
@@ -1015,7 +1035,7 @@ extension CallViewController {
     }
     
     private func endRemoteVideo() {
-        VoIPCallStateManager.shared.endRemoteVideo()
+        delegate?.endRemoteVideo()
         DispatchQueue.main.async {
             if self.viewIfLoaded?.window != nil {
                 if self.isLocalVideoActive {
@@ -1034,7 +1054,7 @@ extension CallViewController {
     }
     
     private func moveOrRemoveLocalRenderer() {
-        if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer() {
+        if let localRenderer = delegate?.localVideoRenderer() {
             if localVideoView.subviews.first == localRenderer as? UIView {
                 moveEmbedView(localRenderer as! UIView, from: localVideoView, into: remoteVideoView)
             }
@@ -1073,7 +1093,7 @@ extension CallViewController {
     }
     
     private func isLocalRendererInLocalView() -> Bool {
-        if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer() as? UIView {
+        if let localRenderer = delegate?.localVideoRenderer() as? UIView {
             if localVideoView.subviews.first == localRenderer {
                 return true
             }
@@ -1082,7 +1102,7 @@ extension CallViewController {
     }
     
     private func isLocalRendererInRemoteView() -> Bool {
-        if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer() as? UIView {
+        if let localRenderer = delegate?.localVideoRenderer() as? UIView {
             if remoteVideoView.subviews.first == localRenderer {
                 return true
             }
@@ -1091,7 +1111,7 @@ extension CallViewController {
     }
     
     private func isRemoteRendererInRemoteView() -> Bool {
-        if let remoteRenderer = VoIPCallStateManager.shared.remoteVideoRenderer() as? UIView {
+        if let remoteRenderer = delegate?.remoteVideoRenderer() as? UIView {
             if remoteVideoView.subviews.first == remoteRenderer {
                 return true
             }
@@ -1100,7 +1120,7 @@ extension CallViewController {
     }
     
     private func isRemoteRendererInLocalView() -> Bool {
-        if let remoteRenderer = VoIPCallStateManager.shared.remoteVideoRenderer() as? UIView {
+        if let remoteRenderer = delegate?.remoteVideoRenderer() as? UIView {
             if localVideoView.subviews.first == remoteRenderer {
                 return true
             }
@@ -1210,6 +1230,11 @@ extension CallViewController {
     }
     
     private func activateSpeakerForVideo() {
+        guard let callID = delegate?.currentCallID() else {
+            DDLogWarn("VoipCallService: [cid=null)]: Activate speaker for video failed due to missing callID")
+            return
+        }
+        
         let currentRoute = AVAudioSession.sharedInstance().currentRoute
         
         for output in currentRoute.outputs {
@@ -1217,10 +1242,10 @@ extension CallViewController {
                 let action = VoIPCallUserAction(
                     action: .speakerOn,
                     contactIdentity: contactIdentity!,
-                    callID: VoIPCallStateManager.shared.currentCallID(),
+                    callID: callID,
                     completion: nil
                 )
-                VoIPCallStateManager.shared.processUserAction(action)
+                VoIPCallStateManager.shared.addActionToCallQueue(action)
             }
         }
     }
@@ -1449,7 +1474,7 @@ extension CallViewController {
     }
     
     private func updateRemoteVideoContentMode(videoView: RTCVideoRenderer) {
-        if let remoteRenderer = VoIPCallStateManager.shared.remoteVideoRenderer() as? RTCMTLVideoView,
+        if let remoteRenderer = delegate?.remoteVideoRenderer() as? RTCMTLVideoView,
            remoteRenderer.isEqual(videoView) {
             if UIApplication.shared.statusBarOrientation.isPortrait,
                isRemoteVideoPortrait {
@@ -1492,7 +1517,7 @@ extension CallViewController {
                 mode: .voiceChat,
                 options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
             )
-            try audioSession.overrideOutputAudioPort(VoIPCallStateManager.shared.isSpeakerActive() ? .speaker : .none)
+            try audioSession.overrideOutputAudioPort((delegate?.isSpeakerActive() ?? false) ? .speaker : .none)
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
             
             let soundFilePath = BundleUtil.path(forResource: "threema_problem", ofType: "mp3")
@@ -1546,13 +1571,18 @@ extension CallViewController {
     }
     
     @IBAction func acceptAction(_ sender: UIButton, forEvent event: UIEvent) {
+        guard let callID = delegate?.currentCallID() else {
+            DDLogWarn("VoipCallService: [cid=null)]: Accept action failed due to missing callID")
+            return
+        }
+        
         let action = VoIPCallUserAction(
             action: .accept,
             contactIdentity: contactIdentity!,
-            callID: VoIPCallStateManager.shared.currentCallID(),
+            callID: callID,
             completion: nil
         )
-        VoIPCallStateManager.shared.processUserAction(action)
+        VoIPCallStateManager.shared.addActionToCallQueue(action)
     }
     
     @IBAction func rejectAction(_ sender: UIButton, forEvent event: UIEvent) {
@@ -1560,43 +1590,63 @@ extension CallViewController {
             dismiss(animated: true, completion: nil)
         }
         else {
+            guard let callID = delegate?.currentCallID() else {
+                DDLogWarn("VoipCallService: [cid=null)]: Reject action failed due to missing callID")
+                return
+            }
+            
             let action = VoIPCallUserAction(
                 action: .reject,
                 contactIdentity: contactIdentity!,
-                callID: VoIPCallStateManager.shared.currentCallID(),
+                callID: callID,
                 completion: nil
             )
-            VoIPCallStateManager.shared.processUserAction(action)
+            VoIPCallStateManager.shared.addActionToCallQueue(action)
         }
     }
     
     @IBAction func endAction(_ sender: UIButton, forEvent event: UIEvent) {
+        guard let callID = delegate?.currentCallID() else {
+            DDLogWarn("VoipCallService: [cid=null)]: Hangup action failed due to missing callID")
+            return
+        }
+        
         DDLogNotice(
-            "VoipCallService: [cid=\(VoIPCallStateManager.shared.currentCallID()?.callID ?? 0)]: User pressed the hangup button"
+            "VoipCallService: [cid=\(callID.callID)]: User pressed the hangup button"
         )
 
         let action = VoIPCallUserAction(
             action: .end,
             contactIdentity: contactIdentity!,
-            callID: VoIPCallStateManager.shared.currentCallID(),
+            callID: callID,
             completion: nil
         )
-        VoIPCallStateManager.shared.processUserAction(action)
+        VoIPCallStateManager.shared.addActionToCallQueue(action)
     }
     
     @IBAction func muteAction(_ sender: UIButton, forEvent event: UIEvent) {
+        guard let callID = delegate?.currentCallID() else {
+            DDLogWarn("VoipCallService: [cid=null)]: Mute action failed due to missing callID")
+            return
+        }
+        
         let action = VoIPCallUserAction(
-            action: VoIPCallStateManager.shared.isCallMuted() ? .unmuteAudio : .muteAudio,
+            action: (delegate?.isCallMuted() ?? false) ? .unmuteAudio : .muteAudio,
             contactIdentity: contactIdentity!,
-            callID: VoIPCallStateManager.shared.currentCallID(),
+            callID: callID,
             completion: nil
         )
         muteButton.isSelected = action.action == .muteAudio
         updateAccessibilityLabels()
-        VoIPCallStateManager.shared.processUserAction(action)
+        VoIPCallStateManager.shared.addActionToCallQueue(action)
     }
     
     @IBAction func speakerAction(_ sender: UIButton, forEvent event: UIEvent) {
+        guard let callID = delegate?.currentCallID() else {
+            DDLogWarn("VoipCallService: [cid=null)]: Speaker action failed due to missing callID")
+            return
+        }
+        
         checkAndHandleAvailableBluetoothDevices()
         
         let audioSession = AVAudioSession.sharedInstance()
@@ -1606,34 +1656,34 @@ extension CallViewController {
                 let action = VoIPCallUserAction(
                     action: .speakerOn,
                     contactIdentity: contactIdentity!,
-                    callID: VoIPCallStateManager.shared.currentCallID(),
+                    callID: callID,
                     completion: nil
                 )
-                VoIPCallStateManager.shared.processUserAction(action)
+                VoIPCallStateManager.shared.addActionToCallQueue(action)
             case .builtInSpeaker:
                 let action = VoIPCallUserAction(
                     action: .speakerOff,
                     contactIdentity: contactIdentity!,
-                    callID: VoIPCallStateManager.shared.currentCallID(),
+                    callID: callID,
                     completion: nil
                 )
-                VoIPCallStateManager.shared.processUserAction(action)
+                VoIPCallStateManager.shared.addActionToCallQueue(action)
             case .bluetoothA2DP, .bluetoothHFP, .bluetoothLE:
                 let action = VoIPCallUserAction(
                     action: .speakerOn,
                     contactIdentity: contactIdentity!,
-                    callID: VoIPCallStateManager.shared.currentCallID(),
+                    callID: callID,
                     completion: nil
                 )
-                VoIPCallStateManager.shared.processUserAction(action)
+                VoIPCallStateManager.shared.addActionToCallQueue(action)
             case .headphones:
                 let action = VoIPCallUserAction(
                     action: .speakerOn,
                     contactIdentity: contactIdentity!,
-                    callID: VoIPCallStateManager.shared.currentCallID(),
+                    callID: callID,
                     completion: nil
                 )
-                VoIPCallStateManager.shared.processUserAction(action)
+                VoIPCallStateManager.shared.addActionToCallQueue(action)
             default:
                 break
             }
@@ -1674,14 +1724,14 @@ extension CallViewController {
         DispatchQueue.main.async {
             if self.isLocalRendererInLocalView(), self.isRemoteRendererInRemoteView() {
                 self.removeAllSubviewsFromVideoViews()
-                self.embedView(VoIPCallStateManager.shared.remoteVideoRenderer()! as! UIView, into: self.localVideoView)
-                self.embedView(VoIPCallStateManager.shared.localVideoRenderer() as! UIView, into: self.remoteVideoView)
+                self.embedView(self.delegate?.remoteVideoRenderer()! as! UIView, into: self.localVideoView)
+                self.embedView(self.delegate?.localVideoRenderer() as! UIView, into: self.remoteVideoView)
                 self.flipLocalRenderer()
             }
             else if self.isLocalRendererInRemoteView(), self.isRemoteRendererInLocalView() {
                 self.removeAllSubviewsFromVideoViews()
-                self.embedView(VoIPCallStateManager.shared.localVideoRenderer()! as! UIView, into: self.localVideoView)
-                self.embedView(VoIPCallStateManager.shared.remoteVideoRenderer() as! UIView, into: self.remoteVideoView)
+                self.embedView(self.delegate?.localVideoRenderer()! as! UIView, into: self.localVideoView)
+                self.embedView(self.delegate?.remoteVideoRenderer() as! UIView, into: self.remoteVideoView)
                 self.flipLocalRenderer()
             }
         }
@@ -1727,11 +1777,11 @@ extension CallViewController: RTCVideoViewDelegate {
         isRemoteVideoPortrait = size.height > size.width
         updateRemoteVideoContentMode(videoView: videoView)
         
-        if let remoteRenderer = VoIPCallStateManager.shared.remoteVideoRenderer() as? RTCMTLVideoView,
+        if let remoteRenderer = delegate?.remoteVideoRenderer() as? RTCMTLVideoView,
            remoteRenderer.isEqual(videoView) {
             DDLogNotice("[Call Debug] Remote Video view did change size: \(size))")
         }
-        if let localRenderer = VoIPCallStateManager.shared.localVideoRenderer(),
+        if let localRenderer = delegate?.localVideoRenderer(),
            localRenderer.isEqual(videoView) {
             updateConstraintsAfterRotation(size: size)
         }

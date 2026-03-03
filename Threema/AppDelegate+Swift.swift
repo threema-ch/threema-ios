@@ -109,7 +109,8 @@ extension AppDelegate {
                 // used with this configuration before
                 MyIdentityStore.shared().removeIdentityUserDefaults()
                 
-                assert(showOnboardingIfNeeded() == true, "We should end up showing the onboarding here")
+                let result = showOnboardingIfNeeded()
+                assert(result == true, "We should end up showing the onboarding here")
                 return nil
             }
 
@@ -328,9 +329,10 @@ extension AppDelegate {
               let identity = dictionaryPayload[Constants.notificationExtensionOffer],
               let displayName = dictionaryPayload[Constants.notificationExtensionCallerName],
               let ringtoneSound = dictionaryPayload[Constants.notificationExtensionRingtoneSoundName],
-              let callIDString = dictionaryPayload[Constants.notificationExtensionCallID]
+              let callIDString = dictionaryPayload[Constants.notificationExtensionCallID],
+              let callIDRawValue = UInt32(callIDString)
         else {
-            VoIPCallStateManager.startAndCancelCall(
+            VoIPCallStateManager.shared.startAndCancelCall(
                 from: TargetManager.appName,
                 completion: completion
             )
@@ -338,45 +340,17 @@ extension AppDelegate {
         }
         
         // Report initial call. We up date it once business is ready.
-        let manager = VoIPCallKitManager()
-        let uuid = UUID()
-        let callID = VoIPCallID(callID: UInt32(callIDString))
-        
-        manager.reportIncomingCallFromBackground(
-            uuid: uuid,
-            callID: callID,
-            contactIdentity: identity,
-            contactName: displayName,
+        let callID = VoIPCallID(callID: callIDRawValue)
+        DDLogNotice("VoipCallService: [cid=\(callID.callID)]: Call reported from push kit notification. Reporting call")
+
+        VoIPCallStateManager.shared.newIncomingCallFromBackground(
+            with: callID,
+            callPartnerIdentity: identity,
+            callPartnerName: displayName,
             ringtoneSound: ringtoneSound
-        ) { error in
-            
-            guard error == nil else {
-                DDLogError("Failed to report incoming call: \(error!.localizedDescription)")
-                completion()
-                return
-            }
-            
-            // Task to update call when business is ready
-            let task: (() -> Void) = {
-                Task { @MainActor in
-                    PersistenceManager(
-                        appGroupID: AppGroup.groupID(),
-                        userDefaults: AppGroup.userDefaults(),
-                        remoteSecretManager: AppLaunchManager.remoteSecretManager
-                    ).dirtyObjectManager.refreshDirtyObjects(reset: true)
-                    
-                    if ServerConnector.shared().connectionState == .disconnected {
-                        ServerConnector.shared().isAppInBackground = AppDelegate.shared().isAppInBackground()
-                        ServerConnector.shared().connectWait(initiator: .threemaCall)
-                    }
-                    
-                    let stateManager = VoIPCallStateManager.shared
-                    stateManager.updateInitialIncomingCall(using: manager)
-                    completion()
-                }
-            }
-            
+        ) { task in
             self.runWhenBusinessReady(task: task)
+            completion()
         }
     }
     
@@ -500,13 +474,7 @@ extension AppDelegate {
                     return
                 }
                 
-                let userAction = VoIPCallUserAction(
-                    action: .call,
-                    contactIdentity: personHandle,
-                    callID: nil,
-                    completion: nil
-                )
-                VoIPCallStateManager.shared.processUserAction(userAction)
+                VoIPCallStateManager.shared.startCall(callee: personHandle)
             }
         }
     }
@@ -520,9 +488,7 @@ extension AppDelegate {
         
         let task: () -> Void = {
             Task { @MainActor in
-                if !self.active,
-                   VoIPCallStateManager.shared.currentCallState() == .idle || VoIPCallStateManager.shared
-                   .preCallHandling {
+                if !self.active {
                     DDLogNotice("[Push] willPresentNotification: Start NotificationExtension for received push")
                     // Do not handle notifications if the app is not active -> Show notification in iOS, not in the app
                     completion([.list, .banner, .badge, .sound])

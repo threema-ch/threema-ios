@@ -24,20 +24,18 @@ import WebRTC
 @objc public class VoIPCallIceCandidatesMessage: NSObject {
     public let removed: Bool
     public let candidates: [RTCIceCandidate]
-    public var contactIdentity: String?
+    public var contactIdentity: String!
     public let callID: VoIPCallID
     public var completion: (() -> Void)?
     
     public init(
         removed: Bool,
         candidates: [RTCIceCandidate],
-        contactIdentity: String?,
         callID: VoIPCallID,
         completion: (() -> Void)?
     ) {
         self.removed = removed
         self.candidates = candidates
-        self.contactIdentity = contactIdentity
         self.callID = callID
         self.completion = completion
         super.init()
@@ -61,7 +59,7 @@ extension VoIPCallIceCandidatesMessage: VoIPCallMessageProtocol {
         case ufrag
     }
     
-    static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any]) -> T where T: VoIPCallMessageProtocol {
+    public static func decodeAsObject<T>(_ dictionary: [AnyHashable: Any]) -> T where T: VoIPCallMessageProtocol {
         let removed = dictionary[Keys.removed.rawValue] as! Bool
         let tmpCandidates = dictionary[Keys.candidates.rawValue] as? [[AnyHashable: Any]]
         var candidates = [RTCIceCandidate]()
@@ -75,13 +73,13 @@ extension VoIPCallIceCandidatesMessage: VoIPCallMessageProtocol {
                 candidates.append(candidate)
             }
         }
-        let tmpCallID = VoIPCallID(callID: dictionary[VoIPCallConstants.callIDKey] as? UInt32)
+        
+        let callID = VoIPCallID(callID: dictionary[VoIPCallConstants.callIDKey] as! UInt32)
 
         return VoIPCallIceCandidatesMessage(
             removed: removed,
             candidates: candidates,
-            contactIdentity: nil,
-            callID: tmpCallID,
+            callID: callID,
             completion: nil
         ) as! T
     }

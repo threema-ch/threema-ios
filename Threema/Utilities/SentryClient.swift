@@ -103,6 +103,10 @@ import ThreemaMacros
         event.threads?.forEach { $0.stacktrace?.registers = [:] }
         event.exceptions?.forEach { $0.stacktrace?.registers = [:] }
         
+        // Remove possible user info, some info might still be added server-side
+        event.user?.geo = nil
+        event.user?.ipAddress = nil
+        
         if event.exceptions?.first?.value != nil {
             event.exceptions?.first?.value = redact(exceptionDescription: event.exceptions!.first!.value)
         }

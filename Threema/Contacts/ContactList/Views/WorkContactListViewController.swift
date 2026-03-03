@@ -127,14 +127,7 @@ import ThreemaMacros
                 style: .normal,
                 title: #localize("call"),
                 handler: { _, _, handler in
-                    let action = VoIPCallUserAction(
-                        action: .call,
-                        contactIdentity: contact.identity.rawValue,
-                        callID: nil,
-                        completion: nil
-                    )
-                    VoIPCallStateManager.shared.processUserAction(action)
-                    
+                    VoIPCallStateManager.shared.startCall(callee: contact.identity.rawValue)
                     handler(true)
                 }
             )

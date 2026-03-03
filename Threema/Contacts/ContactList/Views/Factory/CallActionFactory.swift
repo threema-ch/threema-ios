@@ -64,13 +64,7 @@ extension CallActionFactory {
     
     public static func make(for contact: Contact) -> UIContextualAction {
         CallActionFactory(title: #localize("call")) {
-            let action = VoIPCallUserAction(
-                action: .call,
-                contactIdentity: contact.identity.rawValue,
-                callID: nil,
-                completion: nil
-            )
-            VoIPCallStateManager.shared.processUserAction(action)
+            VoIPCallStateManager.shared.startCall(callee: contact.identity.rawValue)
         }.make()
     }
 }

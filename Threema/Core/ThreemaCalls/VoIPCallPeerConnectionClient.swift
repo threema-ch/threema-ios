@@ -22,13 +22,14 @@
 
 import AVFoundation
 import CocoaLumberjackSwift
+import Collections
 import Foundation
 import Reachability
 import ThreemaFramework
 import WebRTC
 
 protocol VoIPCallPeerConnectionClientDelegate: AnyObject {
-    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, changeState: VoIPCallService.CallState)
+    func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, changeState: CallState)
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, audioMuted: Bool)
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, speakerActive: Bool)
     func peerConnectionClient(_ client: VoIPCallPeerConnectionClientProtocol, removedCandidates: [RTCIceCandidate])
@@ -132,7 +133,7 @@ final class VoIPCallPeerConnectionClient: NSObject, VoIPCallPeerConnectionClient
     private let rtcAudioSession = RTCAudioSession.sharedInstance()
     private let audioQueue = DispatchQueue(label: "VoIPCallAudioQueue")
     
-    private var dataChannelQueue = Queue<Any>()
+    private var dataChannelQueue = Deque<Any>()
     private let dataChannelLockQueue = DispatchQueue(label: "VoIIPCallPeerConnectionClientLockQueue")
     
     private var videoCapturer: RTCVideoCapturer?
@@ -721,16 +722,16 @@ extension VoIPCallPeerConnectionClient {
         }
         else {
             dataChannelLockQueue.sync {
-                dataChannelQueue.enqueue(data)
+                dataChannelQueue.append(data)
             }
         }
     }
     
     private func sendCachedDataChannelDataToRemote() {
-        while !dataChannelQueue.elements.isEmpty {
+        while !dataChannelQueue.isEmpty {
             var element: Data?
             dataChannelLockQueue.sync {
-                element = dataChannelQueue.dequeue() as? Data
+                element = dataChannelQueue.popFirst() as? Data
             }
             if element != nil {
                 let buffer = RTCDataBuffer(data: element!, isBinary: true)
@@ -832,6 +833,7 @@ extension VoIPCallPeerConnectionClient {
         guard let peerConnection, let peerConnectionParameters else {
             assertionFailure("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
             DDLogWarn("\(VoIPCallPeerConnectionClientError.peerConnectionIsNotInitialized)")
+            completion(nil)
             return
         }
         let type: VoIPCallSdpPatcher.SdpType = isInitiator ? .REMOTE_ANSWER : .REMOTE_OFFER
@@ -846,6 +848,9 @@ extension VoIPCallPeerConnectionClient {
             peerConnection.setRemoteDescription(patchedDescription, completionHandler: completion)
         }
         catch let sdpError {
+            completion(nil)
+        }
+        catch {
             completion(nil)
         }
     }

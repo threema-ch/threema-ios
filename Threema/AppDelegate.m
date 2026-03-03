@@ -866,7 +866,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                 if ([[VoIPCallStateManager shared] currentCallState] != CallStateIdle) {
                     // Call is active (the key must be `kAppClosedByUserBackgroundTask` because the app was sent to the background)
                     key = kAppClosedByUserBackgroundTask;
-                    timeout = kAppVoIPIncomCallBackgroundTaskTime;
+                    timeout = kAppVoIPIncomingCallBackgroundTaskTime;
                 }
                 else if ([[WCSessionManager shared] isRunningWCSession] == true) {
                     // Web client is active (the key must be `kAppClosedByUserBackgroundTask` because the app was sent to the background)
@@ -1100,6 +1100,9 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
      See also applicationDidEnterBackground:.
      */
     DDLogNotice(@"AppState: applicationWillTerminate");
+    
+    // Since we might not disconnect correctly before the app is purged from memory, we make sure to set ourselves inactive.
+    [AppGroup setMeInactive];
 }
 
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(nullable UIWindow *)window {

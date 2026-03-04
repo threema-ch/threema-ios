@@ -93,6 +93,10 @@ class ServerConnectorMock: NSObject, ServerConnectorProtocol {
         // no-op
     }
 
+    func disconnect(initiator: ConnectionInitiator, force: Bool) {
+        // no-op
+    }
+
     func disconnectWait(initiator: ConnectionInitiator) -> Bool {
         true
     }

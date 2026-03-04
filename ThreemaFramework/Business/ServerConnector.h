@@ -78,6 +78,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)unblockIncomingMessages;
 
 - (void)disconnect:(ConnectionInitiator)initiator NS_SWIFT_NAME(disconnect(initiator:));
+- (void)disconnect:(ConnectionInitiator)initiator force:(BOOL)force NS_SWIFT_NAME(disconnect(initiator:force:));
 
 /**
  Wait (max. 3s) for connection state disconnected.
@@ -86,7 +87,7 @@ NS_ASSUME_NONNULL_BEGIN
  @return BOOL is YES if disconnected
  */
 - (BOOL)disconnectWait:(ConnectionInitiator)initiator NS_SWIFT_NAME(disconnectWait(initiator:));
- 
+
 - (void)reconnect;
 
 - (NSString*)nameForConnectionState:(ConnectionState)connectionState;

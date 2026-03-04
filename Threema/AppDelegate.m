@@ -636,8 +636,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             [lastViewController dismissViewControllerAnimated:NO completion:nil];
         }
         
-        UIViewController *lockCover = [LockCoverViewProvider lockCoverViewController];
-        lockView = lockCover.view;
+        UIViewController *privacyViewController = [PrivacyViewController new];
+        lockView = privacyViewController.view;
         lockView.frame = self.window.bounds;
 
         [self.window insertSubview:lockView atIndex:99999];

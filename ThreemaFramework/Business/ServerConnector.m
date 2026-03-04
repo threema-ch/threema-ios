@@ -822,8 +822,12 @@ struct pktExtension {
 }
 
 - (void)disconnect:(ConnectionInitiator)initiator {
+    [self disconnect:initiator force:NO];
+}
+
+- (void)disconnect:(ConnectionInitiator)initiator force:(BOOL)force {
     dispatch_async(socketQueue, ^{
-        if ([self isOthersConnectedDisconnectBy:initiator] == NO) {
+        if ([self isOthersConnectedDisconnectBy:initiator] == NO || force == YES) {
             [self _disconnect];
         }
         [self disconnectedBy:initiator];

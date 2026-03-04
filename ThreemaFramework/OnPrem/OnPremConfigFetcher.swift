@@ -23,11 +23,14 @@ import FileUtility
 import Foundation
 import Keychain
 
-public final class OnPremConfigFetcher: OnPremConfigFetcherProtocol {
+public final class OnPremConfigFetcher: NSObject, OnPremConfigFetcherProtocol {
     private let configURL: URL
+    private let username: String
+    private let password: String
+
     private let trustedPublicKeys: [String]
     private let cacheURL: URL
-    
+        
     private var currentTask: Task<OnPremConfig, any Error>? = nil
     private var cachedConfig: OnPremConfig?
     
@@ -44,8 +47,16 @@ public final class OnPremConfigFetcher: OnPremConfigFetcherProtocol {
         return URLSession(configuration: configuration)
     }()
     
-    public init(configURL: URL, trustedPublicKeys: [String], cacheURL: URL) {
+    public init(
+        configURL: URL,
+        username: String,
+        password: String,
+        trustedPublicKeys: [String],
+        cacheURL: URL
+    ) {
         self.configURL = configURL
+        self.username = username
+        self.password = password
         self.trustedPublicKeys = trustedPublicKeys
         self.cacheURL = cacheURL
     }
@@ -103,7 +114,7 @@ public final class OnPremConfigFetcher: OnPremConfigFetcherProtocol {
         }
         
         DDLogVerbose("[Fetch OPPF] Fetch from server")
-        let (oppfData, _) = try await session.data(from: configURL)
+        let (oppfData, _) = try await session.data(from: configURL, delegate: self)
         
         guard let oppfString = String(data: oppfData, encoding: .utf8) else {
             throw OnPremConfigError.badInputOppfData
@@ -122,5 +133,31 @@ public final class OnPremConfigFetcher: OnPremConfigFetcherProtocol {
         OnPremCachedWorkServer.storeURLString(config.work?.url)
         
         return config
+    }
+}
+
+// MARK: - URLSessionTaskDelegate
+
+extension OnPremConfigFetcher: URLSessionTaskDelegate {
+    // This is needed (instead of encoding it in the url) to correctly support passwords with special
+    // characters (e.g. #)
+    public func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        didReceive challenge: URLAuthenticationChallenge
+    ) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        switch challenge.protectionSpace.authenticationMethod {
+        case NSURLAuthenticationMethodHTTPBasic,
+             NSURLAuthenticationMethodHTTPDigest:
+            if challenge.previousFailureCount < 7 {
+                let credential = URLCredential(user: username, password: password, persistence: .forSession)
+                return (.useCredential, credential)
+            }
+            else {
+                return (.performDefaultHandling, nil)
+            }
+        default:
+            return (.performDefaultHandling, nil)
+        }
     }
 }

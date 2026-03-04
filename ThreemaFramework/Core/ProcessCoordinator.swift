@@ -317,7 +317,7 @@ final class ProcessCoordinator: NSObject {
                         // This can happen when a file message is shared within the app. Then the app
                         // must disconnect and reconnect with a 2 seconds delay.
                         if serverConnector?.connectionState != .disconnected {
-                            serverConnector?.disconnect(initiator: .app)
+                            serverConnector?.disconnect(initiator: .app, force: true)
                             DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
                                 self.serverConnector?.connect(initiator: .app)
                             }

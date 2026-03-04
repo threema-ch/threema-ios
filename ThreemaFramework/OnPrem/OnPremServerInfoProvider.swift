@@ -319,7 +319,7 @@ class OnPremServerInfoProvider: ServerInfoProvider {
     
     private var onPremConfigFetcher: OnPremConfigFetcherProtocol?
 
-    private var lastConfigURLAuth: URL?
+    private var lastConfigURL: URL?
     
     private let cachedConfigURL = FileUtility.shared.appDataDirectory(
         appGroupID: AppGroup.groupID()
@@ -355,18 +355,14 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             return .failure(OnPremConfigError.missingLicenseInfo)
         }
         
-        guard let configURLAuth = makeURLWithUsernamePassword(
-            url: onPremConfigURL,
-            username: username,
-            password: password
-        ) else {
+        guard let configURL = URL(string: onPremConfigURL) else {
             DDLogError("Invalid config URL \(onPremConfigURL)")
             return .failure(OnPremConfigError.invalidConfigUrl)
         }
         
         if let onPremConfigFetcher {
             // Check if the config URL has changed in the meantime
-            if configURLAuth == lastConfigURLAuth {
+            if configURL == lastConfigURL {
                 return .success(onPremConfigFetcher)
             }
         }
@@ -378,24 +374,14 @@ class OnPremServerInfoProvider: ServerInfoProvider {
         }
         
         onPremConfigFetcher = OnPremConfigFetcher(
-            configURL: configURLAuth,
+            configURL: configURL,
+            username: username,
+            password: password,
             trustedPublicKeys: threemaOnPremPublicKeys,
             cacheURL: cachedConfigURL
         )
-        lastConfigURLAuth = configURLAuth
+        lastConfigURL = configURL
         return .success(onPremConfigFetcher!)
-    }
-
-    private func makeURLWithUsernamePassword(url: String, username: String, password: String) -> URL? {
-        if let url = URL(string: url) {
-            var urlComp = URLComponents(url: url, resolvingAgainstBaseURL: false)!
-            urlComp.user = username
-            urlComp.password = password
-            return urlComp.url
-        }
-        else {
-            return nil
-        }
     }
 }
 

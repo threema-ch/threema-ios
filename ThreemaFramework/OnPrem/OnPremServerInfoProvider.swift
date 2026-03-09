@@ -319,6 +319,8 @@ class OnPremServerInfoProvider: ServerInfoProvider {
     
     private var onPremConfigFetcher: OnPremConfigFetcherProtocol?
 
+    private var lastUsername: String?
+    private var lastPassword: String?
     private var lastConfigURL: URL?
     
     private let cachedConfigURL = FileUtility.shared.appDataDirectory(
@@ -361,8 +363,8 @@ class OnPremServerInfoProvider: ServerInfoProvider {
         }
         
         if let onPremConfigFetcher {
-            // Check if the config URL has changed in the meantime
-            if configURL == lastConfigURL {
+            // Check if the username, password or config URL has changed in the meantime
+            if username == lastUsername, password == lastPassword, configURL == lastConfigURL {
                 return .success(onPremConfigFetcher)
             }
         }
@@ -380,6 +382,8 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             trustedPublicKeys: threemaOnPremPublicKeys,
             cacheURL: cachedConfigURL
         )
+        lastUsername = username
+        lastPassword = password
         lastConfigURL = configURL
         return .success(onPremConfigFetcher!)
     }

@@ -94,14 +94,6 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
             if mdmSetup.isSafeRestoreServerPreset() {
                 expertOptionsButton.isHidden = true
                 
-                let safeConfigManager = SafeConfigManager()
-                let _ = SafeStore(
-                    safeConfigManager: safeConfigManager,
-                    serverApiConnector: ServerAPIConnector(),
-                    groupManager: BusinessInjector.ui.groupManager,
-                    myIdentityStore: BusinessInjector.ui.myIdentityStore
-                )
-
                 restoreCustomServer = mdmSetup.safeServerURL()
                 restoreServer = mdmSetup.safeServerURL()
                 restoreServerUsername = mdmSetup.safeServerUsername()

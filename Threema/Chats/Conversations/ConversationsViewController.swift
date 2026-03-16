@@ -170,7 +170,7 @@ final class ConversationsViewController: ThemedTableViewController {
     @objc public var selectedConversation: ConversationEntity?
     private var allSelected = false
     private var didStartMultiselect = false
-    
+
     private var lastAppearance = Date()
     private var viewLoadedInBackground = AppDelegate.shared().isAppInBackground()
     
@@ -193,7 +193,8 @@ final class ConversationsViewController: ThemedTableViewController {
         tabBarItem.title = #localize("chats_title")
         tabBarItem.image = UIImage(systemName: "bubble.left.and.bubble.right.fill")
         tabBarItem.selectedImage = UIImage(systemName: "bubble.left.and.bubble.right.fill")
-        
+        tabBarItem.accessibilityIdentifier = "TabBarChats"
+
         do {
             try fetchedResultsController.performFetch()
         }

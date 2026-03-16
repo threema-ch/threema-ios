@@ -43,6 +43,7 @@ extern NSString * _Nonnull const MDM_KEY_ID_BACKUP_PASSWORD;
 extern NSString * _Nonnull const MDM_KEY_BLOCK_UNKNOWN;
 extern NSString * _Nonnull const MDM_KEY_HIDE_INACTIVE_IDS;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_SAVE_TO_GALLERY;
+extern NSString * _Nonnull const MDM_KEY_DISABLE_SCREENSHOTS;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_ADD_CONTACT;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_EXPORT;
 extern NSString * _Nonnull const MDM_KEY_DISABLE_BACKUPS;
@@ -108,6 +109,8 @@ typedef enum : int {
 - (BOOL)readonlyProfile;
 
 - (BOOL)disableAddContact;
+
+- (BOOL)disableScreenshots;
 
 - (BOOL)disableSaveToGallery;
 
@@ -213,6 +216,7 @@ typedef enum : int {
 /// Apply company MDM with cached Threema MDM parameters
 /// @param sendForce: If YES send update work info any way
 - (void)applyCompanyMDMWithCachedThreemaMDMSendForce:(BOOL)sendForce NS_SWIFT_NAME(applyCompanyMDMWithCachedThreemaMDM(sendForce:));
+
 
 - (void)deleteThreemaMdm;
 

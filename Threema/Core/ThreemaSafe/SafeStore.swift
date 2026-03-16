@@ -33,6 +33,7 @@ import ThreemaMacros
     
     public static let masterKeyLength = 64
     private static let backupIDLength = 32
+    private static let nonceLength = 24
     private static let encryptionKeyLength = 32
     
     // MARK: - Properties
@@ -156,26 +157,29 @@ import ThreemaMacros
         guard key.count == SafeStore.masterKeyLength else {
             throw SafeError.restoreError(.invalidMasterKey)
         }
-        guard !data.isEmpty else {
+        
+        guard !data.isEmpty, data.count >= SafeStore.nonceLength else {
             throw SafeError.restoreError(.invalidData)
         }
         
         let backupID = SafeStore.getBackupID(key: key)
         let encryptionKey = getEncryptionKey(key: key)
         
-        guard backupID != nil, encryptionKey != nil else {
+        guard backupID != nil, let encryptionKey else {
             throw SafeError.restoreError(.invalidClientKey)
         }
         
-        let nonce = data[0...23]
-        let encryptedData = data[24...data.count - 1]
+        let nonce = data[0..<SafeStore.nonceLength]
+        let encryptedData = data[SafeStore.nonceLength..<data.count]
         
         let crypto = NaClCrypto()
-        let decryptedData = crypto.symmetricDecryptData(
+        guard let decryptedData = crypto.symmetricDecryptData(
             Data(encryptedData),
-            withKey: Data(encryptionKey!),
+            withKey: Data(encryptionKey),
             nonce: Data(nonce)
-        )!
+        ) else {
+            throw SafeError.restoreError(.invalidData)
+        }
         
         let uncompressedData = try decryptedData.gunzipped()
         

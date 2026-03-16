@@ -29,12 +29,35 @@ public class DeleteRevokeIdentityManager: NSObject {
         case revocationFailed
     }
 
-    @available(swift, obsoleted: 1.0, renamed: "deleteLocalData()", message: "Only use from Objective-C")
-    @objc static func deleteLocalDataObjC(completion: @escaping () -> Void) {
+    @available(
+        swift,
+        obsoleted: 1.0,
+        renamed: "deleteLocalDataWithoutBusinessReady()",
+        message: "Only use from Objective-C"
+    )
+    @objc static func deleteLocalDataWithoutBusinessReadyObjC(completion: @escaping () -> Void) {
         Task { @MainActor in
-            await deleteLocalData()
+            await deleteLocalDataWithoutBusinessReady()
             completion()
         }
+    }
+    
+    /// Since business might no be available in all cases (e.g. when entering the passcode), and we need
+    /// to delete all data, we cannot remove everything that would make use of business.
+    static func deleteLocalDataWithoutBusinessReady() async {
+        // Files
+        UserDefaults.resetStandardUserDefaults()
+        FileUtility.shared.removeItemsInAllDirectories(appGroupID: AppGroup.groupID())
+       
+        // Keychain
+        do {
+            try KeychainManager.deleteAllItems()
+        }
+        catch {
+            DDLogError("Not all Keychain items could be deleted: \(error)")
+        }
+        
+        KKPasscodeLock.shared().disablePasscode()
     }
     
     static func deleteLocalData() async {
@@ -77,9 +100,9 @@ public class DeleteRevokeIdentityManager: NSObject {
         safeManager.setBackupReminder()
 
         // DB & Files
-        FileUtility.shared.removeItemsInAllDirectories(appGroupID: AppGroup.groupID())
         UserDefaults.resetStandardUserDefaults()
         AppGroup.resetUserDefaults()
+        FileUtility.shared.removeItemsInAllDirectories(appGroupID: AppGroup.groupID())
         try? PersistenceManager(
             appGroupID: AppGroup.groupID(),
             userDefaults: AppGroup.userDefaults(),

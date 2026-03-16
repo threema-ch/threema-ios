@@ -48,6 +48,7 @@ public enum AppMigrationVersion: Int, Comparable, CaseIterable {
     case v6_6 = 28
     case v6_8_8 = 31
     case v6_9 = 32
+    case v7_0_1 = 33
     // Add new version for app migration here...
 
     public private(set) static var isAppVersionDowngraded = false
@@ -64,7 +65,7 @@ public enum AppMigrationVersion: Int, Comparable, CaseIterable {
         return AppMigrationVersion.allCases.last!.rawValue > userSettings.appMigratedToVersion
     }
 
-    public static var latestVerison: AppMigrationVersion {
+    public static var latestVersion: AppMigrationVersion {
         AppMigrationVersion.allCases.max() ?? .none
     }
 

@@ -362,7 +362,8 @@ final class SingleDetailsDataSource: UITableViewDiffableDataSource<SingleDetails
     
     func refresh(sections: [SingleDetails.Section]) {
         var localSnapshot = snapshot()
-        localSnapshot.reloadSections(sections)
+        let sectionsExistingInSnapshot = sections.filter { localSnapshot.sectionIdentifiers.contains($0) }
+        localSnapshot.reloadSections(sectionsExistingInSnapshot)
         apply(localSnapshot)
     }
     

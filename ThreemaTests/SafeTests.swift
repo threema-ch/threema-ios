@@ -18,9 +18,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+import RemoteSecretProtocolTestHelper
 import ThreemaEssentials
 import XCTest
 @testable import Threema
+@testable import ThreemaFramework
 
 class SafeTests: XCTestCase {
 
@@ -28,6 +30,10 @@ class SafeTests: XCTestCase {
         super.setUp()
         
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
+        
+        // Workaround to ensure remote secret is initialized
+        let remoteSecretManagerMock = RemoteSecretManagerMock()
+        AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManagerMock)
     }
 
     func testSafeJsonParserCreate() {
@@ -124,6 +130,26 @@ class SafeTests: XCTestCase {
         XCTAssertNotNil(dataOut.user)
         XCTAssertEqual("key123", dataOut.user?.privatekey)
         XCTAssertEqual("nicki", dataOut.user?.nickname)
+    }
+    
+    func testSafeStoreDecryptBackupDataWithTooLittleData() throws {
+        XCTAssertThrowsExpectedError(
+            _ = try SafeStore.decryptBackupData(
+                key: Array(repeating: 0x1, count: SafeStore.masterKeyLength),
+                data: Array(repeating: 0x1, count: 23)
+            ),
+            SafeError.restoreError(.invalidData)
+        )
+    }
+    
+    func testSafeStoreDecryptBackupDataWithUndecryptableData() throws {
+        XCTAssertThrowsExpectedError(
+            _ = try SafeStore.decryptBackupData(
+                key: Array(repeating: 0x1, count: SafeStore.masterKeyLength),
+                data: Array(repeating: 0x1, count: 24)
+            ),
+            SafeError.restoreError(.invalidData)
+        )
     }
 
     func testSafeManagerIsPasswordBad() {
@@ -323,5 +349,18 @@ class SafeTests: XCTestCase {
         XCTAssertEqual(safeConfigManager.getLastChecksum(), lastChecksum)
         XCTAssertEqual(safeConfigManager.getLastAlertBackupFailed(), lastAlertBackupFailed)
         XCTAssertEqual(safeConfigManager.getIsTriggered(), isTriggered)
+    }
+}
+
+private func XCTAssertThrowsExpectedError<E: Error & Equatable>(
+    _ expression: @autoclosure () throws -> some Any,
+    _ expectedError: E,
+    _ message: String = "",
+    file: StaticString = #file,
+    line: UInt = #line
+) {
+    XCTAssertThrowsError(try expression(), message, file: file, line: line) { error in
+        XCTAssertNotNil(error as? E)
+        XCTAssertEqual(error as? E, expectedError)
     }
 }

@@ -112,8 +112,8 @@ final class ReactionsMessageProcessor: NSObject {
                     return nil
                 }
 
-                self.messageProcessorDelegate.changedManagedObjectID(reaction.objectID)
                 self.entityManager.entityDestroyer.delete(reaction: reaction)
+                self.messageProcessorDelegate.changedManagedObjectID(reaction.objectID)
 
             case .none:
                 DDLogError("Received unknown action for reaction.")

@@ -125,7 +125,7 @@ final class TaskQueue {
             for droppedItem in droppedItems {
                 droppedItem.taskDefinition.isDropped = true
             }
-            
+
             save()
         }
         
@@ -607,6 +607,9 @@ final class TaskQueue {
                 if item.taskDefinition.retry, item.taskDefinition.retryCount < TaskQueue.retriesOfFailedTasks {
                     if case TaskExecutionError.reflectMessageTimeout(message: _) = error {
                         DDLogNotice("Retry of \(item.taskDefinition) after reflecting timeout")
+                    }
+                    else if case TaskExecutionError.reflectMessageInterrupted(message: _) = error {
+                        DDLogNotice("Retry of \(item.taskDefinition) after reflecting  interrupted")
                     }
                     else if case TaskExecutionError.sendMessageTimeout(message: _) = error {
                         DDLogNotice("Retry of \(item.taskDefinition) after sending timeout")

@@ -26,8 +26,14 @@ class TaskDefinition: NSObject, Codable, TaskDefinitionProtocol {
     var className: String { String(describing: Swift.type(of: self)) }
 
     var type: TaskType = .persistent
-    var state: TaskExecutionState
-    
+    var state: TaskExecutionState {
+        didSet {
+            isInterrupted = state == .interrupted
+        }
+    }
+
+    @objc private(set) dynamic var isInterrupted = false
+
     /// Is this task dropped?
     ///
     /// This is similar to a cancel, but used for wording in line with Threema Protocol.

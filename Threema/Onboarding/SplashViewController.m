@@ -235,7 +235,7 @@
                 // Reload MDM parameter, could be changed after work data fetch
                 [mdmSetup loadIDCreationValues];
                 [mdmSetup loadRenewableValues];
-
+                [[[AppDelegate sharedAppDelegate]window]makeSecure];
                 didWorkApiFetch = YES;
 
                 [self presentUI];

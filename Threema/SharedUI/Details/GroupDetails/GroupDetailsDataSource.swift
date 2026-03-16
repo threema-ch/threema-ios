@@ -330,7 +330,8 @@ final class GroupDetailsDataSource: UITableViewDiffableDataSource<GroupDetails.S
     /// - Parameter sections: Sections to refresh
     func refresh(sections: [GroupDetails.Section]) {
         var localSnapshot = snapshot()
-        localSnapshot.reloadSections(sections)
+        let sectionsExistingInSnapshot = sections.filter { localSnapshot.sectionIdentifiers.contains($0) }
+        localSnapshot.reloadSections(sectionsExistingInSnapshot)
         apply(localSnapshot)
     }
 }

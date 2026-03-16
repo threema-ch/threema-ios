@@ -114,7 +114,9 @@ extension VoIPCallKitManager {
             fatalError("VoIPCallKitManager is not supported in this environment.")
         }
         
-        provider.configuration = VoIPCallKitManager.providerConfiguration(ringtoneSound: ringtoneSound)
+        if ringtoneSound != "default" {
+            provider.configuration = VoIPCallKitManager.providerConfiguration(ringtoneSound: ringtoneSound)
+        }
         
         let update = CXCallUpdate()
         update.remoteHandle = CXHandle(type: .generic, value: callPartnerIdentity)
@@ -125,8 +127,6 @@ extension VoIPCallKitManager {
         update.hasVideo = false
         update.localizedCallerName = callPartnerName ?? callPartnerIdentity
 
-        RTCAudioSession.sharedInstance().useManualAudio = true
-
         let (uuid, isNew) = callIDService.uuid(for: callID)
         if isNew {
             DDLogNotice("VoipCallService: [cid=\(callID.callID)]: Report new incoming call -> (callUUUID=\(uuid)")
@@ -136,12 +136,15 @@ extension VoIPCallKitManager {
                         "CallKitManager: [cid=\(callID.callID)]: Report new incoming call failed (CallKit UUID: \(uuid): \(error)"
                     )
                 }
+                RTCAudioSession.sharedInstance().useManualAudio = true
                 completion(error)
             }
         }
         else {
             DDLogNotice("VoipCallService: [cid=\(callID.callID)]: Report incoming call -> (callUUUID=\(uuid)")
             provider.reportCall(with: uuid, updated: update)
+            RTCAudioSession.sharedInstance().useManualAudio = true
+            completion(nil)
         }
     }
     

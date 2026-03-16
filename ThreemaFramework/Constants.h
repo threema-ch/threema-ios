@@ -135,7 +135,6 @@ static NSString * const kNotificationProfileNicknameChanged = @"ProfileNicknameC
 static NSString * const kNotificationChatMessageAck = @"ChatMessageAck";
 static NSString * const kNotificationMediatorMessageAck = @"MediatorMessageAck";
 
-
 #pragma mark - notification info keys
 
 #define kKeyContact @"contact"

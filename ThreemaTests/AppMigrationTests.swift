@@ -76,7 +76,8 @@ class AppMigrationTests: XCTestCase {
         try setupDataForMigrationVersion6_6()
         setupDataForMigrationVersion6_8_8()
         setupDataForMigrationVersion6_9()
-
+        setupDataForMigrationVersion7_0_1()
+        
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
         try DatabaseManager(
@@ -165,7 +166,13 @@ class AppMigrationTests: XCTestCase {
             ddLoggerMock
                 .exists(message: "[AppMigration] App migration to version 6.9 successfully finished")
         )
-
+        
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 7.0.1 started"))
+        XCTAssertTrue(
+            ddLoggerMock
+                .exists(message: "[AppMigration] App migration to version 7.0.1 successfully finished")
+        )
+        
         XCTAssertEqual(1, keychainManagerMock.migrateToVersion0Calls)
 
         let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
@@ -334,6 +341,13 @@ class AppMigrationTests: XCTestCase {
         XCTAssertEqual(1, keychainManagerMock.migrateToVersion1Calls)
         XCTAssertEqual(1, keychainManagerMock.storeLicenseCalls.count)
         XCTAssertEqual(1, keychainManagerMock.storeMultiDeviceIDCalls.count)
+        
+        // Checks for 7.0.1 migration
+        let dict = try XCTUnwrap(
+            AppGroup.userDefaults()
+                .object(forKey: "threema_mdm_configuration") as? [String: String]
+        )
+        XCTAssertEqual(dict["test"], "test")
     }
 
     private func setupDataForMigrationVersion4_8() {
@@ -698,7 +712,7 @@ class AppMigrationTests: XCTestCase {
         userSettingsMock.profilePictureContactList = ["Optional(\"ABCDEFGH\")", "Optional(\"BCDEFGHI\")", "CDEFGHIJ"]
     }
 
-    func setupDataForMigrationVersion6_9() {
+    private func setupDataForMigrationVersion6_9() {
         // Test data for Threema Work/OnPrem license
         AppGroup.userDefaults().setValue("user", forKey: "Threema license username")
         AppGroup.userDefaults().setValue("password", forKey: "Threema license password")
@@ -706,5 +720,11 @@ class AppMigrationTests: XCTestCase {
 
         // Test data for Device ID of multi device
         AppGroup.userDefaults().setValue(MockData.generateDeviceID(), forKey: "DeviceID")
+    }
+    
+    private func setupDataForMigrationVersion7_0_1() {
+        // Test data for Threema MDM migration
+        let dict = ["test": "test"]
+        UserDefaults.standard.set(dict, forKey: "threema_mdm_configuration")
     }
 }

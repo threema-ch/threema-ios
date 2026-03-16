@@ -145,8 +145,9 @@ extension WCSessionManager {
                         UIApplication.shared.isIdleTimerDisabled = false
                         return
                     }
-                    let chatNavVc = viewControllers[Int(kChatTabBarIndex)] as! UINavigationController
-                    if let curChatVc = chatNavVc.topViewController as? ChatViewController {
+
+                    if let chatNavVc = viewControllers[Int(kChatTabBarIndex)] as? UINavigationController,
+                       let curChatVc = chatNavVc.topViewController as? ChatViewController {
                         if !curChatVc.isRecording(),
                            !curChatVc.isPlayingAudioMessage() {
                             UIApplication.shared.isIdleTimerDisabled = false

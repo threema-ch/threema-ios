@@ -94,7 +94,7 @@ Path: `ThreemaFramework/Resources/Framework Symbols.xcassets`
 
 | Name                          | Description                                               | Type   | Size                 | Appearances | Mandatory |
 | ----------------------------- | --------------------------------------------------------- | :----: | -------------------- | ----------- | :-------: |
-| `VoipCustom`                  | Shown in iOS call overlay to open to app                  | `.svg` | *Not applicable*     | None        | ✅        |
+| `VoipCustom`                  | Shown in iOS call overlay to open to app                  | `.svg` | 40x40                | None        | ✅        |
 | `ChatBackground`              | Chat background                                           | `.svg` | *Not applicable*     | None        | ✅        |
 | `PasscodeLogoCustomOnprem`    | Shown when entering passcode, usually same as app icon    | `.png` | 1024x1024            | None        | ✅        |
 | `CustomOnPrem`                | Shown in navigation bars                                  | `.svg` | *Not applicable*     | Any, Dark   | ✅        |

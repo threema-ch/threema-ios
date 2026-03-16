@@ -116,6 +116,8 @@ protocol MediatorReflectedProcessorProtocol {
                 try seal.fulfill(decoder.decode(outgoingMessage: outgoingMessage))
             }
             .then { abstractMessage -> Promise<Void> in
+                DebugLog.log(abstractMessage, isIncoming: false)
+
                 let processor = MediatorReflectedOutgoingMessageProcessor(
                     frameworkInjector: self.frameworkInjector,
                     messageStore: MessageStore(
@@ -151,6 +153,8 @@ protocol MediatorReflectedProcessorProtocol {
                 )
             }
             .then { abstractMessage -> Promise<Void> in
+                DebugLog.log(abstractMessage, isIncoming: true)
+
                 let processor = MediatorReflectedIncomingMessageProcessor(
                     frameworkInjector: self.frameworkInjector,
                     messageStore: MessageStore(

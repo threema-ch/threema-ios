@@ -195,10 +195,12 @@ import ThreemaMacros
             return nil
         }
         
-        // 2.) Delete all data that might still be in the keychain if we deleted the app on the home screen of the
-        //     same device before
-        try KeychainManager.deleteAllThisDeviceOnlyItems()
-
+        // 2.) Delete all data in keychain if the app was not setup before. Data might still be in the keychain if we
+        //     deleted the app on the home screen on the same device before
+        if AppSetup.state == .notSetup {
+            try KeychainManager.deleteAllThisDeviceOnlyItems()
+        }
+        
         // 3.) Create empty RS Manager and store it in `AppLaunchManager`
         let remoteSecretManager = setupEmptyRemoteSecretManager()
         AppLaunchManager.remoteSecretManager = remoteSecretManager
@@ -284,9 +286,9 @@ import ThreemaMacros
             }
         }
         
-        // If we have a (new) identity we store it in the keychain
-        // if not we try to load the one stored in keychain
-        if myIdentityStore.identity != nil {
+        // If we have a (new) identity and it is valid, we store it in the keychain.
+        // If not we try to load the one stored in keychain
+        if myIdentityStore.isValidIdentity {
             try storeIdentity(using: keychainManager)
         }
         else if let identity = try keychainManager.loadIdentity() {

@@ -379,6 +379,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
     [self runWhenBusinessReadyWithTask:^{
         dispatch_async(dispatch_get_main_queue(), ^{
+            [_window makeSecure];
+
             if ([self isAppInBackground] && isEnteringForeground == false) {
                 shouldLoadUIForEnterForeground = true;
             } else {
@@ -537,6 +539,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)presentKeyGeneration {
+    [self.window makeSecure];
     [self.window.rootViewController dismissViewControllerAnimated:NO completion:nil];
     
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"CreateID" bundle:[NSBundle mainBundle] ];
@@ -918,6 +921,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [self runWhenBusinessReadyWithTask:^{
         dispatch_async(dispatch_get_main_queue(), ^{
             DDLogNotice(@"AppState: applicationWillEnterForeground executing task");
+            [_window makeSecure];
+            
             [DebugLog logAppConfiguration];
 
             AppLaunchTasks *appLaunchTasks = [AppLaunchTasks new];
@@ -963,6 +968,11 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             else if (TargetManagerObjC.isBusinessApp) {
                 // check again for threema safe if a url have changed in mdm
                 [self handlePresentingScreensWithForce:YES];
+                
+                // Check again for screenshot prevention
+                if([[MDMSetup new] disableScreenshots]) {
+                    [_window makeSecure];
+                }
             }
             
             /* ensure we're connected when we enter into foreground */
@@ -1022,6 +1032,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [self runWhenBusinessReadyWithTask:^{
         dispatch_async(dispatch_get_main_queue(), ^{
             DDLogNotice(@"AppState: applicationDidBecomeActive executing task");
+            [_window makeSecure];
             
             if ([[KKPasscodeLock sharedLock] isPasscodeRequired] && isAppLocked) {
                 if (![self isPassCodeViewControllerPresented]) {
@@ -1173,6 +1184,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)presentPasscodeView {
+    [_window makeSecure];
     if (lockView != nil) {
         [lockView removeFromSuperview];
     }
@@ -1325,7 +1337,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             } completion:^(BOOL finished) {
                 // Delete all data then show summary
                 __weak typeof(self) weakSelf = self;
-                [DeleteRevokeIdentityManager deleteLocalDataObjCWithCompletion:^{
+                [DeleteRevokeIdentityManager deleteLocalDataWithoutBusinessReadyObjCWithCompletion:^{
                     weakSelf.window.rootViewController = [SwiftUIAdapter createDeleteSummaryViewOnDismiss:^{
                         // NOOP as we've removed all of the views
                     }];

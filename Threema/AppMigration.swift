@@ -188,6 +188,10 @@ public class AppMigration {
                 try migrateTo6_9()
                 migratedTo = .v6_9
             }
+            if migratedTo < .v7_0_1 {
+                try migrateTo7_0_1()
+                migratedTo = .v7_0_1
+            }
 
             // Add here a check if migration is necessary for a particular version...
         }
@@ -216,7 +220,7 @@ public class AppMigration {
     }
 
     func updateAppMigrationVersionToLatest() {
-        businessInjector.userSettings.appMigratedToVersion = AppMigrationVersion.latestVerison.rawValue
+        businessInjector.userSettings.appMigratedToVersion = AppMigrationVersion.latestVersion.rawValue
     }
 
     // Add here migration function for particular version...
@@ -903,5 +907,28 @@ public class AppMigration {
 
         os_signpost(.end, log: osPOILog, name: "6.9 migration")
         DDLogNotice("[AppMigration] App migration to version 6.9 successfully finished")
+    }
+    
+    /// Migrate to version 7.0.1
+    /// - Migrate MDM to app group user defaults
+    private func migrateTo7_0_1() throws {
+        DDLogNotice("[AppMigration] App migration to version 7.0.1 started")
+        os_signpost(.begin, log: osPOILog, name: "7.0.1 migration")
+        
+        guard let appGroupUserDefaults = AppGroup.userDefaults() else {
+            return
+        }
+        
+        let defaults = UserDefaults.standard
+        
+        // Threema MDM
+        let threemaMDMKey = "threema_mdm_configuration"
+        if let threemaMDM = defaults.dictionary(forKey: threemaMDMKey) {
+            appGroupUserDefaults.set(threemaMDM, forKey: threemaMDMKey)
+            defaults.removeObject(forKey: threemaMDMKey)
+        }
+        
+        os_signpost(.end, log: osPOILog, name: "7.0.1 migration")
+        DDLogNotice("[AppMigration] App migration to version 7.0.1 successfully finished")
     }
 }

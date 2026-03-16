@@ -49,7 +49,7 @@ extension AppDelegate {
     // TODO: (IOS-5305) See if we can merge this with the implementation in `CompletedIDViewController+Swift`
     @MainActor @objc func appLaunch() async throws -> BusinessInjector? {
         window.makeKeyAndVisible()
-
+        
         do {
             let logFile = LogManager.appLaunchLogFile
             LogManager.deleteLogFile(logFile)
@@ -90,9 +90,6 @@ extension AppDelegate {
 
             DebugLog.logAppConfiguration()
 
-            let databaseManager = try await SetupApp
-                .runDatabaseMigrationIfNeeded(remoteSecretManager: remoteSecretManager)
-
             // TODO: (IOS-5305) Move keychain manager creation out of here
             let keychainManager = KeychainManager(remoteSecretManager: remoteSecretManager)
 
@@ -113,6 +110,9 @@ extension AppDelegate {
                 assert(result == true, "We should end up showing the onboarding here")
                 return nil
             }
+            
+            let databaseManager = try await SetupApp
+                .runDatabaseMigrationIfNeeded(remoteSecretManager: remoteSecretManager)
 
             try await SetupApp.runAppMigrationIsNeeded()
 

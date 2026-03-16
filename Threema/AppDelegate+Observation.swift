@@ -19,6 +19,7 @@
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import Foundation
+import SwiftUI
 import ThreemaMacros
 
 /// Use this extension to create and handle observers that live as long as the app is running.
@@ -40,6 +41,26 @@ extension AppDelegate {
             name: Notification.Name(kSafeBackupPasswordCheck),
             object: nil
         )
+        
+        // MARK: Screenshot detection
+        
+        if TargetManager.isBusinessApp {
+            // Since the app might not be ready at this point to handle MDM, we check for mdm once the observers are
+            // triggered.
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(screenshotDetected),
+                name: UIApplication.userDidTakeScreenshotNotification,
+                object: nil
+            )
+            
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(didScreenRecording(_:)),
+                name: UIScreen.capturedDidChangeNotification,
+                object: nil
+            )
+        }
     }
 
     @objc private func errorWhileProcessingManagedObject(notification: Notification) {
@@ -106,6 +127,45 @@ extension AppDelegate {
                         enableActionsAfter: 5
                     )
                 }
+            }
+        }
+    }
+
+    @objc private func screenshotDetected() {
+        showScreenshotPrevention()
+    }
+
+    @objc private func didScreenRecording(_ notification: Notification) {
+        if UIScreen.main.isCaptured {
+            showScreenshotPrevention()
+        }
+    }
+
+    private func showScreenshotPrevention() {
+        guard TargetManager.isBusinessApp, MDMSetup().disableScreenshots() else {
+            return
+        }
+        
+        Task { @MainActor in
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let window = windowScene.windows.first else {
+                return
+            }
+            
+            let privacyView = UIHostingController(rootView: ScreenshotPreventionView()).view!
+            
+            privacyView.translatesAutoresizingMaskIntoConstraints = false
+            window.addSubview(privacyView)
+
+            NSLayoutConstraint.activate([
+                privacyView.topAnchor.constraint(equalTo: window.topAnchor),
+                privacyView.bottomAnchor.constraint(equalTo: window.bottomAnchor),
+                privacyView.leadingAnchor.constraint(equalTo: window.leadingAnchor),
+                privacyView.trailingAnchor.constraint(equalTo: window.trailingAnchor),
+            ])
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                privacyView.removeFromSuperview()
             }
         }
     }

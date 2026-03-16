@@ -104,7 +104,7 @@
     
     [_motionEntropyCollector start];
     
-    self.view.backgroundColor = [UIColor clearColor];
+    self.view.backgroundColor = [UIColor blackColor];
     
     _accessabilityLastProgress = 0.0;
     

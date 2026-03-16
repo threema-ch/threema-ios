@@ -273,7 +273,7 @@ public final class ConversationEntity: ThreemaManagedObject, Identifiable {
         let typingName = Field.name(for: .typing, encrypted: false)
         var value: NSNumber = 0 // Default value
         willAccessValue(forKey: typingName)
-        value = primitiveValue(forKey: typingName) as! NSNumber
+        value = primitiveValue(forKey: typingName) as? NSNumber ?? value
         didAccessValue(forKey: typingName)
         return value
     }

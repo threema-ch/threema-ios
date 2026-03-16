@@ -38,6 +38,7 @@ enum TaskExecutionError: Error {
     case processIncomingMessageFailed(message: String?)
     case reflectMessageFailed(message: String?)
     case reflectMessageTimeout(message: String?)
+    case reflectMessageInterrupted(message: String?)
     case sendMessageFailed(message: String)
     case sendMessageTimeout(message: String)
     case wrongTaskDefinitionType
@@ -180,6 +181,32 @@ class TaskExecution: NSObject {
         let notificationCenter = NotificationCenter.default
         var mediatorMessageAckObserver: NSObjectProtocol?
 
+        // Add observer to release the waiting of the server ack, if the task is interrupted
+        let task = taskDefinition as? TaskDefinition
+        var isInterruptedObserver: NSKeyValueObservation? =
+            if let task {
+                task.observe(\.isInterrupted) { task, _ in
+                    guard task.isInterrupted else {
+                        return
+                    }
+                    DDLogWarn("\(ltAck.hexString) \(ltAck) \(loggingMsgInfo) is interrupted")
+                    mediatorMessageAck.leave()
+                }
+            }
+            else {
+                nil
+            }
+
+        func removeObservers() {
+            if let mediatorMessageAckObserver {
+                notificationCenter.removeObserver(mediatorMessageAckObserver)
+            }
+
+            if isInterruptedObserver != nil {
+                isInterruptedObserver = nil
+            }
+        }
+
         mediatorMessageAckObserver = notificationCenter.addObserver(
             forName: TaskManager.mediatorMessageAckObserverName(reflectID: reflectID),
             object: nil,
@@ -192,30 +219,36 @@ class TaskExecution: NSObject {
                     reflectedAt = notification.userInfo?[reflectID] as? Date
 
                     DDLogNotice("\(ltAck.hexString) \(ltAck) \(loggingMsgInfo)")
-                    notificationCenter.removeObserver(mediatorMessageAckObserver!)
+                    removeObservers()
 
                     mediatorMessageAck.leave()
                 }
             }
         }
+
         mediatorMessageAck.enter()
 
         DDLogNotice("\(ltReflect.hexString) \(ltReflect) \(loggingMsgInfo)")
         if let error = frameworkInjector.serverConnector.reflectMessage(reflectMessage) {
-            notificationCenter.removeObserver(mediatorMessageAckObserver!)
+            removeObservers()
             throw error
         }
-
+        
         guard mediatorMessageAck.wait(timeout: .now() + .seconds(responseTimeoutInSeconds)) == .success else {
-            notificationCenter.removeObserver(mediatorMessageAckObserver!)
+            removeObservers()
             throw TaskExecutionError.reflectMessageTimeout(message: loggingMsgInfo)
+        }
+        
+        removeObservers()
+
+        guard let task, !task.isInterrupted else {
+            throw TaskExecutionError.reflectMessageInterrupted(message: loggingMsgInfo)
         }
 
         guard let reflectedAt else {
-            notificationCenter.removeObserver(mediatorMessageAckObserver!)
             throw TaskExecutionError.reflectMessageFailed(message: "Reflected at is nil for \(loggingMsgInfo)")
         }
-
+        
         return reflectedAt
     }
 

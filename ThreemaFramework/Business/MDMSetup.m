@@ -52,6 +52,7 @@ NSString * const MDM_KEY_ID_BACKUP_PASSWORD = @"th_id_backup_password"; // Strin
 NSString * const MDM_KEY_BLOCK_UNKNOWN = @"th_block_unknown"; // Bool
 NSString * const MDM_KEY_HIDE_INACTIVE_IDS = @"th_hide_inactive_ids"; // Bool
 NSString * const MDM_KEY_DISABLE_SAVE_TO_GALLERY = @"th_disable_save_to_gallery"; // Bool
+NSString * const MDM_KEY_DISABLE_SCREENSHOTS = @"th_disable_screenshots"; // Bool
 NSString * const MDM_KEY_DISABLE_ADD_CONTACT = @"th_disable_add_contact"; // Bool
 NSString * const MDM_KEY_DISABLE_EXPORT = @"th_disable_export"; // Bool
 NSString * const MDM_KEY_DISABLE_BACKUPS = @"th_disable_backups"; // Bool
@@ -196,6 +197,11 @@ static NSDictionary *_mdmCacheSetup;
 - (BOOL)disableAddContact {
     NSNumber *disableAddContact = [self getMdmConfigurationBoolForKey:MDM_KEY_DISABLE_ADD_CONTACT];
     return [disableAddContact isKindOfClass:[NSNumber class]] ? disableAddContact.boolValue : NO;
+}
+
+- (BOOL)disableScreenshots {
+    NSNumber *disableScreenshots = [self getMdmConfigurationBoolForKey:MDM_KEY_DISABLE_SCREENSHOTS];
+    return [disableScreenshots isKindOfClass:[NSNumber class]] ? disableScreenshots.boolValue : NO;
 }
 
 - (BOOL)disableSaveToGallery {
@@ -718,7 +724,7 @@ static NSDictionary *_mdmCacheSetup;
     }
     
     dispatch_sync(queue, ^{
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSUserDefaults *defaults = AppGroup.userDefaults;
         NSDictionary *threemaMdm = nil;
 
         // Only update MDM settings if key exists in work data
@@ -782,7 +788,7 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (nullable NSDictionary*)getThreemaMDM {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults *defaults = AppGroup.userDefaults;
     return [defaults dictionaryForKey:MDM_THREEMA_CONFIGURATION_KEY];
 }
 
@@ -881,7 +887,7 @@ static NSDictionary *_mdmCacheSetup;
 
 - (void)deleteThreemaMdm {
     dispatch_sync(queue, ^{
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSUserDefaults *defaults = AppGroup.userDefaults;
         [defaults removeObjectForKey:MDM_THREEMA_CONFIGURATION_KEY];
         [defaults synchronize];
         
@@ -890,7 +896,7 @@ static NSDictionary *_mdmCacheSetup;
 }
 
 - (BOOL)isRenewable:(NSString *)mdmKey {
-    NSArray *renewableKeys = @[MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_DISABLE_MULTIDEVICE, MDM_KEY_WEB_HOSTS, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_PASSWORD, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_ONPREM_SERVER, MDM_KEY_KEEP_MESSAGE_DAYS, MDM_KEY_ENABLE_REMOTE_SECRET];
+    NSArray *renewableKeys = @[MDM_KEY_LICENSE_USERNAME, MDM_KEY_LICENSE_PASSWORD, MDM_KEY_NICKNAME, MDM_KEY_FIRST_NAME, MDM_KEY_LAST_NAME, MDM_KEY_CSI, MDM_KEY_JOB_TITLE, MDM_KEY_DEPARTMENT, MDM_KEY_CATEGORY, MDM_KEY_READONLY_PROFILE, MDM_KEY_BLOCK_UNKNOWN, MDM_KEY_HIDE_INACTIVE_IDS, MDM_KEY_DISABLE_SAVE_TO_GALLERY, MDM_KEY_DISABLE_SCREENSHOTS, MDM_KEY_DISABLE_ADD_CONTACT, MDM_KEY_DISABLE_EXPORT, MDM_KEY_DISABLE_BACKUPS, MDM_KEY_DISABLE_ID_EXPORT, MDM_KEY_DISABLE_SYSTEM_BACKUPS, MDM_KEY_DISABLE_MESSAGE_PREVIEW, MDM_KEY_DISABLE_SEND_PROFILE_PICTURE, MDM_KEY_DISABLE_CALLS, MDM_KEY_DISABLE_GROUP_CALLS, MDM_KEY_DISABLE_CREATE_GROUP, MDM_KEY_DISABLE_WEB, MDM_KEY_DISABLE_MULTIDEVICE, MDM_KEY_WEB_HOSTS, MDM_KEY_SAFE_ENABLE, MDM_KEY_SAFE_PASSWORD, MDM_KEY_SAFE_SERVER_URL, MDM_KEY_SAFE_SERVER_USERNAME, MDM_KEY_SAFE_SERVER_PASSWORD, MDM_KEY_SAFE_PASSWORD_PATTERN, MDM_KEY_SAFE_PASSWORD_MESSAGE, MDM_KEY_DISABLE_SHARE_MEDIA, MDM_KEY_DISABLE_WORK_DIRECTORY, MDM_KEY_CONTACT_SYNC, MDM_KEY_DISABLE_VIDEO_CALLS, MDM_KEY_ONPREM_SERVER, MDM_KEY_KEEP_MESSAGE_DAYS, MDM_KEY_ENABLE_REMOTE_SECRET];
     return [renewableKeys containsObject:mdmKey];
 }
 

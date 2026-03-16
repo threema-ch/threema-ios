@@ -21,7 +21,7 @@
 import Foundation
 import ThreemaMacros
 
-indirect enum SafeError: Error, CustomStringConvertible {
+indirect enum SafeError: Error, CustomStringConvertible, Equatable {
     
     case backupError(BackupError)
     case restoreError(RestoreError)

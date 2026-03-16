@@ -51,7 +51,7 @@
     _scanLabel.text = [BundleUtil localizedStringForKey:@"scan_id_backup"];
     _scanLabel.textColor = UIColor.tintColor;
     
-    self.view.backgroundColor = [UIColor clearColor];
+    self.view.backgroundColor = [UIColor blackColor];
 
     _backupTextView.delegate = self;
     _passwordTextField.delegate = self;

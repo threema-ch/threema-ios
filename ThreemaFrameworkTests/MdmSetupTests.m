@@ -54,6 +54,8 @@
 - (void)setUp {
     [super setUp];
 
+    [AppGroup setGroupId:@"group.ch.threema"];
+
     _mockUserSettingsClass = mockClass([UserSettings class]);
     _mockUserSettings = mock([UserSettings class]);
     stubSingleton(_mockUserSettingsClass, sharedUserSettings);
@@ -97,29 +99,34 @@
 }
 
 - (void)delMdm {
+    NSUserDefaults *appDefaults = AppGroup.userDefaults;
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults removeObjectForKey:MDM_CONFIGURATION_KEY];
-    [defaults removeObjectForKey:MDM_THREEMA_CONFIGURATION_KEY];
+    [appDefaults removeObjectForKey:MDM_THREEMA_CONFIGURATION_KEY];
+    [appDefaults synchronize];
     [defaults synchronize];
     [MDMSetup clearMdmCache];
 }
 
 - (void)setMdm:(NSDictionary*)companyMdm threemaMdm:(NSDictionary*)threemaMdm {
+    NSUserDefaults *appDefaults = AppGroup.userDefaults;
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     if (companyMdm != nil) {
         [defaults setObject:companyMdm forKey:MDM_CONFIGURATION_KEY];
     }
     if (threemaMdm != nil) {
-        [defaults setObject:threemaMdm forKey:MDM_THREEMA_CONFIGURATION_KEY];
+        [appDefaults setObject:threemaMdm forKey:MDM_THREEMA_CONFIGURATION_KEY];
     }
     [defaults synchronize];
 }
 
 - (void)setEmptyMDM {
+    NSUserDefaults *appDefaults = AppGroup.userDefaults;
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:nil forKey:MDM_CONFIGURATION_KEY];
-    [defaults setObject:nil forKey:MDM_THREEMA_CONFIGURATION_KEY];
+    [appDefaults setObject:nil forKey:MDM_THREEMA_CONFIGURATION_KEY];
     [defaults synchronize];
+    [appDefaults synchronize];
     [MDMSetup clearMdmCache];
 }
 

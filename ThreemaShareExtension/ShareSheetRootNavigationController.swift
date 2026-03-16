@@ -32,6 +32,9 @@ import ThreemaMacros
 class ShareSheetRootNavigationController: UINavigationController {
 
     private lazy var businessInjector = BusinessInjector.ui
+   
+    // Screenshot prevention
+    private let textField = UITextField()
 
     var recipientConversations: Set<ConversationEntity>?
     var passcodeVC: JKLLockScreenViewController?
@@ -175,6 +178,36 @@ class ShareSheetRootNavigationController: UINavigationController {
         }
         else {
             presentContactPicker()
+        }
+        
+        if TargetManager.isBusinessApp, MDMSetup().disableScreenshots() {
+            makeSecure()
+        }
+    }
+    
+    // We cannot use the same approach in the share extension as within the app, due to not being able to access the
+    // window directly
+    private func makeSecure() {
+        textField.isSecureTextEntry = true
+            
+        // 1. Grab the secure container layer
+        guard let secureView = textField.layer.sublayers?.filter({ $0.delegate is UIView }).first?
+            .delegate as? UIView else {
+            return
+        }
+                        
+        // 2. Add the secureView to the navigation controller's main view
+        view.addSubview(secureView)
+        secureView.frame = view.bounds
+        secureView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            
+        // 3. IMPORTANT: Move the navigation bar and the content view
+        // into the secure container so they are hidden during screenshots.
+        // We bring the existing subviews (like the navigation transition view) into the secureView
+        for subview in view.subviews {
+            if subview != secureView {
+                secureView.addSubview(subview)
+            }
         }
     }
     

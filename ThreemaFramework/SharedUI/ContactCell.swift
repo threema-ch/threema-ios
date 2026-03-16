@@ -294,7 +294,7 @@ public final class ContactCell: ThemedCodeTableViewCell {
     
     private func configureContactCell(for contact: Contact) {
         let em = BusinessInjector.ui.entityManager
-        em.performBlock {
+        em.performAndWait {
             if let contactEntity = em.entityFetcher.contactEntity(for: contact.identity.rawValue) {
                 self.profilePictureView.info = .contact(contact)
                 self.nameLabel.contactObject = contactEntity

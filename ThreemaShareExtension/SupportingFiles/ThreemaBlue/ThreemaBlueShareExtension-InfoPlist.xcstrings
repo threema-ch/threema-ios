@@ -77,19 +77,7 @@
             "value" : "Threema Blue"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Blue"
-          }
-        },
         "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Blue"
-          }
-        },
-        "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Threema Blue"
@@ -209,19 +197,7 @@
             "value" : "Threema Blue ShareExtension"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Blue ShareExtension"
-          }
-        },
         "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Blue ShareExtension"
-          }
-        },
-        "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Threema Blue ShareExtension"

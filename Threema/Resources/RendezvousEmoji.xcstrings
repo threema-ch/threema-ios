@@ -70,12 +70,6 @@
             "value" : "strzał w 10"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "no alvo"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -187,12 +181,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "kręgle"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "boliche"
           }
         },
         "pt-BR" : {
@@ -308,12 +296,6 @@
             "value" : "saksofon"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "saxofone"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -425,12 +407,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "gitara"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "guitarra"
           }
         },
         "pt-BR" : {
@@ -546,12 +522,6 @@
             "value" : "koszykówka"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bola de basquete"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -663,12 +633,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "siatkówka"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bola de vôlei"
           }
         },
         "pt-BR" : {
@@ -784,12 +748,6 @@
             "value" : "tenis stołowy"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "pingue-pongue"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -901,12 +859,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "kemping"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "acampamento"
           }
         },
         "pt-BR" : {
@@ -1022,12 +974,6 @@
             "value" : "klasyczna budowla"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "prédio grego"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1139,12 +1085,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "bezludna wyspa"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ilha deserta"
           }
         },
         "pt-BR" : {
@@ -1260,12 +1200,6 @@
             "value" : "rozeta"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "roseta"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1377,12 +1311,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "kolizja"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "colisão"
           }
         },
         "pt-BR" : {
@@ -1498,12 +1426,6 @@
             "value" : "kropla"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "gota"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1615,12 +1537,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "zawroty głowy"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "zonzo"
           }
         },
         "pt-BR" : {
@@ -1736,12 +1652,6 @@
             "value" : "dymek"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "balão de diálogo"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1853,12 +1763,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "teczka"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "maleta"
           }
         },
         "pt-BR" : {
@@ -1974,12 +1878,6 @@
             "value" : "podkładka do pisania"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "prancheta"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2091,12 +1989,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "otwarta książka"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "livro aberto"
           }
         },
         "pt-BR" : {
@@ -2212,12 +2104,6 @@
             "value" : "notatka"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "memorando"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2329,12 +2215,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "paczka"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "pacote"
           }
         },
         "pt-BR" : {
@@ -2450,12 +2330,6 @@
             "value" : "skrzynka na listy"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "caixa de correio"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2567,12 +2441,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "siła sygnału"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "barras de sinal"
           }
         },
         "pt-BR" : {
@@ -2688,12 +2556,6 @@
             "value" : "aparat fotograficzny z lampą błyskową"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "câmera com flash"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2805,12 +2667,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "drukarka"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "impressora"
           }
         },
         "pt-BR" : {
@@ -2926,12 +2782,6 @@
             "value" : "mapa świata"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "mapa-múndi"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3043,12 +2893,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "muszla klozetowa"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "vaso sanitário"
           }
         },
         "pt-BR" : {
@@ -3164,12 +3008,6 @@
             "value" : "tor kolejowy"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "trilhos"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3281,12 +3119,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "satelita"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "satélite"
           }
         },
         "pt-BR" : {
@@ -3402,12 +3234,6 @@
             "value" : "żółty kwadrat"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "quadrado amarelo"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3519,12 +3345,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "łabędź"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "cisne"
           }
         },
         "pt-BR" : {
@@ -3640,12 +3460,6 @@
             "value" : "dodo"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "dodô"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3757,12 +3571,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "flaming"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "flamingo"
           }
         },
         "pt-BR" : {
@@ -3878,12 +3686,6 @@
             "value" : "żubr"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bisão"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3995,12 +3797,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "foka"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "foca"
           }
         },
         "pt-BR" : {
@@ -4116,12 +3912,6 @@
             "value" : "sól"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "sal"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4233,12 +4023,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "kostka lodu"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "cubo de gelo"
           }
         },
         "pt-BR" : {
@@ -4354,12 +4138,6 @@
             "value" : "element układanki"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "quebra-cabeça"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4471,12 +4249,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "miś pluszowy"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ursinho de pelúcia"
           }
         },
         "pt-BR" : {
@@ -4592,12 +4364,6 @@
             "value" : "miotła"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "vassoura"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4709,12 +4475,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "wulkan"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "vulcão"
           }
         },
         "pt-BR" : {
@@ -4830,12 +4590,6 @@
             "value" : "słonecznik"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "girassol"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4947,12 +4701,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "zioło"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "erva"
           }
         },
         "pt-BR" : {
@@ -5068,12 +4816,6 @@
             "value" : "cytryna"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "limão"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5185,12 +4927,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "czerwone jabłko"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "maçã vermelha"
           }
         },
         "pt-BR" : {
@@ -5306,12 +5042,6 @@
             "value" : "ciastko"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "biscoito"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5423,12 +5153,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "tabliczka czekolady"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "chocolate"
           }
         },
         "pt-BR" : {
@@ -5544,12 +5268,6 @@
             "value" : "wieloryb"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "baleia"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5661,12 +5379,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "muszla spiralna"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "caramujo"
           }
         },
         "pt-BR" : {
@@ -5782,12 +5494,6 @@
             "value" : "ryba"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "peixe"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5899,12 +5605,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "wielbłąd"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "camelo"
           }
         },
         "pt-BR" : {
@@ -6020,12 +5720,6 @@
             "value" : "delfin"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "golfinho"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6137,12 +5831,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "głowa myszy"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "rosto de camundongo"
           }
         },
         "pt-BR" : {
@@ -6258,12 +5946,6 @@
             "value" : "głowa krowy"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "rosto de vaca"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6375,12 +6057,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "głowa pandy"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "rosto de panda"
           }
         },
         "pt-BR" : {
@@ -6496,12 +6172,6 @@
             "value" : "pręgowiec"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "esquilo"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6613,12 +6283,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "mikroskop"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "microscópio"
           }
         },
         "pt-BR" : {
@@ -6734,12 +6398,6 @@
             "value" : "gołąb"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "pomba branca"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6851,12 +6509,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "świeca"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "vela"
           }
         },
         "pt-BR" : {
@@ -6972,12 +6624,6 @@
             "value" : "samochód dostawczy"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "caminhão de entrega"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7089,12 +6735,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ciągnik"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "trator"
           }
         },
         "pt-BR" : {
@@ -7210,12 +6850,6 @@
             "value" : "głowa lisa"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "rosto de raposa"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7327,12 +6961,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "tęcza"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "arco-íris"
           }
         },
         "pt-BR" : {
@@ -7448,12 +7076,6 @@
             "value" : "półksiężyc"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "lua crescente"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7565,12 +7187,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "wiecznie zielone drzewo"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "conífera"
           }
         },
         "pt-BR" : {
@@ -7686,12 +7302,6 @@
             "value" : "grzyb"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "cogumelo"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7803,12 +7413,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "pomidor"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "tomate"
           }
         },
         "pt-BR" : {
@@ -7924,12 +7528,6 @@
             "value" : "arbuz"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "melancia"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8041,12 +7639,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "wiśnie"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "cereja"
           }
         },
         "pt-BR" : {
@@ -8162,12 +7754,6 @@
             "value" : "truskawka"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "morango"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8279,12 +7865,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "wstążka"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "laço de fita"
           }
         },
         "pt-BR" : {
@@ -8400,12 +7980,6 @@
             "value" : "balon"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "balão"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8517,12 +8091,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "czarny kot"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "gato preto"
           }
         },
         "pt-BR" : {
@@ -8638,12 +8206,6 @@
             "value" : "kura"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "galinha"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8755,12 +8317,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "słoń"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "elefante"
           }
         },
         "pt-BR" : {
@@ -8876,12 +8432,6 @@
             "value" : "pudel"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "poodle"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -8993,12 +8543,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "głowa królika"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "rosto de coelho"
           }
         },
         "pt-BR" : {
@@ -9114,12 +8658,6 @@
             "value" : "głowa konia"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "rosto de cavalo"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9231,12 +8769,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "głowa małpy"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "rosto de macaco"
           }
         },
         "pt-BR" : {
@@ -9352,12 +8884,6 @@
             "value" : "głowa psa"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "rosto de cachorro"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9469,12 +8995,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "głowa świni"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "rosto de porco"
           }
         },
         "pt-BR" : {
@@ -9590,12 +9110,6 @@
             "value" : "głowa żaby"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "sapo"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9707,12 +9221,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "oczy"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "olhos"
           }
         },
         "pt-BR" : {
@@ -9828,12 +9336,6 @@
             "value" : "korona"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "coroa"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9945,12 +9447,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "sukienka"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "vestido"
           }
         },
         "pt-BR" : {
@@ -10066,12 +9562,6 @@
             "value" : "ślady stóp"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "pegadas"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10183,12 +9673,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "klucz"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "chave"
           }
         },
         "pt-BR" : {
@@ -10304,12 +9788,6 @@
             "value" : "zamknięta kłódka"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "cadeado"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10421,12 +9899,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "dzwonek"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "sino"
           }
         },
         "pt-BR" : {
@@ -10542,12 +10014,6 @@
             "value" : "ogniwa"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "link"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10659,12 +10125,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ogień"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "fogo"
           }
         },
         "pt-BR" : {
@@ -10780,12 +10240,6 @@
             "value" : "pajęczyna"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "teia de aranha"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -10897,12 +10351,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "dżojstik"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "joystick"
           }
         },
         "pt-BR" : {
@@ -11018,12 +10466,6 @@
             "value" : "rakieta"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "foguete"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11135,12 +10577,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "lokomotywa"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "locomotiva"
           }
         },
         "pt-BR" : {
@@ -11256,12 +10692,6 @@
             "value" : "medal za 1. miejsce"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "medalha de ouro"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11373,12 +10803,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "awokado"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "abacate"
           }
         },
         "pt-BR" : {
@@ -11494,12 +10918,6 @@
             "value" : "marchew"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "cenoura"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11611,12 +11029,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "pałeczki"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "hashi"
           }
         },
         "pt-BR" : {
@@ -11732,12 +11144,6 @@
             "value" : "brokuł"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "brócolis"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -11849,12 +11255,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "kaczka"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "pato"
           }
         },
         "pt-BR" : {
@@ -11970,12 +11370,6 @@
             "value" : "sowa"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "coruja"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12087,12 +11481,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "żyrafa"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "girafa"
           }
         },
         "pt-BR" : {
@@ -12208,12 +11596,6 @@
             "value" : "kangur"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "canguru"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12325,12 +11707,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "hak"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "gancho"
           }
         },
         "pt-BR" : {
@@ -12446,12 +11822,6 @@
             "value" : "bumerang"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bumerangue"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12563,12 +11933,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "krzesło"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "cadeira"
           }
         },
         "pt-BR" : {
@@ -12684,12 +12048,6 @@
             "value" : "wiadro"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "balde"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12801,12 +12159,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "chrząszcz"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "besouro"
           }
         },
         "pt-BR" : {
@@ -12922,12 +12274,6 @@
             "value" : "pióro"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "pena"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13039,12 +12385,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "borówka amerykańska"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "mirtilos"
           }
         },
         "pt-BR" : {
@@ -13160,12 +12500,6 @@
             "value" : "fasola"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "feijões"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13277,12 +12611,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "bąbelki"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bolhas"
           }
         },
         "pt-BR" : {
@@ -13398,12 +12726,6 @@
             "value" : "gwiazda"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "estrela branca média"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13515,12 +12837,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "odtwórz"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "botão reproduzir"
           }
         },
         "pt-BR" : {
@@ -13636,12 +12952,6 @@
             "value" : "czarne koło"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "círculo preto"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13753,12 +13063,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "flaga w dołku"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bandeira no buraco"
           }
         },
         "pt-BR" : {
@@ -13874,12 +13178,6 @@
             "value" : "słońce"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "sol"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13991,12 +13289,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "parasol"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "guarda-chuva"
           }
         },
         "pt-BR" : {
@@ -14112,12 +13404,6 @@
             "value" : "bałwanek i płatki śniegu"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "boneco de neve"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14229,12 +13515,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "gorący napój"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "café"
           }
         },
         "pt-BR" : {
@@ -14350,12 +13630,6 @@
             "value" : "koniczyna"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "trevo"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14467,12 +13741,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "pik"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "naipe de espadas"
           }
         },
         "pt-BR" : {
@@ -14588,12 +13856,6 @@
             "value" : "kier"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "naipe de copas"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14705,12 +13967,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "młoty"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "martelo e picareta"
           }
         },
         "pt-BR" : {
@@ -14826,12 +14082,6 @@
             "value" : "kotwica"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "âncora"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14943,12 +14193,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "waga szalkowa"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "balança"
           }
         },
         "pt-BR" : {
@@ -15064,12 +14308,6 @@
             "value" : "gwiazdki"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "brilhos"
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
@@ -15181,12 +14419,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "płatek śniegu"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "floco de neve"
           }
         },
         "pt-BR" : {

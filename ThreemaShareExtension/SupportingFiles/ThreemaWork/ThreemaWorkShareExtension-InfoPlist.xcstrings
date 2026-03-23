@@ -77,19 +77,7 @@
             "value" : "Threema Work"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Work"
-          }
-        },
         "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Work"
-          }
-        },
-        "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Threema Work"
@@ -209,19 +197,7 @@
             "value" : "Threema Work ShareExtension"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Work ShareExtension"
-          }
-        },
         "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Work ShareExtension"
-          }
-        },
-        "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Threema Work ShareExtension"

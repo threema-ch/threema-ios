@@ -92,8 +92,10 @@ class ChatViewDefaultMessageTapActionProvider: NSObject {
                     guard let fileMessageEntity = fileMessage as? FileMessageEntity else {
                         return
                     }
-                    let controller =
-                        UIHostingController(rootView: FileMessagePreviewView(fileMessageEntity: fileMessageEntity))
+                    let controller = UIHostingController(
+                        rootView: FileMessagePreviewView(fileMessageEntity: fileMessageEntity)
+                    )
+                    controller.modalPresentationStyle = .overFullScreen
                     chatViewController?.present(controller, animated: true)
                 case let .video(videoMessage):
                     play(videoMessage: videoMessage)

@@ -69,6 +69,9 @@ extension MyIdentityStore {
             DDLogError("Delete my identity from keychain failed: \(error)")
         }
         
+        KeychainKeyWrapper().deleteWrappingKey()
+        DeviceCookieManager.deleteDeviceCookie()
+        
         removeIdentityUserDefaults()
         
         UserSettings.shared().pushDecrypt = false
@@ -79,9 +82,6 @@ extension MyIdentityStore {
     }
     
     public func removeIdentityUserDefaults() {
-        KeychainKeyWrapper().deleteWrappingKey()
-        DeviceCookieManager.deleteDeviceCookie()
-
         // Delete / reset user settings
         let userDefaults = AppGroup.userDefaults()
 

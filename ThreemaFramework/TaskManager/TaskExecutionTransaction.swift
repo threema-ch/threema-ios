@@ -84,22 +84,51 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
             return try self.beginTransaction(scope: (task as! TaskDefinitionTransactionProtocol).scope)
         }
         .then { _ -> Promise<Void> in
-            guard try self.checkPreconditions() else {
-                throw TaskExecutionTransactionError.preconditionFailed
-            }
-
-            try task.checkDropping()
-            return try self.executeTransaction()
-        }
-        .then { _ -> Promise<Void> in
-            try task.checkDropping()
-            return try self.commitTransaction()
+            try self.executeAndCommitTransaction(for: task)
         }
         .then { _ -> Promise<Void> in
             self.writeLocal()
         }
         .ensure {
             self.frameworkInjector.serverConnector.unregisterTaskExecutionTransactionDelegate(delegate: self)
+        }
+    }
+
+    /// Executes the transaction after successful begin of the transaction and
+    /// commits the transaction, even if an error occurs.
+    ///
+    /// If the commit fails, then the task will be finished as a failed task and it should retried again.
+    ///
+    /// - Parameter task: Actual running task
+    private func executeAndCommitTransaction(for task: TaskDefinition) throws -> Promise<Void> {
+        Promise { seal in
+            do {
+                guard try self.checkPreconditions() else {
+                    throw TaskExecutionTransactionError.preconditionFailed
+                }
+
+                try task.checkDropping()
+
+                _ = try self.executeTransaction()
+                    .then {
+                        try self.commitTransaction()
+
+                        seal.fulfill_()
+                        return Promise()
+                    }
+                    .catch(on: .global()) { error in
+                        seal.reject(error)
+                    }
+            }
+            catch {
+                do {
+                    try self.commitTransaction()
+                }
+                catch {
+                    DDLogError("\(task) commit transaction failed with error: \(error)")
+                }
+                seal.reject(error)
+            }
         }
     }
 
@@ -137,7 +166,7 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
             throw TaskExecutionError.createReflectedMessageFailed
         }
 
-        guard try wait(forType: .lockAck, message: message, messageType: .lock) == .lockAck else {
+        guard try reflectAndWaitForResponse(message: message, messageType: .lock) == .lockAck else {
             throw TaskExecutionTransactionError.badResponse
         }
 
@@ -148,25 +177,22 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
         return Promise()
     }
 
-    private func commitTransaction() throws -> Promise<Void> {
+    private func commitTransaction() throws {
         guard let message = frameworkInjector.mediatorMessageProtocol
             .encodeCommitTransactionMessage(messageType: .unlock) else {
             throw TaskExecutionError.createReflectedMessageFailed
         }
 
-        guard try wait(forType: .unlockAck, message: message, messageType: .unlock) == .unlockAck else {
+        guard try reflectAndWaitForResponse(message: message, messageType: .unlock) == .unlockAck else {
             throw TaskExecutionTransactionError.badResponse
         }
 
         DDLogNotice(
             "\(LoggingTag.sendCommitTransactionToMediator.hexString) \(LoggingTag.sendCommitTransactionToMediator) \(String(describing: taskDefinition))"
         )
-
-        return Promise()
     }
 
-    private func wait(
-        forType: MediatorMessageProtocol.MediatorMessageType,
+    private func reflectAndWaitForResponse(
         message: Data,
         messageType: MediatorMessageProtocol.MediatorMessageType
     ) throws -> MediatorMessageProtocol.MediatorMessageType {

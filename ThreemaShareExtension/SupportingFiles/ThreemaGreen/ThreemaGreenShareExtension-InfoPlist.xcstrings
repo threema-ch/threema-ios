@@ -76,19 +76,7 @@
             "value" : "Threema Green"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Green ShareExtension"
-          }
-        },
         "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Green"
-          }
-        },
-        "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Threema Green"
@@ -208,19 +196,7 @@
             "value" : "Threema Green ShareExtension"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Green ShareExtension"
-          }
-        },
         "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Green ShareExtension"
-          }
-        },
-        "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Threema Green ShareExtension"

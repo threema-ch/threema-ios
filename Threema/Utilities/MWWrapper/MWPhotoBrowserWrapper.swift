@@ -236,6 +236,7 @@ class MWPhotoBrowserWrapper: NSObject, MWPhotoBrowserDelegate, MWVideoDelegate, 
 
     func showFile(_ fileMessageEntity: FileMessageEntity) {
         let controller = UIHostingController(rootView: FileMessagePreviewView(fileMessageEntity: fileMessageEntity))
+        controller.modalPresentationStyle = .overFullScreen
         photoBrowser?.present(controller, animated: true)
     }
     

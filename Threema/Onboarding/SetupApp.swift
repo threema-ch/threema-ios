@@ -36,6 +36,7 @@ import ThreemaMacros
     enum SetupError: Error {
         case missingInfo
         case noIdentityFound
+        case noLicenseFound
         case unableToStoreLicense
         case unableToStoreIdentity
         case unableToGetWorkServerURL
@@ -278,11 +279,18 @@ import ThreemaMacros
     private func handleKeychain(with keychainManager: KeychainManagerProtocol) throws {
         // If we are a business app, we make sure that the LicenseStore and the keychain have the same info
         if TargetManager.isBusinessApp {
-            if let license = try keychainManager.loadLicense() {
+            // If we have a license and it is valid, we store it in the keychain.
+            // If not we try to load the one stored in keychain
+            if licenseStore.isValid() {
+                try storeLicense(using: keychainManager)
+            }
+            else if let license = try keychainManager.loadLicense() {
                 updateLicenseStore(with: license)
             }
             else {
-                try storeLicense(using: keychainManager)
+                assertionFailure("This should not happen")
+                DDLogError("No license, neither in LicenseStore nor in keychain")
+                throw SetupError.noLicenseFound
             }
         }
         

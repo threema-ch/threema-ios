@@ -77,19 +77,7 @@
             "value" : "Threema"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema"
-          }
-        },
         "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema"
-          }
-        },
-        "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Threema"
@@ -209,19 +197,7 @@
             "value" : "Threema ShareExtension"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema ShareExtension"
-          }
-        },
         "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema ShareExtension"
-          }
-        },
-        "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Threema ShareExtension"

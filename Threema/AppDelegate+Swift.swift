@@ -55,6 +55,15 @@ extension AppDelegate {
             LogManager.deleteLogFile(logFile)
             LogManager.addFileLogger(logFile)
             
+            if try KeychainManager.loadThreemaIdentity() == nil {
+                // We end up here after an iOS data backup restore, because the ID won't be around. In that case we
+                // reset the configuration for the previous ID, which also resets the `AppSetup` `state`
+                
+                // We always delete all ID configurations, because the restored ID might not be the same ID that was
+                // used with this configuration before
+                MyIdentityStore.shared().removeIdentityUserDefaults()
+            }
+            
             guard showOnboardingIfNeeded() == false else {
                 return nil
             }
@@ -98,17 +107,8 @@ extension AppDelegate {
                 MyIdentityStore.shared().setupIdentity(identity)
             }
             else {
-                // We end up here after an iOS data backup restore, because the ID won't be around. In that case we
-                // reset the configuration for the previous ID, which also resets the `AppSetup` `state`, and show
-                // the onboarding
-                
-                // We always delete all ID configurations, because the restored ID might not be the same ID that was
-                // used with this configuration before
-                MyIdentityStore.shared().removeIdentityUserDefaults()
-                
-                let result = showOnboardingIfNeeded()
-                assert(result == true, "We should end up showing the onboarding here")
-                return nil
+                assertionFailure("We should never end up here, identity should be set up at this point")
+                throw AppLaunchManager.AppLaunchError.myIdentityIsMissing
             }
             
             let databaseManager = try await SetupApp

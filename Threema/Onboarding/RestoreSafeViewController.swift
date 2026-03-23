@@ -30,7 +30,7 @@ import UIKit
 
 @objc protocol RestoreSafeViewControllerDelegate {
     func restoreSafeDone()
-    func restoreSafeCancelled()
+    func restoreSafeCancelled(showLocalDataInfo: Bool)
 }
 
 class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelegate {
@@ -55,7 +55,7 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
     var restoreServerPassword: String?
     
     private var activateSafeAnyway = false
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -159,6 +159,22 @@ class RestoreSafeViewController: IDCreationPageViewController, UITextFieldDelega
                 return false
             }
         }
+        if restoreIdentityOnly {
+            let alert = IntroQuestionViewHelper(parent: self) { _, answer in
+                if answer == .yes {
+                    self.performSegue(withIdentifier: "RestoreSafePassword", sender: nil)
+                }
+                else {
+                    self.delegate?.restoreSafeCancelled(showLocalDataInfo: true)
+                }
+            }
+            let message = String.localizedStringWithFormat(
+                #localize("restore_option_safe_keep_data"),
+                TargetManager.localizedAppName
+            )
+            alert.showConfirm(message, noButtonLabel: #localize("no"), yesButtonLabel: #localize("yes"))
+            return false
+        }
         
         return true
     }
@@ -189,13 +205,13 @@ extension RestoreSafeViewController: SetupTextFieldDelegate {
 extension RestoreSafeViewController {
     @IBAction func touchDownButton(_ sender: UIButton, forEvent event: UIEvent) {
         if sender == cancelButton {
-            delegate?.restoreSafeCancelled()
+            delegate?.restoreSafeCancelled(showLocalDataInfo: false)
         }
     }
     
     @objc func swipeAction(sender: UITapGestureRecognizer) {
         if sender.state == .ended {
-            delegate?.restoreSafeCancelled()
+            delegate?.restoreSafeCancelled(showLocalDataInfo: false)
         }
     }
     
@@ -395,6 +411,7 @@ extension RestoreSafeViewController {
                 delegate?.restoreSafeDone()
             }
             catch {
+                DDLogError("[ThreemaSafe Restore] Error: \(error)")
                 showAlert(for: error)
             }
         }
@@ -415,7 +432,7 @@ extension RestoreSafeViewController {
         DDLogError("[ThremaSafe Restore] Error restoring safe: [\(message)]")
         let alert = IntroQuestionViewHelper(parent: self) { [weak self] _, _ in
             if let safeError = error as? SafeError.RestoreError {
-                self?.delegate?.restoreSafeCancelled()
+                self?.delegate?.restoreSafeCancelled(showLocalDataInfo: false)
             }
         }
         
@@ -441,6 +458,6 @@ extension RestoreSafeViewController: SetupAppDelegate {
     }
     
     func mismatchCancelled() {
-        delegate?.restoreSafeCancelled()
+        delegate?.restoreSafeCancelled(showLocalDataInfo: false)
     }
 }

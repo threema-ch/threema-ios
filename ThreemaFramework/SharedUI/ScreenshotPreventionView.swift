@@ -30,7 +30,7 @@ public struct ScreenshotPreventionView: View {
             Colors.textInverted.color
                 .ignoresSafeArea()
             
-            VStack(spacing: 16) {
+            VStack(spacing: 8) {
                 Image(uiImage: Colors.threemaLogo)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -42,17 +42,18 @@ public struct ScreenshotPreventionView: View {
                 Image(systemName: "eye.slash")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(maxHeight: 100)
+                    .frame(maxHeight: 80)
                     .padding()
                 
                 Text(#localize("screenshot_prevention_info"))
-                    .font(.title2)
-                    .bold()
+                    .font(.title3)
+                    .fontWeight(.medium)
                 
                 Spacer()
                 Spacer()
             }
-            .padding()
+            .padding([.top, .bottom])
+            .padding([.leading, .trailing], 50)
             .multilineTextAlignment(.center)
         }
     }

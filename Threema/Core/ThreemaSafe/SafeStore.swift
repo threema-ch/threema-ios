@@ -892,44 +892,87 @@ import ThreemaMacros
         }
         
         for backupGroup in backupGroups {
-            guard let groupID = backupGroup.id,
+            guard let groupIDString = backupGroup.id,
+                  let groupIDBytes = BytesUtility.toBytes(hexString: groupIDString),
                   let groupCreator = backupGroup.creator,
                   let members = backupGroup.members else {
                 DDLogWarn("[ThreemaSafe Restore] Safe restore group id, creator or members missing")
                 continue
             }
+
+            let groupID = Data(groupIDBytes)
             
             do {
-                guard let group = try await groupManager.createOrUpdateDB(
-                    for: GroupIdentity(
-                        id: Data(BytesUtility.toBytes(hexString: groupID)!),
-                        creator: ThreemaIdentity(groupCreator)
-                    ),
-                    members: Set<String>(members.map { $0.uppercased() }),
-                    systemMessageDate: nil,
-                    sourceCaller: .local
-                ) else {
-                    DDLogWarn("[ThreemaSafe Restore] Restoring group failed")
-                    return
-                }
-                
-                var category: ConversationEntity.Category = .default
-                
-                if let isPrivate = backupGroup.private,
-                   isPrivate {
-                    category = .private
-                }
-                
-                await entityManager.performSave {
-                    group.conversation.groupName = backupGroup.groupname
-                    group.conversation.changeCategory(to: category)
+                if members.contains(myIdentityStore.identity) {
+                    guard let group = try await groupManager.createOrUpdateDB(
+                        for: GroupIdentity(
+                            id: groupID,
+                            creator: ThreemaIdentity(groupCreator)
+                        ),
+                        members: Set<String>(members.map { $0.uppercased() }),
+                        systemMessageDate: nil,
+                        sourceCaller: .local
+                    ) else {
+                        DDLogWarn("[ThreemaSafe Restore] Restoring group failed")
+                        continue
+                    }
                     
-                    if let lastUpdate = backupGroup.lastUpdate {
-                        group.conversation.lastUpdate = Date(millisecondsSince1970: lastUpdate)
+                    var category: ConversationEntity.Category = .default
+                    
+                    if let isPrivate = backupGroup.private,
+                       isPrivate {
+                        category = .private
+                    }
+                    
+                    await entityManager.performSave {
+                        group.conversation.groupName = backupGroup.groupname
+                        group.conversation.changeCategory(to: category)
+                        
+                        if let lastUpdate = backupGroup.lastUpdate {
+                            group.conversation.lastUpdate = Date(millisecondsSince1970: lastUpdate)
+                        }
+                    }
+                    
+                    // No sync is needed as this will be done in the `AppUpdateSteps`
+                }
+                else {
+                    // Dissolved Group
+                    await entityManager.performSave {
+                        let groupEntity = entityManager.entityCreator.groupEntity(
+                            groupID: groupID,
+                            state: NSNumber(value: GroupEntity.GroupState.left.rawValue)
+                        )
+                        let isSelfGroupCreator = groupCreator == self.myIdentityStore.identity
+                        groupEntity.groupCreator = isSelfGroupCreator ? nil : groupCreator
+                        
+                        let conversationEntity = entityManager.entityCreator.conversationEntity()
+                        conversationEntity.groupID = groupID
+                        
+                        if !isSelfGroupCreator {
+                            conversationEntity.contact = entityManager.entityFetcher.contactEntity(for: groupCreator)
+                        }
+                        conversationEntity.groupMyIdentity = self.myIdentityStore.identity
+                        
+                        var category: ConversationEntity.Category = .default
+                        if let isPrivate = backupGroup.private,
+                           isPrivate {
+                            category = .private
+                        }
+                        
+                        conversationEntity.groupName = backupGroup.groupname
+                        conversationEntity.changeCategory(to: category)
+                        
+                        if let lastUpdate = backupGroup.lastUpdate {
+                            conversationEntity.lastUpdate = Date(millisecondsSince1970: lastUpdate)
+                        }
+                        
+                        for identity in members {
+                            if let member = entityManager.entityFetcher.contactEntity(for: identity) {
+                                conversationEntity.members?.insert(member)
+                            }
+                        }
                     }
                 }
-                
-                // No sync is needed as this will be done in the `AppUpdateSteps`
             }
             catch {
                 DDLogWarn("[ThreemaSafe Restore] Restoring group failed with error: \(error)")

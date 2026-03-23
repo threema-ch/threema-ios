@@ -87,7 +87,9 @@ final class ThreemaWebSettingsViewModel: NSObject, ObservableObject {
     private let qrCodeParser = QRCodeParser()
     private var overrideSaltyRtcPort: Int?
     private var overrideSaltyRtcHost: String?
-    private var threemaWebServerURL: String = BundleUtil.object(forInfoDictionaryKey: "ThreemaWebURL") as? String ?? ""
+    private var threemaWebServerURL: String = BundleUtil.object(
+        forThreemaFrameworkConfigurationKey: "ThreemaWebURL"
+    ) as? String ?? ""
 
     private lazy var entityManager = BusinessInjector.ui.entityManager
     private lazy var serverInfoProvider = ServerInfoProviderFactory.makeServerInfoProvider()

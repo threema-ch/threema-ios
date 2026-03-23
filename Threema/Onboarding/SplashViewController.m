@@ -1072,11 +1072,15 @@
 
 #pragma mark - RestoreSafeViewControllerDelegate
 
-- (void)restoreSafeCancelled {
+- (void)restoreSafeCancelledWithShowLocalDataInfo:(BOOL)showLocalDataInfo {
     _restoreSafeViewController.delegate = nil;
     [self showRestoreOptionBackupViewController];
     [self slideOut:_restoreSafeViewController fromRightToLeft:NO onCompletion:nil];
     [self slideIn:_restoreOptionBackupViewController fromLeftToRight:NO onCompletion:nil];
+    
+    if (showLocalDataInfo) {
+        [self restoreCancelled];
+    }
 }
 
 - (void)restoreSafeDone {

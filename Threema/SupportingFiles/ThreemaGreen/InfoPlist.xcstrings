@@ -77,19 +77,7 @@
             "value" : "Threema Green"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Green"
-          }
-        },
         "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Green"
-          }
-        },
-        "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Threema Green"
@@ -209,19 +197,7 @@
             "value" : "Threema Green"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Green"
-          }
-        },
         "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema Green"
-          }
-        },
-        "rm-CH" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Threema Green"
@@ -341,22 +317,10 @@
             "value" : "Twój aparat jest używany do robienia zdjęć lub wideo i wysyłania ich na czacie oraz do skanowania kodów QR."
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A sua câmera é utilizada quando você tira uma foto ou faz um vídeo e envia em um chat e para digitalizar códigos QR."
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "A sua câmera é utilizada quando você tira uma foto ou faz um vídeo e envia em um chat e para digitalizar códigos QR."
-          }
-        },
-        "rm-CH" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La camera vegn duvrada per far fotos/videos e trametter en in chat e per scannar codes QR."
           }
         },
         "ru" : {
@@ -473,22 +437,10 @@
             "value" : "Kontakty służą do znajdowania innych użytkowników Threema, gdy synchronizacja jest włączona. W tym celu skróty numerów telefonów i adresów e-mail zostaną przesłane na serwer Threema. Te informacje nie są przechowywane na serwerach."
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Os contatos são utilizados para encontrar outros usuários do Threema quando a sincronização está ativada. Hashes dos números de telefone e endereços de e-mail serão enviados ao servidor do Threema com este propósito. Esta informação não é armazenada nos servidores."
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Os contatos são utilizados para encontrar outros usuários do Threema quando a sincronização está ativada. Hashes dos números de telefone e endereços de e-mail serão enviados ao servidor do Threema com este propósito. Esta informação não é armazenada nos servidores."
-          }
-        },
-        "rm-CH" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ils contacts vegnan duvrads per chattar auters utilisaders da Threema, sche la sincronisaziun è activada."
           }
         },
         "ru" : {
@@ -605,22 +557,10 @@
             "value" : "Możesz użyć Face ID, aby odblokować Threema bez wpisywania kodu."
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Você pode usar o seu Face ID para desbloquear o Threema sem inserir o seu código."
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Você pode usar o seu Face ID para desbloquear o Threema sem inserir o seu código."
-          }
-        },
-        "rm-CH" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ti pos duvrar Face ID per debloccar Threema senza endatar tes code."
           }
         },
         "ru" : {
@@ -737,22 +677,10 @@
             "value" : "Threema używa sieci lokalnej do połączeń telefonicznych."
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O Threema usa a rede local para fazer ligações."
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "O Threema usa a rede local para fazer ligações."
-          }
-        },
-        "rm-CH" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema utilisescha la rait locala per colliaziuns da telefon."
           }
         },
         "ru" : {
@@ -869,22 +797,10 @@
             "value" : "Twoja lokalizacja jest używana, gdy wyślesz ją na czacie i do wyświetlenia Twojej lokalizacji na mapie."
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A sua localização é utilizada quando você a envia em um chat e para exibir a sua própria localização em um mapa."
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "A sua localização é utilizada quando você a envia em um chat e para exibir a sua própria localização em um mapa."
-          }
-        },
-        "rm-CH" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Il lieu vegn duvrà, sche ti al tramettas en in chat e per mussar tia atgna posiziun sin la charta."
           }
         },
         "ru" : {
@@ -937,13 +853,13 @@
         },
         "cs" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mikrofon slouží k nahrávání zvukových zpráv."
+            "state" : "translated",
+            "value" : "Pro použití funkcí jako jsou hlasové hovory, hlasové zprávy a videohovory aplikace potřebuje přístup k mikrofonu. Chcete-li tyto funkce využívat, povolte prosím přístup k mikrofonu."
           }
         },
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Für Funktionen wie Sprachanrufen, Sprachnachrichten und Videoanrufen benötigt die App Zugriff auf Ihr Mikrofon. Bitte erlauben Sie den Zugriff, um diese Funktionen nutzen zu können."
           }
         },
@@ -967,8 +883,8 @@
         },
         "gsw-CH" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "S’Mikrofon wird bruucht für Aarüef und zum Sprachnachrichte ufneh."
+            "state" : "translated",
+            "value" : "Für Funktione wie Spracharüef, Sprachnachrichte und Videoarüef bruucht d’App Zuegriff uf Ihres Mikrofon. Bitte erlaubed Sie de Zuegriff, damit Sie die Funktione chönd nutze."
           }
         },
         "it" : {
@@ -1001,22 +917,10 @@
             "value" : "Mikrofon służy do nagrywania wiadomości audio."
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O microfone é utilizado para gravar mensagens em áudio."
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "O microfone é utilizado para gravar mensagens em áudio."
-          }
-        },
-        "rm-CH" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Il microfon vegn duvrà per registrar messadis discurrids."
           }
         },
         "ru" : {
@@ -1133,22 +1037,10 @@
             "value" : "Threema może automatycznie zapisywać przychodzące pliki multimedialne w aplikacji Zdjęcia."
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O Threema pode salvar automaticamente os arquivos de mídia recebidos no aplicativo de Fotos."
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "O Threema pode salvar automaticamente os arquivos de mídia recebidos no aplicativo de Fotos."
-          }
-        },
-        "rm-CH" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Threema po memorisar automaticamain las medias che entran en las registraziuns."
           }
         },
         "ru" : {
@@ -1265,22 +1157,10 @@
             "value" : "Twoja biblioteka zdjęć jest używana, gdy wybierzesz z niej obraz i wyślesz go na czacie."
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A sua biblioteca de fotos é utilizada quando você escolhe uma imagem dela e envia em um chat."
-          }
-        },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "A sua biblioteca de fotos é utilizada quando você escolhe uma imagem dela e envia em um chat."
-          }
-        },
-        "rm-CH" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L'access a las fotos vegn duvrà per tscherner in maletg ed al trametter en in chat."
           }
         },
         "ru" : {

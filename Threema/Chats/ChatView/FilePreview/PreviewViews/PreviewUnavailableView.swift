@@ -30,10 +30,12 @@ struct PreviewUnavailableView: View {
         } description: {
             Text(viewModel.fileSizeText ?? "")
         } actions: {
-            Button {
-                viewModel.shareFile()
-            } label: {
-                Label(viewModel.shareButtonName, systemImage: "square.and.arrow.up")
+            if viewModel.isShareable {
+                Button {
+                    viewModel.shareFile()
+                } label: {
+                    Label(viewModel.shareButtonName, systemImage: "square.and.arrow.up")
+                }
             }
         }
         .background(Color(uiColor: .systemGroupedBackground))

@@ -361,29 +361,6 @@ struct KeychainManagerTests {
         #expect(loadOperation.searchAccount == nil)
         #expect(cryptoMock.calls.isEmpty)
     }
-
-    @Test
-    func testDeleteDeviceCookie() throws {
-        let (
-            keychainManager,
-            keychainMock,
-            cryptoMock,
-            _
-        ) = makeSUT()
-        
-        try keychainManager.deleteDeviceCookie()
-        #expect(keychainMock.calls.count == 1)
-        
-        let keychainCall = try #require(keychainMock.calls.first)
-        guard case let .delete(keychainItem) = keychainCall else {
-            Issue.record("Expected call to be .delete, but got \(keychainCall)")
-            throw NSError(domain: "", code: -1)
-        }
-        
-        #expect(keychainCall.isDeleting == true)
-        #expect(keychainItem == .deviceCookie())
-        #expect(cryptoMock.calls.isEmpty)
-    }
     
     // MARK: - Multi-Device Group Key Tests
     
@@ -883,29 +860,6 @@ struct KeychainManagerTests {
         #expect(keychainCall.isLoading == true)
         #expect(loadOperation.searchItem == .forwardSecurityWrappingKey())
         #expect(loadOperation.searchAccount == nil)
-        #expect(cryptoMock.calls.isEmpty)
-    }
-
-    @Test
-    func testDeleteForwardSecurityKey() throws {
-        let (
-            keychainManager,
-            keychainMock,
-            cryptoMock,
-            _
-        ) = makeSUT()
-        
-        try keychainManager.deleteForwardSecurityKey()
-        #expect(keychainMock.calls.count == 1)
-        
-        let keychainCall = try #require(keychainMock.calls.first)
-        guard case let .delete(keychainItem) = keychainCall else {
-            Issue.record("Expected call to be .delete, but got \(keychainCall)")
-            throw NSError(domain: "", code: -1)
-        }
-        
-        #expect(keychainCall.isDeleting == true)
-        #expect(keychainItem == .forwardSecurityWrappingKey())
         #expect(cryptoMock.calls.isEmpty)
     }
 

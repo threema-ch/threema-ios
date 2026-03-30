@@ -277,8 +277,8 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         )
     }
 
-    public func deleteDeviceCookie() throws {
-        try keychainProvider.delete(.deviceCookie())
+    public static func deleteDeviceCookie() throws {
+        try KeychainProvider().delete(.deviceCookie())
     }
 
     // MARK: - Device Group Key
@@ -374,8 +374,8 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
         )
     }
 
-    public func deleteForwardSecurityKey() throws {
-        try keychainProvider.delete(.forwardSecurityWrappingKey())
+    public static func deleteForwardSecurityKey() throws {
+        try KeychainProvider().delete(.forwardSecurityWrappingKey())
     }
 
     // MARK: - License (Work and OnPrem)
@@ -521,6 +521,33 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
     public func migrateToVersion1(myIdentity: ThreemaEssentials.ThreemaIdentity) throws {
         try KeychainMigration.migrateToVersion1(myIdentity: myIdentity)
     }
+    
+    // MARK: - Deletion
+    
+    @objc public static func deleteAllItems() throws {
+        let keychainProvider = KeychainProvider()
+        for item in KeychainItem.allCases {
+            try keychainProvider.delete(item)
+        }
+    }
+    
+    public static func deleteAllThisDeviceOnlyItems() throws {
+        let keychainProvider = KeychainProvider()
+        for item in KeychainItem.allCases where item.accessibility == kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly {
+            try keychainProvider.delete(item)
+        }
+    }
+    
+    public static func deleteAllEncryptedItems() throws {
+        guard hasRemoteSecretInStore() else {
+            return
+        }
+        
+        let keychainProvider = KeychainProvider()
+        for item in KeychainItem.allCases where item.mightContainEncryptedData {
+            try keychainProvider.delete(item)
+        }
+    }
 
     // MARK: - Debug stuff
 
@@ -561,18 +588,4 @@ public final class KeychainManager: NSObject, KeychainManagerProtocol {
             }
         }
     #endif
-    
-    @objc public static func deleteAllItems() throws {
-        let keychainProvider = KeychainProvider()
-        for item in KeychainItem.allCases {
-            try keychainProvider.delete(item)
-        }
-    }
-    
-    public static func deleteAllThisDeviceOnlyItems() throws {
-        let keychainProvider = KeychainProvider()
-        for item in KeychainItem.allCases where item.accessibility == kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly {
-            try keychainProvider.delete(item)
-        }
-    }
 }

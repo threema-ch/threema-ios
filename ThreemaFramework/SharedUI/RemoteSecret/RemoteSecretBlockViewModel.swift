@@ -70,11 +70,11 @@ class RemoteSecretBlockViewModel: ObservableObject {
 
     lazy var retryButtonTitle: String =
         switch type {
-        case .generalError:
+        case .generalError, .mismatch:
             #localize("rs_view_failed_button_title")
         case .timeout:
             #localize("rs_view_disconnected_button_title")
-        case .blocked, .mismatch:
+        case .blocked:
             ""
         }
     
@@ -89,7 +89,7 @@ class RemoteSecretBlockViewModel: ObservableObject {
     // MARK: - Properties
     
     var showRetryButton: Bool {
-        type == .timeout || type == .generalError
+        onRetry != nil && (type == .timeout || type == .generalError || type == .mismatch)
     }
     
     var showDeleteButton: Bool {

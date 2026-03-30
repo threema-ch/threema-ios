@@ -58,7 +58,6 @@
 @property IntroQuestionView *acceptPrivacyPolicyQuestionView;
 @property IntroQuestionView *existingBackupQuestionView;
 @property IntroQuestionView *existingIdQuestionView;
-@property IntroQuestionView *existingRemoteSecretQuestionView;
 
 @property NSString *idBackup;
 
@@ -548,25 +547,6 @@
     [self hideMessageView:_existingIdQuestionView];
 }
 
-- (void)showRemoteSecretExistsQuestion {
-    
-    if (_existingRemoteSecretQuestionView == nil) {
-        _existingRemoteSecretQuestionView = (IntroQuestionView *)[NibUtil loadViewFromNibWithName:@"IntroQuestionView"];
-        _existingRemoteSecretQuestionView.tag = 3;
-        _existingRemoteSecretQuestionView.questionLabel.text = [BundleUtil localizedStringForKey:@"intro_question_text_rs"];
-        _existingRemoteSecretQuestionView.delegate = self;
-        _existingRemoteSecretQuestionView.frame = [self rect:_existingRemoteSecretQuestionView.frame centerIn:self.view.frame round:YES];
-        
-        [self.view addSubview:_existingRemoteSecretQuestionView];
-    }
-    
-    [self showMessageView:_existingRemoteSecretQuestionView];
-}
-
-- (void)hideRemoteSecretExistsQuestion {
-    [self hideMessageView:_existingRemoteSecretQuestionView];
-}
-
 #pragma mark - manage views
 
 - (void)showSetupViewController {
@@ -771,15 +751,6 @@
     return NO;
 }
 
-- (BOOL)checkForRSExists {
-
-    if ([KeychainManager hasRemoteSecretInStore]) {
-        [self showRemoteSecretExistsQuestion];
-        return YES;
-    }
-    return NO;
-}
-
 - (BOOL)checkForIDExists {
     // Because we load an existing identity at `viewDidLoad` we know here if there is still a valid identity in the keychain
     if ([MyIdentityStore.sharedMyIdentityStore isValidIdentity]) {
@@ -807,15 +778,12 @@
 - (IBAction)setupAction:(id)sender {
     _triggeredSetup = YES;
     
-    // First we check for an existing RS, the check will show a question view and handle decision itself.
-    if(![self checkForRSExists]) {
-        // Check for ID Export, if is business app or if Threema and has no existing ID
-        if (TargetManagerObjC.isBusinessApp || (!TargetManagerObjC.isBusinessApp && ![self checkForIDExists])) {
-            if ([self checkForIDBackup] == NO) {
-                [self showSetupViewController];
-                [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-                [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
-            }
+    // Check for ID Export, if is business app or if Threema and has no existing ID
+    if (TargetManagerObjC.isBusinessApp || (!TargetManagerObjC.isBusinessApp && ![self checkForIDExists])) {
+        if ([self checkForIDBackup] == NO) {
+            [self showSetupViewController];
+            [self slideOut:self fromRightToLeft:YES onCompletion:nil];
+            [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
         }
     }
 }
@@ -879,11 +847,6 @@
             [self presentPageViewControllerWithRemoteSecretAndKeychain:remoteSecretAndKeychain];
         }];
     }
-    else if (sender.tag == 3) {
-        // RS exists, we give the option to restore a backup with the ID
-        [self hideRemoteSecretExistsQuestion];
-        [self startRestore];
-    }
 }
 
 - (void)selectedNo:(IntroQuestionView *)sender {
@@ -908,17 +871,6 @@
         // Remove all keychain items
         [KeychainManager deleteAllItemsAndReturnError:(NSError * _Nullable __autoreleasing * _Nullable) {}];
 
-        [self showSetupViewController];
-        [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-        [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
-    }
-    else if (sender.tag == 3) {
-        // User wants new RS and needs new ID
-        [self hideRemoteSecretExistsQuestion];
-        
-        // Remove all keychain items
-        [KeychainManager deleteAllItemsAndReturnError:(NSError * _Nullable __autoreleasing * _Nullable) {}];
-        
         [self showSetupViewController];
         [self slideOut:self fromRightToLeft:YES onCompletion:nil];
         [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];

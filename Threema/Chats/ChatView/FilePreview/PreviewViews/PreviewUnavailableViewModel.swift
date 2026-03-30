@@ -24,6 +24,7 @@ import ThreemaMacros
 
 struct PreviewUnavailableViewModel {
     private let fileMessageEntity: FileMessageEntity
+    private let mdmManager: MDMSetup
 
     var thumbnailSymbolName: String {
         "document.fill"
@@ -42,6 +43,10 @@ struct PreviewUnavailableViewModel {
         
     let shareButtonName: String = #localize("share")
     
+    var isShareable: Bool {
+        mdmManager.disableShareMedia() == false
+    }
+    
     private var shareableItem: UIActivityItemSource? {
         guard let data = BaseMessageEntityMessageShareContentMapper.mapToContent(
             from: fileMessageEntity,
@@ -53,13 +58,21 @@ struct PreviewUnavailableViewModel {
         return UIActivityHelperFactory.makeItemSource(type: .messageActivity(data))
     }
     
-    init(fileMessageEntity: FileMessageEntity) {
+    init(
+        fileMessageEntity: FileMessageEntity,
+        mdmManager: MDMSetup = MDMSetup()
+    ) {
         self.fileMessageEntity = fileMessageEntity
+        self.mdmManager = mdmManager
     }
     
     // A bit a hacky way to show share sheet in SwiftUI for types, that don't support `Transferable`
     // TODO: (IOS-5599) Adapt (file) messages to `Transferable` protocol
     func shareFile() {
+        guard isShareable else {
+            return
+        }
+        
         guard let shareableItem else {
             return
         }

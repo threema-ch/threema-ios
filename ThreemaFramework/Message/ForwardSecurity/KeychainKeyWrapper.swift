@@ -102,10 +102,8 @@ import Keychain
     }
     
     @objc func deleteWrappingKey() {
-        let keychainManager = KeychainManager(remoteSecretManager: AppLaunchManager.remoteSecretManager)
-
         do {
-            try keychainManager.deleteForwardSecurityKey()
+            try KeychainManager.deleteForwardSecurityKey()
         }
         catch {
             DDLogError("Couldn't delete wrapping key in Keychain: \(error)")

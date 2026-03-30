@@ -41,7 +41,7 @@ public protocol KeychainManagerProtocol: Sendable {
 
     func loadDeviceCookie() throws -> Data?
     func storeDeviceCookie(_ cookie: Data) throws
-    func deleteDeviceCookie() throws
+    static func deleteDeviceCookie() throws
 
     func loadMultiDeviceGroupKey() throws -> Data?
     func storeMultiDeviceGroupKey(key: Data) throws
@@ -54,7 +54,7 @@ public protocol KeychainManagerProtocol: Sendable {
 
     func loadForwardSecurityWrappingKey() throws -> Data?
     func storeForwardSecurityWrappingKey(_ key: Data) throws
-    func deleteForwardSecurityKey() throws
+    static func deleteForwardSecurityKey() throws
 
     static func loadOnPremServer() throws -> String?
 
@@ -73,4 +73,8 @@ public protocol KeychainManagerProtocol: Sendable {
     func migrateToDowngrade() throws
     func migrateToVersion0() throws
     func migrateToVersion1(myIdentity: ThreemaIdentity) throws
+    
+    static func deleteAllItems() throws
+    static func deleteAllThisDeviceOnlyItems() throws
+    static func deleteAllEncryptedItems() throws
 }

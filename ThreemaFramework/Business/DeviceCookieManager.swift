@@ -44,7 +44,7 @@ import ThreemaEssentials
             if let cookie = try keychainManager.loadDeviceCookie() {
                 guard cookie.count == DeviceCookieManager.deviceCookieSize else {
                     DDLogError("Bad Keychain item data")
-                    try keychainManager.deleteDeviceCookie()
+                    try KeychainManager.deleteDeviceCookie()
                     return nil
                 }
 
@@ -90,10 +90,8 @@ import ThreemaEssentials
     }
 
     @objc static func deleteDeviceCookie() {
-        let keychainManager = KeychainManager(remoteSecretManager: AppLaunchManager.remoteSecretManager)
-
         do {
-            try keychainManager.deleteDeviceCookie()
+            try KeychainManager.deleteDeviceCookie()
         }
         catch {
             DDLogError("Couldn't delete device cookie in Keychain: \(error)")

@@ -117,7 +117,7 @@ public final class KeychainManagerMock: KeychainManagerProtocol, @unchecked Send
         // no-op
     }
 
-    public func deleteDeviceCookie() throws {
+    public static func deleteDeviceCookie() throws {
         // no-op
     }
 
@@ -154,7 +154,7 @@ public final class KeychainManagerMock: KeychainManagerProtocol, @unchecked Send
         // no-op
     }
 
-    public func deleteForwardSecurityKey() throws {
+    public static func deleteForwardSecurityKey() throws {
         // no-op
     }
 
@@ -208,5 +208,17 @@ public final class KeychainManagerMock: KeychainManagerProtocol, @unchecked Send
 
     public func migrateToVersion1(myIdentity: ThreemaEssentials.ThreemaIdentity) throws {
         $migrateToVersion1Calls += 1
+    }
+    
+    public static func deleteAllItems() throws {
+        // no-op
+    }
+    
+    public static func deleteAllThisDeviceOnlyItems() throws {
+        // no-op
+    }
+    
+    public static func deleteAllEncryptedItems() throws {
+        // no-op
     }
 }

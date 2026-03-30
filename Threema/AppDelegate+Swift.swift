@@ -63,6 +63,19 @@ extension AppDelegate {
                 // used with this configuration before
                 MyIdentityStore.shared().removeIdentityUserDefaults()
             }
+
+            // If a user deletes an RS-enabled app from the Home Screen all information is still in the keychain, but
+            // there is not preexisting data (and thus the `AppSetupState` is `notSetup`). In this case we delete all
+            // RS-related data in keychain. As soon as `AppSetupState` is not `notSetup` anymore an ID was created or
+            // restored and any potential new RS created. Thus we don't delete anything.
+            // TODO: (IOS-6023) Can we generalize this cleanup?
+            if KeychainManager.hasRemoteSecretInStore() &&
+                AppSetup.hasPreexistingDatabaseFile == false &&
+                AppSetup.state == .notSetup {
+                
+                try KeychainManager.deleteAllEncryptedItems()
+                try KeychainManager.deleteRemoteSecret()
+            }
             
             guard showOnboardingIfNeeded() == false else {
                 return nil

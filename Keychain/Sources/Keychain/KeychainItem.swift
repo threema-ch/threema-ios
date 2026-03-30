@@ -21,7 +21,7 @@
 import Foundation
 import ThreemaEssentials
 
-enum KeychainItem: CustomStringConvertible, CaseIterable {
+enum KeychainItem: CaseIterable {
     case remoteSecret(_ version: KeychainVersion = .v1)
     case identity(_ version: KeychainVersion = .v1)
     case identityBackup(_ version: KeychainVersion = .v1)
@@ -104,6 +104,28 @@ enum KeychainItem: CustomStringConvertible, CaseIterable {
         }
     }
 
+    var mightContainEncryptedData: Bool {
+        switch self {
+        case .remoteSecret,
+             .identityBackup:
+            false
+            
+        case .identity,
+             .deviceCookie,
+             .multiDeviceGroupKey,
+             .multiDeviceID,
+             .forwardSecurityWrappingKey,
+             .license,
+             .threemaSafeKey,
+             .threemaSafeServer:
+            true
+        }
+    }
+}
+
+// MARK: - CustomStringConvertible
+
+extension KeychainItem: CustomStringConvertible {
     var description: String {
         label
     }

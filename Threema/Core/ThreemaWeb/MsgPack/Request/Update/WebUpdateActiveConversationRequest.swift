@@ -42,32 +42,29 @@ class WebUpdateActiveConversationRequest: WebAbstractMessage {
     
     func updateActiveConversation() {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
-        
-        DispatchQueue.main.sync {
-            let entityManager = BusinessInjector.ui.entityManager
 
-            if groupID != nil {
-                let conversation = entityManager.entityFetcher.legacyConversationEntity(for: groupID)
-                
-                entityManager.performAndWaitSave {
-                    if conversation?.unreadMessageCount == -1 {
-                        conversation!.unreadMessageCount = 0
-                    }
+        let entityManager = BusinessInjector.ui.entityManager
+
+        entityManager.performAndWaitSave {
+            if self.groupID != nil {
+                let conversation = entityManager.entityFetcher.legacyConversationEntity(for: self.groupID)
+                if conversation?.unreadMessageCount == -1 {
+                    conversation!.unreadMessageCount = 0
                 }
             }
-            else if let identity {
+            else if let identity = self.identity {
                 let conversation = entityManager.entityFetcher.conversationEntity(for: identity)
-                entityManager.performAndWaitSave {
-                    if conversation?.unreadMessageCount == -1 {
-                        conversation!.unreadMessageCount = 0
-                    }
+                if conversation?.unreadMessageCount == -1 {
+                    conversation!.unreadMessageCount = 0
                 }
             }
-            
+        }
+
+        DispatchQueue.main.async {
             let notificationManager = NotificationManager()
             notificationManager.updateUnreadMessagesCount()
-            
-            self.ack!.success = true
         }
+
+        ack!.success = true
     }
 }

@@ -4,7 +4,7 @@
 //   |_| |_||_|_| \___\___|_|_|_\__,_(_)
 //
 // Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
+// Copyright (c) 2026-2025 Threema GmbH
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License, version 3,
@@ -18,12 +18,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-VERSION_NUMBER=7.0.7
-BUILD_NUMBER=70074
+import ThreemaEssentials
 
-SLASH = /
-
-ONLY_ACTIVE_ARCH = YES
-TARGETED_DEVICE_FAMILY = 1,2
-SWIFT_EMIT_LOC_STRINGS = YES
-IPHONEOS_DEPLOYMENT_TARGET = 17.0
+@objc(ThreemaIdentityObjc)
+public class ThreemaIdentityObjc: NSObject {
+    @objc public static let length = ThreemaIdentity.length
+}

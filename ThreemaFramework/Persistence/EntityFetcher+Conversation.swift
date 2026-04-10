@@ -45,6 +45,18 @@ extension EntityFetcher {
         return fetchEntities(entityName: "Conversation", predicate: predicate)
     }
     
+    /// Fetches all `ConversationEntity` that are in the `typing` state and the indicator state has timeout.
+    /// - Returns: Array of `ConversationEntity`
+    @objc public func typingConversationEntities(timeoutDate: Date) -> [ConversationEntity] {
+        fetchEntities(
+            entityName: "Conversation",
+            predicate: .and(
+                .conversationIsTyping,
+                .conversationTypingIsStale(timeoutDate: timeoutDate)
+            )
+        ) ?? []
+    }
+
     /// Fetches all persisted `ConversationEntity` that are private
     /// - Returns: Optional array of `ConversationEntity`
     public func privateConversationEntities() -> [ConversationEntity]? {

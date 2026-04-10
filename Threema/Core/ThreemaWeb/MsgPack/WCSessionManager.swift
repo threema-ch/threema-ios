@@ -25,7 +25,7 @@ import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
-@objc class WCSessionManager: NSObject {
+@objc final class WCSessionManager: NSObject {
     
     @objc static let shared = WCSessionManager()
     
@@ -46,7 +46,7 @@ import ThreemaMacros
         try? fileUtility.delete(at: runningSessionsURL())
     }
     
-    public class func isWebHostAllowed(scannedHostName: String, whiteList: String) -> Bool {
+    public final class func isWebHostAllowed(scannedHostName: String, whiteList: String) -> Bool {
         if whiteList.isEmpty {
             return false
         }
@@ -135,26 +135,34 @@ extension WCSessionManager {
         observerAlreadySet = false
         NavigationBarPromptHandler.isWebActive = false
 
-        if NavigationBarPromptHandler.isCallActiveInBackground || VoIPCallStateManager.shared
-            .currentCallState() == .idle, !NavigationBarPromptHandler.isGroupCallActive {
-            
-            DispatchQueue.main.async {
-                if let mainTabBar = AppDelegate.getMainTabBarController(),
-                   let viewControllers = mainTabBar.viewControllers {
-                    if viewControllers.count <= kChatTabBarIndex {
-                        UIApplication.shared.isIdleTimerDisabled = false
-                        return
-                    }
+        guard
+            NavigationBarPromptHandler.isCallActiveInBackground
+            || VoIPCallStateManager.shared.currentCallState() == .idle,
+            !NavigationBarPromptHandler.isGroupCallActive
+        else {
+            return
+        }
 
-                    if let chatNavVc = viewControllers[Int(kChatTabBarIndex)] as? UINavigationController,
-                       let curChatVc = chatNavVc.topViewController as? ChatViewController {
-                        if !curChatVc.isRecording(),
-                           !curChatVc.isPlayingAudioMessage() {
-                            UIApplication.shared.isIdleTimerDisabled = false
-                        }
-                        return
-                    }
-                }
+        DispatchQueue.main.async {
+            guard let mainTabBar = AppDelegate.getMainTabBarController(),
+                  let viewControllers = mainTabBar.viewControllers else {
+                UIApplication.shared.isIdleTimerDisabled = false
+                return
+            }
+
+            guard viewControllers.count > kChatTabBarIndex else {
+                UIApplication.shared.isIdleTimerDisabled = false
+                return
+            }
+
+            guard let chatNavVc = viewControllers[Int(kChatTabBarIndex)] as? UINavigationController,
+                  let curChatVc = chatNavVc.topViewController as? ChatViewController else {
+                UIApplication.shared.isIdleTimerDisabled = false
+                return
+            }
+
+            if !curChatVc.isRecording(),
+               !curChatVc.isPlayingAudioMessage() {
                 UIApplication.shared.isIdleTimerDisabled = false
             }
         }
@@ -178,137 +186,161 @@ extension WCSessionManager {
     /// Connect a old or new session. Search for correct session or create a new one
     @objc public func connect(authToken: Data?, wca: String?, publicKeyHash: String) {
         canConnectToWebClient { isValid in
-            if isValid == true {
-                if let webClientSession = WebClientSessionStore.shared.webClientSessionForHash(publicKeyHash) {
-                    if webClientSession.isConnecting {
-                        DDLogError("[Threema Web] WebClientSession try already to connect")
-                        return
-                    }
-                    webClientSession.isConnecting = true
-                    var session: WCSession? = self.sessions[webClientSession.initiatorPermanentPublicKey]
-                    
-                    if TargetManager.isBusinessApp {
-                        let mdmSetup = MDMSetup()!
-                        if let webHosts = mdmSetup.webHosts() {
-                            if WCSessionManager.isWebHostAllowed(
-                                scannedHostName: webClientSession.saltyRTCHost,
-                                whiteList: webHosts
-                            ) == false {
-                                DDLogNotice("[Threema Web] Scanned qr code host is not white listed")
-                                if AppDelegate.shared().isAppInBackground() {
-                                    ThreemaUtilityObjC.sendErrorLocalNotification(
-                                        #localize("webClient_scan_error_mdm_host_title"),
-                                        body: #localize("webClient_scan_error_mdm_host_message"),
-                                        userInfo: nil
-                                    )
-                                }
-                                else if let rootVC = AppDelegate.keyWindow?.rootViewController {
-                                    UIAlertTemplate.showAlert(
-                                        owner: rootVC,
-                                        title: #localize("webClient_scan_error_mdm_host_title"),
-                                        message: #localize("webClient_scan_error_mdm_host_message")
-                                    )
-                                }
-                                webClientSession.isConnecting = false
-                                return
-                            }
+            guard isValid == true else {
+                return
+            }
+
+            guard let webClientSession = WebClientSessionStore.shared.webClientSessionForHash(publicKeyHash) else {
+                // session not found
+                return
+            }
+
+            if webClientSession.isConnecting {
+                DDLogError("[Threema Web] WebClientSession try already to connect")
+                return
+            }
+            webClientSession.isConnecting = true
+
+            let (publicKey, saltyRTCHost): (Data, String) = self.businessInjector.entityManager
+                .performAndWait {
+                    (
+                        webClientSession.initiatorPermanentPublicKey,
+                        webClientSession.saltyRTCHost
+                    )
+                }
+
+            var session: WCSession? = self.sessions[publicKey]
+
+            if TargetManager.isBusinessApp {
+                let mdmSetup = MDMSetup()!
+                if let webHosts = mdmSetup.webHosts() {
+                    if WCSessionManager.isWebHostAllowed(
+                        scannedHostName: saltyRTCHost,
+                        whiteList: webHosts
+                    ) == false {
+                        DDLogNotice("[Threema Web] Scanned qr code host is not white listed")
+                        if AppDelegate.shared().isAppInBackground() {
+                            ThreemaUtilityObjC.sendErrorLocalNotification(
+                                #localize("webClient_scan_error_mdm_host_title"),
+                                body: #localize("webClient_scan_error_mdm_host_message"),
+                                userInfo: nil
+                            )
                         }
-                    }
-                                      
-                    if let session, let wca,
-                       let connectionWca = session.connectionWca(),
-                       wca.elementsEqual(connectionWca) {
-                        // same wca, ignore this request
-                        DDLogNotice("[Threema Web] Ignore connect, because it's the same wca")
+                        else if let rootVC = AppDelegate.keyWindow?.rootViewController {
+                            UIAlertTemplate.showAlert(
+                                owner: rootVC,
+                                title: #localize("webClient_scan_error_mdm_host_title"),
+                                message: #localize("webClient_scan_error_mdm_host_message")
+                            )
+                        }
                         webClientSession.isConnecting = false
                         return
                     }
-
-                    if session == nil {
-                        session = WCSession(webClientSession: webClientSession)
-                        self.sessions[webClientSession.initiatorPermanentPublicKey] = session
-                    }
-                    if wca != nil {
-                        session!.setWcaForConnection(wca: wca!)
-                    }
-                    self.addWCSessionToRunning(webClientSession: webClientSession)
-                    self.addObservers()
-                    session!.connect(authToken: authToken)
-                }
-                else {
-                    // session not found
                 }
             }
+
+            if let session, let wca,
+               let connectionWca = session.connectionWca(),
+               wca.elementsEqual(connectionWca) {
+                // same wca, ignore this request
+                DDLogNotice("[Threema Web] Ignore connect, because it's the same wca")
+                webClientSession.isConnecting = false
+                return
+            }
+
+            if session == nil {
+                session = WCSession(webClientSession: webClientSession)
+                self.sessions[publicKey] = session
+            }
+            if wca != nil {
+                session!.setWcaForConnection(wca: wca!)
+            }
+            self.addWCSessionToRunning(webClientSession: webClientSession)
+            self.addObservers()
+            session!.connect(authToken: authToken)
         }
     }
     
     @objc public func connect(authToken: Data?, wca: String?, webClientSession: WebClientSessionEntity) {
+        // Pre-read Core Data properties before any async work
+        let (publicKey, saltyRTCHost, saltyRTCPort, selfHosted, permanent, version):
+            (Data, String, String, String, String, String?) = businessInjector.entityManager.performAndWait {
+                (
+                    webClientSession.initiatorPermanentPublicKey,
+                    webClientSession.saltyRTCHost,
+                    webClientSession.saltyRTCPort.stringValue,
+                    webClientSession.selfHosted.stringValue,
+                    webClientSession.permanent.stringValue,
+                    webClientSession.version?.stringValue
+                )
+            }
+
         DDLogNotice(
-            "[Threema Web] Connect to host \(webClientSession.saltyRTCHost); port: \(webClientSession.saltyRTCPort.stringValue) selfHosted: \(webClientSession.selfHosted.stringValue); permanent: \(webClientSession.permanent.stringValue); version: \(webClientSession.version?.stringValue ?? "?")"
+            "[Threema Web] Connect to host \(saltyRTCHost); port: \(saltyRTCPort) selfHosted: \(selfHosted); permanent: \(permanent); version: \(version ?? "?")"
         )
-        
+
         if webClientSession.isConnecting {
             DDLogError("[Threema Web] WebClientSession try already to connect")
             return
         }
         webClientSession.isConnecting = true
-        
-        canConnectToWebClient(completionHandler: { isValid in
-            if isValid == true {
-                var session: WCSession? = self.sessions[webClientSession.initiatorPermanentPublicKey]
-                
-                if let session, let wca,
-                   let connectionWca = session.connectionWca(),
-                   wca.elementsEqual(connectionWca) {
-                    // same wca, ignore this request
-                    DDLogNotice("[Threema Web] Ignore connect, because it's the same wca")
-                    webClientSession.isConnecting = false
-                    return
-                }
 
-                if session == nil {
-                    session = WCSession(webClientSession: webClientSession)
-                    self.sessions[webClientSession.initiatorPermanentPublicKey] = session
-                }
-                
-                if TargetManager.isBusinessApp {
-                    let mdmSetup = MDMSetup()!
-                    if let webHosts = mdmSetup.webHosts() {
-                        if WCSessionManager.isWebHostAllowed(
-                            scannedHostName: webClientSession.saltyRTCHost,
-                            whiteList: webHosts
-                        ) == false {
-                            DDLogError("[Threema Web] Scanned qr code host is not white listed")
-                            if AppDelegate.shared().isAppInBackground() {
-                                ThreemaUtilityObjC.sendErrorLocalNotification(
-                                    #localize("webClient_scan_error_mdm_host_title"),
-                                    body: #localize("webClient_scan_error_mdm_host_message"),
-                                    userInfo: nil
-                                )
-                            }
-                            else if let rootVC = AppDelegate.keyWindow?.rootViewController {
-                                UIAlertTemplate.showAlert(
-                                    owner: rootVC,
-                                    title: #localize("webClient_scan_error_mdm_host_title"),
-                                    message: #localize("webClient_scan_error_mdm_host_message")
-                                )
-                            }
-                            webClientSession.isConnecting = false
-                            return
+        canConnectToWebClient(completionHandler: { isValid in
+            guard isValid == true else {
+                webClientSession.isConnecting = false
+                return
+            }
+
+            var session: WCSession? = self.sessions[publicKey]
+
+            if let session, let wca,
+               let connectionWca = session.connectionWca(),
+               wca.elementsEqual(connectionWca) {
+                // same wca, ignore this request
+                DDLogNotice("[Threema Web] Ignore connect, because it's the same wca")
+                webClientSession.isConnecting = false
+                return
+            }
+
+            if session == nil {
+                session = WCSession(webClientSession: webClientSession)
+                self.sessions[publicKey] = session
+            }
+
+            if TargetManager.isBusinessApp {
+                let mdmSetup = MDMSetup()!
+                if let webHosts = mdmSetup.webHosts() {
+                    if WCSessionManager.isWebHostAllowed(
+                        scannedHostName: saltyRTCHost,
+                        whiteList: webHosts
+                    ) == false {
+                        DDLogError("[Threema Web] Scanned qr code host is not white listed")
+                        if AppDelegate.shared().isAppInBackground() {
+                            ThreemaUtilityObjC.sendErrorLocalNotification(
+                                #localize("webClient_scan_error_mdm_host_title"),
+                                body: #localize("webClient_scan_error_mdm_host_message"),
+                                userInfo: nil
+                            )
                         }
+                        else if let rootVC = AppDelegate.keyWindow?.rootViewController {
+                            UIAlertTemplate.showAlert(
+                                owner: rootVC,
+                                title: #localize("webClient_scan_error_mdm_host_title"),
+                                message: #localize("webClient_scan_error_mdm_host_message")
+                            )
+                        }
+                        webClientSession.isConnecting = false
+                        return
                     }
                 }
-                                
-                if let wca {
-                    session!.setWcaForConnection(wca: wca)
-                }
-                self.addWCSessionToRunning(webClientSession: webClientSession)
-                self.addObservers()
-                session!.connect(authToken: authToken)
             }
-            else {
-                webClientSession.isConnecting = false
+
+            if let wca {
+                session!.setWcaForConnection(wca: wca)
             }
+            self.addWCSessionToRunning(webClientSession: webClientSession)
+            self.addObservers()
+            session!.connect(authToken: authToken)
         })
     }
     
@@ -321,25 +353,27 @@ extension WCSessionManager {
             return
         }
         canConnectToWebClient { isValid in
-            if isValid == true {
-                DDLogNotice("[Threema Web] Connect active sessions (\(self.running.count))")
-                for publicKey in self.running {
-                    if let session = self.sessions[publicKey] {
-                        if session.connectionStatus() == .disconnected {
-                            self.addObservers()
-                            DDLogNotice("[Threema Web] Connect active session")
-                            session.connect(authToken: nil)
+            guard isValid == true else {
+                return
+            }
+
+            DDLogNotice("[Threema Web] Connect active sessions (\(self.running.count))")
+            for publicKey in self.running {
+                if let session = self.sessions[publicKey] {
+                    if session.connectionStatus() == .disconnected {
+                        self.addObservers()
+                        DDLogNotice("[Threema Web] Connect active session")
+                        session.connect(authToken: nil)
+                    }
+                    else {
+                        if let connectionStatus = session.connectionStatus() {
+                            DDLogError(
+                                "[Threema Web] Can't connect active session, wrong state \(connectionStatus)"
+                            )
                         }
                         else {
-                            if let connectionStatus = session.connectionStatus() {
-                                DDLogError(
-                                    "[Threema Web] Can't connect active session, wrong state \(connectionStatus)"
-                                )
-                            }
-                            else {
-                                DDLogError("[Threema Web] Can't connect active session, connectionStatus is nil!")
-                                self.removeWCSessionFromRunning(session)
-                            }
+                            DDLogError("[Threema Web] Can't connect active session, connectionStatus is nil!")
+                            self.removeWCSessionFromRunning(session)
                         }
                     }
                 }
@@ -376,7 +410,10 @@ extension WCSessionManager {
     /// Stop specific session.
     public func stopSession(_ webClientSession: WebClientSessionEntity) {
         DDLogNotice("[Threema Web] Stop session")
-        if let session: WCSession = sessions[webClientSession.initiatorPermanentPublicKey] {
+        let publicKey: Data = businessInjector.entityManager.performAndWait {
+            webClientSession.initiatorPermanentPublicKey
+        }
+        if let session: WCSession = sessions[publicKey] {
             session.stop(close: true, forget: false, sendDisconnect: true, reason: .stop)
         }
     }
@@ -384,18 +421,23 @@ extension WCSessionManager {
     /// Stop and delete specific session.
     public func stopAndDeleteSession(_ webClientSession: WebClientSessionEntity) {
         DDLogNotice("[Threema Web] Stop and delete all active sessions")
-        let publicKey = webClientSession.initiatorPermanentPublicKey
+        let publicKey: Data = businessInjector.entityManager.performAndWait {
+            webClientSession.initiatorPermanentPublicKey
+        }
         if let session: WCSession = sessions[publicKey] {
             session.stop(close: true, forget: true, sendDisconnect: true, reason: .delete)
             sessions.removeValue(forKey: publicKey)
         }
-        
+
         WebClientSessionStore.shared.deleteWebClientSession(webClientSession)
     }
-    
+
     /// Remove WebClientSession from running list.
     public func removeWCSessionFromRunning(_ session: WCSession) {
-        if let publicKey = session.webClientSession?.initiatorPermanentPublicKey {
+        let publicKey: Data? = businessInjector.entityManager.performAndWait {
+            session.webClientSession?.initiatorPermanentPublicKey
+        }
+        if let publicKey {
             runningSessionsQueue.sync {
                 if let index = running.firstIndex(of: publicKey) {
                     running.remove(at: index)
@@ -446,9 +488,12 @@ extension WCSessionManager {
     // MARK: Private functions
     
     private func addWCSessionToRunning(webClientSession: WebClientSessionEntity) {
+        let publicKey: Data = businessInjector.entityManager.performAndWait {
+            webClientSession.initiatorPermanentPublicKey
+        }
         runningSessionsQueue.sync {
-            if !running.contains(webClientSession.initiatorPermanentPublicKey) {
-                running.append(webClientSession.initiatorPermanentPublicKey)
+            if !running.contains(publicKey) {
+                running.append(publicKey)
                 WebClientSessionStore.shared.updateWebClientSession(session: webClientSession, active: true)
             }
         }
@@ -481,10 +526,9 @@ extension WCSessionManager {
     
     private func sendConnectionAckToAllActiveSessions() {
         for publicKey in running {
-            if let session = sessions[publicKey] {
-                if let context = session.connectionContext() {
-                    context.sendConnectionAck()
-                }
+            if let session = sessions[publicKey],
+               let context = session.connectionContext() {
+                context.sendConnectionAck()
             }
         }
     }
@@ -503,20 +547,18 @@ extension WCSessionManager {
         blackListed: Bool
     ) {
         for publicKey in running {
-            if let session = sessions[publicKey] {
-                if session.requestedConversations(contains: requestedConversationID) == true {
-                    session.sendMessageToWeb(blacklisted: blackListed, msgpack: messagePack)
-                }
+            if let session = sessions[publicKey],
+               session.requestedConversations(contains: requestedConversationID) == true {
+                session.sendMessageToWeb(blacklisted: blackListed, msgpack: messagePack)
             }
         }
     }
-    
+
     private func sendMessagePackToRequestedSession(with requestID: String, messagePack: Data, blackListed: Bool) {
         for publicKey in running {
-            if let session = sessions[publicKey] {
-                if session.requestMessage(for: requestID) != nil {
-                    session.sendMessageToWeb(blacklisted: blackListed, msgpack: messagePack)
-                }
+            if let session = sessions[publicKey],
+               session.requestMessage(for: requestID) != nil {
+                session.sendMessageToWeb(blacklisted: blackListed, msgpack: messagePack)
             }
         }
     }
@@ -548,21 +590,19 @@ extension WCSessionManager {
         exclude requestID: String
     ) {
         for publicKey in running {
-            if let session = sessions[publicKey] {
-                if session.requestedConversations(contains: requestedConversationID) == true {
-                    if session.requestMessage(for: requestID) == nil {
-                        sendResponseUpdateMessage(
-                            message: message,
-                            conversation: conversation,
-                            objectMode: objectMode,
-                            session: session
-                        )
-                    }
-                }
+            if let session = sessions[publicKey],
+               session.requestedConversations(contains: requestedConversationID) == true,
+               session.requestMessage(for: requestID) == nil {
+                sendResponseUpdateMessage(
+                    message: message,
+                    conversation: conversation,
+                    objectMode: objectMode,
+                    session: session
+                )
             }
         }
     }
-    
+
     private func responseUpdateMessage(
         with requestedConversationID: String,
         message: BaseMessageEntity,
@@ -570,15 +610,14 @@ extension WCSessionManager {
         objectMode: WebMessagesUpdate.ObjectMode
     ) {
         for publicKey in running {
-            if let session = sessions[publicKey] {
-                if session.requestedConversations(contains: requestedConversationID) == true {
-                    sendResponseUpdateMessage(
-                        message: message,
-                        conversation: conversation,
-                        objectMode: objectMode,
-                        session: session
-                    )
-                }
+            if let session = sessions[publicKey],
+               session.requestedConversations(contains: requestedConversationID) == true {
+                sendResponseUpdateMessage(
+                    message: message,
+                    conversation: conversation,
+                    objectMode: objectMode,
+                    session: session
+                )
             }
         }
     }
@@ -644,21 +683,19 @@ extension WCSessionManager {
 
     private func webRequestMessage(for requestID: String) -> WebAbstractMessage? {
         for publicKey in running {
-            if let session = sessions[publicKey] {
-                if let webAbstractMessage = session.requestMessage(for: requestID) {
-                    return webAbstractMessage
-                }
+            if let session = sessions[publicKey],
+               let webAbstractMessage = session.requestMessage(for: requestID) {
+                return webAbstractMessage
             }
         }
         return nil
     }
-    
+
     private func removeWebRequestMessage(with requestID: String) {
         for publicKey in running {
-            if let session = sessions[publicKey] {
-                if session.requestMessage(for: requestID) != nil {
-                    session.removeRequestCreateMessage(requestID: requestID)
-                }
+            if let session = sessions[publicKey],
+               session.requestMessage(for: requestID) != nil {
+                session.removeRequestCreateMessage(requestID: requestID)
             }
         }
     }

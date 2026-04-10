@@ -72,66 +72,65 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
             entityManager: entityManager
         )
 
-        var conversation: ConversationEntity?
-        if type == "contact" {
-            guard let id, let contact = entityManager.entityFetcher.contactEntity(for: id) else {
-                baseMessage = nil
-                tmpError = "internalError"
-                completion()
-                return
+        let result: Result<ConversationEntity, WebRequestError> = entityManager.performAndWait { [weak self] in
+            guard let self else {
+                return .failure(WebRequestError(message: "WebCreateTextMessageRequest released before sending"))
             }
 
-            conversation = entityManager.entityFetcher.conversationEntity(for: contact.identity)
-            if conversation == nil {
-                entityManager.performAndWaitSave {
-                    conversation = entityManager.entityCreator.conversationEntity()
-                    conversation?.contact = contact
+            var conversation: ConversationEntity?
+            if type == "contact" {
+                guard let id, let contact = entityManager.entityFetcher.contactEntity(for: id) else {
+                    return .failure(WebRequestError(message: "internalError"))
+                }
+
+                conversation = entityManager.entityFetcher.conversationEntity(for: contact.identity)
+                if conversation == nil {
+                    entityManager.performAndWaitSave {
+                        conversation = entityManager.entityCreator.conversationEntity()
+                        conversation?.contact = contact
+                    }
+                }
+
+                guard conversation != nil else {
+                    return .failure(WebRequestError(message: "internalError"))
+                }
+
+                if !messagePermission.canSend(to: contact.identity).isAllowed {
+                    return .failure(WebRequestError(message: "blocked"))
+                }
+            }
+            else {
+                conversation = entityManager.entityFetcher.legacyConversationEntity(for: groupID)
+
+                guard let conversation,
+                      let group = groupManager.getGroup(conversation: conversation)
+                else {
+                    return .failure(WebRequestError(message: "internalError"))
+                }
+
+                if !messagePermission.canSend(
+                    groudID: group.groupID,
+                    groupCreatorIdentity: group.groupCreatorIdentity
+                ).isAllowed {
+                    return .failure(WebRequestError(message: "blocked"))
                 }
             }
 
-            guard conversation != nil else {
-                baseMessage = nil
-                tmpError = "internalError"
-                completion()
-                return
+            guard let conversation else {
+                return .failure(WebRequestError(message: "internalError"))
             }
 
-            if !messagePermission.canSend(to: contact.identity).isAllowed {
-                baseMessage = nil
-                tmpError = "blocked"
-                completion()
-                return
-            }
+            return .success(conversation)
         }
-        else {
-            conversation = entityManager.entityFetcher.legacyConversationEntity(for: groupID)
 
-            guard let conversation,
-                  let group = groupManager.getGroup(conversation: conversation)
-            else {
-                baseMessage = nil
-                tmpError = "internalError"
-                completion()
-                return
-            }
-
-            if !messagePermission.canSend(groudID: group.groupID, groupCreatorIdentity: group.groupCreatorIdentity)
-                .isAllowed {
-                baseMessage = nil
-                tmpError = "blocked"
-                completion()
-                return
-            }
-        }
-        
-        guard let conversation else {
+        switch result {
+        case let .success(conversation):
+            sendMessage(conversation: conversation, completion: completion)
+        case let .failure(error):
             baseMessage = nil
-            tmpError = "internalError"
+            tmpError = error.message
             completion()
-            return
         }
-
-        sendMessage(conversation: conversation, completion: completion)
     }
 
     private func sendMessage(conversation: ConversationEntity, completion: @escaping () -> Void) {
@@ -151,8 +150,10 @@ public class WebCreateTextMessageRequest: WebAbstractMessage {
                 }
                 
                 completion()
-                if conversation.conversationVisibility == .archived {
-                    conversation.changeVisibility(to: .default)
+                businessInjector.entityManager.performAndWaitSave {
+                    if conversation.conversationVisibility == .archived {
+                        conversation.changeVisibility(to: .default)
+                    }
                 }
             }
         } onTimeout: {

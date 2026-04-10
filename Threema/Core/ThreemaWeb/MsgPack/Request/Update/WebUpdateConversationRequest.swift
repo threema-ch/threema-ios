@@ -48,55 +48,32 @@ class WebUpdateConversationRequest: WebAbstractMessage {
     
     func updateConversation() {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
-        DispatchQueue.main.sync {
-            let entityManager = BusinessInjector.ui.entityManager
-            
-            if groupID != nil {
-                let conversation = entityManager.entityFetcher.legacyConversationEntity(for: groupID)
-                
-                if conversation == nil {
-                    ack!.success = false
-                    ack!.error = "invalidConversation"
-                    return
-                }
-                
-                if isStarred == nil {
-                    ack!.success = false
-                    ack!.error = "badRequest"
-                    return
-                }
-                
-                entityManager.performAndWaitSave {
-                    conversation!.changeVisibility(to: self.isStarred! ? .pinned : .default)
-                }
-                
-                self.ack!.success = true
+        let entityManager = BusinessInjector.ui.entityManager
+
+        guard isStarred != nil else {
+            ack!.success = false
+            ack!.error = "badRequest"
+            return
+        }
+
+        entityManager.performAndWaitSave {
+            var conversation: ConversationEntity?
+
+            if self.groupID != nil {
+                conversation = entityManager.entityFetcher.legacyConversationEntity(for: self.groupID)
             }
-            else if let identity {
-                let conversation = entityManager.entityFetcher.conversationEntity(for: identity)
-                if conversation == nil {
-                    ack!.success = false
-                    ack!.error = "invalidConversation"
-                    return
-                }
-                
-                if isStarred == nil {
-                    ack!.success = false
-                    ack!.error = "badRequest"
-                    return
-                }
-                
-                entityManager.performAndWaitSave {
-                    conversation!.changeVisibility(to: self.isStarred! ? .pinned : .default)
-                }
-                
-                self.ack!.success = true
+            else if let identity = self.identity {
+                conversation = entityManager.entityFetcher.conversationEntity(for: identity)
             }
-            else {
-                ack!.success = false
-                ack!.error = "badRequest"
+
+            guard let conversation else {
+                self.ack!.success = false
+                self.ack!.error = "invalidConversation"
                 return
             }
+
+            conversation.changeVisibility(to: self.isStarred! ? .pinned : .default)
+            self.ack!.success = true
         }
     }
 }

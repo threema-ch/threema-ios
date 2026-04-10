@@ -67,83 +67,84 @@ class WebUpdateGroupRequest: WebAbstractMessage {
         super.init(message: message)
     }
     
-    func updateGroup(completion: @escaping () -> Void) {
+    func updateGroup(completion: @escaping @Sendable () -> Void) {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
-        DispatchQueue.main.sync {
-            let businessInjector = BusinessInjector.ui
-            guard let conversation = businessInjector.entityManager.entityFetcher.legacyConversationEntity(for: id)
-            else {
-                ack!.success = false
-                ack!.error = "invalidGroup"
-                completion()
-                return
-            }
+        let businessInjector = BusinessInjector.ui
 
-            guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
-                ack!.success = false
-                ack!.error = "invalidGroup"
-                completion()
-                return
+        let id = id
+        let group: Group? = businessInjector.entityManager.performAndWait {
+            guard let conversation = businessInjector.entityManager.entityFetcher
+                .legacyConversationEntity(for: id) else {
+                return nil
             }
-            
-            self.group = group
-            
-            if members.isEmpty {
-                ack!.success = false
-                ack!.error = "noMembers"
-                completion()
-                return
-            }
-            
-            if !group.isOwnGroup {
-                ack!.success = false
-                ack!.error = "notAllowed"
-                completion()
-                return
-            }
-            
-            if self.name != nil {
-                if self.name!.lengthOfBytes(using: .utf8) > 256 {
-                    self.ack!.success = false
-                    self.ack!.error = "valueTooLong"
-                    completion()
-                    return
-                }
-            }
+            return businessInjector.groupManager.getGroup(conversation: conversation)
+        }
 
-            Task {
-                do {
-                    let (group, _) = try await businessInjector.groupManager.createOrUpdate(
-                        for: group.groupIdentity,
-                        members: Set<String>(members),
-                        systemMessageDate: Date()
+        guard let group else {
+            ack!.success = false
+            ack!.error = "invalidGroup"
+            completion()
+            return
+        }
+
+        self.group = group
+
+        if members.isEmpty {
+            ack!.success = false
+            ack!.error = "noMembers"
+            completion()
+            return
+        }
+
+        if !group.isOwnGroup {
+            ack!.success = false
+            ack!.error = "notAllowed"
+            completion()
+            return
+        }
+
+        if name != nil {
+            if name!.lengthOfBytes(using: .utf8) > 256 {
+                ack!.success = false
+                ack!.error = "valueTooLong"
+                completion()
+                return
+            }
+        }
+
+        Task {
+            do {
+                let (group, _) = try await businessInjector.groupManager.createOrUpdate(
+                    for: group.groupIdentity,
+                    members: Set<String>(members),
+                    systemMessageDate: Date()
+                )
+
+                if self.deleteName || self.name != nil {
+                    try await businessInjector.groupManager.setName(
+                        group: group,
+                        name: self.name
                     )
-
-                    if self.deleteName || self.name != nil {
-                        try await businessInjector.groupManager.setName(
-                            group: group,
-                            name: self.name
-                        )
-                    }
-
-                    if !self.deleteAvatar,
-                       let photo = self.avatar {
-
-                        try await businessInjector.groupManager.setPhoto(
-                            group: group,
-                            imageData: photo,
-                            sentDate: Date()
-                        )
-                    }
-
-                    self.ack!.success = true
-                }
-                catch {
-                    DDLogError("Could not update group members: \(error)")
-                    self.ack!.success = false
-                    self.ack!.error = "internalError"
                 }
 
+                if !self.deleteAvatar,
+                   let photo = self.avatar {
+                    try await businessInjector.groupManager.setPhoto(
+                        group: group,
+                        imageData: photo,
+                        sentDate: Date()
+                    )
+                }
+
+                self.ack!.success = true
+            }
+            catch {
+                DDLogError("Could not update group members: \(error)")
+                self.ack!.success = false
+                self.ack!.error = "internalError"
+            }
+
+            await MainActor.run {
                 completion()
             }
         }

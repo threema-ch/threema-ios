@@ -32,35 +32,37 @@ class WebGroupSyncRequest: WebAbstractMessage {
     }
     
     func syncGroup() {
+        ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
+        let businessInjector = BusinessInjector.ui
+
+        let id = id
+        let group: Group? = businessInjector.entityManager.performAndWait {
+            guard let conversation = businessInjector.entityManager.entityFetcher
+                .legacyConversationEntity(for: id) else {
+                return nil
+            }
+            return businessInjector.groupManager.getGroup(conversation: conversation)
+        }
+
+        guard let group else {
+            ack!.success = false
+            ack!.error = "invalidGroup"
+            return
+        }
+
+        if !group.isOwnGroup {
+            ack!.success = false
+            ack!.error = "notAllowed"
+            return
+        }
+
         Task {
             do {
-                ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
-                let businessInjector = BusinessInjector.ui
-                guard let conversation = businessInjector.entityManager.entityFetcher.legacyConversationEntity(for: id)
-                else {
-                    ack!.success = false
-                    ack!.error = "invalidGroup"
-                    return
-                }
-
-                guard let group = businessInjector.groupManager.getGroup(conversation: conversation) else {
-                    ack!.success = false
-                    ack!.error = "invalidGroup"
-                    return
-                }
-
-                if !group.isOwnGroup {
-                    ack!.success = false
-                    ack!.error = "notAllowed"
-                    return
-                }
-
                 try await businessInjector.groupManager.sync(group: group)
             }
             catch {
                 DDLogError("Unable to sync group: \(error)")
             }
-
             ack!.success = true
         }
     }

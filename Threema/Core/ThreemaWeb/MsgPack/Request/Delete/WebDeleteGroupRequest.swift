@@ -38,64 +38,69 @@ class WebDeleteGroupRequest: WebAbstractMessage {
     func deleteOrLeave() {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
         let backgroundBusinessInjector = BusinessInjector(forBackgroundProcess: true)
-        guard let conversation = backgroundBusinessInjector.entityManager.entityFetcher
-            .legacyConversationEntity(for: id)
-        else {
-            ack!.success = false
-            ack!.error = "invalidGroup"
-            return
-        }
-        
-        if conversation.isGroup {
-            guard let group = backgroundBusinessInjector.groupManager.getGroup(conversation: conversation) else {
-                ack!.success = false
-                ack!.error = "invalidGroup"
-                return
-            }
-            
-            if group.didLeave, deleteType == "leave" {
-                ack!.success = false
-                ack!.error = "alreadyLeft"
-                return
-            }
+        let entityManager = backgroundBusinessInjector.entityManager
 
-            backgroundBusinessInjector.groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
-
-            MessageDraftStore.shared.deleteDraft(for: conversation)
-            
-            ack!.success = true
-            
-            if deleteType == "delete" {
-
-                backgroundBusinessInjector.groupManager.dissolve(groupID: group.groupID, to: nil)
-
-                backgroundBusinessInjector.entityManager.performAndWaitSave {
-                    MessageDraftStore.shared.deleteDraft(for: conversation)
-                    backgroundBusinessInjector.entityManager.entityDestroyer.delete(conversation: conversation)
-                }
-                
-                DispatchQueue.main.async {
-                    let notificationManager = NotificationManager()
-                    notificationManager.updateUnreadMessagesCount()
-                    
-                    let info = [kKeyConversation: conversation]
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name(rawValue: kNotificationDeletedConversation),
-                        object: nil,
-                        userInfo: info
-                    )
-                }
-            }
+        let id = id
+        let deleteType = deleteType
+        let result: Result<(ConversationEntity, Group), WebRequestError> = entityManager.performAndWait {
+            guard let conversation = entityManager.entityFetcher
+                .legacyConversationEntity(for: id)
             else {
+                return .failure(WebRequestError(message: "invalidGroup"))
+            }
+
+            guard conversation.isGroup else {
+                return .failure(WebRequestError(message: "invalidGroup"))
+            }
+
+            guard let group = backgroundBusinessInjector.groupManager.getGroup(conversation: conversation) else {
+                return .failure(WebRequestError(message: "invalidGroup"))
+            }
+
+            if group.didLeave, deleteType == "leave" {
+                return .failure(WebRequestError(message: "alreadyLeft"))
+            }
+
+            return .success((conversation, group))
+        }
+
+        guard case let .success((conversation, group)) = result else {
+            if case let .failure(error) = result {
                 ack!.success = false
-                ack!.error = "badRequest"
-                return
+                ack!.error = error.message
+            }
+            return
+        }
+
+        backgroundBusinessInjector.groupManager.leave(groupIdentity: group.groupIdentity, toMembers: nil)
+
+        MessageDraftStore.shared.deleteDraft(for: conversation)
+
+        ack!.success = true
+
+        if deleteType == "delete" {
+            backgroundBusinessInjector.groupManager.dissolve(groupID: group.groupID, to: nil)
+
+            entityManager.performAndWaitSave {
+                MessageDraftStore.shared.deleteDraft(for: conversation)
+                entityManager.entityDestroyer.delete(conversation: conversation)
+            }
+
+            DispatchQueue.main.async {
+                let notificationManager = NotificationManager()
+                notificationManager.updateUnreadMessagesCount()
+
+                let info = [kKeyConversation: conversation]
+                NotificationCenter.default.post(
+                    name: NSNotification.Name(rawValue: kNotificationDeletedConversation),
+                    object: nil,
+                    userInfo: info
+                )
             }
         }
         else {
             ack!.success = false
-            ack!.error = "invalidGroup"
-            return
+            ack!.error = "badRequest"
         }
     }
 }

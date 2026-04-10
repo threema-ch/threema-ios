@@ -32,6 +32,8 @@
 + (TypingIndicatorManager*)sharedInstance;
 
 - (void)resetTypingIndicators;
+- (void)startObserving;
+- (void)stopObserving;
 - (void)setTypingIndicatorForIdentity:(NSString*)identity typing:(BOOL)typing;
 
 @end

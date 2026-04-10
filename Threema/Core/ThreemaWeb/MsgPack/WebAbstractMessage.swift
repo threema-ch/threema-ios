@@ -23,13 +23,21 @@ import Foundation
 import SwiftMsgPack
 import ThreemaFramework
 
+struct WebRequestError: Error {
+    let message: String
+}
+
 public class WebAbstractMessage: NSObject {
-        
+
+    private var entityManager: EntityManager {
+        BusinessInjector.ui.entityManager
+    }
+
     var messageType: String
     var messageSubType: String?
     var requestID: String?
     var ack: WebAbstractMessageAcknowledgement?
-    
+
     var args: [AnyHashable: Any?]?
     var data: Any?
     
@@ -153,11 +161,15 @@ public class WebAbstractMessage: NSObject {
                 }
             case "conversations"?:
                 let requestConversations = WebConversationsRequest(message: self)
-                let responseConversations = WebConversationsResponse(
-                    requestID: requestID,
-                    conversationRequest: requestConversations,
-                    session: session
-                )
+                let requestID = requestID
+
+                let responseConversations: WebConversationsResponse = entityManager.performAndWait {
+                    WebConversationsResponse(
+                        requestID: requestID,
+                        conversationRequest: requestConversations,
+                        session: session
+                    )
+                }
                 DDLogVerbose("[Threema Web] MessagePack -> Send response/conversations")
                 completionHandler(responseConversations.messagePack(), false)
                 return
@@ -168,112 +180,106 @@ public class WebAbstractMessage: NSObject {
                 return
             case "messages"?:
                 let requestMessages = WebMessagesRequest(message: self)
-                let responseMessages = WebMessagesResponse(requestMessage: requestMessages, session: session)
+
+                let responseMessages: WebMessagesResponse = entityManager.performAndWait {
+                    WebMessagesResponse(requestMessage: requestMessages, session: session)
+                }
                 session.addRequestedConversation(conversationID: responseMessages.identity)
                 DDLogVerbose("[Threema Web] MessagePack -> Send response/messages")
                 completionHandler(responseMessages.messagePack(), false)
                 return
             case "avatar"?:
                 let requestAvatar = WebAvatarRequest(message: self)
-                let responseAvatar = WebAvatarResponse(request: requestAvatar)
+
+                let responseAvatar: WebAvatarResponse = entityManager.performAndWait {
+                    WebAvatarResponse(request: requestAvatar)
+                }
                 DDLogVerbose("[Threema Web] MessagePack -> Send response/avatar")
                 completionHandler(responseAvatar.messagePack(), false)
                 return
             case "thumbnail"?:
                 let requestThumbnail = WebThumbnailRequest(message: self)
-                var conversation: ConversationEntity?
-                let entityManager = BusinessInjector.ui.entityManager
 
-                if requestThumbnail.type == "contact" {
-                    conversation = entityManager.entityFetcher.conversationEntity(for: requestThumbnail.id)
-                }
-                else {
-                    conversation = entityManager.entityFetcher
-                        .legacyConversationEntity(for: requestThumbnail.id.hexadecimal)
-                }
-                
-                guard let conversation, let baseMessage = entityManager.entityFetcher.message(
-                    with: requestThumbnail.messageID,
-                    in: conversation
-                ) else {
-                    let confirmResponse = WebConfirmResponse(
-                        message: requestThumbnail,
-                        success: false,
-                        error: "invalidMessage"
-                    )
-                    DDLogVerbose("[Threema Web] MessagePack -> Send response/thumbnail")
-                    completionHandler(confirmResponse.messagePack(), false)
-                    return
-                }
-                
-                if let imageMessageEntity = baseMessage as? ImageMessageEntity {
-                    if imageMessageEntity.image == nil, imageMessageEntity.thumbnail == nil {
-                        let confirmResponse = WebConfirmResponse(
+                let entityFetcher = entityManager.entityFetcher
+                let msgPack: Data? = entityManager.performAndWait {
+                    let conversation: ConversationEntity? =
+                        if requestThumbnail.type == "contact" {
+                            entityFetcher.conversationEntity(for: requestThumbnail.id)
+                        }
+                        else {
+                            entityFetcher.legacyConversationEntity(for: requestThumbnail.id.hexadecimal)
+                        }
+
+                    guard let conversation, let baseMessage = entityFetcher.message(
+                        with: requestThumbnail.messageID,
+                        in: conversation
+                    ) else {
+                        return WebConfirmResponse(
                             message: requestThumbnail,
                             success: false,
-                            error: "internalError"
-                        )
-                        DDLogVerbose("[Threema Web] MessagePack -> Send update/confirm")
-                        completionHandler(confirmResponse.messagePack(), false)
-                        return
+                            error: "invalidMessage"
+                        ).messagePack()
                     }
-                    else {
-                        if imageMessageEntity.image != nil {
-                            let confirmResponse = WebConfirmResponse(
+
+                    if let imageMessageEntity = baseMessage as? ImageMessageEntity {
+                        if imageMessageEntity.image == nil, imageMessageEntity.thumbnail == nil {
+                            return WebConfirmResponse(
                                 message: requestThumbnail,
                                 success: false,
                                 error: "internalError"
-                            )
-                            DDLogVerbose("[Threema Web] MessagePack -> Send update/confirm")
-                            completionHandler(confirmResponse.messagePack(), false)
-                            return
+                            ).messagePack()
                         }
-                        else if imageMessageEntity.thumbnail != nil {
-                            let confirmResponse = WebConfirmResponse(
-                                message: requestThumbnail,
-                                success: false,
-                                error: "internalError"
-                            )
-                            DDLogVerbose("[Threema Web] MessagePack -> Send update/confirm")
-                            completionHandler(confirmResponse.messagePack(), false)
-                            return
+                        else {
+                            if imageMessageEntity.image != nil {
+                                return WebConfirmResponse(
+                                    message: requestThumbnail,
+                                    success: false,
+                                    error: "internalError"
+                                ).messagePack()
+                            }
+                            else if imageMessageEntity.thumbnail != nil {
+                                return WebConfirmResponse(
+                                    message: requestThumbnail,
+                                    success: false,
+                                    error: "internalError"
+                                ).messagePack()
+                            }
                         }
+                        return WebThumbnailResponse(
+                            request: requestThumbnail,
+                            imageMessageEntity: imageMessageEntity
+                        ).messagePack()
                     }
-                    let responseThumbnail = WebThumbnailResponse(
-                        request: requestThumbnail,
-                        imageMessageEntity: imageMessageEntity
-                    )
-                    DDLogVerbose("[Threema Web] MessagePack -> Send response/thumbnail")
-                    completionHandler(responseThumbnail.messagePack(), false)
-                    return
+                    else if let videoMessageEntity = baseMessage as? VideoMessageEntity {
+                        return WebThumbnailResponse(
+                            request: requestThumbnail,
+                            videoMessageEntity: videoMessageEntity
+                        ).messagePack()
+                    }
+                    else if let fileMessageEntity = baseMessage as? FileMessageEntity {
+                        return WebThumbnailResponse(
+                            request: requestThumbnail,
+                            fileMessageEntity: fileMessageEntity
+                        ).messagePack()
+                    }
+                    return nil
                 }
-                else if let videoMessageEntity = baseMessage as? VideoMessageEntity {
-                    let responseThumbnail = WebThumbnailResponse(
-                        request: requestThumbnail,
-                        videoMessageEntity: videoMessageEntity
-                    )
+                if let msgPack {
                     DDLogVerbose("[Threema Web] MessagePack -> Send response/thumbnail")
-                    completionHandler(responseThumbnail.messagePack(), false)
-                    return
+                    completionHandler(msgPack, false)
                 }
-                else if let fileMessageEntity = baseMessage as? FileMessageEntity {
-                    let responseThumbnail = WebThumbnailResponse(
-                        request: requestThumbnail,
-                        fileMessageEntity: fileMessageEntity
-                    )
-                    DDLogVerbose("[Threema Web] MessagePack -> Send response/thumbnail")
-                    completionHandler(responseThumbnail.messagePack(), false)
-                    return
-                }
+                return
             case "contactDetail"?:
                 let requestContactDetail = WebContactDetailRequest(message: self)
-                var contact: ContactEntity?
-                let entityManager = BusinessInjector.ui.entityManager
-                contact = entityManager.entityFetcher.contactEntity(for: requestContactDetail.identity)
-                let responseContactDetail = WebContactDetailResponse(
-                    contact: contact,
-                    contactDetailRequest: requestContactDetail
-                )
+
+                let entityFetcher = entityManager.entityFetcher
+                let responseContactDetail: WebContactDetailResponse = entityManager.performAndWait {
+                    let contact = entityFetcher.contactEntity(for: requestContactDetail.identity)
+                    return WebContactDetailResponse(
+                        contact: contact,
+                        contactDetailRequest: requestContactDetail
+                    )
+                }
                 DDLogVerbose("[Threema Web] MessagePack -> Send response/contactDetail")
                 completionHandler(responseContactDetail.messagePack(), false)
                 return
@@ -286,121 +292,129 @@ public class WebAbstractMessage: NSObject {
                 return
             case "ack"?:
                 let requestAck = WebAckRequest(message: self)
-                var conversation: ConversationEntity?
                 let businessInjector = BusinessInjector.ui
-                
-                if requestAck.type == "contact" {
-                    conversation = businessInjector.entityManager.entityFetcher
-                        .conversationEntity(for: requestAck.id)
-                }
-                else {
-                    conversation = businessInjector.entityManager.entityFetcher
-                        .legacyConversationEntity(for: requestAck.id.hexadecimal)
-                }
-                
-                guard let conversation, let baseMessage = businessInjector.entityManager.entityFetcher.message(
-                    with: requestAck.messageID,
-                    in: conversation
-                ), conversation.objectID == baseMessage.conversation.objectID else {
-                    let confirmResponse = WebConfirmResponse(
-                        message: requestAck,
-                        success: false,
-                        error: "invalidMessage"
+                let requestID = requestID
+                let msgPack: Data? = businessInjector.entityManager.performAndWait { [weak self] in
+                    guard let self else {
+                        return nil
+                    }
+                    
+                    let conversation: ConversationEntity? =
+                        if requestAck.type == "contact" {
+                            businessInjector.entityManager.entityFetcher
+                                .conversationEntity(for: requestAck.id)
+                        }
+                        else {
+                            businessInjector.entityManager.entityFetcher
+                                .legacyConversationEntity(for: requestAck.id.hexadecimal)
+                        }
+
+                    guard let conversation, let baseMessage = businessInjector.entityManager.entityFetcher.message(
+                        with: requestAck.messageID,
+                        in: conversation
+                    ), conversation.objectID == baseMessage.conversation.objectID else {
+                        return WebConfirmResponse(
+                            message: requestAck,
+                            success: false,
+                            error: "invalidMessage"
+                        ).messagePack()
+                    }
+
+                    updateAckForMessage(
+                        businessInjector: businessInjector,
+                        requestMessage: requestAck,
+                        baseMessage: baseMessage
                     )
-                    DDLogVerbose("[Threema Web] MessagePack -> Send update/confirm")
-                    completionHandler(confirmResponse.messagePack(), false)
-                    return
+                    return WebMessagesUpdate(
+                        requestID,
+                        baseMessage: baseMessage,
+                        conversation: baseMessage.conversation,
+                        objectMode: .modified,
+                        session: session
+                    ).messagePack()
                 }
-                
-                updateAckForMessage(
-                    businessInjector: businessInjector,
-                    requestMessage: requestAck,
-                    baseMessage: baseMessage
-                )
-                let responseMessage = WebMessagesUpdate(
-                    requestID,
-                    baseMessage: baseMessage,
-                    conversation: baseMessage.conversation,
-                    objectMode: .modified,
-                    session: session
-                )
-                DDLogVerbose("[Threema Web] MessagePack -> Send update/messages")
-                completionHandler(responseMessage.messagePack(), false)
+                if let msgPack {
+                    DDLogVerbose("[Threema Web] MessagePack -> Send update/messages")
+                    completionHandler(msgPack, false)
+                }
                 return
             case "blob"?:
                 let requestBlob = WebBlobRequest(message: self)
-                let entityManager = BusinessInjector.ui.entityManager
 
-                let conversation: ConversationEntity? =
-                    if requestBlob.type == "contact" {
-                        entityManager.entityFetcher.conversationEntity(for: requestBlob.id)
+                enum BlobResult {
+                    case image(WebBlobResponse)
+                    case video(WebBlobResponse)
+                    case audio(WebBlobResponse)
+                    case file(WebBlobResponse)
+                    case error(Data)
+                }
+
+                let entityFetcher = entityManager.entityFetcher
+                let result: BlobResult = entityManager.performAndWait {
+                    let conversation: ConversationEntity? =
+                        if requestBlob.type == "contact" {
+                            entityFetcher.conversationEntity(for: requestBlob.id)
+                        }
+                        else {
+                            entityFetcher.legacyConversationEntity(for: requestBlob.id.hexadecimal)
+                        }
+
+                    guard let conversation, let baseMessage = entityFetcher.message(
+                        with: requestBlob.messageID,
+                        in: conversation
+                    ) else {
+                        return .error(WebConfirmResponse(
+                            message: requestBlob,
+                            success: false,
+                            error: "invalidMessage"
+                        ).messagePack())
+                    }
+
+                    if let imageMessageEntity = baseMessage as? ImageMessageEntity {
+                        return .image(WebBlobResponse(request: requestBlob, imageMessage: imageMessageEntity))
+                    }
+                    else if let videoMessageEntity = baseMessage as? VideoMessageEntity {
+                        return .video(WebBlobResponse(request: requestBlob, videoMessageEntity: videoMessageEntity))
+                    }
+                    else if let audioMessageEntity = baseMessage as? AudioMessageEntity {
+                        return .audio(WebBlobResponse(request: requestBlob, audioMessageEntity: audioMessageEntity))
+                    }
+                    else if let fileMessageEntity = baseMessage as? FileMessageEntity {
+                        return .file(WebBlobResponse(request: requestBlob, fileMessageEntity: fileMessageEntity))
                     }
                     else {
-                        entityManager.entityFetcher.legacyConversationEntity(for: requestBlob.id.hexadecimal)
+                        return .error(WebConfirmResponse(
+                            message: requestBlob,
+                            success: false,
+                            error: "internalError"
+                        ).messagePack())
                     }
-                
-                guard let conversation, let baseMessage = entityManager.entityFetcher.message(
-                    with: requestBlob.messageID,
-                    in: conversation
-                ) else {
-                    let confirmResponse = WebConfirmResponse(
-                        message: requestBlob,
-                        success: false,
-                        error: "invalidMessage"
-                    )
-                    DDLogVerbose("[Threema Web] MessagePack -> Send update/confirm")
-                    completionHandler(confirmResponse.messagePack(), false)
-                    return
                 }
-                
-                if let imageMessageEntity = baseMessage as? ImageMessageEntity {
-                    let responseMessage = WebBlobResponse(
-                        request: requestBlob,
-                        imageMessage: imageMessageEntity
-                    )
+
+                switch result {
+                case let .image(responseMessage):
                     responseMessage.addImage {
                         DDLogVerbose("[Threema Web] MessagePack -> Send response/blob")
                         completionHandler(responseMessage.messagePack(), false)
                     }
-                }
-                else if let videoMessageEntity = baseMessage as? VideoMessageEntity {
-                    let responseMessage = WebBlobResponse(
-                        request: requestBlob,
-                        videoMessageEntity: videoMessageEntity
-                    )
+                case let .video(responseMessage):
                     responseMessage.addVideo {
                         DDLogVerbose("[Threema Web] MessagePack -> Send response/blob")
                         completionHandler(responseMessage.messagePack(), false)
                     }
-                }
-                else if let audioMessageEntity = baseMessage as? AudioMessageEntity {
-                    let responseMessage = WebBlobResponse(
-                        request: requestBlob,
-                        audioMessageEntity: audioMessageEntity
-                    )
+                case let .audio(responseMessage):
                     responseMessage.addAudio {
                         DDLogVerbose("[Threema Web] MessagePack -> Send response/blob")
                         completionHandler(responseMessage.messagePack(), false)
                     }
-                }
-                else if let fileMessageEntity = baseMessage as? FileMessageEntity {
-                    let responseMessage = WebBlobResponse(
-                        request: requestBlob,
-                        fileMessageEntity: fileMessageEntity
-                    )
+                case let .file(responseMessage):
                     responseMessage.addFile {
                         DDLogVerbose("[Threema Web] MessagePack -> Send response/blob")
                         completionHandler(responseMessage.messagePack(), false)
                     }
-                }
-                else {
-                    let confirmResponse = WebConfirmResponse(
-                        message: requestBlob,
-                        success: false,
-                        error: "internalError"
-                    )
+                case let .error(msgPack):
                     DDLogVerbose("[Threema Web] MessagePack -> Send update/confirm")
-                    completionHandler(confirmResponse.messagePack(), false)
+                    completionHandler(msgPack, false)
                     return
                 }
             case "groupSync"?:
@@ -673,77 +687,89 @@ public class WebAbstractMessage: NSObject {
     }
     
     private func updateReadStateForMessage(requestMessage: WebReadRequest) {
-        var conversation: ConversationEntity?
         let businessInjector = BusinessInjector.ui
-        
-        if requestMessage.type == "contact" {
-            conversation = businessInjector.entityManager.entityFetcher
-                .conversationEntity(for: requestMessage.id)
-        }
-        else {
-            conversation = businessInjector.entityManager.entityFetcher
-                .legacyConversationEntity(for: requestMessage.id.hexadecimal)
-        }
-        
-        guard let conversation else {
-            requestMessage.ack = WebAbstractMessageAcknowledgement(requestMessage.requestID, false, "invalidMessage")
-            return
-        }
-        
-        let messageFetcher = MessageFetcher(for: conversation, with: businessInjector.entityManager)
-        var foundMessageID = false
-        
-        var readReceiptQueue: [BaseMessageEntity] = []
-        var readNotificationsKeys: [String] = []
-        let unreadMessages = messageFetcher.unreadMessages()
-        
-        for message in unreadMessages {
-            if message.id == requestMessage.messageID || foundMessageID {
-                let conversation = message.conversation
-                readReceiptQueue.append(message)
-                if conversation.isGroup {
-                    // Quickfix: Sender should never be `nil` for incoming group messages
-                    let key = message.sender!.identity + message.id.hexEncodedString()
-                    for stage in UserNotificationStage.allCases {
-                        readNotificationsKeys.append(key + "-\(stage)")
+
+        let entityManager = entityManager
+        let entityFetcher = entityManager.entityFetcher
+        let result: (conversation: ConversationEntity, readNotificationsKeys: [String])? =
+            entityManager.performAndWait {
+                let conversation: ConversationEntity? =
+                    if requestMessage.type == "contact" {
+                        entityFetcher.conversationEntity(for: requestMessage.id)
+                    }
+                    else {
+                        entityFetcher.legacyConversationEntity(for: requestMessage.id.hexadecimal)
+                    }
+
+                guard let conversation else {
+                    requestMessage
+                        .ack = WebAbstractMessageAcknowledgement(
+                            requestMessage.requestID,
+                            false,
+                            "invalidMessage"
+                        )
+                    return nil
+                }
+
+                let messageFetcher = MessageFetcher(for: conversation, with: entityManager)
+                var foundMessageID = false
+
+                var readReceiptQueue: [BaseMessageEntity] = []
+                var readNotificationsKeys: [String] = []
+                let unreadMessages = messageFetcher.unreadMessages()
+
+                for message in unreadMessages {
+                    if message.id == requestMessage.messageID || foundMessageID {
+                        let conversation = message.conversation
+                        readReceiptQueue.append(message)
+                        if conversation.isGroup {
+                            // Quickfix: Sender should never be `nil` for incoming group messages
+                            let key = message.sender!.identity + message.id.hexEncodedString()
+                            for stage in UserNotificationStage.allCases {
+                                readNotificationsKeys.append(key + "-\(stage)")
+                            }
+                        }
+                        else {
+                            guard let contact = conversation.contact else {
+                                continue
+                            }
+                            let key = contact.identity + message.id.hexEncodedString()
+                            for stage in UserNotificationStage.allCases {
+                                readNotificationsKeys.append(key + "-\(stage)")
+                            }
+                        }
+                        foundMessageID = true
                     }
                 }
-                else {
-                    guard let contact = conversation.contact else {
-                        continue
-                    }
-                    let key = contact.identity + message.id.hexEncodedString()
-                    for stage in UserNotificationStage.allCases {
-                        readNotificationsKeys.append(key + "-\(stage)")
-                    }
+
+                if readReceiptQueue.isEmpty {
+                    requestMessage.ack = WebAbstractMessageAcknowledgement(
+                        requestMessage.requestID,
+                        false,
+                        "alreadyRead"
+                    )
+                    return nil
                 }
-                foundMessageID = true
+
+                return (conversation, readNotificationsKeys)
             }
-        }
-        
-        if !readReceiptQueue.isEmpty {
+
+        if let result {
             ServerConnectorHelper.connectAndWaitUntilConnected(initiator: .threemaWeb, timeout: 10) {
                 Task {
                     let conversationActions = ConversationActions(businessInjector: businessInjector)
                     // set isAppInBackground to false, because it will send receipts only if app is in foreground
-                    await conversationActions.read(conversation, isAppInBackground: false)
+                    await conversationActions.read(result.conversation, isAppInBackground: false)
                 }
             } onTimeout: {
                 DDLogError("[Threema Web] Sending read receipt message timed out")
             }
-            
+
             DispatchQueue.main.async {
                 let center = UNUserNotificationCenter.current()
-                center.removePendingNotificationRequests(withIdentifiers: readNotificationsKeys)
-                center.removeDeliveredNotifications(withIdentifiers: readNotificationsKeys)
+                center.removePendingNotificationRequests(withIdentifiers: result.readNotificationsKeys)
+                center.removeDeliveredNotifications(withIdentifiers: result.readNotificationsKeys)
             }
-        }
-        else {
-            requestMessage.ack = WebAbstractMessageAcknowledgement(
-                requestMessage.requestID,
-                false,
-                "alreadyRead"
-            )
         }
         requestMessage.ack = WebAbstractMessageAcknowledgement(requestMessage.requestID, true, nil)
     }
@@ -780,15 +806,20 @@ public class WebAbstractMessage: NSObject {
     }
     
     private func buildResponseReceivers(completion: @escaping (_ webResponseReceivers: WebReceiversResponse?) -> Void) {
-        let entityManager = BusinessInjector.ui.entityManager
-        let contactResult = entityManager.entityFetcher.contactEntities() ?? []
-        let allGroupConversations = entityManager.entityFetcher.groupConversationEntities() ?? []
+        let requestID = requestID
         
-        let responseReceivers = WebReceiversResponse(
-            requestID: requestID,
-            allContacts: contactResult,
-            allGroupConversations: allGroupConversations
-        )
+        let entityFetcher = entityManager.entityFetcher
+        let responseReceivers: WebReceiversResponse = entityManager.performAndWait {
+            let contactResult = entityFetcher.contactEntities() ?? []
+            let allGroupConversations = entityFetcher.groupConversationEntities() ?? []
+
+            return WebReceiversResponse(
+                requestID: requestID,
+                allContacts: contactResult,
+                allGroupConversations: allGroupConversations
+            )
+        }
+        
         completion(responseReceivers)
     }
 }

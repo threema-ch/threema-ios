@@ -79,29 +79,37 @@ extension WCConnection {
     // MARK: public functions
     
     func connect(authToken: Data?) {
+        // Read Core Data properties on the current (correct) context before dispatching
+        // to the background queue, to avoid Core Data threading violations.
+        guard let currentWebClientSession = delegate.currentWebClientSession() else {
+            DDLogNotice("[Threema Web] Can't connect to web, webClientSession is nil")
+            WCSessionManager.shared.removeWCSessionFromRunning(delegate.currentWCSession())
+            return
+        }
+
+        let sessionPrivateKey = currentWebClientSession.privateKey
+        let sessionInitiatorPermanentPublicKey = currentWebClientSession.initiatorPermanentPublicKey
+        let sessionServerPermanentPublicKey = currentWebClientSession.serverPermanentPublicKey
+        let sessionSaltyRTCHost = currentWebClientSession.saltyRTCHost
+        let sessionSaltyRTCPort = currentWebClientSession.saltyRTCPort.intValue
+
         webClientConnectionQueue.async {
-            
+
             let callback: @convention(c) (UInt8, UnsafePointer<Int8>?, UnsafePointer<Int8>?)
                 -> Void = { _, target, message in
                     if let upmessage = message, let uptarget = target {
                         let logTarget = String(cString: uptarget)
                         let logMessage = String(cString: upmessage)
-                    
+
                         DDLogNotice("[Threema Web] Salty Log: " + logTarget + ": " + logMessage)
                     }
                 }
 
             salty_log_init_callback(callback, UInt8(LEVEL_INFO))
-            
-            guard let currentWebClientSession = self.delegate.currentWebClientSession() else {
-                DDLogNotice("[Threema Web] Can't connect to web, webClientSession is nil")
-                WCSessionManager.shared.removeWCSessionFromRunning(self.delegate.currentWCSession())
-                return
-            }
-            
+
             var r_keypair: OpaquePointer?
-            
-            if let p = currentWebClientSession.privateKey {
+
+            if let p = sessionPrivateKey {
                 let u8PtrPrivateKey: UnsafePointer<UInt8> = p.withUnsafeBytes {
                     $0.bindMemory(to: UInt8.self).baseAddress!
                 }
@@ -112,19 +120,29 @@ extension WCConnection {
             }
             let loop = salty_event_loop_new()
             let remote = salty_event_loop_get_remote(loop)
-            
-            let ippk: UnsafePointer<UInt8> = currentWebClientSession.initiatorPermanentPublicKey.withUnsafeBytes {
+
+            let ippk: UnsafePointer<UInt8> = sessionInitiatorPermanentPublicKey.withUnsafeBytes {
                 $0.bindMemory(to: UInt8.self).baseAddress!
             }
-            
+
             var at: UnsafePointer<UInt8>?
             if authToken != nil {
                 at = authToken!.withUnsafeBytes {
                     $0.bindMemory(to: UInt8.self).baseAddress!
                 }
             }
-            
-            self.connectToWebClient(ippk: ippk, at: at, r_keypair: r_keypair!, loop: loop!, remote: remote!)
+
+            self.connectToWebClient(
+                ippk: ippk,
+                at: at,
+                r_keypair: r_keypair!,
+                loop: loop!,
+                remote: remote!,
+                sessionPrivateKey: sessionPrivateKey,
+                sessionServerPermanentPublicKey: sessionServerPermanentPublicKey,
+                sessionSaltyRTCHost: sessionSaltyRTCHost,
+                sessionSaltyRTCPort: sessionSaltyRTCPort
+            )
         }
     }
     
@@ -242,17 +260,19 @@ extension WCConnection {
         at: UnsafePointer<UInt8>?,
         r_keypair: OpaquePointer,
         loop: OpaquePointer,
-        remote: OpaquePointer
+        remote: OpaquePointer,
+        sessionPrivateKey: Data?,
+        sessionServerPermanentPublicKey: Data,
+        sessionSaltyRTCHost: String,
+        sessionSaltyRTCPort: Int
     ) {
         var client_ret: salty_relayed_data_client_ret_t?
-        
-        let serverPermanentPublicKey = delegate.currentWebClientSession()!.serverPermanentPublicKey
-        
-        let u8PtrServerPermanentPublicKey: UnsafePointer<UInt8> = serverPermanentPublicKey.withUnsafeBytes {
+
+        let u8PtrServerPermanentPublicKey: UnsafePointer<UInt8> = sessionServerPermanentPublicKey.withUnsafeBytes {
             $0.bindMemory(to: UInt8.self).baseAddress!
         }
-        
-        if delegate.currentWebClientSession()!.privateKey == nil {
+
+        if sessionPrivateKey == nil {
             let privateKey = salty_keypair_private_key(r_keypair)
             let privateKeyData: Data? = NSData(bytes: privateKey, length: 32) as Data
             WebClientSessionStore.shared.updateWebClientSession(
@@ -261,7 +281,7 @@ extension WCConnection {
             )
             delegate.currentWCSession().privateKey = privateKeyData
         }
-        
+
         if at != nil {
             client_ret = salty_relayed_data_responder_new(
                 r_keypair,
@@ -282,11 +302,11 @@ extension WCConnection {
                 u8PtrServerPermanentPublicKey
             )
         }
-        
+
         responder_sender = client_ret!.sender_tx
         responder_disconnect = client_ret!.disconnect_tx
         responder_client = client_ret!.client
-        
+
         if client_ret!.success != 0 {
             delegate.currentWebClientSession()!.isConnecting = false
             let errorString =
@@ -295,9 +315,9 @@ extension WCConnection {
             WCSessionManager.shared.removeWCSessionFromRunning(delegate.currentWCSession())
             return
         }
-        
-        let saltyRTCHost: NSString = delegate.currentWebClientSession()!.saltyRTCHost as NSString
-        let saltyRTCPort = delegate.currentWebClientSession()!.saltyRTCPort.intValue
+
+        let saltyRTCHost: NSString = sessionSaltyRTCHost as NSString
+        let saltyRTCPort = sessionSaltyRTCPort
         
         WebClientSessionStore.shared.updateWebClientSession(
             session: delegate.currentWebClientSession()!,

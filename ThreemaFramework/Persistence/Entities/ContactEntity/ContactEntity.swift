@@ -48,6 +48,8 @@ public final class ContactEntity: ThreemaManagedObject {
     
     @objc public enum ContactState: Int {
         case active = 0, inactive, invalid
+
+        static let keyPath = #keyPath(ContactEntity.state)
     }
     
     @objc(ContactVerificationLevel) public enum VerificationLevel: Int {
@@ -56,10 +58,14 @@ public final class ContactEntity: ThreemaManagedObject {
     
     @objc public enum ReadReceipt: Int {
         case `default` = 0, send, doNotSend
+
+        static let keyPath = #keyPath(ContactEntity.readReceipts)
     }
     
     @objc public enum TypingIndicator: Int {
         case `default` = 0, send, doNotSend
+
+        static let keyPath = #keyPath(ContactEntity.typingIndicators)
     }
     
     // MARK: Attributes
@@ -121,8 +127,10 @@ public final class ContactEntity: ThreemaManagedObject {
             setForwardSecurityState(newValue)
         }
     }
-    
+
+    static let hiddenKeyPath = #keyPath(ContactEntity.hidden)
     @NSManaged private var hidden: NSNumber?
+
     @NSManaged public private(set) var identity: String
     
     /// Image data set from Contact of iOS

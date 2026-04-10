@@ -26,9 +26,11 @@
 #else
   static const DDLogLevel ddLogLevel = DDLogLevelWarning;
 #endif
+
 @implementation TypingIndicatorManager {
     dispatch_source_t resetTimer;
     dispatch_queue_t resetQueue;
+    BOOL timerSuspended;
 }
 
 + (int) typingIndicatorResendInterval {
@@ -64,41 +66,67 @@
     return self;
 }
 
+- (void)startObserving {
+    if (!timerSuspended) {
+        return;
+    }
+    
+    dispatch_resume(resetTimer);
+    timerSuspended = NO;
+    DDLogVerbose(@"Typing indicator observing started");
+}
+
+- (void)stopObserving {
+    if (timerSuspended) {
+        return;
+    }
+    
+    dispatch_suspend(resetTimer);
+    timerSuspended = YES;
+    DDLogVerbose(@"Typing indicator observing stopped");
+}
+
 - (void)resetTypingIndicators {
     DDLogVerbose(@"Resetting typing indicators");
     dispatch_async(dispatch_get_main_queue(), ^{
         /* Fetch all Conversations that are currently typing, and reset the typing
          indicator if it was received too long ago */
         EntityManager *entityManager = [[BusinessInjector ui] entityManager];
-        [entityManager performBlockAndWait:^{
-            NSArray *conversations = [entityManager.entityFetcher conversationEntities];
+        [entityManager performAndWaitSave:^{
+            NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:-kTypingIndicatorTimeout];
+            NSArray *conversations = [entityManager.entityFetcher typingConversationEntitiesWithTimeoutDate:timeoutDate];
+            
             if (conversations == nil) {
-                DDLogError(@"No conversations found");
                 return;
             }
-            
-            [entityManager performSyncBlockAndSafe:^{
-                for (ConversationEntity *conversation in conversations) {
-                    if (conversation.typing.boolValue && ((conversation.lastTypingStart != nil && [conversation.lastTypingStart timeIntervalSinceNow] < -kTypingIndicatorTimeout))) {
-                        DDLogVerbose(@"Reset typing indicator on conversation with %@", conversation.contact.identity);
-                        conversation.typing = @NO;
-                    }
-                }
-            }];
+
+            for (ConversationEntity *conversation in conversations) {
+                DDLogVerbose(@"Reset typing indicator on conversation with %@", conversation.contact.identity);
+                conversation.typing = @NO;
+            }
         }];
     });
 }
 
 - (void)setTypingIndicatorForIdentity:(NSString*)identity typing:(BOOL)typing {
+    DDLogInfo(@"Started setting typing indicator `%@` for conversation with contact identity %@.", typing ? @"ON" : @"OFF", identity);
+
+    if (identity.length != ThreemaIdentityObjc.length) {
+        DDLogError(@"Invalid contact identity: %@.", identity);
+        return;
+    }
+
     dispatch_async(dispatch_get_main_queue(), ^{
-        EntityManager *entityManager = [[BusinessInjector ui] entityManager];
-        ConversationEntity *conversation = [entityManager.entityFetcher conversationEntityFor:identity];
+        EntityFetcher *entityFetcher = [[BusinessInjector ui] entityManager].entityFetcher;
+
+        ConversationEntity *conversation = [entityFetcher conversationEntityFor:identity];
         if (conversation == nil) {
-            DDLogInfo(@"No conversation with identity %@ found", identity);
+            DDLogError(@"No conversation found with contact identity %@.", identity);
             return;
         }
-        
+
         conversation.typing = [NSNumber numberWithBool:typing];
+        DDLogInfo(@"Typing indicator for conversation with contact identity %@ successfully set.", identity);
     });
 }
 

@@ -838,7 +838,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [self runWhenBusinessReadyWithTask:^{
         dispatch_async(dispatch_get_main_queue(), ^{
             DDLogNotice(@"AppState: applicationDidEnterBackground executing task");
-            
+
+            [[TypingIndicatorManager sharedInstance] stopObserving];
             [[ThreemaBGTaskManager shared] scheduleTasks];
             
             [self showLockScreen];
@@ -993,6 +994,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             [FeatureMask updateLocalObjc];
             [AppDelegate registerForLocalNotifications];
             
+            [[TypingIndicatorManager sharedInstance] startObserving];
             [[TypingIndicatorManager sharedInstance] resetTypingIndicators];
             [[NotificationPresenterWrapper shared] dismissAllPresentedNotifications];
             

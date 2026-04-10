@@ -41,49 +41,45 @@ class WebCleanReceiverConversationRequest: WebAbstractMessage {
     }
     
     func clean() {
-        DispatchQueue.main.sync {
-            let entityManager = BusinessInjector.ui.entityManager
+        let entityManager = BusinessInjector.ui.entityManager
 
-            if let identity {
+        entityManager.performAndWaitSave {
+            if let identity = self.identity {
                 if let conversation = entityManager.entityFetcher.conversationEntity(for: identity) {
-                    entityManager.performAndWaitSave {
-                        entityManager.entityDestroyer.delete(conversation: conversation)
-                    }
+                    entityManager.entityDestroyer.delete(conversation: conversation)
                 }
             }
-            else if groupID != nil {
-                if let conversation = entityManager.entityFetcher.legacyConversationEntity(for: groupID) {
-                    entityManager.performAndWaitSave {
-                        var imageData: Data?
-                        var imageHeight: NSNumber?
-                        var imageWidth: NSNumber?
-                        
-                        if let groupImage = conversation.groupImage {
-                            imageData = groupImage.data
-                            imageHeight = (groupImage.height) as NSNumber
-                            imageWidth = (groupImage.width) as NSNumber
-                        }
-                        
-                        entityManager.entityDestroyer.delete(conversation: conversation)
+            else if self.groupID != nil {
+                if let conversation = entityManager.entityFetcher.legacyConversationEntity(for: self.groupID) {
+                    var imageData: Data?
+                    var imageHeight: NSNumber?
+                    var imageWidth: NSNumber?
 
-                        let tmpConversation = entityManager.entityCreator.conversationEntity()
-                        tmpConversation.contact = conversation.contact
-                        tmpConversation.members = conversation.members
-                        tmpConversation.groupID = conversation.groupID
-                        tmpConversation.groupName = conversation.groupName
-                        tmpConversation.groupMyIdentity = conversation.groupMyIdentity
-                        
-                        if let imageData {
-                            let tmpImageData = entityManager.entityCreator.imageDataEntity(
-                                data: imageData,
-                                size: CGSize(
-                                    width: Double(truncating: imageWidth ?? 0.0),
-                                    height: Double(truncating: imageHeight ?? 0.0)
-                                )
+                    if let groupImage = conversation.groupImage {
+                        imageData = groupImage.data
+                        imageHeight = (groupImage.height) as NSNumber
+                        imageWidth = (groupImage.width) as NSNumber
+                    }
+
+                    entityManager.entityDestroyer.delete(conversation: conversation)
+
+                    let tmpConversation = entityManager.entityCreator.conversationEntity()
+                    tmpConversation.contact = conversation.contact
+                    tmpConversation.members = conversation.members
+                    tmpConversation.groupID = conversation.groupID
+                    tmpConversation.groupName = conversation.groupName
+                    tmpConversation.groupMyIdentity = conversation.groupMyIdentity
+
+                    if let imageData {
+                        let tmpImageData = entityManager.entityCreator.imageDataEntity(
+                            data: imageData,
+                            size: CGSize(
+                                width: Double(truncating: imageWidth ?? 0.0),
+                                height: Double(truncating: imageHeight ?? 0.0)
                             )
-                            tmpConversation.groupImage = tmpImageData
-                            tmpConversation.groupImageSetDate = conversation.groupImageSetDate
-                        }
+                        )
+                        tmpConversation.groupImage = tmpImageData
+                        tmpConversation.groupImageSetDate = conversation.groupImageSetDate
                     }
                 }
             }

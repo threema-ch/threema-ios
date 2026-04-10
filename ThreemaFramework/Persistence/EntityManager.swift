@@ -94,6 +94,13 @@ public class EntityManager: NSObject {
         }
     }
     
+    @objc public func performAndWaitSave(_ block: @escaping () -> Void) {
+        dbContext.current.performAndWait {
+            block()
+            try? internalSave()
+        }
+    }
+
     public func performAndWaitSave<T>(_ block: @escaping () throws -> T) rethrows -> T {
         try dbContext.current.performAndWait {
             let returnValue = try block()

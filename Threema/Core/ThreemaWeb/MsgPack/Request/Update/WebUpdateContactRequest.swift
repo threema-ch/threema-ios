@@ -63,13 +63,16 @@ class WebUpdateContactRequest: WebAbstractMessage {
     func updateContact() {
         ack = WebAbstractMessageAcknowledgement(requestID, false, nil)
         let entityManager = BusinessInjector.ui.entityManager
-        let updatedContact = entityManager.entityFetcher.contactEntity(for: identity)
-        
+
         if firstName != nil {
             if firstName!.lengthOfBytes(using: .utf8) > 256 {
                 ack!.success = false
                 ack!.error = "valueTooLong"
-                contact = updatedContact
+                
+                let identity = identity
+                contact = entityManager.performAndWait {
+                    entityManager.entityFetcher.contactEntity(for: identity)
+                }
                 return
             }
         }
@@ -77,12 +80,18 @@ class WebUpdateContactRequest: WebAbstractMessage {
             if lastName!.lengthOfBytes(using: .utf8) > 256 {
                 ack!.success = false
                 ack!.error = "valueTooLong"
-                contact = updatedContact
+                
+                let identity = identity
+                contact = entityManager.performAndWait {
+                    entityManager.entityFetcher.contactEntity(for: identity)
+                }
                 return
             }
         }
-        
-        entityManager.performAndWaitSave {
+
+        contact = entityManager.performAndWaitSave {
+            let updatedContact = entityManager.entityFetcher.contactEntity(for: self.identity)
+
             updatedContact?.setFirstName(
                 to: self.firstName,
                 sortOrderFirstName: BusinessInjector.ui.userSettings.sortOrderFirstName
@@ -95,8 +104,9 @@ class WebUpdateContactRequest: WebAbstractMessage {
             if self.avatar != nil || self.deleteAvatar == true {
                 updatedContact?.imageData = self.avatar
             }
+
+            return updatedContact
         }
-        contact = updatedContact
         ack!.success = true
     }
 }

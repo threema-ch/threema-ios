@@ -1,5 +1,6 @@
 #!/usr/bin/env swift
 
+// swiftformat:disable:next header
 // See README for information about this script
 
 import Foundation

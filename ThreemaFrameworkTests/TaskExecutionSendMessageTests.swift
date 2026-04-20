@@ -1,33 +1,13 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 
 @testable import ThreemaFramework
 
-class TaskExecutionSendMessageTests: XCTestCase {
-    private var dbBackgroundCnx: DatabaseContext!
-    private var dbPreparer: DatabasePreparer!
+final class TaskExecutionSendMessageTests: XCTestCase {
+    private var testDatabase: TestDatabase!
+    private var dbPreparer: TestDatabasePreparer!
     private var entityManager: EntityManager!
 
     private var ddLoggerMock: DDLoggerMock!
@@ -37,15 +17,12 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
-            .devNullContext(withChildContextForBackgroundProcess: true)
-        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        dbPreparer = DatabasePreparer(context: mainCnx)
-        entityManager =
-            EntityManager(
-                databaseContext: DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx),
-                isRemoteSecretEnabled: false
-            )
+        testDatabase = TestDatabase()
+        dbPreparer = testDatabase.backgroundPreparer
+        entityManager = testDatabase.backgroundEntityManager
+
+        // Workaround to ensure remote secret is initialized
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -59,20 +36,20 @@ class TaskExecutionSendMessageTests: XCTestCase {
     func testExecuteTextMessageWithoutReflectingConnectionStateDisconnected() async throws {
         let serverConnectorMock = ServerConnectorMock(connectionState: .disconnected)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: entityManager,
             serverConnector: serverConnectorMock
         )
 
         let (messageID, receiverIdentity, conversation) = dbPreparer.save {
             let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: receiverIdentity
             )
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
             conversation.contact = contact
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,
@@ -134,20 +111,20 @@ class TaskExecutionSendMessageTests: XCTestCase {
     func testExecuteTextMessageWithoutReflecting() async throws {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             serverConnector: serverConnectorMock
         )
 
         let (messageID, receiverIdentity, conversation) = dbPreparer.save {
             let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: receiverIdentity
             )
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
             conversation.contact = contact
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,
@@ -201,14 +178,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
     func testExecuteTextMessageWithoutReflectingToInvalidContact() async throws {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: entityManager,
             serverConnector: serverConnectorMock
         )
 
         let (messageID, receiverIdentity, conversation) = dbPreparer.save {
             let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: receiverIdentity
             )
             contact.contactState = .invalid
@@ -216,7 +193,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
             conversation.contact = contact
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,
@@ -274,10 +251,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
     }
 
     func testExecuteTextMessageWithReflecting() async throws {
-        let expectedMessageReflectID = MockData.generateReflectID()
+        let expectedMessageReflectID = BytesUtility.generateReflectID()
         let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
-        let expectedMessageSentReflectID = MockData.generateReflectID()
+        let expectedMessageSentReflectID = BytesUtility.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
         // Second date (reflected at) is used when reflecting message sent
@@ -306,7 +283,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         }
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
@@ -327,14 +304,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let (messageID, receiverIdentity, conversation) = dbPreparer.save {
             let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: receiverIdentity
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
             conversation.contact = contact
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,
@@ -397,10 +374,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
     }
 
     func testExecuteGroupTextMessageWithReflecting() async throws {
-        let expectedMessageReflectID = MockData.generateReflectID()
+        let expectedMessageReflectID = BytesUtility.generateReflectID()
         let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
-        let expectedMessageSentReflectID = MockData.generateReflectID()
+        let expectedMessageSentReflectID = BytesUtility.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
@@ -432,7 +409,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock,
@@ -455,14 +432,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
             var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: member
                 )
                 members.insert(contact)
             }
 
             let groupEntity = dbPreparer.createGroupEntity(
-                groupID: MockData.generateGroupID(),
+                groupID: BytesUtility.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
 
@@ -471,7 +448,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = members
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,
@@ -546,10 +523,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
     }
 
     func testExecuteGroupTextMessageWithReflectingAndOneInvalidContact() async throws {
-        let expectedMessageReflectID = MockData.generateReflectID()
+        let expectedMessageReflectID = BytesUtility.generateReflectID()
         let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
-        let expectedMessageSentReflectID = MockData.generateReflectID()
+        let expectedMessageSentReflectID = BytesUtility.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
@@ -581,7 +558,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock,
@@ -604,7 +581,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: member
                 )
                 members.insert(contact)
@@ -615,7 +592,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
             let groupEntity = dbPreparer.createGroupEntity(
-                groupID: MockData.generateGroupID(),
+                groupID: BytesUtility.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
 
@@ -624,7 +601,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = members
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,
@@ -705,10 +682,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
     }
 
     func testExecuteGroupTextMessageWithReflectingAlreadySent() async throws {
-        let expectedMessageReflectID = MockData.generateReflectID()
+        let expectedMessageReflectID = BytesUtility.generateReflectID()
         let expectedMessageReflectedAt = Date()
         let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
-        let expectedMessageSentReflectID = MockData.generateReflectID()
+        let expectedMessageSentReflectID = BytesUtility.generateReflectID()
         let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
@@ -739,7 +716,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         }
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock,
@@ -762,14 +739,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
             var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: member
                 )
                 members.insert(contact)
             }
 
             let groupEntity = dbPreparer.createGroupEntity(
-                groupID: MockData.generateGroupID(),
+                groupID: BytesUtility.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
 
@@ -778,7 +755,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = members
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,
@@ -811,7 +788,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             receivers: group.members.map(\.identity),
             sendContactProfilePicture: false
         )
-        task.messageAlreadySentTo["MEMBER01"] = MockData.generateMessageNonce()
+        task.messageAlreadySentTo["MEMBER01"] = BytesUtility.generateMessageNonce()
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
                 expect.fulfill()
@@ -857,14 +834,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
         
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             serverConnector: serverConnectorMock
         )
 
         let (messageID, group, conversation) = dbPreparer.save {
             let members = expectedMembers.map {
                 dbPreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: $0
                 )
             }
@@ -873,7 +850,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
             let groupEntity = dbPreparer.createGroupEntity(
-                groupID: MockData.generateGroupID(),
+                groupID: BytesUtility.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
 
@@ -882,7 +859,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = Set(members)
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             let textMessage = self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,
@@ -953,14 +930,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             serverConnector: serverConnectorMock
         )
 
         let (messageID, group, conversation) = dbPreparer.save {
             let members = expectedMembers.map {
                 dbPreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: $0
                 )
             }
@@ -969,7 +946,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
             let groupEntity = dbPreparer.createGroupEntity(
-                groupID: MockData.generateGroupID(),
+                groupID: BytesUtility.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
 
@@ -982,7 +959,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = Set(members)
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             let textMessage = self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,
@@ -1057,14 +1034,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             serverConnector: serverConnectorMock
         )
 
         let (messageID, group, conversation) = dbPreparer.save {
             let members = expectedMembers.map {
                 dbPreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: $0
                 )
             }
@@ -1073,7 +1050,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
             let groupEntity = dbPreparer.createGroupEntity(
-                groupID: MockData.generateGroupID(),
+                groupID: BytesUtility.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
 
@@ -1086,7 +1063,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members = Set(members)
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             let textMessage = self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,
@@ -1155,7 +1132,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         )
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock
@@ -1167,7 +1144,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             var members = Set<ContactEntity>()
             for member in expectedMembers {
                 let contact = dbPreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: member
                 )
                 if myIdentityStoreMock.identity != member {
@@ -1176,7 +1153,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             }
 
             let groupEntity = dbPreparer.createGroupEntity(
-                groupID: MockData.generateGroupID(),
+                groupID: BytesUtility.generateGroupID(),
                 groupCreator: "MEMBER01"
             )
 
@@ -1203,7 +1180,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             to: Array(expectedMembers),
             members: expectedMembers
         )
-        task.messageAlreadySentTo["MEMBER01"] = MockData.generateMessageNonce()
+        task.messageAlreadySentTo["MEMBER01"] = BytesUtility.generateMessageNonce()
         task.create(frameworkInjector: frameworkInjectorMock).execute()
             .done {
                 expect.fulfill()
@@ -1221,9 +1198,9 @@ class TaskExecutionSendMessageTests: XCTestCase {
     }
 
     func testExecuteNoticeGroupTextMessageWithReflecting() async throws {
-        let expectedReflectID = MockData.generateReflectID()
+        let expectedReflectID = BytesUtility.generateReflectID()
         let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
-        let expectedOutgoingMessageSentReflectID = MockData.generateReflectID()
+        let expectedOutgoingMessageSentReflectID = BytesUtility.generateReflectID()
         let expectedOutgoingMessageSentReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
 
         let serverConnectorMock = ServerConnectorMock(
@@ -1254,9 +1231,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(
-                databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false
-            ),
+            entityManager: testDatabase.backgroundEntityManager,
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
@@ -1279,7 +1254,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
 
         let (messageID, group, conversation) = dbPreparer.save {
             let groupEntity = dbPreparer.createGroupEntity(
-                groupID: MockData.generateGroupID(),
+                groupID: BytesUtility.generateGroupID(),
                 /// See `GroupManager` line 227 for why this has to be nil
                 groupCreator: nil
             )
@@ -1290,7 +1265,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             /// See `GroupManager` line 227 for why this has to be nil
             conversation.contact = nil
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,
@@ -1370,10 +1345,10 @@ class TaskExecutionSendMessageTests: XCTestCase {
         ]
 
         for broadcastGroupTest in broadcastGroupTests {
-            let expectedMessageReflectID = MockData.generateReflectID()
+            let expectedMessageReflectID = BytesUtility.generateReflectID()
             let expectedMessageReflectedAt = Date()
             let expectedMessageReflect = BytesUtility.generateRandomBytes(length: 16)!
-            let expectedMessageSentReflectID = MockData.generateReflectID()
+            let expectedMessageSentReflectID = BytesUtility.generateReflectID()
             let expectedMessageSentReflect = BytesUtility.generateRandomBytes(length: 16)!
             let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", "*ADMIN01"]
             var expectedReflectIDs = [expectedMessageReflectID, expectedMessageSentReflectID]
@@ -1404,7 +1379,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             let myIdentityStoreMock = MyIdentityStoreMock()
             XCTAssertNotNil(serverConnectorMock.deviceGroupKeys, "Device group keys missing")
             let frameworkInjectorMock = BusinessInjectorMock(
-                entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+                entityManager: testDatabase.backgroundEntityManager,
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: UserSettingsMock(enableMultiDevice: true),
                 serverConnector: serverConnectorMock,
@@ -1427,14 +1402,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 var members = Set<ContactEntity>()
                 for member in expectedMembers {
                     let contact = dbPreparer.createContact(
-                        publicKey: MockData.generatePublicKey(),
+                        publicKey: BytesUtility.generatePublicKey(),
                         identity: member
                     )
                     members.insert(contact)
                 }
 
                 let groupEntity = dbPreparer.createGroupEntity(
-                    groupID: MockData.generateGroupID(),
+                    groupID: BytesUtility.generateGroupID(),
                     groupCreator: "*ADMIN01"
                 )
 
@@ -1445,7 +1420,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
                 conversation.contact = members.first(where: { $0.identity == "*ADMIN01" })
                 conversation.members = members
 
-                let messageID = MockData.generateMessageID()
+                let messageID = BytesUtility.generateMessageID()
                 self.dbPreparer.createTextMessage(
                     conversation: conversation,
                     delivered: false,
@@ -1531,7 +1506,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
     }
 
     func testExecuteTextMessageWithReflectingConnectionStateDisconnected() async throws {
-        let expectedReflectID = MockData.generateReflectID()
+        let expectedReflectID = BytesUtility.generateReflectID()
         let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 16)!
 
         let serverConnectorMock = ServerConnectorMock(
@@ -1547,7 +1522,7 @@ class TaskExecutionSendMessageTests: XCTestCase {
             ) as? NSError
         }
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
@@ -1565,14 +1540,14 @@ class TaskExecutionSendMessageTests: XCTestCase {
         let (messageID, receiverIdentity, conversation) = dbPreparer.save {
             let receiverIdentity = "ECHOECHO"
             let contact = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: receiverIdentity
             )
 
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
             conversation.contact = contact
 
-            let messageID = MockData.generateMessageID()
+            let messageID = BytesUtility.generateMessageID()
             self.dbPreparer.createTextMessage(
                 conversation: conversation,
                 delivered: false,

@@ -1,35 +1,13 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 import ThreemaMacros
 
 struct MultiDeviceWizardCodeView: View {
     @Environment(\.dismiss) var dismiss
-
     @ObservedObject var wizardVM: MultiDeviceWizardViewModel
-    @Binding var dismissModal: Bool
+    @Binding var path: NavigationPath
 
     @State var animate = false
-    @State var advance = false
-    
+
     var animation: Animation {
         Animation.linear(duration: 6.0)
             .repeatForever(autoreverses: false)
@@ -79,12 +57,6 @@ struct MultiDeviceWizardCodeView: View {
             }
             .buttonStyle(.bordered)
             .tint(.accentColor)
-            
-            NavigationLink(isActive: $advance) {
-                MultiDeviceWizardSuccessView(dismiss: $dismissModal)
-            } label: {
-                EmptyView()
-            }
         }
         .padding(.horizontal)
         .navigationBarTitle(#localize("md_wizard_header"))
@@ -96,9 +68,9 @@ struct MultiDeviceWizardCodeView: View {
         .onDisappear {
             animate = false
         }
-        .onChange(of: wizardVM.wizardState) { newValue in
-            if newValue == .success {
-                advance = true
+        .onChange(of: wizardVM.wizardState) {
+            if wizardVM.wizardState == .success {
+                path.append(MultiDeviceWizardNavigationRoute.success)
             }
         }
     }
@@ -126,9 +98,9 @@ private struct MultiDeviceWizardCodeBlockView: View {
             }
         }
         
-        .onChange(of: wizardVM.linkingCode, perform: { newValue in
-            blocks = newValue
-        })
+        .onChange(of: wizardVM.linkingCode) {
+            blocks = wizardVM.linkingCode
+        }
         .onTapGesture {
             UIPasteboard.general.string = blocks.joined(separator: "")
             NotificationPresenterWrapper.shared.present(type: .copySuccess)
@@ -138,6 +110,9 @@ private struct MultiDeviceWizardCodeBlockView: View {
 
 struct MultiDeviceWizardLinkView_Previews: PreviewProvider {
     static var previews: some View {
-        MultiDeviceWizardCodeView(wizardVM: MultiDeviceWizardViewModel(), dismissModal: .constant(true))
+        MultiDeviceWizardCodeView(
+            wizardVM: MultiDeviceWizardViewModel(),
+            path: .constant(.init())
+        )
     }
 }

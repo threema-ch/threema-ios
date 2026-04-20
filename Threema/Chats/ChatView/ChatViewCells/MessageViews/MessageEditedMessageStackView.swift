@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaFramework
 import ThreemaMacros
 import UIKit
@@ -66,7 +46,6 @@ final class MessageEditedMessageStackView: UIStackView {
     private lazy var titleLabel: RTLAligningLabel = {
         let titleLabel = RTLAligningLabel()
         titleLabel.font = ChatViewConfiguration.EditedMessage.nameFont
-        titleLabel.textColor = .secondaryLabel
         titleLabel.adjustsFontForContentSizeCategory = true
         titleLabel.numberOfLines = 0
       
@@ -77,7 +56,6 @@ final class MessageEditedMessageStackView: UIStackView {
         let editMessageLabel = RTLAligningLabel()
         editMessageLabel.adjustsFontForContentSizeCategory = true
         editMessageLabel.numberOfLines = ChatViewConfiguration.EditedMessage.maxLines
-        editMessageLabel.textColor = .secondaryLabel
 
         return editMessageLabel
     }()
@@ -176,6 +154,15 @@ final class MessageEditedMessageStackView: UIStackView {
     func updateColors() {
         // The image in the edit message only gets updated if we set it new again
         updateContent()
+        
+        if #available(iOS 26.0, *) {
+            titleLabel.textColor = .label
+            editMessageLabel.textColor = .label
+        }
+        else {
+            titleLabel.textColor = .secondaryLabel
+            editMessageLabel.textColor = .secondaryLabel
+        }
     }
     
     private func updateContent() {

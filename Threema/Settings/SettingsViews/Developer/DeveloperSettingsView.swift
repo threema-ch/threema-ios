@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Intents
@@ -34,8 +14,8 @@ struct DeveloperSettingsView: View {
     @State private var showDebugDeviceJoin = false
     
     // Feature Flags
-    @State var newNavigationEnabled = UserSettings.shared().newNavigationEnabled
-    @State var showWorkReferral = UserSettings.shared().showWorkReferral
+    @State var ipcCommunicationEnabled = UserSettings.shared().ipcCommunicationEnabled
+    @State var distributionListsEnabled = UserSettings.shared().distributionListsEnabled
     
     // Group Calls
     @State var groupCallsDebugMessages = UserSettings.shared().groupCallsDebugMessages
@@ -88,6 +68,12 @@ struct DeveloperSettingsView: View {
                 }
                 
                 NavigationLink {
+                    ThreemaButtonView()
+                } label: {
+                    Text(verbatim: "Buttons")
+                }
+                
+                NavigationLink {
                     LaunchModalSettingsView()
                 } label: {
                     Text(verbatim: "Launch Modals")
@@ -98,31 +84,7 @@ struct DeveloperSettingsView: View {
                 } label: {
                     Text(verbatim: "Notifications / Alerts")
                 }
-                
-                Button {
-                    AppDelegate.shared().window
-                        .rootViewController =
-                        UIHostingController(
-                            rootView: RemoteSecretActivateDeactivateView(
-                                viewModel: RemoteSecretActivateDeactivateViewModel(type: .activate)
-                            )
-                        )
-                } label: {
-                    Text(verbatim: "RS Activate")
-                }
-                
-                Button {
-                    AppDelegate.shared().window
-                        .rootViewController =
-                        UIHostingController(
-                            rootView: RemoteSecretActivateDeactivateView(
-                                viewModel: RemoteSecretActivateDeactivateViewModel(type: .deactivate)
-                            )
-                        )
-                } label: {
-                    Text(verbatim: "RS Deactivate")
-                }
-                
+
                 Button {
                     UserSettings.shared().resetTipKitOnNextLaunch = true
                     exit(1)
@@ -151,8 +113,8 @@ struct DeveloperSettingsView: View {
                         .foregroundStyle(.secondary)
                     }
                 }
-                .onChange(of: allowSeveralDevices) { newValue in
-                    UserSettings.shared().allowSeveralLinkedDevices = newValue
+                .onChange(of: allowSeveralDevices) {
+                    UserSettings.shared().allowSeveralLinkedDevices = allowSeveralDevices
                 }
                 
                 NavigationLink {
@@ -173,20 +135,14 @@ struct DeveloperSettingsView: View {
             }
             
             Section {
-                Toggle(isOn: $newNavigationEnabled) {
-                    Text(verbatim: "Enable new Navigation")
-                }
-                .onChange(of: newNavigationEnabled) { newValue in
-                    UserSettings.shared().newNavigationEnabled = newValue
-                    exit(1)
-                }
-                Toggle(isOn: $showWorkReferral) {
-                    Text(verbatim: "Show Work Referral")
-                }
-                .onChange(of: showWorkReferral) { newValue in
-                    UserSettings.shared().showWorkReferral = newValue
-                    exit(1)
-                }
+                #if DEBUG
+                    Toggle(isOn: $distributionListsEnabled) {
+                        Text(verbatim: "Enable Distribution Lists Feature")
+                    }
+                    .onChange(of: distributionListsEnabled) {
+                        UserSettings.shared().distributionListsEnabled = distributionListsEnabled
+                    }
+                #endif
             }
             header: {
                 Text(verbatim: "Feature Flags")
@@ -196,8 +152,8 @@ struct DeveloperSettingsView: View {
                 Toggle(isOn: $groupCallsDebugMessages) {
                     Text(verbatim: "Send Debug Messages for Group Calls")
                 }
-                .onChange(of: groupCallsDebugMessages) { newValue in
-                    UserSettings.shared().groupCallsDebugMessages = newValue
+                .onChange(of: groupCallsDebugMessages) {
+                    UserSettings.shared().groupCallsDebugMessages = groupCallsDebugMessages
                 }
             }
             header: {

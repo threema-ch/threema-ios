@@ -1,33 +1,8 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
+import ThreemaFramework
 import ThreemaMacros
+import TipKit
 import UIKit
-
-protocol ContactSelectionHandler: AnyObject, ContactListSearchResultSelectionHandler {
-    func didSelect(item: Contact)
-    func didDeselect(item: Contact)
-    func selectionFor(item: Contact) -> Bool
-    func selectedItems() -> [Contact]
-}
 
 final class SelectContactListViewController: ThemedViewController {
     
@@ -38,10 +13,14 @@ final class SelectContactListViewController: ThemedViewController {
     private let contactSelectionMode: SelectContactListDisplayMode
     private let onSaveDisplayMode: OnSaveDisplayMode
     private let onEdit: (([Contact]) -> Void)?
+    private let tip = TipKitManager.ThreemaNoteGroupCreationTip()
+    private var tipObservation: Task<Void, Never>?
+    private var tipPopoverController: TipUIPopoverViewController?
+
     private lazy var provider = ContactListProvider()
     private lazy var cellProvider = ContactListSelectionCellProvider()
     private lazy var carouselView = {
-        let headerView = SelectContactListHeaderView(
+        let headerView = SelectedItemsHeaderView(
             collectionKind: contactSelectionMode.countLabelKind
         )
         headerView.setContentHuggingPriority(.required, for: .vertical)
@@ -128,6 +107,8 @@ final class SelectContactListViewController: ThemedViewController {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
+        tipObservation?.cancel()
+        tipObservation = nil
     }
     
     override func viewDidLoad() {
@@ -135,8 +116,7 @@ final class SelectContactListViewController: ThemedViewController {
         
         navigationItem.title = contactSelectionMode.title
         navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: #localize("cancel"),
-            style: .plain,
+            barButtonSystemItem: .cancel,
             target: self,
             action: #selector(cancelTapped)
         )
@@ -144,6 +124,7 @@ final class SelectContactListViewController: ThemedViewController {
         navigationItem.searchController = searchController
         
         preFillData()
+        updateTipEligibility()
         updateNextButton()
         setupViews()
         addObservers()
@@ -151,29 +132,50 @@ final class SelectContactListViewController: ThemedViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
         carouselView.configure()
+        carouselView.invalidateLayout()
+        super.viewWillAppear(animated)
     }
 
     // MARK: - Configuration
     
     private func updateNextButton() {
         
-        let title =
-            if contactSelectionMode.isEdit {
-                #localize("Done")
-            }
-            else {
-                selectedContacts.isEmpty ? #localize("skip") : #localize("next")
-            }
-        
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: title,
-            style: .done,
-            target: self,
-            action: #selector(nextTapped)
-        )
-        
+        if #available(iOS 26.0, *) {
+            let item =
+                if contactSelectionMode.isEdit {
+                    UIBarButtonItem(
+                        barButtonSystemItem: .add,
+                        target: self,
+                        action: #selector(nextTapped)
+                    )
+                }
+                else {
+                    UIBarButtonItem(
+                        image: UIImage(systemName: "arrow.forward"),
+                        style: .plain,
+                        target: self,
+                        action: #selector(nextTapped)
+                    )
+                }
+            navigationItem.rightBarButtonItem = item
+        }
+        else {
+            let title =
+                if contactSelectionMode.isEdit {
+                    #localize("Done")
+                }
+                else {
+                    selectedContacts.isEmpty ? #localize("skip") : #localize("next")
+                }
+            
+            navigationItem.rightBarButtonItem = UIBarButtonItem(
+                title: title,
+                style: .done,
+                target: self,
+                action: #selector(nextTapped)
+            )
+        }
         if selectedContacts.count > Group.maxGroupMembers {
             navigationItem.rightBarButtonItem?.isEnabled = false
         }
@@ -188,45 +190,44 @@ final class SelectContactListViewController: ThemedViewController {
     }
 
     @objc private func nextTapped() {
-        if contactSelectionMode.isEdit {
+        guard !contactSelectionMode.isEdit else {
             onEdit?(selectedContacts)
             dismiss(animated: true)
+            return
         }
-        else {
-            let data = EditData(
-                name: editData?.name,
-                profilePicture: editData?.profilePicture,
-                contacts: selectedContacts
-            )
-            let config: CreateEditGroupDistributionListDisplayMode
+        let data = EditData(
+            name: editData?.name,
+            profilePicture: editData?.profilePicture,
+            contacts: selectedContacts
+        )
+        let config: CreateEditGroupDistributionListDisplayMode
 
-            switch contactSelectionMode {
-            case .group(.create):
-                config = .group(.create(data: data))
-                
-            case .distributionList(.create):
-                config = .distributionList(.create(data: data))
-                
-            case let .group(.clone(group)):
-                config = .group(.clone(group: group, data: data))
+        switch contactSelectionMode {
+        case .group(.create):
+            config = .group(.create(data: data))
 
-            default:
-                fatalError("Unsupported contact selection mode for this flow")
-            }
+        case .distributionList(.create):
+            config = .distributionList(.create(data: data))
 
-            let controller = CreateEditGroupDistributionViewController(
-                for: config,
-                onSaveDisplayMode: onSaveDisplayMode
-            ) { [weak self] editData in
-                self?.editData = editData
-                self?.selectedContacts = editData.contacts
-                self?.updateNextButton()
-                self?.carouselView.configure()
-                self?.tableViewController.updateSelection()
-            }
+        case let .group(.clone(group)):
+            config = .group(.clone(group: group, data: data))
 
-            navigationController?.pushViewController(controller, animated: true)
+        default:
+            fatalError("Unsupported contact selection mode for this flow")
         }
+
+        let controller = CreateEditGroupDistributionViewController(
+            for: config,
+            onSaveDisplayMode: onSaveDisplayMode
+        ) { [weak self] editData in
+            self?.editData = editData
+            self?.selectedContacts = editData.contacts
+            self?.updateNextButton()
+            self?.carouselView.configure()
+            self?.tableViewController.updateSelection()
+        }
+
+        navigationController?.pushViewController(controller, animated: true)
     }
 
     private func addObservers() {
@@ -237,6 +238,17 @@ final class SelectContactListViewController: ThemedViewController {
             name: UIContentSizeCategory.didChangeNotification,
             object: nil
         )
+
+        // Rotation
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleOrientationChange),
+            name: UIDevice.orientationDidChangeNotification,
+            object: nil
+        )
+
+        // Tip
+        observeTipStatus()
     }
 
     private func setupViews() {
@@ -267,34 +279,84 @@ final class SelectContactListViewController: ThemedViewController {
         
         view.backgroundColor = Colors.backgroundGroupedViewController
     }
+
+    private func observeTipStatus() {
+        tipObservation = tipObservation ?? Task { @MainActor in
+            for await shouldDisplay in tip.shouldDisplayUpdates {
+                if shouldDisplay {
+                    showTip()
+                }
+                else {
+                    dismissTip()
+                }
+            }
+        }
+    }
     
+    private func updateTipEligibility() {
+        TipKitManager.ThreemaNoteGroupCreationTip.isInCorrectScenario = selectedContacts.isEmpty
+    }
+
+    private func showTip() {
+        guard tipPopoverController == nil, let sourceItem = navigationItem.rightBarButtonItem else {
+            return
+        }
+
+        let controller = TipUIPopoverViewController(tip, sourceItem: sourceItem)
+        if #unavailable(iOS 26.0) {
+            controller.view.backgroundColor = .tertiarySystemGroupedBackground
+        }
+
+        if let popover = controller.popoverPresentationController {
+            popover.sourceItem = sourceItem
+            popover.permittedArrowDirections = .up
+        }
+
+        present(controller, animated: true)
+        tipPopoverController = controller
+    }
+
+    private func dismissTip() {
+        tipPopoverController?.dismiss(animated: true)
+        tipPopoverController = nil
+    }
+
     // MARK: - Notification
 
     @objc func contentSizeCategoryDidChange() {
-        carouselView.contentSizeCategoryDidChange()
+        carouselView.invalidateLayout()
         tableViewController.updateSelection()
+    }
+
+    @objc func handleOrientationChange() {
+        carouselView.invalidateLayout()
     }
 }
 
-// MARK: - ContactSelectionHandler
+// MARK: - ItemSelectionHandler
 
-extension SelectContactListViewController: ContactSelectionHandler {
-    func selectedItems() -> [Contact] {
-        selectedContacts
+extension SelectContactListViewController: ItemSelectionHandler {
+    func selectedItems() -> [SelectableItem] {
+        selectedContacts.map {
+            SelectableItem(id: $0.objectID, item: .contact($0), isSelected: false)
+        }
     }
     
-    func didSelect(item: Contact) {
-        guard !selectedContacts.contains(where: { $0.identity == item.identity }) else {
+    func didSelect(id: ItemID) {
+        if selectedContacts.contains(where: { $0.objectID == id }) {
+            return
+        }
+        guard let contact = provider.entity(for: id) else {
             return
         }
         carouselView.isHidden = false
-        selectedContacts.append(item)
+        selectedContacts.append(contact)
         updateNextButton()
         carouselView.configure()
     }
     
-    func didDeselect(item: Contact) {
-        selectedContacts.removeAll { $0.identity == item.identity }
+    func didDeselect(id: ItemID) {
+        selectedContacts.removeAll { $0.objectID == id }
         updateNextButton()
         carouselView.configure()
         tableViewController.updateSelection()
@@ -302,8 +364,8 @@ extension SelectContactListViewController: ContactSelectionHandler {
         carouselView.isHidden = selectedContacts.isEmpty
     }
     
-    func selectionFor(item: Contact) -> Bool {
-        selectedContacts.contains { $0.identity == item.identity }
+    func selectionFor(id: ItemID) -> Bool {
+        selectedContacts.contains { $0.objectID == id }
     }
 }
 
@@ -316,13 +378,17 @@ extension SelectContactListViewController: UISearchControllerDelegate {
     }
 }
 
-// MARK: - SelectContactListHeaderViewDelegate
+// MARK: - SelectedItemsHeaderViewDelegate
 
-extension SelectContactListViewController: SelectContactListHeaderViewDelegate {
+extension SelectContactListViewController: SelectedItemsHeaderViewDelegate {
     func header(
-        _ header: SelectContactListHeaderView,
+        _ header: ThreemaFramework.SelectedItemsHeaderView,
         itemForIndexPath indexPath: IndexPath
-    ) -> Contact {
-        selectedContacts[indexPath.row]
+    ) -> ThreemaFramework.SelectableItem? {
+        guard indexPath.row < selectedContacts.count else {
+            return nil
+        }
+        let contact = selectedContacts[indexPath.row]
+        return SelectableItem(id: contact.objectID, item: .contact(contact), isSelected: false)
     }
 }

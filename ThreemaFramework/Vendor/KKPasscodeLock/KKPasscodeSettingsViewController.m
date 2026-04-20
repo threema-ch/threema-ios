@@ -46,9 +46,7 @@
     _touchIdSwitch = [[UISwitch alloc] init];
     [_touchIdSwitch addTarget:self action:@selector(touchIdSwitchChanged:) forControlEvents:UIControlEventValueChanged];
     
-    if (@available(iOS 11.0, *)) {
-        self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
-    }
+    self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
 }
 
 - (void)viewDidUnload
@@ -69,7 +67,7 @@
 }
 
 -(UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    if (SYSTEM_IS_IPAD) {
+    if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
         return UIInterfaceOrientationMaskAll;
     }
     return UIInterfaceOrientationMaskAllButUpsideDown;
@@ -80,7 +78,7 @@
 }
 
 - (BOOL)shouldAutorotate {
-    if (SYSTEM_IS_IPAD) {
+    if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
         return YES;
     }
     return YES;
@@ -148,12 +146,10 @@
     LAContext *context = [LAContext new];
     if ([context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:nil]) {
         BOOL haveFaceId = NO;
-        if (@available(iOS 11.0, *)) {
-            if (context.biometryType == LABiometryTypeFaceID) {
-                haveFaceId = YES;
-            }
+        if (context.biometryType == LABiometryTypeFaceID) {
+            haveFaceId = YES;
         }
-        
+
         if (haveFaceId) {
             return @"Face ID";
         } else {
@@ -349,7 +345,7 @@
         
         [tableView deselectRowAtIndexPath:indexPath animated:YES];
 	} else if (indexPath.section == 1) {
-        KKPasscodeGracePeriodViewController *gvc = [[KKPasscodeGracePeriodViewController alloc] initWithStyle:UITableViewStyleGrouped];
+        KKPasscodeGracePeriodViewController *gvc = [[KKPasscodeGracePeriodViewController alloc] initWithStyle:UITableViewStyleInsetGrouped];
         [self.navigationController pushViewController:gvc animated:YES];
     }
 }

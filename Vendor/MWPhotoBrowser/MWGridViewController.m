@@ -36,7 +36,7 @@
         (void)(_marginL = 0), _gutterL = 1;
         
         // For pixel perfection...
-        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
             // iPad
             (void)(_columns = 6), _columnsL = 8;
             (void)(_margin = 1), _gutter = 2;
@@ -136,8 +136,7 @@
 #pragma mark - Layout
 
 - (CGFloat)getColumns {
-    if (UIInterfaceOrientationIsPortrait([[UIApplication sharedApplication] statusBarOrientation])) {
-//    if ((UIInterfaceOrientationIsPortrait(self.interfaceOrientation))) {
+    if (UIInterfaceOrientationIsPortrait([self currentInterfaceOrientation])) {
         return _columns;
     } else {
         return _columnsL;
@@ -145,8 +144,7 @@
 }
 
 - (CGFloat)getMargin {
-    if (UIInterfaceOrientationIsPortrait([[UIApplication sharedApplication] statusBarOrientation])) {
-//    if ((UIInterfaceOrientationIsPortrait(self.interfaceOrientation))) {
+    if (UIInterfaceOrientationIsPortrait([self currentInterfaceOrientation])) {
         return _margin;
     } else {
         return _marginL;
@@ -154,8 +152,7 @@
 }
 
 - (CGFloat)getGutter {
-    if (UIInterfaceOrientationIsPortrait([[UIApplication sharedApplication] statusBarOrientation])) {
-//    if ((UIInterfaceOrientationIsPortrait(self.interfaceOrientation))) {
+    if (UIInterfaceOrientationIsPortrait([self currentInterfaceOrientation])) {
         return _gutter;
     } else {
         return _gutterL;
@@ -224,6 +221,12 @@
 - (UIEdgeInsets)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout insetForSectionAtIndex:(NSInteger)section {
     CGFloat margin = [self getMargin];
     return UIEdgeInsetsMake(margin, margin, margin, margin);
+}
+
+#pragma mark - Helpers
+
+- (UIInterfaceOrientation)currentInterfaceOrientation {
+    return [[[[self.view window] windowScene] effectiveGeometry] interfaceOrientation] ?: UIInterfaceOrientationUnknown;
 }
 
 @end

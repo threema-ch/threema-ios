@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2015-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import "ContactGroupPickerViewController.h"
 #import "ContactTableDataSource.h"
 #import "GroupTableDataSource.h"
@@ -137,7 +117,6 @@ typedef enum : NSUInteger {
     self.searchController = [[UISearchController alloc]initWithSearchResultsController:nil];
     self.searchController.searchBar.showsScopeBar = NO;
     self.searchController.searchBar.scopeButtonTitles = nil;
-    self.tableView.keyboardDismissMode = UIScrollViewKeyboardDismissModeNone;
     self.searchController.searchBar.delegate = self;
     self.searchController.searchResultsUpdater = self;
     self.searchController.searchBar.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -189,17 +168,12 @@ typedef enum : NSUInteger {
 }
 
 - (void)updateColors {
-    self.view.backgroundColor = Colors.backgroundViewController;
-    self.tableView.backgroundColor = Colors.backgroundNavigationController;
-    self.navigationController.navigationBar.backgroundColor = Colors.backgroundNavigationController;
     
     _controlView.backgroundColor = Colors.backgroundView;
     _buttonView.backgroundColor = Colors.backgroundView;
     [_sendButton setTintColor:Colors.textLink];
     [_addTextButton setTintColor:Colors.textLink];
     [_hideTextButton setTintColor:Colors.textLink];
-    
-    _textView.backgroundColor = Colors.backgroundView;
     
     [Colors updateWithTableView:self.tableView];
     [Colors updateWithSearchBar:_searchController.searchBar];
@@ -209,12 +183,17 @@ typedef enum : NSUInteger {
     
     _sendAsFileLabel.textColor = Colors.textLink;
     
-    [self.navigationItem.leftBarButtonItem setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
-                                                                   UIColor.primary, NSForegroundColorAttributeName,
-                                        nil] forState:UIControlStateNormal];
-    [self.navigationItem.leftBarButtonItem setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
-                                                                   UIColor.primary, NSForegroundColorAttributeName,
-                                                                   nil] forState:UIControlStateHighlighted];
+    if (@available(iOS 26, *)) {
+        self.navigationItem.rightBarButtonItem = [UIBarButtonItem nextButtonWithTarget:self selector:@selector(doneAction:)];
+    }
+    else {
+        [self.navigationItem.leftBarButtonItem setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
+                                                                       UIColor.primary, NSForegroundColorAttributeName,
+                                            nil] forState:UIControlStateNormal];
+        [self.navigationItem.leftBarButtonItem setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
+                                                                       UIColor.primary, NSForegroundColorAttributeName,
+                                                                       nil] forState:UIControlStateHighlighted];
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -267,7 +246,7 @@ typedef enum : NSUInteger {
 }
 
 -(UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    if (SYSTEM_IS_IPAD) {
+    if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
         return UIInterfaceOrientationMaskAll;
     }
     
@@ -302,6 +281,9 @@ typedef enum : NSUInteger {
 }
 
 - (void)processKeyboardNotification:(NSNotification*)notification willHide:(BOOL)willHide {
+    if (@available(iOS 26, *)) {
+        return;
+    }
     NSDictionary* info = [notification userInfo];
     
     NSNumber *durationValue = info[UIKeyboardAnimationDurationUserInfoKey];
@@ -322,13 +304,13 @@ typedef enum : NSUInteger {
         }
         
         CGFloat offset = willHide == true ? self.view.safeAreaInsets.bottom : keyboardHeight + controlViewOffset;
-        
+
         float difference = self.view.safeAreaLayoutGuide.layoutFrame.size.height - self.view.frame.size.height;
         if (willHide == false) {
             offset += difference;
         }
-        
         _tableViewBottomConstraint.constant =  offset;
+    
     } completion:^(BOOL finished) {
     }];
 }
@@ -415,7 +397,7 @@ typedef enum : NSUInteger {
 - (void)updateButtons {
     NSUInteger count = [_currentDataSource selectedConversations].count;
     BOOL hasSelection = count > 0;
-    _sendButton.enabled = hasSelection;
+    self.navigationItem.rightBarButtonItem.enabled = hasSelection;
     if (hasSelection) {
         [_sendButton setTitle:[NSString stringWithFormat:@"%@ (%lu)", _rightBarButtonTitle, (unsigned long)count]];
     } else {
@@ -430,9 +412,19 @@ typedef enum : NSUInteger {
     
     _isSearchBarHidden = hide;
     
-    [UIView animateWithDuration:0.3 animations:^{
-        [self.searchController.searchBar setHidden:hide];
-    }];
+    if (@available(iOS 26, *)) {
+        if(hide) {
+            self.navigationItem.searchController = nil;
+        }
+        else {
+            self.navigationItem.searchController = _searchController;
+        }
+    }
+    else {
+        [UIView animateWithDuration:0.3 animations:^{
+            [self.searchController.searchBar setHidden:hide];
+        }];
+    }
 }
 
 - (void)hideTextInput:(BOOL)hide {

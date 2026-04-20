@@ -1,28 +1,8 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import FileUtility
 import XCTest
 @testable import ThreemaFramework
 
-class URLSenderItemCreatorTests: XCTestCase {
+final class URLSenderItemCreatorTests: XCTestCase {
 
     let testBundle = Bundle(for: ImageURLSenderItemCreatorTest.self)
     
@@ -44,11 +24,11 @@ class URLSenderItemCreatorTests: XCTestCase {
                 forResource: item.0,
                 withExtension: item.1
             ) else {
-                XCTFail("Could not create testImageURL")
+                XCTFail("Could not create testImageURL for \(item.0).\(item.1)")
                 return
             }
             guard let senderItem = URLSenderItemCreator.getSenderItem(for: testImageURL, maxSize: item.2) else {
-                XCTFail("Could not create senderItem from valid testdata")
+                XCTFail("Could not create senderItem from valid testdata \(item.0).\(item.1)")
                 return
             }
             imageURLSenderItemCreatorTest.checkSenderItem(senderItem: senderItem, item: item)

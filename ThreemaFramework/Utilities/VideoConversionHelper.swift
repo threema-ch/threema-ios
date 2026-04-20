@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
@@ -98,21 +78,9 @@ final class VideoConversionHelper: NSObject {
         
         return Video.size
     }
-    
-    private func getEstimatedVideoFileSize(for asset: AVAsset) async -> Double? {
-        guard let exportSession = getAVAssetExportSession(
-            from: asset,
-            outputURL: outputDirectoryURL
-        ) else {
-            DDLogError("No export asset for the video available")
-            return nil
-        }
-        
-        return try? await Double(integerLiteral: exportSession.estimatedOutputFileLengthInBytes)
-    }
-            
-    @objc func getAVAssetExportSession(from asset: AVAsset, outputURL: URL) -> AVAssetExportSession? {
-        guard asset.tracks(withMediaType: .video).first != nil else {
+
+    func getAVAssetExportSession(from asset: AVAsset, outputURL: URL) async -> AVAssetExportSession? {
+        guard await (try? asset.loadTracks(withMediaType: .video))?.first != nil else {
             DDLogError("No video track found")
             return nil
         }
@@ -142,34 +110,25 @@ final class VideoConversionHelper: NSObject {
                     ]
                 }
             }
-                
-        var exportSession: AVAssetExportSession? = nil
-        
-        for presetName in sortedPresetNames {
-            if exportSession != nil {
-                break
+
+        for preset in sortedPresetNames {
+            guard let session = createExportSession(presetName: preset, asset: asset, outputURL: outputURL) else {
+                continue
             }
 
-            let tmpSession = createExportSession(
-                presetName: presetName,
-                asset: asset,
-                outputURL: outputURL
-            )
-
-            let group = DispatchGroup()
-            group.enter()
-
-            tmpSession?.estimateOutputFileLength(completionHandler: { estimatedSize, _ in
+            do {
+                let estimatedSize = try await session.estimatedOutputFileLengthInBytes
                 if estimatedSize > 0, estimatedSize <= kMaxFileSize {
-                    exportSession = tmpSession
+                    return session
                 }
-                group.leave()
-            })
-            
-            group.wait()
+            }
+            catch {
+                // Trying next preset
+                continue
+            }
         }
-        
-        return exportSession
+
+        return nil
     }
 
     // MARK: Private Properties
@@ -211,5 +170,17 @@ final class VideoConversionHelper: NSObject {
         exportSession.metadata = [creationDateMetaDataItem]
 
         return exportSession
+    }
+
+    private func getEstimatedVideoFileSize(for asset: AVAsset) async -> Double? {
+        guard let exportSession = await getAVAssetExportSession(
+            from: asset,
+            outputURL: outputDirectoryURL
+        ) else {
+            DDLogError("No export asset for the video available")
+            return nil
+        }
+
+        return try? await Double(integerLiteral: exportSession.estimatedOutputFileLengthInBytes)
     }
 }

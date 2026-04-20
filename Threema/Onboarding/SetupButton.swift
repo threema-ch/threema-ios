@@ -1,26 +1,6 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2018-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import UIKit
 
-@IBDesignable class SetupButton: UIButton {
+@IBDesignable final class SetupButton: UIButton {
     
     @IBInspectable var cancelStyle = false {
         didSet {
@@ -80,17 +60,20 @@ import UIKit
         var red: CGFloat = 0
         var green: CGFloat = 0
         var blue: CGFloat = 0
-        accentColor.getRed(&red, green: &green, blue: &blue, alpha: nil)
-        let accentColorDisabled = UIColor(red: red, green: green, blue: blue, alpha: 0.5)
-        
+
+        let resolvedAccentColor = accentColor.resolvedColor(with: UITraitCollection(userInterfaceStyle: .dark))
+
+        resolvedAccentColor.getRed(&red, green: &green, blue: &blue, alpha: nil)
+        let resolvedAccentColorDisabled = UIColor(red: red, green: green, blue: blue, alpha: 0.5)
+
         if cancelStyle {
             backgroundColor = .clear
-            setTitleColor(accentColor, for: .normal)
+            setTitleColor(resolvedAccentColor, for: .normal)
             layer.borderWidth = 1
-            layer.borderColor = isEnabled ? accentColor.cgColor : accentColorDisabled.cgColor
+            layer.borderColor = isEnabled ? resolvedAccentColor.cgColor : resolvedAccentColorDisabled.cgColor
         }
         else {
-            backgroundColor = isEnabled ? accentColor : accentColorDisabled
+            backgroundColor = isEnabled ? resolvedAccentColor : resolvedAccentColorDisabled
             setTitleColor(Colors.textProminentButtonWizard, for: .normal)
         }
     }

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjack
 import CocoaLumberjackSwift
 import ThreemaEssentials
@@ -70,7 +50,11 @@ final class GroupCallManagerTests: XCTestCase {
                 localContactModel: self.localContactModel
             )
 
-            await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
+            await groupCallManager.handleNewCallMessage(
+                for: proposedGroupCall,
+                creatorOrigin: .db,
+                calledFromExtension: false
+            )
 
 //                while await !(groupCallManager.hasRunningGroupCalls(in: proposedGroupCall)) {
 //                    await Task.yield()
@@ -116,7 +100,11 @@ final class GroupCallManagerTests: XCTestCase {
             let proposedGroupCalls = [proposedGroupCall1, proposedGroupCall2]
 
             for proposedGroupCall in proposedGroupCalls {
-                await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
+                await groupCallManager.handleNewCallMessage(
+                    for: proposedGroupCall,
+                    creatorOrigin: .db,
+                    calledFromExtension: false
+                )
 
 //                    while await !(groupCallManager.hasRunningGroupCalls(in: proposedGroupCall)) {
 //                        await Task.yield()
@@ -201,7 +189,11 @@ final class GroupCallManagerTests: XCTestCase {
             XCTAssertEqual(proposedGroupCalls.count, numberOfCalls)
 
             for proposedGroupCall in proposedGroupCalls {
-                await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
+                await groupCallManager.handleNewCallMessage(
+                    for: proposedGroupCall,
+                    creatorOrigin: .db,
+                    calledFromExtension: false
+                )
                     
 //                    while await !(groupCallManager.hasRunningGroupCalls(in: proposedGroupCall)) {
 //                        await Task.yield()

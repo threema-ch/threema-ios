@@ -1,30 +1,22 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
 import SwiftUI
 import UIKit
 
-public final class WallpaperStore {
+public protocol WallpaperStoreProtocol {
+    var defaultWallPaper: UIImage! { get }
+    func saveWallpaper(_ wallpaper: UIImage, for conversationID: NSManagedObjectID)
+    func saveDefaultWallpaper(_ wallpaper: UIImage?)
+    func wallpaper(for conversationID: NSManagedObjectID) -> UIImage?
+    func hasCustomWallpaper(for conversationID: NSManagedObjectID) -> Bool
+    func deleteWallpaper(for conversationID: NSManagedObjectID)
+    func deleteAllCustom()
+    func currentDefaultWallpaper() -> UIImage?
+    func wallpaperType() -> WallpaperType
+}
+
+public final class WallpaperStore: WallpaperStoreProtocol {
         
     public static let shared = WallpaperStore(fileUtility: FileUtility.shared)
     

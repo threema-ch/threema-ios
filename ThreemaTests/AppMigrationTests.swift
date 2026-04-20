@@ -1,35 +1,15 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import FileUtility
 import KeychainTestHelper
 import RemoteSecretProtocolTestHelper
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 @testable import Threema
 @testable import ThreemaFramework
 
-class AppMigrationTests: XCTestCase {
-    private var dbMainCnx: DatabaseContext!
-    private var dbPreparer: DatabasePreparer!
+final class AppMigrationTests: XCTestCase {
+    private var testDatabase: TestDatabase!
+    private var dbPreparer: TestDatabasePreparer!
 
     private var ddLoggerMock: DDLoggerMock!
 
@@ -37,12 +17,11 @@ class AppMigrationTests: XCTestCase {
     private var groupManagerMock: GroupManagerMock!
     private var userSettingsMock: UserSettingsMock!
 
-    override func setUpWithError() throws {
+    override func setUp() {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        dbPreparer = DatabasePreparer(context: mainCnx)
+        testDatabase = TestDatabase()
+        dbPreparer = testDatabase.preparer
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -59,7 +38,7 @@ class AppMigrationTests: XCTestCase {
         AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManagerMock)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() {
         DDLog.remove(ddLoggerMock)
     }
 
@@ -76,7 +55,8 @@ class AppMigrationTests: XCTestCase {
         try setupDataForMigrationVersion6_6()
         setupDataForMigrationVersion6_8_8()
         setupDataForMigrationVersion6_9()
-        setupDataForMigrationVersion7_0_1()
+        setupDataForMigrationVersion7_0_4()
+        setupDataForMigrationVersion7_1()
         
         // Verify that the migration was started by `doMigrate` and not some other function accidentally accessing the
         // database before the proper migration was initialized.
@@ -90,7 +70,7 @@ class AppMigrationTests: XCTestCase {
 
         let keychainManagerMock = KeychainManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             groupManager: groupManagerMock,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
@@ -167,15 +147,15 @@ class AppMigrationTests: XCTestCase {
                 .exists(message: "[AppMigration] App migration to version 6.9 successfully finished")
         )
         
-        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 7.0.1 started"))
+        XCTAssertTrue(ddLoggerMock.exists(message: "[AppMigration] App migration to version 7.0.4 started"))
         XCTAssertTrue(
             ddLoggerMock
-                .exists(message: "[AppMigration] App migration to version 7.0.1 successfully finished")
+                .exists(message: "[AppMigration] App migration to version 7.0.4 successfully finished")
         )
         
         XCTAssertEqual(1, keychainManagerMock.migrateToVersion0Calls)
 
-        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
         let conversations: [ConversationEntity] = entityManager.entityFetcher
             .conversationEntities() ?? []
         XCTAssertEqual(conversations.count, 7)
@@ -211,7 +191,7 @@ class AppMigrationTests: XCTestCase {
         let pushSettingManager = PushSettingManager(
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             markupParser: MarkupParser(),
             taskManager: TaskManagerMock(),
             isWorkApp: false
@@ -342,12 +322,22 @@ class AppMigrationTests: XCTestCase {
         XCTAssertEqual(1, keychainManagerMock.storeLicenseCalls.count)
         XCTAssertEqual(1, keychainManagerMock.storeMultiDeviceIDCalls.count)
         
-        // Checks for 7.0.1 migration
+        // Checks for 7.0.4 migration
         let dict = try XCTUnwrap(
             AppGroup.userDefaults()
                 .object(forKey: "threema_mdm_configuration") as? [String: String]
         )
         XCTAssertEqual(dict["test"], "test")
+
+        // Checks for 7.1 migration
+
+        #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+            // Key added with computed value
+            XCTAssertEqual(AppGroup.userDefaults().integer(forKey: kPreferenceInterfaceStyleKey), 2)
+            // Values in old keys are removed
+            XCTAssertNil(AppGroup.userDefaults().value(forKey: "DarkTheme"))
+            XCTAssertNil(AppGroup.userDefaults().value(forKey: "UseSystemTheme"))
+        #endif
     }
 
     private func setupDataForMigrationVersion4_8() {
@@ -396,7 +386,7 @@ class AppMigrationTests: XCTestCase {
                 identity: myIdentityStoreMock.identity
             )
 
-            let groupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+            let groupIdentity = GroupIdentity(id: BytesUtility.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
             let expectedMember01 = "MEMBER01"
             let expectedMember02 = "MEMBER02"
 
@@ -408,11 +398,11 @@ class AppMigrationTests: XCTestCase {
                 )
 
                 let member01 = dbPreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: expectedMember01
                 )
                 let member02 = dbPreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: expectedMember02
                 )
 
@@ -604,7 +594,10 @@ class AppMigrationTests: XCTestCase {
 
         // Unknown group message removal
         AppGroup.userDefaults()
-            .setValue(["groupid": MockData.generateGroupID(), "creator": "CREATOR1"], forKey: "UnknownGroupAlertList")
+            .setValue(
+                ["groupid": BytesUtility.generateGroupID(), "creator": "CREATOR1"],
+                forKey: "UnknownGroupAlertList"
+            )
     }
 
     private func setupDataForMigrationVersion5_9_2() {
@@ -650,7 +643,7 @@ class AppMigrationTests: XCTestCase {
     private func setupDataForMigrationVersion6_6() throws {
         let contact = dbPreparer.save {
             dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "REACTION"
             )
         }
@@ -679,7 +672,7 @@ class AppMigrationTests: XCTestCase {
             )
             
             // Group reactions
-            let groupID = MockData.generateGroupID()
+            let groupID = BytesUtility.generateGroupID()
             let (_, _, groupConversation) = try dbPreparer.createGroup(
                 groupID: groupID,
                 groupCreatorIdentity: "REACTION",
@@ -719,12 +712,24 @@ class AppMigrationTests: XCTestCase {
         AppGroup.userDefaults().setValue("http://threema.ch", forKey: "Threema OnPrem config URL")
 
         // Test data for Device ID of multi device
-        AppGroup.userDefaults().setValue(MockData.generateDeviceID(), forKey: "DeviceID")
+        AppGroup.userDefaults().setValue(BytesUtility.generateDeviceID(), forKey: "DeviceID")
     }
-    
-    private func setupDataForMigrationVersion7_0_1() {
+
+    private func setupDataForMigrationVersion7_0_4() {
         // Test data for Threema MDM migration
         let dict = ["test": "test"]
         UserDefaults.standard.set(dict, forKey: "threema_mdm_configuration")
+    }
+    
+    func setupDataForMigrationVersion7_1() {
+
+        #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+
+            // Test data for UIUserInterfaceStyle migration
+            AppGroup.userDefaults().setValue(nil, forKey: kPreferenceInterfaceStyleKey)
+            AppGroup.userDefaults().setValue(true, forKey: "DarkTheme")
+            AppGroup.userDefaults().setValue(false, forKey: "UseSystemTheme")
+
+        #endif
     }
 }

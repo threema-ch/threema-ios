@@ -1,30 +1,10 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 
 @testable import ThreemaFramework
 
-class BlobManagerTests: XCTestCase {
+final class BlobManagerTests: XCTestCase {
     
     enum BlobManagerTestsError: Error {
         case urlIsNil
@@ -37,7 +17,7 @@ class BlobManagerTests: XCTestCase {
 
     private let testBundle = Bundle(for: BlobManagerTests.self)
     private var context: NSManagedObjectContext!
-    private var databasePreparer: DatabasePreparer!
+    private var databasePreparer: TestDatabasePreparer!
     private var conversation: ConversationEntity!
     private var groupConversation: ConversationEntity!
     private var entityManager: EntityManager!
@@ -45,7 +25,7 @@ class BlobManagerTests: XCTestCase {
     private let myIdentityStoreMock = MyIdentityStoreMock()
     
     private let baseURLString = "https://example.com"
-    private let encryptionKey = MockData.generateBlobEncryptionKey()
+    private let encryptionKey = BytesUtility.generateBlobEncryptionKey()
     
     private let testThumbnailID = "546573745468756d62".data(using: .ascii)!
     private let testThumbnailData = try! Data(
@@ -74,11 +54,11 @@ class BlobManagerTests: XCTestCase {
     
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
-        
-        let (_, context, backgroundManagedObjectContext) = DatabasePersistentContext.devNullContext()
-                
-        databasePreparer = DatabasePreparer(context: context)
-        
+
+        let testDatabase = TestDatabase()
+
+        databasePreparer = testDatabase.preparer
+
         databasePreparer.save {
             conversation = databasePreparer.createConversation(
                 typing: false,
@@ -97,22 +77,18 @@ class BlobManagerTests: XCTestCase {
             )
         }
         
-        let databaseContext = DatabaseContext(
-            mainContext: context,
-            backgroundContext: backgroundManagedObjectContext
-        )
-        
-        entityManager = EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false)
+        entityManager = testDatabase.entityManager
         
         blobManager = BlobManager(
             entityManager: entityManager,
+            groupManager: GroupManagerMock(),
             sessionManager: URLSessionManager(with: TestSessionProvider()),
             serverConnector: ServerConnectorMock(connectionState: .loggedIn),
             serverInfoProvider: ServerInfoProviderMock(baseURLString: baseURLString),
             userSettings: UserSettingsMock()
         )
     }
-        
+
     // MARK: - Incoming Tests
     
     @MainActor
@@ -120,7 +96,7 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -173,8 +149,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = MockData.generateBlobID()
-        let thumbnailID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -264,8 +240,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = MockData.generateBlobID()
-        let thumbnailID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -345,7 +321,7 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -402,8 +378,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = MockData.generateBlobID()
-        let thumbnailID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -619,36 +595,33 @@ class BlobManagerTests: XCTestCase {
     func testOutGoingDataNoteGroup() async throws {
         
         let myIdentityStoreMock = MyIdentityStoreMock()
-        let contactStoreMock = ContactStoreMock(callOnCompletion: true)
-        let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
-        let groupManager = GroupManager(
-            myIdentityStore: myIdentityStoreMock,
-            contactStore: contactStoreMock,
-            taskManager: taskManagerMock,
-            userSettings: userSettingsMock,
-            entityManager: entityManager,
-            groupPhotoSender: {
-                GroupPhotoSenderMock()
-            }
-        )
-        
-        let grp = try await createOrUpdateDBWait(
-            groupManager: groupManager,
-            groupIdentity: expectedGroupIdentity,
-            members: []
-        )
-                
-        let conversation = try XCTUnwrap(entityManager.entityFetcher.conversationEntity(
-            for: grp.groupIdentity, myIdentity: myIdentityStoreMock.identity
-        ))
-        
+        let (group, conversationEntity) = try databasePreparer.save {
+            let (_, groupEntity, conversationEntity) = try databasePreparer.createGroup(
+                groupID: expectedGroupIdentity.id,
+                groupCreatorIdentity: expectedGroupIdentity.creator.rawValue,
+                members: [],
+                myIdentityStoreMock: myIdentityStoreMock
+            )
+            return (
+                Group(
+                    myIdentityStore: myIdentityStoreMock,
+                    userSettings: userSettingsMock,
+                    pushSettingManager: PushSettingManagerMock(),
+                    groupEntity: groupEntity,
+                    conversation: conversationEntity,
+                    lastSyncRequest: nil
+                ),
+                conversationEntity
+            )
+        }
+
         // Arrange
         var fileMessageEntity: FileMessageEntity!
         let fileDataEntity = databasePreparer.createFileDataEntity(data: testBlobData)
@@ -656,7 +629,7 @@ class BlobManagerTests: XCTestCase {
 
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
-                conversation: conversation,
+                conversation: conversationEntity,
                 encryptionKey: encryptionKey,
                 blobID: testBlobID,
                 blobThumbnailID: testThumbnailID,
@@ -676,10 +649,13 @@ class BlobManagerTests: XCTestCase {
             }
         )
 
+        let groupManagerMock = GroupManagerMock()
+        groupManagerMock.getGroupReturns.append(group)
+
         // Act
         let blobManager = BlobManager(
             entityManager: entityManager,
-            groupManager: groupManager,
+            groupManager: groupManagerMock,
             sessionManager: URLSessionManager(with: TestSessionProvider()),
             serverConnector: ServerConnectorMock(connectionState: .loggedIn),
             serverInfoProvider: ServerInfoProviderMock(baseURLString: baseURLString),
@@ -731,8 +707,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = MockData.generateBlobID()
-        let thumbnailID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -818,8 +794,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = MockData.generateBlobID()
-        let thumbnailID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -905,8 +881,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = MockData.generateBlobID()
-        let thumbnailID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -992,8 +968,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = MockData.generateBlobID()
-        let thumbnailID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -1079,8 +1055,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = MockData.generateBlobID()
-        let thumbnailID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -1128,8 +1104,8 @@ class BlobManagerTests: XCTestCase {
         
         // Arrange
         var fileMessageEntity: FileMessageEntity!
-        let blobID = MockData.generateBlobID()
-        let thumbnailID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
+        let thumbnailID = BytesUtility.generateBlobID()
         
         databasePreparer.save {
             fileMessageEntity = databasePreparer.createFileMessageEntity(
@@ -1221,20 +1197,5 @@ class BlobManagerTests: XCTestCase {
         }
 
         return data.hexString.data(using: .ascii)
-    }
-    
-    /// Create or update group in DB and wait until finished.
-    @discardableResult private func createOrUpdateDBWait(
-        groupManager: GroupManagerProtocol,
-        groupIdentity: GroupIdentity,
-        members: Set<String>
-    ) async throws -> Group {
-        let group = try await groupManager.createOrUpdateDB(
-            for: groupIdentity,
-            members: members,
-            systemMessageDate: Date(),
-            sourceCaller: .local
-        )
-        return try XCTUnwrap(group)
     }
 }

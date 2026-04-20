@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Combine
 import Foundation
@@ -26,25 +6,12 @@ import SwiftUI
 import ThreemaFramework
 import UIKit
 
-@objc class StatusNavigationBar: UINavigationBar {
-    
-    // MARK: - Private Properties
-    
-    private var navigationBarColorShouldChange: AnyCancellable?
-    
-    private lazy var tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tapped))
+@objc final class StatusNavigationBar: UINavigationBar {
     
     // MARK: - Subviews
     
     private lazy var statusView = UIView(frame: CGRect(x: 0, y: frame.size.height - 2, width: frame.width, height: 2))
     
-    private lazy var tapView = UIView(frame: .zero)
-
-    @NotificationPublishedState(
-        Notification.Name(kNotificationNavigationBarColorShouldChange)
-    )
-    private var notificationBarColorShouldChange
-
     // MARK: - Lifecycle
     
     override init(frame: CGRect) {
@@ -58,26 +25,13 @@ import UIKit
         configure()
     }
     
-    private func addObservers() {
-        navigationBarColorShouldChange = notificationBarColorShouldChange
-            .sink { [weak self] _ in
-                self?.updateNavigationBar()
-            }
-    }
-    
     override func layoutSubviews() {
         super.layoutSubviews()
         statusView.frame = CGRect(x: 0, y: frame.size.height - 2, width: frame.width, height: 2)
-        updateStatusView()
-    }
-    
-    deinit {
-        navigationBarColorShouldChange = nil
-        ServerConnector.shared().unregisterConnectionStateDelegate(delegate: self)
+        updateNavigationBar()
     }
     
     private func configure() {
-        addObservers()
         ServerConnector.shared().registerConnectionStateDelegate(delegate: self)
         statusView.isHidden = true
         addSubview(statusView)
@@ -87,19 +41,13 @@ import UIKit
     
     // MARK: - Private Functions
     
-    @objc private func updateNavigationBar() {
-        DispatchQueue.main.async { [self] in
-            if NavigationBarPromptHandler.shouldShowPrompt() {
-                addGestureRecognizer(tapGestureRecognizer)
-            }
-            else {
-                removeGestureRecognizer(tapGestureRecognizer)
-            }
-            Colors.update(navigationBar: self)
+    private func updateNavigationBar() {
+        Task { @MainActor in
             updateStatusView()
         }
     }
     
+    @MainActor
     private func updateStatusView() {
         DispatchQueue.main.async { [self] in
             // The display of connection state is delayed because the process coordinator checks
@@ -132,45 +80,14 @@ import UIKit
             }
         }
     }
-    
-    @objc private func tapped() {
-        Task { @MainActor in
-            // 1-1 Calls
-            if NavigationBarPromptHandler.isCallActiveInBackground {
-                VoIPCallStateManager.shared.presentCallViewController()
-            }
-            // Web
-            else if NavigationBarPromptHandler.isWebActive {
-                let vc = UIHostingController(rootView: ThreemaWebSettingsView())
-                showViewController(vc)
-            }
-            // Group Calls
-            else if NavigationBarPromptHandler.isGroupCallActive {
-                GlobalGroupCallManagerSingleton.shared.showGroupCallViewController()
-            }
-        }
-    }
-    
-    private func showViewController(_ vc: UIViewController) {
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            guard let mainTabBarController = AppDelegate.getMainTabBarController() as? MainTabBarController else {
-                return
-            }
-            mainTabBarController.showModal(vc)
-        }
-        else {
-            let modalVC = ModalNavigationController()
-            modalVC.showDoneButton = true
-            modalVC.pushViewController(vc, animated: true)
-            AppDelegate.shared().currentTopViewController().show(modalVC, sender: nil)
-        }
-    }
 }
 
 // MARK: - ConnectionStateDelegate
 
 extension StatusNavigationBar: ConnectionStateDelegate {
     func changed(connectionState state: ConnectionState) {
-        updateStatusView()
+        Task { @MainActor in
+            updateStatusView()
+        }
     }
 }

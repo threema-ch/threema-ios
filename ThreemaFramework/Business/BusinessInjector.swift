@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import Keychain
@@ -42,21 +22,14 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
     // Will be used for none public services, that must be running in the background anyway
     private let backgroundEntityManager: EntityManager
 
-    @objc required init(entityManager: EntityManager) {
-        // This `assert` would be nice, than the `BusinessInjector` can only be used when My Identity is present.
-        // But in the moment the assert throws if unit tests are running, because e.g.
-        // `ContactEntity.setFeatureMask(...` uses an instance of `BusinessInjector`, this should be mocked.
-        // There are many issues of this kind!
-        // assert(MyIdentityStore.shared().identity != nil, "My identity should be set when using business injector")
-
+    /// Main designated initializer that accepts EntityManager and PersistenceManager.
+    /// Use this when you want full control over both dependencies.
+    /// - Parameters:
+    ///   - entityManager: The entity manager to use
+    ///   - persistenceManager: The persistence manager (provides database and background entity manager)
+    required init(entityManager: EntityManager, persistenceManager: PersistenceManager) {
         self.runsInBackground = entityManager.hasBackgroundChildContext
         self.entityManager = entityManager
-
-        let persistenceManager = PersistenceManager(
-            appGroupID: AppGroup.groupID(),
-            userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
-        )
 
         self.databaseManagerObjC = persistenceManager.databaseManager
         self.dirtyObjectManagerObjC = persistenceManager.dirtyObjectManager
@@ -67,6 +40,23 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
         else {
             self.backgroundEntityManager = persistenceManager.backgroundEntityManager
         }
+    }
+    
+    /// Legacy initializer for backward compatibility (uses AppLaunchManager.remoteSecretManager).
+    @objc convenience init(entityManager: EntityManager) {
+        // This `assert` would be nice, than the `BusinessInjector` can only be used when My Identity is present.
+        // But in the moment the assert throws if unit tests are running, because e.g.
+        // `ContactEntity.setFeatureMask(...` uses an instance of `BusinessInjector`, this should be mocked.
+        // There are many issues of this kind!
+        // assert(MyIdentityStore.shared().identity != nil, "My identity should be set when using business injector")
+
+        let persistenceManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: AppLaunchManager.remoteSecretManager
+        )
+        
+        self.init(entityManager: entityManager, persistenceManager: persistenceManager)
     }
 
     /// Create `BusinessInjector` for main thread or background (Core Data child context) thread.
@@ -90,6 +80,19 @@ public final class BusinessInjector: NSObject, FrameworkInjectorProtocol {
 
     @objc override public convenience init() {
         self.init(forBackgroundProcess: false)
+    }
+    
+    /// Create `BusinessInjector` with injected RemoteSecretManager (avoids AppLaunchManager singleton).
+    /// Use this for new coordinator-based architecture.
+    /// - Parameter remoteSecretManager: The RemoteSecretManager to use for persistence
+    public convenience init(remoteSecretManager: any RemoteSecretManagerProtocol) {
+        let persistenceManager = PersistenceManager(
+            appGroupID: AppGroup.groupID(),
+            userDefaults: AppGroup.userDefaults(),
+            remoteSecretManager: remoteSecretManager
+        )
+        
+        self.init(entityManager: persistenceManager.entityManager, persistenceManager: persistenceManager)
     }
     
     // MARK: BusinessInjectorProtocol

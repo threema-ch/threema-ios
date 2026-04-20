@@ -1,28 +1,9 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
+import ThreemaFramework
 import ThreemaMacros
 import UIKit
 
-protocol StartChatContactSelectionHandler: ContactListSearchResultSelectionHandler { }
+protocol StartChatContactSelectionHandler: ItemListSearchResultSelectionHandler { }
 
 final class StartChatViewController: ThemedViewController {
     
@@ -62,13 +43,7 @@ final class StartChatViewController: ThemedViewController {
         super.viewDidLoad()
         
         navigationItem.title = #localize("start_chat_title")
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: #localize("cancel"),
-            style: .plain,
-            target: self,
-            action: #selector(cancelTapped)
-        )
-        
+        navigationItem.leftBarButtonItem = UIBarButtonItem.cancelButton(target: self, selector: #selector(cancelTapped))
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
         
@@ -109,10 +84,13 @@ final class StartChatViewController: ThemedViewController {
 // MARK: - StartChatContactSelectionHandler
 
 extension StartChatViewController: StartChatContactSelectionHandler {
-    func didSelect(item contact: Contact) {
+    func didSelect(id: ItemID) {
         presentingViewController?.dismiss(animated: true) {
-            let entity = BusinessInjector.ui.entityManager.entityFetcher.contactEntity(for: contact.identity.rawValue)
-            
+            guard let entity = BusinessInjector.ui.entityManager.entityFetcher.contactEntity(with: id) else {
+                assertionFailure("Contact entity not found.")
+                return
+            }
+
             let info: [String: Any] = [
                 kKeyContact: entity as Any,
                 kKeyForceCompose: true,
@@ -126,11 +104,11 @@ extension StartChatViewController: StartChatContactSelectionHandler {
         }
     }
     
-    func didDeselect(item: Contact) {
+    func didDeselect(id: ItemID) {
         // no-op, not multiselect
     }
     
-    func selectionFor(item: Contact) -> Bool {
+    func selectionFor(id: ItemID) -> Bool {
         false
     }
 }

@@ -1,27 +1,9 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import SwiftUI
 
 struct WizardGroupBoxStyle: GroupBoxStyle {
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
     func makeBody(configuration: Configuration) -> some View {
         VStack(alignment: .center, spacing: 20.0) {
             configuration.label
@@ -30,7 +12,7 @@ struct WizardGroupBoxStyle: GroupBoxStyle {
         }
         .multilineTextAlignment(.center)
         .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? UIScreen.main.bounds.width - 200.0 : .infinity)
+        .frame(maxWidth: horizontalSizeClass == .regular ? UIScreen.main.bounds.width - 200.0 : .infinity)
         .padding(.all, 10.0)
     }
 }

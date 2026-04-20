@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2012-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #include <CommonCrypto/CommonDigest.h>
 
 #import "ThreemaFramework/ThreemaFramework-Swift.h"
@@ -219,8 +199,7 @@ struct pktExtension {
         isWaitingForReconnect = NO;
         [self setIsRolePromotedToLeader:NO];
 
-        /* listen for identity changes */
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(identityCreated:) name:kNotificationCreatedIdentity object:nil];
+        // Listen for identity changes
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(identityDestroyed:) name:kNotificationDestroyedIdentity object:nil];
 
         queueConnectionStateDelegate = dispatch_queue_create("ch.threema.ServerConnector.queueConnectionStateDelegate", NULL);
@@ -1039,8 +1018,6 @@ struct pktExtension {
             chatServerInInitialQueueSend = NO;
             
             [self chatQueueDry];
-             
-            [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationQueueSendComplete object:nil userInfo:nil];
             break;
         case PLTYPE_DEVICE_COOKIE_CHANGE_INDICATION: {
             DDLogWarn(@"Got device cookie change indication");
@@ -1666,7 +1643,7 @@ struct pktExtension {
         }
             
         case TAG_LOGIN_ACK_READ: {
-            DDLogInfo(@"Login ack received");
+            DDLogNotice(@"Login ack received");
             lastRead = CACurrentMediaTime();
             
             /* decrypt server hello box */
@@ -1681,6 +1658,7 @@ struct pktExtension {
             /* Don't care about the contents of the login ACK for now; it only needs to decrypt correctly */
             
             reconnectAttempts = 0;
+            DDLogNotice(@"Got chat server login ack; client connected");
             [serverConnectorConnectionState loggedInChatServer];
 
             [self sendPushToken];
@@ -1707,10 +1685,18 @@ struct pktExtension {
             /* Receive next payload header */
             [socket readWithLength:sizeof(uint16_t) timeout:-1 tag:TAG_PAYLOAD_LENGTH_READ];
             
-            // Process all tasks
-            TaskManager *tm = [[TaskManager alloc] init];
-            [tm spool];
-            
+            // Process all tasks.
+            //
+            // Call the spool function 2s delayed. Because when is running in the Notification Extension (NE)
+            // it can happen the task queue is empty, right after the login (because the task for the incoming
+            // message is not added at this time) and then the NE will be terminated. But it needs this call,
+            // because it can happen also, that is receiving a reflected message before logged in and the
+            // task will not be executed (because the connection state is not logged in).
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2000 * NSEC_PER_MSEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                TaskManager *tm = [[TaskManager alloc] init];
+                [tm spool];
+            });
+
             break;
         }
             
@@ -1783,7 +1769,7 @@ struct pktExtension {
                 [socket writeWithData:result];
             }
             else if ((int)type == MediatorMessageProtocol.MEDIATOR_MESSAGE_TYPE_SERVER_INFO) {
-                DDLogInfo(@"Got mediator server info; client connected");
+                DDLogNotice(@"Got mediator server info; client connected");
                 [serverConnectorConnectionState loggedInMediatorServer];
                 maximumNumberOfDeviceSlots = maxDeviceSlots;
             }
@@ -1804,7 +1790,7 @@ struct pktExtension {
                 }
             }
             else if (result != nil) {
-                [self messageReceived:type data:result];
+                [self messageReceived:self type:type data:result];
             }
 
             break;
@@ -1841,7 +1827,7 @@ struct pktExtension {
 
 #pragma mark - MessageListenerDelegate
 
-- (void)messageReceived:(uint8_t)type data:(NSData * _Nonnull)data {
+- (void)messageReceived:(_Nonnull id<MessageListenerDelegate>)listener type:(uint8_t)type data:(NSData * _Nonnull)data {
     dispatch_sync(queueMessageListenerDelegate, ^{
         if (clientMessageListenerDelegates != nil && [clientMessageListenerDelegates count] > 0) {
             for (id<MessageListenerDelegate> clientListener in clientMessageListenerDelegates) {
@@ -1947,14 +1933,6 @@ struct pktExtension {
 }
 
 #pragma mark - Notifications
-
-- (void)identityCreated:(NSNotification*)notification {
-    /* when the identity is created, we should connect */
-    dispatch_async(socketQueue, ^{
-        [self connectBy:ConnectionInitiatorApp];
-        [self _connect];
-    });
-}
 
 - (void)identityDestroyed:(NSNotification*)notification {
     /* when the identity is destroyed, we must disconnect */

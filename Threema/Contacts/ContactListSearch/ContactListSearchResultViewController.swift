@@ -1,30 +1,5 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
+import ThreemaFramework
 import ThreemaMacros
-
-protocol ContactListSearchResultSelectionHandler: AnyObject {
-    func didSelect(item: Contact)
-    func didDeselect(item: Contact)
-    func selectionFor(item: Contact) -> Bool
-}
 
 final class ContactListSearchResultViewController<CellProvider: ContactListCellProviderProtocol>:
     ThemedViewController,
@@ -34,7 +9,7 @@ final class ContactListSearchResultViewController<CellProvider: ContactListCellP
 
     // MARK: - Public properties
     
-    weak var delegate: ContactListSearchResultSelectionHandler?
+    weak var delegate: ItemListSearchResultSelectionHandler?
     
     // MARK: - Private properties
         
@@ -115,8 +90,8 @@ final class ContactListSearchResultViewController<CellProvider: ContactListCellP
         let snapshot = dataSource.snapshot()
         for identifier in snapshot.itemIdentifiers {
             guard let indexPath = dataSource.indexPath(for: identifier),
-                  let contact = contact(for: indexPath),
-                  let isSelected = delegate?.selectionFor(item: contact) else {
+                  let isSelected = delegate?.selectionFor(id: identifier)
+            else {
                 continue
             }
             
@@ -128,19 +103,7 @@ final class ContactListSearchResultViewController<CellProvider: ContactListCellP
             }
         }
     }
-    
-    // MARK: - Helpers
-    
-    private func contact(for indexPath: IndexPath) -> Contact? {
-        guard
-            let id = dataSource.itemIdentifier(for: indexPath),
-            let contact = provider.entity(for: id) else {
-            return nil
-        }
-        
-        return contact
-    }
-    
+
     // MARK: UITableViewDelegate
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -148,19 +111,19 @@ final class ContactListSearchResultViewController<CellProvider: ContactListCellP
             tableView.deselectRow(at: indexPath, animated: true)
         }
         
-        guard let contact = contact(for: indexPath) else {
+        guard let id = dataSource.itemIdentifier(for: indexPath) else {
             return
         }
         
-        delegate?.didSelect(item: contact)
+        delegate?.didSelect(id: id)
     }
     
     func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
-        guard allowsMultiSelect, let contact = contact(for: indexPath) else {
+        guard allowsMultiSelect, let id = dataSource.itemIdentifier(for: indexPath) else {
             return
         }
         
-        delegate?.didDeselect(item: contact)
+        delegate?.didDeselect(id: id)
     }
     
     func tableView(_ tableView: UITableView, estimatedHeightForHeaderInSection section: Int) -> CGFloat {

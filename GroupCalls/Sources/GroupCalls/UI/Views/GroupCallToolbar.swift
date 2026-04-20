@@ -1,27 +1,7 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import UIKit
 
-class GroupCallToolbar: UIView {
+final class GroupCallToolbar: UIView {
     typealias toolbarConfig = GroupCallUIConfiguration.Toolbar
     typealias toolbarButtonConfig = GroupCallUIConfiguration.ToolbarButton
     
@@ -30,21 +10,30 @@ class GroupCallToolbar: UIView {
     // MARK: Toggle Video Button
 
     private lazy var toggleVideoButton: UIButton = {
-        var configuration = UIButton.Configuration.plain()
+        var configuration: UIButton.Configuration =
+            if #available(iOS 26.0, *) {
+                .glass()
+            }
+            else {
+                .bordered()
+            }
+        
+        configuration.cornerStyle = .capsule
+        configuration.activityIndicatorColorTransformer = .grayscale
+        // Add some color pre glass
+        if #unavailable(iOS 26.0) {
+            configuration.baseForegroundColor = toolbarButtonConfig.biggerButtonTint
+            configuration.baseBackgroundColor = toolbarButtonConfig.biggerButtonBackground
+        }
+
         configuration.image = dependencies.groupCallBundleUtil.image(named: "threema.video.outline.slash")
             .withConfiguration(toolbarButtonConfig.biggerButtonImageConfig)
+        
         let action = UIAction { [weak self] _ in
             self?.didTapToggleVideoButton()
         }
-        configuration.activityIndicatorColorTransformer = .grayscale
         
         let button = UIButton(configuration: configuration, primaryAction: action)
-        
-        button.layer.masksToBounds = true
-        button.layer.cornerRadius = toolbarButtonConfig.biggerButtonCornerRadius
-        button.clipsToBounds = true
-        button.tintColor = toolbarButtonConfig.biggerButtonTint
-        button.backgroundColor = toolbarButtonConfig.biggerButtonBackground
 
         // TODO: (IOS-4111) Remove? See comment in NotificationPresenterWrapper
         button.accessibilityTraits.insert(.startsMediaSession)
@@ -52,6 +41,7 @@ class GroupCallToolbar: UIView {
         button.accessibilityLabel = dependencies.groupCallBundleUtil
             .localizedString(for: "group_call_accessibility_enable_camera")
 
+        button.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),
             button.heightAnchor.constraint(equalTo: button.widthAnchor),
@@ -92,7 +82,20 @@ class GroupCallToolbar: UIView {
     // MARK: Switch Camera Button
 
     private lazy var switchCameraButton: UIButton = {
-        var configuration = UIButton.Configuration.plain()
+        var configuration: UIButton.Configuration =
+            if #available(iOS 26.0, *) {
+                .glass()
+            }
+            else {
+                .bordered()
+            }
+        configuration.cornerStyle = .capsule
+        // Add some color pre glass
+        if #unavailable(iOS 26.0) {
+            configuration.baseForegroundColor = toolbarButtonConfig.smallerButtonTint
+            configuration.baseBackgroundColor = toolbarButtonConfig.smallerButtonBackground
+        }
+        
         configuration.image = UIImage(
             systemName: "arrow.triangle.2.circlepath.camera",
             withConfiguration: toolbarButtonConfig.smallerButtonImageConfig
@@ -103,11 +106,6 @@ class GroupCallToolbar: UIView {
         }
         
         let button = UIButton(configuration: configuration, primaryAction: action)
-        button.layer.masksToBounds = true
-        button.layer.cornerRadius = toolbarButtonConfig.smallerButtonCornerRadius
-        button.clipsToBounds = true
-        button.tintColor = toolbarButtonConfig.smallerButtonTint
-        button.backgroundColor = toolbarButtonConfig.smallerButtonBackground
         button.accessibilityLabel = dependencies.groupCallBundleUtil
             .localizedString(for: "call_camera_switch_to_back_button")
 
@@ -122,8 +120,6 @@ class GroupCallToolbar: UIView {
                 return
             }
             button.isHidden = viewModel.ownVideoMuteState == .muted
-            button.tintColor = toolbarButtonConfig.smallerButtonTint
-            button.backgroundColor = toolbarButtonConfig.smallerButtonBackground
         }
         
         return button
@@ -147,7 +143,17 @@ class GroupCallToolbar: UIView {
     // MARK: Leave Call Button
 
     private lazy var leaveCallButton: UIButton = {
-        var configuration = UIButton.Configuration.filled()
+        var configuration: UIButton.Configuration =
+            if #available(iOS 26.0, *) {
+                .prominentGlass()
+            }
+            else {
+                .filled()
+            }
+        configuration.cornerStyle = .capsule
+        configuration.baseForegroundColor = .white
+        configuration.baseBackgroundColor = .systemRed
+
         configuration.image = UIImage(
             systemName: "phone.down.fill",
             withConfiguration: toolbarButtonConfig.biggerButtonImageConfig
@@ -158,13 +164,9 @@ class GroupCallToolbar: UIView {
         }
         
         let button = UIButton(configuration: configuration, primaryAction: action)
-        
-        button.layer.masksToBounds = true
-        button.layer.cornerRadius = toolbarButtonConfig.biggerButtonCornerRadius
-        button.clipsToBounds = true
-        button.tintColor = .red
         button.accessibilityIdentifier = "group_call_button_hangup"
         
+        button.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),
             button.heightAnchor.constraint(equalTo: button.widthAnchor),
@@ -194,12 +196,25 @@ class GroupCallToolbar: UIView {
     // MARK: Toggle Audio Button
 
     private lazy var toggleAudioButton: UIButton = {
-        var configuration = UIButton.Configuration.plain()
+        var configuration: UIButton.Configuration =
+            if #available(iOS 26.0, *) {
+                .glass()
+            }
+            else {
+                .bordered()
+            }
+        configuration.cornerStyle = .capsule
+        configuration.activityIndicatorColorTransformer = .grayscale
+        // Add some color pre glass
+        if #unavailable(iOS 26.0) {
+            configuration.baseForegroundColor = toolbarButtonConfig.biggerButtonTint
+            configuration.baseBackgroundColor = toolbarButtonConfig.biggerButtonBackground
+        }
+
         configuration.image = UIImage(
             systemName: "mic.slash",
             withConfiguration: toolbarButtonConfig.biggerButtonImageConfig
         )
-        configuration.activityIndicatorColorTransformer = .grayscale
         
         let action = UIAction { [weak self] _ in
             self?.didTapToggleAudioButton()
@@ -207,17 +222,13 @@ class GroupCallToolbar: UIView {
         
         let button = UIButton(configuration: configuration, primaryAction: action)
         
-        button.layer.masksToBounds = true
-        button.layer.cornerRadius = toolbarButtonConfig.biggerButtonCornerRadius
-        button.clipsToBounds = true
-        button.tintColor = toolbarButtonConfig.biggerButtonTint
-        button.backgroundColor = toolbarButtonConfig.biggerButtonBackground
         button.accessibilityLabel = dependencies.groupCallBundleUtil
             .localizedString(for: "group_call_accessibility_enable_microphone")
         
         // TODO: (IOS-4111) Remove? See comment in NotificationPresenterWrapper
         button.accessibilityTraits.insert(.startsMediaSession)
 
+        button.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             button.widthAnchor.constraint(equalToConstant: toolbarButtonConfig.biggerButtonWidth),
             button.heightAnchor.constraint(equalTo: button.widthAnchor),

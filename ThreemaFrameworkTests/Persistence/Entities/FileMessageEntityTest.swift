@@ -1,25 +1,6 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import RemoteSecretProtocolTestHelper
-import ThreemaEssentialsTestHelper
+import ThreemaEssentials
+
 import XCTest
 @testable import RemoteSecret
 @testable import ThreemaFramework
@@ -41,13 +22,13 @@ final class FileMessageEntityTests: XCTestCase {
         let testDatabase = TestDatabase(encrypted: encrypted)
         let entityManager = testDatabase.entityManager
 
-        let messageID = MockData.generateMessageID()
+        let messageID = BytesUtility.generateMessageID()
         let isOwn = true
-        let blobID = MockData.generateBlobID()
-        let blobThumbnailID = MockData.generateBlobID()
+        let blobID = BytesUtility.generateBlobID()
+        let blobThumbnailID = BytesUtility.generateBlobID()
         let caption = "Caption"
         let consumed = Date.now
-        let encryptionKey = MockData.generateBlobEncryptionKey()
+        let encryptionKey = BytesUtility.generateBlobEncryptionKey()
         let fileName = "fileName"
         let fileSize = 0
         let json = "JSON"
@@ -158,7 +139,7 @@ final class FileMessageEntityTests: XCTestCase {
         let testDatabase = TestDatabase()
         let entityManager = testDatabase.entityManager
 
-        let messageID = MockData.generateMessageID()
+        let messageID = BytesUtility.generateMessageID()
         let isOwn = true
         
         // Act

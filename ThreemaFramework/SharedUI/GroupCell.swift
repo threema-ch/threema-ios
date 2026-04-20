@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import UIKit
 
 /// Shows a group in a list
@@ -30,16 +10,16 @@ public final class GroupCell: ThemedCodeTableViewCell {
     private lazy var configuration = CellConfiguration(size: size)
     
     // MARK: - Public properties
-    
+
     override public func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-        
+
         guard hasCheckmark else {
             return
         }
         checkMarkView.isChecked = selected
     }
-    
+
     public var size = CellConfiguration.Size.small {
         didSet {
             guard size != oldValue else {
@@ -50,13 +30,13 @@ public final class GroupCell: ThemedCodeTableViewCell {
             sizeDidChange()
         }
     }
-    
+
     public var hasCheckmark = false {
         didSet {
             checkMarkView.isHidden = !hasCheckmark
         }
     }
-    
+
     /// Group to show
     @objc public var group: Group? {
         didSet {
@@ -106,7 +86,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
     
     private lazy var nameLabel: UILabel = {
         let label = UILabel()
-        
+            
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
@@ -118,7 +98,7 @@ public final class GroupCell: ThemedCodeTableViewCell {
     
     private lazy var topMetadataLabel: UILabel = {
         let label = UILabel()
-        
+    
         label.textAlignment = .right
         label.font = .preferredFont(forTextStyle: .footnote)
         label.textColor = .secondaryLabel
@@ -133,21 +113,21 @@ public final class GroupCell: ThemedCodeTableViewCell {
         
         label.font = .preferredFont(forTextStyle: .footnote)
         label.textColor = .secondaryLabel
-        
+
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 2
         }
         
         return label
     }()
-    
+
     private lazy var checkMarkView: CustomCellCheckMarkAccessoryView = {
         let view = CustomCellCheckMarkAccessoryView()
         view.isHidden = !hasCheckmark
-        
+
         return view
     }()
-    
+
     // MARK: Layout stacks
     
     private lazy var firstLineStack: UIStackView = {
@@ -169,12 +149,12 @@ public final class GroupCell: ThemedCodeTableViewCell {
     
     private lazy var textStack: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [firstLineStack, membersListLabel])
-        
+
         stackView.spacing = configuration.verticalSpacing
         stackView.axis = .vertical
         stackView.distribution = .equalSpacing
         stackView.alignment = .fill
-        
+
         return stackView
     }()
     

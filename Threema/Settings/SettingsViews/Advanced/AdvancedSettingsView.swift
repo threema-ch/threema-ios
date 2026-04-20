@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import MBProgressHUD
@@ -46,7 +26,7 @@ struct AdvancedSettingsView: View {
                 Toggle(isOn: $settingsVM.enableIPv6) {
                     Text(#localize("settings_advanced_ipv6_title"))
                 }
-                .onChange(of: settingsVM.enableIPv6) { _ in
+                .onChange(of: settingsVM.enableIPv6) {
                     ServerConnector.shared().reconnect()
                 }
             } header: {
@@ -59,8 +39,8 @@ struct AdvancedSettingsView: View {
                 Toggle(isOn: $settingsVM.validationLogging) {
                     Text(#localize("settings_advanced_debug_log_title"))
                 }
-                .onChange(of: settingsVM.validationLogging) { newValue in
-                    if newValue {
+                .onChange(of: settingsVM.validationLogging) {
+                    if settingsVM.validationLogging {
                         LogManager.addFileLogger(LogManager.debugLogFile)
                         DDLogNotice("Logging started")
 
@@ -322,26 +302,27 @@ struct AdvancedSettingsView: View {
     }
     
     private func shareLog() {
-        guard let debugLogFile = LogManager.debugLogFile,
-              LogManager.logFileSize(debugLogFile) > 0 else {
+        guard
+            let debugLogFile = LogManager.debugLogFile,
+            LogManager.logFileSize(debugLogFile) > 0,
+            let topViewController = AppDelegate.shared().currentTopViewController()
+        else {
             return
         }
         
         let activityViewController = UIActivityViewController(activityItems: [debugLogFile], applicationActivities: nil)
-        if let currentWindow = AppDelegate.shared().currentTopViewController() {
-            
-            if UIDevice.current.userInterfaceIdiom == .pad {
-                activityViewController.popoverPresentationController?.sourceView = currentWindow.view
-                activityViewController.popoverPresentationController?.sourceRect = CGRectMake(
-                    currentWindow.view.bounds.maxX,
-                    currentWindow.view.bounds.midY,
-                    0,
-                    0
-                )
-            }
-            
-            currentWindow.present(activityViewController, animated: true)
+        
+        if topViewController.traitCollection.horizontalSizeClass == .regular {
+            activityViewController.popoverPresentationController?.sourceView = topViewController.view
+            activityViewController.popoverPresentationController?.sourceRect = CGRectMake(
+                topViewController.view.bounds.maxX,
+                topViewController.view.bounds.midY,
+                0,
+                0
+            )
         }
+        
+        topViewController.present(activityViewController, animated: true)
     }
     
     private func reregisterPushNotifications() {

@@ -1,35 +1,14 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftProtobuf
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 
 @testable import ThreemaFramework
 
-class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
-    private var dbMainCnx: DatabaseContext!
-    private var dbBackgroundCnx: DatabaseContext!
-    private var dbPreparer: DatabasePreparer!
+final class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
+    private var testDatabase: TestDatabase!
+    private var dbPreparer: TestDatabasePreparer!
 
     private var frameworkInjectorMock: BusinessInjectorMock!
     private var messageStoreMock: MessageStoreMock!
@@ -39,10 +18,8 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        dbPreparer = DatabasePreparer(context: mainCnx)
+        testDatabase = TestDatabase()
+        dbPreparer = testDatabase.backgroundPreparer
     }
 
     func testProcessAudioMessageThrowsMessageDeprecated() throws {
@@ -51,7 +28,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = BoxAudioMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        expectedAbstractMessage.nonce = BytesUtility.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
@@ -75,9 +52,9 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = GroupAudioMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        expectedAbstractMessage.groupID = MockData.generateGroupID()
+        expectedAbstractMessage.groupID = BytesUtility.generateGroupID()
         expectedAbstractMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
-        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        expectedAbstractMessage.nonce = BytesUtility.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
@@ -101,7 +78,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = BoxImageMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        expectedAbstractMessage.nonce = BytesUtility.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
@@ -125,9 +102,9 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = GroupImageMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        expectedAbstractMessage.groupID = MockData.generateGroupID()
+        expectedAbstractMessage.groupID = BytesUtility.generateGroupID()
         expectedAbstractMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
-        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        expectedAbstractMessage.nonce = BytesUtility.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
@@ -145,14 +122,14 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         )
     }
 
-    func testProcessVideoMessageThrowsMessageDeprecated() throws {
+    func testProcessVideoMessageThrowsMessageDeprecated() async throws {
         // Initialize test data and mocks
         let (frameworkInjectorMock, messageStoreMock) = setUpMocks(group: nil)
 
         let expectedAbstractMessage = BoxVideoMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        expectedAbstractMessage.nonce = BytesUtility.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
@@ -176,9 +153,9 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         let expectedAbstractMessage = GroupVideoMessage()
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
-        expectedAbstractMessage.groupID = MockData.generateGroupID()
+        expectedAbstractMessage.groupID = BytesUtility.generateGroupID()
         expectedAbstractMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
-        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        expectedAbstractMessage.nonce = BytesUtility.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
@@ -203,7 +180,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
         expectedAbstractMessage.text = "Test text message"
-        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        expectedAbstractMessage.nonce = BytesUtility.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
@@ -235,7 +212,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "ECHOECHO"
         expectedAbstractMessage.text = "Test text message"
-        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        expectedAbstractMessage.nonce = BytesUtility.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
@@ -284,7 +261,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "MEMBER02"
         expectedAbstractMessage.text = "Test text message"
-        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        expectedAbstractMessage.nonce = BytesUtility.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
@@ -304,13 +281,13 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         )
     }
 
-    func testProcessGroupTextMessage() throws {
+    func testProcessGroupTextMessage() async throws {
         // Initialize test data and mocks
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         var group: Group!
         dbPreparer.save {
             let groupCreator = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER01"
             )
             let conversation = dbPreparer
@@ -343,7 +320,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         expectedAbstractMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedAbstractMessage.toIdentity = "MEMBER02"
         expectedAbstractMessage.text = "Test text message"
-        expectedAbstractMessage.nonce = MockData.generateMessageNonce()
+        expectedAbstractMessage.nonce = BytesUtility.generateMessageNonce()
         let expectedEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedAbstractMessage)
 
         let processor = MediatorReflectedOutgoingMessageProcessor(
@@ -417,7 +394,7 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
         -> (frameworkInjectorMock: BusinessInjectorMock, messageStoreMock: MessageStoreMock) {
 
         if let group {
-            let entityManager = EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false)
+            let entityManager = testDatabase.backgroundEntityManager
             let groupManagerMock = GroupManagerMock()
             groupManagerMock.getGroupReturns.append(group)
 
@@ -426,15 +403,12 @@ class MediatorReflectedOutgoingMessageProcessorTests: XCTestCase {
                 groupManager: groupManagerMock,
                 unreadMessages: UnreadMessages(
                     messageSender: MessageSenderMock(),
-                    entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false)
+                    entityManager: entityManager
                 )
             )
         }
         else {
-            frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(
-                databaseContext: dbMainCnx,
-                isRemoteSecretEnabled: false
-            ))
+            frameworkInjectorMock = BusinessInjectorMock(entityManager: testDatabase.entityManager)
         }
 
         return (frameworkInjectorMock, MessageStoreMock())

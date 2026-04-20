@@ -1,29 +1,9 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
 import PromiseKit
 
-@objc public class ItemLoader: NSObject {
+@objc public final class ItemLoader: NSObject {
     @objc public enum ItemType: Int {
         case TextOnly
         case Media
@@ -43,7 +23,8 @@ import PromiseKit
     private let fileOperationQueue = DispatchQueue(label: "fileOperationQueue", qos: .userInitiated)
     private let forceLoadFileURLItem: Bool
     private let tmpDirURL: URL
-    
+    private let imageSender = ImageURLSenderItemCreator()
+
     override public convenience init() {
         self.init(forceLoadFileURLItem: false)
     }
@@ -60,10 +41,11 @@ import PromiseKit
         _ = loadItems().done(on: DispatchQueue.global(qos: .userInteractive)) { items in
             finalItems = items
             sema.signal()
-        }.catch { error in
+        }.catch(on: DispatchQueue.global(qos: .userInteractive)) { error in
             DDLogError("Could not load items because \(error)")
             sema.signal()
         }
+        // This waits & blocks the main queue, thus the `done` and catch` need to be run on another queue
         sema.wait()
         return finalItems
     }
@@ -119,7 +101,7 @@ import PromiseKit
         
         let isText = UTIConverter.type(checkedType, conformsTo: UTType.plainText.identifier)
         let isURL = UTIConverter.type(checkedType, conformsTo: UTType.url.identifier)
-        
+
         let firstTypeIsFileURL = UTIConverter.type(firstType, conformsTo: UTType.fileURL.identifier)
         let secondTypeIsFileURL = UTIConverter.type(checkedType, conformsTo: UTType.fileURL.identifier)
         let anyTypeIsFileURL = firstTypeIsFileURL || secondTypeIsFileURL
@@ -245,10 +227,16 @@ import PromiseKit
                 if (isFileItem && isContent) || forceLoadFileURLItem {
                     intermediateItem.itemProvider.loadFileRepresentation(forTypeIdentifier: type) { item, error in
                         if let error {
+                            DDLogError("loadFileRepresentation failed for type \(type): \(error)")
                             seal.reject(error)
+                            return
                         }
                         if let urlItem = item, urlItem.scheme == "file" {
                             self.loadURLItem(urlItem: urlItem, type: type, seal: seal)
+                        }
+                        else {
+                            DDLogError("loadFileRepresentation returned no usable file URL for type \(type)")
+                            seal.reject(ItemLoaderError.loadItemFailed)
                         }
                     }
                 }
@@ -273,22 +261,26 @@ import PromiseKit
             options: nil,
             completionHandler: { item, error in
                 if let error {
+                    DDLogError("loadItem failed for type \(type): \(error)")
                     seal.reject(error)
+                    return
                 }
                 if let urlItem = item as? URL, urlItem.scheme == "file" {
                     self.loadURLItem(urlItem: urlItem, type: type, seal: seal)
                 }
-                if self.isDataLoadable(type: type), let dataItem = item as? Data {
+                else if self.isDataLoadable(type: type), let dataItem = item as? Data {
                     self.loadDataItem(dataItem: dataItem, type: type, seal: seal)
                 }
-                if UTIConverter.type(type, conformsTo: UTType.image.identifier), let imageItem = item as? UIImage {
+                else if UTIConverter.type(type, conformsTo: UTType.image.identifier),
+                        let imageItem = item as? UIImage {
                     self.loadImageItem(imageItem: imageItem, seal: seal)
                 }
-                if let item {
+                else if let item {
+                    DDLogError("Unsupported item type \(Swift.type(of: item)) for type \(type)")
                     seal.fulfill(item)
                 }
                 else {
-                    DDLogError("Item could not be loaded.")
+                    DDLogError("Item could not be loaded for type \(type)")
                     seal.reject(ItemLoaderError.unknownType)
                 }
             }
@@ -297,13 +289,14 @@ import PromiseKit
     
     private func isDataLoadable(type: String) -> Bool {
         UTIConverter.type(type, conformsTo: UTType.data.identifier) ||
-            UTIConverter.isPassMimeType(UTIConverter.mimeType(fromUTI: type))
+            UTIConverter.isPassMimeType(UTIConverter.mimeType(fromUTI: type) ?? "application/octet-stream") ||
+            UTType(type)?.preferredFilenameExtension != nil
     }
     
     private func loadURLItem(urlItem: URL, type: String, seal: Resolver<Any>) {
         let url = tmpDirURL
-        let ext = UTIConverter.preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: type)) ?? urlItem
-            .pathExtension
+        let mimeType = UTIConverter.mimeType(fromUTI: type) ?? "application/octet-stream"
+        let ext = UTIConverter.preferredFileExtension(forMimeType: mimeType) ?? urlItem.pathExtension
         fileOperationQueue.sync {
             let ogFilename = urlItem.deletingPathExtension().lastPathComponent
             let filename = FileUtility.shared.getUniqueFilename(
@@ -327,8 +320,11 @@ import PromiseKit
     private func loadDataItem(dataItem: Data, type: String, seal: Resolver<Any>) {
         let url = tmpDirURL
         fileOperationQueue.sync {
-            guard let ext = UTIConverter.preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: type))
-            else {
+            let mimeType = UTIConverter.mimeType(fromUTI: type) ?? "application/octet-stream"
+            guard let ext = UTIConverter.preferredFileExtension(
+                forMimeType: mimeType
+            ) ?? UTType(type)?.preferredFilenameExtension else {
+                DDLogError("Could not determine file extension for type \(type) (MIME: \(mimeType))")
                 seal.reject(ItemLoaderError.unknownType)
                 return
             }
@@ -350,7 +346,7 @@ import PromiseKit
     }
     
     private func loadImageItem(imageItem: UIImage, seal: Resolver<Any>) {
-        let isSticker = ImageURLSenderItemCreator.isPNGSticker(image: imageItem, uti: UTType.png.identifier)
+        let isSticker = imageSender.isPNGSticker(image: imageItem, uti: UTType.png.identifier)
         let imageData: Data? =
             if isSticker {
                 MediaConverter.pngRepresentation(for: imageItem)
@@ -358,7 +354,7 @@ import PromiseKit
             else {
                 MediaConverter.jpegRepresentation(
                     for: imageItem,
-                    withQuality: ImageURLSenderItemCreator().imageCompressionQuality()
+                    withQuality: imageSender.imageCompressionQuality()
                 )
             }
         guard let dataItem = imageData else {
@@ -371,14 +367,16 @@ import PromiseKit
         
         let url = tmpDirURL
         fileOperationQueue.sync {
-            let jpegExt = UTIConverter.preferredFileExtension(
-                forMimeType: UTIConverter.mimeType(fromUTI: UTType.jpeg.identifier)
-            )!
-            let pngExt = UTIConverter.preferredFileExtension(
-                forMimeType: UTIConverter.mimeType(fromUTI: UTType.png.identifier)
-            )!
-            let ext = isSticker ? pngExt : jpegExt
-            let fileUtility = FileUtility.shared!
+            guard
+                let fileUtility = FileUtility.shared,
+                let jpegExt = UTType.jpeg.preferredFilenameExtension,
+                let pngExt = UTType.png.preferredFilenameExtension
+            else {
+                return
+            }
+
+            let ext: String = isSticker ? pngExt : jpegExt
+
             let filename = fileUtility.getTemporarySendableFileName(
                 base: "image",
                 directoryURL: url,

@@ -1,60 +1,53 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-import ThreemaEssentialsTestHelper
+import ThreemaEssentials
 import ThreemaProtocols
 import XCTest
 
 @testable import ThreemaFramework
 
-class MediatorSyncableContactsTests: XCTestCase {
+final class MediatorSyncableContactsTests: XCTestCase {
     private let testBundle = Bundle(for: MediatorSyncableContactsTests.self)
 
-    private var databasePreparer: DatabasePreparer!
-    private var databaseBackgroundCnx: DatabaseContext!
+    private var testDatabase: TestDatabase!
+    private var databasePreparer: TestDatabasePreparer!
 
     private var blobDict = [Data: Data]()
     
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        databasePreparer = DatabasePreparer(context: mainCnx)
-        databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+        testDatabase = TestDatabase()
+        databasePreparer = testDatabase.backgroundPreparer
     }
 
-    func testUpdateAllSyncChunkCount() {
+    func testUpdateAllSyncChunkCount() async {
         let taskManagerMock = TaskManagerMock()
 
         let mediatorSyncableContacts = MediatorSyncableContacts(
             userSettings: UserSettingsMock(enableMultiDevice: true),
             pushSettingManager: PushSettingManagerMock(),
             taskManager: taskManagerMock,
-            entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
+            entityManager: testDatabase.backgroundEntityManager
         )
 
+        /// Batch all contact creations into a single save block to avoid
+        /// N individual performAndWait+save round-trips (1 round-trip instead of N).
         let noContacts = 500
-        for _ in 0..<noContacts {
-            let contact = getMinimalContact()
-
-            mediatorSyncableContacts.updateAll(identity: contact.identity, added: false, withoutProfileImage: true)
+        var identities = [String]()
+        databasePreparer.save {
+            for _ in 0..<noContacts {
+                let publicKey = BytesUtility.generatePublicKey()
+                let identity = SwiftUtils.pseudoRandomStringUpperCaseOnly(length: 8, exclude: nil)
+                databasePreparer.createContact(
+                    publicKey: publicKey,
+                    identity: identity,
+                    verificationLevel: .unverified
+                )
+                identities.append(identity)
+            }
+        }
+        
+        for identity in identities {
+            mediatorSyncableContacts.updateAll(identity: identity, added: false, withoutProfileImage: true)
         }
 
         let expec = expectation(description: "Sync")
@@ -67,12 +60,12 @@ class MediatorSyncableContactsTests: XCTestCase {
                 XCTFail(error.localizedDescription)
             }
 
-        wait(for: [expec], timeout: 6)
+        wait(for: [expec], timeout: 1)
 
         XCTAssertEqual(taskManagerMock.addedTasks.count, 5)
     }
     
-    func testUpdateAllSync() {
+    func testUpdateAllSync() async {
         for contactCount in [1, 2, 5, 50, 100, 1000] {
             let taskManagerMock = TaskManagerMock()
             
@@ -80,11 +73,27 @@ class MediatorSyncableContactsTests: XCTestCase {
                 userSettings: UserSettingsMock(enableMultiDevice: true),
                 pushSettingManager: PushSettingManagerMock(),
                 taskManager: taskManagerMock,
-                entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
+                entityManager: testDatabase.backgroundEntityManager
             )
-            for _ in 0..<contactCount {
-                let contact = getMinimalContact()
-                mediatorSyncableContacts.updateAll(identity: contact.identity, added: false, withoutProfileImage: true)
+
+            /// Batch all contact creations into a single save block to avoid
+            /// N individual performAndWait+save round-trips (1 round-trip instead of N).
+            var identities = [String]()
+            databasePreparer.save {
+                for _ in 0..<contactCount {
+                    let publicKey = BytesUtility.generatePublicKey()
+                    let identity = SwiftUtils.pseudoRandomStringUpperCaseOnly(length: 8, exclude: nil)
+                    databasePreparer.createContact(
+                        publicKey: publicKey,
+                        identity: identity,
+                        verificationLevel: .unverified
+                    )
+                    identities.append(identity)
+                }
+            }
+            
+            for identity in identities {
+                mediatorSyncableContacts.updateAll(identity: identity, added: false, withoutProfileImage: true)
             }
 
             let expec = XCTestExpectation(description: "Sync completes successfully")
@@ -108,7 +117,7 @@ class MediatorSyncableContactsTests: XCTestCase {
                     XCTFail("Sync failed: \(error)")
                 }
             
-            wait(for: [expec], timeout: 6)
+            wait(for: [expec], timeout: 1)
         }
     }
     
@@ -170,7 +179,7 @@ class MediatorSyncableContactsTests: XCTestCase {
                 userSettings: userSettingsMock,
                 pushSettingManager: PushSettingManagerMock(),
                 taskManager: taskManagerMock,
-                entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
+                entityManager: testDatabase.backgroundEntityManager
             )
             
             let expec =
@@ -310,7 +319,7 @@ class MediatorSyncableContactsTests: XCTestCase {
                     XCTFail("Sync failed: \(error)")
                 }
 
-            wait(for: [expec], timeout: 6)
+            wait(for: [expec], timeout: 1)
             
             // Clean tasks for next test
             taskManagerMock.addedTasks.removeAll()
@@ -325,7 +334,7 @@ class MediatorSyncableContactsTests: XCTestCase {
             userSettings: UserSettingsMock(),
             pushSettingManager: PushSettingManagerMock(),
             taskManager: TaskManagerMock(),
-            entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
+            entityManager: testDatabase.backgroundEntityManager
         )
         
         let allSyncableContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
@@ -346,7 +355,7 @@ class MediatorSyncableContactsTests: XCTestCase {
             userSettings: UserSettingsMock(),
             pushSettingManager: PushSettingManagerMock(),
             taskManager: TaskManagerMock(),
-            entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
+            entityManager: testDatabase.backgroundEntityManager
         )
         
         let allSyncableContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
@@ -370,7 +379,7 @@ class MediatorSyncableContactsTests: XCTestCase {
             userSettings: UserSettingsMock(),
             pushSettingManager: PushSettingManagerMock(),
             taskManager: TaskManagerMock(),
-            entityManager: EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
+            entityManager: testDatabase.backgroundEntityManager
         )
         
         let allSyncableContacts = mediatorSyncableContacts.getAllDeltaSyncContacts()
@@ -458,8 +467,8 @@ class MediatorSyncableContactsTests: XCTestCase {
     private func getMinimalContact() -> ContactEntity {
         var contact: ContactEntity!
         databasePreparer.save {
-            let publicKey = MockData.generatePublicKey()
-            let identity = SwiftUtils.pseudoRandomString(length: 8)
+            let publicKey = BytesUtility.generatePublicKey()
+            let identity = SwiftUtils.pseudoRandomStringUpperCaseOnly(length: 8, exclude: nil)
 
             contact = databasePreparer.createContact(
                 publicKey: publicKey,

@@ -1,30 +1,10 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2019-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
-class MediatorMessageProcessorTests: XCTestCase {
+final class MediatorMessageProcessorTests: XCTestCase {
     
     private var mmp: MediatorMessageProcessor?
     private var deviceGroupKeys: DeviceGroupKeys!
@@ -36,11 +16,11 @@ class MediatorMessageProcessorTests: XCTestCase {
         taskManagerMock = TaskManagerMock()
 
         deviceGroupKeys = DeviceGroupKeys(
-            dgpk: MockData.generateDeviceGroupKey(),
+            dgpk: BytesUtility.generateDeviceGroupKey(),
             dgrk: Data(base64Encoded: "BivETNngWPWYxad+ogDb8Q4ZWha1piBk/TLGsW5zojs=")!,
-            dgdik: MockData.generateDeviceGroupKey(),
-            dgsddk: MockData.generateDeviceGroupKey(),
-            dgtsk: MockData.generateDeviceGroupKey(),
+            dgdik: BytesUtility.generateDeviceGroupKey(),
+            dgsddk: BytesUtility.generateDeviceGroupKey(),
+            dgtsk: BytesUtility.generateDeviceGroupKey(),
             deviceGroupIDFirstByteHex: "a1"
         )
 
@@ -116,7 +96,7 @@ class MediatorMessageProcessorTests: XCTestCase {
     }
     
     func testProcessReflectAck() {
-        let reflectID = MockData.generateReflectID()
+        let reflectID = BytesUtility.generateReflectID()
         let reflectedAt = Date().millisecondsSince1970
         
         var message = Data(

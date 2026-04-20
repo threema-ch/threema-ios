@@ -1,31 +1,11 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
-class MessageDraftStoreTests: XCTestCase {
-    private var managedObjectContext: NSManagedObjectContext!
-    
+final class MessageDraftStoreTests: XCTestCase {
+    private var testDatabase: TestDatabase!
+
     var testConversation: ConversationEntity!
     var testDraft: Draft!
     var draftStore: MessageDraftStore!
@@ -34,7 +14,7 @@ class MessageDraftStoreTests: XCTestCase {
         var contact: ContactEntity!
         var conversation: ConversationEntity!
         
-        let databasePreparer = DatabasePreparer(context: managedObjectContext)
+        let databasePreparer = testDatabase.preparer
         databasePreparer.save {
             contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO")
             
@@ -53,8 +33,9 @@ class MessageDraftStoreTests: XCTestCase {
     override func setUpWithError() throws {
         super.setUp()
         AppGroup.setGroupID("group.ch.threema")
-        
-        (_, managedObjectContext, _) = DatabasePersistentContext.devNullContext()
+
+        testDatabase = TestDatabase()
+
         (_, testConversation) = createConversation()
         draftStore = MessageDraftStore()
         testDraft = Draft(key: .messageDrafts, value: "hello world")

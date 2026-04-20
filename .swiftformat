@@ -23,6 +23,7 @@
 --emptybraces spaced
 --extensionacl on-declarations
 --groupedextension "MARK: - %c"
+--header strip
 --importgrouping testable-last
 --indentstrings true
 --marktypes never

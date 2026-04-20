@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
@@ -91,15 +71,15 @@ class MediatorReflectedIncomingMessageProcessor {
         case is EditGroupMessage:
             try process(incomingMessage: imsg, editGroupMessage: amsg as! EditGroupMessage)
         case is GroupCreateMessage:
-            try process(groupCreateMessage: amsg as! GroupCreateMessage)
+            try process(incomingMessage: imsg, groupCreateMessage: amsg as! GroupCreateMessage)
         case is GroupDeletePhotoMessage:
-            try process(groupDeletePhotoMessage: amsg as! GroupDeletePhotoMessage)
+            try process(incomingMessage: imsg, groupDeletePhotoMessage: amsg as! GroupDeletePhotoMessage)
         case is GroupLeaveMessage:
-            process(groupLeaveMessage: amsg as! GroupLeaveMessage)
+            process(incomingMessage: imsg, groupLeaveMessage: amsg as! GroupLeaveMessage)
         case is GroupRenameMessage:
-            try process(groupRenameMessage: amsg as! GroupRenameMessage)
+            try process(incomingMessage: imsg, groupRenameMessage: amsg as! GroupRenameMessage)
         case is GroupSetPhotoMessage:
-            try process(groupSetPhotoMessage: amsg as! GroupSetPhotoMessage)
+            try process(incomingMessage: imsg, groupSetPhotoMessage: amsg as! GroupSetPhotoMessage)
         case is GroupDeliveryReceiptMessage:
             try process(incomingMessage: imsg, groupDeliveryReceiptMessage: amsg as! GroupDeliveryReceiptMessage)
         case is GroupAudioMessage:
@@ -354,37 +334,67 @@ class MediatorReflectedIncomingMessageProcessor {
     // MARK: Process reflected incoming group control messages
 
     private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
         groupCreateMessage amsg: GroupCreateMessage
     ) throws -> Promise<Void> {
-        try messageStore.save(groupCreateMessage: amsg)
+        try messageStore.save(
+            groupCreateMessage: amsg,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: false
+        )
     }
 
     private func process(
-        groupDeletePhotoMessage amsg: GroupDeletePhotoMessage
+        incomingMessage imsg: D2d_IncomingMessage,
+        groupDeletePhotoMessage amsg: GroupDeletePhotoMessage,
     ) throws -> Promise<Void> {
         try getGroup(for: amsg)
-        return messageStore.save(groupDeletePhotoMessage: amsg)
+        return messageStore.save(
+            groupDeletePhotoMessage: amsg,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: false
+        )
     }
 
     private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
         groupLeaveMessage amsg: GroupLeaveMessage
     ) -> Promise<Void> {
-        messageStore.save(groupLeaveMessage: amsg)
+        messageStore.save(
+            groupLeaveMessage: amsg,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: false
+        )
         return Promise()
     }
 
     private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
         groupRenameMessage amsg: GroupRenameMessage
     ) throws -> Promise<Void> {
         try getGroup(for: amsg)
-        return messageStore.save(groupRenameMessage: amsg)
+        return messageStore.save(
+            groupRenameMessage: amsg,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: false
+        )
     }
 
     private func process(
+        incomingMessage imsg: D2d_IncomingMessage,
         groupSetPhotoMessage amsg: GroupSetPhotoMessage
     ) throws -> Promise<Void> {
         try getGroup(for: amsg)
-        return messageStore.save(groupSetPhotoMessage: amsg)
+        return messageStore.save(
+            groupSetPhotoMessage: amsg,
+            createdAt: getCreatedAt(for: imsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: false
+        )
     }
     
     private func process(

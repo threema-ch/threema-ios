@@ -1,27 +1,7 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import UIKit
 
 // Note: No need to adjust dynamic type properties as cells are newly initialized after dynamic type changes
-class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
+final class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
     
     // MARK: - Public properties
     
@@ -58,7 +38,13 @@ class ActionDetailsTableViewCell: ThemedCodeTableViewCell {
     private let iconCenterFromLeadingMargin: CGFloat = 12
     private let labelOffsetFromIconCenter: CGFloat = 28
     
-    private let defaultTopAndBottomMargin: CGFloat = 10
+    private let defaultTopAndBottomMargin: CGFloat =
+        if #available(iOS 26.0, *) {
+            14
+        }
+        else {
+            10
+        }
     
     // MARK: Constraints
     

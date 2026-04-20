@@ -1,24 +1,5 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
+import ThreemaFramework
 import ThreemaMacros
 
 struct RevokeView: View {
@@ -79,10 +60,10 @@ struct RevokeView: View {
                             .textFieldStyle(.roundedBorder)
                             .textCase(.uppercase)
                             .textInputAutocapitalization(.characters)
-                            .onChange(of: enteredText) { newValue in
+                            .onChange(of: enteredText) {
                                 // Workaround: TextField has the wrong color
                                 textFieldColor = .white
-                                textIsSameAsID = newValue == identity
+                                textIsSameAsID = enteredText == identity
                             }
                         }
                         .padding(.top)
@@ -120,25 +101,26 @@ struct RevokeView: View {
                     Spacer()
                     
                     VStack(spacing: 12) {
-                        Button(role: .destructive, action: {
+                        ThreemaButton(
+                            title: #localize("my_profile_revoke_identity_view_button_revoke"),
+                            role: .destructive,
+                            style: .bordered,
+                            size: .fullWidth
+                        ) {
                             revokePressed()
-                        }, label: {
-                            Text(#localize("my_profile_revoke_identity_view_button_revoke"))
-                                .frame(maxWidth: .infinity)
-                        })
-                        .disabled(isDeleting)
-                        .buttonStyle(.bordered)
-                        .disabled(!textIsSameAsID)
-                        
-                        Button {
-                            tabSelection = 0
-                        } label: {
-                            Text(#localize("back"))
-                                .frame(maxWidth: .infinity)
-                                .foregroundColor(Colors.textProminentButtonWizard.color)
                         }
                         .disabled(isDeleting)
-                        .buttonStyle(.borderedProminent)
+                        .disabled(!textIsSameAsID)
+                        
+                        ThreemaButton(
+                            title: #localize("back"),
+                            style: .borderedProminent,
+                            size: .fullWidth,
+                            action: {
+                                tabSelection = 0
+                            }
+                        )
+                        .disabled(isDeleting)
                     }
                     .padding(.horizontal)
                 }
@@ -178,5 +160,5 @@ struct RevokeView: View {
 
 #Preview {
     RevokeView(tabSelection: .constant(1), successViewType: .constant(.revoke))
-        .background(.black)
+        .preferredColorScheme(.dark)
 }

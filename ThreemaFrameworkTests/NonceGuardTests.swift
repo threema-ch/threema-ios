@@ -1,47 +1,22 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-import ThreemaEssentialsTestHelper
+import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
-class NonceGuardTests: XCTestCase {
+final class NonceGuardTests: XCTestCase {
     private let myIdentityStore = MyIdentityStoreMock()
     
     private var entityManager: EntityManager!
-    private var dbPreparer: DatabasePreparer!
+    private var dbPreparer: TestDatabasePreparer!
 
     private var ddLoggerMock: DDLoggerMock!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
+        let testDatabase = TestDatabase()
 
-        entityManager = EntityManager(
-            databaseContext: DatabaseContext(
-                mainContext: mainCnx,
-                backgroundContext: nil
-            ), isRemoteSecretEnabled: false
-        )
-        dbPreparer = DatabasePreparer(context: mainCnx)
+        entityManager = testDatabase.entityManager
+        dbPreparer = testDatabase.preparer
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -53,7 +28,7 @@ class NonceGuardTests: XCTestCase {
     }
 
     func testIsProcessed() throws {
-        let nonce = MockData.generateMessageNonce()
+        let nonce = BytesUtility.generateMessageNonce()
         let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentity: myIdentityStore.identity)
         entityManager.performAndWaitSave {
             _ = self.entityManager.entityCreator.nonceEntity(for: hashedNonce!)
@@ -70,7 +45,7 @@ class NonceGuardTests: XCTestCase {
 
     func testIsProcessedNoNonceStored() throws {
         let expectedIncomingMessage = BoxTextMessage()
-        expectedIncomingMessage.nonce = MockData.generateMessageNonce()
+        expectedIncomingMessage.nonce = BytesUtility.generateMessageNonce()
 
         let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
@@ -92,7 +67,7 @@ class NonceGuardTests: XCTestCase {
     }
 
     func testIsProcessedReflected() throws {
-        let nonce = MockData.generateMessageNonce()
+        let nonce = BytesUtility.generateMessageNonce()
         let hashedNonce = NonceHasher.hashedNonce(nonce, myIdentity: myIdentityStore.identity)
         entityManager.performAndWaitSave {
             _ = self.entityManager.entityCreator.nonceEntity(for: hashedNonce!)
@@ -109,7 +84,7 @@ class NonceGuardTests: XCTestCase {
 
     func testIsProcessedNoNonceStoredReflected() throws {
         let expectedIncomingMessage = BoxTextMessage()
-        expectedIncomingMessage.nonce = MockData.generateMessageNonce()
+        expectedIncomingMessage.nonce = BytesUtility.generateMessageNonce()
 
         let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         let result = nonceGuard.isProcessed(message: expectedIncomingMessage)
@@ -119,7 +94,7 @@ class NonceGuardTests: XCTestCase {
 
     func testProcessed() throws {
         let expectedIncomingMessage = BoxTextMessage()
-        expectedIncomingMessage.nonce = MockData.generateMessageNonce()
+        expectedIncomingMessage.nonce = BytesUtility.generateMessageNonce()
 
         let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         try nonceGuard.processed(message: expectedIncomingMessage)
@@ -150,7 +125,7 @@ class NonceGuardTests: XCTestCase {
 
     func testProcessedReflected() throws {
         let expectedIncomingMessage = BoxTextMessage()
-        expectedIncomingMessage.nonce = MockData.generateMessageNonce()
+        expectedIncomingMessage.nonce = BytesUtility.generateMessageNonce()
 
         let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         try nonceGuard.processed(message: expectedIncomingMessage)
@@ -162,7 +137,7 @@ class NonceGuardTests: XCTestCase {
     }
     
     func testDoNotStoreSameNonceTwice() throws {
-        let nonce = MockData.generateMessageNonce()
+        let nonce = BytesUtility.generateMessageNonce()
         
         let nonceGuard = NonceGuard(myIdentityStore: myIdentityStore, entityManager: entityManager)
         try nonceGuard.processed(nonces: [nonce, nonce])

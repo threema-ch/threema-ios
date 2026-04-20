@@ -1,33 +1,18 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 import ThreemaFramework
 import ThreemaMacros
 
 struct StorageManagementConversationView: View {
+    let businessInjector: BusinessInjectorProtocol
+   
     @Environment(\.sizeCategory) var sizeCategory
     @ObservedObject var messageModel: MessageRetentionManagerModel
     @ObservedObject var model: Model
+   
+    @State var showExport = false
     
     init(businessInjector: BusinessInjectorProtocol, conversation: ConversationEntity? = nil) {
+        self.businessInjector = businessInjector
         self.messageModel = businessInjector.messageRetentionManager as! MessageRetentionManagerModel
         self.model = .init(conversation: conversation, businessInjector: businessInjector)
     }
@@ -49,6 +34,11 @@ struct StorageManagementConversationView: View {
                 }
             }
             .padding()
+            .sheet(isPresented: $showExport) {
+                StorageManagementChatExportView(
+                    viewModel: ChatExportViewModel(businessInjector: BusinessInjector(forBackgroundProcess: true))
+                )
+            }
         }
         .navigationTitle(#localize("storage_management"))
         .task(model.load)
@@ -85,6 +75,30 @@ struct StorageManagementConversationView: View {
     
     @ViewBuilder
     private var sections: some View {
+        if model.canExport {
+            GroupBox(
+                label: Label(#localize("chat_export_title"), systemImage: "square.and.arrow.up"),
+                content: {
+                    Text(#localize("chat_export_description"))
+                        .padding(.top, 1)
+                        .padding(.bottom, 8)
+                        .font(.footnote)
+                    Spacer()
+                    
+                    Button {
+                        showExport = true
+                    }
+                    label: {
+                        Text(#localize("chat_export_button_title"))
+                            .font(.headline)
+                            .padding(4)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+            )
+            .groupBoxStyle(.storageManagement)
+        }
+        
         SectionView(amount: $model.totalMessagesCount, section: .messages) {
             showActionSheet(.messages)
         }
@@ -164,7 +178,7 @@ struct StorageManagementConversationView: View {
                 )
             }
             $0.addAction(UIAlertAction(title: #localize("cancel"), style: .cancel))
-            if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {
+            if topVC.traitCollection.horizontalSizeClass == .regular {
                 $0.popoverPresentationController?.sourceRect = view.bounds
                 $0.popoverPresentationController?.sourceView = view
             }

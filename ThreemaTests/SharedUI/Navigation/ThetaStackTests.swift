@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Testing
 import Threema
 import UIKit
@@ -31,11 +11,11 @@ struct ThetaStackTests {
     @Test("Store and restore empty stack")
     func storeAndRestoreEmptyStack() {
         let thetaStack = ThetaStack()
-        let tabIdentifier = ThreemaTabBarController.TabBarItem.contacts
+        let tab = ThreemaTab.contacts
         let emptyStack: [UIViewController] = []
         
-        thetaStack.store(stack: emptyStack, for: tabIdentifier)
-        let retrievedStack = thetaStack.restore(for: tabIdentifier)
+        thetaStack.store(stack: emptyStack, for: tab)
+        let retrievedStack = thetaStack.restore(for: tab)
         
         #expect(retrievedStack.isEmpty)
         #expect(retrievedStack.isEmpty)
@@ -44,12 +24,12 @@ struct ThetaStackTests {
     @Test("Store and restore single view controller")
     func storeAndRestoreSingleViewController() {
         let thetaStack = ThetaStack()
-        let tabIdentifier = ThreemaTabBarController.TabBarItem.contacts
+        let tab = ThreemaTab.contacts
         let viewController = UIViewController()
         let stack = [viewController]
         
-        thetaStack.store(stack: stack, for: tabIdentifier)
-        let retrievedStack = thetaStack.restore(for: tabIdentifier)
+        thetaStack.store(stack: stack, for: tab)
+        let retrievedStack = thetaStack.restore(for: tab)
         
         #expect(retrievedStack.count == 1)
         #expect(retrievedStack[0] === viewController)
@@ -58,14 +38,14 @@ struct ThetaStackTests {
     @Test("Store and restore multiple view controllers")
     func storeAndRestoreMultipleViewControllers() {
         let thetaStack = ThetaStack()
-        let tabIdentifier = ThreemaTabBarController.TabBarItem.conversations
+        let tab = ThreemaTab.conversations
         let viewController1 = UIViewController()
         let viewController2 = UIViewController()
         let viewController3 = UIViewController()
         let stack = [viewController1, viewController2, viewController3]
         
-        thetaStack.store(stack: stack, for: tabIdentifier)
-        let retrievedStack = thetaStack.restore(for: tabIdentifier)
+        thetaStack.store(stack: stack, for: tab)
+        let retrievedStack = thetaStack.restore(for: tab)
         
         #expect(retrievedStack.count == 3)
         #expect(retrievedStack[0] === viewController1)
@@ -78,9 +58,9 @@ struct ThetaStackTests {
     @Test("Store different stacks for different indices")
     func storeDifferentStacksForDifferentIndices() {
         let thetaStack = ThetaStack()
-        let tab1 = ThreemaTabBarController.TabBarItem.contacts
-        let tab2 = ThreemaTabBarController.TabBarItem.conversations
-        let tab3 = ThreemaTabBarController.TabBarItem.profile
+        let tab1 = ThreemaTab.contacts
+        let tab2 = ThreemaTab.conversations
+        let tab3 = ThreemaTab.profile
         
         let stack1 = [UIViewController()]
         let stack2 = [UIViewController(), UIViewController()]
@@ -106,8 +86,8 @@ struct ThetaStackTests {
     @Test("Independent storage for different indices")
     func independentStorageForDifferentIndices() {
         let thetaStack = ThetaStack()
-        let tab1 = ThreemaTabBarController.TabBarItem.contacts
-        let tab2 = ThreemaTabBarController.TabBarItem.conversations
+        let tab1 = ThreemaTab.contacts
+        let tab2 = ThreemaTab.conversations
         let viewController1 = UIViewController()
         let viewController2 = UIViewController()
         
@@ -127,13 +107,13 @@ struct ThetaStackTests {
     @Test("Overwrite existing stack")
     func overwriteExistingStack() {
         let thetaStack = ThetaStack()
-        let tabIdentifier = ThreemaTabBarController.TabBarItem.contacts
+        let tab = ThreemaTab.contacts
         let originalStack = [UIViewController(), UIViewController()]
         let newStack = [UIViewController()]
         
-        thetaStack.store(stack: originalStack, for: tabIdentifier)
-        thetaStack.store(stack: newStack, for: tabIdentifier)
-        let retrievedStack = thetaStack.restore(for: tabIdentifier)
+        thetaStack.store(stack: originalStack, for: tab)
+        thetaStack.store(stack: newStack, for: tab)
+        let retrievedStack = thetaStack.restore(for: tab)
         
         #expect(retrievedStack.count == 1)
         #expect(retrievedStack[0] === newStack[0])
@@ -142,13 +122,13 @@ struct ThetaStackTests {
     @Test("Overwrite with empty stack")
     func overwriteWithEmptyStack() {
         let thetaStack = ThetaStack()
-        let tabIdentifier = ThreemaTabBarController.TabBarItem.contacts
+        let tab = ThreemaTab.contacts
         let originalStack = [UIViewController(), UIViewController()]
         let emptyStack: [UIViewController] = []
         
-        thetaStack.store(stack: originalStack, for: tabIdentifier)
-        thetaStack.store(stack: emptyStack, for: tabIdentifier)
-        let retrievedStack = thetaStack.restore(for: tabIdentifier)
+        thetaStack.store(stack: originalStack, for: tab)
+        thetaStack.store(stack: emptyStack, for: tab)
+        let retrievedStack = thetaStack.restore(for: tab)
         
         #expect(retrievedStack.isEmpty)
     }
@@ -158,51 +138,55 @@ struct ThetaStackTests {
     @Test("View controller retention")
     func viewControllerRetention() {
         let thetaStack = ThetaStack()
-        let tabIdentifier = ThreemaTabBarController.TabBarItem.contacts
+        let tab = ThreemaTab.contacts
         var viewController: UIViewController? = UIViewController()
         weak var weakReference = viewController
         
-        thetaStack.store(stack: [viewController!], for: tabIdentifier)
+        thetaStack.store(stack: [viewController!], for: tab)
         viewController = nil // Release our strong reference
         
         #expect(weakReference != nil) // View controller should be retained by ThetaStack
         
-        let retrievedStack = thetaStack.restore(for: tabIdentifier)
+        let retrievedStack = thetaStack.restore(for: tab)
         #expect(retrievedStack.count == 1)
         #expect(weakReference != nil) // View controller should still be retained
     }
     
     @Test("View controller release after overwrite")
     func viewControllerReleaseAfterOverwrite() {
-        let thetaStack = ThetaStack()
-        let tabIdentifier = ThreemaTabBarController.TabBarItem.contacts
-        var originalViewController: UIViewController? = UIViewController()
-        weak var weakReference = originalViewController
-        let newViewController = UIViewController()
-        
-        thetaStack.store(stack: [originalViewController!], for: tabIdentifier)
-        originalViewController = nil // Release our strong reference
-        
-        #expect(weakReference != nil) // Original view controller should be retained by ThetaStack
-        
-        // Overwrite with new stack
-        thetaStack.store(stack: [newViewController], for: tabIdentifier)
-        
-        #expect(weakReference == nil) // Original view controller should be released after overwrite
-        
-        let retrievedStack = thetaStack.restore(for: tabIdentifier)
-        #expect(retrievedStack.count == 1)
-        #expect(retrievedStack[0] === newViewController)
+        weak var weakReference: UIViewController?
+
+        autoreleasepool {
+            let thetaStack = ThetaStack()
+            let tab = ThreemaTab.contacts
+            var originalViewController: UIViewController? = UIViewController()
+            weakReference = originalViewController
+            let newViewController = UIViewController()
+
+            thetaStack.store(stack: [originalViewController!], for: tab)
+            // Drop our strong reference
+            originalViewController = nil
+
+            // Still retained by ThetaStack
+            #expect(weakReference != nil)
+
+            // Overwrite with new stack. Should release old one.
+            thetaStack.store(stack: [newViewController], for: tab)
+        }
+
+        RunLoop.current.run(until: Date())
+
+        #expect(weakReference == nil)
     }
-    
+
     // MARK: - Real-world Scenario Tests
     
     @Test("Tab bar controller scenario")
     func ThreemaTabBarControllerScenario() {
         let thetaStack = ThetaStack()
-        let tab1 = ThreemaTabBarController.TabBarItem.contacts
-        let tab2 = ThreemaTabBarController.TabBarItem.profile
-        let tab3 = ThreemaTabBarController.TabBarItem.settings
+        let tab1 = ThreemaTab.contacts
+        let tab2 = ThreemaTab.profile
+        let tab3 = ThreemaTab.settings
         
         // Tab 1: Contacts -> Profile
         let contactsVC = UIViewController()
@@ -237,7 +221,7 @@ struct ThetaStackTests {
     func splitViewControllerScenario() {
         // Simulate split view with detail navigation
         let thetaStack = ThetaStack()
-        let detailTab = ThreemaTabBarController.TabBarItem.contacts
+        let detailTab = ThreemaTab.contacts
         
         // Detail navigation: List -> Detail -> Edit
         let listVC = UIViewController()

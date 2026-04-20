@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
@@ -45,8 +25,6 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
 
     fileprivate var transactionResponse: TaskExecutionTransactionResponse?
     fileprivate var transactionResponseTimeout: DispatchGroup?
-
-    private let responseTimeoutInSeconds = 25
 
     func execute() -> Promise<Void> {
         guard let task = taskDefinition as? TaskDefinition, task is TaskDefinitionTransactionProtocol else {
@@ -201,13 +179,32 @@ class TaskExecutionTransaction: TaskExecution, TaskExecutionProtocol {
         transactionResponseTimeout = DispatchGroup()
         transactionResponseTimeout?.enter()
 
-        if let error = frameworkInjector.serverConnector.reflectMessage(message) {
-            throw TaskExecutionError.reflectMessageFailed(message: "message type: \(messageType) / \(error)")
+        let loggingMsgInfo = "message type: \(messageType)"
+
+        // Add observer to release the waiting of the lock or unlock response, if the task is interrupted
+        let task = taskDefinition as? TaskDefinition
+        let interruptionObserver = observeInterruption(of: taskDefinition as? TaskDefinition) {
+            DDLogWarn("\(loggingMsgInfo) interrupted")
+            self.transactionResponseTimeout?.leave()
         }
 
-        let result = transactionResponseTimeout?.wait(timeout: .now() + .seconds(responseTimeoutInSeconds))
+        if let error = frameworkInjector.serverConnector.reflectMessage(message) {
+            throw TaskExecutionError.reflectMessageFailed(message: "\(loggingMsgInfo) / \(error)")
+        }
+
+        let result = transactionResponseTimeout?.wait(
+            timeout: .now() + .seconds(taskContext.transactionResponseTimeoutInSeconds)
+        )
         guard result == .success else {
             throw TaskExecutionTransactionError.lockTimeout
+        }
+
+        if let interruptionObserver {
+            interruptionObserver.invalidate()
+        }
+
+        guard let task, !task.isInterrupted else {
+            throw TaskExecutionError.reflectMessageInterrupted(message: loggingMsgInfo)
         }
 
         if let type = transactionResponse?.messageType {

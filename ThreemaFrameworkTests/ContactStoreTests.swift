@@ -1,46 +1,24 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import RemoteSecretProtocolTestHelper
-import ThreemaEssentialsTestHelper
+import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
-class ContactStoreTests: XCTestCase {
+final class ContactStoreTests: XCTestCase {
 
-    private var databaseMainCnx: DatabaseContext!
+    private var testDatabase: TestDatabase!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        
+        testDatabase = TestDatabase()
+
         // Workaround to ensure remote secret is initialized
-        let remoteSecretManagerMock = RemoteSecretManagerMock()
-        AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManagerMock)
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
     }
 
     func testAddWorkContactWithIdentity() throws {
         let expectedIdentity = "TESTER01"
-        let expectedPublicKey = MockData.generatePublicKey()
+        let expectedPublicKey = BytesUtility.generatePublicKey()
         let expectedFirstName = "Test"
         let expectedLastName = "Tester"
         let expectedCsi = "Csi"
@@ -48,7 +26,7 @@ class ContactStoreTests: XCTestCase {
         let expectedDepartment = "Department"
 
         let userSettingsMock = UserSettingsMock()
-        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
+        let em = testDatabase.entityManager
         let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
 
         let identity = contactStore.addWorkContact(
@@ -73,15 +51,18 @@ class ContactStoreTests: XCTestCase {
         XCTAssertEqual(expectedCsi, contactEntity.csi)
         XCTAssertEqual(expectedJobTitle, contactEntity.jobTitle)
         XCTAssertEqual(expectedDepartment, contactEntity.department)
-        XCTAssertTrue(userSettingsMock.workIdentities.contains(expectedIdentity))
-        XCTAssertTrue(userSettingsMock.profilePictureRequestList.contains(where: { $0 as? String == expectedIdentity }))
+        XCTAssertTrue((userSettingsMock.workIdentities ?? []).contains(expectedIdentity))
+        XCTAssertTrue(
+            (userSettingsMock.profilePictureRequestList ?? [])
+                .contains(where: { $0 as? String == expectedIdentity })
+        )
     }
     
     func testAddUnknownContactWithIdentityBlockUnknown() throws {
         let expectedIdentity = "TESTER01"
 
         let userSettingsMock = UserSettingsMock(blockUnknown: true)
-        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
+        let em = testDatabase.entityManager
         let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
         
         let expect = expectation(description: "Give time to fetch public key")
@@ -112,7 +93,7 @@ class ContactStoreTests: XCTestCase {
         }
 
         let userSettingsMock = UserSettingsMock(blockUnknown: true)
-        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
+        let em = testDatabase.entityManager
         let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
         
         let expect = expectation(description: "Give time to fetch public key")
@@ -148,7 +129,7 @@ class ContactStoreTests: XCTestCase {
         }
 
         let userSettingsMock = UserSettingsMock(blockUnknown: true)
-        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
+        let em = testDatabase.entityManager
         let contactStore = ContactStore(userSettings: userSettingsMock, entityManager: em)
         
         let expect = expectation(description: "Give time to fetch public key")
@@ -172,10 +153,10 @@ class ContactStoreTests: XCTestCase {
 
     func testUpdateContactWithIdentity() throws {
         let expectedIdentity = "TESTER01"
-        let expectedPublicKey = MockData.generatePublicKey()
+        let expectedPublicKey = BytesUtility.generatePublicKey()
         let expectedFirstName = "Dirsty"
 
-        let dbPreparer = DatabasePreparer(context: databaseMainCnx.current)
+        let dbPreparer = testDatabase.preparer
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: expectedPublicKey,
@@ -184,7 +165,7 @@ class ContactStoreTests: XCTestCase {
             contact.imageData = Data([0])
         }
 
-        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
+        let em = testDatabase.entityManager
 
         let contactStore = ContactStore(
             userSettings: UserSettingsMock(),
@@ -207,10 +188,10 @@ class ContactStoreTests: XCTestCase {
     
     func testUpdateContactStatus() throws {
         let expectedIdentity = "TESTER01"
-        let expectedPublicKey = MockData.generatePublicKey()
+        let expectedPublicKey = BytesUtility.generatePublicKey()
         let expectedStatus = ContactEntity.ContactState.active
 
-        let dbPreparer = DatabasePreparer(context: databaseMainCnx.current)
+        let dbPreparer = testDatabase.preparer
         var savedContact: ContactEntity?
         dbPreparer.save {
             savedContact = dbPreparer.createContact(
@@ -220,7 +201,7 @@ class ContactStoreTests: XCTestCase {
             )
         }
 
-        let em = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
+        let em = testDatabase.entityManager
 
         let contactStore = ContactStore(
             userSettings: UserSettingsMock(),

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Combine
 import Foundation
 import ThreemaEssentials
@@ -25,24 +5,17 @@ import XCTest
 @testable import Threema
 @testable import ThreemaFramework
 
-class ChatViewSnapshotProviderTests: XCTestCase {
-    var objCnx: ThreemaManagedObjectContext!
-    
-    private var databaseMainCnx: DatabaseContext!
-    private var databaseBackgroundCnx: DatabaseContext!
-    
+final class ChatViewSnapshotProviderTests: XCTestCase {
+    private var testDatabase: TestDatabase!
+
     private var internalInitialSetupCompleted = false
     
     override func setUp() {
         super.setUp()
         
-        (_, objCnx, _) = DatabasePersistentContext.devNullContext()
-
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+        testDatabase = TestDatabase()
     }
     
     override func tearDown() {
@@ -50,9 +23,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     }
     
     func testBasicSetup() {
-        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
-        _ = EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
-        
+        let entityManager = testDatabase.entityManager
+
         let conversation = createContactAndConversation(
             entityManager: entityManager,
             identity: "ECHOECHO"
@@ -67,7 +39,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             around: nil,
             entityManager: entityManager,
             backgroundEntityManager: entityManager,
-            context: databaseMainCnx.current
+            context: testDatabase.context.current
         )
         
         let snapshotProvider = ChatViewSnapshotProvider(
@@ -114,9 +86,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     }
     
     func testBasicPublish() {
-        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
-        _ = EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
-        
+        let entityManager = testDatabase.entityManager
+
         let conversation = createContactAndConversation(
             entityManager: entityManager,
             identity: "ECHOECHO"
@@ -131,7 +102,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             around: nil,
             entityManager: entityManager,
             backgroundEntityManager: entityManager,
-            context: databaseMainCnx.current
+            context: testDatabase.context.current
         )
         
         let snapshotProvider = ChatViewSnapshotProvider(
@@ -227,9 +198,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     }
     
     func basicUnreadMessageLine() {
-        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
-        _ = EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
-        
+        let entityManager = testDatabase.entityManager
+
         let conversation = createContactAndConversation(
             entityManager: entityManager,
             identity: "ECHOECHO"
@@ -244,7 +214,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             around: nil,
             entityManager: entityManager,
             backgroundEntityManager: entityManager,
-            context: databaseMainCnx.current
+            context: testDatabase.context.current
         )
         
         let typingIndicatorInformationProvider = ChatViewTypingIndicatorInformationProviderMock()
@@ -381,9 +351,8 @@ class ChatViewSnapshotProviderTests: XCTestCase {
     
     // TODO: (IOS-3875) Timeout
     func testUnreadMessageLineStillLastAfterNewMessageSent() {
-        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
-        _ = EntityManager(databaseContext: databaseBackgroundCnx, isRemoteSecretEnabled: false)
-        
+        let entityManager = testDatabase.entityManager
+
         let conversation = createContactAndConversation(
             entityManager: entityManager,
             identity: "ECHOECHO"
@@ -398,7 +367,7 @@ class ChatViewSnapshotProviderTests: XCTestCase {
             around: nil,
             entityManager: entityManager,
             backgroundEntityManager: entityManager,
-            context: databaseMainCnx.current
+            context: testDatabase.context.current
         )
         
         let typingIndicatorInformationProvider = ChatViewTypingIndicatorInformationProviderMock()

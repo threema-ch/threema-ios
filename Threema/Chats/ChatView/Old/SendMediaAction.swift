@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
@@ -33,7 +13,8 @@ final class SendMediaAction: NSObject {
     }
     
     // MARK: - Private properties
-    
+
+    private let imageSender = ImageURLSenderItemCreator()
     private var picker: UIImagePickerController?
     private var pickedVideoSent = false
     private var pickedVideoSaved = false
@@ -398,7 +379,7 @@ final class SendMediaAction: NSObject {
                     }
                 }
                 else if let url = assets[i] as? URL {
-                    let uti = UTIConverter.uti(forFileURL: url)
+                    let uti = UTIConverter.uti(forFileURL: url) ?? UTType.data.identifier
                     if UTIConverter.conforms(toImageType: uti) {
                         let item: URLSenderItem? =
                             if sendAsFile {
@@ -423,9 +404,10 @@ final class SendMediaAction: NSObject {
                     else if UTIConverter.conforms(toMovieType: uti) {
                         // All videos in the format of an URL come from the media preview and have already been
                         // converted
+                        let mimeType = UTIConverter.mimeType(fromUTI: uti) ?? "application/octet-stream"
                         let item = URLSenderItem(
                             url: url,
-                            type: UTIConverter.mimeType(fromUTI: uti),
+                            type: mimeType,
                             renderType: sendAsFile ? 0 : 1,
                             sendAsFile: true
                         )
@@ -465,7 +447,7 @@ final class SendMediaAction: NSObject {
     }
     
     private func sendItems(itemArray: [Any], asFile sendAsFile: Bool, withCaptions captions: [Any]) {
-        let correlationID = ImageURLSenderItemCreator.createCorrelationID()
+        let correlationID = imageSender.createCorrelationID()
         let itemsCount = itemArray.count
 
         for i in 0..<itemsCount {
@@ -642,7 +624,7 @@ final class SendMediaAction: NSObject {
         options.isNetworkAccessAllowed = true
         options.version = .current
         
-        imageManager.requestImageData(for: asset, options: options) { imageData, dataUTI, _, _ in
+        imageManager.requestImageData(for: asset, options: options) { [imageSender] imageData, dataUTI, _, _ in
             if let imageData {
                 let resources = PHAssetResource.assetResources(for: asset)
                 let orgFilename =
@@ -663,8 +645,7 @@ final class SendMediaAction: NSObject {
                     )
                 }
                 else {
-                    let itemCreator = ImageURLSenderItemCreator()
-                    item = itemCreator.senderItem(from: imageData, uti: dataUTI ?? "")
+                    item = imageSender.senderItem(from: imageData, uti: dataUTI ?? "")
                 }
                 sema.signal()
             }

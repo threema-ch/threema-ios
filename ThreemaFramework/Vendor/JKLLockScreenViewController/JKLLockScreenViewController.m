@@ -91,9 +91,7 @@ static const NSUInteger newMaxLength = 6;
     _threemaLogo.image = [Colors threemaLogoForPasscode];
     _threemaLogo.layer.cornerRadius = 10;
     //------------------ Threema edit end ---------------------------
-    
-    [Colors updateWithNavigationBar:self.navigationController.navigationBar];
-    
+        
     _pincodeView.pincodeColor = UIColor.primary;
     _tintColor = UIColor.primary;
     [self tintSubviewsWithColor:_tintColor];
@@ -619,7 +617,7 @@ static const NSUInteger newMaxLength = 6;
 
 //------------------ Threema edit begin ---------------------------
 -(UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    if (SYSTEM_IS_IPAD) {
+    if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
         return UIInterfaceOrientationMaskAll;
     }
     return UIInterfaceOrientationMaskAllButUpsideDown;
@@ -630,9 +628,6 @@ static const NSUInteger newMaxLength = 6;
 }
 
 - (BOOL)shouldAutorotate {
-    if (SYSTEM_IS_IPAD) {
-        return YES;
-    }
     return YES;
 }
 //------------------ Threema edit end ---------------------------

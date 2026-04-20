@@ -1,25 +1,6 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import ThreemaEssentials
+import ThreemaFramework
 import ThreemaMacros
 import UIKit
 
@@ -32,7 +13,7 @@ final class CreateEditGroupDistributionViewController: UICollectionViewControlle
     
     private enum Constants {
         static var contactsPerRow: Int {
-            UIDevice.current.userInterfaceIdiom == .pad ? 7 : 5
+            AppDelegate.shared().isCompactSizeClass ? 5 : 7
         }
 
         static let maxMembers = Group.maxGroupMembers
@@ -102,14 +83,16 @@ final class CreateEditGroupDistributionViewController: UICollectionViewControlle
                 return editNameCell
                 
             case let .editContact(contact):
-                let editContactCell: ContactGridContactCell = collectionView
-                    .dequeueCell(for: indexPath)
-                editContactCell.configure(for: contact)
+                let editContactCell: SelectedItemGridCell = collectionView.dequeueCell(for: indexPath)
+                editContactCell.configure(for: SelectableItem(
+                    id: contact.objectID,
+                    item: .contact(contact),
+                    isSelected: false
+                ))
                 editContactCell.onClear = { [weak self] in
                     guard let self else {
                         return
                     }
-                    
                     contacts.removeAll { $0.identity == contact.identity }
                     configureSnapshot(animated: true)
                 }
@@ -167,16 +150,16 @@ final class CreateEditGroupDistributionViewController: UICollectionViewControlle
     
     // MARK: Subview
     
-    private lazy var cancelBarButtonItem = UIBarButtonItem(
-        barButtonSystemItem: .cancel,
+    private lazy var cancelBarButtonItem = UIBarButtonItem.cancelButton(
         target: self,
-        action: #selector(cancelButtonTapped)
+        selector: #selector(cancelButtonTapped)
     )
-    private lazy var saveBarButtonItem = UIBarButtonItem(
-        barButtonSystemItem: .save,
+    
+    private lazy var saveBarButtonItem = UIBarButtonItem.saveButton(
         target: self,
-        action: #selector(saveButtonTapped)
+        selector: #selector(saveButtonTapped)
     )
+    
     private lazy var editProfilePictureView: EditProfilePictureView = {
         let imageUpdated: EditProfilePictureView.ImageUpdated = { [weak self] newImageData -> (UIImage?, Bool) in
             guard let strongSelf = self else {
@@ -222,8 +205,7 @@ final class CreateEditGroupDistributionViewController: UICollectionViewControlle
         )
         let group = NSCollectionLayoutGroup.horizontal(
             layoutSize: groupSize,
-            subitem: item,
-            count: 1
+            subitems: [item]
         )
         let section = NSCollectionLayoutSection(group: group)
         section.contentInsets = Constants.sectionInset
@@ -242,8 +224,7 @@ final class CreateEditGroupDistributionViewController: UICollectionViewControlle
         )
         let group = NSCollectionLayoutGroup.horizontal(
             layoutSize: groupSize,
-            subitem: item,
-            count: 1
+            subitems: [item]
         )
         let section = NSCollectionLayoutSection(group: group)
         section.contentInsets = Constants.sectionInset
@@ -252,7 +233,7 @@ final class CreateEditGroupDistributionViewController: UICollectionViewControlle
     
     private static var membersSection: NSCollectionLayoutSection {
         let itemSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1),
+            widthDimension: .fractionalWidth(1.0 / CGFloat(Constants.contactsPerRow)),
             heightDimension: .estimated(80)
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
@@ -262,7 +243,7 @@ final class CreateEditGroupDistributionViewController: UICollectionViewControlle
         )
         let group = NSCollectionLayoutGroup.horizontal(
             layoutSize: groupSize,
-            subitem: item,
+            repeatingSubitem: item,
             count: Constants.contactsPerRow
         )
         group.interItemSpacing = NSCollectionLayoutSpacing.fixed(Constants.contactsInterItemSpacing)
@@ -414,7 +395,7 @@ final class CreateEditGroupDistributionViewController: UICollectionViewControlle
     
     private func registerCells() {
         collectionView.registerCell(CreateEditGroupDistributionNameCell.self)
-        collectionView.registerCell(ContactGridContactCell.self)
+        collectionView.registerCell(SelectedItemGridCell.self)
         collectionView.registerCell(CreateEditGroupDistributionListProfilePictureCell.self)
         collectionView.registerCell(ContactGridAddButtonCell.self)
         collectionView.register(
@@ -552,7 +533,9 @@ final class CreateEditGroupDistributionViewController: UICollectionViewControlle
     }
     
     @objc private func saveButtonTapped() {
-        Task { @MainActor in
+        saveBarButtonItem.isEnabled = false
+        Task {
+            defer { saveBarButtonItem.isEnabled = true }
             switch displayMode {
             case let .group(action):
                 switch action {
@@ -639,7 +622,7 @@ extension CreateEditGroupDistributionViewController {
                         name: NSNotification.Name(rawValue: kNotificationShowDistributionList),
                         object: nil,
                         userInfo: [
-                            kKeyDistributionList: distributionList,
+                            kKeyDistributionList: distributionList as Any,
                         ]
                     )
                     
@@ -705,7 +688,7 @@ extension CreateEditGroupDistributionViewController {
             NotificationPresenterWrapper.shared.present(type: .saveError)
         }
     }
-    
+
     private func createGroup() async {
         do {
             let groupID = NaClCrypto.shared().randomBytes(Int32(ThreemaProtocol.groupIDLength)) ?? Data()
@@ -727,30 +710,16 @@ extension CreateEditGroupDistributionViewController {
                 
                 switch onSaveDisplayMode {
                 case .showDetails:
-                    NotificationCenter.default.post(
-                        name: NSNotification.Name(rawValue: kNotificationShowGroup),
-                        object: nil,
-                        userInfo: [
-                            kKeyGroup: result.0,
-                        ]
-                    )
-                    
+                    navigateToGroupDetails(result.0)
+
                 case .showChat:
-                    let conversation = entityManager.entityFetcher.conversationEntity(
-                        for: groupIdentity,
-                        myIdentity: myIdentity
-                    )
-                    
-                    let info: [String: Any] = [
-                        kKeyConversation: conversation as Any,
-                        kKeyForceCompose: true,
-                    ]
-                    
-                    NotificationCenter.default.post(
-                        name: Notification.Name(kNotificationShowConversation),
-                        object: nil,
-                        userInfo: info
-                    )
+                    guard let conversationEntity = entityManager
+                        .entityFetcher.conversationEntity(for: groupIdentity, myIdentity: myIdentity)
+                    else {
+                        return
+                    }
+
+                    navigateToGroupConversation(conversationEntity)
                 }
             }
         }
@@ -758,6 +727,18 @@ extension CreateEditGroupDistributionViewController {
             DDLogError("Unable to create group: \(error)")
             NotificationPresenterWrapper.shared.present(type: .createFailed)
         }
+    }
+
+    private func navigateToGroupDetails(_ group: Group) {
+        let name = NSNotification.Name(rawValue: kNotificationShowGroup)
+        let userInfo: [AnyHashable: Any] = [kKeyGroup: group as Any]
+        NotificationCenter.default.post(name: name, object: nil, userInfo: userInfo)
+    }
+
+    private func navigateToGroupConversation(_ conversationEntity: ConversationEntity) {
+        let name = Notification.Name(kNotificationShowConversation)
+        let userInfo: [AnyHashable: Any] = [kKeyConversation: conversationEntity as Any, kKeyForceCompose: true]
+        NotificationCenter.default.post(name: name, object: nil, userInfo: userInfo)
     }
 
     private func saveNameIfNeeded(_ group: Group, newName: String?) async throws {
@@ -803,7 +784,7 @@ extension CreateEditGroupDistributionViewController {
         }
 
         do {
-            try await groupManager.createOrUpdate(
+            _ = try await groupManager.createOrUpdate(
                 for: group.groupIdentity,
                 members: Set(newMembers.map(\.identity.rawValue)),
                 systemMessageDate: Date.now

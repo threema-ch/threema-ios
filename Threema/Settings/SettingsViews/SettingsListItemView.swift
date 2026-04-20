@@ -1,31 +1,8 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 import ThreemaFramework
 
 @available(*, deprecated, message: "Do not use anymore. Use stock APIs instead.")
-protocol SettingsListItemProtocol: View { }
-
-@available(*, deprecated, message: "Do not use anymore. Use stock APIs instead.")
-struct SettingsListItemView: View, SettingsListItemProtocol {
+struct SettingsListItemView: View {
     let cellTitle: String
     let accessoryText: String?
     let resource: ThreemaImageResource?
@@ -58,56 +35,6 @@ struct SettingsListItemView: View, SettingsListItemProtocol {
                 Text(accessoryText)
                     .foregroundColor(.secondary)
             }
-        }
-    }
-}
-
-@available(*, deprecated, message: "Do not use anymore. Use stock APIs instead.")
-struct SettingsListImageItemView: View, SettingsListItemProtocol {
-    let cellTitle: String
-    let subCellTitle: String?
-    let image: Image
-    let width: CGFloat = 28
-
-    var body: some View {
-        Label {
-            if let subCellTitle {
-                VStack {
-                    Text(cellTitle)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                    Text(subCellTitle)
-                        .font(.footnote)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .foregroundColor(Color(uiColor: .secondaryLabel))
-                }
-                .padding(.leading, 1)
-            }
-            else {
-                Text(cellTitle)
-                    .padding(.leading, 1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        } icon: {
-            image
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: width, height: width, alignment: .center)
-                .background(.gray)
-                .cornerRadius(5)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .labelStyle(CustomImageLabelStyle())
-    }
-}
-
-@available(*, deprecated, message: "Do not use anymore. Use stock APIs instead.")
-struct CustomImageLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack {
-            configuration.icon
-                .padding([.bottom, .trailing, .top], 5.0)
-            configuration.title
         }
     }
 }

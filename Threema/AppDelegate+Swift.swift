@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import BackgroundTasks
 import CocoaLumberjackSwift
 import FileUtility
@@ -43,13 +23,21 @@ extension AppDelegate {
         }
         return window
     }
+    
+    @objc var isCompactSizeClass: Bool {
+        guard let appCoordinator = appCoordinator as? AppCoordinator else {
+            return false
+        }
+        
+        return appCoordinator.splitViewController.traitCollection.horizontalSizeClass == .compact
+    }
 
     // MARK: - App launch
 
     // TODO: (IOS-5305) See if we can merge this with the implementation in `CompletedIDViewController+Swift`
     @MainActor @objc func appLaunch() async throws -> BusinessInjector? {
         window.makeKeyAndVisible()
-        
+
         do {
             let logFile = LogManager.appLaunchLogFile
             LogManager.deleteLogFile(logFile)
@@ -138,13 +126,6 @@ extension AppDelegate {
                 LicenseStore.shared().onPremConfigURL = license.onPremServer
             }
             
-            // TODO: (IOS-5579) Check if this is still needed with full OPPF caching
-            // After the license is set we can fetch the OPPF
-            // Reset pinned certificates to ensure we (also) use pins from OPPF for OnPrem flavor apps
-            if TargetManager.isOnPrem || TargetManager.isCustomOnPrem {
-                NotificationCenter.default.post(name: .resetSSLCAHelperCache, object: nil)
-            }
-
             LogManager.removeFileLogger(logFile)
             LogManager.deleteLogFile(logFile)
 
@@ -385,7 +366,9 @@ extension AppDelegate {
             }
             
             task = {
-                URLHandler.handle(url)
+                Task { @MainActor in
+                    URLHandler().handle(url)
+                }
             }
         }
         
@@ -536,12 +519,10 @@ extension AppDelegate {
     
     @objc func openSettingsNotification() {
         let task: () -> Void = {
-            Task { @MainActor in
-                guard let mainTabBar = AppDelegate.getMainTabBarController() as? MainTabBarController else {
-                    return
+            Task { @MainActor [weak self] in
+                self?.execute { appCoordinator in
+                    appCoordinator.showNotificationSettings()
                 }
-                UIApplication.shared.windows.first?.rootViewController?.dismiss(animated: false)
-                mainTabBar.showNotificationSettings()
             }
         }
         
@@ -553,7 +534,9 @@ extension AppDelegate {
     @objc func open(_ url: URL) -> Bool {
         // We can handle license urls before the business is ready
         guard !(url.host(percentEncoded: true) == "license") else {
-            URLHandler.handleLicense(url)
+            Task { @MainActor in
+                URLHandler.handleLicenseBeforeSetup(url)
+            }
             return true
         }
         
@@ -565,7 +548,7 @@ extension AppDelegate {
                     return
                 }
                 
-                URLHandler.handle(url)
+                URLHandler().handle(url)
             }
         }
         
@@ -583,11 +566,22 @@ extension AppDelegate {
                     completion(true)
                     return
                 }
-                completion(URLHandler.handleShortCut(shortcutItem))
+                completion(URLHandler().handle(item: shortcutItem))
             }
         }
         
         runWhenBusinessReady(task: task)
+    }
+    
+    @objc func execute(
+        _ coordinatorClosure: (AppCoordinator) -> Void
+    ) {
+        if let appCoordinator = appCoordinator as? AppCoordinator {
+            coordinatorClosure(appCoordinator)
+        }
+        else {
+            DDLogError("MainTabBarController or AppCoordinator not found.")
+        }
     }
     
     private func deleteLocalDataWithoutRemoteSecretManager() {

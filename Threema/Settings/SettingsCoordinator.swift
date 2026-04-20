@@ -1,29 +1,10 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
+import CocoaLumberjackSwift
 import Coordinator
 import Foundation
 import SwiftUI
 import ThreemaMacros
 
-final class SettingsCoordinator: NSObject, Coordinator, CurrentDestinationHolding {
+final class SettingsCoordinator: NSObject, Coordinator, CurrentDestinationHolderProtocol {
     
     // MARK: - Internal destination
     
@@ -64,39 +45,40 @@ final class SettingsCoordinator: NSObject, Coordinator, CurrentDestinationHoldin
     
     // MARK: - Routers
     
-    private let shareActivityRouter: any ShareActivityRouting
-    private let passcodeRouter: any PasscodeRouting
+    private let shareActivityRouter: any ShareActivityRouterProtocol
+    private let passcodeRouter: any PasscodeRouterProtocol
     
     var currentDestination: InternalDestination?
     
     // MARK: - Private properties
 
     private lazy var settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
-    private weak var presentingViewController: UIViewController?
+    private(set) weak var presentingViewController: ThreemaSplitViewController?
     
     private lazy var settingsViewController: SettingsViewController = {
         let settingsViewController = SettingsViewController(coordinator: self)
         
-        let tabBarItem = ThreemaTabBarController.TabBarItem(.settings)
-        settingsViewController.tabBarItem = tabBarItem.uiTabBarItem
-        settingsViewController.title = tabBarItem.title
+        let tab = ThreemaTab(.settings)
+        settingsViewController.tabBarItem = tab.tabBarItem
+        settingsViewController.title = tab.title
         
         return settingsViewController
     }()
     
-    private lazy var rootNavigationController = UINavigationController()
+    private lazy var rootNavigationController = StatusNavigationController()
         
     private lazy var navigationDestinationResetter = NavigationDestinationResetter(
         rootViewController: settingsViewController,
+        splitViewController: presentingViewController,
         destinationHolder: self.eraseToAnyDestinationHolder()
     )
     
     // MARK: - Lifecycle
 
     init(
-        presentingViewController: UIViewController,
-        shareActivityRouter: any ShareActivityRouting,
-        passcodeRouter: any PasscodeRouting
+        presentingViewController: ThreemaSplitViewController,
+        shareActivityRouter: any ShareActivityRouterProtocol,
+        passcodeRouter: any PasscodeRouterProtocol
     ) {
         self.presentingViewController = presentingViewController
         self.shareActivityRouter = shareActivityRouter
@@ -195,8 +177,41 @@ final class SettingsCoordinator: NSObject, Coordinator, CurrentDestinationHoldin
     // MARK: - Private functions
     
     private func openBetaFeedbackChat() {
-        // TODO: (IOS-5212) Add once conversations coordinator is in
-        assertionFailure("Not implemented")
+        if let contact = BusinessInjector.ui.entityManager.entityFetcher
+            .contactEntity(for: Constants.betaFeedbackIdentity) {
+            showConversation(for: contact)
+        }
+        else {
+            BusinessInjector.ui.contactStore.addContact(
+                with: Constants.betaFeedbackIdentity,
+                verificationLevel: Int32(ContactEntity.VerificationLevel.unverified.rawValue)
+            ) { contact, _ in
+                guard let contactEntity = contact as? ContactEntity else {
+                    DDLogError("Can't add \(Constants.betaFeedbackIdentity) as contact")
+                    return
+                }
+                
+                showConversation(for: contactEntity)
+            } onError: { error in
+                DDLogError("Can't add \(Constants.betaFeedbackIdentity) as contact \(error)")
+            }
+        }
+        
+        func showConversation(for contact: ContactEntity) {
+            let info = [
+                kKeyContact: contact,
+                kKeyForceCompose: NSNumber(booleanLiteral: true),
+                kKeyText: "Version: \(ThreemaUtility.clientVersionWithMDM)",
+            ] as [String: Any]
+            
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name(rawValue: kNotificationShowConversation),
+                    object: nil,
+                    userInfo: info
+                )
+            }
+        }
     }
     
     private func showDeveloperSettings() {

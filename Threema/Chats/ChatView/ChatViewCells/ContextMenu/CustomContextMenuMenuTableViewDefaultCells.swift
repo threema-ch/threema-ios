@@ -1,27 +1,13 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 
-class CustomContextMenuMenuTableViewDefaultCell: UITableViewCell, Reusable {
-    let config: CustomContextMenuMenuTableViewConfig = .defaultConfig
+final class CustomContextMenuMenuTableViewDefaultCell: UITableViewCell, Reusable {
+    private let config: CustomContextMenuMenuTableViewConfig =
+        if #available(iOS 26.0, *) {
+            .glassConfig
+        }
+        else {
+            .defaultConfig
+        }
 
     var action: ChatViewMessageActionsProvider.MessageAction? {
         didSet {
@@ -50,7 +36,7 @@ class CustomContextMenuMenuTableViewDefaultCell: UITableViewCell, Reusable {
     private lazy var label: UILabel = {
         let label = UILabel()
         
-        label.font = .preferredFont(forTextStyle: .body)
+        label.font = .preferredFont(forTextStyle: config.preferredTextStyle)
         label.numberOfLines = 0
         
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -61,7 +47,7 @@ class CustomContextMenuMenuTableViewDefaultCell: UITableViewCell, Reusable {
     private lazy var image: UIImageView = {
         let image = UIImageView()
         
-        let configuration = UIImage.SymbolConfiguration(textStyle: .body)
+        let configuration = UIImage.SymbolConfiguration(textStyle: config.preferredTextStyle)
         image.preferredSymbolConfiguration = configuration
         
         image.contentMode = .center
@@ -73,7 +59,25 @@ class CustomContextMenuMenuTableViewDefaultCell: UITableViewCell, Reusable {
     
     private lazy var selectedBgView: UIView = {
         let view = UIView()
-        view.backgroundColor = config.tableViewHighlightedColor
+        if #available(iOS 26.0, *) {
+            let selectedView = UIView()
+            view.addSubview(selectedView)
+            selectedView.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                selectedView.topAnchor.constraint(equalTo: view.topAnchor),
+                selectedView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: config.tableViewInset),
+                selectedView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+                selectedView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -config.tableViewInset),
+            ])
+            selectedView.backgroundColor = config.tableViewHighlightedColor
+            selectedView.cornerConfiguration = .uniformCorners(
+                radius: UICornerRadius(floatLiteral: config.defaultSelectionBackgroundCornerRadius)
+            )
+        }
+        else {
+            view.backgroundColor = config.tableViewHighlightedColor
+        }
+
         return view
     }()
     
@@ -81,7 +85,13 @@ class CustomContextMenuMenuTableViewDefaultCell: UITableViewCell, Reusable {
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        configureCell()
+       
+        if #available(iOS 26.0, *) {
+            configureCellPostGlass()
+        }
+        else {
+            configureCellPreGlass()
+        }
     }
     
     @available(*, unavailable)
@@ -91,7 +101,59 @@ class CustomContextMenuMenuTableViewDefaultCell: UITableViewCell, Reusable {
     
     // MARK: - Private functions
 
-    private func configureCell() {
+    private func configureCellPostGlass() {
+        backgroundColor = .clear
+        contentView.addSubview(label)
+        selectedBackgroundView = selectedBgView
+        
+        // We do not show the image for a11y fonts
+        if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
+            NSLayoutConstraint.activate([
+                label.leadingAnchor.constraint(
+                    equalTo: contentView.leadingAnchor,
+                    constant: config.itemLeadingTrailingInset
+                ),
+            ])
+        }
+        else {
+            contentView.addSubview(image)
+
+            NSLayoutConstraint.activate([
+                label.leadingAnchor.constraint(
+                    equalTo: image.trailingAnchor,
+                    constant: config.defaultItemSpacing
+                ),
+                image.firstBaselineAnchor.constraint(equalTo: label.firstBaselineAnchor),
+                image.centerXAnchor.constraint(
+                    equalTo: contentView.leadingAnchor,
+                    constant: UIFontMetrics.default.scaledValue(
+                        for: config.itemLeadingTrailingInset
+                    ) + config.defaultImageCenterInset
+                ),
+            ])
+        }
+        
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(
+                equalTo: contentView.topAnchor,
+                constant: UIFontMetrics.default.scaledValue(
+                    for: config.defaultItemTopBottomInset
+                )
+            ),
+            label.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor,
+                constant: -config.itemLeadingTrailingInset
+            ),
+            label.bottomAnchor.constraint(
+                equalTo: contentView.bottomAnchor,
+                constant: -UIFontMetrics.default.scaledValue(
+                    for: config.defaultItemTopBottomInset
+                )
+            ),
+        ])
+    }
+    
+    private func configureCellPreGlass() {
         backgroundColor = .clear
         contentView.addSubview(label)
         selectedBackgroundView = selectedBgView
@@ -143,8 +205,14 @@ class CustomContextMenuMenuTableViewDefaultCell: UITableViewCell, Reusable {
     }
 }
 
-class CustomContextMenuMenuTableViewStackCell: UITableViewCell, Reusable {
-    let config: CustomContextMenuMenuTableViewConfig = .defaultConfig
+final class CustomContextMenuMenuTableViewStackCell: UITableViewCell, Reusable {
+    let config: CustomContextMenuMenuTableViewConfig =
+        if #available(iOS 26.0, *) {
+            .glassConfig
+        }
+        else {
+            .defaultConfig
+        }
 
     weak var menuDelegate: CustomContextMenuMenuTableViewDelegate?
 
@@ -163,15 +231,21 @@ class CustomContextMenuMenuTableViewStackCell: UITableViewCell, Reusable {
                 var configuration = UIButton.Configuration.plain()
                 
                 configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(
-                    textStyle: .body,
+                    textStyle: config.preferredTextStyle,
                     scale: .medium
                 )
                 configuration.image = action.image
-                                
+                
+                if action.attributes.contains(.destructive) {
+                    configuration.baseForegroundColor = .systemRed
+                }
+                else {
+                    configuration.baseForegroundColor = .label
+                }
+                
                 let button = UIButton(type: .custom)
                 button.configuration = configuration
                 button.layer.cornerRadius = config.inlineItemCornerRadius
-                
                 button.configurationUpdateHandler = { [weak self] button in
                     guard let self else {
                         return
@@ -193,24 +267,6 @@ class CustomContextMenuMenuTableViewStackCell: UITableViewCell, Reusable {
                 )
                 
                 stackView.addArrangedSubview(button)
-                
-                if action.attributes.contains(.destructive) {
-                    button.tintColor = .systemRed
-                }
-                else {
-                    button.tintColor = .label
-                }
-                
-                NSLayoutConstraint.activate([
-                    button.topAnchor.constraint(
-                        equalTo: stackView.topAnchor,
-                        constant: UIFontMetrics.default.scaledValue(for: config.inlineItemTopBottomInset)
-                    ),
-                    button.bottomAnchor.constraint(
-                        equalTo: stackView.bottomAnchor,
-                        constant: -UIFontMetrics.default.scaledValue(for: config.inlineItemTopBottomInset)
-                    ),
-                ])
             }
         }
     }
@@ -223,15 +279,15 @@ class CustomContextMenuMenuTableViewStackCell: UITableViewCell, Reusable {
         stackView.alignment = .center
         stackView.distribution = .fillEqually
         stackView.translatesAutoresizingMaskIntoConstraints = false
-        stackView.setContentCompressionResistancePriority(.required, for: .vertical)
+        stackView.setContentHuggingPriority(.required, for: .vertical)
         stackView.spacing = config.inlineItemSpacing
-        stackView.layoutMargins = UIEdgeInsets(
-            top: 0,
-            left: UIFontMetrics.default.scaledValue(for: config.inlineItemInset),
-            bottom: 0,
-            right: UIFontMetrics.default.scaledValue(for: config.inlineItemInset)
-        )
         stackView.isLayoutMarginsRelativeArrangement = true
+        stackView.directionalLayoutMargins = NSDirectionalEdgeInsets(
+            top: UIFontMetrics.default.scaledValue(for: config.inlineItemTopBottomInset),
+            leading: UIFontMetrics.default.scaledValue(for: config.inlineItemInset),
+            bottom: UIFontMetrics.default.scaledValue(for: config.inlineItemTopBottomInset),
+            trailing: UIFontMetrics.default.scaledValue(for: config.inlineItemInset)
+        )
         return stackView
     }()
     
@@ -253,7 +309,6 @@ class CustomContextMenuMenuTableViewStackCell: UITableViewCell, Reusable {
         backgroundColor = .clear
         selectionStyle = .none
         contentView.addSubview(stackView)
-        
         NSLayoutConstraint.activate([
             stackView.topAnchor.constraint(equalTo: contentView.topAnchor),
             stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),

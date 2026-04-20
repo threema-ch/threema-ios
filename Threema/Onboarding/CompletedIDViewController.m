@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2015-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import "CompletedIDViewController.h"
 #import "UserSettings.h"
 #import "ContactStore.h"
@@ -154,8 +134,9 @@
     [_finishButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
     
     if ([AppDelegate hasBottomSafeAreaInsets]) {
-        CGFloat iPadSpace = SYSTEM_IS_IPAD ? 50 : 0;
-        _finishButton.frame = CGRectMake(_finishButton.frame.origin.x, _finishButton.frame.origin.y - 20.0 - iPadSpace, _finishButton.frame.size.width, _finishButton.frame.size.height);
+        BOOL isRegularSizeClass = [AppDelegate sharedAppDelegate].isCompactSizeClass == NO;
+        CGFloat regularSizeSpace = isRegularSizeClass ? 50 : 0;
+        _finishButton.frame = CGRectMake(_finishButton.frame.origin.x, _finishButton.frame.origin.y - 20.0 - regularSizeSpace, _finishButton.frame.size.width, _finishButton.frame.size.height);
     }
     
     _contactImageView.image = [[UIImage systemImageNamed:@"person.fill"] imageWithTintColor:Colors.textSetup];
@@ -299,7 +280,7 @@
     SafeConfigManager *safeConfigManager = [[SafeConfigManager alloc] init];
     BusinessInjector * bi = [BusinessInjector new];
     SafeStore *safeStore = [[SafeStore alloc] initWithSafeConfigManagerAsObject:safeConfigManager serverApiConnector:[[ServerAPIConnector alloc] init] groupManager: [bi groupManagerObjC] myIdentityStore: bi.myIdentityStore];
-    SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeApiService:[[SafeApiService alloc] init]];
+    SafeManager *safeManager = [[SafeManager alloc] initWithSafeConfigManagerAsObject:safeConfigManager safeStore:safeStore safeAPIService:[[SafeApiService alloc] init]];
     
     // apply Threema Safe password and server config from MDM
     MDMSetup *mdmSetup = [MDMSetup new];
@@ -499,6 +480,11 @@
 }
 
 - (void)startCompletionProcess {
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [_delegate completedIDSetupWithConfiguration:self.setupConfiguration];
+    return;
+    #endif
+    
     _finishButton.userInteractionEnabled = NO;
     _finishButton.alpha = 0.0;
     
@@ -576,6 +562,11 @@
 }
 
 - (void)finishCompletionProcess {
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [_delegate completedIDSetupWithConfiguration:self.setupConfiguration];
+    return;
+    #endif
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         [_delegate completedIDSetup];
     });

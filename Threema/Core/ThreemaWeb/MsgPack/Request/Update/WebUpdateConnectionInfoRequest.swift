@@ -1,27 +1,7 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2018-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 
-class WebUpdateConnectionInfoRequest: NSObject {
+final class WebUpdateConnectionInfoRequest: NSObject {
     let id: Data
     let resume: WebConnection?
     
@@ -99,7 +79,7 @@ class WebUpdateConnectionInfoRequest: NSObject {
     }
 }
 
-class WebConnection: NSObject {
+final class WebConnection: NSObject {
     var id: Data
     var sequenceNumber: UInt32? // chunk id
     
@@ -114,7 +94,7 @@ class WebConnection: NSObject {
         ["id": id, "sequenceNumber": sequenceNumber ?? 0]
     }
     
-    class func convertToUInt32(sn: Any) -> UInt32 {
+    final class func convertToUInt32(sn: Any) -> UInt32 {
         var converted: UInt32 = 0
         if let sq = sn as? UInt8 {
             converted = UInt32(sq)

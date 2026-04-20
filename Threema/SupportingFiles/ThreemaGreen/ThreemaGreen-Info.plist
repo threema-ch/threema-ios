@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>AppURLScheme</key>
+	<string>$(APP_URL_SCHEME)</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>ch.threema.bgtask.messageRetention</string>
@@ -74,7 +76,7 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>comgooglemaps</string>
-		<string>threemawork</string>
+		<string>threemablue</string>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
@@ -82,8 +84,10 @@
 	<false/>
 	<key>LocalizedAppName</key>
 	<string>$(LOCALIZED_APP_NAME)</string>
-	<key>AppURLScheme</key>
-	<string>$(APP_URL_SCHEME)</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_privacy-check._tcp</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>$(PRIVACY_DESCRIPTION_CAMERA)</string>
 	<key>NSContactsUsageDescription</key>
@@ -129,15 +133,15 @@
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
-    <key>UILaunchScreen</key>
-    <dict>
-        <key>UIColorName</key>
-        <string>LaunchScreenBackground</string>
-        <key>UIImageName</key>
-        <string>LockCover</string>
-        <key>UIImageRespectsSafeAreaInsets</key>
-        <true/>
-    </dict>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchScreenBackground</string>
+		<key>UIImageName</key>
+		<string>LockCover</string>
+		<key>UIImageRespectsSafeAreaInsets</key>
+		<true/>
+	</dict>
 	<key>UIPrerenderedIcon</key>
 	<true/>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -163,11 +167,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-    <key>UIDesignRequiresCompatibility</key>
-    <true/>
-    <key>NSBonjourServices</key>
-    <array>
-        <string>_privacy-check._tcp</string>
-    </array>
 </dict>
 </plist>

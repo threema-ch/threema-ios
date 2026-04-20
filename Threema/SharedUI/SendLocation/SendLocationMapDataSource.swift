@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import MapKit
@@ -207,11 +187,11 @@ extension SendLocationMapDataSource: CLLocationManagerDelegate {
     
     /// Checks location access and sets up views according to authorizationStatus
     private func checkLocationAccess() {
-        switch CLLocationManager.authorizationStatus() {
+        switch locationManager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
             
             // Only request location once if imprecise location is enabled
-            if CLLocationManager().accuracyAuthorization == .reducedAccuracy {
+            if locationManager.accuracyAuthorization == .reducedAccuracy {
                 locationManager.startUpdatingLocation()
                 locationManager.stopUpdatingLocation()
                 return
@@ -235,7 +215,7 @@ extension SendLocationMapDataSource: CLLocationManagerDelegate {
         }
         
         // Center map on user if imprecise location is enabled
-        if CLLocationManager().accuracyAuthorization == .reducedAccuracy {
+        if locationManager.accuracyAuthorization == .reducedAccuracy {
             sendLocationVC.centerMap(on: location.coordinate, zoom: .veryFar, animated: true)
             return
         }
@@ -267,8 +247,7 @@ extension SendLocationMapDataSource: CLLocationManagerDelegate {
     }
     
     func distanceToCurrentLocation(location: CLLocation) -> Int {
-        if CLLocationManager.authorizationStatus() == .authorizedWhenInUse || CLLocationManager
-            .authorizationStatus() == .authorizedAlways {
+        if locationManager.locationGranted {
             guard let userLocation = locationManager.location else {
                 return 0
             }
@@ -309,10 +288,13 @@ extension SendLocationMapDataSource {
             return
         }
         
-        HTTPClient().downloadData(url: url, contentType: .json) { data, _, error in
+        HTTPClient().downloadData(url: url, contentType: .json) { [weak self] data, _, error in
+            guard let self else {
+                return
+            }
             do {
                 guard let data else {
-                    DDLogError("Did not receive POI: \(error)")
+                    DDLogError("Did not receive POI: \(error.map(\.localizedDescription) ?? "No Error")")
                     return
                 }
                 // Decode Data
@@ -321,26 +303,29 @@ extension SendLocationMapDataSource {
                 threemaPOIs.sort(by: { $0.dist < $1.dist })
                 
                 // Remove old POIs from Datasource
-                var localSnapshot = self.snapshot()
+                var localSnapshot = snapshot()
                 localSnapshot.deleteSections([.threemaPOI])
                 localSnapshot.appendSections([.threemaPOI])
                 
                 // Add new POIs to Datasource
-                self.pointsOfInterest = threemaPOIs.map { PointOfInterest(receivedPOI: $0) }
-                localSnapshot.appendItems(self.pointsOfInterest, toSection: .threemaPOI)
+                pointsOfInterest = threemaPOIs.map { PointOfInterest(receivedPOI: $0) }
+                localSnapshot.appendItems(pointsOfInterest, toSection: .threemaPOI)
                 
-                DispatchQueue.main.async {
-                    
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else {
+                        return
+                    }
                     // Apply snapshot and inform Delegate
-                    self.apply(localSnapshot, animatingDifferences: true) {
-                        self.delegate?.poisDidChange(pois: self.pointsOfInterest)
+                    apply(localSnapshot, animatingDifferences: true) { [weak self] in
+                        guard let self else {
+                            return
+                        }
+                        delegate?.poisDidChange(pois: pointsOfInterest)
                     }
                     
                     // Change distances of ThreemaPOI relative to current location if available
-                    if CLLocationManager.authorizationStatus() == .authorizedAlways || CLLocationManager
-                        .authorizationStatus() == .authorizedWhenInUse,
-                        let location = CLLocationManager().location {
-                        self.updateDistanceLabel(of: self.pointsOfInterest, from: location)
+                    if locationManager.locationGranted, let location = locationManager.location {
+                        updateDistanceLabel(of: pointsOfInterest, from: location)
                     }
                     completion?()
                 }

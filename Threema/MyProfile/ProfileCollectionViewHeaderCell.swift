@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import ThreemaMacros
 
@@ -101,14 +81,14 @@ final class ProfileCollectionViewHeaderCell: UICollectionViewListCell, Reusable 
         return view
     }()
   
-    private lazy var noIDLabelConsraint: [NSLayoutConstraint] = [
+    private lazy var noIDLabelConstraint: [NSLayoutConstraint] = [
         quickActionsView.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 20),
         quickActionsView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
         quickActionsView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
         quickActionsView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
     ]
     
-    private lazy var idLabelConsraints: [NSLayoutConstraint] = [
+    private lazy var idLabelConstraints: [NSLayoutConstraint] = [
         idLabel.topAnchor.constraint(equalTo: nameLabel.bottomAnchor),
         idLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor),
         idLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor),
@@ -139,6 +119,21 @@ final class ProfileCollectionViewHeaderCell: UICollectionViewListCell, Reusable 
         configure()
     }
     
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        clipsToBounds = false
+        contentView.clipsToBounds = false
+    }
+
+    // MARK: - Public methods
+
+    func updateContent() {
+        checkIDLabel()
+    }
+
+    // MARK: - Private methods
+
     private func configure() {
         idLabel.addGestureRecognizer(nameTapGestureRecognizer)
         nameLabel.addGestureRecognizer(idTapGestureRecognizer)
@@ -158,8 +153,6 @@ final class ProfileCollectionViewHeaderCell: UICollectionViewListCell, Reusable 
             nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor),
             nameLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
         ])
-        
-        checkIDLabel()
     }
     
     @available(*, unavailable)
@@ -174,15 +167,15 @@ final class ProfileCollectionViewHeaderCell: UICollectionViewListCell, Reusable 
             contentView.addSubview(idLabel)
             nameLabel.text = nickname
             idLabel.text = identityStore.identity
-            NSLayoutConstraint.deactivate(noIDLabelConsraint)
-            NSLayoutConstraint.activate(idLabelConsraints)
+            NSLayoutConstraint.deactivate(noIDLabelConstraint)
+            NSLayoutConstraint.activate(idLabelConstraints)
         }
         else {
             idLabel.removeFromSuperview()
             nameLabel.text = identityStore.identity
             idLabel.text = nil
-            NSLayoutConstraint.deactivate(idLabelConsraints)
-            NSLayoutConstraint.activate(noIDLabelConsraint)
+            NSLayoutConstraint.deactivate(idLabelConstraints)
+            NSLayoutConstraint.activate(noIDLabelConstraint)
         }
         
         layoutIfNeeded()

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaEssentials
@@ -115,39 +95,35 @@ final class BlobMessageSender {
     private func isMessageReadyToSend(with objectID: NSManagedObjectID) -> Bool {
         // Due to the business injector entity manager having outdated info about the object belonging to the ID passed
         // in here, we create a new one.
-        let entityManager = PersistenceManager(
-            appGroupID: AppGroup.groupID(),
-            userDefaults: AppGroup.userDefaults(),
-            remoteSecretManager: AppLaunchManager.remoteSecretManager
-        ).backgroundEntityManager
-        var isReady = false
-        
-        entityManager.performAndWait {
-            guard let fileMessage = entityManager.entityFetcher.existingObject(with: objectID) as? FileMessage else {
-                return
-            }
-            
-            guard fileMessage.blobIdentifier != nil,
-                  fileMessage.blobProgress == nil else {
-                return
-            }
-            
-            if fileMessage.blobThumbnail != nil,
-               fileMessage.blobThumbnailIdentifier == nil {
-                return
-            }
-            
-            // If we have a a blobID, and possibly a thumbnail and its ID, this means that the upload has succeeded
-            // and just the sending of the message must have failed, so we reset the error and mark it as ready
-            if fileMessage.blobError {
-                entityManager.performAndWaitSave {
-                    fileMessage.blobError = false
+        businessInjector.runInBackgroundAndWait { backgroundBusinessInjector in
+            let entityManager = backgroundBusinessInjector.entityManager
+
+            return entityManager.performAndWait {
+                guard let fileMessage = entityManager.entityFetcher.existingObject(with: objectID) as? FileMessage
+                else {
+                    return false
                 }
+
+                guard fileMessage.blobIdentifier != nil,
+                      fileMessage.blobProgress == nil else {
+                    return false
+                }
+
+                if fileMessage.blobThumbnail != nil,
+                   fileMessage.blobThumbnailIdentifier == nil {
+                    return false
+                }
+
+                // If we have a a blobID, and possibly a thumbnail and its ID, this means that the upload has succeeded
+                // and just the sending of the message must have failed, so we reset the error and mark it as ready
+                if fileMessage.blobError {
+                    entityManager.performAndWaitSave {
+                        fileMessage.blobError = false
+                    }
+                }
+
+                return true
             }
-            
-            isReady = true
         }
-        
-        return isReady
     }
 }

@@ -1,25 +1,5 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import RemoteSecretProtocolTestHelper
-import ThreemaEssentialsTestHelper
+import ThreemaEssentials
 import XCTest
 @testable import RemoteSecret
 @testable import ThreemaFramework
@@ -50,14 +30,14 @@ final class ContactEntityTests: XCTestCase {
         let forwardSecurityState = 0
         let hidden = 0
         let identity = "TESTERID"
-        let imageData = MockData.generateGroupID()
+        let imageData = BytesUtility.generateGroupID()
         let importStatus = 0
         let jobTitle = "Tester"
         let lastName = "McTestface"
         let profilePictureBlobID = "RandomID"
         let profilePictureSended = 0
         let profilePictureUpload = Date.now
-        let publicKey = MockData.generatePublicKey()
+        let publicKey = BytesUtility.generatePublicKey()
         let publicNickname = "Testy"
         let readReceipts = 0
         let sortIndex = 0
@@ -233,7 +213,7 @@ final class ContactEntityTests: XCTestCase {
         let entityManager = testDatabase.entityManager
 
         let identity = "TESTERID"
-        let publicKey = MockData.generatePublicKey()
+        let publicKey = BytesUtility.generatePublicKey()
         
         // Act
         let contactEntity = entityManager.performAndWaitSave {

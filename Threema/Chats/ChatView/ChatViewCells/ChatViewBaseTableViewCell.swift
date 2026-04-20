@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaFramework
@@ -332,8 +312,8 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
     
     private(set) var reactionsView: ChatViewBaseTableViewCellReactionsStackView?
     
-    private var tipPopover: Any?
-    
+    private var tipPopoverController: Any?
+
     // MARK: Constraints
     
     private lazy var nameConstraints = [NSLayoutConstraint]()
@@ -889,7 +869,12 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
                 size: reactionsStackViewSize
             )
             self.reactionsView = reactionsView
-        
+            
+            // Since emojis are somewhat hard to long press, we prioritize them over the context menu gesture
+            longPressContextMenuGestureRecognizer.require(toFail: reactionsView.longPressGestureRecognizer)
+            if let swipeGesture = swipeHandler?.swipeGesture {
+                swipeGesture.require(toFail: reactionsView.longPressGestureRecognizer)
+            }
             reactionsView.translatesAutoresizingMaskIntoConstraints = false
         
             contentView.addSubview(reactionsView)
@@ -964,7 +949,7 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
         Task(priority: .userInitiated) { @MainActor in
             for await shouldDisplay in longPressInfoTip.shouldDisplayUpdates {
                 guard shouldDisplay, let reactionsView else {
-                    if let tipPopover = tipPopover as? TipUIPopoverViewController {
+                    if let tipPopover = tipPopoverController as? TipUIPopoverViewController {
                         tipPopover.dismiss(animated: true)
                     }
                     continue
@@ -972,14 +957,25 @@ class ChatViewBaseTableViewCell: ThemedCodeTableViewCell {
                 
                 let controller = TipUIPopoverViewController(longPressInfoTip, sourceItem: reactionsView)
                 controller.popoverPresentationController?.permittedArrowDirections = [.up, .down]
-                controller.view.backgroundColor = .tertiarySystemGroupedBackground
-                tipPopover = controller
+                if #unavailable(iOS 26.0) {
+                    controller.view.backgroundColor = .tertiarySystemGroupedBackground
+                }
+                tipPopoverController = controller
                 AppDelegate.shared().window.rootViewController?.present(controller, animated: true)
             }
         }
     }
     
     // MARK: - Actions
+
+    override func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        gestureRecognizer == longPressContextMenuGestureRecognizer && otherGestureRecognizer == reactionsView?
+            .longPressGestureRecognizer || gestureRecognizer == swipeHandler?
+            .swipeGesture && otherGestureRecognizer == reactionsView?.longPressGestureRecognizer
+    }
     
     @objc private func contextMenuInteractionDetected(gestureRecognizer: UIGestureRecognizer) {
         if gestureRecognizer.state == .began {

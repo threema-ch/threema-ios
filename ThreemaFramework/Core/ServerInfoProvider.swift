@@ -1,26 +1,6 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 
-public class ChatServerInfo: NSObject {
+public final class ChatServerInfo: NSObject {
     @objc public let serverNamePrefix: String
     @objc public let serverNameSuffix: String
     @objc public let serverPorts: [Int]
@@ -45,7 +25,7 @@ public class ChatServerInfo: NSObject {
     }
 }
 
-public class DirectoryServerInfo: NSObject {
+public final class DirectoryServerInfo: NSObject {
     @objc public let url: String
     
     init(url: String) {
@@ -53,7 +33,7 @@ public class DirectoryServerInfo: NSObject {
     }
 }
 
-public class BlobServerInfo: NSObject {
+public final class BlobServerInfo: NSObject {
     public let downloadURL: String
     public let uploadURL: String
     public let doneURL: String
@@ -65,7 +45,7 @@ public class BlobServerInfo: NSObject {
     }
 }
 
-public class WorkServerInfo: NSObject {
+public final class WorkServerInfo: NSObject {
     @objc public let url: String
     
     init(url: String) {
@@ -73,7 +53,7 @@ public class WorkServerInfo: NSObject {
     }
 }
 
-public class AvatarServerInfo: NSObject {
+public final class AvatarServerInfo: NSObject {
     @objc public let url: String
     
     init(url: String) {
@@ -81,7 +61,7 @@ public class AvatarServerInfo: NSObject {
     }
 }
 
-public class SafeServerInfo: NSObject {
+public final class SafeServerInfo: NSObject {
     public let url: String
     
     init(url: String) {
@@ -89,7 +69,7 @@ public class SafeServerInfo: NSObject {
     }
 }
 
-public class MediatorServerInfo: NSObject {
+public final class MediatorServerInfo: NSObject {
     @objc public let url: String
     @objc public let blob: BlobServerInfo
 
@@ -112,7 +92,7 @@ public class MediatorServerInfo: NSObject {
     }
 }
 
-public class WebServerInfo: NSObject {
+public final class WebServerInfo: NSObject {
     public let url: String
     public let overrideSaltyRtcHost: String?
     public let overrideSaltyRtcPort: Int?
@@ -124,7 +104,7 @@ public class WebServerInfo: NSObject {
     }
 }
 
-public class RendezvousServerInfo: NSObject {
+public final class RendezvousServerInfo: NSObject {
     public let url: String
 
     init(url: String) {
@@ -148,7 +128,7 @@ public enum DomainMatchMode: String {
     }
 }
 
-public class MapsServerInfo: NSObject {
+public final class MapsServerInfo: NSObject {
     public let poiNamesURL: String
     public let poiAroundURL: String
     
@@ -245,6 +225,7 @@ extension Domain {
     func rendezvousServer(completionHandler: @escaping (RendezvousServerInfo?, Error?) -> Void)
     func domains(completionHandler: @escaping ([Domain]?, Error?) -> Void)
     func mapsServer(completionHandler: @escaping (MapsServerInfo?, Error?) -> Void)
+    func doRecovery() async throws
 }
 
 extension ServerInfoProvider {

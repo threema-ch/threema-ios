@@ -102,7 +102,6 @@
     _failedAttemptsCount = [[AppGroup userDefaults] integerForKey:@"FailedCodeAttempts"];
     
     [self.view setBackgroundColor:Colors.backgroundView];
-    [Colors updateWithNavigationBar:self.navigationController.navigationBar];
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
@@ -237,7 +236,7 @@
 	[[_tableViews objectAtIndex:0] reloadData];
 	[[_textFields objectAtIndex:[_tableViews count] - 1] setReturnKeyType:UIReturnKeyDone];
 	
-	if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+	if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
 		if ([_tableViews count] > 1) {
 			[self moveToNextTableView];
 			[self moveToPreviousTableView];
@@ -504,7 +503,7 @@
     } else if (_mode == KKPasscodeModeEnter) {
         NSString *passcode = [KKKeychain getStringForKey:@"passcode"];
         if ([_enterPasscodeTextField.text isEqualToString:passcode]) {
-            if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
                 [UIView beginAnimations:@"fadeIn" context:nil];
                 [UIView setAnimationDelay:0.25];
                 [UIView setAnimationDuration:0.5];

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CommonCrypto
 import Foundation
 
@@ -143,5 +123,52 @@ public enum BytesUtility {
         else {
             return nil
         }
+    }
+}
+
+/// Generate various random Data IDs, with specific ID lengths.
+extension BytesUtility {
+    public static func generateBallotID() -> Data {
+        generateRandomBytes(length: ThreemaProtocol.ballotIDLength)!
+    }
+
+    public static func generateBlobID() -> Data {
+        generateRandomBytes(length: ThreemaProtocol.blobIDLength)!
+    }
+
+    public static func generateBlobEncryptionKey() -> Data {
+        generateRandomBytes(length: ThreemaProtocol.blobKeyLength)!
+    }
+
+    public static func generateMessageID() -> Data {
+        generateRandomBytes(length: ThreemaProtocol.messageIDLength)!
+    }
+
+    public static func generateMessageNonce() -> Data {
+        generateRandomBytes(length: ThreemaProtocol.nonceLength)!
+    }
+
+    public static func generateGroupID() -> Data {
+        generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
+    }
+
+    public static func generatePublicKey() -> Data {
+        generateRandomBytes(length: ThreemaProtocol.publicKeyLength)!
+    }
+
+    public static func generateReflectID() -> Data {
+        generateRandomBytes(length: ThreemaProtocol.reflectIDLength)!
+    }
+
+    public static func generateGCK() -> Data {
+        generateRandomBytes(length: ThreemaProtocol.gckLength)!
+    }
+
+    public static func generateDeviceGroupKey() -> Data {
+        generateRandomBytes(length: ThreemaProtocol.deviceGroupKeyLength)!
+    }
+
+    public static func generateDeviceID() -> Data {
+        generateRandomBytes(length: ThreemaProtocol.deviceIDLength)!
     }
 }

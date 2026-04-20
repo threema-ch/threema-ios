@@ -1,24 +1,5 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaFramework
+import ThreemaMacros
 import UIKit
 
 final class ContactListNavigationItem: UINavigationItem {
@@ -26,10 +7,15 @@ final class ContactListNavigationItem: UINavigationItem {
     // MARK: - Properties
 
     private weak var delegate: ContactListActionDelegate?
+    private var selectedItem: ContactListFilterItem {
+        didSet {
+            title = selectedItem.label
+        }
+    }
     
     var shouldShowWorkButton = true {
         willSet {
-            leftBarButtonItem = newValue ? toggleWorkItem : nil
+            leftBarButtonItem = newValue ? workContactsFilterBarButtonItem : nil
         }
     }
     
@@ -37,22 +23,95 @@ final class ContactListNavigationItem: UINavigationItem {
     
     // MARK: - Subviews
     
-    private lazy var addMenuItem = UIBarButtonItem(systemItem: .add, menu: UIMenu(delegate?.add ?? { _ in }))
+    private lazy var addMenuItem = UIBarButtonItem(
+        systemItem: .add,
+        menu: UIMenu { [weak self] item in
+            self?.delegate?.add(item)
+        }
+    )
     
-    private lazy var filterItem = ScrollableMenuView(delegate?.filterChanged ?? { _ in })
+    private lazy var workContactsFilterButtonImageConfiguration =
+        if #available(iOS 26.0, *) {
+            UIImage.SymbolConfiguration(weight: .semibold).applying(
+                UIImage.SymbolConfiguration(scale: .medium)
+            )
+        }
+        else {
+            UIImage.SymbolConfiguration(textStyle: .footnote).applying(
+                UIImage.SymbolConfiguration(weight: .medium)
+            )
+        }
     
-    private lazy var toggleWorkItem: UIBarButtonItem = {
-        let image = UIImage(resource: .threemaCaseFillCircle)
-        let item = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(didToggleWorkContacts))
+    private lazy var workContactsFilterButton: UIButton = {
+        var configuration =
+            if #available(iOS 26.0, *) {
+                UIButton.Configuration.tinted()
+            }
+            else {
+                UIButton.Configuration.borderedTinted()
+            }
         
+        configuration.image = UIImage(systemName: "case")
+        configuration.preferredSymbolConfigurationForImage = workContactsFilterButtonImageConfiguration
+        configuration.cornerStyle = .capsule
+        configuration.imagePlacement = .all
+       
+        if #unavailable(iOS 26.0) {
+            // We add a little inset to the content. Together with the reduced font size of
+            // `workContactsFilterButtonImageConfiguration`, we get the same size as originally, but with accurate
+            // padding.
+            configuration.contentInsets = .init(top: 8, leading: 8, bottom: 8, trailing: 8)
+        }
+        
+        let button = UIButton(configuration: configuration)
+        button.addTarget(self, action: #selector(didToggleWorkContacts), for: .touchUpInside)
+        
+        button.configurationUpdateHandler = { [weak self] button in
+            guard let self, var configuration = button.configuration else {
+                return
+            }
+            
+            if button.isSelected {
+                configuration.baseForegroundColor = Colors.textInverted
+                configuration.baseBackgroundColor = .tintColor
+               
+                workContactsFilterBarButtonItem.accessibilityValue = #localize("default_enabled")
+            }
+            else {
+                
+                if #available(iOS 26.0, *) {
+                    configuration.baseBackgroundColor = .clear
+                    configuration.baseForegroundColor = .label
+                }
+                else {
+                    configuration.baseForegroundColor = .tintColor
+                    configuration.baseBackgroundColor = .gray
+                }
+                
+                workContactsFilterBarButtonItem.accessibilityValue = #localize("default_disabled")
+            }
+            
+            button.configuration = configuration
+        }
+        
+        return button
+    }()
+    
+    private lazy var workContactsFilterBarButtonItem: UIBarButtonItem = {
+        let item = UIBarButtonItem(customView: workContactsFilterButton)
+        item.accessibilityLabel = #localize("work_filter_button_accessibility_label")
         return item
     }()
     
     // MARK: - Lifecycle
 
-    init(delegate: ContactListActionDelegate? = nil) {
+    init(
+        initialFilterItem: ContactListFilterItem = .contacts,
+        delegate: ContactListActionDelegate? = nil
+    ) {
+        self.selectedItem = initialFilterItem
         self.delegate = delegate
-        super.init(title: "")
+        super.init(title: initialFilterItem.label)
 
         configureNavigationBarItems()
     }
@@ -65,11 +124,32 @@ final class ContactListNavigationItem: UINavigationItem {
     // MARK: - Private functions
 
     private func configureNavigationBarItems() {
-        titleView = filterItem.view
+        titleMenuProvider = { [weak self] _ in
+            guard let self else {
+                return nil
+            }
+            
+            let menuItems = ContactListFilterItem.allCases
+                .filter(\.enabled)
+                .map { item in
+                    UIAction(
+                        title: item.label,
+                        image: item.icon.uiImage,
+                        identifier: UIAction.Identifier(item.label),
+                        handler: { [weak self] _ in
+                            self?.selectedItem = item
+                            self?.delegate?.filterChanged(item)
+                        }
+                    )
+                }
+            
+            return UIMenu(children: menuItems)
+        }
+        
         rightBarButtonItem = addMenuItem
         
         if TargetManager.isWork {
-            leftBarButtonItem = toggleWorkItem
+            leftBarButtonItem = workContactsFilterBarButtonItem
         }
     }
     
@@ -79,10 +159,7 @@ final class ContactListNavigationItem: UINavigationItem {
         }
         
         workContactsFilterActive.toggle()
-        
-        toggleWorkItem
-            .image = UIImage(resource: workContactsFilterActive ? .threemaCaseCircleFill : .threemaCaseFillCircle)
-        
+        workContactsFilterButton.isSelected = workContactsFilterActive
         delegate.didToggleWorkContacts(workContactsFilterActive)
     }
 }

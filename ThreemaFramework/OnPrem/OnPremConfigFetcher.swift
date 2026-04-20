@@ -1,76 +1,36 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
 import Keychain
 
-public final class OnPremConfigFetcher: NSObject, OnPremConfigFetcherProtocol {
-    private let configURL: URL
-    private let username: String
-    private let password: String
+protocol OnPremConfigFetcherDelegate: AnyObject {
+    func oppfFileUpdated()
+}
 
-    private let trustedPublicKeys: [String]
+final class OnPremConfigFetcher: OnPremConfigFetcherProtocol {
+    private let configDownloader: OnPremConfigDownloaderProtocol
+    private let configVerifier: OnPremConfigVerifierProtocol
     private let cacheURL: URL
-        
-    private var currentTask: Task<OnPremConfig, any Error>? = nil
+    private weak var delegate: OnPremConfigFetcherDelegate?
+
+    private static var currentTask: Task<OnPremConfig, any Error>? = nil
     private var cachedConfig: OnPremConfig?
-    
-    // We intentionally don't use the HTTPClient here, because the initial fetching happens before the business is
-    // ready. At he same time there is no requirement to pin the certificate for this request as the OPPF is validated
-    // by its checksum
-    private lazy var session: URLSession = {
-        let configuration = URLSessionConfiguration.ephemeral
-        
-        // Ephemeral sessions will still store a cache in memory. Setting these to `nil` fully disables caching
-        configuration.urlCache = nil
-        configuration.urlCredentialStorage = nil
-        
-        return URLSession(configuration: configuration)
-    }()
-    
-    public init(
-        configURL: URL,
-        username: String,
-        password: String,
-        trustedPublicKeys: [String],
-        cacheURL: URL
+
+    init(
+        configDownloader: OnPremConfigDownloaderProtocol,
+        configVerifier: OnPremConfigVerifierProtocol,
+        cacheURL: URL,
+        delegate: OnPremConfigFetcherDelegate
     ) {
-        self.configURL = configURL
-        self.username = username
-        self.password = password
-        self.trustedPublicKeys = trustedPublicKeys
+        self.configDownloader = configDownloader
+        self.configVerifier = configVerifier
         self.cacheURL = cacheURL
+        self.delegate = delegate
     }
     
-    public func fetch(completionHandler: @escaping (Swift.Result<OnPremConfig, Error>) -> Void) {
+    func fetch(completionHandler: @escaping (Swift.Result<OnPremConfig, Error>) -> Void) {
         DDLogVerbose("[Fetch OPPF] New fetch")
-        
-        // The cache is never reset. Thus we can take this shortcut if the config is already cached
-        if let cachedConfig {
-            DDLogVerbose("[Fetch OPPF] Getting from cache")
-            completionHandler(.success(cachedConfig))
-            return
-        }
-        
+
         // If a task already runs we wait for the result. If no task exists we create a new one and wait on it
         //
         // Note: This is intentionally not fully race safe if the fetch task should only be run once. We landed on this
@@ -78,25 +38,48 @@ public final class OnPremConfigFetcher: NSObject, OnPremConfigFetcherProtocol {
         // resource intensive. This could be fixed by protecting the access of `currentTask` either by making this class
         // an actor or using some sort of mutex or queue.
         Task {
+            // The cache is never reset. Thus we can take this shortcut if the config is already cached
+            if await !self.configDownloader.isRecoveryModeEnabled, let cachedConfig {
+                DDLogVerbose("[Fetch OPPF] Getting from cache")
+                completionHandler(.success(cachedConfig))
+                return
+            }
+
             let task: Task<OnPremConfig, any Error>
-            if let currentTask {
+            if let currentTask = OnPremConfigFetcher.currentTask {
                 DDLogVerbose("[Fetch OPPF] Load existing fetch task to wait on it")
                 task = currentTask
             }
             else {
                 DDLogVerbose("[Fetch OPPF] Create new fetch task")
                 let newTask = Task {
-                    try await self.fetch()
+                    var doFetching = true
+                    while doFetching {
+                        do {
+                            let config = try await self.fetch()
+                            doFetching = false
+                            return config
+                        }
+                        catch OnPremConfigError.fetchRequestFailed {
+                            DDLogVerbose("[Fetch OPPF] Fetch failed, retry in 10s")
+                            try await Task.sleep(seconds: 10)
+                        }
+                        catch {
+                            doFetching = false
+                            DDLogError("[Fetch OPPF] Fetch failed: \(error)")
+                            throw error
+                        }
+                    }
                 }
-                self.currentTask = newTask
-                
+                OnPremConfigFetcher.currentTask = newTask
+
                 task = newTask
             }
-            
+
             defer {
-                self.currentTask = nil
+                OnPremConfigFetcher.currentTask = nil
             }
-            
+
             do {
                 let config = try await task.value
                 completionHandler(.success(config))
@@ -108,56 +91,65 @@ public final class OnPremConfigFetcher: NSObject, OnPremConfigFetcherProtocol {
     }
     
     private func fetch() async throws -> OnPremConfig {
-        if let cachedConfig {
+        let isRecoveryModeEnabled = await configDownloader.isRecoveryModeEnabled
+        if !isRecoveryModeEnabled, let cachedConfig {
             DDLogVerbose("[Fetch OPPF] Getting from cache 2")
             return cachedConfig
         }
-        
+
         DDLogVerbose("[Fetch OPPF] Fetch from server")
-        let (oppfData, _) = try await session.data(from: configURL, delegate: self)
-        
-        guard let oppfString = String(data: oppfData, encoding: .utf8) else {
+        let result = try await configDownloader.downloadData()
+
+        guard let httpResponse = result.response as? HTTPURLResponse else {
+            throw OnPremConfigError.fetchRequestFailed
+        }
+
+        switch httpResponse.statusCode {
+        case 400:
+            DDLogError("[Fetch OPPF] HTTP status code: \(httpResponse.statusCode)")
+            if isRecoveryModeEnabled {
+                DDLogError("[Fetch OPPF] HTTP Authorization contains user or password")
+            }
+            throw OnPremConfigError.fetchRequestFailed
+        case 404:
+            DDLogError("[Fetch OPPF] HTTP status code: \(httpResponse.statusCode)")
+            if isRecoveryModeEnabled {
+                DDLogError(
+                    "[Fetch OPPF] The temporary fallback has not been activated via cockpit"
+                )
+            }
+            throw OnPremConfigError.fetchRequestFailed
+        case 429:
+            DDLogError("[Fetch OPPF] HTTP status code: \(httpResponse.statusCode)")
+            if isRecoveryModeEnabled {
+                DDLogError("[Fetch OPPF] License check exceeds quota per IP per minute")
+            }
+            throw OnPremConfigError.fetchRequestFailed
+        case 200:
+            DDLogVerbose("[Fetch OPPF] Fetch was successful")
+        default:
+            DDLogVerbose("[Fetch OPPF] Untreated HTTP code: \(httpResponse.statusCode)")
+            throw OnPremConfigError.fetchRequestFailed
+        }
+
+        guard let oppfString = String(data: result.oppfData, encoding: .utf8) else {
             throw OnPremConfigError.badInputOppfData
         }
         
         if oppfString == "Unauthorized" {
             throw OnPremConfigError.unauthorized
         }
-        let verifier = OnPremConfigVerifier(trustedPublicKeys: trustedPublicKeys)
-        let config = try verifier.verify(oppfData: oppfString)
+        let config = try configVerifier.verify(oppfData: oppfString)
         cachedConfig = config
-        
-        // TODO: (IOS-5579) Remove last line and reenable full file caching
-        // Cache config file
-        // FileUtility.shared.write(contents: Data(oppfData.utf8), to: cacheURL)
-        OnPremCachedWorkServer.storeURLString(config.work?.url)
-        
+
+        // Caches the new OPPF file and reset cached pins
+        FileUtility.shared.write(contents: result.oppfData, to: cacheURL)
+        await configDownloader.enableRecoveryMode(false)
+
+        delegate?.oppfFileUpdated()
+
+        NotificationCenter.default.post(name: .resetSSLCAHelperCache, object: nil)
+
         return config
-    }
-}
-
-// MARK: - URLSessionTaskDelegate
-
-extension OnPremConfigFetcher: URLSessionTaskDelegate {
-    // This is needed (instead of encoding it in the url) to correctly support passwords with special
-    // characters (e.g. #)
-    public func urlSession(
-        _ session: URLSession,
-        task: URLSessionTask,
-        didReceive challenge: URLAuthenticationChallenge
-    ) async -> (URLSession.AuthChallengeDisposition, URLCredential?) {
-        switch challenge.protectionSpace.authenticationMethod {
-        case NSURLAuthenticationMethodHTTPBasic,
-             NSURLAuthenticationMethodHTTPDigest:
-            if challenge.previousFailureCount < 7 {
-                let credential = URLCredential(user: username, password: password, persistence: .forSession)
-                return (.useCredential, credential)
-            }
-            else {
-                return (.performDefaultHandling, nil)
-            }
-        default:
-            return (.performDefaultHandling, nil)
-        }
     }
 }

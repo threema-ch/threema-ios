@@ -1,77 +1,113 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
+import SwiftUI
 
-@objc public class LaunchModalManager: NSObject {
-    
-    @objc static let shared = LaunchModalManager()
-    
-    public var isBeingDisplayed = false
+@MainActor
+final class LaunchModalManager {
+    // MARK: - Private types
+
+    /// Contains all options of modal than can be displayed on app launch in the **order** they get checked in
+    private enum LaunchModalType {
+        case safeForcePassword
+        case notificationReminder
+        case notificationTypeSelection
+        case safeSetupInfo
+        case remoteSecretActivate
+        case remoteSecretDeactivate
+    }
+
+    // MARK: - Public properties
+
+    static let shared = LaunchModalManager()
+
+    var isBeingDisplayed = false
+
+    // MARK: - Private properties
+
+    private lazy var appFlavorService = AppFlavorService()
+    private lazy var groupManager = BusinessInjector.ui.groupManager
+    private lazy var myIdentityStore = BusinessInjector.ui.myIdentityStore
+    private lazy var safeAPIService = SafeApiService()
     private lazy var safeConfigManager = SafeConfigManager()
-    private lazy var safeStore = SafeStore(
-        safeConfigManager: safeConfigManager,
-        serverApiConnector: ServerAPIConnector(),
-        groupManager: BusinessInjector.ui.groupManager,
-        myIdentityStore: BusinessInjector.ui.myIdentityStore
-    )
+    private lazy var serverApiConnector = ServerAPIConnector()
+    private lazy var userSettings = BusinessInjector.ui.userSettings
+
+    private lazy var mdmSetup: MDMSetup = {
+        let mdmSetup = MDMSetup()
+        if mdmSetup == nil {
+            assertionFailure("MDMSetup is nil")
+        }
+        return mdmSetup!
+    }()
+
     private lazy var safeManager = SafeManager(
         safeConfigManager: safeConfigManager,
         safeStore: safeStore,
-        safeApiService: SafeApiService()
+        safeAPIService: safeAPIService
     )
-    
-    /// Checks if there is a launch view that needs to be displayed and does so modally if there is one
-    @objc func checkLaunchModals() {
-        
-        // TODO: (IOS-4577) Get root view and view to show
-        guard let rootView = AppDelegate.shared().currentTopViewController() else {
-            return
+
+    private lazy var safeStore = SafeStore(
+        safeConfigManager: safeConfigManager,
+        serverApiConnector: serverApiConnector,
+        groupManager: groupManager,
+        myIdentityStore: myIdentityStore
+    )
+
+    private var topViewController: UIViewController {
+        guard let vc = AppDelegate.shared().currentTopViewController() else {
+            assertionFailure("Error: Could not get top view controller.")
+            return .init()
         }
-        
+        return vc
+    }
+    
+    private var didCheckLocalNetworkForOnPrem = false
+
+    // MARK: - Public methods
+
+    /// Checks if there is a launch view that needs to be displayed and does so modally if there is one
+    func checkLaunchModals() {
         Task {
             guard let modalType = await resolveModalType() else {
                 // No more launch modals to show
                 self.isBeingDisplayed = false
-                
-                if let mdm = MDMSetup(),
-                   mdm.existsMdmKey(MDM_KEY_SAFE_PASSWORD) {
+
+                if mdmSetup.existsMdmKey(MDM_KEY_SAFE_PASSWORD) {
                     NotificationCenter.default.post(name: NSNotification.Name(kSafeBackupPasswordCheck), object: nil)
                 }
                 return
             }
-            
+
             isBeingDisplayed = true
-            
-            // Display view
-            Task { @MainActor in
-                rootView.present(modalType.viewController(delegate: self), animated: true)
+
+            switch modalType {
+            case .safeForcePassword:
+                showThreemaSafePasswordScreen()
+
+            case .safeSetupInfo:
+                showThreemaSafeIntroScreen()
+
+            case .notificationReminder:
+                showNotificationReminder()
+
+            case .notificationTypeSelection:
+                showNotificationTypeSelection()
+
+            case .remoteSecretActivate:
+                showRemoteSecret(type: .activate)
+
+            case .remoteSecretDeactivate:
+                showRemoteSecret(type: .deactivate)
             }
         }
     }
-        
+
+    // MARK: - Private methods
+
     private func resolveModalType() async -> LaunchModalType? {
         guard !ProcessInfoHelper.isRunningForScreenshots else {
             return nil
         }
-        
+
         if checkForceMDMSafeBackup() {
             return .safeForcePassword
         }
@@ -82,7 +118,7 @@ import Foundation
                 !AppGroup.userDefaults().bool(forKey: Constants.showedNotificationTypeSelectionView) {
             return .notificationTypeSelection
         }
-        else if checkSafeInto() {
+        else if checkSafeInfo() {
             return .safeSetupInfo
         }
         else if checkRemoteSecretActivate() {
@@ -93,27 +129,26 @@ import Foundation
         }
         else if checkMicForOnPrem() {
             // We ask mic permission to improve the UX for calls
-            AVAudioApplication.requestRecordPermission { _ in
-                self.didDismiss()
-            }
+            await AVAudioApplication.requestRecordPermission()
+            didDismiss()
+            return nil
         }
         // Check this always as last
         else if checkNetworkForOnPrem() {
             // We ask for local network permission to improve the UX for calls
             LocalNetworkPermissionChecker().checkLocalNetworkPermission { _ in
-                // no op
+                // no-op
             }
+            didCheckLocalNetworkForOnPrem = true
+            didDismiss()
+            return nil
         }
-        
-        return nil
+        else {
+            return nil
+        }
     }
-    
+
     private func checkForceMDMSafeBackup() -> Bool {
-        
-        guard let mdmSetup = MDMSetup() else {
-            return false
-        }
-        
         if !safeManager.isActivated, mdmSetup.isSafeBackupForce(), mdmSetup.safePassword() == nil {
             return true
         }
@@ -121,14 +156,12 @@ import Foundation
         return false
     }
     
-    private func checkSafeInto() -> Bool {
-        
-        guard let mdmSetup = MDMSetup() else {
-            return false
-        }
-        
-        if !safeManager.isActivated, !mdmSetup.isSafeBackupForce(), !mdmSetup.isSafeBackupDisable(),
-           !TargetManager.isBusinessApp, !UserSettings.shared().safeIntroShown {
+    private func checkSafeInfo() -> Bool {
+        if !mdmSetup.isSafeBackupForce(),
+           !mdmSetup.isSafeBackupDisable(),
+           !safeManager.isActivated,
+           !userSettings.safeIntroShown,
+           !TargetManager.isBusinessApp {
             return true
         }
         
@@ -136,8 +169,7 @@ import Foundation
     }
     
     private func checkRemoteSecretActivate() -> Bool {
-        guard let mdmSetup = MDMSetup(),
-              let remoteSecretManager = AppLaunchManager.remoteSecretManager else {
+        guard let remoteSecretManager = AppLaunchManager.remoteSecretManager else {
             return false
         }
         
@@ -145,8 +177,7 @@ import Foundation
     }
     
     private func checkRemoteSecretDeactivate() -> Bool {
-        guard let mdmSetup = MDMSetup(),
-              let remoteSecretManager = AppLaunchManager.remoteSecretManager else {
+        guard let remoteSecretManager = AppLaunchManager.remoteSecretManager else {
             return false
         }
         
@@ -156,23 +187,80 @@ import Foundation
     private func checkMicForOnPrem() -> Bool {
         TargetManager.isOnPrem && AVAudioApplication.shared.recordPermission == .undetermined
     }
-    
+
     private func checkNetworkForOnPrem() -> Bool {
-        TargetManager.isOnPrem
+        guard TargetManager.isOnPrem else {
+            return false
+        }
+        
+        return didCheckLocalNetworkForOnPrem == false
     }
-}
 
-// MARK: - LaunchModalManagerDelegate
-
-// TODO: (IOS-3251) Remove
-extension LaunchModalManager: LaunchModalManagerDelegate {
-    func didDismiss() {
+    private func didDismiss() {
         isBeingDisplayed = false
         checkLaunchModals()
     }
-}
 
-// TODO: (IOS-3251) Remove
-protocol LaunchModalManagerDelegate: AnyObject {
-    func didDismiss()
+    private func showThreemaSafePasswordScreen() {
+        let model = ThreemaSafePasswordViewModel(
+            appFlavor: appFlavorService,
+            myIdentityStore: myIdentityStore,
+            safeConfigManager: safeConfigManager,
+            safeManager: safeManager,
+            mdmSetup: mdmSetup
+        )
+
+        let view = ThreemaSafePasswordView(model: model)
+        let vc = UIHostingController(rootView: view)
+        let navC = UINavigationController(rootViewController: vc)
+        navC.isModalInPresentation = true
+
+        topViewController.present(navC, animated: true)
+
+        model.onFinish = { [weak self] in
+            self?.topViewController.dismiss(animated: true) { [weak self] in
+                self?.didDismiss()
+            }
+        }
+    }
+
+    private func showThreemaSafeIntroScreen() {
+        let model = ThreemaSafeIntroViewModel(appFlavor: appFlavorService, userSettings: userSettings)
+        let view = ThreemaSafeIntroView(model: model)
+        let vc = UIHostingController(rootView: view)
+        let navC = UINavigationController(rootViewController: vc)
+
+        topViewController.present(navC, animated: true)
+
+        model.onCancel = { [weak self] in
+            self?.userSettings.safeIntroShown = true
+            self?.topViewController.dismiss(animated: true) { [weak self] in
+                self?.didDismiss()
+            }
+        }
+
+        model.onConfirm = { [weak self] in
+            self?.topViewController.dismiss(animated: false) { [weak self] in
+                self?.isBeingDisplayed = false
+                self?.showThreemaSafePasswordScreen()
+            }
+        }
+    }
+
+    private func showNotificationReminder() {
+        let vc = UIHostingController(rootView: NotificationReminderView())
+        topViewController.present(vc, animated: true)
+    }
+
+    private func showNotificationTypeSelection() {
+        let vc = UIHostingController(rootView: NotificationTypeSelectionView())
+        topViewController.present(vc, animated: true)
+    }
+
+    private func showRemoteSecret(type: RemoteSecretActivateDeactivateViewModel.ViewType) {
+        let model = RemoteSecretActivateDeactivateViewModel(type: type)
+        let view = RemoteSecretActivateDeactivateView(viewModel: model)
+        let vc = UIHostingController(rootView: view)
+        topViewController.present(vc, animated: true)
+    }
 }

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0A677B8C1C6250CA0019B361 /* ThreemaFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; };
 		0A677B971C6250CA0019B361 /* ThreemaFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; };
 		0A677B981C6250CA0019B361 /* ThreemaFramework.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0A688AB919A3A4670013FCE8 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD01F6E14C1CCA900EF7690 /* Foundation.framework */; settings = {ATTRIBUTES = (Required, ); }; };
@@ -81,7 +80,6 @@
 		242083C52CBCDCD00079D9B8 /* ThreemaMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 242083C42CBCDCD00079D9B8 /* ThreemaMacros */; };
 		242083C72CBCDCD70079D9B8 /* ThreemaMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 242083C62CBCDCD70079D9B8 /* ThreemaMacros */; };
 		242083C92CBCDCDE0079D9B8 /* ThreemaMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 242083C82CBCDCDE0079D9B8 /* ThreemaMacros */; };
-		242083CB2CBCDCE60079D9B8 /* ThreemaMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 242083CA2CBCDCE60079D9B8 /* ThreemaMacros */; };
 		242083CD2CBCDCED0079D9B8 /* ThreemaMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 242083CC2CBCDCED0079D9B8 /* ThreemaMacros */; };
 		242083CF2CBCDCF40079D9B8 /* ThreemaMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 242083CE2CBCDCF40079D9B8 /* ThreemaMacros */; };
 		242083D12CBCDCFB0079D9B8 /* ThreemaMacros in Frameworks */ = {isa = PBXBuildFile; productRef = 242083D02CBCDCFB0079D9B8 /* ThreemaMacros */; };
@@ -103,7 +101,6 @@
 		245565D02E94DB4B00B1E0BC /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 245565CF2E94DB4B00B1E0BC /* Collections */; };
 		245565D22E94DB5300B1E0BC /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 245565D12E94DB5300B1E0BC /* Collections */; };
 		245565D42E94DB5D00B1E0BC /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 245565D32E94DB5D00B1E0BC /* Collections */; };
-		246D2A3E2B45393B0026A8C7 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 246D2A3D2B45393B0026A8C7 /* SwiftUIIntrospect */; };
 		246FD2DF2E717B140040A5C2 /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 681766ED2E687E880083D372 /* FileUtility */; };
 		246FD2E02E717B140040A5C2 /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 681766EF2E687E8E0083D372 /* FileUtility */; };
 		246FD2E12E717B140040A5C2 /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 681766F52E687EA00083D372 /* FileUtility */; };
@@ -149,8 +146,6 @@
 		24B8200F2B32CEEB00E8D13E /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = 24B8200E2B32CEEB00E8D13E /* CocoaLumberjack */; };
 		24B820112B32CEEB00E8D13E /* CocoaLumberjackSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 24B820102B32CEEB00E8D13E /* CocoaLumberjackSwift */; };
 		24B820132B32CF1D00E8D13E /* MBProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = 24B820122B32CF1D00E8D13E /* MBProgressHUD */; };
-		24B820152B32CF5700E8D13E /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = 24B820142B32CF5700E8D13E /* CocoaLumberjack */; };
-		24B820172B32CF5700E8D13E /* CocoaLumberjackSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 24B820162B32CF5700E8D13E /* CocoaLumberjackSwift */; };
 		24B820192B32D06300E8D13E /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = 24B820182B32D06300E8D13E /* CocoaLumberjack */; };
 		24B8201B2B32D06300E8D13E /* CocoaLumberjackSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 24B8201A2B32D06300E8D13E /* CocoaLumberjackSwift */; };
 		24B8201D2B32D07000E8D13E /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = 24B8201C2B32D07000E8D13E /* CocoaLumberjack */; };
@@ -210,16 +205,15 @@
 		2D0FEE0A2E60A19A0020AE37 /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2D0FEE092E60A19A0020AE37 /* PromiseKit */; };
 		2D0FEE0C2E60A1B20020AE37 /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2D0FEE0B2E60A1B20020AE37 /* FileUtility */; };
 		2D1A19C22DE0AC65005E4AE4 /* FileUtilityTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D1A19C12DE0AC65005E4AE4 /* FileUtilityTestHelper */; };
-		2D26220B2DD626E400A63682 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 2D26220A2DD626E400A63682 /* SwiftProtobuf */; };
-		2D3BC2A32DE49F740012E8A5 /* ThreemaEssentialsTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3BC2A22DE49F740012E8A5 /* ThreemaEssentialsTestHelper */; };
-		2D3BC2A52DE49F880012E8A5 /* ThreemaEssentialsTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3BC2A42DE49F880012E8A5 /* ThreemaEssentialsTestHelper */; };
-		2D3BC2A72DE49F900012E8A5 /* ThreemaEssentialsTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3BC2A62DE49F900012E8A5 /* ThreemaEssentialsTestHelper */; };
 		2D3FD5192E61A561003D3DEE /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD5182E61A561003D3DEE /* PromiseKit */; };
 		2D3FD51B2E61A567003D3DEE /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD51A2E61A567003D3DEE /* FileUtility */; };
 		2D3FD51D2E61A804003D3DEE /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD51C2E61A804003D3DEE /* FileUtility */; };
 		2D3FD51F2E61A80C003D3DEE /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD51E2E61A80C003D3DEE /* PromiseKit */; };
 		2D3FD5212E61B194003D3DEE /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD5202E61B194003D3DEE /* FileUtility */; };
 		2D3FD5232E61B19E003D3DEE /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2D3FD5222E61B19E003D3DEE /* PromiseKit */; };
+		2D44B64D2F16482200459A99 /* FileUtilityTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D44B64C2F16482200459A99 /* FileUtilityTestHelper */; };
+		2D44B6512F16483600459A99 /* KeychainTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D44B6502F16483600459A99 /* KeychainTestHelper */; };
+		2D44B6532F16484100459A99 /* RemoteSecretProtocolTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D44B6522F16484100459A99 /* RemoteSecretProtocolTestHelper */; };
 		2D46B5C3260A018B0017EE3A /* ThreemaFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; };
 		2D5A1CD924C9B5DF00F87DD0 /* salsa20.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BECE210EEDDD0058D7FF /* salsa20.c */; };
 		2D5A1CDB24C9B5DF00F87DD0 /* DKAssetGroupCellItemProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8A2B261EB38270004973D5 /* DKAssetGroupCellItemProtocol.swift */; };
@@ -312,6 +306,8 @@
 		2D5A1F4D24C9B5DF00F87DD0 /* DKImagePickerController.bundle in Resources */ = {isa = PBXBuildFile; fileRef = CE8A2B1D1EB38270004973D5 /* DKImagePickerController.bundle */; };
 		2D5A1F4F24C9B5DF00F87DD0 /* ThreemaFramework.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2D5B8FB321BF8E9700788B2E /* salsa20.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BECE210EEDDD0058D7FF /* salsa20.c */; };
+		2D6F196B2F03BFC0004E1F90 /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 2D6F196A2F03BFC0004E1F90 /* ThreemaEssentials */; };
+		2D6F196D2F03BFC0004E1F90 /* ThreemaEssentialsTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2D6F196C2F03BFC0004E1F90 /* ThreemaEssentialsTestHelper */; };
 		2D84777A21BEC7CD009EB43B /* pbkdf2.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BECF210EEDDD0058D7FF /* pbkdf2.c */; };
 		2D84777C21BEC7D2009EB43B /* sha256.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BECD210EEDDD0058D7FF /* sha256.c */; };
 		2D84777E21BEC7D7009EB43B /* scrypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BECC210EEDDD0058D7FF /* scrypt.c */; };
@@ -324,11 +320,14 @@
 		2DA017A62EAA30FC008EAB3C /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA017A52EAA30FC008EAB3C /* FileUtility */; };
 		2DA017A82EAA3105008EAB3C /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2DA017A72EAA3105008EAB3C /* FileUtility */; };
 		2DC414AE24C9C07400A7C58E /* Threema Blue ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2D08983524C98984006A70E1 /* Threema Blue ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2DCBA8CD2F16402C00B2E5F7 /* ThreemaFramework.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */; };
 		2DD228FD2E5C59A900CD7132 /* ThreemaEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD228FC2E5C59A900CD7132 /* ThreemaEssentials */; };
 		2DD228FF2E5C59B200CD7132 /* FileUtility in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD228FE2E5C59B200CD7132 /* FileUtility */; };
 		2DD229022E5C629E00CD7132 /* PromiseKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DD229012E5C629E00CD7132 /* PromiseKit */; };
 		2DD445912511F481008EC521 /* Threema Work NotificationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2DEF20012511EDE9001CC54F /* Threema Work NotificationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2DD445A72511F913008EC521 /* Threema Blue NotificationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2DD445A52511F78F008EC521 /* Threema Blue NotificationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2DDB045F2F18D48A00C19CC5 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 2D26220A2DD626E400A63682 /* SwiftProtobuf */; };
+		2DDB04602F18D48A00C19CC5 /* ThreemaProtocols in Frameworks */ = {isa = PBXBuildFile; productRef = 427B7B232E4B957200DB93D3 /* ThreemaProtocols */; };
 		2DE1BE962109A3AF0058D7FF /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE19614F1E262C46009937C3 /* XCTest.framework */; };
 		2DE1BED0210EEDDD0058D7FF /* Scrypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BEC3210EEDDD0058D7FF /* Scrypt.c */; };
 		2DE1BED1210EEDDD0058D7FF /* hmac.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BEC6210EEDDD0058D7FF /* hmac.c */; };
@@ -360,7 +359,6 @@
 		2DE70D182ED450CE00F4F2E0 /* JDStatusBarNotification in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE70D172ED450CE00F4F2E0 /* JDStatusBarNotification */; };
 		2DE70D1A2ED450E400F4F2E0 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE70D192ED450E400F4F2E0 /* SDWebImage */; };
 		2DE70D1C2ED450EE00F4F2E0 /* TrustKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE70D1B2ED450EE00F4F2E0 /* TrustKit */; };
-		2DE808C02DD22A1500970DC4 /* ThreemaEssentialsTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 2DE808BF2DD22A1500970DC4 /* ThreemaEssentialsTestHelper */; };
 		2DEC5515250A56E100B9826D /* Threema NotificationExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2DEC550E250A56E100B9826D /* Threema NotificationExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2DEDB15E24C9903400FC9099 /* DKAssetGroupCellItemProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8A2B261EB38270004973D5 /* DKAssetGroupCellItemProtocol.swift */; };
 		2DEDB16824C9903400FC9099 /* DKAssetGroupDetailBaseCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8A2B271EB38270004973D5 /* DKAssetGroupDetailBaseCell.swift */; };
@@ -456,15 +454,14 @@
 		2DEDB3E324C9907A00FC9099 /* Threema Green ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2DF99C5524C970CC003AAB74 /* Threema Green ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		423637D5297EDF77000342E1 /* IntentsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 42C4BAFD297EDC1200B0A285 /* IntentsUI.framework */; };
 		423AA9792C46FE3F0067C80A /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 423AA9782C46FE3F0067C80A /* UniformTypeIdentifiers.framework */; };
+		4250536E2F8E25E400441645 /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 4250536D2F8E25E400441645 /* OrderedCollections */; };
 		425A5D422C62128300390D38 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 423AA9782C46FE3F0067C80A /* UniformTypeIdentifiers.framework */; };
 		425A5D432C6212B600390D38 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 423AA9782C46FE3F0067C80A /* UniformTypeIdentifiers.framework */; };
 		425A5D442C6212C100390D38 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 423AA9782C46FE3F0067C80A /* UniformTypeIdentifiers.framework */; };
 		425A5D452C6212CE00390D38 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 423AA9782C46FE3F0067C80A /* UniformTypeIdentifiers.framework */; };
-		427B7B242E4B957200DB93D3 /* ThreemaProtocols in Frameworks */ = {isa = PBXBuildFile; productRef = 427B7B232E4B957200DB93D3 /* ThreemaProtocols */; };
 		4282501E2DA931AC008F0111 /* libthreemaSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4282501D2DA931AC008F0111 /* libthreemaSwift */; };
 		42A6D2802A1CA6B600C641D9 /* ThreemaBlake2b in Frameworks */ = {isa = PBXBuildFile; productRef = 42A6D27F2A1CA6B600C641D9 /* ThreemaBlake2b */; };
 		42F546602E1EFE2B00C8C8FC /* RemoteSecret in Frameworks */ = {isa = PBXBuildFile; productRef = 42F5465F2E1EFE2B00C8C8FC /* RemoteSecret */; };
-		42F546622E1F9D2800C8C8FC /* RemoteSecretProtocolTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 42F546612E1F9D2800C8C8FC /* RemoteSecretProtocolTestHelper */; };
 		42F546642E1F9F1200C8C8FC /* RemoteSecretProtocolTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = 42F546632E1F9F1200C8C8FC /* RemoteSecretProtocolTestHelper */; };
 		4A21CAF1252CBC0B00CF1F9E /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D0FC68619E3F33900CF7BB5 /* QuickLook.framework */; };
 		4A30E87C2A0B9C15008E039C /* ThreemaProtocols in Frameworks */ = {isa = PBXBuildFile; productRef = 4A30E87B2A0B9C15008E039C /* ThreemaProtocols */; };
@@ -683,7 +680,6 @@
 		8D965B46271E9C81009A4E4C /* WebRTC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D965B3D271E9C4F009A4E4C /* WebRTC.xcframework */; };
 		8D965B47271E9C81009A4E4C /* WebRTC.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8D965B3D271E9C4F009A4E4C /* WebRTC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8DACAAEC2747C7FE005880A8 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 8DACAAEB2747C7FE005880A8 /* SDWebImage */; settings = {ATTRIBUTES = (Required, ); }; };
-		8DBF27022710881B0008045E /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 8DBF27012710881B0008045E /* SDWebImage */; };
 		8DBF271427108D260008045E /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 8DBF271327108D260008045E /* Sentry */; };
 		8DBF271627108D360008045E /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 8DBF271527108D360008045E /* Sentry */; };
 		8DBF271827108D410008045E /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 8DBF271727108D410008045E /* Sentry */; };
@@ -713,10 +709,6 @@
 		941735152C4FD88B008534FC /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 941735142C4FD88B008534FC /* AsyncAlgorithms */; };
 		941735172C4FD894008534FC /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 941735162C4FD894008534FC /* AsyncAlgorithms */; };
 		941735192C4FD89C008534FC /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 941735182C4FD89C008534FC /* AsyncAlgorithms */; };
-		9456B5DC2B03CA29000E3B30 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 9456B5DB2B03CA29000E3B30 /* SwiftUIIntrospect */; };
-		9456B5E32B03CA52000E3B30 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 9456B5E22B03CA52000E3B30 /* SwiftUIIntrospect */; };
-		9456B5EA2B03CA62000E3B30 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 9456B5E92B03CA62000E3B30 /* SwiftUIIntrospect */; };
-		9456B5F82B03CA7E000E3B30 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 9456B5F72B03CA7E000E3B30 /* SwiftUIIntrospect */; };
 		94913A982B2CB61300336FC9 /* DSWaveformImageViews in Frameworks */ = {isa = PBXBuildFile; productRef = 94913A972B2CB61300336FC9 /* DSWaveformImageViews */; };
 		94913A9A2B2CB61A00336FC9 /* DSWaveformImageViews in Frameworks */ = {isa = PBXBuildFile; productRef = 94913A992B2CB61A00336FC9 /* DSWaveformImageViews */; };
 		94913A9C2B2CB62100336FC9 /* DSWaveformImageViews in Frameworks */ = {isa = PBXBuildFile; productRef = 94913A9B2B2CB62100336FC9 /* DSWaveformImageViews */; };
@@ -888,7 +880,6 @@
 		F2B743692DFC677B008C5C52 /* InternalDocumentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = F2B743662DFC677B008C5C52 /* InternalDocumentation.docc */; };
 		F2B7436A2DFC677B008C5C52 /* InternalDocumentation.docc in Sources */ = {isa = PBXBuildFile; fileRef = F2B743662DFC677B008C5C52 /* InternalDocumentation.docc */; };
 		F2BDF6ED2E79A7AB0034C642 /* KeychainTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = F2BDF6EC2E79A7AB0034C642 /* KeychainTestHelper */; };
-		F2D9E8A82E798EC400F97343 /* KeychainTestHelper in Frameworks */ = {isa = PBXBuildFile; productRef = F2D9E8A72E798EC400F97343 /* KeychainTestHelper */; };
 		F2EAFBED2D6CC9C400DFFD48 /* salsa20.c in Sources */ = {isa = PBXBuildFile; fileRef = 2DE1BECE210EEDDD0058D7FF /* salsa20.c */; };
 		F2EAFBEF2D6CC9C400DFFD48 /* DKAssetGroupCellItemProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8A2B261EB38270004973D5 /* DKAssetGroupCellItemProtocol.swift */; };
 		F2EAFBF62D6CC9C400DFFD48 /* DKAssetGroupDetailBaseCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE8A2B271EB38270004973D5 /* DKAssetGroupDetailBaseCell.swift */; };
@@ -945,7 +936,6 @@
 		F2EAFEA42D6CC9C400DFFD48 /* DSWaveformImage in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBD32D6CC9C400DFFD48 /* DSWaveformImage */; };
 		F2EAFEA52D6CC9C400DFFD48 /* libsaltyrtc_task_relayed_data_ffi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE6511EA202C829100239FB6 /* libsaltyrtc_task_relayed_data_ffi.a */; };
 		F2EAFEA62D6CC9C400DFFD48 /* ThreemaMacros in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBE62D6CC9C400DFFD48 /* ThreemaMacros */; };
-		F2EAFEA72D6CC9C400DFFD48 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = F2EAFBDD2D6CC9C400DFFD48 /* SwiftUIIntrospect */; };
 		F2EAFEA82D6CC9C400DFFD48 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = CE5E6E23202C5A80006796B5 /* libresolv.tbd */; };
 		F2EAFEA92D6CC9C400DFFD48 /* ContactsUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE88CABE20347CE20021475F /* ContactsUI.framework */; };
 		F2EAFEAA2D6CC9C400DFFD48 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEFFAABC1FA0F90E0039916C /* AVKit.framework */; };
@@ -2236,6 +2226,48 @@
 			);
 			target = 0A677B811C6250C90019B361 /* ThreemaFramework */;
 		};
+		24E13C822EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Threema ShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ThemedWindow.swift,
+			);
+			target = 0AE4354F1C636AB500E1ECC8 /* Threema ShareExtension */;
+		};
+		24E13C832EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Threema Work ShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ThemedWindow.swift,
+			);
+			target = 0A7DF94E1C9FDD9B002D4DC3 /* Threema Work ShareExtension */;
+		};
+		24E13C842EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Threema OnPrem ShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ThemedWindow.swift,
+			);
+			target = 4D088B99255C1501002F3129 /* Threema OnPrem ShareExtension */;
+		};
+		24E13C852EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Custom OnPrem ShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ThemedWindow.swift,
+			);
+			target = F2EAFF722D6CCA3700DFFD48 /* Custom OnPrem ShareExtension */;
+		};
+		24E13C862EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Threema Green ShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ThemedWindow.swift,
+			);
+			target = 2DF99C3F24C970CC003AAB74 /* Threema Green ShareExtension */;
+		};
+		24E13C872EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Threema Blue ShareExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ThemedWindow.swift,
+			);
+			target = 2D08982024C98984006A70E1 /* Threema Blue ShareExtension */;
+		};
 		F25FD7292E7043FB00EA8AF3 /* Exceptions for "ThreemaFramework" folder in "Threema" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -2309,13 +2341,13 @@
 				Business/AppGroup.h,
 				Business/ContactStore.h,
 				Business/LicenseStore.h,
-				Business/MDMSetup.h,
-				Business/MyIdentityStore.h,
+				Business/MDMSetup/MDMSetup.h,
+				Business/MyIdentityStore/MyIdentityStore.h,
 				Business/ServerAPIConnector.h,
 				Business/ServerConnector.h,
 				Business/TouchIDAuthentication.h,
 				Business/TypingIndicatorManager.h,
-				Business/UserSettings.h,
+				Business/UserSettings/UserSettings.h,
 				Constants.h,
 				Core/ConnectionStateDelegate.h,
 				Core/LoggingDescriptionProtocol.h,
@@ -2399,7 +2431,6 @@
 				Utilities/NonceHasher.h,
 				Utilities/PushPayloadDecryptor.h,
 				Utilities/ThreemaUtilityObjC.h,
-				Utilities/UTIConverter.h,
 				Vendor/JKLLockScreenViewController/JKLLockScreenViewController.h,
 				Vendor/KKPasscodeLock/KKPasscodeLock.h,
 				Vendor/KKPasscodeLock/KKPasscodeViewController.h,
@@ -2471,41 +2502,43 @@
 		F2FC397C2E7054BB00A289D0 /* Exceptions for "SharedTests" folder in "Threema Work Tests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Mocks/DatabaseContextMock.swift,
 				Mocks/DatabaseManagerMock.swift,
 				Mocks/MessageSenderMock.swift,
 				Mocks/MockMultiDevice.swift,
 				Mocks/MyIdentityStoreMock.swift,
 				Mocks/TaskManagerMock.swift,
+				Mocks/WallpaperStoreMock.swift,
 				"Resources/Bild-1-0.jpg",
-				Utilities/DatabasePersistentContext.swift,
-				Utilities/DatabasePreparer.swift,
-				Utilities/DatabasePreparerProtocol.swift,
 				Utilities/TestDatabase.swift,
+				Utilities/TestDatabasePreparer.swift,
 			);
 			target = 4D5C4CA11CD79C8500512FE6 /* Threema Work Tests */;
 		};
 		F2FC397D2E7054BB00A289D0 /* Exceptions for "SharedTests" folder in "Threema OnPrem Tests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Mocks/DatabaseContextMock.swift,
 				Mocks/DatabaseManagerMock.swift,
 				Mocks/MessageSenderMock.swift,
 				Mocks/MockMultiDevice.swift,
 				Mocks/MyIdentityStoreMock.swift,
 				Mocks/TaskManagerMock.swift,
+				Mocks/WallpaperStoreMock.swift,
 				"Resources/Bild-1-0.jpg",
-				Utilities/DatabasePersistentContext.swift,
-				Utilities/DatabasePreparer.swift,
-				Utilities/DatabasePreparerProtocol.swift,
 				Utilities/TestDatabase.swift,
+				Utilities/TestDatabasePreparer.swift,
 			);
 			target = CE08C0DE27299A13001EFCDE /* Threema OnPrem Tests */;
 		};
 		F2FC397E2E7054BB00A289D0 /* Exceptions for "SharedTests" folder in "Threema Green Tests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Mocks/DatabaseContextMock.swift,
 				Mocks/MessageSenderMock.swift,
 				Mocks/MyIdentityStoreMock.swift,
 				Mocks/TaskManagerMock.swift,
+				Mocks/WallpaperStoreMock.swift,
 				"Resources/Bild-1-0.jpg",
 			);
 			target = 2412D2AD2DA639DC008823F5 /* Threema Green Tests */;
@@ -2513,10 +2546,12 @@
 		F2FC397F2E7054BB00A289D0 /* Exceptions for "SharedTests" folder in "Threema Blue Tests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Mocks/DatabaseContextMock.swift,
 				Mocks/DatabaseManagerMock.swift,
 				Mocks/MessageSenderMock.swift,
 				Mocks/MyIdentityStoreMock.swift,
 				Mocks/TaskManagerMock.swift,
+				Mocks/WallpaperStoreMock.swift,
 				"Resources/Bild-1-0.jpg",
 			);
 			target = 2412D2BE2DA63A1A008823F5 /* Threema Blue Tests */;
@@ -2524,10 +2559,12 @@
 		F2FC39802E7054BB00A289D0 /* Exceptions for "SharedTests" folder in "Custom Onprem Tests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Mocks/DatabaseContextMock.swift,
 				Mocks/DatabaseManagerMock.swift,
 				Mocks/MessageSenderMock.swift,
 				Mocks/MyIdentityStoreMock.swift,
 				Mocks/TaskManagerMock.swift,
+				Mocks/WallpaperStoreMock.swift,
 				"Resources/Bild-1-0.jpg",
 			);
 			target = 2412D2CF2DA63A5A008823F5 /* Custom Onprem Tests */;
@@ -2716,6 +2753,12 @@
 				246F0CC62E717CAF0040A5C2 /* Exceptions for "Threema" folder in "Custom OnPrem" target */,
 				246F0CC72E717CAF0040A5C2 /* Exceptions for "Threema" folder in "Threema Green" target */,
 				246F0CC82E717CAF0040A5C2 /* Exceptions for "Threema" folder in "Threema Blue" target */,
+				24E13C822EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Threema ShareExtension" target */,
+				24E13C832EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Threema Work ShareExtension" target */,
+				24E13C842EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Threema OnPrem ShareExtension" target */,
+				24E13C852EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Custom OnPrem ShareExtension" target */,
+				24E13C862EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Threema Green ShareExtension" target */,
+				24E13C872EABB39B00CFAB02 /* Exceptions for "Threema" folder in "Threema Blue ShareExtension" target */,
 				246F0CC92E717CAF0040A5C2 /* Exceptions for "Threema" folder in "ThreemaFramework" target */,
 			);
 			path = Threema;
@@ -2838,6 +2881,7 @@
 				0AC9EF2D1C99AE1700555E62 /* AVFoundation.framework in Frameworks */,
 				8DDCF7CC27107FB8000CB4F6 /* SwiftProtobuf in Frameworks */,
 				24AD2ED12B4D916000BB0BDF /* Reachability in Frameworks */,
+				4250536E2F8E25E400441645 /* OrderedCollections in Frameworks */,
 				8D34862B2747B2980064AD35 /* WebRTC.xcframework in Frameworks */,
 				8DBF271F271096070008045E /* TrustKit in Frameworks */,
 				24B3A5FF2B31E7EA0053CFB6 /* MBProgressHUD in Frameworks */,
@@ -2852,20 +2896,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2DDB04602F18D48A00C19CC5 /* ThreemaProtocols in Frameworks */,
+				2DDB045F2F18D48A00C19CC5 /* SwiftProtobuf in Frameworks */,
 				8D73743F2735554900CEE9D7 /* OCMockito in Frameworks */,
-				242083CB2CBCDCE60079D9B8 /* ThreemaMacros in Frameworks */,
-				F2D9E8A82E798EC400F97343 /* KeychainTestHelper in Frameworks */,
-				427B7B242E4B957200DB93D3 /* ThreemaProtocols in Frameworks */,
-				2DE808C02DD22A1500970DC4 /* ThreemaEssentialsTestHelper in Frameworks */,
 				2D1A19C22DE0AC65005E4AE4 /* FileUtilityTestHelper in Frameworks */,
 				24C28FBF2AB9A16200D1C789 /* Foundation.framework in Frameworks */,
-				2D26220B2DD626E400A63682 /* SwiftProtobuf in Frameworks */,
-				42F546622E1F9D2800C8C8FC /* RemoteSecretProtocolTestHelper in Frameworks */,
+				2D44B6532F16484100459A99 /* RemoteSecretProtocolTestHelper in Frameworks */,
+				2D44B6512F16483600459A99 /* KeychainTestHelper in Frameworks */,
+				2DCBA8CD2F16402C00B2E5F7 /* ThreemaFramework.framework in Frameworks */,
 				7E2201532D3F758E00DBAA07 /* Testing.framework in Frameworks */,
-				24B820172B32CF5700E8D13E /* CocoaLumberjackSwift in Frameworks */,
-				8DBF27022710881B0008045E /* SDWebImage in Frameworks */,
-				24B820152B32CF5700E8D13E /* CocoaLumberjack in Frameworks */,
-				0A677B8C1C6250CA0019B361 /* ThreemaFramework.framework in Frameworks */,
+				2D44B64D2F16482200459A99 /* FileUtilityTestHelper in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2874,7 +2914,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				242083C52CBCDCD00079D9B8 /* ThreemaMacros in Frameworks */,
-				2D3BC2A32DE49F740012E8A5 /* ThreemaEssentialsTestHelper in Frameworks */,
 				7E4C52342B35C46400B780B2 /* ThreemaProtocols in Frameworks */,
 				2DE1BE962109A3AF0058D7FF /* XCTest.framework in Frameworks */,
 				7E0A4BDB2AD691D600C38A25 /* PromiseKit in Frameworks */,
@@ -2894,7 +2933,6 @@
 				425A5D432C6212B600390D38 /* UniformTypeIdentifiers.framework in Frameworks */,
 				24FA8E4F2A73BA9600AB6842 /* Foundation.framework in Frameworks */,
 				4A9029E12892D953007604D8 /* DSWaveformImage in Frameworks */,
-				9456B5E32B03CA52000E3B30 /* SwiftUIIntrospect in Frameworks */,
 				242083A72CBCDC550079D9B8 /* ThreemaMacros in Frameworks */,
 				CED100FD208F90EA00D2B7DA /* libsaltyrtc_task_relayed_data_ffi.a in Frameworks */,
 				CED100FC208F909600D2B7DA /* libresolv.tbd in Frameworks */,
@@ -3001,8 +3039,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2D6F196D2F03BFC0004E1F90 /* ThreemaEssentialsTestHelper in Frameworks */,
 				2D3FD5192E61A561003D3DEE /* PromiseKit in Frameworks */,
 				2D3FD51B2E61A567003D3DEE /* FileUtility in Frameworks */,
+				2D6F196B2F03BFC0004E1F90 /* ThreemaEssentials in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3077,7 +3117,6 @@
 				F2A87DEA2E4B685400646386 /* FLAnimatedImage in Frameworks */,
 				2D5A1ED424C9B5DF00F87DD0 /* Contacts.framework in Frameworks */,
 				E152442026145E6500471E1B /* RSKImageCropper in Frameworks */,
-				9456B5F82B03CA7E000E3B30 /* SwiftUIIntrospect in Frameworks */,
 				2D5A1ED724C9B5DF00F87DD0 /* PushKit.framework in Frameworks */,
 				2D5A1ED824C9B5DF00F87DD0 /* CallKit.framework in Frameworks */,
 				2DE70D182ED450CE00F4F2E0 /* JDStatusBarNotification in Frameworks */,
@@ -3200,7 +3239,6 @@
 				24FA8E512A73BAB200AB6842 /* Foundation.framework in Frameworks */,
 				2DEDB35824C9903400FC9099 /* ContactsUI.framework in Frameworks */,
 				242083AB2CBCDC620079D9B8 /* ThreemaMacros in Frameworks */,
-				246D2A3E2B45393B0026A8C7 /* SwiftUIIntrospect in Frameworks */,
 				2DEDB35924C9903400FC9099 /* Contacts.framework in Frameworks */,
 				2B8896FA2E4450E50074D387 /* NotificationBannerSwift in Frameworks */,
 				2DEDB35A24C9903400FC9099 /* libsaltyrtc_task_relayed_data_ffi.a in Frameworks */,
@@ -3312,7 +3350,6 @@
 				4A9029E42892D97E007604D8 /* DSWaveformImage in Frameworks */,
 				4D088A87255C0CD4002F3129 /* libsaltyrtc_task_relayed_data_ffi.a in Frameworks */,
 				242083A92CBCDC5C0079D9B8 /* ThreemaMacros in Frameworks */,
-				9456B5EA2B03CA62000E3B30 /* SwiftUIIntrospect in Frameworks */,
 				4D088A88255C0CD4002F3129 /* libresolv.tbd in Frameworks */,
 				2B8896F82E4450CE0074D387 /* NotificationBannerSwift in Frameworks */,
 				4D088A89255C0CD4002F3129 /* ContactsUI.framework in Frameworks */,
@@ -3420,7 +3457,6 @@
 			files = (
 				2D0FEE0C2E60A1B20020AE37 /* FileUtility in Frameworks */,
 				F24E52652ECF68A700C6884B /* XCTest.framework in Frameworks */,
-				2D3BC2A52DE49F880012E8A5 /* ThreemaEssentialsTestHelper in Frameworks */,
 				F24E52642ECF66A500C6884B /* ThreemaProtocols in Frameworks */,
 				2D0FEE0A2E60A19A0020AE37 /* PromiseKit in Frameworks */,
 				24B820192B32D06300E8D13E /* CocoaLumberjack in Frameworks */,
@@ -3475,7 +3511,6 @@
 				2DE70BBE2ED43A1900F4F2E0 /* TrustKit in Frameworks */,
 				4DA38C87178AF5D100937DD7 /* Social.framework in Frameworks */,
 				4AD3502B28886518002B37C8 /* DSWaveformImage in Frameworks */,
-				9456B5DC2B03CA29000E3B30 /* SwiftUIIntrospect in Frameworks */,
 				4DD55132168C681700B19DF8 /* MediaPlayer.framework in Frameworks */,
 				4D22601716677EC2003C5691 /* CoreLocation.framework in Frameworks */,
 				2DE70BBA2ED43A0300F4F2E0 /* JDStatusBarNotification in Frameworks */,
@@ -3528,7 +3563,6 @@
 				F2540EAF2ECF6B9C00866020 /* KeychainTestHelper in Frameworks */,
 				F2540EB32ECF6BB300866020 /* ThreemaProtocols in Frameworks */,
 				2DD229022E5C629E00CD7132 /* PromiseKit in Frameworks */,
-				2D3BC2A72DE49F900012E8A5 /* ThreemaEssentialsTestHelper in Frameworks */,
 				24B8201F2B32D07000E8D13E /* CocoaLumberjackSwift in Frameworks */,
 				F2540EB42ECF6BBE00866020 /* XCTest.framework in Frameworks */,
 				F2540EB12ECF6BA700866020 /* RemoteSecretProtocolTestHelper in Frameworks */,
@@ -3572,7 +3606,6 @@
 				F2EAFEA52D6CC9C400DFFD48 /* libsaltyrtc_task_relayed_data_ffi.a in Frameworks */,
 				F2380D272E4CB3D30059D4F3 /* ChunkedDC in Frameworks */,
 				F2EAFEA62D6CC9C400DFFD48 /* ThreemaMacros in Frameworks */,
-				F2EAFEA72D6CC9C400DFFD48 /* SwiftUIIntrospect in Frameworks */,
 				F2EAFEA82D6CC9C400DFFD48 /* libresolv.tbd in Frameworks */,
 				2B8896FE2E4451150074D387 /* NotificationBannerSwift in Frameworks */,
 				F2EAFEA92D6CC9C400DFFD48 /* ContactsUI.framework in Frameworks */,
@@ -3698,7 +3731,8 @@
 			children = (
 				249C15F129FFDA2300F81D20 /* BinUtils.swift */,
 			);
-			path = BinUtils;
+			name = BinUtils;
+			path = Vendor/BinUtils;
 			sourceTree = "<group>";
 		};
 		2DE1BEBF210EEDDD0058D7FF /* Scrypt */ = {
@@ -4094,6 +4128,7 @@
 				42F5465F2E1EFE2B00C8C8FC /* RemoteSecret */,
 				2D9E4F892E276DA40010A5D1 /* Keychain */,
 				F2A4C91C2E4B58060062B883 /* FLAnimatedImage */,
+				4250536D2F8E25E400441645 /* OrderedCollections */,
 			);
 			productName = ThreemaFramework;
 			productReference = 0A677B821C6250C90019B361 /* ThreemaFramework.framework */;
@@ -4120,17 +4155,10 @@
 			);
 			name = ThreemaFrameworkTests;
 			packageProductDependencies = (
-				8DBF27012710881B0008045E /* SDWebImage */,
 				8D73743E2735554900CEE9D7 /* OCMockito */,
-				24B820142B32CF5700E8D13E /* CocoaLumberjack */,
-				24B820162B32CF5700E8D13E /* CocoaLumberjackSwift */,
-				242083CA2CBCDCE60079D9B8 /* ThreemaMacros */,
-				2DE808BF2DD22A1500970DC4 /* ThreemaEssentialsTestHelper */,
 				2D26220A2DD626E400A63682 /* SwiftProtobuf */,
 				2D1A19C12DE0AC65005E4AE4 /* FileUtilityTestHelper */,
-				42F546612E1F9D2800C8C8FC /* RemoteSecretProtocolTestHelper */,
 				427B7B232E4B957200DB93D3 /* ThreemaProtocols */,
-				F2D9E8A72E798EC400F97343 /* KeychainTestHelper */,
 			);
 			productName = ThreemaFrameworkTests;
 			productReference = 0A677B8B1C6250CA0019B361 /* ThreemaFrameworkTests.xctest */;
@@ -4161,7 +4189,6 @@
 				24B8200E2B32CEEB00E8D13E /* CocoaLumberjack */,
 				24B820102B32CEEB00E8D13E /* CocoaLumberjackSwift */,
 				242083C42CBCDCD00079D9B8 /* ThreemaMacros */,
-				2D3BC2A22DE49F740012E8A5 /* ThreemaEssentialsTestHelper */,
 				42F546632E1F9F1200C8C8FC /* RemoteSecretProtocolTestHelper */,
 				F2BDF6EC2E79A7AB0034C642 /* KeychainTestHelper */,
 				688E45702E818890000B17F8 /* FileUtilityTestHelper */,
@@ -4204,7 +4231,6 @@
 				24D02F3C2A56EF840074ABE4 /* ThreemaEssentials */,
 				7E0A4BBE2AD68E4000C38A25 /* PromiseKit */,
 				94913A992B2CB61A00336FC9 /* DSWaveformImageViews */,
-				9456B5E22B03CA52000E3B30 /* SwiftUIIntrospect */,
 				24EFCD822B31E91200DD7C66 /* MBProgressHUD */,
 				24B81FDA2B32CE0700E8D13E /* CocoaLumberjack */,
 				24B81FDC2B32CE0700E8D13E /* CocoaLumberjackSwift */,
@@ -4305,6 +4331,8 @@
 			packageProductDependencies = (
 				2D3FD5182E61A561003D3DEE /* PromiseKit */,
 				2D3FD51A2E61A567003D3DEE /* FileUtility */,
+				2D6F196A2F03BFC0004E1F90 /* ThreemaEssentials */,
+				2D6F196C2F03BFC0004E1F90 /* ThreemaEssentialsTestHelper */,
 			);
 			productName = "Threema Green Tests";
 			productReference = 2412D2AE2DA639DC008823F5 /* Threema Green Tests.xctest */;
@@ -4456,7 +4484,6 @@
 				24D02F362A56EF700074ABE4 /* ThreemaEssentials */,
 				7E0A4BC42AD68E6D00C38A25 /* PromiseKit */,
 				94913A9F2B2CB63000336FC9 /* DSWaveformImageViews */,
-				9456B5F72B03CA7E000E3B30 /* SwiftUIIntrospect */,
 				24EFCD882B31E93600DD7C66 /* MBProgressHUD */,
 				24B81FE62B32CE2200E8D13E /* CocoaLumberjack */,
 				24B81FE82B32CE2200E8D13E /* CocoaLumberjackSwift */,
@@ -4579,6 +4606,7 @@
 			buildPhases = (
 				2DEDB15C24C9903400FC9099 /* Sources */,
 				2DEDB35524C9903400FC9099 /* Frameworks */,
+				68C60BCF2F30EE9C008EBA75 /* Configure Scene Delegate Script */,
 				2DEDB38A24C9903400FC9099 /* Resources */,
 				2DEDB3D624C9903400FC9099 /* Embed Frameworks */,
 				2DEDB3D924C9903400FC9099 /* Embed Foundation Extensions */,
@@ -4610,7 +4638,6 @@
 				24EFCD862B31E92A00DD7C66 /* MBProgressHUD */,
 				24B81FE22B32CE1B00E8D13E /* CocoaLumberjack */,
 				24B81FE42B32CE1B00E8D13E /* CocoaLumberjackSwift */,
-				246D2A3D2B45393B0026A8C7 /* SwiftUIIntrospect */,
 				941735162C4FD894008534FC /* AsyncAlgorithms */,
 				242083AA2CBCDC620079D9B8 /* ThreemaMacros */,
 				244F24D62D9289A3004CC9D7 /* Coordinator */,
@@ -4725,7 +4752,6 @@
 				24D02F3A2A56EF7C0074ABE4 /* ThreemaEssentials */,
 				7E0A4BC02AD68E4E00C38A25 /* PromiseKit */,
 				94913A9B2B2CB62100336FC9 /* DSWaveformImageViews */,
-				9456B5E92B03CA62000E3B30 /* SwiftUIIntrospect */,
 				24EFCD842B31E91C00DD7C66 /* MBProgressHUD */,
 				24B81FDE2B32CE1200E8D13E /* CocoaLumberjack */,
 				24B81FE02B32CE1200E8D13E /* CocoaLumberjackSwift */,
@@ -4829,7 +4855,6 @@
 				24B820182B32D06300E8D13E /* CocoaLumberjack */,
 				24B8201A2B32D06300E8D13E /* CocoaLumberjackSwift */,
 				242083C62CBCDCD70079D9B8 /* ThreemaMacros */,
-				2D3BC2A42DE49F880012E8A5 /* ThreemaEssentialsTestHelper */,
 				2D0FEE092E60A19A0020AE37 /* PromiseKit */,
 				2D0FEE0B2E60A1B20020AE37 /* FileUtility */,
 				F24E525B2ECF661A00C6884B /* KeychainTestHelper */,
@@ -4875,7 +4900,6 @@
 				24D02F3E2A56EF8E0074ABE4 /* ThreemaEssentials */,
 				7EAEA2152ABD5FE4007C49F2 /* PromiseKit */,
 				94913A972B2CB61300336FC9 /* DSWaveformImageViews */,
-				9456B5DB2B03CA29000E3B30 /* SwiftUIIntrospect */,
 				24FD0C4E2B31E5BD0086892A /* MBProgressHUD */,
 				248BF4332B31EFCB00722B72 /* CocoaLumberjack */,
 				248BF4352B31EFCB00722B72 /* CocoaLumberjackSwift */,
@@ -4937,7 +4961,6 @@
 				24B8201C2B32D07000E8D13E /* CocoaLumberjack */,
 				24B8201E2B32D07000E8D13E /* CocoaLumberjackSwift */,
 				242083C82CBCDCDE0079D9B8 /* ThreemaMacros */,
-				2D3BC2A62DE49F900012E8A5 /* ThreemaEssentialsTestHelper */,
 				2DD228FC2E5C59A900CD7132 /* ThreemaEssentials */,
 				2DD228FE2E5C59B200CD7132 /* FileUtility */,
 				2DD229012E5C629E00CD7132 /* PromiseKit */,
@@ -5028,7 +5051,6 @@
 				F2EAFBD92D6CC9C400DFFD48 /* ThreemaEssentials */,
 				F2EAFBDA2D6CC9C400DFFD48 /* PromiseKit */,
 				F2EAFBDC2D6CC9C400DFFD48 /* DSWaveformImageViews */,
-				F2EAFBDD2D6CC9C400DFFD48 /* SwiftUIIntrospect */,
 				F2EAFBDF2D6CC9C400DFFD48 /* MBProgressHUD */,
 				F2EAFBE12D6CC9C400DFFD48 /* CocoaLumberjack */,
 				F2EAFBE32D6CC9C400DFFD48 /* CocoaLumberjackSwift */,
@@ -5324,7 +5346,6 @@
 				24CCB0D528AE23D300545893 /* XCRemoteSwiftPackageReference "JDStatusBarNotification" */,
 				4D4941F328B8F68F003FFC9B /* XCRemoteSwiftPackageReference "SQLite" */,
 				7EAEA2142ABD5FE4007C49F2 /* XCRemoteSwiftPackageReference "PromiseKit" */,
-				9456B5DA2B03C91C000E3B30 /* XCRemoteSwiftPackageReference "swiftui-introspect" */,
 				24FD0C4D2B31E5BC0086892A /* XCRemoteSwiftPackageReference "MBProgressHUD" */,
 				248BF4322B31EFCB00722B72 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */,
 				24AD2ECD2B4D8F4500BB0BDF /* XCRemoteSwiftPackageReference "Reachability" */,
@@ -5682,6 +5703,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if [ -z ${CI+x} ]; then\n    \"${SRCROOT}/scripts/format.sh\" \"$SRCROOT\"\nfi\n\n";
+		};
+		68C60BCF2F30EE9C008EBA75 /* Configure Scene Delegate Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/$(INFOPLIST_FILE)",
+			);
+			name = "Configure Scene Delegate Script";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\n\n# Configure Scene Delegate in Info.plist\n#\n# When SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT flag is present in\n# SWIFT_ACTIVE_COMPILATION_CONDITIONS, this script adds the UIApplicationSceneManifest\n# configuration to the target's Info.plist. Otherwise, it removes it.\n#\n# Add this as a Run Script build phase BEFORE \"Copy Bundle Resources\".\n\nset -euo pipefail\n\nPLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n\n# Fallback to source plist if built plist doesn't exist yet\nif [ ! -f \"$PLIST\" ]; then\n    PLIST=\"${SRCROOT}/${INFOPLIST_FILE}\"\nfi\n\nif [ ! -f \"$PLIST\" ]; then\n    echo \"warning: Info.plist not found at ${PLIST}\"\n    exit 0\nfi\n\nSCENE_MANIFEST_KEY=\"UIApplicationSceneManifest\"\nFLAG=\"SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT\"\n\nif echo \"${SWIFT_ACTIVE_COMPILATION_CONDITIONS:-}\" | grep -qw \"$FLAG\"; then\n    echo \"note: ${FLAG} is active — adding scene manifest to Info.plist\"\n\n    # Add UIApplicationSceneManifest dictionary\n    /usr/libexec/PlistBuddy -c \"Delete :${SCENE_MANIFEST_KEY}\" \"$PLIST\" 2>/dev/null || true\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY} dict\" \"$PLIST\"\n\n    # UIApplicationSupportsMultipleScenes = false\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UIApplicationSupportsMultipleScenes bool false\" \"$PLIST\"\n\n    # UISceneConfigurations dictionary\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UISceneConfigurations dict\" \"$PLIST\"\n\n    # UIWindowSceneSessionRoleApplication array\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UISceneConfigurations:UIWindowSceneSessionRoleApplication array\" \"$PLIST\"\n\n    # First (and only) scene configuration\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UISceneConfigurations:UIWindowSceneSessionRoleApplication:0 dict\" \"$PLIST\"\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UISceneConfigurations:UIWindowSceneSessionRoleApplication:0:UISceneConfigurationName string 'Default Configuration'\" \"$PLIST\"\n    /usr/libexec/PlistBuddy -c \"Add :${SCENE_MANIFEST_KEY}:UISceneConfigurations:UIWindowSceneSessionRoleApplication:0:UISceneDelegateClassName string '${PRODUCT_MODULE_NAME}.SceneDelegate'\" \"$PLIST\"\n\n    echo \"note: Scene manifest added successfully\"\nelse\n    echo \"note: ${FLAG} is not active — removing scene manifest from Info.plist\"\n\n    /usr/libexec/PlistBuddy -c \"Delete :${SCENE_MANIFEST_KEY}\" \"$PLIST\" 2>/dev/null || true\n\n    echo \"note: Scene manifest removed (or was not present)\"\nfi\n";
 		};
 		E1465DBA27285E55004F3103 /* SwiftFormat */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -12511,7 +12552,7 @@
 			repositoryURL = "https://github.com/threema-ch/sentry-cocoa";
 			requirement = {
 				kind = revision;
-				revision = b4eacc3656505ac6b2e727ebe59c3c404ada0187;
+				revision = 49728433c3b111e4e721cbeb7c28fbd5e165d36a;
 			};
 		};
 		8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */ = {
@@ -12584,14 +12625,6 @@
 			requirement = {
 				kind = exactVersion;
 				version = 1.0.4;
-			};
-		};
-		9456B5DA2B03C91C000E3B30 /* XCRemoteSwiftPackageReference "swiftui-introspect" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/siteline/swiftui-introspect";
-			requirement = {
-				kind = exactVersion;
-				version = 1.3.0;
 			};
 		};
 		E152440926145E2100471E1B /* XCRemoteSwiftPackageReference "RSKImageCropper" */ = {
@@ -12688,14 +12721,6 @@
 			requirement = {
 				kind = exactVersion;
 				version = 8.1.1;
-			};
-		};
-		F2EAFBDE2D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "swiftui-introspect" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/siteline/swiftui-introspect";
-			requirement = {
-				kind = exactVersion;
-				version = 1.1.1;
 			};
 		};
 		F2EAFBE02D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "MBProgressHUD" */ = {
@@ -12941,10 +12966,6 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = ThreemaMacros;
 		};
-		242083CA2CBCDCE60079D9B8 /* ThreemaMacros */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ThreemaMacros;
-		};
 		242083CC2CBCDCED0079D9B8 /* ThreemaMacros */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ThreemaMacros;
@@ -13039,11 +13060,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 245565C82E94DB1600B1E0BC /* XCRemoteSwiftPackageReference "swift-collections" */;
 			productName = Collections;
-		};
-		246D2A3D2B45393B0026A8C7 /* SwiftUIIntrospect */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9456B5DA2B03C91C000E3B30 /* XCRemoteSwiftPackageReference "swiftui-introspect" */;
-			productName = SwiftUIIntrospect;
 		};
 		247700BB28AE3C5700634745 /* JDStatusBarNotification */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -13218,16 +13234,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 24FD0C4D2B31E5BC0086892A /* XCRemoteSwiftPackageReference "MBProgressHUD" */;
 			productName = MBProgressHUD;
-		};
-		24B820142B32CF5700E8D13E /* CocoaLumberjack */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 248BF4322B31EFCB00722B72 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
-			productName = CocoaLumberjack;
-		};
-		24B820162B32CF5700E8D13E /* CocoaLumberjackSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 248BF4322B31EFCB00722B72 /* XCRemoteSwiftPackageReference "CocoaLumberjack" */;
-			productName = CocoaLumberjackSwift;
 		};
 		24B820182B32D06300E8D13E /* CocoaLumberjack */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -13485,18 +13491,6 @@
 			package = 8DDCF7C827107F94000CB4F6 /* XCRemoteSwiftPackageReference "swift-protobuf" */;
 			productName = SwiftProtobuf;
 		};
-		2D3BC2A22DE49F740012E8A5 /* ThreemaEssentialsTestHelper */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ThreemaEssentialsTestHelper;
-		};
-		2D3BC2A42DE49F880012E8A5 /* ThreemaEssentialsTestHelper */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ThreemaEssentialsTestHelper;
-		};
-		2D3BC2A62DE49F900012E8A5 /* ThreemaEssentialsTestHelper */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ThreemaEssentialsTestHelper;
-		};
 		2D3FD5182E61A561003D3DEE /* PromiseKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7EAEA2142ABD5FE4007C49F2 /* XCRemoteSwiftPackageReference "PromiseKit" */;
@@ -13523,6 +13517,26 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7EAEA2142ABD5FE4007C49F2 /* XCRemoteSwiftPackageReference "PromiseKit" */;
 			productName = PromiseKit;
+		};
+		2D44B64C2F16482200459A99 /* FileUtilityTestHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FileUtilityTestHelper;
+		};
+		2D44B6502F16483600459A99 /* KeychainTestHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KeychainTestHelper;
+		};
+		2D44B6522F16484100459A99 /* RemoteSecretProtocolTestHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RemoteSecretProtocolTestHelper;
+		};
+		2D6F196A2F03BFC0004E1F90 /* ThreemaEssentials */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ThreemaEssentials;
+		};
+		2D6F196C2F03BFC0004E1F90 /* ThreemaEssentialsTestHelper */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ThreemaEssentialsTestHelper;
 		};
 		2D9E4F892E276DA40010A5D1 /* Keychain */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -13681,9 +13695,10 @@
 			package = 8DBF271D271096070008045E /* XCRemoteSwiftPackageReference "TrustKit" */;
 			productName = TrustKit;
 		};
-		2DE808BF2DD22A1500970DC4 /* ThreemaEssentialsTestHelper */ = {
+		4250536D2F8E25E400441645 /* OrderedCollections */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = ThreemaEssentialsTestHelper;
+			package = 245565C82E94DB1600B1E0BC /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = OrderedCollections;
 		};
 		427B7B232E4B957200DB93D3 /* ThreemaProtocols */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -13700,10 +13715,6 @@
 		42F5465F2E1EFE2B00C8C8FC /* RemoteSecret */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RemoteSecret;
-		};
-		42F546612E1F9D2800C8C8FC /* RemoteSecretProtocolTestHelper */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = RemoteSecretProtocolTestHelper;
 		};
 		42F546632E1F9F1200C8C8FC /* RemoteSecretProtocolTestHelper */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -14019,11 +14030,6 @@
 			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
 			productName = SDWebImage;
 		};
-		8DBF27012710881B0008045E /* SDWebImage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8DDCF7D8271082AB000CB4F6 /* XCRemoteSwiftPackageReference "SDWebImage" */;
-			productName = SDWebImage;
-		};
 		8DBF271327108D260008045E /* Sentry */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 8DBF271027108B350008045E /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
@@ -14163,26 +14169,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 9417350F2C4FD819008534FC /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
 			productName = AsyncAlgorithms;
-		};
-		9456B5DB2B03CA29000E3B30 /* SwiftUIIntrospect */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9456B5DA2B03C91C000E3B30 /* XCRemoteSwiftPackageReference "swiftui-introspect" */;
-			productName = SwiftUIIntrospect;
-		};
-		9456B5E22B03CA52000E3B30 /* SwiftUIIntrospect */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9456B5DA2B03C91C000E3B30 /* XCRemoteSwiftPackageReference "swiftui-introspect" */;
-			productName = SwiftUIIntrospect;
-		};
-		9456B5E92B03CA62000E3B30 /* SwiftUIIntrospect */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9456B5DA2B03C91C000E3B30 /* XCRemoteSwiftPackageReference "swiftui-introspect" */;
-			productName = SwiftUIIntrospect;
-		};
-		9456B5F72B03CA7E000E3B30 /* SwiftUIIntrospect */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9456B5DA2B03C91C000E3B30 /* XCRemoteSwiftPackageReference "swiftui-introspect" */;
-			productName = SwiftUIIntrospect;
 		};
 		94913A972B2CB61300336FC9 /* DSWaveformImageViews */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -14483,10 +14469,6 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = KeychainTestHelper;
 		};
-		F2D9E8A72E798EC400F97343 /* KeychainTestHelper */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = KeychainTestHelper;
-		};
 		F2EAFBC52D6CC9C400DFFD48 /* RSKImageCropper */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F2EAFBC62D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "RSKImageCropper" */;
@@ -14548,11 +14530,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F2EAFBD42D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
 			productName = DSWaveformImageViews;
-		};
-		F2EAFBDD2D6CC9C400DFFD48 /* SwiftUIIntrospect */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F2EAFBDE2D6CC9C400DFFD48 /* XCRemoteSwiftPackageReference "swiftui-introspect" */;
-			productName = SwiftUIIntrospect;
 		};
 		F2EAFBDF2D6CC9C400DFFD48 /* MBProgressHUD */ = {
 			isa = XCSwiftPackageProductDependency;

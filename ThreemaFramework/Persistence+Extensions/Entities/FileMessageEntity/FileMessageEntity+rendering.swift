@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 
 extension FileMessageEntity {
@@ -43,6 +23,8 @@ extension FileMessageEntity {
     /// How should this message be rendered?
     /// When changing this you should also change `func fileMessagesForPhotoBrowser(_)` in `EntityFetcher`
     public var renderType: RenderType {
+        let mimeType = mimeType ?? ""
+        
         if UTIConverter.isImageMimeType(mimeType), UTIConverter.isRenderingImageMimeType(mimeType) {
             if type?.intValue == 1 {
                 return .imageMessage

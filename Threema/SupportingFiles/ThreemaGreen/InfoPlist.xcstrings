@@ -272,7 +272,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La cámara se utiliza cuando haces una foto o un vídeo y lo envías a un chat y también para escanear códigos QR."
+            "value" : "La cámara se utiliza cuando hace una foto o un vídeo, realiza videollamadas o escanea códigos QR."
           }
         },
         "fr" : {
@@ -290,7 +290,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La fotocamera viene utilizzata quando scatti una foto o giri un video e l’invii in una chat, nonché per scannerizzare i codici QR."
+            "value" : "La fotocamera viene utilizzata quando scatti foto o registri video, effettui videochiamate o scansioni codici QR."
           }
         },
         "ja" : {
@@ -392,7 +392,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Los contactos se utilizan para buscar a otros usuarios de Threema cuando la sincronización está activada. Con este propósito, se subirán los hashes de los números de teléfono y las direcciones de correo electrónico al servidor de Threema. Dicha información no se almacena en los servidores."
+            "value" : "La libreta de direcciones se utiliza para buscar a otros usuarios cuando la sincronización de contactos está activada. Con este propósito, se subirán los hashes de los números de teléfono y las direcciones de correo electrónico a nuestro servidor. Dicha información no se almacena en los servidores."
           }
         },
         "fr" : {
@@ -410,7 +410,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "I contatti vengono utilizzati per trovare altri utenti di Threema quando la sincronizzazione è attiva. Versioni crittografate (hashes) dei numeri di telefono e degli indirizzi e-mail verranno caricate su un server Threema a tale scopo. Queste informazioni non vengono salvate sui server."
+            "value" : "La rubrica viene utilizzata per trovare altri utenti quando la sincronizzazione dei contatti è attiva. Gli hash dei numeri di telefono e degli indirizzi email verranno caricati sui nostri server per la sincronizzazione, ma le informazioni non vengono memorizzate sui server."
           }
         },
         "ja" : {
@@ -512,7 +512,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ahora puedes usar Face ID para desbloquear Threema sin introducir tu código."
+            "value" : "Ahora puede usar Face ID para desbloquear la aplicación sin introducir su código."
           }
         },
         "fr" : {
@@ -530,7 +530,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Puoi utilizzare Face ID per sbloccare Threema senza inserire il tuo codice."
+            "value" : "Puoi utilizzare Face ID per sbloccare l'app senza inserire il tuo codice."
           }
         },
         "ja" : {
@@ -632,7 +632,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema usa la red local para las conexiones de llamadas."
+            "value" : "La aplicación usa la red local para las conexiones de llamadas."
           }
         },
         "fr" : {
@@ -650,7 +650,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema utilizza la rete locale di connessione per le chiamate."
+            "value" : "L'app utilizza la rete locale di connessione per le chiamate."
           }
         },
         "ja" : {
@@ -752,7 +752,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tu ubicación se utiliza cuando la envías a un chat o para mostrarla en un mapa."
+            "value" : "Su ubicación se utiliza cuando la comparte en un chat y para mostrar su propia ubicación en un mapa."
           }
         },
         "fr" : {
@@ -847,7 +847,7 @@
       "localizations" : {
         "bg" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Микрофонът се използва за обаждания и за запис на гласови съобщения."
           }
         },
@@ -871,14 +871,14 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "El micrófono se utiliza para grabar mensajes de audio."
+            "state" : "translated",
+            "value" : "Para funciones como llamadas de voz, mensajes de voz y videollamadas, la aplicación necesita acceso a su micrófono. Para usar estas funciones, permita el acceso al micrófono."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Le microphone est utilisé pour enregistrer des messages audio."
+            "state" : "translated",
+            "value" : "L'application a besoin d'accéder à votre microphone pour les fonctionnalités telles que les appels vocaux, les messages vocaux et les appels vidéo. Pour utiliser ces fonctionnalités, veuillez autoriser l'accès au microphone."
           }
         },
         "gsw-CH" : {
@@ -889,74 +889,74 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Il microfono viene utilizzato per registrare messaggi audio."
+            "state" : "translated",
+            "value" : "Per funzionalità come chiamate vocali, messaggi vocali e videochiamate, l'app necessita dell'accesso al microfono. Per utilizzare queste funzioni, consenti l'accesso al microfono."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "マイクは音声メッセージを録音するために使用されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "마이크는 오디오 메시지를 녹음하는 데 사용됩니다."
           }
         },
         "nl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "De microfoon wordt gebruikt om audioberichten op te nemen."
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mikrofon służy do nagrywania wiadomości audio."
+            "state" : "translated",
+            "value" : "Aby korzystać z takich funkcji jak połączenia głosowe, wiadomości głosowe czy połączenia wideo, aplikacja potrzebuje dostępu do mikrofonu. Aby używać tych funkcji, musisz udzielić dostępu do mikrofonu."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "O microfone é utilizado para gravar mensagens em áudio."
           }
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Микрофон используется для записи аудиосообщений."
           }
         },
         "sk" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mikforón sa používa na nahrávanie zvukových správ."
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mikrofon sesli mesajları kaydetmek için kullanılır."
           }
         },
         "uk" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Мікрофон потрібен для запису аудіоповідомлень."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "麦克风权限用于录制音频消息。"
+            "state" : "translated",
+            "value" : "本应用需要访问您的麦克风，来使用语音通话、语音留言和视频通话等功能。如果您想使用这些功能，请允许麦克风访问权限。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "麥克風權限用於錄製音訊訊息。"
+            "state" : "translated",
+            "value" : "本應用程式需要存取您的麥克風，以使用語音通話、音訊訊息和視訊通話等功能。如果您想使用這些功能，請允許麥克風存取權限。"
           }
         }
       }
@@ -992,7 +992,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema puede guardar automáticamente los archivos multimedia entrantes en la aplicación \"Fotos\"."
+            "value" : "Los archivos multimedia entrantes pueden guardarse automáticamente en la biblioteca de fotos."
           }
         },
         "fr" : {
@@ -1010,7 +1010,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema può salvare automaticamente i media in arrivo e i file nell’app delle fotografie."
+            "value" : "I file multimediali in arrivo possono essere salvati automaticamente nella libreria foto."
           }
         },
         "ja" : {
@@ -1034,7 +1034,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Threema może automatycznie zapisywać przychodzące pliki multimedialne w aplikacji Zdjęcia."
+            "value" : "Przychodzące pliki multimedialne mogą być automatycznie zapisywane w bibliotece zdjęć."
           }
         },
         "pt-BR" : {
@@ -1112,7 +1112,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La biblioteca de fotos se utiliza para elegir una imagen y enviarla a un chat."
+            "value" : "La biblioteca de fotos se utiliza cuando selecciona una imagen en ella y la envía en un chat."
           }
         },
         "fr" : {
@@ -1130,7 +1130,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La libreria fotografica viene utilizzata quando scegli un immagine da inviare in una chat."
+            "value" : "La libreria foto viene utilizzata quando selezioni un'immagine e la invii in chat."
           }
         },
         "ja" : {

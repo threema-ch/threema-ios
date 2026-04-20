@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import ThreemaFramework
 import ThreemaMacros
@@ -32,7 +12,7 @@ import UIKit
 /// button item it should span all the way to the end offset by the margin.)
 ///
 /// `UINavigationBar` allows a custom title view to be set through the front most `UINavigationItem`. In a normal setup
-/// (like this) where the navigation bar is handled by a `UINavigationViewController` this can configured in the
+/// (like this) where the navigation bar is handled by a `UINavigationViewController` this can be configured in the
 /// `navigationItem` property of the front most view controller.
 ///
 /// The problem with a navigation bar title view is that it is centered until it spans the complete width and there is
@@ -40,9 +20,12 @@ import UIKit
 /// API exists to access the width of left and right (back) bar button items (to deduct them form the full navigation
 /// bar width).
 ///
-/// Constraints as the time of writing: Needs to support iOS 12.
+/// Constraints as the time of writing: Needs to support iOS 16 and later. (This didn't seem a limiting constraint in
+/// our latest research)
 ///
 /// # Solution chosen
+///
+/// ## iOS 17 and 18
 ///
 /// We set the profile view to a fixed width, based on the width of the whole navigation bar minus an offset on both
 /// ends (`combinedLeadingAndTrailingOffset` in `ChatViewConfiguration.Profile`). This offset is a compromise to stay at
@@ -51,6 +34,12 @@ import UIKit
 ///
 /// Limitation: This doesn't allow the view to span all the way to the trailing end. Otherwise the offset from the
 /// leading edge would change on every update of the unread count and minimize the space for the back button in general.
+///
+/// ## iOS 26 and later
+///
+/// Similar to before (iOS 17 & 18) we set the profile view to a fixed size, but because with Liquid Glass the back
+/// button is bigger it varies if there is any unread message or none.  (`combinedLeadingAndTrailingOffset` &
+/// `combinedLeadingAndTrailingOffsetWithUnreadMessages` in `ChatViewConfiguration.Profile`)
 ///
 /// # Other solutions considered
 ///
@@ -63,14 +52,8 @@ import UIKit
 ///   `UIView.layoutFittingExpandedSize` from this view's `intrinsicContentSize`. The tradeoff here is that
 ///   on every unread count change the offset from the leading edge might change (especially if the number of digit
 ///   changes) unless we control the width of the back button area (arrow & unread count) which seems to be not
-///   straight forward if possible at all.
-///
-/// # Solutions that might be considered in the future
-///
-/// - With the addition of `UINavigationBarAppearance` in iOS 13 there is more possibility to control the navigation bar
-///   appearance this might allow us to control the size of the back button area or at least set the back button text
-///   (unread count) to monospaced digits.
-/// - Workaround to get the right and left bar button items: https://stackoverflow.com/a/46965131
+///   straight forward if possible at all. On iOS 26 this configuration also takes precedent over the back button width
+/// and thus breaks the button if an unread count is shown.
 final class ChatProfileView: UIStackView {
     
     typealias TapAction = () -> Void
@@ -86,16 +69,7 @@ final class ChatProfileView: UIStackView {
                 return
             }
 
-            // Because the sizing in the navigation bar changes slightly for the system components (i.e. back button &
-            // label) we need to also adjust the width such that unread counts < 100 are not cut off. As the sizing
-            // changes are small we take the log of the scaler.
-            let scaler = log10(UIFontMetrics.default.scaledValue(for: 10))
-            widthConstraint.constant = (
-                safeAreaAdjustedNavigationBarWidth -
-                    (scaler * ChatViewConfiguration.Profile.combinedLeadingAndTrailingOffset)
-            )
-            
-            setNeedsLayout() // "Commit" update
+            updateWidthConstraint()
         }
     }
     
@@ -108,13 +82,27 @@ final class ChatProfileView: UIStackView {
     private let entityManager: EntityManager
     private lazy var group: Group? = BusinessInjector.ui.groupManager
         .getGroup(conversation: conversation)
+    
+    // While we would be able to access the size class in the view's
+    // trait collection, that value would not include the whole picture, only
+    // the current context. In order to correctly assess it, we inject it,
+    // letting the caller decide from where this information will be fetched.
+    private let isRegularSizeClass: () -> Bool
 
     // We need to hold on to the observers until the object is deallocated.
     // `invalidate()` is automatically called on destruction of them (according to the `invalidate()` header
     // documentation).
     private var observers = [NSKeyValueObservation]()
     private lazy var memberObservers = [NSKeyValueObservation]()
-
+    
+    /// Current number of all unread messages in all chats
+    ///
+    /// - Note: This only relevant for width sizing in iOS 26 and later
+    private var unreadCount = 0
+    
+    /// Task used for debouncing updates of width constraint
+    private var updateWidthConstraintDebounceTask: Task<Void, Never>?
+    
     // We skip the scaler here that is applied above on `safeAreaAdjustedNavigationBarWidth` updates
     private lazy var widthConstraint = widthAnchor.constraint(
         equalToConstant: safeAreaAdjustedNavigationBarWidth -
@@ -130,9 +118,15 @@ final class ChatProfileView: UIStackView {
     /// Profile picture of contact or group
     private lazy var profilePictureView: ProfilePictureImageView = {
         let imageView = ProfilePictureImageView()
+        imageView.addBackground()
         
         imageView.isAccessibilityElement = false
-
+        
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            imageView.heightAnchor.constraint(equalToConstant: ChatViewConfiguration.Profile.profilePictureHeight),
+        ])
+        
         return imageView
     }()
         
@@ -190,7 +184,12 @@ final class ChatProfileView: UIStackView {
         let label = UILabel()
         
         label.font = ChatViewConfiguration.Profile.membersListFont
-        label.textColor = .secondaryLabel
+        if #available(iOS 26.0, *) {
+            label.textColor = .label
+        }
+        else {
+            label.textColor = .secondaryLabel
+        }
         
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         
@@ -231,10 +230,14 @@ final class ChatProfileView: UIStackView {
     init(
         for conversation: ConversationEntity,
         entityManager: EntityManager,
-        tapAction: @escaping TapAction
+        initialUnreadCount: Int,
+        isRegularSizeClass: @escaping () -> Bool,
+        tapAction: @escaping TapAction,
     ) {
         self.conversation = conversation
         self.entityManager = entityManager
+        self.isRegularSizeClass = isRegularSizeClass
+        self.unreadCount = initialUnreadCount
         self.tapAction = tapAction
         
         super.init(frame: .zero)
@@ -243,6 +246,7 @@ final class ChatProfileView: UIStackView {
         
         configureView()
         configureButton()
+        configureNotificationObservers()
         configureContentObservers()
     }
 
@@ -325,6 +329,18 @@ final class ChatProfileView: UIStackView {
             viewButton.bottomAnchor.constraint(equalTo: bottomAnchor),
             viewButton.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
+    }
+    
+    private func configureNotificationObservers() {
+        // We observe unread message count changes to adapt the width of the view when the back button (size) changes
+        if #available(iOS 26.0, *) {
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(unreadMessageCountChanged(_:)),
+                name: NSNotification.Name(rawValue: kNotificationMessagesCountChanged),
+                object: nil
+            )
+        }
     }
         
     private func configureContentObservers() {
@@ -470,7 +486,76 @@ final class ChatProfileView: UIStackView {
         observers.append(observer)
     }
     
+    @objc private func unreadMessageCountChanged(_ notification: Notification) {
+        let newUnreadCount = notification.userInfo?[kKeyUnread] as? Int ?? 0
+                        
+        updateWidthConstraintWithDebounce(newUnreadCount: newUnreadCount)
+    }
+    
     // MARK: - Update functions
+    
+    private func updateWidthConstraintWithDebounce(newUnreadCount: Int) {
+        updateWidthConstraintDebounceTask?.cancel()
+        
+        updateWidthConstraintDebounceTask = Task { @MainActor in
+            
+            unreadCount = newUnreadCount
+            let conversationUnreadCount = conversation.unreadMessageCount.intValue
+                    
+            guard conversationUnreadCount == 0 || conversationUnreadCount != unreadCount else {
+                DDLogNotice(
+                    "Selected conversation has no unread message or unread count only comes from the selected conversation"
+                )
+                return
+            }
+            
+            // Wait a bit such that the there is no fast showing and hiding of the unread count if it switches back
+            // and forth between 0 and another number (e.g. when the chat opens)
+            // This needs to be in sync with the sleep in `ConversationListViewController.setBackButton(unread:)`
+            guard await (try? Task.sleep(for: .milliseconds(500))) != nil else {
+                // no-op as we just not run it when canceled
+                return
+            }
+            
+            updateWidthConstraint()
+        }
+    }
+    
+    private func updateWidthConstraint() {
+        let scaler: CGFloat =
+            if #available(iOS 26.0, *) {
+                1
+            }
+            else {
+                // Because the sizing in the navigation bar changes slightly for the system components (i.e. back button
+                // &
+                // label) we need to also adjust the width such that unread counts < 100 are not cut off. As the sizing
+                // changes are small we take the log of the scaler.
+                log10(UIFontMetrics.default.scaledValue(for: 10))
+            }
+        
+        let constant =
+            if isRegularSizeClass() {
+                ChatViewConfiguration.Profile.combinedLeadingAndTrailingOffsetRegularSizeClass
+            }
+            else if unreadCount > 0 {
+                ChatViewConfiguration.Profile.combinedLeadingAndTrailingOffsetWithUnreadMessages
+            }
+            else {
+                ChatViewConfiguration.Profile.combinedLeadingAndTrailingOffset
+            }
+        
+        let newConstant = safeAreaAdjustedNavigationBarWidth - (scaler * constant)
+        
+        guard newConstant != widthConstraint.constant else {
+            DDLogDebug("No need to update width constraint constant")
+            return
+        }
+            
+        widthConstraint.constant = newConstant
+        
+        setNeedsLayout() // "Commit" update
+    }
         
     private func updateGroupMembersListLabel() {
         let businessInjector = BusinessInjector.ui

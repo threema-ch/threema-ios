@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 
 public struct CustomContextMenuMenuTableViewConfig {
@@ -28,9 +8,10 @@ public struct CustomContextMenuMenuTableViewConfig {
     let tableViewBackgroundColorDark: UIColor
     let tableViewBackgroundColorLight: UIColor
     let tableViewHighlightedColor: UIColor
-    let tableViewSeparatorColor: UIColor
     let tableViewWidth: CGFloat
     let tableViewCornerRadius: CGFloat
+    let tableViewInset: CGFloat
+    let additionalSeparatorInset: CGFloat
     
     // Item
     let itemLeadingTrailingInset: CGFloat
@@ -38,10 +19,12 @@ public struct CustomContextMenuMenuTableViewConfig {
     let defaultItemTopTweak: CGFloat
     let defaultItemSpacing: CGFloat
     let defaultImageCenterInset: CGFloat
+    let defaultSelectionBackgroundCornerRadius: CGFloat
     let inlineItemTopBottomInset: CGFloat
     let inlineItemCornerRadius: CGFloat
     let inlineItemSpacing: CGFloat
     let inlineItemInset: CGFloat
+    let preferredTextStyle: UIFont.TextStyle
     
     // Default initializer created by compiler is enough
     
@@ -53,17 +36,44 @@ public struct CustomContextMenuMenuTableViewConfig {
         tableViewBackgroundColorDark: .secondarySystemBackground.withAlphaComponent(0.7),
         tableViewBackgroundColorLight: .systemBackground.withAlphaComponent(0.5),
         tableViewHighlightedColor: .gray.withAlphaComponent(0.2),
-        tableViewSeparatorColor: .quaternaryLabel,
         tableViewWidth: UIApplication.shared.preferredContentSizeCategory.isAccessibilityCategory ? 300 : 250,
         tableViewCornerRadius: 14,
+        tableViewInset: 0,
+        additionalSeparatorInset: 0,
         itemLeadingTrailingInset: 16,
         defaultItemTopBottomInset: 12,
         defaultItemTopTweak: -0.66,
         defaultItemSpacing: 4,
         defaultImageCenterInset: 12,
+        defaultSelectionBackgroundCornerRadius: 0,
         inlineItemTopBottomInset: 8.5,
         inlineItemCornerRadius: 8,
         inlineItemSpacing: 16,
-        inlineItemInset: 8
+        inlineItemInset: 8,
+        preferredTextStyle: .body
+    )
+    
+    static let glassConfig = CustomContextMenuMenuTableViewConfig(
+        sectionSpacingHeight: 21,
+        sectionBackgroundColorDark: .separator,
+        sectionBackgroundColorLight: .separator,
+        tableViewBackgroundColorDark: .clear,
+        tableViewBackgroundColorLight: .clear,
+        tableViewHighlightedColor: .gray.withAlphaComponent(0.2),
+        tableViewWidth: UIApplication.shared.preferredContentSizeCategory.isAccessibilityCategory ? 300 : 250,
+        tableViewCornerRadius: 32,
+        tableViewInset: 9,
+        additionalSeparatorInset: 4,
+        itemLeadingTrailingInset: 20,
+        defaultItemTopBottomInset: 10.33,
+        defaultItemTopTweak: 0,
+        defaultItemSpacing: 13,
+        defaultImageCenterInset: 15.5,
+        defaultSelectionBackgroundCornerRadius: 21,
+        inlineItemTopBottomInset: 0,
+        inlineItemCornerRadius: 8,
+        inlineItemSpacing: 4,
+        inlineItemInset: 10,
+        preferredTextStyle: .body
     )
 }

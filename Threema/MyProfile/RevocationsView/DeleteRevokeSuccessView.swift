@@ -1,24 +1,5 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
+import ThreemaFramework
 import ThreemaMacros
 
 struct DeleteRevokeSuccessView: View {
@@ -137,16 +118,15 @@ struct DeleteRevokeSuccessView: View {
                     
                     Spacer()
                     
-                    Button {
+                    ThreemaButton(
+                        title: #localize("my_profile_delete_identity_summary_view_close"),
+                        style: .borderedProminent,
+                        size: .fullWidth
+                    ) {
                         exit(1)
-                    } label: {
-                        Text(#localize("my_profile_delete_identity_summary_view_close"))
-                            .frame(maxWidth: .infinity)
-                            .foregroundColor(Colors.textProminentButtonWizard.color)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .padding(.horizontal)
                 }
+                .padding(.horizontal)
                 .frame(maxHeight: .infinity)
                 .frame(minHeight: proxy.size.height)
             }
@@ -156,5 +136,5 @@ struct DeleteRevokeSuccessView: View {
 
 #Preview {
     DeleteRevokeSuccessView(successViewType: .constant(.revoke))
-        .background(.black)
+        .preferredColorScheme(.dark)
 }

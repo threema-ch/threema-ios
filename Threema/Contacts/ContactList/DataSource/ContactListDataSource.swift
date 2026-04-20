@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Combine
 import Foundation
@@ -67,8 +47,8 @@ final class ContactListDataSource<
     private weak var tableView: UITableView?
     private var snapshotSubscription: Cancellable?
     private var sectionTitles: [String] { ThreemaLocalizedIndexedCollation.sectionIndexTitles }
-    private var contentProvider: (CellProvider, Provider) -> ContactListDataSource
-        .CellProvider = { cellProvider, provider in
+    private var contentProvider: (CellProvider, Provider)
+        -> ContactListDataSource.CellProvider = { cellProvider, provider in
             { tableView, indexPath, itemIdentifier in
                 cellProvider.dequeueCell(
                     for: indexPath,
@@ -102,52 +82,55 @@ final class ContactListDataSource<
     }()
     
     private lazy var headerView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [headerLabel, spacerView, headerButton])
-        stackView.axis = .horizontal
-        stackView.distribution = .fillProportionally
-        stackView.spacing = 8
-        stackView.layer.cornerRadius = 8
-        stackView.backgroundColor = .secondarySystemFill
+        let stackView = AccessibleStackView(arrangedSubviews: [headerLabel, headerButton])
+        stackView.onActivate = { [weak self] in
+            self?.openSettings()
+        }
+        stackView.axis = headerAxis()
+        stackView.alignment = .center
+        stackView.distribution = .fill
+        stackView.spacing = 4
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.isLayoutMarginsRelativeArrangement = true
-        stackView.layoutMargins = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        stackView.directionalLayoutMargins = .zero
+        
+        stackView.isAccessibilityElement = true
+        stackView.accessibilityLabel = #localize("contact_list_limited_access_header_label")
+        stackView.accessibilityTraits = .button
+        stackView.accessibilityHint = #localize("contact_list_limited_access_header_accessibility_hint")
+        
         return stackView
     }()
     
     private lazy var headerLabel: UILabel = {
         let label = UILabel()
-        label.text = String.localizedStringWithFormat(
-            #localize("contact_list_limited_access_header_label"),
-            TargetManager.appName
-        )
-        label.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        label.text = #localize("contact_list_limited_access_header_label")
+        label.font = UIFont.preferredFont(forTextStyle: .callout)
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 0
         label.textAlignment = .left
+        label.isAccessibilityElement = false
+        label.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
         return label
     }()
     
-    private lazy var spacerView: UIView = {
-        let spacerView = UIView()
-        
-        let spacerViewWidthConstraint = spacerView.widthAnchor.constraint(equalToConstant: .greatestFiniteMagnitude)
-        spacerViewWidthConstraint.priority = .defaultLow
-        spacerViewWidthConstraint.isActive = true
-        
-        return spacerView
-    }()
-    
     private lazy var headerButton: UIButton = {
-        
         var config = UIButton.Configuration.filled()
         config.buttonSize = .mini
         config.title = #localize("contact_list_limited_access_header_button")
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            outgoing.font = .callout
+            return outgoing
+        }
         config.baseForegroundColor = .white
         let button = UIButton(type: .system)
         button.configuration = config
         button.addTarget(self, action: #selector(openSettings), for: .touchUpInside)
         button.setContentCompressionResistancePriority(.required, for: .horizontal)
         button.setContentHuggingPriority(.required, for: .horizontal)
+        button.isAccessibilityElement = false
 
         return button
     }()
@@ -192,7 +175,11 @@ final class ContactListDataSource<
         sectionIndexEnabled ? sectionTitles : nil
     }
     
-    override func tableView(_ tableView: UITableView, sectionForSectionIndexTitle title: String, at index: Int) -> Int {
+    override func tableView(
+        _ tableView: UITableView,
+        sectionForSectionIndexTitle title: String,
+        at index: Int
+    ) -> Int {
         tableIndexTitles.firstIndex(of: title) ?? 0
     }
     
@@ -237,22 +224,42 @@ final class ContactListDataSource<
         }
     }
     
+    public func updateLimitedAccessHeaderIfNeeded() {
+        guard tableView?.tableHeaderView != nil else {
+            return
+        }
+        
+        headerView.axis = headerAxis()
+    }
+    
     public func checkLimitedAccessHeader() {
-        guard let tableView, #available(iOS 18, *), UserSettings.shared().syncContacts, sourceType == .contacts,
-              CNContactStore.authorizationStatus(for: .contacts) == .limited, snapshot().numberOfItems > 0 else {
+        guard
+            let tableView,
+            #available(iOS 18, *),
+            UserSettings.shared().syncContacts,
+            sourceType == .contacts,
+            CNContactStore.authorizationStatus(for: .contacts) == .limited,
+            snapshot().numberOfItems > 0
+        else {
             tableView?.tableHeaderView = nil
             return
         }
+        
         tableView.tableHeaderView = headerView
         
-        NSLayoutConstraint.activate([
-            headerView.centerXAnchor.constraint(equalTo: tableView.centerXAnchor),
-            headerView.widthAnchor
-                .constraint(
-                    lessThanOrEqualToConstant: tableView.bounds.width - tableView.directionalLayoutMargins
-                        .trailing - tableView.directionalLayoutMargins.leading
+        NSLayoutConstraint.activate(
+            [
+                headerView.leadingAnchor.constraint(
+                    equalTo: tableView.safeAreaLayoutGuide.leadingAnchor,
+                    constant: tableView.directionalLayoutMargins.leading
                 ),
-        ])
+                headerView.trailingAnchor.constraint(
+                    equalTo: tableView.safeAreaLayoutGuide.trailingAnchor,
+                    constant: -tableView.directionalLayoutMargins.trailing
+                ),
+                headerView.topAnchor.constraint(equalTo: tableView.topAnchor),
+            ]
+        )
         
         tableView.layoutSubviews()
     }
@@ -276,8 +283,30 @@ final class ContactListDataSource<
     }
     
     @objc private func openSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString) {
-            Task { await UIApplication.shared.open(url) }
+        guard let url = URL(string: UIApplication.openSettingsURLString) else {
+            return
         }
+        
+        Task {
+            await UIApplication.shared.open(url)
+        }
+    }
+    
+    private func headerAxis() -> NSLayoutConstraint.Axis {
+        let isAccessibilityCategory =
+            tableView?.traitCollection.preferredContentSizeCategory.isAccessibilityCategory
+        
+        return isAccessibilityCategory == true ? .vertical : .horizontal
+    }
+}
+
+// MARK: - Helper Types
+
+private final class AccessibleStackView: UIStackView {
+    var onActivate: (() -> Void)?
+    
+    override func accessibilityActivate() -> Bool {
+        onActivate?()
+        return onActivate != nil
     }
 }

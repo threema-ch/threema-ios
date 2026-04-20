@@ -1,104 +1,189 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
+import ThreemaMacros
 import UIKit
 
 // MARK: - ChatBarButton.Configuration
 
-extension ChatBarButton {
-    struct Configuration {
-        var size: CGFloat = ChatViewConfiguration.ChatBarButton.defaultSize
-        var scaledSize: CGFloat {
-            UIFontMetrics(forTextStyle: .body).scaledValue(for: size)
-        }
-    }
-}
+struct ChatBarButtonConfiguration {
+    let baseConfiguration: UIButton.Configuration
 
-class ChatBarButton: ThemedCodeButton {
+    let systemImageName: String
+    let tintColor: UIColor
+    let accessibilityLabel: String
     
-    private lazy var buttonConfiguration = Configuration()
+    var scaledSize: CGFloat {
+        UIFontMetrics(forTextStyle: .body).scaledValue(for: ChatBarConfiguration.defaultSize)
+    }
     
-    private var defaultColor: () -> UIColor
-    
-    private var sfSymbolName: String?
+    let symbolWeight: UIImage.SymbolWeight
+    let symbolScale: UIImage.SymbolScale
     
     init(
-        sfSymbolName: String,
+        baseConfiguration: UIButton.Configuration,
+        systemImageName: String,
+        tintColor: UIColor,
         accessibilityLabel: String,
-        defaultColor: @escaping (() -> UIColor) = { .tintColor },
-        customScalableSize: CGFloat? = nil,
-        action: @escaping Action
+        symbolWeight: UIImage.SymbolWeight = .regular,
+        symbolScale: UIImage.SymbolScale = .default
     ) {
-        
-        self.defaultColor = defaultColor
-        
-        // Setting the actual frame size fixes an Auto Layout error that probably occurs when
-        // there is no superview
-        let initFrame = CGRect(
-            x: 0, y: 0,
-            width: 44,
-            height: 44
-        )
-        
-        super.init(frame: initFrame, action: action)
-        
-        if let customScalableSize {
-            buttonConfiguration.size = customScalableSize
-        }
-        
-        configureButton(with: sfSymbolName)
-        updateColors()
-        
+        self.baseConfiguration = baseConfiguration
+        self.systemImageName = systemImageName
+        self.tintColor = tintColor
         self.accessibilityLabel = accessibilityLabel
+        self.symbolWeight = symbolWeight
+        self.symbolScale = symbolScale
     }
-    
-    // MARK: - Configure
-    
-    public func updateButton(with sfSymbolName: String) {
-        configureButton(with: sfSymbolName)
-    }
-    
-    private func configureButton(
-        with sfSymbolName: String
-    ) {
-        guard self.sfSymbolName != sfSymbolName else {
-            return
+
+    static var plusButton = {
+        if #available(iOS 26.0, *) {
+            return ChatBarButtonConfiguration(
+                baseConfiguration: .glass(),
+                systemImageName: "plus",
+                tintColor: .label,
+                accessibilityLabel: #localize("compose_bar_attachment_button_accessibility_label")
+            )
         }
+        else {
+            assertionFailure("This button config should not be used before iOS 26.")
+            return ChatBarButtonConfiguration(
+                baseConfiguration: .plain(),
+                systemImageName: "plus",
+                tintColor: .label,
+                accessibilityLabel: #localize("compose_bar_attachment_button_accessibility_label")
+            )
+        }
+    }()
+    
+    static var sendButton = {
+        if #available(iOS 26.0, *) {
+            return ChatBarButtonConfiguration(
+                baseConfiguration: .prominentGlass(),
+                systemImageName: "arrow.up",
+                tintColor: .labelInverted,
+                accessibilityLabel: #localize("compose_bar_send_message_button_accessibility_label"),
+                symbolWeight: .semibold
+            )
+        }
+        else {
+            assertionFailure("This button config should not be used before iOS 26.")
+            return ChatBarButtonConfiguration(
+                baseConfiguration: .borderedProminent(),
+                systemImageName: "arrow.up",
+                tintColor: .labelInverted,
+                accessibilityLabel: #localize("compose_bar_send_message_button_accessibility_label")
+            )
+        }
+    }()
+    
+    static var recordButton = ChatBarButtonConfiguration(
+        baseConfiguration: .plain(),
+        systemImageName: "mic",
+        tintColor: .label,
+        accessibilityLabel: #localize("compose_bar_record_button_accessibility_label")
+    )
+    
+    static var cameraButton = ChatBarButtonConfiguration(
+        baseConfiguration: .plain(),
+        systemImageName: "camera",
+        tintColor: .label,
+        accessibilityLabel: #localize("compose_bar_camera_button_accessibility_label")
+    )
+    
+    static var imagePickerButton = ChatBarButtonConfiguration(
+        baseConfiguration: .plain(),
+        systemImageName: "photo",
+        tintColor: .label,
+        accessibilityLabel: #localize("compose_bar_image_picker_button_accessibility_label")
+    )
+    
+    static var closeEditButton: ChatBarButtonConfiguration = {
+        let accessibilityLabel = #localize("accessibility_chatbar_close_edited_message_button_label")
         
-        self.sfSymbolName = sfSymbolName
+        if #available(iOS 26.0, *) {
+            return ChatBarButtonConfiguration(
+                baseConfiguration: .plain(),
+                systemImageName: "xmark",
+                tintColor: .label,
+                accessibilityLabel: accessibilityLabel
+            )
+        }
+        else {
+            return ChatBarButtonConfiguration(
+                baseConfiguration: .plain(),
+                systemImageName: "xmark.circle.fill",
+                tintColor: Colors.backgroundButton,
+                accessibilityLabel: accessibilityLabel,
+                symbolScale: .large
+            )
+        }
+    }()
+    
+    static var closeQuoteButton: ChatBarButtonConfiguration = {
+        let accessibilityLabel = #localize("accessibility_chatbar_close_quote_button_label")
         
-        let image = UIImage(systemName: sfSymbolName)?.withRenderingMode(.alwaysTemplate)
-        setImage(image, for: .normal)
+        if #available(iOS 26.0, *) {
+            return ChatBarButtonConfiguration(
+                baseConfiguration: .plain(),
+                systemImageName: "xmark",
+                tintColor: .label,
+                accessibilityLabel: accessibilityLabel
+            )
+        }
+        else {
+            return ChatBarButtonConfiguration(
+                baseConfiguration: .plain(),
+                systemImageName: "xmark.circle.fill",
+                tintColor: Colors.backgroundButton,
+                accessibilityLabel: accessibilityLabel,
+                symbolScale: .large
+            )
+        }
+    }()
+}
+
+final class ChatBarButton: UIButton {
+    
+    private var buttonConfiguration: ChatBarButtonConfiguration
+    
+    init(
+        for configuration: ChatBarButtonConfiguration,
+        action: UIAction
+    ) {
+        self.buttonConfiguration = configuration
         
-        let configuration = UIImage.SymbolConfiguration(
-            pointSize: buttonConfiguration.scaledSize,
-            weight: .regular,
-            scale: .large
-        )
-        setPreferredSymbolConfiguration(configuration, forImageIn: .normal)
+        super.init(frame: .zero)
+        
+        addAction(action, for: .touchUpInside)
+        self.accessibilityLabel = configuration.accessibilityLabel
+
+        configureButton()
     }
     
-    // MARK: - Updates
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
-    override func updateColors() {
-        super.updateColors()
-        imageView?.tintColor = defaultColor()
+    func updateImage(imageName: String) {
+        configuration?.image = UIImage(systemName: imageName)
+    }
+    
+    // MARK: - Configuration
+    
+    private func configureButton() {
+        var config = buttonConfiguration.baseConfiguration
+        
+        // Image
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(
+            pointSize: buttonConfiguration.scaledSize,
+            weight: buttonConfiguration.symbolWeight,
+            scale: buttonConfiguration.symbolScale
+        )
+        config.imagePlacement = .all // needed to center image
+
+        config.image = UIImage(systemName: buttonConfiguration.systemImageName)
+      
+        config.baseForegroundColor = buttonConfiguration.tintColor
+        
+        configuration = config
     }
 }

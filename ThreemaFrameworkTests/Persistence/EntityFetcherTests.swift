@@ -1,26 +1,6 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import RemoteSecretProtocolTestHelper
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 @testable import ThreemaFramework
 
@@ -39,7 +19,7 @@ final class EntityFetcherTests: XCTestCase {
     }
 
     func testHasDuplicateContactsNo() {
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
         databasePreparer.save {
             databasePreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: ThreemaProtocol.publicKeyLength)!,
@@ -53,7 +33,7 @@ final class EntityFetcherTests: XCTestCase {
     }
 
     func testHasDuplicateContactsYes() throws {
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
         databasePreparer.save {
             let publicKey1 = BytesUtility.generateRandomBytes(length: ThreemaProtocol.publicKeyLength)!
             let identity1 = "ECHOECHO"
@@ -87,7 +67,7 @@ final class EntityFetcherTests: XCTestCase {
 
     func testSolicitedContactJustContact() {
         // Setup
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
         databasePreparer.save {
             databasePreparer.createContact(identity: "AAAAAAAA")
         }
@@ -106,7 +86,7 @@ final class EntityFetcherTests: XCTestCase {
 
     func testSolicitedContactConversationWithNoLastUpdate() async {
         // Setup
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
         let contact = databasePreparer.save {
             databasePreparer.createContact(identity: "AAAAAAAA")
         }
@@ -129,18 +109,13 @@ final class EntityFetcherTests: XCTestCase {
         XCTAssertEqual(0, solicitedContacts.count)
     }
 
-    func testSolicitedContactConversationWithLastUpdate() async {
+    func testSolicitedContactConversationWithLastUpdate() {
         // Setup
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
         let contactIdentity = ThreemaIdentity("AAAAAAAA")
-        let contact = databasePreparer.save {
-            databasePreparer.createContact(identity: contactIdentity.rawValue)
-        }
-
-        let entityManager = testDatabase.entityManager
-        _ = await entityManager.performSave {
-            let conversation = entityManager.entityCreator.conversationEntity()
-            conversation.contact = contact
+        databasePreparer.save {
+            let contact = databasePreparer.createContact(identity: contactIdentity.rawValue)
+            let conversation = databasePreparer.createConversation(contactEntity: contact)
             conversation.lastUpdate = .now
         }
 
@@ -156,21 +131,17 @@ final class EntityFetcherTests: XCTestCase {
         XCTAssertTrue(solicitedContacts.contains(contactIdentity.rawValue))
     }
 
-    func testSolicitedContactConversationWithLastUpdateInactiveContact() async {
+    func testSolicitedContactConversationWithLastUpdateInactiveContact() {
         // Setup
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
         let contactIdentity = ThreemaIdentity("AAAAAAAA")
-        let contact = databasePreparer.save {
-            databasePreparer.createContact(
+        databasePreparer.save {
+            let contact = databasePreparer.createContact(
                 identity: contactIdentity.rawValue,
                 state: .inactive
             )
-        }
 
-        let entityManager = testDatabase.entityManager
-        _ = await entityManager.performSave {
-            let conversation = entityManager.entityCreator.conversationEntity()
-            conversation.contact = contact
+            let conversation = databasePreparer.createConversation(contactEntity: contact)
             conversation.lastUpdate = .now
         }
 
@@ -186,27 +157,24 @@ final class EntityFetcherTests: XCTestCase {
         XCTAssertTrue(solicitedContacts.contains(contactIdentity.rawValue))
     }
 
-    func testSolicitedContactConversationWithLastUpdateInvalidContact() async {
+    func testSolicitedContactConversationWithLastUpdateInvalidContact() {
         // Setup
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
         let contactIdentity = ThreemaIdentity("AAAAAAAA")
-        let contact = databasePreparer.save {
-            databasePreparer.createContact(
+        databasePreparer.save {
+            let contact = databasePreparer.createContact(
                 identity: contactIdentity.rawValue,
                 state: .invalid
             )
-        }
 
-        let entityManager = testDatabase.entityManager
-        _ = await entityManager.performSave {
-            let conversation = entityManager.entityCreator.conversationEntity()
+            let conversation = databasePreparer.createConversation()
             conversation.contact = contact
             conversation.lastUpdate = .now
         }
 
         // Run
 
-        let entityFetcher = entityManager.entityFetcher
+        let entityFetcher = testDatabase.entityManager.entityFetcher
         let solicitedContacts = entityFetcher.solicitedContactIdentities()
 
         //  Validate
@@ -215,9 +183,9 @@ final class EntityFetcherTests: XCTestCase {
         XCTAssertEqual(0, solicitedContacts.count)
     }
 
-    func testSolicitedContactActiveGroup() async throws {
+    func testSolicitedContactActiveGroup() throws {
         // Setup
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
 
         let creatorIdentity = ThreemaIdentity("CREATOR1")
         let memberIdentities = [
@@ -228,17 +196,17 @@ final class EntityFetcherTests: XCTestCase {
             ThreemaIdentity("MEMBER04"),
         ]
 
-        databasePreparer.save {
+        try databasePreparer.save {
             for memberIdentity in memberIdentities {
                 databasePreparer.createContact(identity: memberIdentity.rawValue)
             }
-        }
 
-        _ = try databasePreparer.createGroup(
-            groupID: MockData.generateGroupID(),
-            groupCreatorIdentity: creatorIdentity.rawValue,
-            members: memberIdentities.map(\.rawValue)
-        )
+            _ = try databasePreparer.createGroup(
+                groupID: BytesUtility.generateGroupID(),
+                groupCreatorIdentity: creatorIdentity.rawValue,
+                members: memberIdentities.map(\.rawValue)
+            )
+        }
 
         // Run
 
@@ -251,9 +219,9 @@ final class EntityFetcherTests: XCTestCase {
         XCTAssertTrue(solicitedContacts.subtracting(memberIdentities.map(\.rawValue)).isEmpty)
     }
 
-    func testSolicitedContactActiveOwnGroup() async throws {
+    func testSolicitedContactActiveOwnGroup() throws {
         // Setup
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
         let myIdentity = "TESTERID"
         let memberIdentities = [
             ThreemaIdentity("MEMBER01"),
@@ -262,17 +230,17 @@ final class EntityFetcherTests: XCTestCase {
             ThreemaIdentity("MEMBER04"),
         ]
 
-        databasePreparer.save {
+        try databasePreparer.save {
             for memberIdentity in memberIdentities {
                 databasePreparer.createContact(identity: memberIdentity.rawValue)
             }
-        }
 
-        _ = try databasePreparer.createGroup(
-            groupID: MockData.generateGroupID(),
-            groupCreatorIdentity: myIdentity,
-            members: memberIdentities.map(\.rawValue)
-        )
+            _ = try databasePreparer.createGroup(
+                groupID: BytesUtility.generateGroupID(),
+                groupCreatorIdentity: myIdentity,
+                members: memberIdentities.map(\.rawValue)
+            )
+        }
 
         // Run
 
@@ -287,9 +255,9 @@ final class EntityFetcherTests: XCTestCase {
 
     // Requested Sync state doesn't seem to be used anymore. Skip
 
-    func testSolicitedContactLeftGroup() async throws {
+    func testSolicitedContactLeftGroup() throws {
         // Setup
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
 
         let creatorIdentity = ThreemaIdentity("CREATOR1")
         let memberIdentities = [
@@ -300,19 +268,17 @@ final class EntityFetcherTests: XCTestCase {
             ThreemaIdentity("MEMBER04"),
         ]
 
-        databasePreparer.save {
+        try databasePreparer.save {
             for memberIdentity in memberIdentities {
                 databasePreparer.createContact(identity: memberIdentity.rawValue)
             }
-        }
 
-        let (_, group, _) = try databasePreparer.createGroup(
-            groupID: MockData.generateGroupID(),
-            groupCreatorIdentity: creatorIdentity.rawValue,
-            members: memberIdentities.map(\.rawValue)
-        )
+            let (_, group, _) = try databasePreparer.createGroup(
+                groupID: BytesUtility.generateGroupID(),
+                groupCreatorIdentity: creatorIdentity.rawValue,
+                members: memberIdentities.map(\.rawValue)
+            )
 
-        databasePreparer.save {
             group.state = 2
         }
 
@@ -327,9 +293,9 @@ final class EntityFetcherTests: XCTestCase {
         XCTAssertEqual(0, solicitedContacts.count)
     }
 
-    func testSolicitedContactForcedLeftGroup() async throws {
+    func testSolicitedContactForcedLeftGroup() throws {
         // Setup
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
 
         let creatorIdentity = ThreemaIdentity("CREATOR1")
         let memberIdentities = [
@@ -340,19 +306,17 @@ final class EntityFetcherTests: XCTestCase {
             ThreemaIdentity("MEMBER04"),
         ]
 
-        databasePreparer.save {
+        try databasePreparer.save {
             for memberIdentity in memberIdentities {
                 databasePreparer.createContact(identity: memberIdentity.rawValue)
             }
-        }
 
-        let (_, group, _) = try databasePreparer.createGroup(
-            groupID: MockData.generateGroupID(),
-            groupCreatorIdentity: creatorIdentity.rawValue,
-            members: memberIdentities.map(\.rawValue)
-        )
+            let (_, group, _) = try databasePreparer.createGroup(
+                groupID: BytesUtility.generateGroupID(),
+                groupCreatorIdentity: creatorIdentity.rawValue,
+                members: memberIdentities.map(\.rawValue)
+            )
 
-        databasePreparer.save {
             group.state = 3
         }
 
@@ -369,7 +333,7 @@ final class EntityFetcherTests: XCTestCase {
 
     func testSolicitedContactMultipleGroupsAndContacts() async throws {
         // Setup
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
         let entityManager = testDatabase.entityManager
 
         // Create some identities to use
@@ -421,7 +385,7 @@ final class EntityFetcherTests: XCTestCase {
         let creator1 = identities[0]
         let members1 = Array(identities[0..<10])
         let _ = try databasePreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: creator1.rawValue,
             members: members1.map(\.rawValue)
         )
@@ -432,7 +396,7 @@ final class EntityFetcherTests: XCTestCase {
         let creator2 = identities[5]
         let members2 = Array(identities[4..<30])
         let _ = try databasePreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: creator2.rawValue,
             members: members2.map(\.rawValue)
         )
@@ -443,7 +407,7 @@ final class EntityFetcherTests: XCTestCase {
         let creator3 = identities[10]
         let members3 = Array(identities[10..<40])
         let (_, group3, _) = try databasePreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: creator3.rawValue,
             members: members3.map(\.rawValue)
         )
@@ -470,7 +434,7 @@ final class EntityFetcherTests: XCTestCase {
     func testAllContactsFetchingPerformance() {
         let numberOfContacts = 9000 // Up to 5 digits allowed
 
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
 
         let numberFormatter = NumberFormatter()
         numberFormatter.minimumIntegerDigits = 5
@@ -499,7 +463,7 @@ final class EntityFetcherTests: XCTestCase {
     func testAllContactIdentitiesFetchingPerformance() {
         let numberOfContacts = 9000 // Up to 5 digits allowed
 
-        let databasePreparer = DatabasePreparer(context: testDatabase.context.main)
+        let databasePreparer = testDatabase.preparer
 
         let numberFormatter = NumberFormatter()
         numberFormatter.minimumIntegerDigits = 5
@@ -530,12 +494,12 @@ final class EntityFetcherTests: XCTestCase {
         ]
 
         for testCase in testCases {
-            let expectedMessageID = MockData.generateMessageID()
-            let expectedGroupMessageID = MockData.generateMessageID()
+            let expectedMessageID = BytesUtility.generateMessageID()
+            let expectedGroupMessageID = BytesUtility.generateMessageID()
 
             let testDatabaseLocal = TestDatabase(encrypted: testCase.isDBEncrypted)
 
-            let databasePreparer = DatabasePreparer(context: testDatabaseLocal.context.main)
+            let databasePreparer = testDatabaseLocal.preparer
             try databasePreparer.save {
                 let contact = databasePreparer.createContact(
                     publicKey: BytesUtility.generateRandomBytes(length: ThreemaProtocol.publicKeyLength)!,
@@ -556,7 +520,7 @@ final class EntityFetcherTests: XCTestCase {
                 )
 
                 let (_, _, groupConversation) = try databasePreparer.createGroup(
-                    groupID: MockData.generateGroupID(),
+                    groupID: BytesUtility.generateGroupID(),
                     groupCreatorIdentity: expectedSenderIdentity,
                     members: [expectedSenderIdentity]
                 )

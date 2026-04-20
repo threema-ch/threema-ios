@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 
 // swiftformat:disable all
@@ -108,6 +88,7 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
     case hushedFace = "😯"
     case astonishedFace = "😲"
     case flushedFace = "😳"
+    case distortedFace = "🫪"
     case pleadingFace = "🥺"
     case faceHoldingBackTears = "🥹"
     case frowningFaceWithOpenMouth = "😦"
@@ -181,6 +162,7 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
     case kissMark = "💋"
     case hundredPoints = "💯"
     case angerSymbol = "💢"
+    case fightCloud = "🫯"
     case collision = "💥"
     case dizzy = "💫"
     case sweatDroplets = "💦"
@@ -425,6 +407,7 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
     case manZombie = "🧟‍♂️"
     case womanZombie = "🧟‍♀️"
     case troll = "🧌"
+    case hairyCreature = "🫈"
     case personGettingMassage = "💆"
     case manGettingMassage = "💆‍♂️"
     case womanGettingMassage = "💆‍♀️"
@@ -470,6 +453,7 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
     case personRunningFacingRight = "🏃‍➡️"
     case womanRunningFacingRight = "🏃‍♀️‍➡️"
     case manRunningFacingRight = "🏃‍♂️‍➡️"
+    case balletDancer = "🧑‍🩰"
     case womanDancing = "💃"
     case manDancing = "🕺"
     case personInSuitLevitating = "🕴️"
@@ -678,6 +662,7 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
     case spoutingWhale = "🐳"
     case whale = "🐋"
     case dolphin = "🐬"
+    case orca = "🫍"
     case seal = "🦭"
     case fish = "🐟"
     case tropicalFish = "🐠"
@@ -877,6 +862,7 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
     case compass = "🧭"
     case snowCappedMountain = "🏔️"
     case mountain = "⛰️"
+    case landslide = "🛘"
     case volcano = "🌋"
     case mountFuji = "🗻"
     case camping = "🏕️"
@@ -1237,10 +1223,11 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
     case headphone = "🎧"
     case radio = "📻"
     case saxophone = "🎷"
+    case trumpet = "🎺"
+    case trombone = "🪊"
     case accordion = "🪗"
     case guitar = "🎸"
     case musicalKeyboard = "🎹"
-    case trumpet = "🎺"
     case violin = "🎻"
     case banjo = "🪕"
     case drum = "🥁"
@@ -1301,8 +1288,9 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
     case bookmarkTabs = "📑"
     case bookmark = "🔖"
     case label = "🏷️"
-    case moneyBag = "💰"
     case coin = "🪙"
+    case moneyBag = "💰"
+    case treasureChest = "🪎"
     case yenBanknote = "💴"
     case dollarBanknote = "💵"
     case euroBanknote = "💶"
@@ -2104,3648 +2092,3664 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
             83
        case .flushedFace:
             84
-       case .pleadingFace:
+       case .distortedFace:
             85
-       case .faceHoldingBackTears:
+       case .pleadingFace:
             86
-       case .frowningFaceWithOpenMouth:
+       case .faceHoldingBackTears:
             87
-       case .anguishedFace:
+       case .frowningFaceWithOpenMouth:
             88
-       case .fearfulFace:
+       case .anguishedFace:
             89
-       case .anxiousFaceWithSweat:
+       case .fearfulFace:
             90
-       case .sadButRelievedFace:
+       case .anxiousFaceWithSweat:
             91
-       case .cryingFace:
+       case .sadButRelievedFace:
             92
-       case .loudlyCryingFace:
+       case .cryingFace:
             93
-       case .faceScreamingInFear:
+       case .loudlyCryingFace:
             94
-       case .confoundedFace:
+       case .faceScreamingInFear:
             95
-       case .perseveringFace:
+       case .confoundedFace:
             96
-       case .disappointedFace:
+       case .perseveringFace:
             97
-       case .downcastFaceWithSweat:
+       case .disappointedFace:
             98
-       case .wearyFace:
+       case .downcastFaceWithSweat:
             99
-       case .tiredFace:
+       case .wearyFace:
             100
-       case .yawningFace:
+       case .tiredFace:
             101
-       case .faceWithSteamFromNose:
+       case .yawningFace:
             102
-       case .enragedFace:
+       case .faceWithSteamFromNose:
             103
-       case .angryFace:
+       case .enragedFace:
             104
-       case .faceWithSymbolsOnMouth:
+       case .angryFace:
             105
-       case .smilingFaceWithHorns:
+       case .faceWithSymbolsOnMouth:
             106
-       case .angryFaceWithHorns:
+       case .smilingFaceWithHorns:
             107
-       case .skull:
+       case .angryFaceWithHorns:
             108
-       case .skullAndCrossbones:
+       case .skull:
             109
-       case .pileOfPoo:
+       case .skullAndCrossbones:
             110
-       case .clownFace:
+       case .pileOfPoo:
             111
-       case .ogre:
+       case .clownFace:
             112
-       case .goblin:
+       case .ogre:
             113
-       case .ghost:
+       case .goblin:
             114
-       case .alien:
+       case .ghost:
             115
-       case .alienMonster:
+       case .alien:
             116
-       case .robot:
+       case .alienMonster:
             117
-       case .grinningCat:
+       case .robot:
             118
-       case .grinningCatWithSmilingEyes:
+       case .grinningCat:
             119
-       case .catWithTearsOfJoy:
+       case .grinningCatWithSmilingEyes:
             120
-       case .smilingCatWithHeartEyes:
+       case .catWithTearsOfJoy:
             121
-       case .catWithWrySmile:
+       case .smilingCatWithHeartEyes:
             122
-       case .kissingCat:
+       case .catWithWrySmile:
             123
-       case .wearyCat:
+       case .kissingCat:
             124
-       case .cryingCat:
+       case .wearyCat:
             125
-       case .poutingCat:
+       case .cryingCat:
             126
-       case .seeNoEvilMonkey:
+       case .poutingCat:
             127
-       case .hearNoEvilMonkey:
+       case .seeNoEvilMonkey:
             128
-       case .speakNoEvilMonkey:
+       case .hearNoEvilMonkey:
             129
-       case .loveLetter:
+       case .speakNoEvilMonkey:
             130
-       case .heartWithArrow:
+       case .loveLetter:
             131
-       case .heartWithRibbon:
+       case .heartWithArrow:
             132
-       case .sparklingHeart:
+       case .heartWithRibbon:
             133
-       case .growingHeart:
+       case .sparklingHeart:
             134
-       case .beatingHeart:
+       case .growingHeart:
             135
-       case .revolvingHearts:
+       case .beatingHeart:
             136
-       case .twoHearts:
+       case .revolvingHearts:
             137
-       case .heartDecoration:
+       case .twoHearts:
             138
-       case .heartExclamation:
+       case .heartDecoration:
             139
-       case .brokenHeart:
+       case .heartExclamation:
             140
-       case .heartOnFire:
+       case .brokenHeart:
             141
-       case .mendingHeart:
+       case .heartOnFire:
             142
-       case .redHeart:
+       case .mendingHeart:
             143
-       case .pinkHeart:
+       case .redHeart:
             144
-       case .orangeHeart:
+       case .pinkHeart:
             145
-       case .yellowHeart:
+       case .orangeHeart:
             146
-       case .greenHeart:
+       case .yellowHeart:
             147
-       case .blueHeart:
+       case .greenHeart:
             148
-       case .lightBlueHeart:
+       case .blueHeart:
             149
-       case .purpleHeart:
+       case .lightBlueHeart:
             150
-       case .brownHeart:
+       case .purpleHeart:
             151
-       case .blackHeart:
+       case .brownHeart:
             152
-       case .greyHeart:
+       case .blackHeart:
             153
-       case .whiteHeart:
+       case .greyHeart:
             154
-       case .kissMark:
+       case .whiteHeart:
             155
-       case .hundredPoints:
+       case .kissMark:
             156
-       case .angerSymbol:
+       case .hundredPoints:
             157
-       case .collision:
+       case .angerSymbol:
             158
-       case .dizzy:
+       case .fightCloud:
             159
-       case .sweatDroplets:
+       case .collision:
             160
-       case .dashingAway:
+       case .dizzy:
             161
-       case .hole:
+       case .sweatDroplets:
             162
-       case .speechBalloon:
+       case .dashingAway:
             163
-       case .eyeInSpeechBubble:
+       case .hole:
             164
-       case .leftSpeechBubble:
+       case .speechBalloon:
             165
-       case .rightAngerBubble:
+       case .eyeInSpeechBubble:
             166
-       case .thoughtBalloon:
+       case .leftSpeechBubble:
             167
-       case .zzz:
+       case .rightAngerBubble:
             168
-       case .wavingHand:
+       case .thoughtBalloon:
             169
-       case .raisedBackOfHand:
+       case .zzz:
             170
-       case .handWithFingersSplayed:
+       case .wavingHand:
             171
-       case .raisedHand:
+       case .raisedBackOfHand:
             172
-       case .vulcanSalute:
+       case .handWithFingersSplayed:
             173
-       case .rightwardsHand:
+       case .raisedHand:
             174
-       case .leftwardsHand:
+       case .vulcanSalute:
             175
-       case .palmDownHand:
+       case .rightwardsHand:
             176
-       case .palmUpHand:
+       case .leftwardsHand:
             177
-       case .leftwardsPushingHand:
+       case .palmDownHand:
             178
-       case .rightwardsPushingHand:
+       case .palmUpHand:
             179
-       case .okHand:
+       case .leftwardsPushingHand:
             180
-       case .pinchedFingers:
+       case .rightwardsPushingHand:
             181
-       case .pinchingHand:
+       case .okHand:
             182
-       case .victoryHand:
+       case .pinchedFingers:
             183
-       case .crossedFingers:
+       case .pinchingHand:
             184
-       case .handWithIndexFingerAndThumbCrossed:
+       case .victoryHand:
             185
-       case .loveYouGesture:
+       case .crossedFingers:
             186
-       case .signOfTheHorns:
+       case .handWithIndexFingerAndThumbCrossed:
             187
-       case .callMeHand:
+       case .loveYouGesture:
             188
-       case .backhandIndexPointingLeft:
+       case .signOfTheHorns:
             189
-       case .backhandIndexPointingRight:
+       case .callMeHand:
             190
-       case .backhandIndexPointingUp:
+       case .backhandIndexPointingLeft:
             191
-       case .middleFinger:
+       case .backhandIndexPointingRight:
             192
-       case .backhandIndexPointingDown:
+       case .backhandIndexPointingUp:
             193
-       case .indexPointingUp:
+       case .middleFinger:
             194
-       case .indexPointingAtTheViewer:
+       case .backhandIndexPointingDown:
             195
-       case .thumbsUp:
+       case .indexPointingUp:
             196
-       case .thumbsDown:
+       case .indexPointingAtTheViewer:
             197
-       case .raisedFist:
+       case .thumbsUp:
             198
-       case .oncomingFist:
+       case .thumbsDown:
             199
-       case .leftFacingFist:
+       case .raisedFist:
             200
-       case .rightFacingFist:
+       case .oncomingFist:
             201
-       case .clappingHands:
+       case .leftFacingFist:
             202
-       case .raisingHands:
+       case .rightFacingFist:
             203
-       case .heartHands:
+       case .clappingHands:
             204
-       case .openHands:
+       case .raisingHands:
             205
-       case .palmsUpTogether:
+       case .heartHands:
             206
-       case .handshake:
+       case .openHands:
             207
-       case .foldedHands:
+       case .palmsUpTogether:
             208
-       case .writingHand:
+       case .handshake:
             209
-       case .nailPolish:
+       case .foldedHands:
             210
-       case .selfie:
+       case .writingHand:
             211
-       case .flexedBiceps:
+       case .nailPolish:
             212
-       case .mechanicalArm:
+       case .selfie:
             213
-       case .mechanicalLeg:
+       case .flexedBiceps:
             214
-       case .leg:
+       case .mechanicalArm:
             215
-       case .foot:
+       case .mechanicalLeg:
             216
-       case .ear:
+       case .leg:
             217
-       case .earWithHearingAid:
+       case .foot:
             218
-       case .nose:
+       case .ear:
             219
-       case .brain:
+       case .earWithHearingAid:
             220
-       case .anatomicalHeart:
+       case .nose:
             221
-       case .lungs:
+       case .brain:
             222
-       case .tooth:
+       case .anatomicalHeart:
             223
-       case .bone:
+       case .lungs:
             224
-       case .eyes:
+       case .tooth:
             225
-       case .eye:
+       case .bone:
             226
-       case .tongue:
+       case .eyes:
             227
-       case .mouth:
+       case .eye:
             228
-       case .bitingLip:
+       case .tongue:
             229
-       case .baby:
+       case .mouth:
             230
-       case .child:
+       case .bitingLip:
             231
-       case .boy:
+       case .baby:
             232
-       case .girl:
+       case .child:
             233
-       case .person:
+       case .boy:
             234
-       case .personBlondHair:
+       case .girl:
             235
-       case .man:
+       case .person:
             236
-       case .personBeard:
+       case .personBlondHair:
             237
-       case .manBeard:
+       case .man:
             238
-       case .womanBeard:
+       case .personBeard:
             239
-       case .manRedHair:
+       case .manBeard:
             240
-       case .manCurlyHair:
+       case .womanBeard:
             241
-       case .manWhiteHair:
+       case .manRedHair:
             242
-       case .manBald:
+       case .manCurlyHair:
             243
-       case .woman:
+       case .manWhiteHair:
             244
-       case .womanRedHair:
+       case .manBald:
             245
-       case .personRedHair:
+       case .woman:
             246
-       case .womanCurlyHair:
+       case .womanRedHair:
             247
-       case .personCurlyHair:
+       case .personRedHair:
             248
-       case .womanWhiteHair:
+       case .womanCurlyHair:
             249
-       case .personWhiteHair:
+       case .personCurlyHair:
             250
-       case .womanBald:
+       case .womanWhiteHair:
             251
-       case .personBald:
+       case .personWhiteHair:
             252
-       case .womanBlondHair:
+       case .womanBald:
             253
-       case .manBlondHair:
+       case .personBald:
             254
-       case .olderPerson:
+       case .womanBlondHair:
             255
-       case .oldMan:
+       case .manBlondHair:
             256
-       case .oldWoman:
+       case .olderPerson:
             257
-       case .personFrowning:
+       case .oldMan:
             258
-       case .manFrowning:
+       case .oldWoman:
             259
-       case .womanFrowning:
+       case .personFrowning:
             260
-       case .personPouting:
+       case .manFrowning:
             261
-       case .manPouting:
+       case .womanFrowning:
             262
-       case .womanPouting:
+       case .personPouting:
             263
-       case .personGesturingNo:
+       case .manPouting:
             264
-       case .manGesturingNo:
+       case .womanPouting:
             265
-       case .womanGesturingNo:
+       case .personGesturingNo:
             266
-       case .personGesturingOk:
+       case .manGesturingNo:
             267
-       case .manGesturingOk:
+       case .womanGesturingNo:
             268
-       case .womanGesturingOk:
+       case .personGesturingOk:
             269
-       case .personTippingHand:
+       case .manGesturingOk:
             270
-       case .manTippingHand:
+       case .womanGesturingOk:
             271
-       case .womanTippingHand:
+       case .personTippingHand:
             272
-       case .personRaisingHand:
+       case .manTippingHand:
             273
-       case .manRaisingHand:
+       case .womanTippingHand:
             274
-       case .womanRaisingHand:
+       case .personRaisingHand:
             275
-       case .deafPerson:
+       case .manRaisingHand:
             276
-       case .deafMan:
+       case .womanRaisingHand:
             277
-       case .deafWoman:
+       case .deafPerson:
             278
-       case .personBowing:
+       case .deafMan:
             279
-       case .manBowing:
+       case .deafWoman:
             280
-       case .womanBowing:
+       case .personBowing:
             281
-       case .personFacepalming:
+       case .manBowing:
             282
-       case .manFacepalming:
+       case .womanBowing:
             283
-       case .womanFacepalming:
+       case .personFacepalming:
             284
-       case .personShrugging:
+       case .manFacepalming:
             285
-       case .manShrugging:
+       case .womanFacepalming:
             286
-       case .womanShrugging:
+       case .personShrugging:
             287
-       case .healthWorker:
+       case .manShrugging:
             288
-       case .manHealthWorker:
+       case .womanShrugging:
             289
-       case .womanHealthWorker:
+       case .healthWorker:
             290
-       case .student:
+       case .manHealthWorker:
             291
-       case .manStudent:
+       case .womanHealthWorker:
             292
-       case .womanStudent:
+       case .student:
             293
-       case .teacher:
+       case .manStudent:
             294
-       case .manTeacher:
+       case .womanStudent:
             295
-       case .womanTeacher:
+       case .teacher:
             296
-       case .judge:
+       case .manTeacher:
             297
-       case .manJudge:
+       case .womanTeacher:
             298
-       case .womanJudge:
+       case .judge:
             299
-       case .farmer:
+       case .manJudge:
             300
-       case .manFarmer:
+       case .womanJudge:
             301
-       case .womanFarmer:
+       case .farmer:
             302
-       case .cook:
+       case .manFarmer:
             303
-       case .manCook:
+       case .womanFarmer:
             304
-       case .womanCook:
+       case .cook:
             305
-       case .mechanic:
+       case .manCook:
             306
-       case .manMechanic:
+       case .womanCook:
             307
-       case .womanMechanic:
+       case .mechanic:
             308
-       case .factoryWorker:
+       case .manMechanic:
             309
-       case .manFactoryWorker:
+       case .womanMechanic:
             310
-       case .womanFactoryWorker:
+       case .factoryWorker:
             311
-       case .officeWorker:
+       case .manFactoryWorker:
             312
-       case .manOfficeWorker:
+       case .womanFactoryWorker:
             313
-       case .womanOfficeWorker:
+       case .officeWorker:
             314
-       case .scientist:
+       case .manOfficeWorker:
             315
-       case .manScientist:
+       case .womanOfficeWorker:
             316
-       case .womanScientist:
+       case .scientist:
             317
-       case .technologist:
+       case .manScientist:
             318
-       case .manTechnologist:
+       case .womanScientist:
             319
-       case .womanTechnologist:
+       case .technologist:
             320
-       case .singer:
+       case .manTechnologist:
             321
-       case .manSinger:
+       case .womanTechnologist:
             322
-       case .womanSinger:
+       case .singer:
             323
-       case .artist:
+       case .manSinger:
             324
-       case .manArtist:
+       case .womanSinger:
             325
-       case .womanArtist:
+       case .artist:
             326
-       case .pilot:
+       case .manArtist:
             327
-       case .manPilot:
+       case .womanArtist:
             328
-       case .womanPilot:
+       case .pilot:
             329
-       case .astronaut:
+       case .manPilot:
             330
-       case .manAstronaut:
+       case .womanPilot:
             331
-       case .womanAstronaut:
+       case .astronaut:
             332
-       case .firefighter:
+       case .manAstronaut:
             333
-       case .manFirefighter:
+       case .womanAstronaut:
             334
-       case .womanFirefighter:
+       case .firefighter:
             335
-       case .policeOfficer:
+       case .manFirefighter:
             336
-       case .manPoliceOfficer:
+       case .womanFirefighter:
             337
-       case .womanPoliceOfficer:
+       case .policeOfficer:
             338
-       case .detective:
+       case .manPoliceOfficer:
             339
-       case .manDetective:
+       case .womanPoliceOfficer:
             340
-       case .womanDetective:
+       case .detective:
             341
-       case .personGuard:
+       case .manDetective:
             342
-       case .manGuard:
+       case .womanDetective:
             343
-       case .womanGuard:
+       case .personGuard:
             344
-       case .ninja:
+       case .manGuard:
             345
-       case .constructionWorker:
+       case .womanGuard:
             346
-       case .manConstructionWorker:
+       case .ninja:
             347
-       case .womanConstructionWorker:
+       case .constructionWorker:
             348
-       case .personWithCrown:
+       case .manConstructionWorker:
             349
-       case .prince:
+       case .womanConstructionWorker:
             350
-       case .princess:
+       case .personWithCrown:
             351
-       case .personWearingTurban:
+       case .prince:
             352
-       case .manWearingTurban:
+       case .princess:
             353
-       case .womanWearingTurban:
+       case .personWearingTurban:
             354
-       case .personWithSkullcap:
+       case .manWearingTurban:
             355
-       case .womanWithHeadscarf:
+       case .womanWearingTurban:
             356
-       case .personInTuxedo:
+       case .personWithSkullcap:
             357
-       case .manInTuxedo:
+       case .womanWithHeadscarf:
             358
-       case .womanInTuxedo:
+       case .personInTuxedo:
             359
-       case .personWithVeil:
+       case .manInTuxedo:
             360
-       case .manWithVeil:
+       case .womanInTuxedo:
             361
-       case .womanWithVeil:
+       case .personWithVeil:
             362
-       case .pregnantWoman:
+       case .manWithVeil:
             363
-       case .pregnantMan:
+       case .womanWithVeil:
             364
-       case .pregnantPerson:
+       case .pregnantWoman:
             365
-       case .breastFeeding:
+       case .pregnantMan:
             366
-       case .womanFeedingBaby:
+       case .pregnantPerson:
             367
-       case .manFeedingBaby:
+       case .breastFeeding:
             368
-       case .personFeedingBaby:
+       case .womanFeedingBaby:
             369
-       case .babyAngel:
+       case .manFeedingBaby:
             370
-       case .santaClaus:
+       case .personFeedingBaby:
             371
-       case .mrsClaus:
+       case .babyAngel:
             372
-       case .mxClaus:
+       case .santaClaus:
             373
-       case .superhero:
+       case .mrsClaus:
             374
-       case .manSuperhero:
+       case .mxClaus:
             375
-       case .womanSuperhero:
+       case .superhero:
             376
-       case .supervillain:
+       case .manSuperhero:
             377
-       case .manSupervillain:
+       case .womanSuperhero:
             378
-       case .womanSupervillain:
+       case .supervillain:
             379
-       case .mage:
+       case .manSupervillain:
             380
-       case .manMage:
+       case .womanSupervillain:
             381
-       case .womanMage:
+       case .mage:
             382
-       case .fairy:
+       case .manMage:
             383
-       case .manFairy:
+       case .womanMage:
             384
-       case .womanFairy:
+       case .fairy:
             385
-       case .vampire:
+       case .manFairy:
             386
-       case .manVampire:
+       case .womanFairy:
             387
-       case .womanVampire:
+       case .vampire:
             388
-       case .merperson:
+       case .manVampire:
             389
-       case .merman:
+       case .womanVampire:
             390
-       case .mermaid:
+       case .merperson:
             391
-       case .elf:
+       case .merman:
             392
-       case .manElf:
+       case .mermaid:
             393
-       case .womanElf:
+       case .elf:
             394
-       case .genie:
+       case .manElf:
             395
-       case .manGenie:
+       case .womanElf:
             396
-       case .womanGenie:
+       case .genie:
             397
-       case .zombie:
+       case .manGenie:
             398
-       case .manZombie:
+       case .womanGenie:
             399
-       case .womanZombie:
+       case .zombie:
             400
-       case .troll:
+       case .manZombie:
             401
-       case .personGettingMassage:
+       case .womanZombie:
             402
-       case .manGettingMassage:
+       case .troll:
             403
-       case .womanGettingMassage:
+       case .hairyCreature:
             404
-       case .personGettingHaircut:
+       case .personGettingMassage:
             405
-       case .manGettingHaircut:
+       case .manGettingMassage:
             406
-       case .womanGettingHaircut:
+       case .womanGettingMassage:
             407
-       case .personWalking:
+       case .personGettingHaircut:
             408
-       case .manWalking:
+       case .manGettingHaircut:
             409
-       case .womanWalking:
+       case .womanGettingHaircut:
             410
-       case .personWalkingFacingRight:
+       case .personWalking:
             411
-       case .womanWalkingFacingRight:
+       case .manWalking:
             412
-       case .manWalkingFacingRight:
+       case .womanWalking:
             413
-       case .personStanding:
+       case .personWalkingFacingRight:
             414
-       case .manStanding:
+       case .womanWalkingFacingRight:
             415
-       case .womanStanding:
+       case .manWalkingFacingRight:
             416
-       case .personKneeling:
+       case .personStanding:
             417
-       case .manKneeling:
+       case .manStanding:
             418
-       case .womanKneeling:
+       case .womanStanding:
             419
-       case .personKneelingFacingRight:
+       case .personKneeling:
             420
-       case .womanKneelingFacingRight:
+       case .manKneeling:
             421
-       case .manKneelingFacingRight:
+       case .womanKneeling:
             422
-       case .personWithWhiteCane:
+       case .personKneelingFacingRight:
             423
-       case .personWithWhiteCaneFacingRight:
+       case .womanKneelingFacingRight:
             424
-       case .manWithWhiteCane:
+       case .manKneelingFacingRight:
             425
-       case .manWithWhiteCaneFacingRight:
+       case .personWithWhiteCane:
             426
-       case .womanWithWhiteCane:
+       case .personWithWhiteCaneFacingRight:
             427
-       case .womanWithWhiteCaneFacingRight:
+       case .manWithWhiteCane:
             428
-       case .personInMotorizedWheelchair:
+       case .manWithWhiteCaneFacingRight:
             429
-       case .personInMotorizedWheelchairFacingRight:
+       case .womanWithWhiteCane:
             430
-       case .manInMotorizedWheelchair:
+       case .womanWithWhiteCaneFacingRight:
             431
-       case .manInMotorizedWheelchairFacingRight:
+       case .personInMotorizedWheelchair:
             432
-       case .womanInMotorizedWheelchair:
+       case .personInMotorizedWheelchairFacingRight:
             433
-       case .womanInMotorizedWheelchairFacingRight:
+       case .manInMotorizedWheelchair:
             434
-       case .personInManualWheelchair:
+       case .manInMotorizedWheelchairFacingRight:
             435
-       case .personInManualWheelchairFacingRight:
+       case .womanInMotorizedWheelchair:
             436
-       case .manInManualWheelchair:
+       case .womanInMotorizedWheelchairFacingRight:
             437
-       case .manInManualWheelchairFacingRight:
+       case .personInManualWheelchair:
             438
-       case .womanInManualWheelchair:
+       case .personInManualWheelchairFacingRight:
             439
-       case .womanInManualWheelchairFacingRight:
+       case .manInManualWheelchair:
             440
-       case .personRunning:
+       case .manInManualWheelchairFacingRight:
             441
-       case .manRunning:
+       case .womanInManualWheelchair:
             442
-       case .womanRunning:
+       case .womanInManualWheelchairFacingRight:
             443
-       case .personRunningFacingRight:
+       case .personRunning:
             444
-       case .womanRunningFacingRight:
+       case .manRunning:
             445
-       case .manRunningFacingRight:
+       case .womanRunning:
             446
-       case .womanDancing:
+       case .personRunningFacingRight:
             447
-       case .manDancing:
+       case .womanRunningFacingRight:
             448
-       case .personInSuitLevitating:
+       case .manRunningFacingRight:
             449
-       case .peopleWithBunnyEars:
+       case .balletDancer:
             450
-       case .menWithBunnyEars:
+       case .womanDancing:
             451
-       case .womenWithBunnyEars:
+       case .manDancing:
             452
-       case .personInSteamyRoom:
+       case .personInSuitLevitating:
             453
-       case .manInSteamyRoom:
+       case .peopleWithBunnyEars:
             454
-       case .womanInSteamyRoom:
+       case .menWithBunnyEars:
             455
-       case .personClimbing:
+       case .womenWithBunnyEars:
             456
-       case .manClimbing:
+       case .personInSteamyRoom:
             457
-       case .womanClimbing:
+       case .manInSteamyRoom:
             458
-       case .personFencing:
+       case .womanInSteamyRoom:
             459
-       case .horseRacing:
+       case .personClimbing:
             460
-       case .skier:
+       case .manClimbing:
             461
-       case .snowboarder:
+       case .womanClimbing:
             462
-       case .personGolfing:
+       case .personFencing:
             463
-       case .manGolfing:
+       case .horseRacing:
             464
-       case .womanGolfing:
+       case .skier:
             465
-       case .personSurfing:
+       case .snowboarder:
             466
-       case .manSurfing:
+       case .personGolfing:
             467
-       case .womanSurfing:
+       case .manGolfing:
             468
-       case .personRowingBoat:
+       case .womanGolfing:
             469
-       case .manRowingBoat:
+       case .personSurfing:
             470
-       case .womanRowingBoat:
+       case .manSurfing:
             471
-       case .personSwimming:
+       case .womanSurfing:
             472
-       case .manSwimming:
+       case .personRowingBoat:
             473
-       case .womanSwimming:
+       case .manRowingBoat:
             474
-       case .personBouncingBall:
+       case .womanRowingBoat:
             475
-       case .manBouncingBall:
+       case .personSwimming:
             476
-       case .womanBouncingBall:
+       case .manSwimming:
             477
-       case .personLiftingWeights:
+       case .womanSwimming:
             478
-       case .manLiftingWeights:
+       case .personBouncingBall:
             479
-       case .womanLiftingWeights:
+       case .manBouncingBall:
             480
-       case .personBiking:
+       case .womanBouncingBall:
             481
-       case .manBiking:
+       case .personLiftingWeights:
             482
-       case .womanBiking:
+       case .manLiftingWeights:
             483
-       case .personMountainBiking:
+       case .womanLiftingWeights:
             484
-       case .manMountainBiking:
+       case .personBiking:
             485
-       case .womanMountainBiking:
+       case .manBiking:
             486
-       case .personCartwheeling:
+       case .womanBiking:
             487
-       case .manCartwheeling:
+       case .personMountainBiking:
             488
-       case .womanCartwheeling:
+       case .manMountainBiking:
             489
-       case .peopleWrestling:
+       case .womanMountainBiking:
             490
-       case .menWrestling:
+       case .personCartwheeling:
             491
-       case .womenWrestling:
+       case .manCartwheeling:
             492
-       case .personPlayingWaterPolo:
+       case .womanCartwheeling:
             493
-       case .manPlayingWaterPolo:
+       case .peopleWrestling:
             494
-       case .womanPlayingWaterPolo:
+       case .menWrestling:
             495
-       case .personPlayingHandball:
+       case .womenWrestling:
             496
-       case .manPlayingHandball:
+       case .personPlayingWaterPolo:
             497
-       case .womanPlayingHandball:
+       case .manPlayingWaterPolo:
             498
-       case .personJuggling:
+       case .womanPlayingWaterPolo:
             499
-       case .manJuggling:
+       case .personPlayingHandball:
             500
-       case .womanJuggling:
+       case .manPlayingHandball:
             501
-       case .personInLotusPosition:
+       case .womanPlayingHandball:
             502
-       case .manInLotusPosition:
+       case .personJuggling:
             503
-       case .womanInLotusPosition:
+       case .manJuggling:
             504
-       case .personTakingBath:
+       case .womanJuggling:
             505
-       case .personInBed:
+       case .personInLotusPosition:
             506
-       case .peopleHoldingHands:
+       case .manInLotusPosition:
             507
-       case .womenHoldingHands:
+       case .womanInLotusPosition:
             508
-       case .womanAndManHoldingHands:
+       case .personTakingBath:
             509
-       case .menHoldingHands:
+       case .personInBed:
             510
-       case .kiss:
+       case .peopleHoldingHands:
             511
-       case .kissWomanMan:
+       case .womenHoldingHands:
             512
-       case .kissManMan:
+       case .womanAndManHoldingHands:
             513
-       case .kissWomanWoman:
+       case .menHoldingHands:
             514
-       case .coupleWithHeart:
+       case .kiss:
             515
-       case .coupleWithHeartWomanMan:
+       case .kissWomanMan:
             516
-       case .coupleWithHeartManMan:
+       case .kissManMan:
             517
-       case .coupleWithHeartWomanWoman:
+       case .kissWomanWoman:
             518
-       case .familyManWomanBoy:
+       case .coupleWithHeart:
             519
-       case .familyManWomanGirl:
+       case .coupleWithHeartWomanMan:
             520
-       case .familyManWomanGirlBoy:
+       case .coupleWithHeartManMan:
             521
-       case .familyManWomanBoyBoy:
+       case .coupleWithHeartWomanWoman:
             522
-       case .familyManWomanGirlGirl:
+       case .familyManWomanBoy:
             523
-       case .familyManManBoy:
+       case .familyManWomanGirl:
             524
-       case .familyManManGirl:
+       case .familyManWomanGirlBoy:
             525
-       case .familyManManGirlBoy:
+       case .familyManWomanBoyBoy:
             526
-       case .familyManManBoyBoy:
+       case .familyManWomanGirlGirl:
             527
-       case .familyManManGirlGirl:
+       case .familyManManBoy:
             528
-       case .familyWomanWomanBoy:
+       case .familyManManGirl:
             529
-       case .familyWomanWomanGirl:
+       case .familyManManGirlBoy:
             530
-       case .familyWomanWomanGirlBoy:
+       case .familyManManBoyBoy:
             531
-       case .familyWomanWomanBoyBoy:
+       case .familyManManGirlGirl:
             532
-       case .familyWomanWomanGirlGirl:
+       case .familyWomanWomanBoy:
             533
-       case .familyManBoy:
+       case .familyWomanWomanGirl:
             534
-       case .familyManBoyBoy:
+       case .familyWomanWomanGirlBoy:
             535
-       case .familyManGirl:
+       case .familyWomanWomanBoyBoy:
             536
-       case .familyManGirlBoy:
+       case .familyWomanWomanGirlGirl:
             537
-       case .familyManGirlGirl:
+       case .familyManBoy:
             538
-       case .familyWomanBoy:
+       case .familyManBoyBoy:
             539
-       case .familyWomanBoyBoy:
+       case .familyManGirl:
             540
-       case .familyWomanGirl:
+       case .familyManGirlBoy:
             541
-       case .familyWomanGirlBoy:
+       case .familyManGirlGirl:
             542
-       case .familyWomanGirlGirl:
+       case .familyWomanBoy:
             543
-       case .speakingHead:
+       case .familyWomanBoyBoy:
             544
-       case .bustInSilhouette:
+       case .familyWomanGirl:
             545
-       case .bustsInSilhouette:
+       case .familyWomanGirlBoy:
             546
-       case .peopleHugging:
+       case .familyWomanGirlGirl:
             547
-       case .family:
+       case .speakingHead:
             548
-       case .familyAdultAdultChild:
+       case .bustInSilhouette:
             549
-       case .familyAdultAdultChildChild:
+       case .bustsInSilhouette:
             550
-       case .familyAdultChild:
+       case .peopleHugging:
             551
-       case .familyAdultChildChild:
+       case .family:
             552
-       case .footprints:
+       case .familyAdultAdultChild:
             553
-       case .fingerprint:
+       case .familyAdultAdultChildChild:
             554
-       case .monkeyFace:
+       case .familyAdultChild:
             555
-       case .monkey:
+       case .familyAdultChildChild:
             556
-       case .gorilla:
+       case .footprints:
             557
-       case .orangutan:
+       case .fingerprint:
             558
-       case .dogFace:
+       case .monkeyFace:
             559
-       case .dog:
+       case .monkey:
             560
-       case .guideDog:
+       case .gorilla:
             561
-       case .serviceDog:
+       case .orangutan:
             562
-       case .poodle:
+       case .dogFace:
             563
-       case .wolf:
+       case .dog:
             564
-       case .fox:
+       case .guideDog:
             565
-       case .raccoon:
+       case .serviceDog:
             566
-       case .catFace:
+       case .poodle:
             567
-       case .cat:
+       case .wolf:
             568
-       case .blackCat:
+       case .fox:
             569
-       case .lion:
+       case .raccoon:
             570
-       case .tigerFace:
+       case .catFace:
             571
-       case .tiger:
+       case .cat:
             572
-       case .leopard:
+       case .blackCat:
             573
-       case .horseFace:
+       case .lion:
             574
-       case .moose:
+       case .tigerFace:
             575
-       case .donkey:
+       case .tiger:
             576
-       case .horse:
+       case .leopard:
             577
-       case .unicorn:
+       case .horseFace:
             578
-       case .zebra:
+       case .moose:
             579
-       case .deer:
+       case .donkey:
             580
-       case .bison:
+       case .horse:
             581
-       case .cowFace:
+       case .unicorn:
             582
-       case .ox:
+       case .zebra:
             583
-       case .waterBuffalo:
+       case .deer:
             584
-       case .cow:
+       case .bison:
             585
-       case .pigFace:
+       case .cowFace:
             586
-       case .pig:
+       case .ox:
             587
-       case .boar:
+       case .waterBuffalo:
             588
-       case .pigNose:
+       case .cow:
             589
-       case .ram:
+       case .pigFace:
             590
-       case .ewe:
+       case .pig:
             591
-       case .goat:
+       case .boar:
             592
-       case .camel:
+       case .pigNose:
             593
-       case .twoHumpCamel:
+       case .ram:
             594
-       case .llama:
+       case .ewe:
             595
-       case .giraffe:
+       case .goat:
             596
-       case .elephant:
+       case .camel:
             597
-       case .mammoth:
+       case .twoHumpCamel:
             598
-       case .rhinoceros:
+       case .llama:
             599
-       case .hippopotamus:
+       case .giraffe:
             600
-       case .mouseFace:
+       case .elephant:
             601
-       case .mouse:
+       case .mammoth:
             602
-       case .rat:
+       case .rhinoceros:
             603
-       case .hamster:
+       case .hippopotamus:
             604
-       case .rabbitFace:
+       case .mouseFace:
             605
-       case .rabbit:
+       case .mouse:
             606
-       case .chipmunk:
+       case .rat:
             607
-       case .beaver:
+       case .hamster:
             608
-       case .hedgehog:
+       case .rabbitFace:
             609
-       case .bat:
+       case .rabbit:
             610
-       case .bear:
+       case .chipmunk:
             611
-       case .polarBear:
+       case .beaver:
             612
-       case .koala:
+       case .hedgehog:
             613
-       case .panda:
+       case .bat:
             614
-       case .sloth:
+       case .bear:
             615
-       case .otter:
+       case .polarBear:
             616
-       case .skunk:
+       case .koala:
             617
-       case .kangaroo:
+       case .panda:
             618
-       case .badger:
+       case .sloth:
             619
-       case .pawPrints:
+       case .otter:
             620
-       case .turkey:
+       case .skunk:
             621
-       case .chicken:
+       case .kangaroo:
             622
-       case .rooster:
+       case .badger:
             623
-       case .hatchingChick:
+       case .pawPrints:
             624
-       case .babyChick:
+       case .turkey:
             625
-       case .frontFacingBabyChick:
+       case .chicken:
             626
-       case .bird:
+       case .rooster:
             627
-       case .penguin:
+       case .hatchingChick:
             628
-       case .dove:
+       case .babyChick:
             629
-       case .eagle:
+       case .frontFacingBabyChick:
             630
-       case .duck:
+       case .bird:
             631
-       case .swan:
+       case .penguin:
             632
-       case .owl:
+       case .dove:
             633
-       case .dodo:
+       case .eagle:
             634
-       case .feather:
+       case .duck:
             635
-       case .flamingo:
+       case .swan:
             636
-       case .peacock:
+       case .owl:
             637
-       case .parrot:
+       case .dodo:
             638
-       case .wing:
+       case .feather:
             639
-       case .blackBird:
+       case .flamingo:
             640
-       case .goose:
+       case .peacock:
             641
-       case .phoenix:
+       case .parrot:
             642
-       case .frog:
+       case .wing:
             643
-       case .crocodile:
+       case .blackBird:
             644
-       case .turtle:
+       case .goose:
             645
-       case .lizard:
+       case .phoenix:
             646
-       case .snake:
+       case .frog:
             647
-       case .dragonFace:
+       case .crocodile:
             648
-       case .dragon:
+       case .turtle:
             649
-       case .sauropod:
+       case .lizard:
             650
-       case .tRex:
+       case .snake:
             651
-       case .spoutingWhale:
+       case .dragonFace:
             652
-       case .whale:
+       case .dragon:
             653
-       case .dolphin:
+       case .sauropod:
             654
-       case .seal:
+       case .tRex:
             655
-       case .fish:
+       case .spoutingWhale:
             656
-       case .tropicalFish:
+       case .whale:
             657
-       case .blowfish:
+       case .dolphin:
             658
-       case .shark:
+       case .orca:
             659
-       case .octopus:
+       case .seal:
             660
-       case .spiralShell:
+       case .fish:
             661
-       case .coral:
+       case .tropicalFish:
             662
-       case .jellyfish:
+       case .blowfish:
             663
-       case .crab:
+       case .shark:
             664
-       case .lobster:
+       case .octopus:
             665
-       case .shrimp:
+       case .spiralShell:
             666
-       case .squid:
+       case .coral:
             667
-       case .oyster:
+       case .jellyfish:
             668
-       case .snail:
+       case .crab:
             669
-       case .butterfly:
+       case .lobster:
             670
-       case .bug:
+       case .shrimp:
             671
-       case .ant:
+       case .squid:
             672
-       case .honeybee:
+       case .oyster:
             673
-       case .beetle:
+       case .snail:
             674
-       case .ladyBeetle:
+       case .butterfly:
             675
-       case .cricket:
+       case .bug:
             676
-       case .cockroach:
+       case .ant:
             677
-       case .spider:
+       case .honeybee:
             678
-       case .spiderWeb:
+       case .beetle:
             679
-       case .scorpion:
+       case .ladyBeetle:
             680
-       case .mosquito:
+       case .cricket:
             681
-       case .fly:
+       case .cockroach:
             682
-       case .worm:
+       case .spider:
             683
-       case .microbe:
+       case .spiderWeb:
             684
-       case .bouquet:
+       case .scorpion:
             685
-       case .cherryBlossom:
+       case .mosquito:
             686
-       case .whiteFlower:
+       case .fly:
             687
-       case .lotus:
+       case .worm:
             688
-       case .rosette:
+       case .microbe:
             689
-       case .rose:
+       case .bouquet:
             690
-       case .wiltedFlower:
+       case .cherryBlossom:
             691
-       case .hibiscus:
+       case .whiteFlower:
             692
-       case .sunflower:
+       case .lotus:
             693
-       case .blossom:
+       case .rosette:
             694
-       case .tulip:
+       case .rose:
             695
-       case .hyacinth:
+       case .wiltedFlower:
             696
-       case .seedling:
+       case .hibiscus:
             697
-       case .pottedPlant:
+       case .sunflower:
             698
-       case .evergreenTree:
+       case .blossom:
             699
-       case .deciduousTree:
+       case .tulip:
             700
-       case .palmTree:
+       case .hyacinth:
             701
-       case .cactus:
+       case .seedling:
             702
-       case .sheafOfRice:
+       case .pottedPlant:
             703
-       case .herb:
+       case .evergreenTree:
             704
-       case .shamrock:
+       case .deciduousTree:
             705
-       case .fourLeafClover:
+       case .palmTree:
             706
-       case .mapleLeaf:
+       case .cactus:
             707
-       case .fallenLeaf:
+       case .sheafOfRice:
             708
-       case .leafFlutteringInWind:
+       case .herb:
             709
-       case .emptyNest:
+       case .shamrock:
             710
-       case .nestWithEggs:
+       case .fourLeafClover:
             711
-       case .mushroom:
+       case .mapleLeaf:
             712
-       case .leaflessTree:
+       case .fallenLeaf:
             713
-       case .grapes:
+       case .leafFlutteringInWind:
             714
-       case .melon:
+       case .emptyNest:
             715
-       case .watermelon:
+       case .nestWithEggs:
             716
-       case .tangerine:
+       case .mushroom:
             717
-       case .lemon:
+       case .leaflessTree:
             718
-       case .lime:
+       case .grapes:
             719
-       case .banana:
+       case .melon:
             720
-       case .pineapple:
+       case .watermelon:
             721
-       case .mango:
+       case .tangerine:
             722
-       case .redApple:
+       case .lemon:
             723
-       case .greenApple:
+       case .lime:
             724
-       case .pear:
+       case .banana:
             725
-       case .peach:
+       case .pineapple:
             726
-       case .cherries:
+       case .mango:
             727
-       case .strawberry:
+       case .redApple:
             728
-       case .blueberries:
+       case .greenApple:
             729
-       case .kiwiFruit:
+       case .pear:
             730
-       case .tomato:
+       case .peach:
             731
-       case .olive:
+       case .cherries:
             732
-       case .coconut:
+       case .strawberry:
             733
-       case .avocado:
+       case .blueberries:
             734
-       case .eggplant:
+       case .kiwiFruit:
             735
-       case .potato:
+       case .tomato:
             736
-       case .carrot:
+       case .olive:
             737
-       case .earOfCorn:
+       case .coconut:
             738
-       case .hotPepper:
+       case .avocado:
             739
-       case .bellPepper:
+       case .eggplant:
             740
-       case .cucumber:
+       case .potato:
             741
-       case .leafyGreen:
+       case .carrot:
             742
-       case .broccoli:
+       case .earOfCorn:
             743
-       case .garlic:
+       case .hotPepper:
             744
-       case .onion:
+       case .bellPepper:
             745
-       case .peanuts:
+       case .cucumber:
             746
-       case .beans:
+       case .leafyGreen:
             747
-       case .chestnut:
+       case .broccoli:
             748
-       case .gingerRoot:
+       case .garlic:
             749
-       case .peaPod:
+       case .onion:
             750
-       case .brownMushroom:
+       case .peanuts:
             751
-       case .rootVegetable:
+       case .beans:
             752
-       case .bread:
+       case .chestnut:
             753
-       case .croissant:
+       case .gingerRoot:
             754
-       case .baguetteBread:
+       case .peaPod:
             755
-       case .flatbread:
+       case .brownMushroom:
             756
-       case .pretzel:
+       case .rootVegetable:
             757
-       case .bagel:
+       case .bread:
             758
-       case .pancakes:
+       case .croissant:
             759
-       case .waffle:
+       case .baguetteBread:
             760
-       case .cheeseWedge:
+       case .flatbread:
             761
-       case .meatOnBone:
+       case .pretzel:
             762
-       case .poultryLeg:
+       case .bagel:
             763
-       case .cutOfMeat:
+       case .pancakes:
             764
-       case .bacon:
+       case .waffle:
             765
-       case .hamburger:
+       case .cheeseWedge:
             766
-       case .frenchFries:
+       case .meatOnBone:
             767
-       case .pizza:
+       case .poultryLeg:
             768
-       case .hotDog:
+       case .cutOfMeat:
             769
-       case .sandwich:
+       case .bacon:
             770
-       case .taco:
+       case .hamburger:
             771
-       case .burrito:
+       case .frenchFries:
             772
-       case .tamale:
+       case .pizza:
             773
-       case .stuffedFlatbread:
+       case .hotDog:
             774
-       case .falafel:
+       case .sandwich:
             775
-       case .egg:
+       case .taco:
             776
-       case .cooking:
+       case .burrito:
             777
-       case .shallowPanOfFood:
+       case .tamale:
             778
-       case .potOfFood:
+       case .stuffedFlatbread:
             779
-       case .fondue:
+       case .falafel:
             780
-       case .bowlWithSpoon:
+       case .egg:
             781
-       case .greenSalad:
+       case .cooking:
             782
-       case .popcorn:
+       case .shallowPanOfFood:
             783
-       case .butter:
+       case .potOfFood:
             784
-       case .salt:
+       case .fondue:
             785
-       case .cannedFood:
+       case .bowlWithSpoon:
             786
-       case .bentoBox:
+       case .greenSalad:
             787
-       case .riceCracker:
+       case .popcorn:
             788
-       case .riceBall:
+       case .butter:
             789
-       case .cookedRice:
+       case .salt:
             790
-       case .curryRice:
+       case .cannedFood:
             791
-       case .steamingBowl:
+       case .bentoBox:
             792
-       case .spaghetti:
+       case .riceCracker:
             793
-       case .roastedSweetPotato:
+       case .riceBall:
             794
-       case .oden:
+       case .cookedRice:
             795
-       case .sushi:
+       case .curryRice:
             796
-       case .friedShrimp:
+       case .steamingBowl:
             797
-       case .fishCakeWithSwirl:
+       case .spaghetti:
             798
-       case .moonCake:
+       case .roastedSweetPotato:
             799
-       case .dango:
+       case .oden:
             800
-       case .dumpling:
+       case .sushi:
             801
-       case .fortuneCookie:
+       case .friedShrimp:
             802
-       case .takeoutBox:
+       case .fishCakeWithSwirl:
             803
-       case .softIceCream:
+       case .moonCake:
             804
-       case .shavedIce:
+       case .dango:
             805
-       case .iceCream:
+       case .dumpling:
             806
-       case .doughnut:
+       case .fortuneCookie:
             807
-       case .cookie:
+       case .takeoutBox:
             808
-       case .birthdayCake:
+       case .softIceCream:
             809
-       case .shortcake:
+       case .shavedIce:
             810
-       case .cupcake:
+       case .iceCream:
             811
-       case .pie:
+       case .doughnut:
             812
-       case .chocolateBar:
+       case .cookie:
             813
-       case .candy:
+       case .birthdayCake:
             814
-       case .lollipop:
+       case .shortcake:
             815
-       case .custard:
+       case .cupcake:
             816
-       case .honeyPot:
+       case .pie:
             817
-       case .babyBottle:
+       case .chocolateBar:
             818
-       case .glassOfMilk:
+       case .candy:
             819
-       case .hotBeverage:
+       case .lollipop:
             820
-       case .teapot:
+       case .custard:
             821
-       case .teacupWithoutHandle:
+       case .honeyPot:
             822
-       case .sake:
+       case .babyBottle:
             823
-       case .bottleWithPoppingCork:
+       case .glassOfMilk:
             824
-       case .wineGlass:
+       case .hotBeverage:
             825
-       case .cocktailGlass:
+       case .teapot:
             826
-       case .tropicalDrink:
+       case .teacupWithoutHandle:
             827
-       case .beerMug:
+       case .sake:
             828
-       case .clinkingBeerMugs:
+       case .bottleWithPoppingCork:
             829
-       case .clinkingGlasses:
+       case .wineGlass:
             830
-       case .tumblerGlass:
+       case .cocktailGlass:
             831
-       case .pouringLiquid:
+       case .tropicalDrink:
             832
-       case .cupWithStraw:
+       case .beerMug:
             833
-       case .bubbleTea:
+       case .clinkingBeerMugs:
             834
-       case .beverageBox:
+       case .clinkingGlasses:
             835
-       case .mate:
+       case .tumblerGlass:
             836
-       case .ice:
+       case .pouringLiquid:
             837
-       case .chopsticks:
+       case .cupWithStraw:
             838
-       case .forkAndKnifeWithPlate:
+       case .bubbleTea:
             839
-       case .forkAndKnife:
+       case .beverageBox:
             840
-       case .spoon:
+       case .mate:
             841
-       case .kitchenKnife:
+       case .ice:
             842
-       case .jar:
+       case .chopsticks:
             843
-       case .amphora:
+       case .forkAndKnifeWithPlate:
             844
-       case .globeShowingEuropeAfrica:
+       case .forkAndKnife:
             845
-       case .globeShowingAmericas:
+       case .spoon:
             846
-       case .globeShowingAsiaAustralia:
+       case .kitchenKnife:
             847
-       case .globeWithMeridians:
+       case .jar:
             848
-       case .worldMap:
+       case .amphora:
             849
-       case .mapOfJapan:
+       case .globeShowingEuropeAfrica:
             850
-       case .compass:
+       case .globeShowingAmericas:
             851
-       case .snowCappedMountain:
+       case .globeShowingAsiaAustralia:
             852
-       case .mountain:
+       case .globeWithMeridians:
             853
-       case .volcano:
+       case .worldMap:
             854
-       case .mountFuji:
+       case .mapOfJapan:
             855
-       case .camping:
+       case .compass:
             856
-       case .beachWithUmbrella:
+       case .snowCappedMountain:
             857
-       case .desert:
+       case .mountain:
             858
-       case .desertIsland:
+       case .landslide:
             859
-       case .nationalPark:
+       case .volcano:
             860
-       case .stadium:
+       case .mountFuji:
             861
-       case .classicalBuilding:
+       case .camping:
             862
-       case .buildingConstruction:
+       case .beachWithUmbrella:
             863
-       case .brick:
+       case .desert:
             864
-       case .rock:
+       case .desertIsland:
             865
-       case .wood:
+       case .nationalPark:
             866
-       case .hut:
+       case .stadium:
             867
-       case .houses:
+       case .classicalBuilding:
             868
-       case .derelictHouse:
+       case .buildingConstruction:
             869
-       case .house:
+       case .brick:
             870
-       case .houseWithGarden:
+       case .rock:
             871
-       case .officeBuilding:
+       case .wood:
             872
-       case .japanesePostOffice:
+       case .hut:
             873
-       case .postOffice:
+       case .houses:
             874
-       case .hospital:
+       case .derelictHouse:
             875
-       case .bank:
+       case .house:
             876
-       case .hotel:
+       case .houseWithGarden:
             877
-       case .loveHotel:
+       case .officeBuilding:
             878
-       case .convenienceStore:
+       case .japanesePostOffice:
             879
-       case .school:
+       case .postOffice:
             880
-       case .departmentStore:
+       case .hospital:
             881
-       case .factory:
+       case .bank:
             882
-       case .japaneseCastle:
+       case .hotel:
             883
-       case .castle:
+       case .loveHotel:
             884
-       case .wedding:
+       case .convenienceStore:
             885
-       case .tokyoTower:
+       case .school:
             886
-       case .statueOfLiberty:
+       case .departmentStore:
             887
-       case .church:
+       case .factory:
             888
-       case .mosque:
+       case .japaneseCastle:
             889
-       case .hinduTemple:
+       case .castle:
             890
-       case .synagogue:
+       case .wedding:
             891
-       case .shintoShrine:
+       case .tokyoTower:
             892
-       case .kaaba:
+       case .statueOfLiberty:
             893
-       case .fountain:
+       case .church:
             894
-       case .tent:
+       case .mosque:
             895
-       case .foggy:
+       case .hinduTemple:
             896
-       case .nightWithStars:
+       case .synagogue:
             897
-       case .cityscape:
+       case .shintoShrine:
             898
-       case .sunriseOverMountains:
+       case .kaaba:
             899
-       case .sunrise:
+       case .fountain:
             900
-       case .cityscapeAtDusk:
+       case .tent:
             901
-       case .sunset:
+       case .foggy:
             902
-       case .bridgeAtNight:
+       case .nightWithStars:
             903
-       case .hotSprings:
+       case .cityscape:
             904
-       case .carouselHorse:
+       case .sunriseOverMountains:
             905
-       case .playgroundSlide:
+       case .sunrise:
             906
-       case .ferrisWheel:
+       case .cityscapeAtDusk:
             907
-       case .rollerCoaster:
+       case .sunset:
             908
-       case .barberPole:
+       case .bridgeAtNight:
             909
-       case .circusTent:
+       case .hotSprings:
             910
-       case .locomotive:
+       case .carouselHorse:
             911
-       case .railwayCar:
+       case .playgroundSlide:
             912
-       case .highSpeedTrain:
+       case .ferrisWheel:
             913
-       case .bulletTrain:
+       case .rollerCoaster:
             914
-       case .train:
+       case .barberPole:
             915
-       case .metro:
+       case .circusTent:
             916
-       case .lightRail:
+       case .locomotive:
             917
-       case .station:
+       case .railwayCar:
             918
-       case .tram:
+       case .highSpeedTrain:
             919
-       case .monorail:
+       case .bulletTrain:
             920
-       case .mountainRailway:
+       case .train:
             921
-       case .tramCar:
+       case .metro:
             922
-       case .bus:
+       case .lightRail:
             923
-       case .oncomingBus:
+       case .station:
             924
-       case .trolleybus:
+       case .tram:
             925
-       case .minibus:
+       case .monorail:
             926
-       case .ambulance:
+       case .mountainRailway:
             927
-       case .fireEngine:
+       case .tramCar:
             928
-       case .policeCar:
+       case .bus:
             929
-       case .oncomingPoliceCar:
+       case .oncomingBus:
             930
-       case .taxi:
+       case .trolleybus:
             931
-       case .oncomingTaxi:
+       case .minibus:
             932
-       case .automobile:
+       case .ambulance:
             933
-       case .oncomingAutomobile:
+       case .fireEngine:
             934
-       case .sportUtilityVehicle:
+       case .policeCar:
             935
-       case .pickupTruck:
+       case .oncomingPoliceCar:
             936
-       case .deliveryTruck:
+       case .taxi:
             937
-       case .articulatedLorry:
+       case .oncomingTaxi:
             938
-       case .tractor:
+       case .automobile:
             939
-       case .racingCar:
+       case .oncomingAutomobile:
             940
-       case .motorcycle:
+       case .sportUtilityVehicle:
             941
-       case .motorScooter:
+       case .pickupTruck:
             942
-       case .manualWheelchair:
+       case .deliveryTruck:
             943
-       case .motorizedWheelchair:
+       case .articulatedLorry:
             944
-       case .autoRickshaw:
+       case .tractor:
             945
-       case .bicycle:
+       case .racingCar:
             946
-       case .kickScooter:
+       case .motorcycle:
             947
-       case .skateboard:
+       case .motorScooter:
             948
-       case .rollerSkate:
+       case .manualWheelchair:
             949
-       case .busStop:
+       case .motorizedWheelchair:
             950
-       case .motorway:
+       case .autoRickshaw:
             951
-       case .railwayTrack:
+       case .bicycle:
             952
-       case .oilDrum:
+       case .kickScooter:
             953
-       case .fuelPump:
+       case .skateboard:
             954
-       case .wheel:
+       case .rollerSkate:
             955
-       case .policeCarLight:
+       case .busStop:
             956
-       case .horizontalTrafficLight:
+       case .motorway:
             957
-       case .verticalTrafficLight:
+       case .railwayTrack:
             958
-       case .stopSign:
+       case .oilDrum:
             959
-       case .construction:
+       case .fuelPump:
             960
-       case .anchor:
+       case .wheel:
             961
-       case .ringBuoy:
+       case .policeCarLight:
             962
-       case .sailboat:
+       case .horizontalTrafficLight:
             963
-       case .canoe:
+       case .verticalTrafficLight:
             964
-       case .speedboat:
+       case .stopSign:
             965
-       case .passengerShip:
+       case .construction:
             966
-       case .ferry:
+       case .anchor:
             967
-       case .motorBoat:
+       case .ringBuoy:
             968
-       case .ship:
+       case .sailboat:
             969
-       case .airplane:
+       case .canoe:
             970
-       case .smallAirplane:
+       case .speedboat:
             971
-       case .airplaneDeparture:
+       case .passengerShip:
             972
-       case .airplaneArrival:
+       case .ferry:
             973
-       case .parachute:
+       case .motorBoat:
             974
-       case .seat:
+       case .ship:
             975
-       case .helicopter:
+       case .airplane:
             976
-       case .suspensionRailway:
+       case .smallAirplane:
             977
-       case .mountainCableway:
+       case .airplaneDeparture:
             978
-       case .aerialTramway:
+       case .airplaneArrival:
             979
-       case .satellite:
+       case .parachute:
             980
-       case .rocket:
+       case .seat:
             981
-       case .flyingSaucer:
+       case .helicopter:
             982
-       case .bellhopBell:
+       case .suspensionRailway:
             983
-       case .luggage:
+       case .mountainCableway:
             984
-       case .hourglassDone:
+       case .aerialTramway:
             985
-       case .hourglassNotDone:
+       case .satellite:
             986
-       case .watch:
+       case .rocket:
             987
-       case .alarmClock:
+       case .flyingSaucer:
             988
-       case .stopwatch:
+       case .bellhopBell:
             989
-       case .timerClock:
+       case .luggage:
             990
-       case .mantelpieceClock:
+       case .hourglassDone:
             991
-       case .twelveOClock:
+       case .hourglassNotDone:
             992
-       case .twelveThirty:
+       case .watch:
             993
-       case .oneOClock:
+       case .alarmClock:
             994
-       case .oneThirty:
+       case .stopwatch:
             995
-       case .twoOClock:
+       case .timerClock:
             996
-       case .twoThirty:
+       case .mantelpieceClock:
             997
-       case .threeOClock:
+       case .twelveOClock:
             998
-       case .threeThirty:
+       case .twelveThirty:
             999
-       case .fourOClock:
+       case .oneOClock:
             1000
-       case .fourThirty:
+       case .oneThirty:
             1001
-       case .fiveOClock:
+       case .twoOClock:
             1002
-       case .fiveThirty:
+       case .twoThirty:
             1003
-       case .sixOClock:
+       case .threeOClock:
             1004
-       case .sixThirty:
+       case .threeThirty:
             1005
-       case .sevenOClock:
+       case .fourOClock:
             1006
-       case .sevenThirty:
+       case .fourThirty:
             1007
-       case .eightOClock:
+       case .fiveOClock:
             1008
-       case .eightThirty:
+       case .fiveThirty:
             1009
-       case .nineOClock:
+       case .sixOClock:
             1010
-       case .nineThirty:
+       case .sixThirty:
             1011
-       case .tenOClock:
+       case .sevenOClock:
             1012
-       case .tenThirty:
+       case .sevenThirty:
             1013
-       case .elevenOClock:
+       case .eightOClock:
             1014
-       case .elevenThirty:
+       case .eightThirty:
             1015
-       case .newMoon:
+       case .nineOClock:
             1016
-       case .waxingCrescentMoon:
+       case .nineThirty:
             1017
-       case .firstQuarterMoon:
+       case .tenOClock:
             1018
-       case .waxingGibbousMoon:
+       case .tenThirty:
             1019
-       case .fullMoon:
+       case .elevenOClock:
             1020
-       case .waningGibbousMoon:
+       case .elevenThirty:
             1021
-       case .lastQuarterMoon:
+       case .newMoon:
             1022
-       case .waningCrescentMoon:
+       case .waxingCrescentMoon:
             1023
-       case .crescentMoon:
+       case .firstQuarterMoon:
             1024
-       case .newMoonFace:
+       case .waxingGibbousMoon:
             1025
-       case .firstQuarterMoonFace:
+       case .fullMoon:
             1026
-       case .lastQuarterMoonFace:
+       case .waningGibbousMoon:
             1027
-       case .thermometer:
+       case .lastQuarterMoon:
             1028
-       case .sun:
+       case .waningCrescentMoon:
             1029
-       case .fullMoonFace:
+       case .crescentMoon:
             1030
-       case .sunWithFace:
+       case .newMoonFace:
             1031
-       case .ringedPlanet:
+       case .firstQuarterMoonFace:
             1032
-       case .star:
+       case .lastQuarterMoonFace:
             1033
-       case .glowingStar:
+       case .thermometer:
             1034
-       case .shootingStar:
+       case .sun:
             1035
-       case .milkyWay:
+       case .fullMoonFace:
             1036
-       case .cloud:
+       case .sunWithFace:
             1037
-       case .sunBehindCloud:
+       case .ringedPlanet:
             1038
-       case .cloudWithLightningAndRain:
+       case .star:
             1039
-       case .sunBehindSmallCloud:
+       case .glowingStar:
             1040
-       case .sunBehindLargeCloud:
+       case .shootingStar:
             1041
-       case .sunBehindRainCloud:
+       case .milkyWay:
             1042
-       case .cloudWithRain:
+       case .cloud:
             1043
-       case .cloudWithSnow:
+       case .sunBehindCloud:
             1044
-       case .cloudWithLightning:
+       case .cloudWithLightningAndRain:
             1045
-       case .tornado:
+       case .sunBehindSmallCloud:
             1046
-       case .fog:
+       case .sunBehindLargeCloud:
             1047
-       case .windFace:
+       case .sunBehindRainCloud:
             1048
-       case .cyclone:
+       case .cloudWithRain:
             1049
-       case .rainbow:
+       case .cloudWithSnow:
             1050
-       case .closedUmbrella:
+       case .cloudWithLightning:
             1051
-       case .umbrella:
+       case .tornado:
             1052
-       case .umbrellaWithRainDrops:
+       case .fog:
             1053
-       case .umbrellaOnGround:
+       case .windFace:
             1054
-       case .highVoltage:
+       case .cyclone:
             1055
-       case .snowflake:
+       case .rainbow:
             1056
-       case .snowman:
+       case .closedUmbrella:
             1057
-       case .snowmanWithoutSnow:
+       case .umbrella:
             1058
-       case .comet:
+       case .umbrellaWithRainDrops:
             1059
-       case .fire:
+       case .umbrellaOnGround:
             1060
-       case .droplet:
+       case .highVoltage:
             1061
-       case .waterWave:
+       case .snowflake:
             1062
-       case .jackOLantern:
+       case .snowman:
             1063
-       case .christmasTree:
+       case .snowmanWithoutSnow:
             1064
-       case .fireworks:
+       case .comet:
             1065
-       case .sparkler:
+       case .fire:
             1066
-       case .firecracker:
+       case .droplet:
             1067
-       case .sparkles:
+       case .waterWave:
             1068
-       case .balloon:
+       case .jackOLantern:
             1069
-       case .partyPopper:
+       case .christmasTree:
             1070
-       case .confettiBall:
+       case .fireworks:
             1071
-       case .tanabataTree:
+       case .sparkler:
             1072
-       case .pineDecoration:
+       case .firecracker:
             1073
-       case .japaneseDolls:
+       case .sparkles:
             1074
-       case .carpStreamer:
+       case .balloon:
             1075
-       case .windChime:
+       case .partyPopper:
             1076
-       case .moonViewingCeremony:
+       case .confettiBall:
             1077
-       case .redEnvelope:
+       case .tanabataTree:
             1078
-       case .ribbon:
+       case .pineDecoration:
             1079
-       case .wrappedGift:
+       case .japaneseDolls:
             1080
-       case .reminderRibbon:
+       case .carpStreamer:
             1081
-       case .admissionTickets:
+       case .windChime:
             1082
-       case .ticket:
+       case .moonViewingCeremony:
             1083
-       case .militaryMedal:
+       case .redEnvelope:
             1084
-       case .trophy:
+       case .ribbon:
             1085
-       case .sportsMedal:
+       case .wrappedGift:
             1086
-       case .firstPlaceMedal:
+       case .reminderRibbon:
             1087
-       case .secondPlaceMedal:
+       case .admissionTickets:
             1088
-       case .thirdPlaceMedal:
+       case .ticket:
             1089
-       case .soccerBall:
+       case .militaryMedal:
             1090
-       case .baseball:
+       case .trophy:
             1091
-       case .softball:
+       case .sportsMedal:
             1092
-       case .basketball:
+       case .firstPlaceMedal:
             1093
-       case .volleyball:
+       case .secondPlaceMedal:
             1094
-       case .americanFootball:
+       case .thirdPlaceMedal:
             1095
-       case .rugbyFootball:
+       case .soccerBall:
             1096
-       case .tennis:
+       case .baseball:
             1097
-       case .flyingDisc:
+       case .softball:
             1098
-       case .bowling:
+       case .basketball:
             1099
-       case .cricketGame:
+       case .volleyball:
             1100
-       case .fieldHockey:
+       case .americanFootball:
             1101
-       case .iceHockey:
+       case .rugbyFootball:
             1102
-       case .lacrosse:
+       case .tennis:
             1103
-       case .pingPong:
+       case .flyingDisc:
             1104
-       case .badminton:
+       case .bowling:
             1105
-       case .boxingGlove:
+       case .cricketGame:
             1106
-       case .martialArtsUniform:
+       case .fieldHockey:
             1107
-       case .goalNet:
+       case .iceHockey:
             1108
-       case .flagInHole:
+       case .lacrosse:
             1109
-       case .iceSkate:
+       case .pingPong:
             1110
-       case .fishingPole:
+       case .badminton:
             1111
-       case .divingMask:
+       case .boxingGlove:
             1112
-       case .runningShirt:
+       case .martialArtsUniform:
             1113
-       case .skis:
+       case .goalNet:
             1114
-       case .sled:
+       case .flagInHole:
             1115
-       case .curlingStone:
+       case .iceSkate:
             1116
-       case .bullseye:
+       case .fishingPole:
             1117
-       case .yoYo:
+       case .divingMask:
             1118
-       case .kite:
+       case .runningShirt:
             1119
-       case .waterPistol:
+       case .skis:
             1120
-       case .pool8Ball:
+       case .sled:
             1121
-       case .crystalBall:
+       case .curlingStone:
             1122
-       case .magicWand:
+       case .bullseye:
             1123
-       case .videoGame:
+       case .yoYo:
             1124
-       case .joystick:
+       case .kite:
             1125
-       case .slotMachine:
+       case .waterPistol:
             1126
-       case .gameDie:
+       case .pool8Ball:
             1127
-       case .puzzlePiece:
+       case .crystalBall:
             1128
-       case .teddyBear:
+       case .magicWand:
             1129
-       case .pinata:
+       case .videoGame:
             1130
-       case .mirrorBall:
+       case .joystick:
             1131
-       case .nestingDolls:
+       case .slotMachine:
             1132
-       case .spadeSuit:
+       case .gameDie:
             1133
-       case .heartSuit:
+       case .puzzlePiece:
             1134
-       case .diamondSuit:
+       case .teddyBear:
             1135
-       case .clubSuit:
+       case .pinata:
             1136
-       case .chessPawn:
+       case .mirrorBall:
             1137
-       case .joker:
+       case .nestingDolls:
             1138
-       case .mahjongRedDragon:
+       case .spadeSuit:
             1139
-       case .flowerPlayingCards:
+       case .heartSuit:
             1140
-       case .performingArts:
+       case .diamondSuit:
             1141
-       case .framedPicture:
+       case .clubSuit:
             1142
-       case .artistPalette:
+       case .chessPawn:
             1143
-       case .thread:
+       case .joker:
             1144
-       case .sewingNeedle:
+       case .mahjongRedDragon:
             1145
-       case .yarn:
+       case .flowerPlayingCards:
             1146
-       case .knot:
+       case .performingArts:
             1147
-       case .glasses:
+       case .framedPicture:
             1148
-       case .sunglasses:
+       case .artistPalette:
             1149
-       case .goggles:
+       case .thread:
             1150
-       case .labCoat:
+       case .sewingNeedle:
             1151
-       case .safetyVest:
+       case .yarn:
             1152
-       case .necktie:
+       case .knot:
             1153
-       case .tShirt:
+       case .glasses:
             1154
-       case .jeans:
+       case .sunglasses:
             1155
-       case .scarf:
+       case .goggles:
             1156
-       case .gloves:
+       case .labCoat:
             1157
-       case .coat:
+       case .safetyVest:
             1158
-       case .socks:
+       case .necktie:
             1159
-       case .dress:
+       case .tShirt:
             1160
-       case .kimono:
+       case .jeans:
             1161
-       case .sari:
+       case .scarf:
             1162
-       case .onePieceSwimsuit:
+       case .gloves:
             1163
-       case .briefs:
+       case .coat:
             1164
-       case .shorts:
+       case .socks:
             1165
-       case .bikini:
+       case .dress:
             1166
-       case .womanSClothes:
+       case .kimono:
             1167
-       case .foldingHandFan:
+       case .sari:
             1168
-       case .purse:
+       case .onePieceSwimsuit:
             1169
-       case .handbag:
+       case .briefs:
             1170
-       case .clutchBag:
+       case .shorts:
             1171
-       case .shoppingBags:
+       case .bikini:
             1172
-       case .backpack:
+       case .womanSClothes:
             1173
-       case .thongSandal:
+       case .foldingHandFan:
             1174
-       case .manSShoe:
+       case .purse:
             1175
-       case .runningShoe:
+       case .handbag:
             1176
-       case .hikingBoot:
+       case .clutchBag:
             1177
-       case .flatShoe:
+       case .shoppingBags:
             1178
-       case .highHeeledShoe:
+       case .backpack:
             1179
-       case .womanSSandal:
+       case .thongSandal:
             1180
-       case .balletShoes:
+       case .manSShoe:
             1181
-       case .womanSBoot:
+       case .runningShoe:
             1182
-       case .hairPick:
+       case .hikingBoot:
             1183
-       case .crown:
+       case .flatShoe:
             1184
-       case .womanSHat:
+       case .highHeeledShoe:
             1185
-       case .topHat:
+       case .womanSSandal:
             1186
-       case .graduationCap:
+       case .balletShoes:
             1187
-       case .billedCap:
+       case .womanSBoot:
             1188
-       case .militaryHelmet:
+       case .hairPick:
             1189
-       case .rescueWorkerSHelmet:
+       case .crown:
             1190
-       case .prayerBeads:
+       case .womanSHat:
             1191
-       case .lipstick:
+       case .topHat:
             1192
-       case .ring:
+       case .graduationCap:
             1193
-       case .gemStone:
+       case .billedCap:
             1194
-       case .mutedSpeaker:
+       case .militaryHelmet:
             1195
-       case .speakerLowVolume:
+       case .rescueWorkerSHelmet:
             1196
-       case .speakerMediumVolume:
+       case .prayerBeads:
             1197
-       case .speakerHighVolume:
+       case .lipstick:
             1198
-       case .loudspeaker:
+       case .ring:
             1199
-       case .megaphone:
+       case .gemStone:
             1200
-       case .postalHorn:
+       case .mutedSpeaker:
             1201
-       case .bell:
+       case .speakerLowVolume:
             1202
-       case .bellWithSlash:
+       case .speakerMediumVolume:
             1203
-       case .musicalScore:
+       case .speakerHighVolume:
             1204
-       case .musicalNote:
+       case .loudspeaker:
             1205
-       case .musicalNotes:
+       case .megaphone:
             1206
-       case .studioMicrophone:
+       case .postalHorn:
             1207
-       case .levelSlider:
+       case .bell:
             1208
-       case .controlKnobs:
+       case .bellWithSlash:
             1209
-       case .microphone:
+       case .musicalScore:
             1210
-       case .headphone:
+       case .musicalNote:
             1211
-       case .radio:
+       case .musicalNotes:
             1212
-       case .saxophone:
+       case .studioMicrophone:
             1213
-       case .accordion:
+       case .levelSlider:
             1214
-       case .guitar:
+       case .controlKnobs:
             1215
-       case .musicalKeyboard:
+       case .microphone:
             1216
-       case .trumpet:
+       case .headphone:
             1217
-       case .violin:
+       case .radio:
             1218
-       case .banjo:
+       case .saxophone:
             1219
-       case .drum:
+       case .trumpet:
             1220
-       case .longDrum:
+       case .trombone:
             1221
-       case .maracas:
+       case .accordion:
             1222
-       case .flute:
+       case .guitar:
             1223
-       case .harp:
+       case .musicalKeyboard:
             1224
-       case .mobilePhone:
+       case .violin:
             1225
-       case .mobilePhoneWithArrow:
+       case .banjo:
             1226
-       case .telephone:
+       case .drum:
             1227
-       case .telephoneReceiver:
+       case .longDrum:
             1228
-       case .pager:
+       case .maracas:
             1229
-       case .faxMachine:
+       case .flute:
             1230
-       case .battery:
+       case .harp:
             1231
-       case .lowBattery:
+       case .mobilePhone:
             1232
-       case .electricPlug:
+       case .mobilePhoneWithArrow:
             1233
-       case .laptop:
+       case .telephone:
             1234
-       case .desktopComputer:
+       case .telephoneReceiver:
             1235
-       case .printer:
+       case .pager:
             1236
-       case .keyboard:
+       case .faxMachine:
             1237
-       case .computerMouse:
+       case .battery:
             1238
-       case .trackball:
+       case .lowBattery:
             1239
-       case .computerDisk:
+       case .electricPlug:
             1240
-       case .floppyDisk:
+       case .laptop:
             1241
-       case .opticalDisk:
+       case .desktopComputer:
             1242
-       case .dvd:
+       case .printer:
             1243
-       case .abacus:
+       case .keyboard:
             1244
-       case .movieCamera:
+       case .computerMouse:
             1245
-       case .filmFrames:
+       case .trackball:
             1246
-       case .filmProjector:
+       case .computerDisk:
             1247
-       case .clapperBoard:
+       case .floppyDisk:
             1248
-       case .television:
+       case .opticalDisk:
             1249
-       case .camera:
+       case .dvd:
             1250
-       case .cameraWithFlash:
+       case .abacus:
             1251
-       case .videoCamera:
+       case .movieCamera:
             1252
-       case .videocassette:
+       case .filmFrames:
             1253
-       case .magnifyingGlassTiltedLeft:
+       case .filmProjector:
             1254
-       case .magnifyingGlassTiltedRight:
+       case .clapperBoard:
             1255
-       case .candle:
+       case .television:
             1256
-       case .lightBulb:
+       case .camera:
             1257
-       case .flashlight:
+       case .cameraWithFlash:
             1258
-       case .redPaperLantern:
+       case .videoCamera:
             1259
-       case .diyaLamp:
+       case .videocassette:
             1260
-       case .notebookWithDecorativeCover:
+       case .magnifyingGlassTiltedLeft:
             1261
-       case .closedBook:
+       case .magnifyingGlassTiltedRight:
             1262
-       case .openBook:
+       case .candle:
             1263
-       case .greenBook:
+       case .lightBulb:
             1264
-       case .blueBook:
+       case .flashlight:
             1265
-       case .orangeBook:
+       case .redPaperLantern:
             1266
-       case .books:
+       case .diyaLamp:
             1267
-       case .notebook:
+       case .notebookWithDecorativeCover:
             1268
-       case .ledger:
+       case .closedBook:
             1269
-       case .pageWithCurl:
+       case .openBook:
             1270
-       case .scroll:
+       case .greenBook:
             1271
-       case .pageFacingUp:
+       case .blueBook:
             1272
-       case .newspaper:
+       case .orangeBook:
             1273
-       case .rolledUpNewspaper:
+       case .books:
             1274
-       case .bookmarkTabs:
+       case .notebook:
             1275
-       case .bookmark:
+       case .ledger:
             1276
-       case .label:
+       case .pageWithCurl:
             1277
-       case .moneyBag:
+       case .scroll:
             1278
-       case .coin:
+       case .pageFacingUp:
             1279
-       case .yenBanknote:
+       case .newspaper:
             1280
-       case .dollarBanknote:
+       case .rolledUpNewspaper:
             1281
-       case .euroBanknote:
+       case .bookmarkTabs:
             1282
-       case .poundBanknote:
+       case .bookmark:
             1283
-       case .moneyWithWings:
+       case .label:
             1284
-       case .creditCard:
+       case .coin:
             1285
-       case .receipt:
+       case .moneyBag:
             1286
-       case .chartIncreasingWithYen:
+       case .treasureChest:
             1287
-       case .envelope:
+       case .yenBanknote:
             1288
-       case .eMail:
+       case .dollarBanknote:
             1289
-       case .incomingEnvelope:
+       case .euroBanknote:
             1290
-       case .envelopeWithArrow:
+       case .poundBanknote:
             1291
-       case .outboxTray:
+       case .moneyWithWings:
             1292
-       case .inboxTray:
+       case .creditCard:
             1293
-       case .package:
+       case .receipt:
             1294
-       case .closedMailboxWithRaisedFlag:
+       case .chartIncreasingWithYen:
             1295
-       case .closedMailboxWithLoweredFlag:
+       case .envelope:
             1296
-       case .openMailboxWithRaisedFlag:
+       case .eMail:
             1297
-       case .openMailboxWithLoweredFlag:
+       case .incomingEnvelope:
             1298
-       case .postbox:
+       case .envelopeWithArrow:
             1299
-       case .ballotBoxWithBallot:
+       case .outboxTray:
             1300
-       case .pencil:
+       case .inboxTray:
             1301
-       case .blackNib:
+       case .package:
             1302
-       case .fountainPen:
+       case .closedMailboxWithRaisedFlag:
             1303
-       case .pen:
+       case .closedMailboxWithLoweredFlag:
             1304
-       case .paintbrush:
+       case .openMailboxWithRaisedFlag:
             1305
-       case .crayon:
+       case .openMailboxWithLoweredFlag:
             1306
-       case .memo:
+       case .postbox:
             1307
-       case .briefcase:
+       case .ballotBoxWithBallot:
             1308
-       case .fileFolder:
+       case .pencil:
             1309
-       case .openFileFolder:
+       case .blackNib:
             1310
-       case .cardIndexDividers:
+       case .fountainPen:
             1311
-       case .calendar:
+       case .pen:
             1312
-       case .tearOffCalendar:
+       case .paintbrush:
             1313
-       case .spiralNotepad:
+       case .crayon:
             1314
-       case .spiralCalendar:
+       case .memo:
             1315
-       case .cardIndex:
+       case .briefcase:
             1316
-       case .chartIncreasing:
+       case .fileFolder:
             1317
-       case .chartDecreasing:
+       case .openFileFolder:
             1318
-       case .barChart:
+       case .cardIndexDividers:
             1319
-       case .clipboard:
+       case .calendar:
             1320
-       case .pushpin:
+       case .tearOffCalendar:
             1321
-       case .roundPushpin:
+       case .spiralNotepad:
             1322
-       case .paperclip:
+       case .spiralCalendar:
             1323
-       case .linkedPaperclips:
+       case .cardIndex:
             1324
-       case .straightRuler:
+       case .chartIncreasing:
             1325
-       case .triangularRuler:
+       case .chartDecreasing:
             1326
-       case .scissors:
+       case .barChart:
             1327
-       case .cardFileBox:
+       case .clipboard:
             1328
-       case .fileCabinet:
+       case .pushpin:
             1329
-       case .wastebasket:
+       case .roundPushpin:
             1330
-       case .locked:
+       case .paperclip:
             1331
-       case .unlocked:
+       case .linkedPaperclips:
             1332
-       case .lockedWithPen:
+       case .straightRuler:
             1333
-       case .lockedWithKey:
+       case .triangularRuler:
             1334
-       case .key:
+       case .scissors:
             1335
-       case .oldKey:
+       case .cardFileBox:
             1336
-       case .hammer:
+       case .fileCabinet:
             1337
-       case .axe:
+       case .wastebasket:
             1338
-       case .pick:
+       case .locked:
             1339
-       case .hammerAndPick:
+       case .unlocked:
             1340
-       case .hammerAndWrench:
+       case .lockedWithPen:
             1341
-       case .dagger:
+       case .lockedWithKey:
             1342
-       case .crossedSwords:
+       case .key:
             1343
-       case .bomb:
+       case .oldKey:
             1344
-       case .boomerang:
+       case .hammer:
             1345
-       case .bowAndArrow:
+       case .axe:
             1346
-       case .shield:
+       case .pick:
             1347
-       case .carpentrySaw:
+       case .hammerAndPick:
             1348
-       case .wrench:
+       case .hammerAndWrench:
             1349
-       case .screwdriver:
+       case .dagger:
             1350
-       case .nutAndBolt:
+       case .crossedSwords:
             1351
-       case .gear:
+       case .bomb:
             1352
-       case .clamp:
+       case .boomerang:
             1353
-       case .balanceScale:
+       case .bowAndArrow:
             1354
-       case .whiteCane:
+       case .shield:
             1355
-       case .link:
+       case .carpentrySaw:
             1356
-       case .brokenChain:
+       case .wrench:
             1357
-       case .chains:
+       case .screwdriver:
             1358
-       case .hook:
+       case .nutAndBolt:
             1359
-       case .toolbox:
+       case .gear:
             1360
-       case .magnet:
+       case .clamp:
             1361
-       case .ladder:
+       case .balanceScale:
             1362
-       case .shovel:
+       case .whiteCane:
             1363
-       case .alembic:
+       case .link:
             1364
-       case .testTube:
+       case .brokenChain:
             1365
-       case .petriDish:
+       case .chains:
             1366
-       case .dna:
+       case .hook:
             1367
-       case .microscope:
+       case .toolbox:
             1368
-       case .telescope:
+       case .magnet:
             1369
-       case .satelliteAntenna:
+       case .ladder:
             1370
-       case .syringe:
+       case .shovel:
             1371
-       case .dropOfBlood:
+       case .alembic:
             1372
-       case .pill:
+       case .testTube:
             1373
-       case .adhesiveBandage:
+       case .petriDish:
             1374
-       case .crutch:
+       case .dna:
             1375
-       case .stethoscope:
+       case .microscope:
             1376
-       case .xRay:
+       case .telescope:
             1377
-       case .door:
+       case .satelliteAntenna:
             1378
-       case .elevator:
+       case .syringe:
             1379
-       case .mirror:
+       case .dropOfBlood:
             1380
-       case .window:
+       case .pill:
             1381
-       case .bed:
+       case .adhesiveBandage:
             1382
-       case .couchAndLamp:
+       case .crutch:
             1383
-       case .chair:
+       case .stethoscope:
             1384
-       case .toilet:
+       case .xRay:
             1385
-       case .plunger:
+       case .door:
             1386
-       case .shower:
+       case .elevator:
             1387
-       case .bathtub:
+       case .mirror:
             1388
-       case .mouseTrap:
+       case .window:
             1389
-       case .razor:
+       case .bed:
             1390
-       case .lotionBottle:
+       case .couchAndLamp:
             1391
-       case .safetyPin:
+       case .chair:
             1392
-       case .broom:
+       case .toilet:
             1393
-       case .basket:
+       case .plunger:
             1394
-       case .rollOfPaper:
+       case .shower:
             1395
-       case .bucket:
+       case .bathtub:
             1396
-       case .soap:
+       case .mouseTrap:
             1397
-       case .bubbles:
+       case .razor:
             1398
-       case .toothbrush:
+       case .lotionBottle:
             1399
-       case .sponge:
+       case .safetyPin:
             1400
-       case .fireExtinguisher:
+       case .broom:
             1401
-       case .shoppingCart:
+       case .basket:
             1402
-       case .cigarette:
+       case .rollOfPaper:
             1403
-       case .coffin:
+       case .bucket:
             1404
-       case .headstone:
+       case .soap:
             1405
-       case .funeralUrn:
+       case .bubbles:
             1406
-       case .nazarAmulet:
+       case .toothbrush:
             1407
-       case .hamsa:
+       case .sponge:
             1408
-       case .moai:
+       case .fireExtinguisher:
             1409
-       case .placard:
+       case .shoppingCart:
             1410
-       case .identificationCard:
+       case .cigarette:
             1411
-       case .atmSign:
+       case .coffin:
             1412
-       case .litterInBinSign:
+       case .headstone:
             1413
-       case .potableWater:
+       case .funeralUrn:
             1414
-       case .wheelchairSymbol:
+       case .nazarAmulet:
             1415
-       case .menSRoom:
+       case .hamsa:
             1416
-       case .womenSRoom:
+       case .moai:
             1417
-       case .restroom:
+       case .placard:
             1418
-       case .babySymbol:
+       case .identificationCard:
             1419
-       case .waterCloset:
+       case .atmSign:
             1420
-       case .passportControl:
+       case .litterInBinSign:
             1421
-       case .customs:
+       case .potableWater:
             1422
-       case .baggageClaim:
+       case .wheelchairSymbol:
             1423
-       case .leftLuggage:
+       case .menSRoom:
             1424
-       case .warning:
+       case .womenSRoom:
             1425
-       case .childrenCrossing:
+       case .restroom:
             1426
-       case .noEntry:
+       case .babySymbol:
             1427
-       case .prohibited:
+       case .waterCloset:
             1428
-       case .noBicycles:
+       case .passportControl:
             1429
-       case .noSmoking:
+       case .customs:
             1430
-       case .noLittering:
+       case .baggageClaim:
             1431
-       case .nonPotableWater:
+       case .leftLuggage:
             1432
-       case .noPedestrians:
+       case .warning:
             1433
-       case .noMobilePhones:
+       case .childrenCrossing:
             1434
-       case .noOneUnderEighteen:
+       case .noEntry:
             1435
-       case .radioactive:
+       case .prohibited:
             1436
-       case .biohazard:
+       case .noBicycles:
             1437
-       case .upArrow:
+       case .noSmoking:
             1438
-       case .upRightArrow:
+       case .noLittering:
             1439
-       case .rightArrow:
+       case .nonPotableWater:
             1440
-       case .downRightArrow:
+       case .noPedestrians:
             1441
-       case .downArrow:
+       case .noMobilePhones:
             1442
-       case .downLeftArrow:
+       case .noOneUnderEighteen:
             1443
-       case .leftArrow:
+       case .radioactive:
             1444
-       case .upLeftArrow:
+       case .biohazard:
             1445
-       case .upDownArrow:
+       case .upArrow:
             1446
-       case .leftRightArrow:
+       case .upRightArrow:
             1447
-       case .rightArrowCurvingLeft:
+       case .rightArrow:
             1448
-       case .leftArrowCurvingRight:
+       case .downRightArrow:
             1449
-       case .rightArrowCurvingUp:
+       case .downArrow:
             1450
-       case .rightArrowCurvingDown:
+       case .downLeftArrow:
             1451
-       case .clockwiseVerticalArrows:
+       case .leftArrow:
             1452
-       case .counterclockwiseArrowsButton:
+       case .upLeftArrow:
             1453
-       case .backArrow:
+       case .upDownArrow:
             1454
-       case .endArrow:
+       case .leftRightArrow:
             1455
-       case .onArrow:
+       case .rightArrowCurvingLeft:
             1456
-       case .soonArrow:
+       case .leftArrowCurvingRight:
             1457
-       case .topArrow:
+       case .rightArrowCurvingUp:
             1458
-       case .placeOfWorship:
+       case .rightArrowCurvingDown:
             1459
-       case .atomSymbol:
+       case .clockwiseVerticalArrows:
             1460
-       case .om:
+       case .counterclockwiseArrowsButton:
             1461
-       case .starOfDavid:
+       case .backArrow:
             1462
-       case .wheelOfDharma:
+       case .endArrow:
             1463
-       case .yinYang:
+       case .onArrow:
             1464
-       case .latinCross:
+       case .soonArrow:
             1465
-       case .orthodoxCross:
+       case .topArrow:
             1466
-       case .starAndCrescent:
+       case .placeOfWorship:
             1467
-       case .peaceSymbol:
+       case .atomSymbol:
             1468
-       case .menorah:
+       case .om:
             1469
-       case .dottedSixPointedStar:
+       case .starOfDavid:
             1470
-       case .khanda:
+       case .wheelOfDharma:
             1471
-       case .aries:
+       case .yinYang:
             1472
-       case .taurus:
+       case .latinCross:
             1473
-       case .gemini:
+       case .orthodoxCross:
             1474
-       case .cancer:
+       case .starAndCrescent:
             1475
-       case .leo:
+       case .peaceSymbol:
             1476
-       case .virgo:
+       case .menorah:
             1477
-       case .libra:
+       case .dottedSixPointedStar:
             1478
-       case .scorpio:
+       case .khanda:
             1479
-       case .sagittarius:
+       case .aries:
             1480
-       case .capricorn:
+       case .taurus:
             1481
-       case .aquarius:
+       case .gemini:
             1482
-       case .pisces:
+       case .cancer:
             1483
-       case .ophiuchus:
+       case .leo:
             1484
-       case .shuffleTracksButton:
+       case .virgo:
             1485
-       case .repeatButton:
+       case .libra:
             1486
-       case .repeatSingleButton:
+       case .scorpio:
             1487
-       case .playButton:
+       case .sagittarius:
             1488
-       case .fastForwardButton:
+       case .capricorn:
             1489
-       case .nextTrackButton:
+       case .aquarius:
             1490
-       case .playOrPauseButton:
+       case .pisces:
             1491
-       case .reverseButton:
+       case .ophiuchus:
             1492
-       case .fastReverseButton:
+       case .shuffleTracksButton:
             1493
-       case .lastTrackButton:
+       case .repeatButton:
             1494
-       case .upwardsButton:
+       case .repeatSingleButton:
             1495
-       case .fastUpButton:
+       case .playButton:
             1496
-       case .downwardsButton:
+       case .fastForwardButton:
             1497
-       case .fastDownButton:
+       case .nextTrackButton:
             1498
-       case .pauseButton:
+       case .playOrPauseButton:
             1499
-       case .stopButton:
+       case .reverseButton:
             1500
-       case .recordButton:
+       case .fastReverseButton:
             1501
-       case .ejectButton:
+       case .lastTrackButton:
             1502
-       case .cinema:
+       case .upwardsButton:
             1503
-       case .dimButton:
+       case .fastUpButton:
             1504
-       case .brightButton:
+       case .downwardsButton:
             1505
-       case .antennaBars:
+       case .fastDownButton:
             1506
-       case .wireless:
+       case .pauseButton:
             1507
-       case .vibrationMode:
+       case .stopButton:
             1508
-       case .mobilePhoneOff:
+       case .recordButton:
             1509
-       case .femaleSign:
+       case .ejectButton:
             1510
-       case .maleSign:
+       case .cinema:
             1511
-       case .transgenderSymbol:
+       case .dimButton:
             1512
-       case .multiply:
+       case .brightButton:
             1513
-       case .plus:
+       case .antennaBars:
             1514
-       case .minus:
+       case .wireless:
             1515
-       case .divide:
+       case .vibrationMode:
             1516
-       case .heavyEqualsSign:
+       case .mobilePhoneOff:
             1517
-       case .infinity:
+       case .femaleSign:
             1518
-       case .doubleExclamationMark:
+       case .maleSign:
             1519
-       case .exclamationQuestionMark:
+       case .transgenderSymbol:
             1520
-       case .redQuestionMark:
+       case .multiply:
             1521
-       case .whiteQuestionMark:
+       case .plus:
             1522
-       case .whiteExclamationMark:
+       case .minus:
             1523
-       case .redExclamationMark:
+       case .divide:
             1524
-       case .wavyDash:
+       case .heavyEqualsSign:
             1525
-       case .currencyExchange:
+       case .infinity:
             1526
-       case .heavyDollarSign:
+       case .doubleExclamationMark:
             1527
-       case .medicalSymbol:
+       case .exclamationQuestionMark:
             1528
-       case .recyclingSymbol:
+       case .redQuestionMark:
             1529
-       case .fleurDeLis:
+       case .whiteQuestionMark:
             1530
-       case .tridentEmblem:
+       case .whiteExclamationMark:
             1531
-       case .nameBadge:
+       case .redExclamationMark:
             1532
-       case .japaneseSymbolForBeginner:
+       case .wavyDash:
             1533
-       case .hollowRedCircle:
+       case .currencyExchange:
             1534
-       case .checkMarkButton:
+       case .heavyDollarSign:
             1535
-       case .checkBoxWithCheck:
+       case .medicalSymbol:
             1536
-       case .checkMark:
+       case .recyclingSymbol:
             1537
-       case .crossMark:
+       case .fleurDeLis:
             1538
-       case .crossMarkButton:
+       case .tridentEmblem:
             1539
-       case .curlyLoop:
+       case .nameBadge:
             1540
-       case .doubleCurlyLoop:
+       case .japaneseSymbolForBeginner:
             1541
-       case .partAlternationMark:
+       case .hollowRedCircle:
             1542
-       case .eightSpokedAsterisk:
+       case .checkMarkButton:
             1543
-       case .eightPointedStar:
+       case .checkBoxWithCheck:
             1544
-       case .sparkle:
+       case .checkMark:
             1545
-       case .copyright:
+       case .crossMark:
             1546
-       case .registered:
+       case .crossMarkButton:
             1547
-       case .tradeMark:
+       case .curlyLoop:
             1548
-       case .splatter:
+       case .doubleCurlyLoop:
             1549
-       case .keycapRoute:
+       case .partAlternationMark:
             1550
-       case .keycapStar:
+       case .eightSpokedAsterisk:
             1551
-       case .keycap0:
+       case .eightPointedStar:
             1552
-       case .keycap1:
+       case .sparkle:
             1553
-       case .keycap2:
+       case .copyright:
             1554
-       case .keycap3:
+       case .registered:
             1555
-       case .keycap4:
+       case .tradeMark:
             1556
-       case .keycap5:
+       case .splatter:
             1557
-       case .keycap6:
+       case .keycapRoute:
             1558
-       case .keycap7:
+       case .keycapStar:
             1559
-       case .keycap8:
+       case .keycap0:
             1560
-       case .keycap9:
+       case .keycap1:
             1561
-       case .keycap10:
+       case .keycap2:
             1562
-       case .inputLatinUppercase:
+       case .keycap3:
             1563
-       case .inputLatinLowercase:
+       case .keycap4:
             1564
-       case .inputNumbers:
+       case .keycap5:
             1565
-       case .inputSymbols:
+       case .keycap6:
             1566
-       case .inputLatinLetters:
+       case .keycap7:
             1567
-       case .aButtonBloodType:
+       case .keycap8:
             1568
-       case .abButtonBloodType:
+       case .keycap9:
             1569
-       case .bButtonBloodType:
+       case .keycap10:
             1570
-       case .clButton:
+       case .inputLatinUppercase:
             1571
-       case .coolButton:
+       case .inputLatinLowercase:
             1572
-       case .freeButton:
+       case .inputNumbers:
             1573
-       case .information:
+       case .inputSymbols:
             1574
-       case .idButton:
+       case .inputLatinLetters:
             1575
-       case .circledM:
+       case .aButtonBloodType:
             1576
-       case .newButton:
+       case .abButtonBloodType:
             1577
-       case .ngButton:
+       case .bButtonBloodType:
             1578
-       case .oButtonBloodType:
+       case .clButton:
             1579
-       case .okButton:
+       case .coolButton:
             1580
-       case .pButton:
+       case .freeButton:
             1581
-       case .sosButton:
+       case .information:
             1582
-       case .upButton:
+       case .idButton:
             1583
-       case .vsButton:
+       case .circledM:
             1584
-       case .japaneseHereButton:
+       case .newButton:
             1585
-       case .japaneseServiceChargeButton:
+       case .ngButton:
             1586
-       case .japaneseMonthlyAmountButton:
+       case .oButtonBloodType:
             1587
-       case .japaneseNotFreeOfChargeButton:
+       case .okButton:
             1588
-       case .japaneseReservedButton:
+       case .pButton:
             1589
-       case .japaneseBargainButton:
+       case .sosButton:
             1590
-       case .japaneseDiscountButton:
+       case .upButton:
             1591
-       case .japaneseFreeOfChargeButton:
+       case .vsButton:
             1592
-       case .japaneseProhibitedButton:
+       case .japaneseHereButton:
             1593
-       case .japaneseAcceptableButton:
+       case .japaneseServiceChargeButton:
             1594
-       case .japaneseApplicationButton:
+       case .japaneseMonthlyAmountButton:
             1595
-       case .japanesePassingGradeButton:
+       case .japaneseNotFreeOfChargeButton:
             1596
-       case .japaneseVacancyButton:
+       case .japaneseReservedButton:
             1597
-       case .japaneseCongratulationsButton:
+       case .japaneseBargainButton:
             1598
-       case .japaneseSecretButton:
+       case .japaneseDiscountButton:
             1599
-       case .japaneseOpenForBusinessButton:
+       case .japaneseFreeOfChargeButton:
             1600
-       case .japaneseNoVacancyButton:
+       case .japaneseProhibitedButton:
             1601
-       case .redCircle:
+       case .japaneseAcceptableButton:
             1602
-       case .orangeCircle:
+       case .japaneseApplicationButton:
             1603
-       case .yellowCircle:
+       case .japanesePassingGradeButton:
             1604
-       case .greenCircle:
+       case .japaneseVacancyButton:
             1605
-       case .blueCircle:
+       case .japaneseCongratulationsButton:
             1606
-       case .purpleCircle:
+       case .japaneseSecretButton:
             1607
-       case .brownCircle:
+       case .japaneseOpenForBusinessButton:
             1608
-       case .blackCircle:
+       case .japaneseNoVacancyButton:
             1609
-       case .whiteCircle:
+       case .redCircle:
             1610
-       case .redSquare:
+       case .orangeCircle:
             1611
-       case .orangeSquare:
+       case .yellowCircle:
             1612
-       case .yellowSquare:
+       case .greenCircle:
             1613
-       case .greenSquare:
+       case .blueCircle:
             1614
-       case .blueSquare:
+       case .purpleCircle:
             1615
-       case .purpleSquare:
+       case .brownCircle:
             1616
-       case .brownSquare:
+       case .blackCircle:
             1617
-       case .blackLargeSquare:
+       case .whiteCircle:
             1618
-       case .whiteLargeSquare:
+       case .redSquare:
             1619
-       case .blackMediumSquare:
+       case .orangeSquare:
             1620
-       case .whiteMediumSquare:
+       case .yellowSquare:
             1621
-       case .blackMediumSmallSquare:
+       case .greenSquare:
             1622
-       case .whiteMediumSmallSquare:
+       case .blueSquare:
             1623
-       case .blackSmallSquare:
+       case .purpleSquare:
             1624
-       case .whiteSmallSquare:
+       case .brownSquare:
             1625
-       case .largeOrangeDiamond:
+       case .blackLargeSquare:
             1626
-       case .largeBlueDiamond:
+       case .whiteLargeSquare:
             1627
-       case .smallOrangeDiamond:
+       case .blackMediumSquare:
             1628
-       case .smallBlueDiamond:
+       case .whiteMediumSquare:
             1629
-       case .redTrianglePointedUp:
+       case .blackMediumSmallSquare:
             1630
-       case .redTrianglePointedDown:
+       case .whiteMediumSmallSquare:
             1631
-       case .diamondWithADot:
+       case .blackSmallSquare:
             1632
-       case .radioButton:
+       case .whiteSmallSquare:
             1633
-       case .whiteSquareButton:
+       case .largeOrangeDiamond:
             1634
-       case .blackSquareButton:
+       case .largeBlueDiamond:
             1635
-       case .chequeredFlag:
+       case .smallOrangeDiamond:
             1636
-       case .triangularFlag:
+       case .smallBlueDiamond:
             1637
-       case .crossedFlags:
+       case .redTrianglePointedUp:
             1638
-       case .blackFlag:
+       case .redTrianglePointedDown:
             1639
-       case .whiteFlag:
+       case .diamondWithADot:
             1640
-       case .rainbowFlag:
+       case .radioButton:
             1641
-       case .transgenderFlag:
+       case .whiteSquareButton:
             1642
-       case .pirateFlag:
+       case .blackSquareButton:
             1643
-       case .flagAscensionIsland:
+       case .chequeredFlag:
             1644
-       case .flagAndorra:
+       case .triangularFlag:
             1645
-       case .flagUnitedArabEmirates:
+       case .crossedFlags:
             1646
-       case .flagAfghanistan:
+       case .blackFlag:
             1647
-       case .flagAntiguaBarbuda:
+       case .whiteFlag:
             1648
-       case .flagAnguilla:
+       case .rainbowFlag:
             1649
-       case .flagAlbania:
+       case .transgenderFlag:
             1650
-       case .flagArmenia:
+       case .pirateFlag:
             1651
-       case .flagAngola:
+       case .flagAscensionIsland:
             1652
-       case .flagAntarctica:
+       case .flagAndorra:
             1653
-       case .flagArgentina:
+       case .flagUnitedArabEmirates:
             1654
-       case .flagAmericanSamoa:
+       case .flagAfghanistan:
             1655
-       case .flagAustria:
+       case .flagAntiguaBarbuda:
             1656
-       case .flagAustralia:
+       case .flagAnguilla:
             1657
-       case .flagAruba:
+       case .flagAlbania:
             1658
-       case .flagAlandIslands:
+       case .flagArmenia:
             1659
-       case .flagAzerbaijan:
+       case .flagAngola:
             1660
-       case .flagBosniaHerzegovina:
+       case .flagAntarctica:
             1661
-       case .flagBarbados:
+       case .flagArgentina:
             1662
-       case .flagBangladesh:
+       case .flagAmericanSamoa:
             1663
-       case .flagBelgium:
+       case .flagAustria:
             1664
-       case .flagBurkinaFaso:
+       case .flagAustralia:
             1665
-       case .flagBulgaria:
+       case .flagAruba:
             1666
-       case .flagBahrain:
+       case .flagAlandIslands:
             1667
-       case .flagBurundi:
+       case .flagAzerbaijan:
             1668
-       case .flagBenin:
+       case .flagBosniaHerzegovina:
             1669
-       case .flagStBarthelemy:
+       case .flagBarbados:
             1670
-       case .flagBermuda:
+       case .flagBangladesh:
             1671
-       case .flagBrunei:
+       case .flagBelgium:
             1672
-       case .flagBolivia:
+       case .flagBurkinaFaso:
             1673
-       case .flagCaribbeanNetherlands:
+       case .flagBulgaria:
             1674
-       case .flagBrazil:
+       case .flagBahrain:
             1675
-       case .flagBahamas:
+       case .flagBurundi:
             1676
-       case .flagBhutan:
+       case .flagBenin:
             1677
-       case .flagBouvetIsland:
+       case .flagStBarthelemy:
             1678
-       case .flagBotswana:
+       case .flagBermuda:
             1679
-       case .flagBelarus:
+       case .flagBrunei:
             1680
-       case .flagBelize:
+       case .flagBolivia:
             1681
-       case .flagCanada:
+       case .flagCaribbeanNetherlands:
             1682
-       case .flagCocosKeelingIslands:
+       case .flagBrazil:
             1683
-       case .flagCongoKinshasa:
+       case .flagBahamas:
             1684
-       case .flagCentralAfricanRepublic:
+       case .flagBhutan:
             1685
-       case .flagCongoBrazzaville:
+       case .flagBouvetIsland:
             1686
-       case .flagSwitzerland:
+       case .flagBotswana:
             1687
-       case .flagCoteDIvoire:
+       case .flagBelarus:
             1688
-       case .flagCookIslands:
+       case .flagBelize:
             1689
-       case .flagChile:
+       case .flagCanada:
             1690
-       case .flagCameroon:
+       case .flagCocosKeelingIslands:
             1691
-       case .flagChina:
+       case .flagCongoKinshasa:
             1692
-       case .flagColombia:
+       case .flagCentralAfricanRepublic:
             1693
-       case .flagClippertonIsland:
+       case .flagCongoBrazzaville:
             1694
-       case .flagSark:
+       case .flagSwitzerland:
             1695
-       case .flagCostaRica:
+       case .flagCoteDIvoire:
             1696
-       case .flagCuba:
+       case .flagCookIslands:
             1697
-       case .flagCapeVerde:
+       case .flagChile:
             1698
-       case .flagCuracao:
+       case .flagCameroon:
             1699
-       case .flagChristmasIsland:
+       case .flagChina:
             1700
-       case .flagCyprus:
+       case .flagColombia:
             1701
-       case .flagCzechia:
+       case .flagClippertonIsland:
             1702
-       case .flagGermany:
+       case .flagSark:
             1703
-       case .flagDiegoGarcia:
+       case .flagCostaRica:
             1704
-       case .flagDjibouti:
+       case .flagCuba:
             1705
-       case .flagDenmark:
+       case .flagCapeVerde:
             1706
-       case .flagDominica:
+       case .flagCuracao:
             1707
-       case .flagDominicanRepublic:
+       case .flagChristmasIsland:
             1708
-       case .flagAlgeria:
+       case .flagCyprus:
             1709
-       case .flagCeutaMelilla:
+       case .flagCzechia:
             1710
-       case .flagEcuador:
+       case .flagGermany:
             1711
-       case .flagEstonia:
+       case .flagDiegoGarcia:
             1712
-       case .flagEgypt:
+       case .flagDjibouti:
             1713
-       case .flagWesternSahara:
+       case .flagDenmark:
             1714
-       case .flagEritrea:
+       case .flagDominica:
             1715
-       case .flagSpain:
+       case .flagDominicanRepublic:
             1716
-       case .flagEthiopia:
+       case .flagAlgeria:
             1717
-       case .flagEuropeanUnion:
+       case .flagCeutaMelilla:
             1718
-       case .flagFinland:
+       case .flagEcuador:
             1719
-       case .flagFiji:
+       case .flagEstonia:
             1720
-       case .flagFalklandIslands:
+       case .flagEgypt:
             1721
-       case .flagMicronesia:
+       case .flagWesternSahara:
             1722
-       case .flagFaroeIslands:
+       case .flagEritrea:
             1723
-       case .flagFrance:
+       case .flagSpain:
             1724
-       case .flagGabon:
+       case .flagEthiopia:
             1725
-       case .flagUnitedKingdom:
+       case .flagEuropeanUnion:
             1726
-       case .flagGrenada:
+       case .flagFinland:
             1727
-       case .flagGeorgia:
+       case .flagFiji:
             1728
-       case .flagFrenchGuiana:
+       case .flagFalklandIslands:
             1729
-       case .flagGuernsey:
+       case .flagMicronesia:
             1730
-       case .flagGhana:
+       case .flagFaroeIslands:
             1731
-       case .flagGibraltar:
+       case .flagFrance:
             1732
-       case .flagGreenland:
+       case .flagGabon:
             1733
-       case .flagGambia:
+       case .flagUnitedKingdom:
             1734
-       case .flagGuinea:
+       case .flagGrenada:
             1735
-       case .flagGuadeloupe:
+       case .flagGeorgia:
             1736
-       case .flagEquatorialGuinea:
+       case .flagFrenchGuiana:
             1737
-       case .flagGreece:
+       case .flagGuernsey:
             1738
-       case .flagSouthGeorgiaSouthSandwichIslands:
+       case .flagGhana:
             1739
-       case .flagGuatemala:
+       case .flagGibraltar:
             1740
-       case .flagGuam:
+       case .flagGreenland:
             1741
-       case .flagGuineaBissau:
+       case .flagGambia:
             1742
-       case .flagGuyana:
+       case .flagGuinea:
             1743
-       case .flagHongKongSarChina:
+       case .flagGuadeloupe:
             1744
-       case .flagHeardMcdonaldIslands:
+       case .flagEquatorialGuinea:
             1745
-       case .flagHonduras:
+       case .flagGreece:
             1746
-       case .flagCroatia:
+       case .flagSouthGeorgiaSouthSandwichIslands:
             1747
-       case .flagHaiti:
+       case .flagGuatemala:
             1748
-       case .flagHungary:
+       case .flagGuam:
             1749
-       case .flagCanaryIslands:
+       case .flagGuineaBissau:
             1750
-       case .flagIndonesia:
+       case .flagGuyana:
             1751
-       case .flagIreland:
+       case .flagHongKongSarChina:
             1752
-       case .flagIsrael:
+       case .flagHeardMcdonaldIslands:
             1753
-       case .flagIsleOfMan:
+       case .flagHonduras:
             1754
-       case .flagIndia:
+       case .flagCroatia:
             1755
-       case .flagBritishIndianOceanTerritory:
+       case .flagHaiti:
             1756
-       case .flagIraq:
+       case .flagHungary:
             1757
-       case .flagIran:
+       case .flagCanaryIslands:
             1758
-       case .flagIceland:
+       case .flagIndonesia:
             1759
-       case .flagItaly:
+       case .flagIreland:
             1760
-       case .flagJersey:
+       case .flagIsrael:
             1761
-       case .flagJamaica:
+       case .flagIsleOfMan:
             1762
-       case .flagJordan:
+       case .flagIndia:
             1763
-       case .flagJapan:
+       case .flagBritishIndianOceanTerritory:
             1764
-       case .flagKenya:
+       case .flagIraq:
             1765
-       case .flagKyrgyzstan:
+       case .flagIran:
             1766
-       case .flagCambodia:
+       case .flagIceland:
             1767
-       case .flagKiribati:
+       case .flagItaly:
             1768
-       case .flagComoros:
+       case .flagJersey:
             1769
-       case .flagStKittsNevis:
+       case .flagJamaica:
             1770
-       case .flagNorthKorea:
+       case .flagJordan:
             1771
-       case .flagSouthKorea:
+       case .flagJapan:
             1772
-       case .flagKuwait:
+       case .flagKenya:
             1773
-       case .flagCaymanIslands:
+       case .flagKyrgyzstan:
             1774
-       case .flagKazakhstan:
+       case .flagCambodia:
             1775
-       case .flagLaos:
+       case .flagKiribati:
             1776
-       case .flagLebanon:
+       case .flagComoros:
             1777
-       case .flagStLucia:
+       case .flagStKittsNevis:
             1778
-       case .flagLiechtenstein:
+       case .flagNorthKorea:
             1779
-       case .flagSriLanka:
+       case .flagSouthKorea:
             1780
-       case .flagLiberia:
+       case .flagKuwait:
             1781
-       case .flagLesotho:
+       case .flagCaymanIslands:
             1782
-       case .flagLithuania:
+       case .flagKazakhstan:
             1783
-       case .flagLuxembourg:
+       case .flagLaos:
             1784
-       case .flagLatvia:
+       case .flagLebanon:
             1785
-       case .flagLibya:
+       case .flagStLucia:
             1786
-       case .flagMorocco:
+       case .flagLiechtenstein:
             1787
-       case .flagMonaco:
+       case .flagSriLanka:
             1788
-       case .flagMoldova:
+       case .flagLiberia:
             1789
-       case .flagMontenegro:
+       case .flagLesotho:
             1790
-       case .flagStMartin:
+       case .flagLithuania:
             1791
-       case .flagMadagascar:
+       case .flagLuxembourg:
             1792
-       case .flagMarshallIslands:
+       case .flagLatvia:
             1793
-       case .flagNorthMacedonia:
+       case .flagLibya:
             1794
-       case .flagMali:
+       case .flagMorocco:
             1795
-       case .flagMyanmarBurma:
+       case .flagMonaco:
             1796
-       case .flagMongolia:
+       case .flagMoldova:
             1797
-       case .flagMacaoSarChina:
+       case .flagMontenegro:
             1798
-       case .flagNorthernMarianaIslands:
+       case .flagStMartin:
             1799
-       case .flagMartinique:
+       case .flagMadagascar:
             1800
-       case .flagMauritania:
+       case .flagMarshallIslands:
             1801
-       case .flagMontserrat:
+       case .flagNorthMacedonia:
             1802
-       case .flagMalta:
+       case .flagMali:
             1803
-       case .flagMauritius:
+       case .flagMyanmarBurma:
             1804
-       case .flagMaldives:
+       case .flagMongolia:
             1805
-       case .flagMalawi:
+       case .flagMacaoSarChina:
             1806
-       case .flagMexico:
+       case .flagNorthernMarianaIslands:
             1807
-       case .flagMalaysia:
+       case .flagMartinique:
             1808
-       case .flagMozambique:
+       case .flagMauritania:
             1809
-       case .flagNamibia:
+       case .flagMontserrat:
             1810
-       case .flagNewCaledonia:
+       case .flagMalta:
             1811
-       case .flagNiger:
+       case .flagMauritius:
             1812
-       case .flagNorfolkIsland:
+       case .flagMaldives:
             1813
-       case .flagNigeria:
+       case .flagMalawi:
             1814
-       case .flagNicaragua:
+       case .flagMexico:
             1815
-       case .flagNetherlands:
+       case .flagMalaysia:
             1816
-       case .flagNorway:
+       case .flagMozambique:
             1817
-       case .flagNepal:
+       case .flagNamibia:
             1818
-       case .flagNauru:
+       case .flagNewCaledonia:
             1819
-       case .flagNiue:
+       case .flagNiger:
             1820
-       case .flagNewZealand:
+       case .flagNorfolkIsland:
             1821
-       case .flagOman:
+       case .flagNigeria:
             1822
-       case .flagPanama:
+       case .flagNicaragua:
             1823
-       case .flagPeru:
+       case .flagNetherlands:
             1824
-       case .flagFrenchPolynesia:
+       case .flagNorway:
             1825
-       case .flagPapuaNewGuinea:
+       case .flagNepal:
             1826
-       case .flagPhilippines:
+       case .flagNauru:
             1827
-       case .flagPakistan:
+       case .flagNiue:
             1828
-       case .flagPoland:
+       case .flagNewZealand:
             1829
-       case .flagStPierreMiquelon:
+       case .flagOman:
             1830
-       case .flagPitcairnIslands:
+       case .flagPanama:
             1831
-       case .flagPuertoRico:
+       case .flagPeru:
             1832
-       case .flagPalestinianTerritories:
+       case .flagFrenchPolynesia:
             1833
-       case .flagPortugal:
+       case .flagPapuaNewGuinea:
             1834
-       case .flagPalau:
+       case .flagPhilippines:
             1835
-       case .flagParaguay:
+       case .flagPakistan:
             1836
-       case .flagQatar:
+       case .flagPoland:
             1837
-       case .flagReunion:
+       case .flagStPierreMiquelon:
             1838
-       case .flagRomania:
+       case .flagPitcairnIslands:
             1839
-       case .flagSerbia:
+       case .flagPuertoRico:
             1840
-       case .flagRussia:
+       case .flagPalestinianTerritories:
             1841
-       case .flagRwanda:
+       case .flagPortugal:
             1842
-       case .flagSaudiArabia:
+       case .flagPalau:
             1843
-       case .flagSolomonIslands:
+       case .flagParaguay:
             1844
-       case .flagSeychelles:
+       case .flagQatar:
             1845
-       case .flagSudan:
+       case .flagReunion:
             1846
-       case .flagSweden:
+       case .flagRomania:
             1847
-       case .flagSingapore:
+       case .flagSerbia:
             1848
-       case .flagStHelena:
+       case .flagRussia:
             1849
-       case .flagSlovenia:
+       case .flagRwanda:
             1850
-       case .flagSvalbardJanMayen:
+       case .flagSaudiArabia:
             1851
-       case .flagSlovakia:
+       case .flagSolomonIslands:
             1852
-       case .flagSierraLeone:
+       case .flagSeychelles:
             1853
-       case .flagSanMarino:
+       case .flagSudan:
             1854
-       case .flagSenegal:
+       case .flagSweden:
             1855
-       case .flagSomalia:
+       case .flagSingapore:
             1856
-       case .flagSuriname:
+       case .flagStHelena:
             1857
-       case .flagSouthSudan:
+       case .flagSlovenia:
             1858
-       case .flagSaoTomePrincipe:
+       case .flagSvalbardJanMayen:
             1859
-       case .flagElSalvador:
+       case .flagSlovakia:
             1860
-       case .flagSintMaarten:
+       case .flagSierraLeone:
             1861
-       case .flagSyria:
+       case .flagSanMarino:
             1862
-       case .flagEswatini:
+       case .flagSenegal:
             1863
-       case .flagTristanDaCunha:
+       case .flagSomalia:
             1864
-       case .flagTurksCaicosIslands:
+       case .flagSuriname:
             1865
-       case .flagChad:
+       case .flagSouthSudan:
             1866
-       case .flagFrenchSouthernTerritories:
+       case .flagSaoTomePrincipe:
             1867
-       case .flagTogo:
+       case .flagElSalvador:
             1868
-       case .flagThailand:
+       case .flagSintMaarten:
             1869
-       case .flagTajikistan:
+       case .flagSyria:
             1870
-       case .flagTokelau:
+       case .flagEswatini:
             1871
-       case .flagTimorLeste:
+       case .flagTristanDaCunha:
             1872
-       case .flagTurkmenistan:
+       case .flagTurksCaicosIslands:
             1873
-       case .flagTunisia:
+       case .flagChad:
             1874
-       case .flagTonga:
+       case .flagFrenchSouthernTerritories:
             1875
-       case .flagTurkiye:
+       case .flagTogo:
             1876
-       case .flagTrinidadTobago:
+       case .flagThailand:
             1877
-       case .flagTuvalu:
+       case .flagTajikistan:
             1878
-       case .flagTaiwan:
+       case .flagTokelau:
             1879
-       case .flagTanzania:
+       case .flagTimorLeste:
             1880
-       case .flagUkraine:
+       case .flagTurkmenistan:
             1881
-       case .flagUganda:
+       case .flagTunisia:
             1882
-       case .flagUSOutlyingIslands:
+       case .flagTonga:
             1883
-       case .flagUnitedNations:
+       case .flagTurkiye:
             1884
-       case .flagUnitedStates:
+       case .flagTrinidadTobago:
             1885
-       case .flagUruguay:
+       case .flagTuvalu:
             1886
-       case .flagUzbekistan:
+       case .flagTaiwan:
             1887
-       case .flagVaticanCity:
+       case .flagTanzania:
             1888
-       case .flagStVincentGrenadines:
+       case .flagUkraine:
             1889
-       case .flagVenezuela:
+       case .flagUganda:
             1890
-       case .flagBritishVirginIslands:
+       case .flagUSOutlyingIslands:
             1891
-       case .flagUSVirginIslands:
+       case .flagUnitedNations:
             1892
-       case .flagVietnam:
+       case .flagUnitedStates:
             1893
-       case .flagVanuatu:
+       case .flagUruguay:
             1894
-       case .flagWallisFutuna:
+       case .flagUzbekistan:
             1895
-       case .flagSamoa:
+       case .flagVaticanCity:
             1896
-       case .flagKosovo:
+       case .flagStVincentGrenadines:
             1897
-       case .flagYemen:
+       case .flagVenezuela:
             1898
-       case .flagMayotte:
+       case .flagBritishVirginIslands:
             1899
-       case .flagSouthAfrica:
+       case .flagUSVirginIslands:
             1900
-       case .flagZambia:
+       case .flagVietnam:
             1901
-       case .flagZimbabwe:
+       case .flagVanuatu:
             1902
-       case .flagEngland:
+       case .flagWallisFutuna:
             1903
-       case .flagScotland:
+       case .flagSamoa:
             1904
-       case .flagWales:
+       case .flagKosovo:
             1905
+       case .flagYemen:
+            1906
+       case .flagMayotte:
+            1907
+       case .flagSouthAfrica:
+            1908
+       case .flagZambia:
+            1909
+       case .flagZimbabwe:
+            1910
+       case .flagEngland:
+            1911
+       case .flagScotland:
+            1912
+       case .flagWales:
+            1913
         }
     }
 
@@ -5755,145 +5759,40 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
 
     public static var allVariants: [Emoji:[[SkinTone]:String]] = {
         [
-            .wavingHand:[
-                [.light]: "👋🏻",
-                [.mediumLight]: "👋🏼",
-                [.medium]: "👋🏽",
-                [.mediumDark]: "👋🏾",
-                [.dark]: "👋🏿"
+            .artist:[
+                [.light]: "🧑🏻‍🎨",
+                [.mediumLight]: "🧑🏼‍🎨",
+                [.medium]: "🧑🏽‍🎨",
+                [.mediumDark]: "🧑🏾‍🎨",
+                [.dark]: "🧑🏿‍🎨"
             ],
-            .raisedBackOfHand:[
-                [.light]: "🤚🏻",
-                [.mediumLight]: "🤚🏼",
-                [.medium]: "🤚🏽",
-                [.mediumDark]: "🤚🏾",
-                [.dark]: "🤚🏿"
+            .astronaut:[
+                [.light]: "🧑🏻‍🚀",
+                [.mediumLight]: "🧑🏼‍🚀",
+                [.medium]: "🧑🏽‍🚀",
+                [.mediumDark]: "🧑🏾‍🚀",
+                [.dark]: "🧑🏿‍🚀"
             ],
-            .handWithFingersSplayed:[
-                [.light]: "🖐🏻",
-                [.mediumLight]: "🖐🏼",
-                [.medium]: "🖐🏽",
-                [.mediumDark]: "🖐🏾",
-                [.dark]: "🖐🏿"
+            .baby:[
+                [.light]: "👶🏻",
+                [.mediumLight]: "👶🏼",
+                [.medium]: "👶🏽",
+                [.mediumDark]: "👶🏾",
+                [.dark]: "👶🏿"
             ],
-            .raisedHand:[
-                [.light]: "✋🏻",
-                [.mediumLight]: "✋🏼",
-                [.medium]: "✋🏽",
-                [.mediumDark]: "✋🏾",
-                [.dark]: "✋🏿"
+            .babyAngel:[
+                [.light]: "👼🏻",
+                [.mediumLight]: "👼🏼",
+                [.medium]: "👼🏽",
+                [.mediumDark]: "👼🏾",
+                [.dark]: "👼🏿"
             ],
-            .vulcanSalute:[
-                [.light]: "🖖🏻",
-                [.mediumLight]: "🖖🏼",
-                [.medium]: "🖖🏽",
-                [.mediumDark]: "🖖🏾",
-                [.dark]: "🖖🏿"
-            ],
-            .rightwardsHand:[
-                [.light]: "🫱🏻",
-                [.mediumLight]: "🫱🏼",
-                [.medium]: "🫱🏽",
-                [.mediumDark]: "🫱🏾",
-                [.dark]: "🫱🏿"
-            ],
-            .leftwardsHand:[
-                [.light]: "🫲🏻",
-                [.mediumLight]: "🫲🏼",
-                [.medium]: "🫲🏽",
-                [.mediumDark]: "🫲🏾",
-                [.dark]: "🫲🏿"
-            ],
-            .palmDownHand:[
-                [.light]: "🫳🏻",
-                [.mediumLight]: "🫳🏼",
-                [.medium]: "🫳🏽",
-                [.mediumDark]: "🫳🏾",
-                [.dark]: "🫳🏿"
-            ],
-            .palmUpHand:[
-                [.light]: "🫴🏻",
-                [.mediumLight]: "🫴🏼",
-                [.medium]: "🫴🏽",
-                [.mediumDark]: "🫴🏾",
-                [.dark]: "🫴🏿"
-            ],
-            .leftwardsPushingHand:[
-                [.light]: "🫷🏻",
-                [.mediumLight]: "🫷🏼",
-                [.medium]: "🫷🏽",
-                [.mediumDark]: "🫷🏾",
-                [.dark]: "🫷🏿"
-            ],
-            .rightwardsPushingHand:[
-                [.light]: "🫸🏻",
-                [.mediumLight]: "🫸🏼",
-                [.medium]: "🫸🏽",
-                [.mediumDark]: "🫸🏾",
-                [.dark]: "🫸🏿"
-            ],
-            .okHand:[
-                [.light]: "👌🏻",
-                [.mediumLight]: "👌🏼",
-                [.medium]: "👌🏽",
-                [.mediumDark]: "👌🏾",
-                [.dark]: "👌🏿"
-            ],
-            .pinchedFingers:[
-                [.light]: "🤌🏻",
-                [.mediumLight]: "🤌🏼",
-                [.medium]: "🤌🏽",
-                [.mediumDark]: "🤌🏾",
-                [.dark]: "🤌🏿"
-            ],
-            .pinchingHand:[
-                [.light]: "🤏🏻",
-                [.mediumLight]: "🤏🏼",
-                [.medium]: "🤏🏽",
-                [.mediumDark]: "🤏🏾",
-                [.dark]: "🤏🏿"
-            ],
-            .victoryHand:[
-                [.light]: "✌🏻",
-                [.mediumLight]: "✌🏼",
-                [.medium]: "✌🏽",
-                [.mediumDark]: "✌🏾",
-                [.dark]: "✌🏿"
-            ],
-            .crossedFingers:[
-                [.light]: "🤞🏻",
-                [.mediumLight]: "🤞🏼",
-                [.medium]: "🤞🏽",
-                [.mediumDark]: "🤞🏾",
-                [.dark]: "🤞🏿"
-            ],
-            .handWithIndexFingerAndThumbCrossed:[
-                [.light]: "🫰🏻",
-                [.mediumLight]: "🫰🏼",
-                [.medium]: "🫰🏽",
-                [.mediumDark]: "🫰🏾",
-                [.dark]: "🫰🏿"
-            ],
-            .loveYouGesture:[
-                [.light]: "🤟🏻",
-                [.mediumLight]: "🤟🏼",
-                [.medium]: "🤟🏽",
-                [.mediumDark]: "🤟🏾",
-                [.dark]: "🤟🏿"
-            ],
-            .signOfTheHorns:[
-                [.light]: "🤘🏻",
-                [.mediumLight]: "🤘🏼",
-                [.medium]: "🤘🏽",
-                [.mediumDark]: "🤘🏾",
-                [.dark]: "🤘🏿"
-            ],
-            .callMeHand:[
-                [.light]: "🤙🏻",
-                [.mediumLight]: "🤙🏼",
-                [.medium]: "🤙🏽",
-                [.mediumDark]: "🤙🏾",
-                [.dark]: "🤙🏿"
+            .backhandIndexPointingDown:[
+                [.light]: "👇🏻",
+                [.mediumLight]: "👇🏼",
+                [.medium]: "👇🏽",
+                [.mediumDark]: "👇🏾",
+                [.dark]: "👇🏿"
             ],
             .backhandIndexPointingLeft:[
                 [.light]: "👈🏻",
@@ -5916,221 +5815,12 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
                 [.mediumDark]: "👆🏾",
                 [.dark]: "👆🏿"
             ],
-            .middleFinger:[
-                [.light]: "🖕🏻",
-                [.mediumLight]: "🖕🏼",
-                [.medium]: "🖕🏽",
-                [.mediumDark]: "🖕🏾",
-                [.dark]: "🖕🏿"
-            ],
-            .backhandIndexPointingDown:[
-                [.light]: "👇🏻",
-                [.mediumLight]: "👇🏼",
-                [.medium]: "👇🏽",
-                [.mediumDark]: "👇🏾",
-                [.dark]: "👇🏿"
-            ],
-            .indexPointingUp:[
-                [.light]: "☝🏻",
-                [.mediumLight]: "☝🏼",
-                [.medium]: "☝🏽",
-                [.mediumDark]: "☝🏾",
-                [.dark]: "☝🏿"
-            ],
-            .indexPointingAtTheViewer:[
-                [.light]: "🫵🏻",
-                [.mediumLight]: "🫵🏼",
-                [.medium]: "🫵🏽",
-                [.mediumDark]: "🫵🏾",
-                [.dark]: "🫵🏿"
-            ],
-            .thumbsUp:[
-                [.light]: "👍🏻",
-                [.mediumLight]: "👍🏼",
-                [.medium]: "👍🏽",
-                [.mediumDark]: "👍🏾",
-                [.dark]: "👍🏿"
-            ],
-            .thumbsDown:[
-                [.light]: "👎🏻",
-                [.mediumLight]: "👎🏼",
-                [.medium]: "👎🏽",
-                [.mediumDark]: "👎🏾",
-                [.dark]: "👎🏿"
-            ],
-            .raisedFist:[
-                [.light]: "✊🏻",
-                [.mediumLight]: "✊🏼",
-                [.medium]: "✊🏽",
-                [.mediumDark]: "✊🏾",
-                [.dark]: "✊🏿"
-            ],
-            .oncomingFist:[
-                [.light]: "👊🏻",
-                [.mediumLight]: "👊🏼",
-                [.medium]: "👊🏽",
-                [.mediumDark]: "👊🏾",
-                [.dark]: "👊🏿"
-            ],
-            .leftFacingFist:[
-                [.light]: "🤛🏻",
-                [.mediumLight]: "🤛🏼",
-                [.medium]: "🤛🏽",
-                [.mediumDark]: "🤛🏾",
-                [.dark]: "🤛🏿"
-            ],
-            .rightFacingFist:[
-                [.light]: "🤜🏻",
-                [.mediumLight]: "🤜🏼",
-                [.medium]: "🤜🏽",
-                [.mediumDark]: "🤜🏾",
-                [.dark]: "🤜🏿"
-            ],
-            .clappingHands:[
-                [.light]: "👏🏻",
-                [.mediumLight]: "👏🏼",
-                [.medium]: "👏🏽",
-                [.mediumDark]: "👏🏾",
-                [.dark]: "👏🏿"
-            ],
-            .raisingHands:[
-                [.light]: "🙌🏻",
-                [.mediumLight]: "🙌🏼",
-                [.medium]: "🙌🏽",
-                [.mediumDark]: "🙌🏾",
-                [.dark]: "🙌🏿"
-            ],
-            .heartHands:[
-                [.light]: "🫶🏻",
-                [.mediumLight]: "🫶🏼",
-                [.medium]: "🫶🏽",
-                [.mediumDark]: "🫶🏾",
-                [.dark]: "🫶🏿"
-            ],
-            .openHands:[
-                [.light]: "👐🏻",
-                [.mediumLight]: "👐🏼",
-                [.medium]: "👐🏽",
-                [.mediumDark]: "👐🏾",
-                [.dark]: "👐🏿"
-            ],
-            .palmsUpTogether:[
-                [.light]: "🤲🏻",
-                [.mediumLight]: "🤲🏼",
-                [.medium]: "🤲🏽",
-                [.mediumDark]: "🤲🏾",
-                [.dark]: "🤲🏿"
-            ],
-            .handshake:[
-                [.light]: "🤝🏻",
-                [.mediumLight]: "🤝🏼",
-                [.medium]: "🤝🏽",
-                [.mediumDark]: "🤝🏾",
-                [.dark]: "🤝🏿",
-                [.light, .mediumLight]: "🫱🏻‍🫲🏼",
-                [.light, .medium]: "🫱🏻‍🫲🏽",
-                [.light, .mediumDark]: "🫱🏻‍🫲🏾",
-                [.light, .dark]: "🫱🏻‍🫲🏿",
-                [.mediumLight, .light]: "🫱🏼‍🫲🏻",
-                [.mediumLight, .medium]: "🫱🏼‍🫲🏽",
-                [.mediumLight, .mediumDark]: "🫱🏼‍🫲🏾",
-                [.mediumLight, .dark]: "🫱🏼‍🫲🏿",
-                [.medium, .light]: "🫱🏽‍🫲🏻",
-                [.medium, .mediumLight]: "🫱🏽‍🫲🏼",
-                [.medium, .mediumDark]: "🫱🏽‍🫲🏾",
-                [.medium, .dark]: "🫱🏽‍🫲🏿",
-                [.mediumDark, .light]: "🫱🏾‍🫲🏻",
-                [.mediumDark, .mediumLight]: "🫱🏾‍🫲🏼",
-                [.mediumDark, .medium]: "🫱🏾‍🫲🏽",
-                [.mediumDark, .dark]: "🫱🏾‍🫲🏿",
-                [.dark, .light]: "🫱🏿‍🫲🏻",
-                [.dark, .mediumLight]: "🫱🏿‍🫲🏼",
-                [.dark, .medium]: "🫱🏿‍🫲🏽",
-                [.dark, .mediumDark]: "🫱🏿‍🫲🏾"
-            ],
-            .foldedHands:[
-                [.light]: "🙏🏻",
-                [.mediumLight]: "🙏🏼",
-                [.medium]: "🙏🏽",
-                [.mediumDark]: "🙏🏾",
-                [.dark]: "🙏🏿"
-            ],
-            .writingHand:[
-                [.light]: "✍🏻",
-                [.mediumLight]: "✍🏼",
-                [.medium]: "✍🏽",
-                [.mediumDark]: "✍🏾",
-                [.dark]: "✍🏿"
-            ],
-            .nailPolish:[
-                [.light]: "💅🏻",
-                [.mediumLight]: "💅🏼",
-                [.medium]: "💅🏽",
-                [.mediumDark]: "💅🏾",
-                [.dark]: "💅🏿"
-            ],
-            .selfie:[
-                [.light]: "🤳🏻",
-                [.mediumLight]: "🤳🏼",
-                [.medium]: "🤳🏽",
-                [.mediumDark]: "🤳🏾",
-                [.dark]: "🤳🏿"
-            ],
-            .flexedBiceps:[
-                [.light]: "💪🏻",
-                [.mediumLight]: "💪🏼",
-                [.medium]: "💪🏽",
-                [.mediumDark]: "💪🏾",
-                [.dark]: "💪🏿"
-            ],
-            .leg:[
-                [.light]: "🦵🏻",
-                [.mediumLight]: "🦵🏼",
-                [.medium]: "🦵🏽",
-                [.mediumDark]: "🦵🏾",
-                [.dark]: "🦵🏿"
-            ],
-            .foot:[
-                [.light]: "🦶🏻",
-                [.mediumLight]: "🦶🏼",
-                [.medium]: "🦶🏽",
-                [.mediumDark]: "🦶🏾",
-                [.dark]: "🦶🏿"
-            ],
-            .ear:[
-                [.light]: "👂🏻",
-                [.mediumLight]: "👂🏼",
-                [.medium]: "👂🏽",
-                [.mediumDark]: "👂🏾",
-                [.dark]: "👂🏿"
-            ],
-            .earWithHearingAid:[
-                [.light]: "🦻🏻",
-                [.mediumLight]: "🦻🏼",
-                [.medium]: "🦻🏽",
-                [.mediumDark]: "🦻🏾",
-                [.dark]: "🦻🏿"
-            ],
-            .nose:[
-                [.light]: "👃🏻",
-                [.mediumLight]: "👃🏼",
-                [.medium]: "👃🏽",
-                [.mediumDark]: "👃🏾",
-                [.dark]: "👃🏿"
-            ],
-            .baby:[
-                [.light]: "👶🏻",
-                [.mediumLight]: "👶🏼",
-                [.medium]: "👶🏽",
-                [.mediumDark]: "👶🏾",
-                [.dark]: "👶🏿"
-            ],
-            .child:[
-                [.light]: "🧒🏻",
-                [.mediumLight]: "🧒🏼",
-                [.medium]: "🧒🏽",
-                [.mediumDark]: "🧒🏾",
-                [.dark]: "🧒🏿"
+            .balletDancer:[
+                [.light]: "🧑🏻‍🩰",
+                [.mediumLight]: "🧑🏼‍🩰",
+                [.medium]: "🧑🏽‍🩰",
+                [.mediumDark]: "🧑🏾‍🩰",
+                [.dark]: "🧑🏿‍🩰"
             ],
             .boy:[
                 [.light]: "👦🏻",
@@ -6139,796 +5829,33 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
                 [.mediumDark]: "👦🏾",
                 [.dark]: "👦🏿"
             ],
-            .girl:[
-                [.light]: "👧🏻",
-                [.mediumLight]: "👧🏼",
-                [.medium]: "👧🏽",
-                [.mediumDark]: "👧🏾",
-                [.dark]: "👧🏿"
-            ],
-            .person:[
-                [.light]: "🧑🏻",
-                [.mediumLight]: "🧑🏼",
-                [.medium]: "🧑🏽",
-                [.mediumDark]: "🧑🏾",
-                [.dark]: "🧑🏿"
-            ],
-            .personBlondHair:[
-                [.light]: "👱🏻",
-                [.mediumLight]: "👱🏼",
-                [.medium]: "👱🏽",
-                [.mediumDark]: "👱🏾",
-                [.dark]: "👱🏿"
-            ],
-            .man:[
-                [.light]: "👨🏻",
-                [.mediumLight]: "👨🏼",
-                [.medium]: "👨🏽",
-                [.mediumDark]: "👨🏾",
-                [.dark]: "👨🏿"
-            ],
-            .personBeard:[
-                [.light]: "🧔🏻",
-                [.mediumLight]: "🧔🏼",
-                [.medium]: "🧔🏽",
-                [.mediumDark]: "🧔🏾",
-                [.dark]: "🧔🏿"
-            ],
-            .manBeard:[
-                [.light]: "🧔🏻‍♂️",
-                [.mediumLight]: "🧔🏼‍♂️",
-                [.medium]: "🧔🏽‍♂️",
-                [.mediumDark]: "🧔🏾‍♂️",
-                [.dark]: "🧔🏿‍♂️"
-            ],
-            .womanBeard:[
-                [.light]: "🧔🏻‍♀️",
-                [.mediumLight]: "🧔🏼‍♀️",
-                [.medium]: "🧔🏽‍♀️",
-                [.mediumDark]: "🧔🏾‍♀️",
-                [.dark]: "🧔🏿‍♀️"
-            ],
-            .manRedHair:[
-                [.light]: "👨🏻‍🦰",
-                [.mediumLight]: "👨🏼‍🦰",
-                [.medium]: "👨🏽‍🦰",
-                [.mediumDark]: "👨🏾‍🦰",
-                [.dark]: "👨🏿‍🦰"
-            ],
-            .manCurlyHair:[
-                [.light]: "👨🏻‍🦱",
-                [.mediumLight]: "👨🏼‍🦱",
-                [.medium]: "👨🏽‍🦱",
-                [.mediumDark]: "👨🏾‍🦱",
-                [.dark]: "👨🏿‍🦱"
-            ],
-            .manWhiteHair:[
-                [.light]: "👨🏻‍🦳",
-                [.mediumLight]: "👨🏼‍🦳",
-                [.medium]: "👨🏽‍🦳",
-                [.mediumDark]: "👨🏾‍🦳",
-                [.dark]: "👨🏿‍🦳"
-            ],
-            .manBald:[
-                [.light]: "👨🏻‍🦲",
-                [.mediumLight]: "👨🏼‍🦲",
-                [.medium]: "👨🏽‍🦲",
-                [.mediumDark]: "👨🏾‍🦲",
-                [.dark]: "👨🏿‍🦲"
-            ],
-            .woman:[
-                [.light]: "👩🏻",
-                [.mediumLight]: "👩🏼",
-                [.medium]: "👩🏽",
-                [.mediumDark]: "👩🏾",
-                [.dark]: "👩🏿"
-            ],
-            .womanRedHair:[
-                [.light]: "👩🏻‍🦰",
-                [.mediumLight]: "👩🏼‍🦰",
-                [.medium]: "👩🏽‍🦰",
-                [.mediumDark]: "👩🏾‍🦰",
-                [.dark]: "👩🏿‍🦰"
-            ],
-            .personRedHair:[
-                [.light]: "🧑🏻‍🦰",
-                [.mediumLight]: "🧑🏼‍🦰",
-                [.medium]: "🧑🏽‍🦰",
-                [.mediumDark]: "🧑🏾‍🦰",
-                [.dark]: "🧑🏿‍🦰"
-            ],
-            .womanCurlyHair:[
-                [.light]: "👩🏻‍🦱",
-                [.mediumLight]: "👩🏼‍🦱",
-                [.medium]: "👩🏽‍🦱",
-                [.mediumDark]: "👩🏾‍🦱",
-                [.dark]: "👩🏿‍🦱"
-            ],
-            .personCurlyHair:[
-                [.light]: "🧑🏻‍🦱",
-                [.mediumLight]: "🧑🏼‍🦱",
-                [.medium]: "🧑🏽‍🦱",
-                [.mediumDark]: "🧑🏾‍🦱",
-                [.dark]: "🧑🏿‍🦱"
-            ],
-            .womanWhiteHair:[
-                [.light]: "👩🏻‍🦳",
-                [.mediumLight]: "👩🏼‍🦳",
-                [.medium]: "👩🏽‍🦳",
-                [.mediumDark]: "👩🏾‍🦳",
-                [.dark]: "👩🏿‍🦳"
-            ],
-            .personWhiteHair:[
-                [.light]: "🧑🏻‍🦳",
-                [.mediumLight]: "🧑🏼‍🦳",
-                [.medium]: "🧑🏽‍🦳",
-                [.mediumDark]: "🧑🏾‍🦳",
-                [.dark]: "🧑🏿‍🦳"
-            ],
-            .womanBald:[
-                [.light]: "👩🏻‍🦲",
-                [.mediumLight]: "👩🏼‍🦲",
-                [.medium]: "👩🏽‍🦲",
-                [.mediumDark]: "👩🏾‍🦲",
-                [.dark]: "👩🏿‍🦲"
-            ],
-            .personBald:[
-                [.light]: "🧑🏻‍🦲",
-                [.mediumLight]: "🧑🏼‍🦲",
-                [.medium]: "🧑🏽‍🦲",
-                [.mediumDark]: "🧑🏾‍🦲",
-                [.dark]: "🧑🏿‍🦲"
-            ],
-            .womanBlondHair:[
-                [.light]: "👱🏻‍♀️",
-                [.mediumLight]: "👱🏼‍♀️",
-                [.medium]: "👱🏽‍♀️",
-                [.mediumDark]: "👱🏾‍♀️",
-                [.dark]: "👱🏿‍♀️"
-            ],
-            .manBlondHair:[
-                [.light]: "👱🏻‍♂️",
-                [.mediumLight]: "👱🏼‍♂️",
-                [.medium]: "👱🏽‍♂️",
-                [.mediumDark]: "👱🏾‍♂️",
-                [.dark]: "👱🏿‍♂️"
-            ],
-            .olderPerson:[
-                [.light]: "🧓🏻",
-                [.mediumLight]: "🧓🏼",
-                [.medium]: "🧓🏽",
-                [.mediumDark]: "🧓🏾",
-                [.dark]: "🧓🏿"
-            ],
-            .oldMan:[
-                [.light]: "👴🏻",
-                [.mediumLight]: "👴🏼",
-                [.medium]: "👴🏽",
-                [.mediumDark]: "👴🏾",
-                [.dark]: "👴🏿"
-            ],
-            .oldWoman:[
-                [.light]: "👵🏻",
-                [.mediumLight]: "👵🏼",
-                [.medium]: "👵🏽",
-                [.mediumDark]: "👵🏾",
-                [.dark]: "👵🏿"
-            ],
-            .personFrowning:[
-                [.light]: "🙍🏻",
-                [.mediumLight]: "🙍🏼",
-                [.medium]: "🙍🏽",
-                [.mediumDark]: "🙍🏾",
-                [.dark]: "🙍🏿"
-            ],
-            .manFrowning:[
-                [.light]: "🙍🏻‍♂️",
-                [.mediumLight]: "🙍🏼‍♂️",
-                [.medium]: "🙍🏽‍♂️",
-                [.mediumDark]: "🙍🏾‍♂️",
-                [.dark]: "🙍🏿‍♂️"
-            ],
-            .womanFrowning:[
-                [.light]: "🙍🏻‍♀️",
-                [.mediumLight]: "🙍🏼‍♀️",
-                [.medium]: "🙍🏽‍♀️",
-                [.mediumDark]: "🙍🏾‍♀️",
-                [.dark]: "🙍🏿‍♀️"
-            ],
-            .personPouting:[
-                [.light]: "🙎🏻",
-                [.mediumLight]: "🙎🏼",
-                [.medium]: "🙎🏽",
-                [.mediumDark]: "🙎🏾",
-                [.dark]: "🙎🏿"
-            ],
-            .manPouting:[
-                [.light]: "🙎🏻‍♂️",
-                [.mediumLight]: "🙎🏼‍♂️",
-                [.medium]: "🙎🏽‍♂️",
-                [.mediumDark]: "🙎🏾‍♂️",
-                [.dark]: "🙎🏿‍♂️"
-            ],
-            .womanPouting:[
-                [.light]: "🙎🏻‍♀️",
-                [.mediumLight]: "🙎🏼‍♀️",
-                [.medium]: "🙎🏽‍♀️",
-                [.mediumDark]: "🙎🏾‍♀️",
-                [.dark]: "🙎🏿‍♀️"
-            ],
-            .personGesturingNo:[
-                [.light]: "🙅🏻",
-                [.mediumLight]: "🙅🏼",
-                [.medium]: "🙅🏽",
-                [.mediumDark]: "🙅🏾",
-                [.dark]: "🙅🏿"
-            ],
-            .manGesturingNo:[
-                [.light]: "🙅🏻‍♂️",
-                [.mediumLight]: "🙅🏼‍♂️",
-                [.medium]: "🙅🏽‍♂️",
-                [.mediumDark]: "🙅🏾‍♂️",
-                [.dark]: "🙅🏿‍♂️"
-            ],
-            .womanGesturingNo:[
-                [.light]: "🙅🏻‍♀️",
-                [.mediumLight]: "🙅🏼‍♀️",
-                [.medium]: "🙅🏽‍♀️",
-                [.mediumDark]: "🙅🏾‍♀️",
-                [.dark]: "🙅🏿‍♀️"
-            ],
-            .personGesturingOk:[
-                [.light]: "🙆🏻",
-                [.mediumLight]: "🙆🏼",
-                [.medium]: "🙆🏽",
-                [.mediumDark]: "🙆🏾",
-                [.dark]: "🙆🏿"
-            ],
-            .manGesturingOk:[
-                [.light]: "🙆🏻‍♂️",
-                [.mediumLight]: "🙆🏼‍♂️",
-                [.medium]: "🙆🏽‍♂️",
-                [.mediumDark]: "🙆🏾‍♂️",
-                [.dark]: "🙆🏿‍♂️"
-            ],
-            .womanGesturingOk:[
-                [.light]: "🙆🏻‍♀️",
-                [.mediumLight]: "🙆🏼‍♀️",
-                [.medium]: "🙆🏽‍♀️",
-                [.mediumDark]: "🙆🏾‍♀️",
-                [.dark]: "🙆🏿‍♀️"
-            ],
-            .personTippingHand:[
-                [.light]: "💁🏻",
-                [.mediumLight]: "💁🏼",
-                [.medium]: "💁🏽",
-                [.mediumDark]: "💁🏾",
-                [.dark]: "💁🏿"
-            ],
-            .manTippingHand:[
-                [.light]: "💁🏻‍♂️",
-                [.mediumLight]: "💁🏼‍♂️",
-                [.medium]: "💁🏽‍♂️",
-                [.mediumDark]: "💁🏾‍♂️",
-                [.dark]: "💁🏿‍♂️"
-            ],
-            .womanTippingHand:[
-                [.light]: "💁🏻‍♀️",
-                [.mediumLight]: "💁🏼‍♀️",
-                [.medium]: "💁🏽‍♀️",
-                [.mediumDark]: "💁🏾‍♀️",
-                [.dark]: "💁🏿‍♀️"
-            ],
-            .personRaisingHand:[
-                [.light]: "🙋🏻",
-                [.mediumLight]: "🙋🏼",
-                [.medium]: "🙋🏽",
-                [.mediumDark]: "🙋🏾",
-                [.dark]: "🙋🏿"
-            ],
-            .manRaisingHand:[
-                [.light]: "🙋🏻‍♂️",
-                [.mediumLight]: "🙋🏼‍♂️",
-                [.medium]: "🙋🏽‍♂️",
-                [.mediumDark]: "🙋🏾‍♂️",
-                [.dark]: "🙋🏿‍♂️"
-            ],
-            .womanRaisingHand:[
-                [.light]: "🙋🏻‍♀️",
-                [.mediumLight]: "🙋🏼‍♀️",
-                [.medium]: "🙋🏽‍♀️",
-                [.mediumDark]: "🙋🏾‍♀️",
-                [.dark]: "🙋🏿‍♀️"
-            ],
-            .deafPerson:[
-                [.light]: "🧏🏻",
-                [.mediumLight]: "🧏🏼",
-                [.medium]: "🧏🏽",
-                [.mediumDark]: "🧏🏾",
-                [.dark]: "🧏🏿"
-            ],
-            .deafMan:[
-                [.light]: "🧏🏻‍♂️",
-                [.mediumLight]: "🧏🏼‍♂️",
-                [.medium]: "🧏🏽‍♂️",
-                [.mediumDark]: "🧏🏾‍♂️",
-                [.dark]: "🧏🏿‍♂️"
-            ],
-            .deafWoman:[
-                [.light]: "🧏🏻‍♀️",
-                [.mediumLight]: "🧏🏼‍♀️",
-                [.medium]: "🧏🏽‍♀️",
-                [.mediumDark]: "🧏🏾‍♀️",
-                [.dark]: "🧏🏿‍♀️"
-            ],
-            .personBowing:[
-                [.light]: "🙇🏻",
-                [.mediumLight]: "🙇🏼",
-                [.medium]: "🙇🏽",
-                [.mediumDark]: "🙇🏾",
-                [.dark]: "🙇🏿"
-            ],
-            .manBowing:[
-                [.light]: "🙇🏻‍♂️",
-                [.mediumLight]: "🙇🏼‍♂️",
-                [.medium]: "🙇🏽‍♂️",
-                [.mediumDark]: "🙇🏾‍♂️",
-                [.dark]: "🙇🏿‍♂️"
-            ],
-            .womanBowing:[
-                [.light]: "🙇🏻‍♀️",
-                [.mediumLight]: "🙇🏼‍♀️",
-                [.medium]: "🙇🏽‍♀️",
-                [.mediumDark]: "🙇🏾‍♀️",
-                [.dark]: "🙇🏿‍♀️"
-            ],
-            .personFacepalming:[
-                [.light]: "🤦🏻",
-                [.mediumLight]: "🤦🏼",
-                [.medium]: "🤦🏽",
-                [.mediumDark]: "🤦🏾",
-                [.dark]: "🤦🏿"
-            ],
-            .manFacepalming:[
-                [.light]: "🤦🏻‍♂️",
-                [.mediumLight]: "🤦🏼‍♂️",
-                [.medium]: "🤦🏽‍♂️",
-                [.mediumDark]: "🤦🏾‍♂️",
-                [.dark]: "🤦🏿‍♂️"
-            ],
-            .womanFacepalming:[
-                [.light]: "🤦🏻‍♀️",
-                [.mediumLight]: "🤦🏼‍♀️",
-                [.medium]: "🤦🏽‍♀️",
-                [.mediumDark]: "🤦🏾‍♀️",
-                [.dark]: "🤦🏿‍♀️"
-            ],
-            .personShrugging:[
-                [.light]: "🤷🏻",
-                [.mediumLight]: "🤷🏼",
-                [.medium]: "🤷🏽",
-                [.mediumDark]: "🤷🏾",
-                [.dark]: "🤷🏿"
-            ],
-            .manShrugging:[
-                [.light]: "🤷🏻‍♂️",
-                [.mediumLight]: "🤷🏼‍♂️",
-                [.medium]: "🤷🏽‍♂️",
-                [.mediumDark]: "🤷🏾‍♂️",
-                [.dark]: "🤷🏿‍♂️"
-            ],
-            .womanShrugging:[
-                [.light]: "🤷🏻‍♀️",
-                [.mediumLight]: "🤷🏼‍♀️",
-                [.medium]: "🤷🏽‍♀️",
-                [.mediumDark]: "🤷🏾‍♀️",
-                [.dark]: "🤷🏿‍♀️"
-            ],
-            .healthWorker:[
-                [.light]: "🧑🏻‍⚕️",
-                [.mediumLight]: "🧑🏼‍⚕️",
-                [.medium]: "🧑🏽‍⚕️",
-                [.mediumDark]: "🧑🏾‍⚕️",
-                [.dark]: "🧑🏿‍⚕️"
-            ],
-            .manHealthWorker:[
-                [.light]: "👨🏻‍⚕️",
-                [.mediumLight]: "👨🏼‍⚕️",
-                [.medium]: "👨🏽‍⚕️",
-                [.mediumDark]: "👨🏾‍⚕️",
-                [.dark]: "👨🏿‍⚕️"
-            ],
-            .womanHealthWorker:[
-                [.light]: "👩🏻‍⚕️",
-                [.mediumLight]: "👩🏼‍⚕️",
-                [.medium]: "👩🏽‍⚕️",
-                [.mediumDark]: "👩🏾‍⚕️",
-                [.dark]: "👩🏿‍⚕️"
-            ],
-            .student:[
-                [.light]: "🧑🏻‍🎓",
-                [.mediumLight]: "🧑🏼‍🎓",
-                [.medium]: "🧑🏽‍🎓",
-                [.mediumDark]: "🧑🏾‍🎓",
-                [.dark]: "🧑🏿‍🎓"
-            ],
-            .manStudent:[
-                [.light]: "👨🏻‍🎓",
-                [.mediumLight]: "👨🏼‍🎓",
-                [.medium]: "👨🏽‍🎓",
-                [.mediumDark]: "👨🏾‍🎓",
-                [.dark]: "👨🏿‍🎓"
-            ],
-            .womanStudent:[
-                [.light]: "👩🏻‍🎓",
-                [.mediumLight]: "👩🏼‍🎓",
-                [.medium]: "👩🏽‍🎓",
-                [.mediumDark]: "👩🏾‍🎓",
-                [.dark]: "👩🏿‍🎓"
-            ],
-            .teacher:[
-                [.light]: "🧑🏻‍🏫",
-                [.mediumLight]: "🧑🏼‍🏫",
-                [.medium]: "🧑🏽‍🏫",
-                [.mediumDark]: "🧑🏾‍🏫",
-                [.dark]: "🧑🏿‍🏫"
-            ],
-            .manTeacher:[
-                [.light]: "👨🏻‍🏫",
-                [.mediumLight]: "👨🏼‍🏫",
-                [.medium]: "👨🏽‍🏫",
-                [.mediumDark]: "👨🏾‍🏫",
-                [.dark]: "👨🏿‍🏫"
-            ],
-            .womanTeacher:[
-                [.light]: "👩🏻‍🏫",
-                [.mediumLight]: "👩🏼‍🏫",
-                [.medium]: "👩🏽‍🏫",
-                [.mediumDark]: "👩🏾‍🏫",
-                [.dark]: "👩🏿‍🏫"
-            ],
-            .judge:[
-                [.light]: "🧑🏻‍⚖️",
-                [.mediumLight]: "🧑🏼‍⚖️",
-                [.medium]: "🧑🏽‍⚖️",
-                [.mediumDark]: "🧑🏾‍⚖️",
-                [.dark]: "🧑🏿‍⚖️"
-            ],
-            .manJudge:[
-                [.light]: "👨🏻‍⚖️",
-                [.mediumLight]: "👨🏼‍⚖️",
-                [.medium]: "👨🏽‍⚖️",
-                [.mediumDark]: "👨🏾‍⚖️",
-                [.dark]: "👨🏿‍⚖️"
-            ],
-            .womanJudge:[
-                [.light]: "👩🏻‍⚖️",
-                [.mediumLight]: "👩🏼‍⚖️",
-                [.medium]: "👩🏽‍⚖️",
-                [.mediumDark]: "👩🏾‍⚖️",
-                [.dark]: "👩🏿‍⚖️"
-            ],
-            .farmer:[
-                [.light]: "🧑🏻‍🌾",
-                [.mediumLight]: "🧑🏼‍🌾",
-                [.medium]: "🧑🏽‍🌾",
-                [.mediumDark]: "🧑🏾‍🌾",
-                [.dark]: "🧑🏿‍🌾"
-            ],
-            .manFarmer:[
-                [.light]: "👨🏻‍🌾",
-                [.mediumLight]: "👨🏼‍🌾",
-                [.medium]: "👨🏽‍🌾",
-                [.mediumDark]: "👨🏾‍🌾",
-                [.dark]: "👨🏿‍🌾"
-            ],
-            .womanFarmer:[
-                [.light]: "👩🏻‍🌾",
-                [.mediumLight]: "👩🏼‍🌾",
-                [.medium]: "👩🏽‍🌾",
-                [.mediumDark]: "👩🏾‍🌾",
-                [.dark]: "👩🏿‍🌾"
-            ],
-            .cook:[
-                [.light]: "🧑🏻‍🍳",
-                [.mediumLight]: "🧑🏼‍🍳",
-                [.medium]: "🧑🏽‍🍳",
-                [.mediumDark]: "🧑🏾‍🍳",
-                [.dark]: "🧑🏿‍🍳"
-            ],
-            .manCook:[
-                [.light]: "👨🏻‍🍳",
-                [.mediumLight]: "👨🏼‍🍳",
-                [.medium]: "👨🏽‍🍳",
-                [.mediumDark]: "👨🏾‍🍳",
-                [.dark]: "👨🏿‍🍳"
-            ],
-            .womanCook:[
-                [.light]: "👩🏻‍🍳",
-                [.mediumLight]: "👩🏼‍🍳",
-                [.medium]: "👩🏽‍🍳",
-                [.mediumDark]: "👩🏾‍🍳",
-                [.dark]: "👩🏿‍🍳"
-            ],
-            .mechanic:[
-                [.light]: "🧑🏻‍🔧",
-                [.mediumLight]: "🧑🏼‍🔧",
-                [.medium]: "🧑🏽‍🔧",
-                [.mediumDark]: "🧑🏾‍🔧",
-                [.dark]: "🧑🏿‍🔧"
-            ],
-            .manMechanic:[
-                [.light]: "👨🏻‍🔧",
-                [.mediumLight]: "👨🏼‍🔧",
-                [.medium]: "👨🏽‍🔧",
-                [.mediumDark]: "👨🏾‍🔧",
-                [.dark]: "👨🏿‍🔧"
-            ],
-            .womanMechanic:[
-                [.light]: "👩🏻‍🔧",
-                [.mediumLight]: "👩🏼‍🔧",
-                [.medium]: "👩🏽‍🔧",
-                [.mediumDark]: "👩🏾‍🔧",
-                [.dark]: "👩🏿‍🔧"
-            ],
-            .factoryWorker:[
-                [.light]: "🧑🏻‍🏭",
-                [.mediumLight]: "🧑🏼‍🏭",
-                [.medium]: "🧑🏽‍🏭",
-                [.mediumDark]: "🧑🏾‍🏭",
-                [.dark]: "🧑🏿‍🏭"
-            ],
-            .manFactoryWorker:[
-                [.light]: "👨🏻‍🏭",
-                [.mediumLight]: "👨🏼‍🏭",
-                [.medium]: "👨🏽‍🏭",
-                [.mediumDark]: "👨🏾‍🏭",
-                [.dark]: "👨🏿‍🏭"
-            ],
-            .womanFactoryWorker:[
-                [.light]: "👩🏻‍🏭",
-                [.mediumLight]: "👩🏼‍🏭",
-                [.medium]: "👩🏽‍🏭",
-                [.mediumDark]: "👩🏾‍🏭",
-                [.dark]: "👩🏿‍🏭"
-            ],
-            .officeWorker:[
-                [.light]: "🧑🏻‍💼",
-                [.mediumLight]: "🧑🏼‍💼",
-                [.medium]: "🧑🏽‍💼",
-                [.mediumDark]: "🧑🏾‍💼",
-                [.dark]: "🧑🏿‍💼"
-            ],
-            .manOfficeWorker:[
-                [.light]: "👨🏻‍💼",
-                [.mediumLight]: "👨🏼‍💼",
-                [.medium]: "👨🏽‍💼",
-                [.mediumDark]: "👨🏾‍💼",
-                [.dark]: "👨🏿‍💼"
-            ],
-            .womanOfficeWorker:[
-                [.light]: "👩🏻‍💼",
-                [.mediumLight]: "👩🏼‍💼",
-                [.medium]: "👩🏽‍💼",
-                [.mediumDark]: "👩🏾‍💼",
-                [.dark]: "👩🏿‍💼"
-            ],
-            .scientist:[
-                [.light]: "🧑🏻‍🔬",
-                [.mediumLight]: "🧑🏼‍🔬",
-                [.medium]: "🧑🏽‍🔬",
-                [.mediumDark]: "🧑🏾‍🔬",
-                [.dark]: "🧑🏿‍🔬"
-            ],
-            .manScientist:[
-                [.light]: "👨🏻‍🔬",
-                [.mediumLight]: "👨🏼‍🔬",
-                [.medium]: "👨🏽‍🔬",
-                [.mediumDark]: "👨🏾‍🔬",
-                [.dark]: "👨🏿‍🔬"
-            ],
-            .womanScientist:[
-                [.light]: "👩🏻‍🔬",
-                [.mediumLight]: "👩🏼‍🔬",
-                [.medium]: "👩🏽‍🔬",
-                [.mediumDark]: "👩🏾‍🔬",
-                [.dark]: "👩🏿‍🔬"
-            ],
-            .technologist:[
-                [.light]: "🧑🏻‍💻",
-                [.mediumLight]: "🧑🏼‍💻",
-                [.medium]: "🧑🏽‍💻",
-                [.mediumDark]: "🧑🏾‍💻",
-                [.dark]: "🧑🏿‍💻"
-            ],
-            .manTechnologist:[
-                [.light]: "👨🏻‍💻",
-                [.mediumLight]: "👨🏼‍💻",
-                [.medium]: "👨🏽‍💻",
-                [.mediumDark]: "👨🏾‍💻",
-                [.dark]: "👨🏿‍💻"
-            ],
-            .womanTechnologist:[
-                [.light]: "👩🏻‍💻",
-                [.mediumLight]: "👩🏼‍💻",
-                [.medium]: "👩🏽‍💻",
-                [.mediumDark]: "👩🏾‍💻",
-                [.dark]: "👩🏿‍💻"
-            ],
-            .singer:[
-                [.light]: "🧑🏻‍🎤",
-                [.mediumLight]: "🧑🏼‍🎤",
-                [.medium]: "🧑🏽‍🎤",
-                [.mediumDark]: "🧑🏾‍🎤",
-                [.dark]: "🧑🏿‍🎤"
-            ],
-            .manSinger:[
-                [.light]: "👨🏻‍🎤",
-                [.mediumLight]: "👨🏼‍🎤",
-                [.medium]: "👨🏽‍🎤",
-                [.mediumDark]: "👨🏾‍🎤",
-                [.dark]: "👨🏿‍🎤"
-            ],
-            .womanSinger:[
-                [.light]: "👩🏻‍🎤",
-                [.mediumLight]: "👩🏼‍🎤",
-                [.medium]: "👩🏽‍🎤",
-                [.mediumDark]: "👩🏾‍🎤",
-                [.dark]: "👩🏿‍🎤"
-            ],
-            .artist:[
-                [.light]: "🧑🏻‍🎨",
-                [.mediumLight]: "🧑🏼‍🎨",
-                [.medium]: "🧑🏽‍🎨",
-                [.mediumDark]: "🧑🏾‍🎨",
-                [.dark]: "🧑🏿‍🎨"
-            ],
-            .manArtist:[
-                [.light]: "👨🏻‍🎨",
-                [.mediumLight]: "👨🏼‍🎨",
-                [.medium]: "👨🏽‍🎨",
-                [.mediumDark]: "👨🏾‍🎨",
-                [.dark]: "👨🏿‍🎨"
-            ],
-            .womanArtist:[
-                [.light]: "👩🏻‍🎨",
-                [.mediumLight]: "👩🏼‍🎨",
-                [.medium]: "👩🏽‍🎨",
-                [.mediumDark]: "👩🏾‍🎨",
-                [.dark]: "👩🏿‍🎨"
-            ],
-            .pilot:[
-                [.light]: "🧑🏻‍✈️",
-                [.mediumLight]: "🧑🏼‍✈️",
-                [.medium]: "🧑🏽‍✈️",
-                [.mediumDark]: "🧑🏾‍✈️",
-                [.dark]: "🧑🏿‍✈️"
-            ],
-            .manPilot:[
-                [.light]: "👨🏻‍✈️",
-                [.mediumLight]: "👨🏼‍✈️",
-                [.medium]: "👨🏽‍✈️",
-                [.mediumDark]: "👨🏾‍✈️",
-                [.dark]: "👨🏿‍✈️"
-            ],
-            .womanPilot:[
-                [.light]: "👩🏻‍✈️",
-                [.mediumLight]: "👩🏼‍✈️",
-                [.medium]: "👩🏽‍✈️",
-                [.mediumDark]: "👩🏾‍✈️",
-                [.dark]: "👩🏿‍✈️"
-            ],
-            .astronaut:[
-                [.light]: "🧑🏻‍🚀",
-                [.mediumLight]: "🧑🏼‍🚀",
-                [.medium]: "🧑🏽‍🚀",
-                [.mediumDark]: "🧑🏾‍🚀",
-                [.dark]: "🧑🏿‍🚀"
-            ],
-            .manAstronaut:[
-                [.light]: "👨🏻‍🚀",
-                [.mediumLight]: "👨🏼‍🚀",
-                [.medium]: "👨🏽‍🚀",
-                [.mediumDark]: "👨🏾‍🚀",
-                [.dark]: "👨🏿‍🚀"
-            ],
-            .womanAstronaut:[
-                [.light]: "👩🏻‍🚀",
-                [.mediumLight]: "👩🏼‍🚀",
-                [.medium]: "👩🏽‍🚀",
-                [.mediumDark]: "👩🏾‍🚀",
-                [.dark]: "👩🏿‍🚀"
-            ],
-            .firefighter:[
-                [.light]: "🧑🏻‍🚒",
-                [.mediumLight]: "🧑🏼‍🚒",
-                [.medium]: "🧑🏽‍🚒",
-                [.mediumDark]: "🧑🏾‍🚒",
-                [.dark]: "🧑🏿‍🚒"
-            ],
-            .manFirefighter:[
-                [.light]: "👨🏻‍🚒",
-                [.mediumLight]: "👨🏼‍🚒",
-                [.medium]: "👨🏽‍🚒",
-                [.mediumDark]: "👨🏾‍🚒",
-                [.dark]: "👨🏿‍🚒"
-            ],
-            .womanFirefighter:[
-                [.light]: "👩🏻‍🚒",
-                [.mediumLight]: "👩🏼‍🚒",
-                [.medium]: "👩🏽‍🚒",
-                [.mediumDark]: "👩🏾‍🚒",
-                [.dark]: "👩🏿‍🚒"
-            ],
-            .policeOfficer:[
-                [.light]: "👮🏻",
-                [.mediumLight]: "👮🏼",
-                [.medium]: "👮🏽",
-                [.mediumDark]: "👮🏾",
-                [.dark]: "👮🏿"
-            ],
-            .manPoliceOfficer:[
-                [.light]: "👮🏻‍♂️",
-                [.mediumLight]: "👮🏼‍♂️",
-                [.medium]: "👮🏽‍♂️",
-                [.mediumDark]: "👮🏾‍♂️",
-                [.dark]: "👮🏿‍♂️"
-            ],
-            .womanPoliceOfficer:[
-                [.light]: "👮🏻‍♀️",
-                [.mediumLight]: "👮🏼‍♀️",
-                [.medium]: "👮🏽‍♀️",
-                [.mediumDark]: "👮🏾‍♀️",
-                [.dark]: "👮🏿‍♀️"
-            ],
-            .detective:[
-                [.light]: "🕵🏻",
-                [.mediumLight]: "🕵🏼",
-                [.medium]: "🕵🏽",
-                [.mediumDark]: "🕵🏾",
-                [.dark]: "🕵🏿"
-            ],
-            .manDetective:[
-                [.light]: "🕵🏻‍♂️",
-                [.mediumLight]: "🕵🏼‍♂️",
-                [.medium]: "🕵🏽‍♂️",
-                [.mediumDark]: "🕵🏾‍♂️",
-                [.dark]: "🕵🏿‍♂️"
-            ],
-            .womanDetective:[
-                [.light]: "🕵🏻‍♀️",
-                [.mediumLight]: "🕵🏼‍♀️",
-                [.medium]: "🕵🏽‍♀️",
-                [.mediumDark]: "🕵🏾‍♀️",
-                [.dark]: "🕵🏿‍♀️"
-            ],
-            .personGuard:[
-                [.light]: "💂🏻",
-                [.mediumLight]: "💂🏼",
-                [.medium]: "💂🏽",
-                [.mediumDark]: "💂🏾",
-                [.dark]: "💂🏿"
-            ],
-            .manGuard:[
-                [.light]: "💂🏻‍♂️",
-                [.mediumLight]: "💂🏼‍♂️",
-                [.medium]: "💂🏽‍♂️",
-                [.mediumDark]: "💂🏾‍♂️",
-                [.dark]: "💂🏿‍♂️"
-            ],
-            .womanGuard:[
-                [.light]: "💂🏻‍♀️",
-                [.mediumLight]: "💂🏼‍♀️",
-                [.medium]: "💂🏽‍♀️",
-                [.mediumDark]: "💂🏾‍♀️",
-                [.dark]: "💂🏿‍♀️"
-            ],
-            .ninja:[
-                [.light]: "🥷🏻",
-                [.mediumLight]: "🥷🏼",
-                [.medium]: "🥷🏽",
-                [.mediumDark]: "🥷🏾",
-                [.dark]: "🥷🏿"
+            .breastFeeding:[
+                [.light]: "🤱🏻",
+                [.mediumLight]: "🤱🏼",
+                [.medium]: "🤱🏽",
+                [.mediumDark]: "🤱🏾",
+                [.dark]: "🤱🏿"
+            ],
+            .callMeHand:[
+                [.light]: "🤙🏻",
+                [.mediumLight]: "🤙🏼",
+                [.medium]: "🤙🏽",
+                [.mediumDark]: "🤙🏾",
+                [.dark]: "🤙🏿"
+            ],
+            .child:[
+                [.light]: "🧒🏻",
+                [.mediumLight]: "🧒🏼",
+                [.medium]: "🧒🏽",
+                [.mediumDark]: "🧒🏾",
+                [.dark]: "🧒🏿"
+            ],
+            .clappingHands:[
+                [.light]: "👏🏻",
+                [.mediumLight]: "👏🏼",
+                [.medium]: "👏🏽",
+                [.mediumDark]: "👏🏾",
+                [.dark]: "👏🏿"
             ],
             .constructionWorker:[
                 [.light]: "👷🏻",
@@ -6937,1236 +5864,12 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
                 [.mediumDark]: "👷🏾",
                 [.dark]: "👷🏿"
             ],
-            .manConstructionWorker:[
-                [.light]: "👷🏻‍♂️",
-                [.mediumLight]: "👷🏼‍♂️",
-                [.medium]: "👷🏽‍♂️",
-                [.mediumDark]: "👷🏾‍♂️",
-                [.dark]: "👷🏿‍♂️"
-            ],
-            .womanConstructionWorker:[
-                [.light]: "👷🏻‍♀️",
-                [.mediumLight]: "👷🏼‍♀️",
-                [.medium]: "👷🏽‍♀️",
-                [.mediumDark]: "👷🏾‍♀️",
-                [.dark]: "👷🏿‍♀️"
-            ],
-            .personWithCrown:[
-                [.light]: "🫅🏻",
-                [.mediumLight]: "🫅🏼",
-                [.medium]: "🫅🏽",
-                [.mediumDark]: "🫅🏾",
-                [.dark]: "🫅🏿"
-            ],
-            .prince:[
-                [.light]: "🤴🏻",
-                [.mediumLight]: "🤴🏼",
-                [.medium]: "🤴🏽",
-                [.mediumDark]: "🤴🏾",
-                [.dark]: "🤴🏿"
-            ],
-            .princess:[
-                [.light]: "👸🏻",
-                [.mediumLight]: "👸🏼",
-                [.medium]: "👸🏽",
-                [.mediumDark]: "👸🏾",
-                [.dark]: "👸🏿"
-            ],
-            .personWearingTurban:[
-                [.light]: "👳🏻",
-                [.mediumLight]: "👳🏼",
-                [.medium]: "👳🏽",
-                [.mediumDark]: "👳🏾",
-                [.dark]: "👳🏿"
-            ],
-            .manWearingTurban:[
-                [.light]: "👳🏻‍♂️",
-                [.mediumLight]: "👳🏼‍♂️",
-                [.medium]: "👳🏽‍♂️",
-                [.mediumDark]: "👳🏾‍♂️",
-                [.dark]: "👳🏿‍♂️"
-            ],
-            .womanWearingTurban:[
-                [.light]: "👳🏻‍♀️",
-                [.mediumLight]: "👳🏼‍♀️",
-                [.medium]: "👳🏽‍♀️",
-                [.mediumDark]: "👳🏾‍♀️",
-                [.dark]: "👳🏿‍♀️"
-            ],
-            .personWithSkullcap:[
-                [.light]: "👲🏻",
-                [.mediumLight]: "👲🏼",
-                [.medium]: "👲🏽",
-                [.mediumDark]: "👲🏾",
-                [.dark]: "👲🏿"
-            ],
-            .womanWithHeadscarf:[
-                [.light]: "🧕🏻",
-                [.mediumLight]: "🧕🏼",
-                [.medium]: "🧕🏽",
-                [.mediumDark]: "🧕🏾",
-                [.dark]: "🧕🏿"
-            ],
-            .personInTuxedo:[
-                [.light]: "🤵🏻",
-                [.mediumLight]: "🤵🏼",
-                [.medium]: "🤵🏽",
-                [.mediumDark]: "🤵🏾",
-                [.dark]: "🤵🏿"
-            ],
-            .manInTuxedo:[
-                [.light]: "🤵🏻‍♂️",
-                [.mediumLight]: "🤵🏼‍♂️",
-                [.medium]: "🤵🏽‍♂️",
-                [.mediumDark]: "🤵🏾‍♂️",
-                [.dark]: "🤵🏿‍♂️"
-            ],
-            .womanInTuxedo:[
-                [.light]: "🤵🏻‍♀️",
-                [.mediumLight]: "🤵🏼‍♀️",
-                [.medium]: "🤵🏽‍♀️",
-                [.mediumDark]: "🤵🏾‍♀️",
-                [.dark]: "🤵🏿‍♀️"
-            ],
-            .personWithVeil:[
-                [.light]: "👰🏻",
-                [.mediumLight]: "👰🏼",
-                [.medium]: "👰🏽",
-                [.mediumDark]: "👰🏾",
-                [.dark]: "👰🏿"
-            ],
-            .manWithVeil:[
-                [.light]: "👰🏻‍♂️",
-                [.mediumLight]: "👰🏼‍♂️",
-                [.medium]: "👰🏽‍♂️",
-                [.mediumDark]: "👰🏾‍♂️",
-                [.dark]: "👰🏿‍♂️"
-            ],
-            .womanWithVeil:[
-                [.light]: "👰🏻‍♀️",
-                [.mediumLight]: "👰🏼‍♀️",
-                [.medium]: "👰🏽‍♀️",
-                [.mediumDark]: "👰🏾‍♀️",
-                [.dark]: "👰🏿‍♀️"
-            ],
-            .pregnantWoman:[
-                [.light]: "🤰🏻",
-                [.mediumLight]: "🤰🏼",
-                [.medium]: "🤰🏽",
-                [.mediumDark]: "🤰🏾",
-                [.dark]: "🤰🏿"
-            ],
-            .pregnantMan:[
-                [.light]: "🫃🏻",
-                [.mediumLight]: "🫃🏼",
-                [.medium]: "🫃🏽",
-                [.mediumDark]: "🫃🏾",
-                [.dark]: "🫃🏿"
-            ],
-            .pregnantPerson:[
-                [.light]: "🫄🏻",
-                [.mediumLight]: "🫄🏼",
-                [.medium]: "🫄🏽",
-                [.mediumDark]: "🫄🏾",
-                [.dark]: "🫄🏿"
-            ],
-            .breastFeeding:[
-                [.light]: "🤱🏻",
-                [.mediumLight]: "🤱🏼",
-                [.medium]: "🤱🏽",
-                [.mediumDark]: "🤱🏾",
-                [.dark]: "🤱🏿"
-            ],
-            .womanFeedingBaby:[
-                [.light]: "👩🏻‍🍼",
-                [.mediumLight]: "👩🏼‍🍼",
-                [.medium]: "👩🏽‍🍼",
-                [.mediumDark]: "👩🏾‍🍼",
-                [.dark]: "👩🏿‍🍼"
-            ],
-            .manFeedingBaby:[
-                [.light]: "👨🏻‍🍼",
-                [.mediumLight]: "👨🏼‍🍼",
-                [.medium]: "👨🏽‍🍼",
-                [.mediumDark]: "👨🏾‍🍼",
-                [.dark]: "👨🏿‍🍼"
-            ],
-            .personFeedingBaby:[
-                [.light]: "🧑🏻‍🍼",
-                [.mediumLight]: "🧑🏼‍🍼",
-                [.medium]: "🧑🏽‍🍼",
-                [.mediumDark]: "🧑🏾‍🍼",
-                [.dark]: "🧑🏿‍🍼"
-            ],
-            .babyAngel:[
-                [.light]: "👼🏻",
-                [.mediumLight]: "👼🏼",
-                [.medium]: "👼🏽",
-                [.mediumDark]: "👼🏾",
-                [.dark]: "👼🏿"
-            ],
-            .santaClaus:[
-                [.light]: "🎅🏻",
-                [.mediumLight]: "🎅🏼",
-                [.medium]: "🎅🏽",
-                [.mediumDark]: "🎅🏾",
-                [.dark]: "🎅🏿"
-            ],
-            .mrsClaus:[
-                [.light]: "🤶🏻",
-                [.mediumLight]: "🤶🏼",
-                [.medium]: "🤶🏽",
-                [.mediumDark]: "🤶🏾",
-                [.dark]: "🤶🏿"
-            ],
-            .mxClaus:[
-                [.light]: "🧑🏻‍🎄",
-                [.mediumLight]: "🧑🏼‍🎄",
-                [.medium]: "🧑🏽‍🎄",
-                [.mediumDark]: "🧑🏾‍🎄",
-                [.dark]: "🧑🏿‍🎄"
-            ],
-            .superhero:[
-                [.light]: "🦸🏻",
-                [.mediumLight]: "🦸🏼",
-                [.medium]: "🦸🏽",
-                [.mediumDark]: "🦸🏾",
-                [.dark]: "🦸🏿"
-            ],
-            .manSuperhero:[
-                [.light]: "🦸🏻‍♂️",
-                [.mediumLight]: "🦸🏼‍♂️",
-                [.medium]: "🦸🏽‍♂️",
-                [.mediumDark]: "🦸🏾‍♂️",
-                [.dark]: "🦸🏿‍♂️"
-            ],
-            .womanSuperhero:[
-                [.light]: "🦸🏻‍♀️",
-                [.mediumLight]: "🦸🏼‍♀️",
-                [.medium]: "🦸🏽‍♀️",
-                [.mediumDark]: "🦸🏾‍♀️",
-                [.dark]: "🦸🏿‍♀️"
-            ],
-            .supervillain:[
-                [.light]: "🦹🏻",
-                [.mediumLight]: "🦹🏼",
-                [.medium]: "🦹🏽",
-                [.mediumDark]: "🦹🏾",
-                [.dark]: "🦹🏿"
-            ],
-            .manSupervillain:[
-                [.light]: "🦹🏻‍♂️",
-                [.mediumLight]: "🦹🏼‍♂️",
-                [.medium]: "🦹🏽‍♂️",
-                [.mediumDark]: "🦹🏾‍♂️",
-                [.dark]: "🦹🏿‍♂️"
-            ],
-            .womanSupervillain:[
-                [.light]: "🦹🏻‍♀️",
-                [.mediumLight]: "🦹🏼‍♀️",
-                [.medium]: "🦹🏽‍♀️",
-                [.mediumDark]: "🦹🏾‍♀️",
-                [.dark]: "🦹🏿‍♀️"
-            ],
-            .mage:[
-                [.light]: "🧙🏻",
-                [.mediumLight]: "🧙🏼",
-                [.medium]: "🧙🏽",
-                [.mediumDark]: "🧙🏾",
-                [.dark]: "🧙🏿"
-            ],
-            .manMage:[
-                [.light]: "🧙🏻‍♂️",
-                [.mediumLight]: "🧙🏼‍♂️",
-                [.medium]: "🧙🏽‍♂️",
-                [.mediumDark]: "🧙🏾‍♂️",
-                [.dark]: "🧙🏿‍♂️"
-            ],
-            .womanMage:[
-                [.light]: "🧙🏻‍♀️",
-                [.mediumLight]: "🧙🏼‍♀️",
-                [.medium]: "🧙🏽‍♀️",
-                [.mediumDark]: "🧙🏾‍♀️",
-                [.dark]: "🧙🏿‍♀️"
-            ],
-            .fairy:[
-                [.light]: "🧚🏻",
-                [.mediumLight]: "🧚🏼",
-                [.medium]: "🧚🏽",
-                [.mediumDark]: "🧚🏾",
-                [.dark]: "🧚🏿"
-            ],
-            .manFairy:[
-                [.light]: "🧚🏻‍♂️",
-                [.mediumLight]: "🧚🏼‍♂️",
-                [.medium]: "🧚🏽‍♂️",
-                [.mediumDark]: "🧚🏾‍♂️",
-                [.dark]: "🧚🏿‍♂️"
-            ],
-            .womanFairy:[
-                [.light]: "🧚🏻‍♀️",
-                [.mediumLight]: "🧚🏼‍♀️",
-                [.medium]: "🧚🏽‍♀️",
-                [.mediumDark]: "🧚🏾‍♀️",
-                [.dark]: "🧚🏿‍♀️"
-            ],
-            .vampire:[
-                [.light]: "🧛🏻",
-                [.mediumLight]: "🧛🏼",
-                [.medium]: "🧛🏽",
-                [.mediumDark]: "🧛🏾",
-                [.dark]: "🧛🏿"
-            ],
-            .manVampire:[
-                [.light]: "🧛🏻‍♂️",
-                [.mediumLight]: "🧛🏼‍♂️",
-                [.medium]: "🧛🏽‍♂️",
-                [.mediumDark]: "🧛🏾‍♂️",
-                [.dark]: "🧛🏿‍♂️"
-            ],
-            .womanVampire:[
-                [.light]: "🧛🏻‍♀️",
-                [.mediumLight]: "🧛🏼‍♀️",
-                [.medium]: "🧛🏽‍♀️",
-                [.mediumDark]: "🧛🏾‍♀️",
-                [.dark]: "🧛🏿‍♀️"
-            ],
-            .merperson:[
-                [.light]: "🧜🏻",
-                [.mediumLight]: "🧜🏼",
-                [.medium]: "🧜🏽",
-                [.mediumDark]: "🧜🏾",
-                [.dark]: "🧜🏿"
-            ],
-            .merman:[
-                [.light]: "🧜🏻‍♂️",
-                [.mediumLight]: "🧜🏼‍♂️",
-                [.medium]: "🧜🏽‍♂️",
-                [.mediumDark]: "🧜🏾‍♂️",
-                [.dark]: "🧜🏿‍♂️"
-            ],
-            .mermaid:[
-                [.light]: "🧜🏻‍♀️",
-                [.mediumLight]: "🧜🏼‍♀️",
-                [.medium]: "🧜🏽‍♀️",
-                [.mediumDark]: "🧜🏾‍♀️",
-                [.dark]: "🧜🏿‍♀️"
-            ],
-            .elf:[
-                [.light]: "🧝🏻",
-                [.mediumLight]: "🧝🏼",
-                [.medium]: "🧝🏽",
-                [.mediumDark]: "🧝🏾",
-                [.dark]: "🧝🏿"
-            ],
-            .manElf:[
-                [.light]: "🧝🏻‍♂️",
-                [.mediumLight]: "🧝🏼‍♂️",
-                [.medium]: "🧝🏽‍♂️",
-                [.mediumDark]: "🧝🏾‍♂️",
-                [.dark]: "🧝🏿‍♂️"
-            ],
-            .womanElf:[
-                [.light]: "🧝🏻‍♀️",
-                [.mediumLight]: "🧝🏼‍♀️",
-                [.medium]: "🧝🏽‍♀️",
-                [.mediumDark]: "🧝🏾‍♀️",
-                [.dark]: "🧝🏿‍♀️"
-            ],
-            .personGettingMassage:[
-                [.light]: "💆🏻",
-                [.mediumLight]: "💆🏼",
-                [.medium]: "💆🏽",
-                [.mediumDark]: "💆🏾",
-                [.dark]: "💆🏿"
-            ],
-            .manGettingMassage:[
-                [.light]: "💆🏻‍♂️",
-                [.mediumLight]: "💆🏼‍♂️",
-                [.medium]: "💆🏽‍♂️",
-                [.mediumDark]: "💆🏾‍♂️",
-                [.dark]: "💆🏿‍♂️"
-            ],
-            .womanGettingMassage:[
-                [.light]: "💆🏻‍♀️",
-                [.mediumLight]: "💆🏼‍♀️",
-                [.medium]: "💆🏽‍♀️",
-                [.mediumDark]: "💆🏾‍♀️",
-                [.dark]: "💆🏿‍♀️"
-            ],
-            .personGettingHaircut:[
-                [.light]: "💇🏻",
-                [.mediumLight]: "💇🏼",
-                [.medium]: "💇🏽",
-                [.mediumDark]: "💇🏾",
-                [.dark]: "💇🏿"
-            ],
-            .manGettingHaircut:[
-                [.light]: "💇🏻‍♂️",
-                [.mediumLight]: "💇🏼‍♂️",
-                [.medium]: "💇🏽‍♂️",
-                [.mediumDark]: "💇🏾‍♂️",
-                [.dark]: "💇🏿‍♂️"
-            ],
-            .womanGettingHaircut:[
-                [.light]: "💇🏻‍♀️",
-                [.mediumLight]: "💇🏼‍♀️",
-                [.medium]: "💇🏽‍♀️",
-                [.mediumDark]: "💇🏾‍♀️",
-                [.dark]: "💇🏿‍♀️"
-            ],
-            .personWalking:[
-                [.light]: "🚶🏻",
-                [.mediumLight]: "🚶🏼",
-                [.medium]: "🚶🏽",
-                [.mediumDark]: "🚶🏾",
-                [.dark]: "🚶🏿"
-            ],
-            .manWalking:[
-                [.light]: "🚶🏻‍♂️",
-                [.mediumLight]: "🚶🏼‍♂️",
-                [.medium]: "🚶🏽‍♂️",
-                [.mediumDark]: "🚶🏾‍♂️",
-                [.dark]: "🚶🏿‍♂️"
-            ],
-            .womanWalking:[
-                [.light]: "🚶🏻‍♀️",
-                [.mediumLight]: "🚶🏼‍♀️",
-                [.medium]: "🚶🏽‍♀️",
-                [.mediumDark]: "🚶🏾‍♀️",
-                [.dark]: "🚶🏿‍♀️"
-            ],
-            .personWalkingFacingRight:[
-                [.light]: "🚶🏻‍➡️",
-                [.mediumLight]: "🚶🏼‍➡️",
-                [.medium]: "🚶🏽‍➡️",
-                [.mediumDark]: "🚶🏾‍➡️",
-                [.dark]: "🚶🏿‍➡️"
-            ],
-            .womanWalkingFacingRight:[
-                [.light]: "🚶🏻‍♀️‍➡️",
-                [.mediumLight]: "🚶🏼‍♀️‍➡️",
-                [.medium]: "🚶🏽‍♀️‍➡️",
-                [.mediumDark]: "🚶🏾‍♀️‍➡️",
-                [.dark]: "🚶🏿‍♀️‍➡️"
-            ],
-            .manWalkingFacingRight:[
-                [.light]: "🚶🏻‍♂️‍➡️",
-                [.mediumLight]: "🚶🏼‍♂️‍➡️",
-                [.medium]: "🚶🏽‍♂️‍➡️",
-                [.mediumDark]: "🚶🏾‍♂️‍➡️",
-                [.dark]: "🚶🏿‍♂️‍➡️"
-            ],
-            .personStanding:[
-                [.light]: "🧍🏻",
-                [.mediumLight]: "🧍🏼",
-                [.medium]: "🧍🏽",
-                [.mediumDark]: "🧍🏾",
-                [.dark]: "🧍🏿"
-            ],
-            .manStanding:[
-                [.light]: "🧍🏻‍♂️",
-                [.mediumLight]: "🧍🏼‍♂️",
-                [.medium]: "🧍🏽‍♂️",
-                [.mediumDark]: "🧍🏾‍♂️",
-                [.dark]: "🧍🏿‍♂️"
-            ],
-            .womanStanding:[
-                [.light]: "🧍🏻‍♀️",
-                [.mediumLight]: "🧍🏼‍♀️",
-                [.medium]: "🧍🏽‍♀️",
-                [.mediumDark]: "🧍🏾‍♀️",
-                [.dark]: "🧍🏿‍♀️"
-            ],
-            .personKneeling:[
-                [.light]: "🧎🏻",
-                [.mediumLight]: "🧎🏼",
-                [.medium]: "🧎🏽",
-                [.mediumDark]: "🧎🏾",
-                [.dark]: "🧎🏿"
-            ],
-            .manKneeling:[
-                [.light]: "🧎🏻‍♂️",
-                [.mediumLight]: "🧎🏼‍♂️",
-                [.medium]: "🧎🏽‍♂️",
-                [.mediumDark]: "🧎🏾‍♂️",
-                [.dark]: "🧎🏿‍♂️"
-            ],
-            .womanKneeling:[
-                [.light]: "🧎🏻‍♀️",
-                [.mediumLight]: "🧎🏼‍♀️",
-                [.medium]: "🧎🏽‍♀️",
-                [.mediumDark]: "🧎🏾‍♀️",
-                [.dark]: "🧎🏿‍♀️"
-            ],
-            .personKneelingFacingRight:[
-                [.light]: "🧎🏻‍➡️",
-                [.mediumLight]: "🧎🏼‍➡️",
-                [.medium]: "🧎🏽‍➡️",
-                [.mediumDark]: "🧎🏾‍➡️",
-                [.dark]: "🧎🏿‍➡️"
-            ],
-            .womanKneelingFacingRight:[
-                [.light]: "🧎🏻‍♀️‍➡️",
-                [.mediumLight]: "🧎🏼‍♀️‍➡️",
-                [.medium]: "🧎🏽‍♀️‍➡️",
-                [.mediumDark]: "🧎🏾‍♀️‍➡️",
-                [.dark]: "🧎🏿‍♀️‍➡️"
-            ],
-            .manKneelingFacingRight:[
-                [.light]: "🧎🏻‍♂️‍➡️",
-                [.mediumLight]: "🧎🏼‍♂️‍➡️",
-                [.medium]: "🧎🏽‍♂️‍➡️",
-                [.mediumDark]: "🧎🏾‍♂️‍➡️",
-                [.dark]: "🧎🏿‍♂️‍➡️"
-            ],
-            .personWithWhiteCane:[
-                [.light]: "🧑🏻‍🦯",
-                [.mediumLight]: "🧑🏼‍🦯",
-                [.medium]: "🧑🏽‍🦯",
-                [.mediumDark]: "🧑🏾‍🦯",
-                [.dark]: "🧑🏿‍🦯"
-            ],
-            .personWithWhiteCaneFacingRight:[
-                [.light]: "🧑🏻‍🦯‍➡️",
-                [.mediumLight]: "🧑🏼‍🦯‍➡️",
-                [.medium]: "🧑🏽‍🦯‍➡️",
-                [.mediumDark]: "🧑🏾‍🦯‍➡️",
-                [.dark]: "🧑🏿‍🦯‍➡️"
-            ],
-            .manWithWhiteCane:[
-                [.light]: "👨🏻‍🦯",
-                [.mediumLight]: "👨🏼‍🦯",
-                [.medium]: "👨🏽‍🦯",
-                [.mediumDark]: "👨🏾‍🦯",
-                [.dark]: "👨🏿‍🦯"
-            ],
-            .manWithWhiteCaneFacingRight:[
-                [.light]: "👨🏻‍🦯‍➡️",
-                [.mediumLight]: "👨🏼‍🦯‍➡️",
-                [.medium]: "👨🏽‍🦯‍➡️",
-                [.mediumDark]: "👨🏾‍🦯‍➡️",
-                [.dark]: "👨🏿‍🦯‍➡️"
-            ],
-            .womanWithWhiteCane:[
-                [.light]: "👩🏻‍🦯",
-                [.mediumLight]: "👩🏼‍🦯",
-                [.medium]: "👩🏽‍🦯",
-                [.mediumDark]: "👩🏾‍🦯",
-                [.dark]: "👩🏿‍🦯"
-            ],
-            .womanWithWhiteCaneFacingRight:[
-                [.light]: "👩🏻‍🦯‍➡️",
-                [.mediumLight]: "👩🏼‍🦯‍➡️",
-                [.medium]: "👩🏽‍🦯‍➡️",
-                [.mediumDark]: "👩🏾‍🦯‍➡️",
-                [.dark]: "👩🏿‍🦯‍➡️"
-            ],
-            .personInMotorizedWheelchair:[
-                [.light]: "🧑🏻‍🦼",
-                [.mediumLight]: "🧑🏼‍🦼",
-                [.medium]: "🧑🏽‍🦼",
-                [.mediumDark]: "🧑🏾‍🦼",
-                [.dark]: "🧑🏿‍🦼"
-            ],
-            .personInMotorizedWheelchairFacingRight:[
-                [.light]: "🧑🏻‍🦼‍➡️",
-                [.mediumLight]: "🧑🏼‍🦼‍➡️",
-                [.medium]: "🧑🏽‍🦼‍➡️",
-                [.mediumDark]: "🧑🏾‍🦼‍➡️",
-                [.dark]: "🧑🏿‍🦼‍➡️"
-            ],
-            .manInMotorizedWheelchair:[
-                [.light]: "👨🏻‍🦼",
-                [.mediumLight]: "👨🏼‍🦼",
-                [.medium]: "👨🏽‍🦼",
-                [.mediumDark]: "👨🏾‍🦼",
-                [.dark]: "👨🏿‍🦼"
-            ],
-            .manInMotorizedWheelchairFacingRight:[
-                [.light]: "👨🏻‍🦼‍➡️",
-                [.mediumLight]: "👨🏼‍🦼‍➡️",
-                [.medium]: "👨🏽‍🦼‍➡️",
-                [.mediumDark]: "👨🏾‍🦼‍➡️",
-                [.dark]: "👨🏿‍🦼‍➡️"
-            ],
-            .womanInMotorizedWheelchair:[
-                [.light]: "👩🏻‍🦼",
-                [.mediumLight]: "👩🏼‍🦼",
-                [.medium]: "👩🏽‍🦼",
-                [.mediumDark]: "👩🏾‍🦼",
-                [.dark]: "👩🏿‍🦼"
-            ],
-            .womanInMotorizedWheelchairFacingRight:[
-                [.light]: "👩🏻‍🦼‍➡️",
-                [.mediumLight]: "👩🏼‍🦼‍➡️",
-                [.medium]: "👩🏽‍🦼‍➡️",
-                [.mediumDark]: "👩🏾‍🦼‍➡️",
-                [.dark]: "👩🏿‍🦼‍➡️"
-            ],
-            .personInManualWheelchair:[
-                [.light]: "🧑🏻‍🦽",
-                [.mediumLight]: "🧑🏼‍🦽",
-                [.medium]: "🧑🏽‍🦽",
-                [.mediumDark]: "🧑🏾‍🦽",
-                [.dark]: "🧑🏿‍🦽"
-            ],
-            .personInManualWheelchairFacingRight:[
-                [.light]: "🧑🏻‍🦽‍➡️",
-                [.mediumLight]: "🧑🏼‍🦽‍➡️",
-                [.medium]: "🧑🏽‍🦽‍➡️",
-                [.mediumDark]: "🧑🏾‍🦽‍➡️",
-                [.dark]: "🧑🏿‍🦽‍➡️"
-            ],
-            .manInManualWheelchair:[
-                [.light]: "👨🏻‍🦽",
-                [.mediumLight]: "👨🏼‍🦽",
-                [.medium]: "👨🏽‍🦽",
-                [.mediumDark]: "👨🏾‍🦽",
-                [.dark]: "👨🏿‍🦽"
-            ],
-            .manInManualWheelchairFacingRight:[
-                [.light]: "👨🏻‍🦽‍➡️",
-                [.mediumLight]: "👨🏼‍🦽‍➡️",
-                [.medium]: "👨🏽‍🦽‍➡️",
-                [.mediumDark]: "👨🏾‍🦽‍➡️",
-                [.dark]: "👨🏿‍🦽‍➡️"
-            ],
-            .womanInManualWheelchair:[
-                [.light]: "👩🏻‍🦽",
-                [.mediumLight]: "👩🏼‍🦽",
-                [.medium]: "👩🏽‍🦽",
-                [.mediumDark]: "👩🏾‍🦽",
-                [.dark]: "👩🏿‍🦽"
-            ],
-            .womanInManualWheelchairFacingRight:[
-                [.light]: "👩🏻‍🦽‍➡️",
-                [.mediumLight]: "👩🏼‍🦽‍➡️",
-                [.medium]: "👩🏽‍🦽‍➡️",
-                [.mediumDark]: "👩🏾‍🦽‍➡️",
-                [.dark]: "👩🏿‍🦽‍➡️"
-            ],
-            .personRunning:[
-                [.light]: "🏃🏻",
-                [.mediumLight]: "🏃🏼",
-                [.medium]: "🏃🏽",
-                [.mediumDark]: "🏃🏾",
-                [.dark]: "🏃🏿"
-            ],
-            .manRunning:[
-                [.light]: "🏃🏻‍♂️",
-                [.mediumLight]: "🏃🏼‍♂️",
-                [.medium]: "🏃🏽‍♂️",
-                [.mediumDark]: "🏃🏾‍♂️",
-                [.dark]: "🏃🏿‍♂️"
-            ],
-            .womanRunning:[
-                [.light]: "🏃🏻‍♀️",
-                [.mediumLight]: "🏃🏼‍♀️",
-                [.medium]: "🏃🏽‍♀️",
-                [.mediumDark]: "🏃🏾‍♀️",
-                [.dark]: "🏃🏿‍♀️"
-            ],
-            .personRunningFacingRight:[
-                [.light]: "🏃🏻‍➡️",
-                [.mediumLight]: "🏃🏼‍➡️",
-                [.medium]: "🏃🏽‍➡️",
-                [.mediumDark]: "🏃🏾‍➡️",
-                [.dark]: "🏃🏿‍➡️"
-            ],
-            .womanRunningFacingRight:[
-                [.light]: "🏃🏻‍♀️‍➡️",
-                [.mediumLight]: "🏃🏼‍♀️‍➡️",
-                [.medium]: "🏃🏽‍♀️‍➡️",
-                [.mediumDark]: "🏃🏾‍♀️‍➡️",
-                [.dark]: "🏃🏿‍♀️‍➡️"
-            ],
-            .manRunningFacingRight:[
-                [.light]: "🏃🏻‍♂️‍➡️",
-                [.mediumLight]: "🏃🏼‍♂️‍➡️",
-                [.medium]: "🏃🏽‍♂️‍➡️",
-                [.mediumDark]: "🏃🏾‍♂️‍➡️",
-                [.dark]: "🏃🏿‍♂️‍➡️"
-            ],
-            .womanDancing:[
-                [.light]: "💃🏻",
-                [.mediumLight]: "💃🏼",
-                [.medium]: "💃🏽",
-                [.mediumDark]: "💃🏾",
-                [.dark]: "💃🏿"
-            ],
-            .manDancing:[
-                [.light]: "🕺🏻",
-                [.mediumLight]: "🕺🏼",
-                [.medium]: "🕺🏽",
-                [.mediumDark]: "🕺🏾",
-                [.dark]: "🕺🏿"
-            ],
-            .personInSuitLevitating:[
-                [.light]: "🕴🏻",
-                [.mediumLight]: "🕴🏼",
-                [.medium]: "🕴🏽",
-                [.mediumDark]: "🕴🏾",
-                [.dark]: "🕴🏿"
-            ],
-            .personInSteamyRoom:[
-                [.light]: "🧖🏻",
-                [.mediumLight]: "🧖🏼",
-                [.medium]: "🧖🏽",
-                [.mediumDark]: "🧖🏾",
-                [.dark]: "🧖🏿"
-            ],
-            .manInSteamyRoom:[
-                [.light]: "🧖🏻‍♂️",
-                [.mediumLight]: "🧖🏼‍♂️",
-                [.medium]: "🧖🏽‍♂️",
-                [.mediumDark]: "🧖🏾‍♂️",
-                [.dark]: "🧖🏿‍♂️"
-            ],
-            .womanInSteamyRoom:[
-                [.light]: "🧖🏻‍♀️",
-                [.mediumLight]: "🧖🏼‍♀️",
-                [.medium]: "🧖🏽‍♀️",
-                [.mediumDark]: "🧖🏾‍♀️",
-                [.dark]: "🧖🏿‍♀️"
-            ],
-            .personClimbing:[
-                [.light]: "🧗🏻",
-                [.mediumLight]: "🧗🏼",
-                [.medium]: "🧗🏽",
-                [.mediumDark]: "🧗🏾",
-                [.dark]: "🧗🏿"
-            ],
-            .manClimbing:[
-                [.light]: "🧗🏻‍♂️",
-                [.mediumLight]: "🧗🏼‍♂️",
-                [.medium]: "🧗🏽‍♂️",
-                [.mediumDark]: "🧗🏾‍♂️",
-                [.dark]: "🧗🏿‍♂️"
-            ],
-            .womanClimbing:[
-                [.light]: "🧗🏻‍♀️",
-                [.mediumLight]: "🧗🏼‍♀️",
-                [.medium]: "🧗🏽‍♀️",
-                [.mediumDark]: "🧗🏾‍♀️",
-                [.dark]: "🧗🏿‍♀️"
-            ],
-            .horseRacing:[
-                [.light]: "🏇🏻",
-                [.mediumLight]: "🏇🏼",
-                [.medium]: "🏇🏽",
-                [.mediumDark]: "🏇🏾",
-                [.dark]: "🏇🏿"
-            ],
-            .snowboarder:[
-                [.light]: "🏂🏻",
-                [.mediumLight]: "🏂🏼",
-                [.medium]: "🏂🏽",
-                [.mediumDark]: "🏂🏾",
-                [.dark]: "🏂🏿"
-            ],
-            .personGolfing:[
-                [.light]: "🏌🏻",
-                [.mediumLight]: "🏌🏼",
-                [.medium]: "🏌🏽",
-                [.mediumDark]: "🏌🏾",
-                [.dark]: "🏌🏿"
-            ],
-            .manGolfing:[
-                [.light]: "🏌🏻‍♂️",
-                [.mediumLight]: "🏌🏼‍♂️",
-                [.medium]: "🏌🏽‍♂️",
-                [.mediumDark]: "🏌🏾‍♂️",
-                [.dark]: "🏌🏿‍♂️"
-            ],
-            .womanGolfing:[
-                [.light]: "🏌🏻‍♀️",
-                [.mediumLight]: "🏌🏼‍♀️",
-                [.medium]: "🏌🏽‍♀️",
-                [.mediumDark]: "🏌🏾‍♀️",
-                [.dark]: "🏌🏿‍♀️"
-            ],
-            .personSurfing:[
-                [.light]: "🏄🏻",
-                [.mediumLight]: "🏄🏼",
-                [.medium]: "🏄🏽",
-                [.mediumDark]: "🏄🏾",
-                [.dark]: "🏄🏿"
-            ],
-            .manSurfing:[
-                [.light]: "🏄🏻‍♂️",
-                [.mediumLight]: "🏄🏼‍♂️",
-                [.medium]: "🏄🏽‍♂️",
-                [.mediumDark]: "🏄🏾‍♂️",
-                [.dark]: "🏄🏿‍♂️"
-            ],
-            .womanSurfing:[
-                [.light]: "🏄🏻‍♀️",
-                [.mediumLight]: "🏄🏼‍♀️",
-                [.medium]: "🏄🏽‍♀️",
-                [.mediumDark]: "🏄🏾‍♀️",
-                [.dark]: "🏄🏿‍♀️"
-            ],
-            .personRowingBoat:[
-                [.light]: "🚣🏻",
-                [.mediumLight]: "🚣🏼",
-                [.medium]: "🚣🏽",
-                [.mediumDark]: "🚣🏾",
-                [.dark]: "🚣🏿"
-            ],
-            .manRowingBoat:[
-                [.light]: "🚣🏻‍♂️",
-                [.mediumLight]: "🚣🏼‍♂️",
-                [.medium]: "🚣🏽‍♂️",
-                [.mediumDark]: "🚣🏾‍♂️",
-                [.dark]: "🚣🏿‍♂️"
-            ],
-            .womanRowingBoat:[
-                [.light]: "🚣🏻‍♀️",
-                [.mediumLight]: "🚣🏼‍♀️",
-                [.medium]: "🚣🏽‍♀️",
-                [.mediumDark]: "🚣🏾‍♀️",
-                [.dark]: "🚣🏿‍♀️"
-            ],
-            .personSwimming:[
-                [.light]: "🏊🏻",
-                [.mediumLight]: "🏊🏼",
-                [.medium]: "🏊🏽",
-                [.mediumDark]: "🏊🏾",
-                [.dark]: "🏊🏿"
-            ],
-            .manSwimming:[
-                [.light]: "🏊🏻‍♂️",
-                [.mediumLight]: "🏊🏼‍♂️",
-                [.medium]: "🏊🏽‍♂️",
-                [.mediumDark]: "🏊🏾‍♂️",
-                [.dark]: "🏊🏿‍♂️"
-            ],
-            .womanSwimming:[
-                [.light]: "🏊🏻‍♀️",
-                [.mediumLight]: "🏊🏼‍♀️",
-                [.medium]: "🏊🏽‍♀️",
-                [.mediumDark]: "🏊🏾‍♀️",
-                [.dark]: "🏊🏿‍♀️"
-            ],
-            .personBouncingBall:[
-                [.light]: "⛹🏻",
-                [.mediumLight]: "⛹🏼",
-                [.medium]: "⛹🏽",
-                [.mediumDark]: "⛹🏾",
-                [.dark]: "⛹🏿"
-            ],
-            .manBouncingBall:[
-                [.light]: "⛹🏻‍♂️",
-                [.mediumLight]: "⛹🏼‍♂️",
-                [.medium]: "⛹🏽‍♂️",
-                [.mediumDark]: "⛹🏾‍♂️",
-                [.dark]: "⛹🏿‍♂️"
-            ],
-            .womanBouncingBall:[
-                [.light]: "⛹🏻‍♀️",
-                [.mediumLight]: "⛹🏼‍♀️",
-                [.medium]: "⛹🏽‍♀️",
-                [.mediumDark]: "⛹🏾‍♀️",
-                [.dark]: "⛹🏿‍♀️"
-            ],
-            .personLiftingWeights:[
-                [.light]: "🏋🏻",
-                [.mediumLight]: "🏋🏼",
-                [.medium]: "🏋🏽",
-                [.mediumDark]: "🏋🏾",
-                [.dark]: "🏋🏿"
-            ],
-            .manLiftingWeights:[
-                [.light]: "🏋🏻‍♂️",
-                [.mediumLight]: "🏋🏼‍♂️",
-                [.medium]: "🏋🏽‍♂️",
-                [.mediumDark]: "🏋🏾‍♂️",
-                [.dark]: "🏋🏿‍♂️"
-            ],
-            .womanLiftingWeights:[
-                [.light]: "🏋🏻‍♀️",
-                [.mediumLight]: "🏋🏼‍♀️",
-                [.medium]: "🏋🏽‍♀️",
-                [.mediumDark]: "🏋🏾‍♀️",
-                [.dark]: "🏋🏿‍♀️"
-            ],
-            .personBiking:[
-                [.light]: "🚴🏻",
-                [.mediumLight]: "🚴🏼",
-                [.medium]: "🚴🏽",
-                [.mediumDark]: "🚴🏾",
-                [.dark]: "🚴🏿"
-            ],
-            .manBiking:[
-                [.light]: "🚴🏻‍♂️",
-                [.mediumLight]: "🚴🏼‍♂️",
-                [.medium]: "🚴🏽‍♂️",
-                [.mediumDark]: "🚴🏾‍♂️",
-                [.dark]: "🚴🏿‍♂️"
-            ],
-            .womanBiking:[
-                [.light]: "🚴🏻‍♀️",
-                [.mediumLight]: "🚴🏼‍♀️",
-                [.medium]: "🚴🏽‍♀️",
-                [.mediumDark]: "🚴🏾‍♀️",
-                [.dark]: "🚴🏿‍♀️"
-            ],
-            .personMountainBiking:[
-                [.light]: "🚵🏻",
-                [.mediumLight]: "🚵🏼",
-                [.medium]: "🚵🏽",
-                [.mediumDark]: "🚵🏾",
-                [.dark]: "🚵🏿"
-            ],
-            .manMountainBiking:[
-                [.light]: "🚵🏻‍♂️",
-                [.mediumLight]: "🚵🏼‍♂️",
-                [.medium]: "🚵🏽‍♂️",
-                [.mediumDark]: "🚵🏾‍♂️",
-                [.dark]: "🚵🏿‍♂️"
-            ],
-            .womanMountainBiking:[
-                [.light]: "🚵🏻‍♀️",
-                [.mediumLight]: "🚵🏼‍♀️",
-                [.medium]: "🚵🏽‍♀️",
-                [.mediumDark]: "🚵🏾‍♀️",
-                [.dark]: "🚵🏿‍♀️"
-            ],
-            .personCartwheeling:[
-                [.light]: "🤸🏻",
-                [.mediumLight]: "🤸🏼",
-                [.medium]: "🤸🏽",
-                [.mediumDark]: "🤸🏾",
-                [.dark]: "🤸🏿"
-            ],
-            .manCartwheeling:[
-                [.light]: "🤸🏻‍♂️",
-                [.mediumLight]: "🤸🏼‍♂️",
-                [.medium]: "🤸🏽‍♂️",
-                [.mediumDark]: "🤸🏾‍♂️",
-                [.dark]: "🤸🏿‍♂️"
-            ],
-            .womanCartwheeling:[
-                [.light]: "🤸🏻‍♀️",
-                [.mediumLight]: "🤸🏼‍♀️",
-                [.medium]: "🤸🏽‍♀️",
-                [.mediumDark]: "🤸🏾‍♀️",
-                [.dark]: "🤸🏿‍♀️"
-            ],
-            .personPlayingWaterPolo:[
-                [.light]: "🤽🏻",
-                [.mediumLight]: "🤽🏼",
-                [.medium]: "🤽🏽",
-                [.mediumDark]: "🤽🏾",
-                [.dark]: "🤽🏿"
-            ],
-            .manPlayingWaterPolo:[
-                [.light]: "🤽🏻‍♂️",
-                [.mediumLight]: "🤽🏼‍♂️",
-                [.medium]: "🤽🏽‍♂️",
-                [.mediumDark]: "🤽🏾‍♂️",
-                [.dark]: "🤽🏿‍♂️"
-            ],
-            .womanPlayingWaterPolo:[
-                [.light]: "🤽🏻‍♀️",
-                [.mediumLight]: "🤽🏼‍♀️",
-                [.medium]: "🤽🏽‍♀️",
-                [.mediumDark]: "🤽🏾‍♀️",
-                [.dark]: "🤽🏿‍♀️"
-            ],
-            .personPlayingHandball:[
-                [.light]: "🤾🏻",
-                [.mediumLight]: "🤾🏼",
-                [.medium]: "🤾🏽",
-                [.mediumDark]: "🤾🏾",
-                [.dark]: "🤾🏿"
-            ],
-            .manPlayingHandball:[
-                [.light]: "🤾🏻‍♂️",
-                [.mediumLight]: "🤾🏼‍♂️",
-                [.medium]: "🤾🏽‍♂️",
-                [.mediumDark]: "🤾🏾‍♂️",
-                [.dark]: "🤾🏿‍♂️"
-            ],
-            .womanPlayingHandball:[
-                [.light]: "🤾🏻‍♀️",
-                [.mediumLight]: "🤾🏼‍♀️",
-                [.medium]: "🤾🏽‍♀️",
-                [.mediumDark]: "🤾🏾‍♀️",
-                [.dark]: "🤾🏿‍♀️"
-            ],
-            .personJuggling:[
-                [.light]: "🤹🏻",
-                [.mediumLight]: "🤹🏼",
-                [.medium]: "🤹🏽",
-                [.mediumDark]: "🤹🏾",
-                [.dark]: "🤹🏿"
-            ],
-            .manJuggling:[
-                [.light]: "🤹🏻‍♂️",
-                [.mediumLight]: "🤹🏼‍♂️",
-                [.medium]: "🤹🏽‍♂️",
-                [.mediumDark]: "🤹🏾‍♂️",
-                [.dark]: "🤹🏿‍♂️"
-            ],
-            .womanJuggling:[
-                [.light]: "🤹🏻‍♀️",
-                [.mediumLight]: "🤹🏼‍♀️",
-                [.medium]: "🤹🏽‍♀️",
-                [.mediumDark]: "🤹🏾‍♀️",
-                [.dark]: "🤹🏿‍♀️"
-            ],
-            .personInLotusPosition:[
-                [.light]: "🧘🏻",
-                [.mediumLight]: "🧘🏼",
-                [.medium]: "🧘🏽",
-                [.mediumDark]: "🧘🏾",
-                [.dark]: "🧘🏿"
-            ],
-            .manInLotusPosition:[
-                [.light]: "🧘🏻‍♂️",
-                [.mediumLight]: "🧘🏼‍♂️",
-                [.medium]: "🧘🏽‍♂️",
-                [.mediumDark]: "🧘🏾‍♂️",
-                [.dark]: "🧘🏿‍♂️"
-            ],
-            .womanInLotusPosition:[
-                [.light]: "🧘🏻‍♀️",
-                [.mediumLight]: "🧘🏼‍♀️",
-                [.medium]: "🧘🏽‍♀️",
-                [.mediumDark]: "🧘🏾‍♀️",
-                [.dark]: "🧘🏿‍♀️"
-            ],
-            .personTakingBath:[
-                [.light]: "🛀🏻",
-                [.mediumLight]: "🛀🏼",
-                [.medium]: "🛀🏽",
-                [.mediumDark]: "🛀🏾",
-                [.dark]: "🛀🏿"
-            ],
-            .personInBed:[
-                [.light]: "🛌🏻",
-                [.mediumLight]: "🛌🏼",
-                [.medium]: "🛌🏽",
-                [.mediumDark]: "🛌🏾",
-                [.dark]: "🛌🏿"
-            ],
-            .peopleHoldingHands:[
-                [.light]: "🧑🏻‍🤝‍🧑🏻",
-                [.light, .mediumLight]: "🧑🏻‍🤝‍🧑🏼",
-                [.light, .medium]: "🧑🏻‍🤝‍🧑🏽",
-                [.light, .mediumDark]: "🧑🏻‍🤝‍🧑🏾",
-                [.light, .dark]: "🧑🏻‍🤝‍🧑🏿",
-                [.mediumLight, .light]: "🧑🏼‍🤝‍🧑🏻",
-                [.mediumLight]: "🧑🏼‍🤝‍🧑🏼",
-                [.mediumLight, .medium]: "🧑🏼‍🤝‍🧑🏽",
-                [.mediumLight, .mediumDark]: "🧑🏼‍🤝‍🧑🏾",
-                [.mediumLight, .dark]: "🧑🏼‍🤝‍🧑🏿",
-                [.medium, .light]: "🧑🏽‍🤝‍🧑🏻",
-                [.medium, .mediumLight]: "🧑🏽‍🤝‍🧑🏼",
-                [.medium]: "🧑🏽‍🤝‍🧑🏽",
-                [.medium, .mediumDark]: "🧑🏽‍🤝‍🧑🏾",
-                [.medium, .dark]: "🧑🏽‍🤝‍🧑🏿",
-                [.mediumDark, .light]: "🧑🏾‍🤝‍🧑🏻",
-                [.mediumDark, .mediumLight]: "🧑🏾‍🤝‍🧑🏼",
-                [.mediumDark, .medium]: "🧑🏾‍🤝‍🧑🏽",
-                [.mediumDark]: "🧑🏾‍🤝‍🧑🏾",
-                [.mediumDark, .dark]: "🧑🏾‍🤝‍🧑🏿",
-                [.dark, .light]: "🧑🏿‍🤝‍🧑🏻",
-                [.dark, .mediumLight]: "🧑🏿‍🤝‍🧑🏼",
-                [.dark, .medium]: "🧑🏿‍🤝‍🧑🏽",
-                [.dark, .mediumDark]: "🧑🏿‍🤝‍🧑🏾",
-                [.dark]: "🧑🏿‍🤝‍🧑🏿"
-            ],
-            .womenHoldingHands:[
-                [.light]: "👭🏻",
-                [.light, .mediumLight]: "👩🏻‍🤝‍👩🏼",
-                [.light, .medium]: "👩🏻‍🤝‍👩🏽",
-                [.light, .mediumDark]: "👩🏻‍🤝‍👩🏾",
-                [.light, .dark]: "👩🏻‍🤝‍👩🏿",
-                [.mediumLight, .light]: "👩🏼‍🤝‍👩🏻",
-                [.mediumLight]: "👭🏼",
-                [.mediumLight, .medium]: "👩🏼‍🤝‍👩🏽",
-                [.mediumLight, .mediumDark]: "👩🏼‍🤝‍👩🏾",
-                [.mediumLight, .dark]: "👩🏼‍🤝‍👩🏿",
-                [.medium, .light]: "👩🏽‍🤝‍👩🏻",
-                [.medium, .mediumLight]: "👩🏽‍🤝‍👩🏼",
-                [.medium]: "👭🏽",
-                [.medium, .mediumDark]: "👩🏽‍🤝‍👩🏾",
-                [.medium, .dark]: "👩🏽‍🤝‍👩🏿",
-                [.mediumDark, .light]: "👩🏾‍🤝‍👩🏻",
-                [.mediumDark, .mediumLight]: "👩🏾‍🤝‍👩🏼",
-                [.mediumDark, .medium]: "👩🏾‍🤝‍👩🏽",
-                [.mediumDark]: "👭🏾",
-                [.mediumDark, .dark]: "👩🏾‍🤝‍👩🏿",
-                [.dark, .light]: "👩🏿‍🤝‍👩🏻",
-                [.dark, .mediumLight]: "👩🏿‍🤝‍👩🏼",
-                [.dark, .medium]: "👩🏿‍🤝‍👩🏽",
-                [.dark, .mediumDark]: "👩🏿‍🤝‍👩🏾",
-                [.dark]: "👭🏿"
-            ],
-            .womanAndManHoldingHands:[
-                [.light]: "👫🏻",
-                [.light, .mediumLight]: "👩🏻‍🤝‍👨🏼",
-                [.light, .medium]: "👩🏻‍🤝‍👨🏽",
-                [.light, .mediumDark]: "👩🏻‍🤝‍👨🏾",
-                [.light, .dark]: "👩🏻‍🤝‍👨🏿",
-                [.mediumLight, .light]: "👩🏼‍🤝‍👨🏻",
-                [.mediumLight]: "👫🏼",
-                [.mediumLight, .medium]: "👩🏼‍🤝‍👨🏽",
-                [.mediumLight, .mediumDark]: "👩🏼‍🤝‍👨🏾",
-                [.mediumLight, .dark]: "👩🏼‍🤝‍👨🏿",
-                [.medium, .light]: "👩🏽‍🤝‍👨🏻",
-                [.medium, .mediumLight]: "👩🏽‍🤝‍👨🏼",
-                [.medium]: "👫🏽",
-                [.medium, .mediumDark]: "👩🏽‍🤝‍👨🏾",
-                [.medium, .dark]: "👩🏽‍🤝‍👨🏿",
-                [.mediumDark, .light]: "👩🏾‍🤝‍👨🏻",
-                [.mediumDark, .mediumLight]: "👩🏾‍🤝‍👨🏼",
-                [.mediumDark, .medium]: "👩🏾‍🤝‍👨🏽",
-                [.mediumDark]: "👫🏾",
-                [.mediumDark, .dark]: "👩🏾‍🤝‍👨🏿",
-                [.dark, .light]: "👩🏿‍🤝‍👨🏻",
-                [.dark, .mediumLight]: "👩🏿‍🤝‍👨🏼",
-                [.dark, .medium]: "👩🏿‍🤝‍👨🏽",
-                [.dark, .mediumDark]: "👩🏿‍🤝‍👨🏾",
-                [.dark]: "👫🏿"
-            ],
-            .menHoldingHands:[
-                [.light]: "👬🏻",
-                [.light, .mediumLight]: "👨🏻‍🤝‍👨🏼",
-                [.light, .medium]: "👨🏻‍🤝‍👨🏽",
-                [.light, .mediumDark]: "👨🏻‍🤝‍👨🏾",
-                [.light, .dark]: "👨🏻‍🤝‍👨🏿",
-                [.mediumLight, .light]: "👨🏼‍🤝‍👨🏻",
-                [.mediumLight]: "👬🏼",
-                [.mediumLight, .medium]: "👨🏼‍🤝‍👨🏽",
-                [.mediumLight, .mediumDark]: "👨🏼‍🤝‍👨🏾",
-                [.mediumLight, .dark]: "👨🏼‍🤝‍👨🏿",
-                [.medium, .light]: "👨🏽‍🤝‍👨🏻",
-                [.medium, .mediumLight]: "👨🏽‍🤝‍👨🏼",
-                [.medium]: "👬🏽",
-                [.medium, .mediumDark]: "👨🏽‍🤝‍👨🏾",
-                [.medium, .dark]: "👨🏽‍🤝‍👨🏿",
-                [.mediumDark, .light]: "👨🏾‍🤝‍👨🏻",
-                [.mediumDark, .mediumLight]: "👨🏾‍🤝‍👨🏼",
-                [.mediumDark, .medium]: "👨🏾‍🤝‍👨🏽",
-                [.mediumDark]: "👬🏾",
-                [.mediumDark, .dark]: "👨🏾‍🤝‍👨🏿",
-                [.dark, .light]: "👨🏿‍🤝‍👨🏻",
-                [.dark, .mediumLight]: "👨🏿‍🤝‍👨🏼",
-                [.dark, .medium]: "👨🏿‍🤝‍👨🏽",
-                [.dark, .mediumDark]: "👨🏿‍🤝‍👨🏾",
-                [.dark]: "👬🏿"
-            ],
-            .kiss:[
-                [.light]: "💏🏻",
-                [.mediumLight]: "💏🏼",
-                [.medium]: "💏🏽",
-                [.mediumDark]: "💏🏾",
-                [.dark]: "💏🏿",
-                [.light, .mediumLight]: "🧑🏻‍❤️‍💋‍🧑🏼",
-                [.light, .medium]: "🧑🏻‍❤️‍💋‍🧑🏽",
-                [.light, .mediumDark]: "🧑🏻‍❤️‍💋‍🧑🏾",
-                [.light, .dark]: "🧑🏻‍❤️‍💋‍🧑🏿",
-                [.mediumLight, .light]: "🧑🏼‍❤️‍💋‍🧑🏻",
-                [.mediumLight, .medium]: "🧑🏼‍❤️‍💋‍🧑🏽",
-                [.mediumLight, .mediumDark]: "🧑🏼‍❤️‍💋‍🧑🏾",
-                [.mediumLight, .dark]: "🧑🏼‍❤️‍💋‍🧑🏿",
-                [.medium, .light]: "🧑🏽‍❤️‍💋‍🧑🏻",
-                [.medium, .mediumLight]: "🧑🏽‍❤️‍💋‍🧑🏼",
-                [.medium, .mediumDark]: "🧑🏽‍❤️‍💋‍🧑🏾",
-                [.medium, .dark]: "🧑🏽‍❤️‍💋‍🧑🏿",
-                [.mediumDark, .light]: "🧑🏾‍❤️‍💋‍🧑🏻",
-                [.mediumDark, .mediumLight]: "🧑🏾‍❤️‍💋‍🧑🏼",
-                [.mediumDark, .medium]: "🧑🏾‍❤️‍💋‍🧑🏽",
-                [.mediumDark, .dark]: "🧑🏾‍❤️‍💋‍🧑🏿",
-                [.dark, .light]: "🧑🏿‍❤️‍💋‍🧑🏻",
-                [.dark, .mediumLight]: "🧑🏿‍❤️‍💋‍🧑🏼",
-                [.dark, .medium]: "🧑🏿‍❤️‍💋‍🧑🏽",
-                [.dark, .mediumDark]: "🧑🏿‍❤️‍💋‍🧑🏾"
-            ],
-            .kissWomanMan:[
-                [.light]: "👩🏻‍❤️‍💋‍👨🏻",
-                [.light, .mediumLight]: "👩🏻‍❤️‍💋‍👨🏼",
-                [.light, .medium]: "👩🏻‍❤️‍💋‍👨🏽",
-                [.light, .mediumDark]: "👩🏻‍❤️‍💋‍👨🏾",
-                [.light, .dark]: "👩🏻‍❤️‍💋‍👨🏿",
-                [.mediumLight, .light]: "👩🏼‍❤️‍💋‍👨🏻",
-                [.mediumLight]: "👩🏼‍❤️‍💋‍👨🏼",
-                [.mediumLight, .medium]: "👩🏼‍❤️‍💋‍👨🏽",
-                [.mediumLight, .mediumDark]: "👩🏼‍❤️‍💋‍👨🏾",
-                [.mediumLight, .dark]: "👩🏼‍❤️‍💋‍👨🏿",
-                [.medium, .light]: "👩🏽‍❤️‍💋‍👨🏻",
-                [.medium, .mediumLight]: "👩🏽‍❤️‍💋‍👨🏼",
-                [.medium]: "👩🏽‍❤️‍💋‍👨🏽",
-                [.medium, .mediumDark]: "👩🏽‍❤️‍💋‍👨🏾",
-                [.medium, .dark]: "👩🏽‍❤️‍💋‍👨🏿",
-                [.mediumDark, .light]: "👩🏾‍❤️‍💋‍👨🏻",
-                [.mediumDark, .mediumLight]: "👩🏾‍❤️‍💋‍👨🏼",
-                [.mediumDark, .medium]: "👩🏾‍❤️‍💋‍👨🏽",
-                [.mediumDark]: "👩🏾‍❤️‍💋‍👨🏾",
-                [.mediumDark, .dark]: "👩🏾‍❤️‍💋‍👨🏿",
-                [.dark, .light]: "👩🏿‍❤️‍💋‍👨🏻",
-                [.dark, .mediumLight]: "👩🏿‍❤️‍💋‍👨🏼",
-                [.dark, .medium]: "👩🏿‍❤️‍💋‍👨🏽",
-                [.dark, .mediumDark]: "👩🏿‍❤️‍💋‍👨🏾",
-                [.dark]: "👩🏿‍❤️‍💋‍👨🏿"
-            ],
-            .kissManMan:[
-                [.light]: "👨🏻‍❤️‍💋‍👨🏻",
-                [.light, .mediumLight]: "👨🏻‍❤️‍💋‍👨🏼",
-                [.light, .medium]: "👨🏻‍❤️‍💋‍👨🏽",
-                [.light, .mediumDark]: "👨🏻‍❤️‍💋‍👨🏾",
-                [.light, .dark]: "👨🏻‍❤️‍💋‍👨🏿",
-                [.mediumLight, .light]: "👨🏼‍❤️‍💋‍👨🏻",
-                [.mediumLight]: "👨🏼‍❤️‍💋‍👨🏼",
-                [.mediumLight, .medium]: "👨🏼‍❤️‍💋‍👨🏽",
-                [.mediumLight, .mediumDark]: "👨🏼‍❤️‍💋‍👨🏾",
-                [.mediumLight, .dark]: "👨🏼‍❤️‍💋‍👨🏿",
-                [.medium, .light]: "👨🏽‍❤️‍💋‍👨🏻",
-                [.medium, .mediumLight]: "👨🏽‍❤️‍💋‍👨🏼",
-                [.medium]: "👨🏽‍❤️‍💋‍👨🏽",
-                [.medium, .mediumDark]: "👨🏽‍❤️‍💋‍👨🏾",
-                [.medium, .dark]: "👨🏽‍❤️‍💋‍👨🏿",
-                [.mediumDark, .light]: "👨🏾‍❤️‍💋‍👨🏻",
-                [.mediumDark, .mediumLight]: "👨🏾‍❤️‍💋‍👨🏼",
-                [.mediumDark, .medium]: "👨🏾‍❤️‍💋‍👨🏽",
-                [.mediumDark]: "👨🏾‍❤️‍💋‍👨🏾",
-                [.mediumDark, .dark]: "👨🏾‍❤️‍💋‍👨🏿",
-                [.dark, .light]: "👨🏿‍❤️‍💋‍👨🏻",
-                [.dark, .mediumLight]: "👨🏿‍❤️‍💋‍👨🏼",
-                [.dark, .medium]: "👨🏿‍❤️‍💋‍👨🏽",
-                [.dark, .mediumDark]: "👨🏿‍❤️‍💋‍👨🏾",
-                [.dark]: "👨🏿‍❤️‍💋‍👨🏿"
-            ],
-            .kissWomanWoman:[
-                [.light]: "👩🏻‍❤️‍💋‍👩🏻",
-                [.light, .mediumLight]: "👩🏻‍❤️‍💋‍👩🏼",
-                [.light, .medium]: "👩🏻‍❤️‍💋‍👩🏽",
-                [.light, .mediumDark]: "👩🏻‍❤️‍💋‍👩🏾",
-                [.light, .dark]: "👩🏻‍❤️‍💋‍👩🏿",
-                [.mediumLight, .light]: "👩🏼‍❤️‍💋‍👩🏻",
-                [.mediumLight]: "👩🏼‍❤️‍💋‍👩🏼",
-                [.mediumLight, .medium]: "👩🏼‍❤️‍💋‍👩🏽",
-                [.mediumLight, .mediumDark]: "👩🏼‍❤️‍💋‍👩🏾",
-                [.mediumLight, .dark]: "👩🏼‍❤️‍💋‍👩🏿",
-                [.medium, .light]: "👩🏽‍❤️‍💋‍👩🏻",
-                [.medium, .mediumLight]: "👩🏽‍❤️‍💋‍👩🏼",
-                [.medium]: "👩🏽‍❤️‍💋‍👩🏽",
-                [.medium, .mediumDark]: "👩🏽‍❤️‍💋‍👩🏾",
-                [.medium, .dark]: "👩🏽‍❤️‍💋‍👩🏿",
-                [.mediumDark, .light]: "👩🏾‍❤️‍💋‍👩🏻",
-                [.mediumDark, .mediumLight]: "👩🏾‍❤️‍💋‍👩🏼",
-                [.mediumDark, .medium]: "👩🏾‍❤️‍💋‍👩🏽",
-                [.mediumDark]: "👩🏾‍❤️‍💋‍👩🏾",
-                [.mediumDark, .dark]: "👩🏾‍❤️‍💋‍👩🏿",
-                [.dark, .light]: "👩🏿‍❤️‍💋‍👩🏻",
-                [.dark, .mediumLight]: "👩🏿‍❤️‍💋‍👩🏼",
-                [.dark, .medium]: "👩🏿‍❤️‍💋‍👩🏽",
-                [.dark, .mediumDark]: "👩🏿‍❤️‍💋‍👩🏾",
-                [.dark]: "👩🏿‍❤️‍💋‍👩🏿"
+            .cook:[
+                [.light]: "🧑🏻‍🍳",
+                [.mediumLight]: "🧑🏼‍🍳",
+                [.medium]: "🧑🏽‍🍳",
+                [.mediumDark]: "🧑🏾‍🍳",
+                [.dark]: "🧑🏿‍🍳"
             ],
             .coupleWithHeart:[
                 [.light]: "💑🏻",
@@ -8195,33 +5898,6 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
                 [.dark, .medium]: "🧑🏿‍❤️‍🧑🏽",
                 [.dark, .mediumDark]: "🧑🏿‍❤️‍🧑🏾"
             ],
-            .coupleWithHeartWomanMan:[
-                [.light]: "👩🏻‍❤️‍👨🏻",
-                [.light, .mediumLight]: "👩🏻‍❤️‍👨🏼",
-                [.light, .medium]: "👩🏻‍❤️‍👨🏽",
-                [.light, .mediumDark]: "👩🏻‍❤️‍👨🏾",
-                [.light, .dark]: "👩🏻‍❤️‍👨🏿",
-                [.mediumLight, .light]: "👩🏼‍❤️‍👨🏻",
-                [.mediumLight]: "👩🏼‍❤️‍👨🏼",
-                [.mediumLight, .medium]: "👩🏼‍❤️‍👨🏽",
-                [.mediumLight, .mediumDark]: "👩🏼‍❤️‍👨🏾",
-                [.mediumLight, .dark]: "👩🏼‍❤️‍👨🏿",
-                [.medium, .light]: "👩🏽‍❤️‍👨🏻",
-                [.medium, .mediumLight]: "👩🏽‍❤️‍👨🏼",
-                [.medium]: "👩🏽‍❤️‍👨🏽",
-                [.medium, .mediumDark]: "👩🏽‍❤️‍👨🏾",
-                [.medium, .dark]: "👩🏽‍❤️‍👨🏿",
-                [.mediumDark, .light]: "👩🏾‍❤️‍👨🏻",
-                [.mediumDark, .mediumLight]: "👩🏾‍❤️‍👨🏼",
-                [.mediumDark, .medium]: "👩🏾‍❤️‍👨🏽",
-                [.mediumDark]: "👩🏾‍❤️‍👨🏾",
-                [.mediumDark, .dark]: "👩🏾‍❤️‍👨🏿",
-                [.dark, .light]: "👩🏿‍❤️‍👨🏻",
-                [.dark, .mediumLight]: "👩🏿‍❤️‍👨🏼",
-                [.dark, .medium]: "👩🏿‍❤️‍👨🏽",
-                [.dark, .mediumDark]: "👩🏿‍❤️‍👨🏾",
-                [.dark]: "👩🏿‍❤️‍👨🏿"
-            ],
             .coupleWithHeartManMan:[
                 [.light]: "👨🏻‍❤️‍👨🏻",
                 [.light, .mediumLight]: "👨🏻‍❤️‍👨🏼",
@@ -8249,6 +5925,33 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
                 [.dark, .mediumDark]: "👨🏿‍❤️‍👨🏾",
                 [.dark]: "👨🏿‍❤️‍👨🏿"
             ],
+            .coupleWithHeartWomanMan:[
+                [.light]: "👩🏻‍❤️‍👨🏻",
+                [.light, .mediumLight]: "👩🏻‍❤️‍👨🏼",
+                [.light, .medium]: "👩🏻‍❤️‍👨🏽",
+                [.light, .mediumDark]: "👩🏻‍❤️‍👨🏾",
+                [.light, .dark]: "👩🏻‍❤️‍👨🏿",
+                [.mediumLight, .light]: "👩🏼‍❤️‍👨🏻",
+                [.mediumLight]: "👩🏼‍❤️‍👨🏼",
+                [.mediumLight, .medium]: "👩🏼‍❤️‍👨🏽",
+                [.mediumLight, .mediumDark]: "👩🏼‍❤️‍👨🏾",
+                [.mediumLight, .dark]: "👩🏼‍❤️‍👨🏿",
+                [.medium, .light]: "👩🏽‍❤️‍👨🏻",
+                [.medium, .mediumLight]: "👩🏽‍❤️‍👨🏼",
+                [.medium]: "👩🏽‍❤️‍👨🏽",
+                [.medium, .mediumDark]: "👩🏽‍❤️‍👨🏾",
+                [.medium, .dark]: "👩🏽‍❤️‍👨🏿",
+                [.mediumDark, .light]: "👩🏾‍❤️‍👨🏻",
+                [.mediumDark, .mediumLight]: "👩🏾‍❤️‍👨🏼",
+                [.mediumDark, .medium]: "👩🏾‍❤️‍👨🏽",
+                [.mediumDark]: "👩🏾‍❤️‍👨🏾",
+                [.mediumDark, .dark]: "👩🏾‍❤️‍👨🏿",
+                [.dark, .light]: "👩🏿‍❤️‍👨🏻",
+                [.dark, .mediumLight]: "👩🏿‍❤️‍👨🏼",
+                [.dark, .medium]: "👩🏿‍❤️‍👨🏽",
+                [.dark, .mediumDark]: "👩🏿‍❤️‍👨🏾",
+                [.dark]: "👩🏿‍❤️‍👨🏿"
+            ],
             .coupleWithHeartWomanWoman:[
                 [.light]: "👩🏻‍❤️‍👩🏻",
                 [.light, .mediumLight]: "👩🏻‍❤️‍👩🏼",
@@ -8275,6 +5978,2476 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
                 [.dark, .medium]: "👩🏿‍❤️‍👩🏽",
                 [.dark, .mediumDark]: "👩🏿‍❤️‍👩🏾",
                 [.dark]: "👩🏿‍❤️‍👩🏿"
+            ],
+            .crossedFingers:[
+                [.light]: "🤞🏻",
+                [.mediumLight]: "🤞🏼",
+                [.medium]: "🤞🏽",
+                [.mediumDark]: "🤞🏾",
+                [.dark]: "🤞🏿"
+            ],
+            .deafMan:[
+                [.light]: "🧏🏻‍♂️",
+                [.mediumLight]: "🧏🏼‍♂️",
+                [.medium]: "🧏🏽‍♂️",
+                [.mediumDark]: "🧏🏾‍♂️",
+                [.dark]: "🧏🏿‍♂️"
+            ],
+            .deafPerson:[
+                [.light]: "🧏🏻",
+                [.mediumLight]: "🧏🏼",
+                [.medium]: "🧏🏽",
+                [.mediumDark]: "🧏🏾",
+                [.dark]: "🧏🏿"
+            ],
+            .deafWoman:[
+                [.light]: "🧏🏻‍♀️",
+                [.mediumLight]: "🧏🏼‍♀️",
+                [.medium]: "🧏🏽‍♀️",
+                [.mediumDark]: "🧏🏾‍♀️",
+                [.dark]: "🧏🏿‍♀️"
+            ],
+            .detective:[
+                [.light]: "🕵🏻",
+                [.mediumLight]: "🕵🏼",
+                [.medium]: "🕵🏽",
+                [.mediumDark]: "🕵🏾",
+                [.dark]: "🕵🏿"
+            ],
+            .ear:[
+                [.light]: "👂🏻",
+                [.mediumLight]: "👂🏼",
+                [.medium]: "👂🏽",
+                [.mediumDark]: "👂🏾",
+                [.dark]: "👂🏿"
+            ],
+            .earWithHearingAid:[
+                [.light]: "🦻🏻",
+                [.mediumLight]: "🦻🏼",
+                [.medium]: "🦻🏽",
+                [.mediumDark]: "🦻🏾",
+                [.dark]: "🦻🏿"
+            ],
+            .elf:[
+                [.light]: "🧝🏻",
+                [.mediumLight]: "🧝🏼",
+                [.medium]: "🧝🏽",
+                [.mediumDark]: "🧝🏾",
+                [.dark]: "🧝🏿"
+            ],
+            .factoryWorker:[
+                [.light]: "🧑🏻‍🏭",
+                [.mediumLight]: "🧑🏼‍🏭",
+                [.medium]: "🧑🏽‍🏭",
+                [.mediumDark]: "🧑🏾‍🏭",
+                [.dark]: "🧑🏿‍🏭"
+            ],
+            .fairy:[
+                [.light]: "🧚🏻",
+                [.mediumLight]: "🧚🏼",
+                [.medium]: "🧚🏽",
+                [.mediumDark]: "🧚🏾",
+                [.dark]: "🧚🏿"
+            ],
+            .farmer:[
+                [.light]: "🧑🏻‍🌾",
+                [.mediumLight]: "🧑🏼‍🌾",
+                [.medium]: "🧑🏽‍🌾",
+                [.mediumDark]: "🧑🏾‍🌾",
+                [.dark]: "🧑🏿‍🌾"
+            ],
+            .firefighter:[
+                [.light]: "🧑🏻‍🚒",
+                [.mediumLight]: "🧑🏼‍🚒",
+                [.medium]: "🧑🏽‍🚒",
+                [.mediumDark]: "🧑🏾‍🚒",
+                [.dark]: "🧑🏿‍🚒"
+            ],
+            .flexedBiceps:[
+                [.light]: "💪🏻",
+                [.mediumLight]: "💪🏼",
+                [.medium]: "💪🏽",
+                [.mediumDark]: "💪🏾",
+                [.dark]: "💪🏿"
+            ],
+            .foldedHands:[
+                [.light]: "🙏🏻",
+                [.mediumLight]: "🙏🏼",
+                [.medium]: "🙏🏽",
+                [.mediumDark]: "🙏🏾",
+                [.dark]: "🙏🏿"
+            ],
+            .foot:[
+                [.light]: "🦶🏻",
+                [.mediumLight]: "🦶🏼",
+                [.medium]: "🦶🏽",
+                [.mediumDark]: "🦶🏾",
+                [.dark]: "🦶🏿"
+            ],
+            .girl:[
+                [.light]: "👧🏻",
+                [.mediumLight]: "👧🏼",
+                [.medium]: "👧🏽",
+                [.mediumDark]: "👧🏾",
+                [.dark]: "👧🏿"
+            ],
+            .handWithFingersSplayed:[
+                [.light]: "🖐🏻",
+                [.mediumLight]: "🖐🏼",
+                [.medium]: "🖐🏽",
+                [.mediumDark]: "🖐🏾",
+                [.dark]: "🖐🏿"
+            ],
+            .handWithIndexFingerAndThumbCrossed:[
+                [.light]: "🫰🏻",
+                [.mediumLight]: "🫰🏼",
+                [.medium]: "🫰🏽",
+                [.mediumDark]: "🫰🏾",
+                [.dark]: "🫰🏿"
+            ],
+            .handshake:[
+                [.light]: "🤝🏻",
+                [.mediumLight]: "🤝🏼",
+                [.medium]: "🤝🏽",
+                [.mediumDark]: "🤝🏾",
+                [.dark]: "🤝🏿",
+                [.light, .mediumLight]: "🫱🏻‍🫲🏼",
+                [.light, .medium]: "🫱🏻‍🫲🏽",
+                [.light, .mediumDark]: "🫱🏻‍🫲🏾",
+                [.light, .dark]: "🫱🏻‍🫲🏿",
+                [.mediumLight, .light]: "🫱🏼‍🫲🏻",
+                [.mediumLight, .medium]: "🫱🏼‍🫲🏽",
+                [.mediumLight, .mediumDark]: "🫱🏼‍🫲🏾",
+                [.mediumLight, .dark]: "🫱🏼‍🫲🏿",
+                [.medium, .light]: "🫱🏽‍🫲🏻",
+                [.medium, .mediumLight]: "🫱🏽‍🫲🏼",
+                [.medium, .mediumDark]: "🫱🏽‍🫲🏾",
+                [.medium, .dark]: "🫱🏽‍🫲🏿",
+                [.mediumDark, .light]: "🫱🏾‍🫲🏻",
+                [.mediumDark, .mediumLight]: "🫱🏾‍🫲🏼",
+                [.mediumDark, .medium]: "🫱🏾‍🫲🏽",
+                [.mediumDark, .dark]: "🫱🏾‍🫲🏿",
+                [.dark, .light]: "🫱🏿‍🫲🏻",
+                [.dark, .mediumLight]: "🫱🏿‍🫲🏼",
+                [.dark, .medium]: "🫱🏿‍🫲🏽",
+                [.dark, .mediumDark]: "🫱🏿‍🫲🏾"
+            ],
+            .healthWorker:[
+                [.light]: "🧑🏻‍⚕️",
+                [.mediumLight]: "🧑🏼‍⚕️",
+                [.medium]: "🧑🏽‍⚕️",
+                [.mediumDark]: "🧑🏾‍⚕️",
+                [.dark]: "🧑🏿‍⚕️"
+            ],
+            .heartHands:[
+                [.light]: "🫶🏻",
+                [.mediumLight]: "🫶🏼",
+                [.medium]: "🫶🏽",
+                [.mediumDark]: "🫶🏾",
+                [.dark]: "🫶🏿"
+            ],
+            .horseRacing:[
+                [.light]: "🏇🏻",
+                [.mediumLight]: "🏇🏼",
+                [.medium]: "🏇🏽",
+                [.mediumDark]: "🏇🏾",
+                [.dark]: "🏇🏿"
+            ],
+            .indexPointingAtTheViewer:[
+                [.light]: "🫵🏻",
+                [.mediumLight]: "🫵🏼",
+                [.medium]: "🫵🏽",
+                [.mediumDark]: "🫵🏾",
+                [.dark]: "🫵🏿"
+            ],
+            .indexPointingUp:[
+                [.light]: "☝🏻",
+                [.mediumLight]: "☝🏼",
+                [.medium]: "☝🏽",
+                [.mediumDark]: "☝🏾",
+                [.dark]: "☝🏿"
+            ],
+            .judge:[
+                [.light]: "🧑🏻‍⚖️",
+                [.mediumLight]: "🧑🏼‍⚖️",
+                [.medium]: "🧑🏽‍⚖️",
+                [.mediumDark]: "🧑🏾‍⚖️",
+                [.dark]: "🧑🏿‍⚖️"
+            ],
+            .kiss:[
+                [.light]: "💏🏻",
+                [.mediumLight]: "💏🏼",
+                [.medium]: "💏🏽",
+                [.mediumDark]: "💏🏾",
+                [.dark]: "💏🏿",
+                [.light, .mediumLight]: "🧑🏻‍❤️‍💋‍🧑🏼",
+                [.light, .medium]: "🧑🏻‍❤️‍💋‍🧑🏽",
+                [.light, .mediumDark]: "🧑🏻‍❤️‍💋‍🧑🏾",
+                [.light, .dark]: "🧑🏻‍❤️‍💋‍🧑🏿",
+                [.mediumLight, .light]: "🧑🏼‍❤️‍💋‍🧑🏻",
+                [.mediumLight, .medium]: "🧑🏼‍❤️‍💋‍🧑🏽",
+                [.mediumLight, .mediumDark]: "🧑🏼‍❤️‍💋‍🧑🏾",
+                [.mediumLight, .dark]: "🧑🏼‍❤️‍💋‍🧑🏿",
+                [.medium, .light]: "🧑🏽‍❤️‍💋‍🧑🏻",
+                [.medium, .mediumLight]: "🧑🏽‍❤️‍💋‍🧑🏼",
+                [.medium, .mediumDark]: "🧑🏽‍❤️‍💋‍🧑🏾",
+                [.medium, .dark]: "🧑🏽‍❤️‍💋‍🧑🏿",
+                [.mediumDark, .light]: "🧑🏾‍❤️‍💋‍🧑🏻",
+                [.mediumDark, .mediumLight]: "🧑🏾‍❤️‍💋‍🧑🏼",
+                [.mediumDark, .medium]: "🧑🏾‍❤️‍💋‍🧑🏽",
+                [.mediumDark, .dark]: "🧑🏾‍❤️‍💋‍🧑🏿",
+                [.dark, .light]: "🧑🏿‍❤️‍💋‍🧑🏻",
+                [.dark, .mediumLight]: "🧑🏿‍❤️‍💋‍🧑🏼",
+                [.dark, .medium]: "🧑🏿‍❤️‍💋‍🧑🏽",
+                [.dark, .mediumDark]: "🧑🏿‍❤️‍💋‍🧑🏾"
+            ],
+            .kissManMan:[
+                [.light]: "👨🏻‍❤️‍💋‍👨🏻",
+                [.light, .mediumLight]: "👨🏻‍❤️‍💋‍👨🏼",
+                [.light, .medium]: "👨🏻‍❤️‍💋‍👨🏽",
+                [.light, .mediumDark]: "👨🏻‍❤️‍💋‍👨🏾",
+                [.light, .dark]: "👨🏻‍❤️‍💋‍👨🏿",
+                [.mediumLight, .light]: "👨🏼‍❤️‍💋‍👨🏻",
+                [.mediumLight]: "👨🏼‍❤️‍💋‍👨🏼",
+                [.mediumLight, .medium]: "👨🏼‍❤️‍💋‍👨🏽",
+                [.mediumLight, .mediumDark]: "👨🏼‍❤️‍💋‍👨🏾",
+                [.mediumLight, .dark]: "👨🏼‍❤️‍💋‍👨🏿",
+                [.medium, .light]: "👨🏽‍❤️‍💋‍👨🏻",
+                [.medium, .mediumLight]: "👨🏽‍❤️‍💋‍👨🏼",
+                [.medium]: "👨🏽‍❤️‍💋‍👨🏽",
+                [.medium, .mediumDark]: "👨🏽‍❤️‍💋‍👨🏾",
+                [.medium, .dark]: "👨🏽‍❤️‍💋‍👨🏿",
+                [.mediumDark, .light]: "👨🏾‍❤️‍💋‍👨🏻",
+                [.mediumDark, .mediumLight]: "👨🏾‍❤️‍💋‍👨🏼",
+                [.mediumDark, .medium]: "👨🏾‍❤️‍💋‍👨🏽",
+                [.mediumDark]: "👨🏾‍❤️‍💋‍👨🏾",
+                [.mediumDark, .dark]: "👨🏾‍❤️‍💋‍👨🏿",
+                [.dark, .light]: "👨🏿‍❤️‍💋‍👨🏻",
+                [.dark, .mediumLight]: "👨🏿‍❤️‍💋‍👨🏼",
+                [.dark, .medium]: "👨🏿‍❤️‍💋‍👨🏽",
+                [.dark, .mediumDark]: "👨🏿‍❤️‍💋‍👨🏾",
+                [.dark]: "👨🏿‍❤️‍💋‍👨🏿"
+            ],
+            .kissWomanMan:[
+                [.light]: "👩🏻‍❤️‍💋‍👨🏻",
+                [.light, .mediumLight]: "👩🏻‍❤️‍💋‍👨🏼",
+                [.light, .medium]: "👩🏻‍❤️‍💋‍👨🏽",
+                [.light, .mediumDark]: "👩🏻‍❤️‍💋‍👨🏾",
+                [.light, .dark]: "👩🏻‍❤️‍💋‍👨🏿",
+                [.mediumLight, .light]: "👩🏼‍❤️‍💋‍👨🏻",
+                [.mediumLight]: "👩🏼‍❤️‍💋‍👨🏼",
+                [.mediumLight, .medium]: "👩🏼‍❤️‍💋‍👨🏽",
+                [.mediumLight, .mediumDark]: "👩🏼‍❤️‍💋‍👨🏾",
+                [.mediumLight, .dark]: "👩🏼‍❤️‍💋‍👨🏿",
+                [.medium, .light]: "👩🏽‍❤️‍💋‍👨🏻",
+                [.medium, .mediumLight]: "👩🏽‍❤️‍💋‍👨🏼",
+                [.medium]: "👩🏽‍❤️‍💋‍👨🏽",
+                [.medium, .mediumDark]: "👩🏽‍❤️‍💋‍👨🏾",
+                [.medium, .dark]: "👩🏽‍❤️‍💋‍👨🏿",
+                [.mediumDark, .light]: "👩🏾‍❤️‍💋‍👨🏻",
+                [.mediumDark, .mediumLight]: "👩🏾‍❤️‍💋‍👨🏼",
+                [.mediumDark, .medium]: "👩🏾‍❤️‍💋‍👨🏽",
+                [.mediumDark]: "👩🏾‍❤️‍💋‍👨🏾",
+                [.mediumDark, .dark]: "👩🏾‍❤️‍💋‍👨🏿",
+                [.dark, .light]: "👩🏿‍❤️‍💋‍👨🏻",
+                [.dark, .mediumLight]: "👩🏿‍❤️‍💋‍👨🏼",
+                [.dark, .medium]: "👩🏿‍❤️‍💋‍👨🏽",
+                [.dark, .mediumDark]: "👩🏿‍❤️‍💋‍👨🏾",
+                [.dark]: "👩🏿‍❤️‍💋‍👨🏿"
+            ],
+            .kissWomanWoman:[
+                [.light]: "👩🏻‍❤️‍💋‍👩🏻",
+                [.light, .mediumLight]: "👩🏻‍❤️‍💋‍👩🏼",
+                [.light, .medium]: "👩🏻‍❤️‍💋‍👩🏽",
+                [.light, .mediumDark]: "👩🏻‍❤️‍💋‍👩🏾",
+                [.light, .dark]: "👩🏻‍❤️‍💋‍👩🏿",
+                [.mediumLight, .light]: "👩🏼‍❤️‍💋‍👩🏻",
+                [.mediumLight]: "👩🏼‍❤️‍💋‍👩🏼",
+                [.mediumLight, .medium]: "👩🏼‍❤️‍💋‍👩🏽",
+                [.mediumLight, .mediumDark]: "👩🏼‍❤️‍💋‍👩🏾",
+                [.mediumLight, .dark]: "👩🏼‍❤️‍💋‍👩🏿",
+                [.medium, .light]: "👩🏽‍❤️‍💋‍👩🏻",
+                [.medium, .mediumLight]: "👩🏽‍❤️‍💋‍👩🏼",
+                [.medium]: "👩🏽‍❤️‍💋‍👩🏽",
+                [.medium, .mediumDark]: "👩🏽‍❤️‍💋‍👩🏾",
+                [.medium, .dark]: "👩🏽‍❤️‍💋‍👩🏿",
+                [.mediumDark, .light]: "👩🏾‍❤️‍💋‍👩🏻",
+                [.mediumDark, .mediumLight]: "👩🏾‍❤️‍💋‍👩🏼",
+                [.mediumDark, .medium]: "👩🏾‍❤️‍💋‍👩🏽",
+                [.mediumDark]: "👩🏾‍❤️‍💋‍👩🏾",
+                [.mediumDark, .dark]: "👩🏾‍❤️‍💋‍👩🏿",
+                [.dark, .light]: "👩🏿‍❤️‍💋‍👩🏻",
+                [.dark, .mediumLight]: "👩🏿‍❤️‍💋‍👩🏼",
+                [.dark, .medium]: "👩🏿‍❤️‍💋‍👩🏽",
+                [.dark, .mediumDark]: "👩🏿‍❤️‍💋‍👩🏾",
+                [.dark]: "👩🏿‍❤️‍💋‍👩🏿"
+            ],
+            .leftFacingFist:[
+                [.light]: "🤛🏻",
+                [.mediumLight]: "🤛🏼",
+                [.medium]: "🤛🏽",
+                [.mediumDark]: "🤛🏾",
+                [.dark]: "🤛🏿"
+            ],
+            .leftwardsHand:[
+                [.light]: "🫲🏻",
+                [.mediumLight]: "🫲🏼",
+                [.medium]: "🫲🏽",
+                [.mediumDark]: "🫲🏾",
+                [.dark]: "🫲🏿"
+            ],
+            .leftwardsPushingHand:[
+                [.light]: "🫷🏻",
+                [.mediumLight]: "🫷🏼",
+                [.medium]: "🫷🏽",
+                [.mediumDark]: "🫷🏾",
+                [.dark]: "🫷🏿"
+            ],
+            .leg:[
+                [.light]: "🦵🏻",
+                [.mediumLight]: "🦵🏼",
+                [.medium]: "🦵🏽",
+                [.mediumDark]: "🦵🏾",
+                [.dark]: "🦵🏿"
+            ],
+            .loveYouGesture:[
+                [.light]: "🤟🏻",
+                [.mediumLight]: "🤟🏼",
+                [.medium]: "🤟🏽",
+                [.mediumDark]: "🤟🏾",
+                [.dark]: "🤟🏿"
+            ],
+            .mage:[
+                [.light]: "🧙🏻",
+                [.mediumLight]: "🧙🏼",
+                [.medium]: "🧙🏽",
+                [.mediumDark]: "🧙🏾",
+                [.dark]: "🧙🏿"
+            ],
+            .man:[
+                [.light]: "👨🏻",
+                [.mediumLight]: "👨🏼",
+                [.medium]: "👨🏽",
+                [.mediumDark]: "👨🏾",
+                [.dark]: "👨🏿"
+            ],
+            .manArtist:[
+                [.light]: "👨🏻‍🎨",
+                [.mediumLight]: "👨🏼‍🎨",
+                [.medium]: "👨🏽‍🎨",
+                [.mediumDark]: "👨🏾‍🎨",
+                [.dark]: "👨🏿‍🎨"
+            ],
+            .manAstronaut:[
+                [.light]: "👨🏻‍🚀",
+                [.mediumLight]: "👨🏼‍🚀",
+                [.medium]: "👨🏽‍🚀",
+                [.mediumDark]: "👨🏾‍🚀",
+                [.dark]: "👨🏿‍🚀"
+            ],
+            .manBald:[
+                [.light]: "👨🏻‍🦲",
+                [.mediumLight]: "👨🏼‍🦲",
+                [.medium]: "👨🏽‍🦲",
+                [.mediumDark]: "👨🏾‍🦲",
+                [.dark]: "👨🏿‍🦲"
+            ],
+            .manBeard:[
+                [.light]: "🧔🏻‍♂️",
+                [.mediumLight]: "🧔🏼‍♂️",
+                [.medium]: "🧔🏽‍♂️",
+                [.mediumDark]: "🧔🏾‍♂️",
+                [.dark]: "🧔🏿‍♂️"
+            ],
+            .manBiking:[
+                [.light]: "🚴🏻‍♂️",
+                [.mediumLight]: "🚴🏼‍♂️",
+                [.medium]: "🚴🏽‍♂️",
+                [.mediumDark]: "🚴🏾‍♂️",
+                [.dark]: "🚴🏿‍♂️"
+            ],
+            .manBlondHair:[
+                [.light]: "👱🏻‍♂️",
+                [.mediumLight]: "👱🏼‍♂️",
+                [.medium]: "👱🏽‍♂️",
+                [.mediumDark]: "👱🏾‍♂️",
+                [.dark]: "👱🏿‍♂️"
+            ],
+            .manBouncingBall:[
+                [.light]: "⛹🏻‍♂️",
+                [.mediumLight]: "⛹🏼‍♂️",
+                [.medium]: "⛹🏽‍♂️",
+                [.mediumDark]: "⛹🏾‍♂️",
+                [.dark]: "⛹🏿‍♂️"
+            ],
+            .manBowing:[
+                [.light]: "🙇🏻‍♂️",
+                [.mediumLight]: "🙇🏼‍♂️",
+                [.medium]: "🙇🏽‍♂️",
+                [.mediumDark]: "🙇🏾‍♂️",
+                [.dark]: "🙇🏿‍♂️"
+            ],
+            .manCartwheeling:[
+                [.light]: "🤸🏻‍♂️",
+                [.mediumLight]: "🤸🏼‍♂️",
+                [.medium]: "🤸🏽‍♂️",
+                [.mediumDark]: "🤸🏾‍♂️",
+                [.dark]: "🤸🏿‍♂️"
+            ],
+            .manClimbing:[
+                [.light]: "🧗🏻‍♂️",
+                [.mediumLight]: "🧗🏼‍♂️",
+                [.medium]: "🧗🏽‍♂️",
+                [.mediumDark]: "🧗🏾‍♂️",
+                [.dark]: "🧗🏿‍♂️"
+            ],
+            .manConstructionWorker:[
+                [.light]: "👷🏻‍♂️",
+                [.mediumLight]: "👷🏼‍♂️",
+                [.medium]: "👷🏽‍♂️",
+                [.mediumDark]: "👷🏾‍♂️",
+                [.dark]: "👷🏿‍♂️"
+            ],
+            .manCook:[
+                [.light]: "👨🏻‍🍳",
+                [.mediumLight]: "👨🏼‍🍳",
+                [.medium]: "👨🏽‍🍳",
+                [.mediumDark]: "👨🏾‍🍳",
+                [.dark]: "👨🏿‍🍳"
+            ],
+            .manCurlyHair:[
+                [.light]: "👨🏻‍🦱",
+                [.mediumLight]: "👨🏼‍🦱",
+                [.medium]: "👨🏽‍🦱",
+                [.mediumDark]: "👨🏾‍🦱",
+                [.dark]: "👨🏿‍🦱"
+            ],
+            .manDancing:[
+                [.light]: "🕺🏻",
+                [.mediumLight]: "🕺🏼",
+                [.medium]: "🕺🏽",
+                [.mediumDark]: "🕺🏾",
+                [.dark]: "🕺🏿"
+            ],
+            .manDetective:[
+                [.light]: "🕵🏻‍♂️",
+                [.mediumLight]: "🕵🏼‍♂️",
+                [.medium]: "🕵🏽‍♂️",
+                [.mediumDark]: "🕵🏾‍♂️",
+                [.dark]: "🕵🏿‍♂️"
+            ],
+            .manElf:[
+                [.light]: "🧝🏻‍♂️",
+                [.mediumLight]: "🧝🏼‍♂️",
+                [.medium]: "🧝🏽‍♂️",
+                [.mediumDark]: "🧝🏾‍♂️",
+                [.dark]: "🧝🏿‍♂️"
+            ],
+            .manFacepalming:[
+                [.light]: "🤦🏻‍♂️",
+                [.mediumLight]: "🤦🏼‍♂️",
+                [.medium]: "🤦🏽‍♂️",
+                [.mediumDark]: "🤦🏾‍♂️",
+                [.dark]: "🤦🏿‍♂️"
+            ],
+            .manFactoryWorker:[
+                [.light]: "👨🏻‍🏭",
+                [.mediumLight]: "👨🏼‍🏭",
+                [.medium]: "👨🏽‍🏭",
+                [.mediumDark]: "👨🏾‍🏭",
+                [.dark]: "👨🏿‍🏭"
+            ],
+            .manFairy:[
+                [.light]: "🧚🏻‍♂️",
+                [.mediumLight]: "🧚🏼‍♂️",
+                [.medium]: "🧚🏽‍♂️",
+                [.mediumDark]: "🧚🏾‍♂️",
+                [.dark]: "🧚🏿‍♂️"
+            ],
+            .manFarmer:[
+                [.light]: "👨🏻‍🌾",
+                [.mediumLight]: "👨🏼‍🌾",
+                [.medium]: "👨🏽‍🌾",
+                [.mediumDark]: "👨🏾‍🌾",
+                [.dark]: "👨🏿‍🌾"
+            ],
+            .manFeedingBaby:[
+                [.light]: "👨🏻‍🍼",
+                [.mediumLight]: "👨🏼‍🍼",
+                [.medium]: "👨🏽‍🍼",
+                [.mediumDark]: "👨🏾‍🍼",
+                [.dark]: "👨🏿‍🍼"
+            ],
+            .manFirefighter:[
+                [.light]: "👨🏻‍🚒",
+                [.mediumLight]: "👨🏼‍🚒",
+                [.medium]: "👨🏽‍🚒",
+                [.mediumDark]: "👨🏾‍🚒",
+                [.dark]: "👨🏿‍🚒"
+            ],
+            .manFrowning:[
+                [.light]: "🙍🏻‍♂️",
+                [.mediumLight]: "🙍🏼‍♂️",
+                [.medium]: "🙍🏽‍♂️",
+                [.mediumDark]: "🙍🏾‍♂️",
+                [.dark]: "🙍🏿‍♂️"
+            ],
+            .manGesturingNo:[
+                [.light]: "🙅🏻‍♂️",
+                [.mediumLight]: "🙅🏼‍♂️",
+                [.medium]: "🙅🏽‍♂️",
+                [.mediumDark]: "🙅🏾‍♂️",
+                [.dark]: "🙅🏿‍♂️"
+            ],
+            .manGesturingOk:[
+                [.light]: "🙆🏻‍♂️",
+                [.mediumLight]: "🙆🏼‍♂️",
+                [.medium]: "🙆🏽‍♂️",
+                [.mediumDark]: "🙆🏾‍♂️",
+                [.dark]: "🙆🏿‍♂️"
+            ],
+            .manGettingHaircut:[
+                [.light]: "💇🏻‍♂️",
+                [.mediumLight]: "💇🏼‍♂️",
+                [.medium]: "💇🏽‍♂️",
+                [.mediumDark]: "💇🏾‍♂️",
+                [.dark]: "💇🏿‍♂️"
+            ],
+            .manGettingMassage:[
+                [.light]: "💆🏻‍♂️",
+                [.mediumLight]: "💆🏼‍♂️",
+                [.medium]: "💆🏽‍♂️",
+                [.mediumDark]: "💆🏾‍♂️",
+                [.dark]: "💆🏿‍♂️"
+            ],
+            .manGolfing:[
+                [.light]: "🏌🏻‍♂️",
+                [.mediumLight]: "🏌🏼‍♂️",
+                [.medium]: "🏌🏽‍♂️",
+                [.mediumDark]: "🏌🏾‍♂️",
+                [.dark]: "🏌🏿‍♂️"
+            ],
+            .manGuard:[
+                [.light]: "💂🏻‍♂️",
+                [.mediumLight]: "💂🏼‍♂️",
+                [.medium]: "💂🏽‍♂️",
+                [.mediumDark]: "💂🏾‍♂️",
+                [.dark]: "💂🏿‍♂️"
+            ],
+            .manHealthWorker:[
+                [.light]: "👨🏻‍⚕️",
+                [.mediumLight]: "👨🏼‍⚕️",
+                [.medium]: "👨🏽‍⚕️",
+                [.mediumDark]: "👨🏾‍⚕️",
+                [.dark]: "👨🏿‍⚕️"
+            ],
+            .manInLotusPosition:[
+                [.light]: "🧘🏻‍♂️",
+                [.mediumLight]: "🧘🏼‍♂️",
+                [.medium]: "🧘🏽‍♂️",
+                [.mediumDark]: "🧘🏾‍♂️",
+                [.dark]: "🧘🏿‍♂️"
+            ],
+            .manInManualWheelchair:[
+                [.light]: "👨🏻‍🦽",
+                [.mediumLight]: "👨🏼‍🦽",
+                [.medium]: "👨🏽‍🦽",
+                [.mediumDark]: "👨🏾‍🦽",
+                [.dark]: "👨🏿‍🦽"
+            ],
+            .manInManualWheelchairFacingRight:[
+                [.light]: "👨🏻‍🦽‍➡️",
+                [.mediumLight]: "👨🏼‍🦽‍➡️",
+                [.medium]: "👨🏽‍🦽‍➡️",
+                [.mediumDark]: "👨🏾‍🦽‍➡️",
+                [.dark]: "👨🏿‍🦽‍➡️"
+            ],
+            .manInMotorizedWheelchair:[
+                [.light]: "👨🏻‍🦼",
+                [.mediumLight]: "👨🏼‍🦼",
+                [.medium]: "👨🏽‍🦼",
+                [.mediumDark]: "👨🏾‍🦼",
+                [.dark]: "👨🏿‍🦼"
+            ],
+            .manInMotorizedWheelchairFacingRight:[
+                [.light]: "👨🏻‍🦼‍➡️",
+                [.mediumLight]: "👨🏼‍🦼‍➡️",
+                [.medium]: "👨🏽‍🦼‍➡️",
+                [.mediumDark]: "👨🏾‍🦼‍➡️",
+                [.dark]: "👨🏿‍🦼‍➡️"
+            ],
+            .manInSteamyRoom:[
+                [.light]: "🧖🏻‍♂️",
+                [.mediumLight]: "🧖🏼‍♂️",
+                [.medium]: "🧖🏽‍♂️",
+                [.mediumDark]: "🧖🏾‍♂️",
+                [.dark]: "🧖🏿‍♂️"
+            ],
+            .manInTuxedo:[
+                [.light]: "🤵🏻‍♂️",
+                [.mediumLight]: "🤵🏼‍♂️",
+                [.medium]: "🤵🏽‍♂️",
+                [.mediumDark]: "🤵🏾‍♂️",
+                [.dark]: "🤵🏿‍♂️"
+            ],
+            .manJudge:[
+                [.light]: "👨🏻‍⚖️",
+                [.mediumLight]: "👨🏼‍⚖️",
+                [.medium]: "👨🏽‍⚖️",
+                [.mediumDark]: "👨🏾‍⚖️",
+                [.dark]: "👨🏿‍⚖️"
+            ],
+            .manJuggling:[
+                [.light]: "🤹🏻‍♂️",
+                [.mediumLight]: "🤹🏼‍♂️",
+                [.medium]: "🤹🏽‍♂️",
+                [.mediumDark]: "🤹🏾‍♂️",
+                [.dark]: "🤹🏿‍♂️"
+            ],
+            .manKneeling:[
+                [.light]: "🧎🏻‍♂️",
+                [.mediumLight]: "🧎🏼‍♂️",
+                [.medium]: "🧎🏽‍♂️",
+                [.mediumDark]: "🧎🏾‍♂️",
+                [.dark]: "🧎🏿‍♂️"
+            ],
+            .manKneelingFacingRight:[
+                [.light]: "🧎🏻‍♂️‍➡️",
+                [.mediumLight]: "🧎🏼‍♂️‍➡️",
+                [.medium]: "🧎🏽‍♂️‍➡️",
+                [.mediumDark]: "🧎🏾‍♂️‍➡️",
+                [.dark]: "🧎🏿‍♂️‍➡️"
+            ],
+            .manLiftingWeights:[
+                [.light]: "🏋🏻‍♂️",
+                [.mediumLight]: "🏋🏼‍♂️",
+                [.medium]: "🏋🏽‍♂️",
+                [.mediumDark]: "🏋🏾‍♂️",
+                [.dark]: "🏋🏿‍♂️"
+            ],
+            .manMage:[
+                [.light]: "🧙🏻‍♂️",
+                [.mediumLight]: "🧙🏼‍♂️",
+                [.medium]: "🧙🏽‍♂️",
+                [.mediumDark]: "🧙🏾‍♂️",
+                [.dark]: "🧙🏿‍♂️"
+            ],
+            .manMechanic:[
+                [.light]: "👨🏻‍🔧",
+                [.mediumLight]: "👨🏼‍🔧",
+                [.medium]: "👨🏽‍🔧",
+                [.mediumDark]: "👨🏾‍🔧",
+                [.dark]: "👨🏿‍🔧"
+            ],
+            .manMountainBiking:[
+                [.light]: "🚵🏻‍♂️",
+                [.mediumLight]: "🚵🏼‍♂️",
+                [.medium]: "🚵🏽‍♂️",
+                [.mediumDark]: "🚵🏾‍♂️",
+                [.dark]: "🚵🏿‍♂️"
+            ],
+            .manOfficeWorker:[
+                [.light]: "👨🏻‍💼",
+                [.mediumLight]: "👨🏼‍💼",
+                [.medium]: "👨🏽‍💼",
+                [.mediumDark]: "👨🏾‍💼",
+                [.dark]: "👨🏿‍💼"
+            ],
+            .manPilot:[
+                [.light]: "👨🏻‍✈️",
+                [.mediumLight]: "👨🏼‍✈️",
+                [.medium]: "👨🏽‍✈️",
+                [.mediumDark]: "👨🏾‍✈️",
+                [.dark]: "👨🏿‍✈️"
+            ],
+            .manPlayingHandball:[
+                [.light]: "🤾🏻‍♂️",
+                [.mediumLight]: "🤾🏼‍♂️",
+                [.medium]: "🤾🏽‍♂️",
+                [.mediumDark]: "🤾🏾‍♂️",
+                [.dark]: "🤾🏿‍♂️"
+            ],
+            .manPlayingWaterPolo:[
+                [.light]: "🤽🏻‍♂️",
+                [.mediumLight]: "🤽🏼‍♂️",
+                [.medium]: "🤽🏽‍♂️",
+                [.mediumDark]: "🤽🏾‍♂️",
+                [.dark]: "🤽🏿‍♂️"
+            ],
+            .manPoliceOfficer:[
+                [.light]: "👮🏻‍♂️",
+                [.mediumLight]: "👮🏼‍♂️",
+                [.medium]: "👮🏽‍♂️",
+                [.mediumDark]: "👮🏾‍♂️",
+                [.dark]: "👮🏿‍♂️"
+            ],
+            .manPouting:[
+                [.light]: "🙎🏻‍♂️",
+                [.mediumLight]: "🙎🏼‍♂️",
+                [.medium]: "🙎🏽‍♂️",
+                [.mediumDark]: "🙎🏾‍♂️",
+                [.dark]: "🙎🏿‍♂️"
+            ],
+            .manRaisingHand:[
+                [.light]: "🙋🏻‍♂️",
+                [.mediumLight]: "🙋🏼‍♂️",
+                [.medium]: "🙋🏽‍♂️",
+                [.mediumDark]: "🙋🏾‍♂️",
+                [.dark]: "🙋🏿‍♂️"
+            ],
+            .manRedHair:[
+                [.light]: "👨🏻‍🦰",
+                [.mediumLight]: "👨🏼‍🦰",
+                [.medium]: "👨🏽‍🦰",
+                [.mediumDark]: "👨🏾‍🦰",
+                [.dark]: "👨🏿‍🦰"
+            ],
+            .manRowingBoat:[
+                [.light]: "🚣🏻‍♂️",
+                [.mediumLight]: "🚣🏼‍♂️",
+                [.medium]: "🚣🏽‍♂️",
+                [.mediumDark]: "🚣🏾‍♂️",
+                [.dark]: "🚣🏿‍♂️"
+            ],
+            .manRunning:[
+                [.light]: "🏃🏻‍♂️",
+                [.mediumLight]: "🏃🏼‍♂️",
+                [.medium]: "🏃🏽‍♂️",
+                [.mediumDark]: "🏃🏾‍♂️",
+                [.dark]: "🏃🏿‍♂️"
+            ],
+            .manRunningFacingRight:[
+                [.light]: "🏃🏻‍♂️‍➡️",
+                [.mediumLight]: "🏃🏼‍♂️‍➡️",
+                [.medium]: "🏃🏽‍♂️‍➡️",
+                [.mediumDark]: "🏃🏾‍♂️‍➡️",
+                [.dark]: "🏃🏿‍♂️‍➡️"
+            ],
+            .manScientist:[
+                [.light]: "👨🏻‍🔬",
+                [.mediumLight]: "👨🏼‍🔬",
+                [.medium]: "👨🏽‍🔬",
+                [.mediumDark]: "👨🏾‍🔬",
+                [.dark]: "👨🏿‍🔬"
+            ],
+            .manShrugging:[
+                [.light]: "🤷🏻‍♂️",
+                [.mediumLight]: "🤷🏼‍♂️",
+                [.medium]: "🤷🏽‍♂️",
+                [.mediumDark]: "🤷🏾‍♂️",
+                [.dark]: "🤷🏿‍♂️"
+            ],
+            .manSinger:[
+                [.light]: "👨🏻‍🎤",
+                [.mediumLight]: "👨🏼‍🎤",
+                [.medium]: "👨🏽‍🎤",
+                [.mediumDark]: "👨🏾‍🎤",
+                [.dark]: "👨🏿‍🎤"
+            ],
+            .manStanding:[
+                [.light]: "🧍🏻‍♂️",
+                [.mediumLight]: "🧍🏼‍♂️",
+                [.medium]: "🧍🏽‍♂️",
+                [.mediumDark]: "🧍🏾‍♂️",
+                [.dark]: "🧍🏿‍♂️"
+            ],
+            .manStudent:[
+                [.light]: "👨🏻‍🎓",
+                [.mediumLight]: "👨🏼‍🎓",
+                [.medium]: "👨🏽‍🎓",
+                [.mediumDark]: "👨🏾‍🎓",
+                [.dark]: "👨🏿‍🎓"
+            ],
+            .manSuperhero:[
+                [.light]: "🦸🏻‍♂️",
+                [.mediumLight]: "🦸🏼‍♂️",
+                [.medium]: "🦸🏽‍♂️",
+                [.mediumDark]: "🦸🏾‍♂️",
+                [.dark]: "🦸🏿‍♂️"
+            ],
+            .manSupervillain:[
+                [.light]: "🦹🏻‍♂️",
+                [.mediumLight]: "🦹🏼‍♂️",
+                [.medium]: "🦹🏽‍♂️",
+                [.mediumDark]: "🦹🏾‍♂️",
+                [.dark]: "🦹🏿‍♂️"
+            ],
+            .manSurfing:[
+                [.light]: "🏄🏻‍♂️",
+                [.mediumLight]: "🏄🏼‍♂️",
+                [.medium]: "🏄🏽‍♂️",
+                [.mediumDark]: "🏄🏾‍♂️",
+                [.dark]: "🏄🏿‍♂️"
+            ],
+            .manSwimming:[
+                [.light]: "🏊🏻‍♂️",
+                [.mediumLight]: "🏊🏼‍♂️",
+                [.medium]: "🏊🏽‍♂️",
+                [.mediumDark]: "🏊🏾‍♂️",
+                [.dark]: "🏊🏿‍♂️"
+            ],
+            .manTeacher:[
+                [.light]: "👨🏻‍🏫",
+                [.mediumLight]: "👨🏼‍🏫",
+                [.medium]: "👨🏽‍🏫",
+                [.mediumDark]: "👨🏾‍🏫",
+                [.dark]: "👨🏿‍🏫"
+            ],
+            .manTechnologist:[
+                [.light]: "👨🏻‍💻",
+                [.mediumLight]: "👨🏼‍💻",
+                [.medium]: "👨🏽‍💻",
+                [.mediumDark]: "👨🏾‍💻",
+                [.dark]: "👨🏿‍💻"
+            ],
+            .manTippingHand:[
+                [.light]: "💁🏻‍♂️",
+                [.mediumLight]: "💁🏼‍♂️",
+                [.medium]: "💁🏽‍♂️",
+                [.mediumDark]: "💁🏾‍♂️",
+                [.dark]: "💁🏿‍♂️"
+            ],
+            .manVampire:[
+                [.light]: "🧛🏻‍♂️",
+                [.mediumLight]: "🧛🏼‍♂️",
+                [.medium]: "🧛🏽‍♂️",
+                [.mediumDark]: "🧛🏾‍♂️",
+                [.dark]: "🧛🏿‍♂️"
+            ],
+            .manWalking:[
+                [.light]: "🚶🏻‍♂️",
+                [.mediumLight]: "🚶🏼‍♂️",
+                [.medium]: "🚶🏽‍♂️",
+                [.mediumDark]: "🚶🏾‍♂️",
+                [.dark]: "🚶🏿‍♂️"
+            ],
+            .manWalkingFacingRight:[
+                [.light]: "🚶🏻‍♂️‍➡️",
+                [.mediumLight]: "🚶🏼‍♂️‍➡️",
+                [.medium]: "🚶🏽‍♂️‍➡️",
+                [.mediumDark]: "🚶🏾‍♂️‍➡️",
+                [.dark]: "🚶🏿‍♂️‍➡️"
+            ],
+            .manWearingTurban:[
+                [.light]: "👳🏻‍♂️",
+                [.mediumLight]: "👳🏼‍♂️",
+                [.medium]: "👳🏽‍♂️",
+                [.mediumDark]: "👳🏾‍♂️",
+                [.dark]: "👳🏿‍♂️"
+            ],
+            .manWhiteHair:[
+                [.light]: "👨🏻‍🦳",
+                [.mediumLight]: "👨🏼‍🦳",
+                [.medium]: "👨🏽‍🦳",
+                [.mediumDark]: "👨🏾‍🦳",
+                [.dark]: "👨🏿‍🦳"
+            ],
+            .manWithVeil:[
+                [.light]: "👰🏻‍♂️",
+                [.mediumLight]: "👰🏼‍♂️",
+                [.medium]: "👰🏽‍♂️",
+                [.mediumDark]: "👰🏾‍♂️",
+                [.dark]: "👰🏿‍♂️"
+            ],
+            .manWithWhiteCane:[
+                [.light]: "👨🏻‍🦯",
+                [.mediumLight]: "👨🏼‍🦯",
+                [.medium]: "👨🏽‍🦯",
+                [.mediumDark]: "👨🏾‍🦯",
+                [.dark]: "👨🏿‍🦯"
+            ],
+            .manWithWhiteCaneFacingRight:[
+                [.light]: "👨🏻‍🦯‍➡️",
+                [.mediumLight]: "👨🏼‍🦯‍➡️",
+                [.medium]: "👨🏽‍🦯‍➡️",
+                [.mediumDark]: "👨🏾‍🦯‍➡️",
+                [.dark]: "👨🏿‍🦯‍➡️"
+            ],
+            .mechanic:[
+                [.light]: "🧑🏻‍🔧",
+                [.mediumLight]: "🧑🏼‍🔧",
+                [.medium]: "🧑🏽‍🔧",
+                [.mediumDark]: "🧑🏾‍🔧",
+                [.dark]: "🧑🏿‍🔧"
+            ],
+            .menHoldingHands:[
+                [.light]: "👬🏻",
+                [.light, .mediumLight]: "👨🏻‍🤝‍👨🏼",
+                [.light, .medium]: "👨🏻‍🤝‍👨🏽",
+                [.light, .mediumDark]: "👨🏻‍🤝‍👨🏾",
+                [.light, .dark]: "👨🏻‍🤝‍👨🏿",
+                [.mediumLight, .light]: "👨🏼‍🤝‍👨🏻",
+                [.mediumLight]: "👬🏼",
+                [.mediumLight, .medium]: "👨🏼‍🤝‍👨🏽",
+                [.mediumLight, .mediumDark]: "👨🏼‍🤝‍👨🏾",
+                [.mediumLight, .dark]: "👨🏼‍🤝‍👨🏿",
+                [.medium, .light]: "👨🏽‍🤝‍👨🏻",
+                [.medium, .mediumLight]: "👨🏽‍🤝‍👨🏼",
+                [.medium]: "👬🏽",
+                [.medium, .mediumDark]: "👨🏽‍🤝‍👨🏾",
+                [.medium, .dark]: "👨🏽‍🤝‍👨🏿",
+                [.mediumDark, .light]: "👨🏾‍🤝‍👨🏻",
+                [.mediumDark, .mediumLight]: "👨🏾‍🤝‍👨🏼",
+                [.mediumDark, .medium]: "👨🏾‍🤝‍👨🏽",
+                [.mediumDark]: "👬🏾",
+                [.mediumDark, .dark]: "👨🏾‍🤝‍👨🏿",
+                [.dark, .light]: "👨🏿‍🤝‍👨🏻",
+                [.dark, .mediumLight]: "👨🏿‍🤝‍👨🏼",
+                [.dark, .medium]: "👨🏿‍🤝‍👨🏽",
+                [.dark, .mediumDark]: "👨🏿‍🤝‍👨🏾",
+                [.dark]: "👬🏿"
+            ],
+            .menWithBunnyEars:[
+                [.light]: "👯🏻‍♂️",
+                [.mediumLight]: "👯🏼‍♂️",
+                [.medium]: "👯🏽‍♂️",
+                [.mediumDark]: "👯🏾‍♂️",
+                [.dark]: "👯🏿‍♂️",
+                [.light, .mediumLight]: "👨🏻‍🐰‍👨🏼",
+                [.light, .medium]: "👨🏻‍🐰‍👨🏽",
+                [.light, .mediumDark]: "👨🏻‍🐰‍👨🏾",
+                [.light, .dark]: "👨🏻‍🐰‍👨🏿",
+                [.mediumLight, .light]: "👨🏼‍🐰‍👨🏻",
+                [.mediumLight, .medium]: "👨🏼‍🐰‍👨🏽",
+                [.mediumLight, .mediumDark]: "👨🏼‍🐰‍👨🏾",
+                [.mediumLight, .dark]: "👨🏼‍🐰‍👨🏿",
+                [.medium, .light]: "👨🏽‍🐰‍👨🏻",
+                [.medium, .mediumLight]: "👨🏽‍🐰‍👨🏼",
+                [.medium, .mediumDark]: "👨🏽‍🐰‍👨🏾",
+                [.medium, .dark]: "👨🏽‍🐰‍👨🏿",
+                [.mediumDark, .light]: "👨🏾‍🐰‍👨🏻",
+                [.mediumDark, .mediumLight]: "👨🏾‍🐰‍👨🏼",
+                [.mediumDark, .medium]: "👨🏾‍🐰‍👨🏽",
+                [.mediumDark, .dark]: "👨🏾‍🐰‍👨🏿",
+                [.dark, .light]: "👨🏿‍🐰‍👨🏻",
+                [.dark, .mediumLight]: "👨🏿‍🐰‍👨🏼",
+                [.dark, .medium]: "👨🏿‍🐰‍👨🏽",
+                [.dark, .mediumDark]: "👨🏿‍🐰‍👨🏾"
+            ],
+            .menWrestling:[
+                [.light]: "🤼🏻‍♂️",
+                [.mediumLight]: "🤼🏼‍♂️",
+                [.medium]: "🤼🏽‍♂️",
+                [.mediumDark]: "🤼🏾‍♂️",
+                [.dark]: "🤼🏿‍♂️",
+                [.light, .mediumLight]: "👨🏻‍🫯‍👨🏼",
+                [.light, .medium]: "👨🏻‍🫯‍👨🏽",
+                [.light, .mediumDark]: "👨🏻‍🫯‍👨🏾",
+                [.light, .dark]: "👨🏻‍🫯‍👨🏿",
+                [.mediumLight, .light]: "👨🏼‍🫯‍👨🏻",
+                [.mediumLight, .medium]: "👨🏼‍🫯‍👨🏽",
+                [.mediumLight, .mediumDark]: "👨🏼‍🫯‍👨🏾",
+                [.mediumLight, .dark]: "👨🏼‍🫯‍👨🏿",
+                [.medium, .light]: "👨🏽‍🫯‍👨🏻",
+                [.medium, .mediumLight]: "👨🏽‍🫯‍👨🏼",
+                [.medium, .mediumDark]: "👨🏽‍🫯‍👨🏾",
+                [.medium, .dark]: "👨🏽‍🫯‍👨🏿",
+                [.mediumDark, .light]: "👨🏾‍🫯‍👨🏻",
+                [.mediumDark, .mediumLight]: "👨🏾‍🫯‍👨🏼",
+                [.mediumDark, .medium]: "👨🏾‍🫯‍👨🏽",
+                [.mediumDark, .dark]: "👨🏾‍🫯‍👨🏿",
+                [.dark, .light]: "👨🏿‍🫯‍👨🏻",
+                [.dark, .mediumLight]: "👨🏿‍🫯‍👨🏼",
+                [.dark, .medium]: "👨🏿‍🫯‍👨🏽",
+                [.dark, .mediumDark]: "👨🏿‍🫯‍👨🏾"
+            ],
+            .mermaid:[
+                [.light]: "🧜🏻‍♀️",
+                [.mediumLight]: "🧜🏼‍♀️",
+                [.medium]: "🧜🏽‍♀️",
+                [.mediumDark]: "🧜🏾‍♀️",
+                [.dark]: "🧜🏿‍♀️"
+            ],
+            .merman:[
+                [.light]: "🧜🏻‍♂️",
+                [.mediumLight]: "🧜🏼‍♂️",
+                [.medium]: "🧜🏽‍♂️",
+                [.mediumDark]: "🧜🏾‍♂️",
+                [.dark]: "🧜🏿‍♂️"
+            ],
+            .merperson:[
+                [.light]: "🧜🏻",
+                [.mediumLight]: "🧜🏼",
+                [.medium]: "🧜🏽",
+                [.mediumDark]: "🧜🏾",
+                [.dark]: "🧜🏿"
+            ],
+            .middleFinger:[
+                [.light]: "🖕🏻",
+                [.mediumLight]: "🖕🏼",
+                [.medium]: "🖕🏽",
+                [.mediumDark]: "🖕🏾",
+                [.dark]: "🖕🏿"
+            ],
+            .mrsClaus:[
+                [.light]: "🤶🏻",
+                [.mediumLight]: "🤶🏼",
+                [.medium]: "🤶🏽",
+                [.mediumDark]: "🤶🏾",
+                [.dark]: "🤶🏿"
+            ],
+            .mxClaus:[
+                [.light]: "🧑🏻‍🎄",
+                [.mediumLight]: "🧑🏼‍🎄",
+                [.medium]: "🧑🏽‍🎄",
+                [.mediumDark]: "🧑🏾‍🎄",
+                [.dark]: "🧑🏿‍🎄"
+            ],
+            .nailPolish:[
+                [.light]: "💅🏻",
+                [.mediumLight]: "💅🏼",
+                [.medium]: "💅🏽",
+                [.mediumDark]: "💅🏾",
+                [.dark]: "💅🏿"
+            ],
+            .ninja:[
+                [.light]: "🥷🏻",
+                [.mediumLight]: "🥷🏼",
+                [.medium]: "🥷🏽",
+                [.mediumDark]: "🥷🏾",
+                [.dark]: "🥷🏿"
+            ],
+            .nose:[
+                [.light]: "👃🏻",
+                [.mediumLight]: "👃🏼",
+                [.medium]: "👃🏽",
+                [.mediumDark]: "👃🏾",
+                [.dark]: "👃🏿"
+            ],
+            .officeWorker:[
+                [.light]: "🧑🏻‍💼",
+                [.mediumLight]: "🧑🏼‍💼",
+                [.medium]: "🧑🏽‍💼",
+                [.mediumDark]: "🧑🏾‍💼",
+                [.dark]: "🧑🏿‍💼"
+            ],
+            .okHand:[
+                [.light]: "👌🏻",
+                [.mediumLight]: "👌🏼",
+                [.medium]: "👌🏽",
+                [.mediumDark]: "👌🏾",
+                [.dark]: "👌🏿"
+            ],
+            .oldMan:[
+                [.light]: "👴🏻",
+                [.mediumLight]: "👴🏼",
+                [.medium]: "👴🏽",
+                [.mediumDark]: "👴🏾",
+                [.dark]: "👴🏿"
+            ],
+            .oldWoman:[
+                [.light]: "👵🏻",
+                [.mediumLight]: "👵🏼",
+                [.medium]: "👵🏽",
+                [.mediumDark]: "👵🏾",
+                [.dark]: "👵🏿"
+            ],
+            .olderPerson:[
+                [.light]: "🧓🏻",
+                [.mediumLight]: "🧓🏼",
+                [.medium]: "🧓🏽",
+                [.mediumDark]: "🧓🏾",
+                [.dark]: "🧓🏿"
+            ],
+            .oncomingFist:[
+                [.light]: "👊🏻",
+                [.mediumLight]: "👊🏼",
+                [.medium]: "👊🏽",
+                [.mediumDark]: "👊🏾",
+                [.dark]: "👊🏿"
+            ],
+            .openHands:[
+                [.light]: "👐🏻",
+                [.mediumLight]: "👐🏼",
+                [.medium]: "👐🏽",
+                [.mediumDark]: "👐🏾",
+                [.dark]: "👐🏿"
+            ],
+            .palmDownHand:[
+                [.light]: "🫳🏻",
+                [.mediumLight]: "🫳🏼",
+                [.medium]: "🫳🏽",
+                [.mediumDark]: "🫳🏾",
+                [.dark]: "🫳🏿"
+            ],
+            .palmUpHand:[
+                [.light]: "🫴🏻",
+                [.mediumLight]: "🫴🏼",
+                [.medium]: "🫴🏽",
+                [.mediumDark]: "🫴🏾",
+                [.dark]: "🫴🏿"
+            ],
+            .palmsUpTogether:[
+                [.light]: "🤲🏻",
+                [.mediumLight]: "🤲🏼",
+                [.medium]: "🤲🏽",
+                [.mediumDark]: "🤲🏾",
+                [.dark]: "🤲🏿"
+            ],
+            .peopleHoldingHands:[
+                [.light]: "🧑🏻‍🤝‍🧑🏻",
+                [.light, .mediumLight]: "🧑🏻‍🤝‍🧑🏼",
+                [.light, .medium]: "🧑🏻‍🤝‍🧑🏽",
+                [.light, .mediumDark]: "🧑🏻‍🤝‍🧑🏾",
+                [.light, .dark]: "🧑🏻‍🤝‍🧑🏿",
+                [.mediumLight, .light]: "🧑🏼‍🤝‍🧑🏻",
+                [.mediumLight]: "🧑🏼‍🤝‍🧑🏼",
+                [.mediumLight, .medium]: "🧑🏼‍🤝‍🧑🏽",
+                [.mediumLight, .mediumDark]: "🧑🏼‍🤝‍🧑🏾",
+                [.mediumLight, .dark]: "🧑🏼‍🤝‍🧑🏿",
+                [.medium, .light]: "🧑🏽‍🤝‍🧑🏻",
+                [.medium, .mediumLight]: "🧑🏽‍🤝‍🧑🏼",
+                [.medium]: "🧑🏽‍🤝‍🧑🏽",
+                [.medium, .mediumDark]: "🧑🏽‍🤝‍🧑🏾",
+                [.medium, .dark]: "🧑🏽‍🤝‍🧑🏿",
+                [.mediumDark, .light]: "🧑🏾‍🤝‍🧑🏻",
+                [.mediumDark, .mediumLight]: "🧑🏾‍🤝‍🧑🏼",
+                [.mediumDark, .medium]: "🧑🏾‍🤝‍🧑🏽",
+                [.mediumDark]: "🧑🏾‍🤝‍🧑🏾",
+                [.mediumDark, .dark]: "🧑🏾‍🤝‍🧑🏿",
+                [.dark, .light]: "🧑🏿‍🤝‍🧑🏻",
+                [.dark, .mediumLight]: "🧑🏿‍🤝‍🧑🏼",
+                [.dark, .medium]: "🧑🏿‍🤝‍🧑🏽",
+                [.dark, .mediumDark]: "🧑🏿‍🤝‍🧑🏾",
+                [.dark]: "🧑🏿‍🤝‍🧑🏿"
+            ],
+            .peopleWithBunnyEars:[
+                [.light]: "👯🏻",
+                [.mediumLight]: "👯🏼",
+                [.medium]: "👯🏽",
+                [.mediumDark]: "👯🏾",
+                [.dark]: "👯🏿",
+                [.light, .mediumLight]: "🧑🏻‍🐰‍🧑🏼",
+                [.light, .medium]: "🧑🏻‍🐰‍🧑🏽",
+                [.light, .mediumDark]: "🧑🏻‍🐰‍🧑🏾",
+                [.light, .dark]: "🧑🏻‍🐰‍🧑🏿",
+                [.mediumLight, .light]: "🧑🏼‍🐰‍🧑🏻",
+                [.mediumLight, .medium]: "🧑🏼‍🐰‍🧑🏽",
+                [.mediumLight, .mediumDark]: "🧑🏼‍🐰‍🧑🏾",
+                [.mediumLight, .dark]: "🧑🏼‍🐰‍🧑🏿",
+                [.medium, .light]: "🧑🏽‍🐰‍🧑🏻",
+                [.medium, .mediumLight]: "🧑🏽‍🐰‍🧑🏼",
+                [.medium, .mediumDark]: "🧑🏽‍🐰‍🧑🏾",
+                [.medium, .dark]: "🧑🏽‍🐰‍🧑🏿",
+                [.mediumDark, .light]: "🧑🏾‍🐰‍🧑🏻",
+                [.mediumDark, .mediumLight]: "🧑🏾‍🐰‍🧑🏼",
+                [.mediumDark, .medium]: "🧑🏾‍🐰‍🧑🏽",
+                [.mediumDark, .dark]: "🧑🏾‍🐰‍🧑🏿",
+                [.dark, .light]: "🧑🏿‍🐰‍🧑🏻",
+                [.dark, .mediumLight]: "🧑🏿‍🐰‍🧑🏼",
+                [.dark, .medium]: "🧑🏿‍🐰‍🧑🏽",
+                [.dark, .mediumDark]: "🧑🏿‍🐰‍🧑🏾"
+            ],
+            .peopleWrestling:[
+                [.light]: "🤼🏻",
+                [.mediumLight]: "🤼🏼",
+                [.medium]: "🤼🏽",
+                [.mediumDark]: "🤼🏾",
+                [.dark]: "🤼🏿",
+                [.light, .mediumLight]: "🧑🏻‍🫯‍🧑🏼",
+                [.light, .medium]: "🧑🏻‍🫯‍🧑🏽",
+                [.light, .mediumDark]: "🧑🏻‍🫯‍🧑🏾",
+                [.light, .dark]: "🧑🏻‍🫯‍🧑🏿",
+                [.mediumLight, .light]: "🧑🏼‍🫯‍🧑🏻",
+                [.mediumLight, .medium]: "🧑🏼‍🫯‍🧑🏽",
+                [.mediumLight, .mediumDark]: "🧑🏼‍🫯‍🧑🏾",
+                [.mediumLight, .dark]: "🧑🏼‍🫯‍🧑🏿",
+                [.medium, .light]: "🧑🏽‍🫯‍🧑🏻",
+                [.medium, .mediumLight]: "🧑🏽‍🫯‍🧑🏼",
+                [.medium, .mediumDark]: "🧑🏽‍🫯‍🧑🏾",
+                [.medium, .dark]: "🧑🏽‍🫯‍🧑🏿",
+                [.mediumDark, .light]: "🧑🏾‍🫯‍🧑🏻",
+                [.mediumDark, .mediumLight]: "🧑🏾‍🫯‍🧑🏼",
+                [.mediumDark, .medium]: "🧑🏾‍🫯‍🧑🏽",
+                [.mediumDark, .dark]: "🧑🏾‍🫯‍🧑🏿",
+                [.dark, .light]: "🧑🏿‍🫯‍🧑🏻",
+                [.dark, .mediumLight]: "🧑🏿‍🫯‍🧑🏼",
+                [.dark, .medium]: "🧑🏿‍🫯‍🧑🏽",
+                [.dark, .mediumDark]: "🧑🏿‍🫯‍🧑🏾"
+            ],
+            .person:[
+                [.light]: "🧑🏻",
+                [.mediumLight]: "🧑🏼",
+                [.medium]: "🧑🏽",
+                [.mediumDark]: "🧑🏾",
+                [.dark]: "🧑🏿"
+            ],
+            .personBald:[
+                [.light]: "🧑🏻‍🦲",
+                [.mediumLight]: "🧑🏼‍🦲",
+                [.medium]: "🧑🏽‍🦲",
+                [.mediumDark]: "🧑🏾‍🦲",
+                [.dark]: "🧑🏿‍🦲"
+            ],
+            .personBeard:[
+                [.light]: "🧔🏻",
+                [.mediumLight]: "🧔🏼",
+                [.medium]: "🧔🏽",
+                [.mediumDark]: "🧔🏾",
+                [.dark]: "🧔🏿"
+            ],
+            .personBiking:[
+                [.light]: "🚴🏻",
+                [.mediumLight]: "🚴🏼",
+                [.medium]: "🚴🏽",
+                [.mediumDark]: "🚴🏾",
+                [.dark]: "🚴🏿"
+            ],
+            .personBlondHair:[
+                [.light]: "👱🏻",
+                [.mediumLight]: "👱🏼",
+                [.medium]: "👱🏽",
+                [.mediumDark]: "👱🏾",
+                [.dark]: "👱🏿"
+            ],
+            .personBouncingBall:[
+                [.light]: "⛹🏻",
+                [.mediumLight]: "⛹🏼",
+                [.medium]: "⛹🏽",
+                [.mediumDark]: "⛹🏾",
+                [.dark]: "⛹🏿"
+            ],
+            .personBowing:[
+                [.light]: "🙇🏻",
+                [.mediumLight]: "🙇🏼",
+                [.medium]: "🙇🏽",
+                [.mediumDark]: "🙇🏾",
+                [.dark]: "🙇🏿"
+            ],
+            .personCartwheeling:[
+                [.light]: "🤸🏻",
+                [.mediumLight]: "🤸🏼",
+                [.medium]: "🤸🏽",
+                [.mediumDark]: "🤸🏾",
+                [.dark]: "🤸🏿"
+            ],
+            .personClimbing:[
+                [.light]: "🧗🏻",
+                [.mediumLight]: "🧗🏼",
+                [.medium]: "🧗🏽",
+                [.mediumDark]: "🧗🏾",
+                [.dark]: "🧗🏿"
+            ],
+            .personCurlyHair:[
+                [.light]: "🧑🏻‍🦱",
+                [.mediumLight]: "🧑🏼‍🦱",
+                [.medium]: "🧑🏽‍🦱",
+                [.mediumDark]: "🧑🏾‍🦱",
+                [.dark]: "🧑🏿‍🦱"
+            ],
+            .personFacepalming:[
+                [.light]: "🤦🏻",
+                [.mediumLight]: "🤦🏼",
+                [.medium]: "🤦🏽",
+                [.mediumDark]: "🤦🏾",
+                [.dark]: "🤦🏿"
+            ],
+            .personFeedingBaby:[
+                [.light]: "🧑🏻‍🍼",
+                [.mediumLight]: "🧑🏼‍🍼",
+                [.medium]: "🧑🏽‍🍼",
+                [.mediumDark]: "🧑🏾‍🍼",
+                [.dark]: "🧑🏿‍🍼"
+            ],
+            .personFrowning:[
+                [.light]: "🙍🏻",
+                [.mediumLight]: "🙍🏼",
+                [.medium]: "🙍🏽",
+                [.mediumDark]: "🙍🏾",
+                [.dark]: "🙍🏿"
+            ],
+            .personGesturingNo:[
+                [.light]: "🙅🏻",
+                [.mediumLight]: "🙅🏼",
+                [.medium]: "🙅🏽",
+                [.mediumDark]: "🙅🏾",
+                [.dark]: "🙅🏿"
+            ],
+            .personGesturingOk:[
+                [.light]: "🙆🏻",
+                [.mediumLight]: "🙆🏼",
+                [.medium]: "🙆🏽",
+                [.mediumDark]: "🙆🏾",
+                [.dark]: "🙆🏿"
+            ],
+            .personGettingHaircut:[
+                [.light]: "💇🏻",
+                [.mediumLight]: "💇🏼",
+                [.medium]: "💇🏽",
+                [.mediumDark]: "💇🏾",
+                [.dark]: "💇🏿"
+            ],
+            .personGettingMassage:[
+                [.light]: "💆🏻",
+                [.mediumLight]: "💆🏼",
+                [.medium]: "💆🏽",
+                [.mediumDark]: "💆🏾",
+                [.dark]: "💆🏿"
+            ],
+            .personGolfing:[
+                [.light]: "🏌🏻",
+                [.mediumLight]: "🏌🏼",
+                [.medium]: "🏌🏽",
+                [.mediumDark]: "🏌🏾",
+                [.dark]: "🏌🏿"
+            ],
+            .personGuard:[
+                [.light]: "💂🏻",
+                [.mediumLight]: "💂🏼",
+                [.medium]: "💂🏽",
+                [.mediumDark]: "💂🏾",
+                [.dark]: "💂🏿"
+            ],
+            .personInBed:[
+                [.light]: "🛌🏻",
+                [.mediumLight]: "🛌🏼",
+                [.medium]: "🛌🏽",
+                [.mediumDark]: "🛌🏾",
+                [.dark]: "🛌🏿"
+            ],
+            .personInLotusPosition:[
+                [.light]: "🧘🏻",
+                [.mediumLight]: "🧘🏼",
+                [.medium]: "🧘🏽",
+                [.mediumDark]: "🧘🏾",
+                [.dark]: "🧘🏿"
+            ],
+            .personInManualWheelchair:[
+                [.light]: "🧑🏻‍🦽",
+                [.mediumLight]: "🧑🏼‍🦽",
+                [.medium]: "🧑🏽‍🦽",
+                [.mediumDark]: "🧑🏾‍🦽",
+                [.dark]: "🧑🏿‍🦽"
+            ],
+            .personInManualWheelchairFacingRight:[
+                [.light]: "🧑🏻‍🦽‍➡️",
+                [.mediumLight]: "🧑🏼‍🦽‍➡️",
+                [.medium]: "🧑🏽‍🦽‍➡️",
+                [.mediumDark]: "🧑🏾‍🦽‍➡️",
+                [.dark]: "🧑🏿‍🦽‍➡️"
+            ],
+            .personInMotorizedWheelchair:[
+                [.light]: "🧑🏻‍🦼",
+                [.mediumLight]: "🧑🏼‍🦼",
+                [.medium]: "🧑🏽‍🦼",
+                [.mediumDark]: "🧑🏾‍🦼",
+                [.dark]: "🧑🏿‍🦼"
+            ],
+            .personInMotorizedWheelchairFacingRight:[
+                [.light]: "🧑🏻‍🦼‍➡️",
+                [.mediumLight]: "🧑🏼‍🦼‍➡️",
+                [.medium]: "🧑🏽‍🦼‍➡️",
+                [.mediumDark]: "🧑🏾‍🦼‍➡️",
+                [.dark]: "🧑🏿‍🦼‍➡️"
+            ],
+            .personInSteamyRoom:[
+                [.light]: "🧖🏻",
+                [.mediumLight]: "🧖🏼",
+                [.medium]: "🧖🏽",
+                [.mediumDark]: "🧖🏾",
+                [.dark]: "🧖🏿"
+            ],
+            .personInSuitLevitating:[
+                [.light]: "🕴🏻",
+                [.mediumLight]: "🕴🏼",
+                [.medium]: "🕴🏽",
+                [.mediumDark]: "🕴🏾",
+                [.dark]: "🕴🏿"
+            ],
+            .personInTuxedo:[
+                [.light]: "🤵🏻",
+                [.mediumLight]: "🤵🏼",
+                [.medium]: "🤵🏽",
+                [.mediumDark]: "🤵🏾",
+                [.dark]: "🤵🏿"
+            ],
+            .personJuggling:[
+                [.light]: "🤹🏻",
+                [.mediumLight]: "🤹🏼",
+                [.medium]: "🤹🏽",
+                [.mediumDark]: "🤹🏾",
+                [.dark]: "🤹🏿"
+            ],
+            .personKneeling:[
+                [.light]: "🧎🏻",
+                [.mediumLight]: "🧎🏼",
+                [.medium]: "🧎🏽",
+                [.mediumDark]: "🧎🏾",
+                [.dark]: "🧎🏿"
+            ],
+            .personKneelingFacingRight:[
+                [.light]: "🧎🏻‍➡️",
+                [.mediumLight]: "🧎🏼‍➡️",
+                [.medium]: "🧎🏽‍➡️",
+                [.mediumDark]: "🧎🏾‍➡️",
+                [.dark]: "🧎🏿‍➡️"
+            ],
+            .personLiftingWeights:[
+                [.light]: "🏋🏻",
+                [.mediumLight]: "🏋🏼",
+                [.medium]: "🏋🏽",
+                [.mediumDark]: "🏋🏾",
+                [.dark]: "🏋🏿"
+            ],
+            .personMountainBiking:[
+                [.light]: "🚵🏻",
+                [.mediumLight]: "🚵🏼",
+                [.medium]: "🚵🏽",
+                [.mediumDark]: "🚵🏾",
+                [.dark]: "🚵🏿"
+            ],
+            .personPlayingHandball:[
+                [.light]: "🤾🏻",
+                [.mediumLight]: "🤾🏼",
+                [.medium]: "🤾🏽",
+                [.mediumDark]: "🤾🏾",
+                [.dark]: "🤾🏿"
+            ],
+            .personPlayingWaterPolo:[
+                [.light]: "🤽🏻",
+                [.mediumLight]: "🤽🏼",
+                [.medium]: "🤽🏽",
+                [.mediumDark]: "🤽🏾",
+                [.dark]: "🤽🏿"
+            ],
+            .personPouting:[
+                [.light]: "🙎🏻",
+                [.mediumLight]: "🙎🏼",
+                [.medium]: "🙎🏽",
+                [.mediumDark]: "🙎🏾",
+                [.dark]: "🙎🏿"
+            ],
+            .personRaisingHand:[
+                [.light]: "🙋🏻",
+                [.mediumLight]: "🙋🏼",
+                [.medium]: "🙋🏽",
+                [.mediumDark]: "🙋🏾",
+                [.dark]: "🙋🏿"
+            ],
+            .personRedHair:[
+                [.light]: "🧑🏻‍🦰",
+                [.mediumLight]: "🧑🏼‍🦰",
+                [.medium]: "🧑🏽‍🦰",
+                [.mediumDark]: "🧑🏾‍🦰",
+                [.dark]: "🧑🏿‍🦰"
+            ],
+            .personRowingBoat:[
+                [.light]: "🚣🏻",
+                [.mediumLight]: "🚣🏼",
+                [.medium]: "🚣🏽",
+                [.mediumDark]: "🚣🏾",
+                [.dark]: "🚣🏿"
+            ],
+            .personRunning:[
+                [.light]: "🏃🏻",
+                [.mediumLight]: "🏃🏼",
+                [.medium]: "🏃🏽",
+                [.mediumDark]: "🏃🏾",
+                [.dark]: "🏃🏿"
+            ],
+            .personRunningFacingRight:[
+                [.light]: "🏃🏻‍➡️",
+                [.mediumLight]: "🏃🏼‍➡️",
+                [.medium]: "🏃🏽‍➡️",
+                [.mediumDark]: "🏃🏾‍➡️",
+                [.dark]: "🏃🏿‍➡️"
+            ],
+            .personShrugging:[
+                [.light]: "🤷🏻",
+                [.mediumLight]: "🤷🏼",
+                [.medium]: "🤷🏽",
+                [.mediumDark]: "🤷🏾",
+                [.dark]: "🤷🏿"
+            ],
+            .personStanding:[
+                [.light]: "🧍🏻",
+                [.mediumLight]: "🧍🏼",
+                [.medium]: "🧍🏽",
+                [.mediumDark]: "🧍🏾",
+                [.dark]: "🧍🏿"
+            ],
+            .personSurfing:[
+                [.light]: "🏄🏻",
+                [.mediumLight]: "🏄🏼",
+                [.medium]: "🏄🏽",
+                [.mediumDark]: "🏄🏾",
+                [.dark]: "🏄🏿"
+            ],
+            .personSwimming:[
+                [.light]: "🏊🏻",
+                [.mediumLight]: "🏊🏼",
+                [.medium]: "🏊🏽",
+                [.mediumDark]: "🏊🏾",
+                [.dark]: "🏊🏿"
+            ],
+            .personTakingBath:[
+                [.light]: "🛀🏻",
+                [.mediumLight]: "🛀🏼",
+                [.medium]: "🛀🏽",
+                [.mediumDark]: "🛀🏾",
+                [.dark]: "🛀🏿"
+            ],
+            .personTippingHand:[
+                [.light]: "💁🏻",
+                [.mediumLight]: "💁🏼",
+                [.medium]: "💁🏽",
+                [.mediumDark]: "💁🏾",
+                [.dark]: "💁🏿"
+            ],
+            .personWalking:[
+                [.light]: "🚶🏻",
+                [.mediumLight]: "🚶🏼",
+                [.medium]: "🚶🏽",
+                [.mediumDark]: "🚶🏾",
+                [.dark]: "🚶🏿"
+            ],
+            .personWalkingFacingRight:[
+                [.light]: "🚶🏻‍➡️",
+                [.mediumLight]: "🚶🏼‍➡️",
+                [.medium]: "🚶🏽‍➡️",
+                [.mediumDark]: "🚶🏾‍➡️",
+                [.dark]: "🚶🏿‍➡️"
+            ],
+            .personWearingTurban:[
+                [.light]: "👳🏻",
+                [.mediumLight]: "👳🏼",
+                [.medium]: "👳🏽",
+                [.mediumDark]: "👳🏾",
+                [.dark]: "👳🏿"
+            ],
+            .personWhiteHair:[
+                [.light]: "🧑🏻‍🦳",
+                [.mediumLight]: "🧑🏼‍🦳",
+                [.medium]: "🧑🏽‍🦳",
+                [.mediumDark]: "🧑🏾‍🦳",
+                [.dark]: "🧑🏿‍🦳"
+            ],
+            .personWithCrown:[
+                [.light]: "🫅🏻",
+                [.mediumLight]: "🫅🏼",
+                [.medium]: "🫅🏽",
+                [.mediumDark]: "🫅🏾",
+                [.dark]: "🫅🏿"
+            ],
+            .personWithSkullcap:[
+                [.light]: "👲🏻",
+                [.mediumLight]: "👲🏼",
+                [.medium]: "👲🏽",
+                [.mediumDark]: "👲🏾",
+                [.dark]: "👲🏿"
+            ],
+            .personWithVeil:[
+                [.light]: "👰🏻",
+                [.mediumLight]: "👰🏼",
+                [.medium]: "👰🏽",
+                [.mediumDark]: "👰🏾",
+                [.dark]: "👰🏿"
+            ],
+            .personWithWhiteCane:[
+                [.light]: "🧑🏻‍🦯",
+                [.mediumLight]: "🧑🏼‍🦯",
+                [.medium]: "🧑🏽‍🦯",
+                [.mediumDark]: "🧑🏾‍🦯",
+                [.dark]: "🧑🏿‍🦯"
+            ],
+            .personWithWhiteCaneFacingRight:[
+                [.light]: "🧑🏻‍🦯‍➡️",
+                [.mediumLight]: "🧑🏼‍🦯‍➡️",
+                [.medium]: "🧑🏽‍🦯‍➡️",
+                [.mediumDark]: "🧑🏾‍🦯‍➡️",
+                [.dark]: "🧑🏿‍🦯‍➡️"
+            ],
+            .pilot:[
+                [.light]: "🧑🏻‍✈️",
+                [.mediumLight]: "🧑🏼‍✈️",
+                [.medium]: "🧑🏽‍✈️",
+                [.mediumDark]: "🧑🏾‍✈️",
+                [.dark]: "🧑🏿‍✈️"
+            ],
+            .pinchedFingers:[
+                [.light]: "🤌🏻",
+                [.mediumLight]: "🤌🏼",
+                [.medium]: "🤌🏽",
+                [.mediumDark]: "🤌🏾",
+                [.dark]: "🤌🏿"
+            ],
+            .pinchingHand:[
+                [.light]: "🤏🏻",
+                [.mediumLight]: "🤏🏼",
+                [.medium]: "🤏🏽",
+                [.mediumDark]: "🤏🏾",
+                [.dark]: "🤏🏿"
+            ],
+            .policeOfficer:[
+                [.light]: "👮🏻",
+                [.mediumLight]: "👮🏼",
+                [.medium]: "👮🏽",
+                [.mediumDark]: "👮🏾",
+                [.dark]: "👮🏿"
+            ],
+            .pregnantMan:[
+                [.light]: "🫃🏻",
+                [.mediumLight]: "🫃🏼",
+                [.medium]: "🫃🏽",
+                [.mediumDark]: "🫃🏾",
+                [.dark]: "🫃🏿"
+            ],
+            .pregnantPerson:[
+                [.light]: "🫄🏻",
+                [.mediumLight]: "🫄🏼",
+                [.medium]: "🫄🏽",
+                [.mediumDark]: "🫄🏾",
+                [.dark]: "🫄🏿"
+            ],
+            .pregnantWoman:[
+                [.light]: "🤰🏻",
+                [.mediumLight]: "🤰🏼",
+                [.medium]: "🤰🏽",
+                [.mediumDark]: "🤰🏾",
+                [.dark]: "🤰🏿"
+            ],
+            .prince:[
+                [.light]: "🤴🏻",
+                [.mediumLight]: "🤴🏼",
+                [.medium]: "🤴🏽",
+                [.mediumDark]: "🤴🏾",
+                [.dark]: "🤴🏿"
+            ],
+            .princess:[
+                [.light]: "👸🏻",
+                [.mediumLight]: "👸🏼",
+                [.medium]: "👸🏽",
+                [.mediumDark]: "👸🏾",
+                [.dark]: "👸🏿"
+            ],
+            .raisedBackOfHand:[
+                [.light]: "🤚🏻",
+                [.mediumLight]: "🤚🏼",
+                [.medium]: "🤚🏽",
+                [.mediumDark]: "🤚🏾",
+                [.dark]: "🤚🏿"
+            ],
+            .raisedFist:[
+                [.light]: "✊🏻",
+                [.mediumLight]: "✊🏼",
+                [.medium]: "✊🏽",
+                [.mediumDark]: "✊🏾",
+                [.dark]: "✊🏿"
+            ],
+            .raisedHand:[
+                [.light]: "✋🏻",
+                [.mediumLight]: "✋🏼",
+                [.medium]: "✋🏽",
+                [.mediumDark]: "✋🏾",
+                [.dark]: "✋🏿"
+            ],
+            .raisingHands:[
+                [.light]: "🙌🏻",
+                [.mediumLight]: "🙌🏼",
+                [.medium]: "🙌🏽",
+                [.mediumDark]: "🙌🏾",
+                [.dark]: "🙌🏿"
+            ],
+            .rightFacingFist:[
+                [.light]: "🤜🏻",
+                [.mediumLight]: "🤜🏼",
+                [.medium]: "🤜🏽",
+                [.mediumDark]: "🤜🏾",
+                [.dark]: "🤜🏿"
+            ],
+            .rightwardsHand:[
+                [.light]: "🫱🏻",
+                [.mediumLight]: "🫱🏼",
+                [.medium]: "🫱🏽",
+                [.mediumDark]: "🫱🏾",
+                [.dark]: "🫱🏿"
+            ],
+            .rightwardsPushingHand:[
+                [.light]: "🫸🏻",
+                [.mediumLight]: "🫸🏼",
+                [.medium]: "🫸🏽",
+                [.mediumDark]: "🫸🏾",
+                [.dark]: "🫸🏿"
+            ],
+            .santaClaus:[
+                [.light]: "🎅🏻",
+                [.mediumLight]: "🎅🏼",
+                [.medium]: "🎅🏽",
+                [.mediumDark]: "🎅🏾",
+                [.dark]: "🎅🏿"
+            ],
+            .scientist:[
+                [.light]: "🧑🏻‍🔬",
+                [.mediumLight]: "🧑🏼‍🔬",
+                [.medium]: "🧑🏽‍🔬",
+                [.mediumDark]: "🧑🏾‍🔬",
+                [.dark]: "🧑🏿‍🔬"
+            ],
+            .selfie:[
+                [.light]: "🤳🏻",
+                [.mediumLight]: "🤳🏼",
+                [.medium]: "🤳🏽",
+                [.mediumDark]: "🤳🏾",
+                [.dark]: "🤳🏿"
+            ],
+            .signOfTheHorns:[
+                [.light]: "🤘🏻",
+                [.mediumLight]: "🤘🏼",
+                [.medium]: "🤘🏽",
+                [.mediumDark]: "🤘🏾",
+                [.dark]: "🤘🏿"
+            ],
+            .singer:[
+                [.light]: "🧑🏻‍🎤",
+                [.mediumLight]: "🧑🏼‍🎤",
+                [.medium]: "🧑🏽‍🎤",
+                [.mediumDark]: "🧑🏾‍🎤",
+                [.dark]: "🧑🏿‍🎤"
+            ],
+            .snowboarder:[
+                [.light]: "🏂🏻",
+                [.mediumLight]: "🏂🏼",
+                [.medium]: "🏂🏽",
+                [.mediumDark]: "🏂🏾",
+                [.dark]: "🏂🏿"
+            ],
+            .student:[
+                [.light]: "🧑🏻‍🎓",
+                [.mediumLight]: "🧑🏼‍🎓",
+                [.medium]: "🧑🏽‍🎓",
+                [.mediumDark]: "🧑🏾‍🎓",
+                [.dark]: "🧑🏿‍🎓"
+            ],
+            .superhero:[
+                [.light]: "🦸🏻",
+                [.mediumLight]: "🦸🏼",
+                [.medium]: "🦸🏽",
+                [.mediumDark]: "🦸🏾",
+                [.dark]: "🦸🏿"
+            ],
+            .supervillain:[
+                [.light]: "🦹🏻",
+                [.mediumLight]: "🦹🏼",
+                [.medium]: "🦹🏽",
+                [.mediumDark]: "🦹🏾",
+                [.dark]: "🦹🏿"
+            ],
+            .teacher:[
+                [.light]: "🧑🏻‍🏫",
+                [.mediumLight]: "🧑🏼‍🏫",
+                [.medium]: "🧑🏽‍🏫",
+                [.mediumDark]: "🧑🏾‍🏫",
+                [.dark]: "🧑🏿‍🏫"
+            ],
+            .technologist:[
+                [.light]: "🧑🏻‍💻",
+                [.mediumLight]: "🧑🏼‍💻",
+                [.medium]: "🧑🏽‍💻",
+                [.mediumDark]: "🧑🏾‍💻",
+                [.dark]: "🧑🏿‍💻"
+            ],
+            .thumbsDown:[
+                [.light]: "👎🏻",
+                [.mediumLight]: "👎🏼",
+                [.medium]: "👎🏽",
+                [.mediumDark]: "👎🏾",
+                [.dark]: "👎🏿"
+            ],
+            .thumbsUp:[
+                [.light]: "👍🏻",
+                [.mediumLight]: "👍🏼",
+                [.medium]: "👍🏽",
+                [.mediumDark]: "👍🏾",
+                [.dark]: "👍🏿"
+            ],
+            .vampire:[
+                [.light]: "🧛🏻",
+                [.mediumLight]: "🧛🏼",
+                [.medium]: "🧛🏽",
+                [.mediumDark]: "🧛🏾",
+                [.dark]: "🧛🏿"
+            ],
+            .victoryHand:[
+                [.light]: "✌🏻",
+                [.mediumLight]: "✌🏼",
+                [.medium]: "✌🏽",
+                [.mediumDark]: "✌🏾",
+                [.dark]: "✌🏿"
+            ],
+            .vulcanSalute:[
+                [.light]: "🖖🏻",
+                [.mediumLight]: "🖖🏼",
+                [.medium]: "🖖🏽",
+                [.mediumDark]: "🖖🏾",
+                [.dark]: "🖖🏿"
+            ],
+            .wavingHand:[
+                [.light]: "👋🏻",
+                [.mediumLight]: "👋🏼",
+                [.medium]: "👋🏽",
+                [.mediumDark]: "👋🏾",
+                [.dark]: "👋🏿"
+            ],
+            .woman:[
+                [.light]: "👩🏻",
+                [.mediumLight]: "👩🏼",
+                [.medium]: "👩🏽",
+                [.mediumDark]: "👩🏾",
+                [.dark]: "👩🏿"
+            ],
+            .womanAndManHoldingHands:[
+                [.light]: "👫🏻",
+                [.light, .mediumLight]: "👩🏻‍🤝‍👨🏼",
+                [.light, .medium]: "👩🏻‍🤝‍👨🏽",
+                [.light, .mediumDark]: "👩🏻‍🤝‍👨🏾",
+                [.light, .dark]: "👩🏻‍🤝‍👨🏿",
+                [.mediumLight, .light]: "👩🏼‍🤝‍👨🏻",
+                [.mediumLight]: "👫🏼",
+                [.mediumLight, .medium]: "👩🏼‍🤝‍👨🏽",
+                [.mediumLight, .mediumDark]: "👩🏼‍🤝‍👨🏾",
+                [.mediumLight, .dark]: "👩🏼‍🤝‍👨🏿",
+                [.medium, .light]: "👩🏽‍🤝‍👨🏻",
+                [.medium, .mediumLight]: "👩🏽‍🤝‍👨🏼",
+                [.medium]: "👫🏽",
+                [.medium, .mediumDark]: "👩🏽‍🤝‍👨🏾",
+                [.medium, .dark]: "👩🏽‍🤝‍👨🏿",
+                [.mediumDark, .light]: "👩🏾‍🤝‍👨🏻",
+                [.mediumDark, .mediumLight]: "👩🏾‍🤝‍👨🏼",
+                [.mediumDark, .medium]: "👩🏾‍🤝‍👨🏽",
+                [.mediumDark]: "👫🏾",
+                [.mediumDark, .dark]: "👩🏾‍🤝‍👨🏿",
+                [.dark, .light]: "👩🏿‍🤝‍👨🏻",
+                [.dark, .mediumLight]: "👩🏿‍🤝‍👨🏼",
+                [.dark, .medium]: "👩🏿‍🤝‍👨🏽",
+                [.dark, .mediumDark]: "👩🏿‍🤝‍👨🏾",
+                [.dark]: "👫🏿"
+            ],
+            .womanArtist:[
+                [.light]: "👩🏻‍🎨",
+                [.mediumLight]: "👩🏼‍🎨",
+                [.medium]: "👩🏽‍🎨",
+                [.mediumDark]: "👩🏾‍🎨",
+                [.dark]: "👩🏿‍🎨"
+            ],
+            .womanAstronaut:[
+                [.light]: "👩🏻‍🚀",
+                [.mediumLight]: "👩🏼‍🚀",
+                [.medium]: "👩🏽‍🚀",
+                [.mediumDark]: "👩🏾‍🚀",
+                [.dark]: "👩🏿‍🚀"
+            ],
+            .womanBald:[
+                [.light]: "👩🏻‍🦲",
+                [.mediumLight]: "👩🏼‍🦲",
+                [.medium]: "👩🏽‍🦲",
+                [.mediumDark]: "👩🏾‍🦲",
+                [.dark]: "👩🏿‍🦲"
+            ],
+            .womanBeard:[
+                [.light]: "🧔🏻‍♀️",
+                [.mediumLight]: "🧔🏼‍♀️",
+                [.medium]: "🧔🏽‍♀️",
+                [.mediumDark]: "🧔🏾‍♀️",
+                [.dark]: "🧔🏿‍♀️"
+            ],
+            .womanBiking:[
+                [.light]: "🚴🏻‍♀️",
+                [.mediumLight]: "🚴🏼‍♀️",
+                [.medium]: "🚴🏽‍♀️",
+                [.mediumDark]: "🚴🏾‍♀️",
+                [.dark]: "🚴🏿‍♀️"
+            ],
+            .womanBlondHair:[
+                [.light]: "👱🏻‍♀️",
+                [.mediumLight]: "👱🏼‍♀️",
+                [.medium]: "👱🏽‍♀️",
+                [.mediumDark]: "👱🏾‍♀️",
+                [.dark]: "👱🏿‍♀️"
+            ],
+            .womanBouncingBall:[
+                [.light]: "⛹🏻‍♀️",
+                [.mediumLight]: "⛹🏼‍♀️",
+                [.medium]: "⛹🏽‍♀️",
+                [.mediumDark]: "⛹🏾‍♀️",
+                [.dark]: "⛹🏿‍♀️"
+            ],
+            .womanBowing:[
+                [.light]: "🙇🏻‍♀️",
+                [.mediumLight]: "🙇🏼‍♀️",
+                [.medium]: "🙇🏽‍♀️",
+                [.mediumDark]: "🙇🏾‍♀️",
+                [.dark]: "🙇🏿‍♀️"
+            ],
+            .womanCartwheeling:[
+                [.light]: "🤸🏻‍♀️",
+                [.mediumLight]: "🤸🏼‍♀️",
+                [.medium]: "🤸🏽‍♀️",
+                [.mediumDark]: "🤸🏾‍♀️",
+                [.dark]: "🤸🏿‍♀️"
+            ],
+            .womanClimbing:[
+                [.light]: "🧗🏻‍♀️",
+                [.mediumLight]: "🧗🏼‍♀️",
+                [.medium]: "🧗🏽‍♀️",
+                [.mediumDark]: "🧗🏾‍♀️",
+                [.dark]: "🧗🏿‍♀️"
+            ],
+            .womanConstructionWorker:[
+                [.light]: "👷🏻‍♀️",
+                [.mediumLight]: "👷🏼‍♀️",
+                [.medium]: "👷🏽‍♀️",
+                [.mediumDark]: "👷🏾‍♀️",
+                [.dark]: "👷🏿‍♀️"
+            ],
+            .womanCook:[
+                [.light]: "👩🏻‍🍳",
+                [.mediumLight]: "👩🏼‍🍳",
+                [.medium]: "👩🏽‍🍳",
+                [.mediumDark]: "👩🏾‍🍳",
+                [.dark]: "👩🏿‍🍳"
+            ],
+            .womanCurlyHair:[
+                [.light]: "👩🏻‍🦱",
+                [.mediumLight]: "👩🏼‍🦱",
+                [.medium]: "👩🏽‍🦱",
+                [.mediumDark]: "👩🏾‍🦱",
+                [.dark]: "👩🏿‍🦱"
+            ],
+            .womanDancing:[
+                [.light]: "💃🏻",
+                [.mediumLight]: "💃🏼",
+                [.medium]: "💃🏽",
+                [.mediumDark]: "💃🏾",
+                [.dark]: "💃🏿"
+            ],
+            .womanDetective:[
+                [.light]: "🕵🏻‍♀️",
+                [.mediumLight]: "🕵🏼‍♀️",
+                [.medium]: "🕵🏽‍♀️",
+                [.mediumDark]: "🕵🏾‍♀️",
+                [.dark]: "🕵🏿‍♀️"
+            ],
+            .womanElf:[
+                [.light]: "🧝🏻‍♀️",
+                [.mediumLight]: "🧝🏼‍♀️",
+                [.medium]: "🧝🏽‍♀️",
+                [.mediumDark]: "🧝🏾‍♀️",
+                [.dark]: "🧝🏿‍♀️"
+            ],
+            .womanFacepalming:[
+                [.light]: "🤦🏻‍♀️",
+                [.mediumLight]: "🤦🏼‍♀️",
+                [.medium]: "🤦🏽‍♀️",
+                [.mediumDark]: "🤦🏾‍♀️",
+                [.dark]: "🤦🏿‍♀️"
+            ],
+            .womanFactoryWorker:[
+                [.light]: "👩🏻‍🏭",
+                [.mediumLight]: "👩🏼‍🏭",
+                [.medium]: "👩🏽‍🏭",
+                [.mediumDark]: "👩🏾‍🏭",
+                [.dark]: "👩🏿‍🏭"
+            ],
+            .womanFairy:[
+                [.light]: "🧚🏻‍♀️",
+                [.mediumLight]: "🧚🏼‍♀️",
+                [.medium]: "🧚🏽‍♀️",
+                [.mediumDark]: "🧚🏾‍♀️",
+                [.dark]: "🧚🏿‍♀️"
+            ],
+            .womanFarmer:[
+                [.light]: "👩🏻‍🌾",
+                [.mediumLight]: "👩🏼‍🌾",
+                [.medium]: "👩🏽‍🌾",
+                [.mediumDark]: "👩🏾‍🌾",
+                [.dark]: "👩🏿‍🌾"
+            ],
+            .womanFeedingBaby:[
+                [.light]: "👩🏻‍🍼",
+                [.mediumLight]: "👩🏼‍🍼",
+                [.medium]: "👩🏽‍🍼",
+                [.mediumDark]: "👩🏾‍🍼",
+                [.dark]: "👩🏿‍🍼"
+            ],
+            .womanFirefighter:[
+                [.light]: "👩🏻‍🚒",
+                [.mediumLight]: "👩🏼‍🚒",
+                [.medium]: "👩🏽‍🚒",
+                [.mediumDark]: "👩🏾‍🚒",
+                [.dark]: "👩🏿‍🚒"
+            ],
+            .womanFrowning:[
+                [.light]: "🙍🏻‍♀️",
+                [.mediumLight]: "🙍🏼‍♀️",
+                [.medium]: "🙍🏽‍♀️",
+                [.mediumDark]: "🙍🏾‍♀️",
+                [.dark]: "🙍🏿‍♀️"
+            ],
+            .womanGesturingNo:[
+                [.light]: "🙅🏻‍♀️",
+                [.mediumLight]: "🙅🏼‍♀️",
+                [.medium]: "🙅🏽‍♀️",
+                [.mediumDark]: "🙅🏾‍♀️",
+                [.dark]: "🙅🏿‍♀️"
+            ],
+            .womanGesturingOk:[
+                [.light]: "🙆🏻‍♀️",
+                [.mediumLight]: "🙆🏼‍♀️",
+                [.medium]: "🙆🏽‍♀️",
+                [.mediumDark]: "🙆🏾‍♀️",
+                [.dark]: "🙆🏿‍♀️"
+            ],
+            .womanGettingHaircut:[
+                [.light]: "💇🏻‍♀️",
+                [.mediumLight]: "💇🏼‍♀️",
+                [.medium]: "💇🏽‍♀️",
+                [.mediumDark]: "💇🏾‍♀️",
+                [.dark]: "💇🏿‍♀️"
+            ],
+            .womanGettingMassage:[
+                [.light]: "💆🏻‍♀️",
+                [.mediumLight]: "💆🏼‍♀️",
+                [.medium]: "💆🏽‍♀️",
+                [.mediumDark]: "💆🏾‍♀️",
+                [.dark]: "💆🏿‍♀️"
+            ],
+            .womanGolfing:[
+                [.light]: "🏌🏻‍♀️",
+                [.mediumLight]: "🏌🏼‍♀️",
+                [.medium]: "🏌🏽‍♀️",
+                [.mediumDark]: "🏌🏾‍♀️",
+                [.dark]: "🏌🏿‍♀️"
+            ],
+            .womanGuard:[
+                [.light]: "💂🏻‍♀️",
+                [.mediumLight]: "💂🏼‍♀️",
+                [.medium]: "💂🏽‍♀️",
+                [.mediumDark]: "💂🏾‍♀️",
+                [.dark]: "💂🏿‍♀️"
+            ],
+            .womanHealthWorker:[
+                [.light]: "👩🏻‍⚕️",
+                [.mediumLight]: "👩🏼‍⚕️",
+                [.medium]: "👩🏽‍⚕️",
+                [.mediumDark]: "👩🏾‍⚕️",
+                [.dark]: "👩🏿‍⚕️"
+            ],
+            .womanInLotusPosition:[
+                [.light]: "🧘🏻‍♀️",
+                [.mediumLight]: "🧘🏼‍♀️",
+                [.medium]: "🧘🏽‍♀️",
+                [.mediumDark]: "🧘🏾‍♀️",
+                [.dark]: "🧘🏿‍♀️"
+            ],
+            .womanInManualWheelchair:[
+                [.light]: "👩🏻‍🦽",
+                [.mediumLight]: "👩🏼‍🦽",
+                [.medium]: "👩🏽‍🦽",
+                [.mediumDark]: "👩🏾‍🦽",
+                [.dark]: "👩🏿‍🦽"
+            ],
+            .womanInManualWheelchairFacingRight:[
+                [.light]: "👩🏻‍🦽‍➡️",
+                [.mediumLight]: "👩🏼‍🦽‍➡️",
+                [.medium]: "👩🏽‍🦽‍➡️",
+                [.mediumDark]: "👩🏾‍🦽‍➡️",
+                [.dark]: "👩🏿‍🦽‍➡️"
+            ],
+            .womanInMotorizedWheelchair:[
+                [.light]: "👩🏻‍🦼",
+                [.mediumLight]: "👩🏼‍🦼",
+                [.medium]: "👩🏽‍🦼",
+                [.mediumDark]: "👩🏾‍🦼",
+                [.dark]: "👩🏿‍🦼"
+            ],
+            .womanInMotorizedWheelchairFacingRight:[
+                [.light]: "👩🏻‍🦼‍➡️",
+                [.mediumLight]: "👩🏼‍🦼‍➡️",
+                [.medium]: "👩🏽‍🦼‍➡️",
+                [.mediumDark]: "👩🏾‍🦼‍➡️",
+                [.dark]: "👩🏿‍🦼‍➡️"
+            ],
+            .womanInSteamyRoom:[
+                [.light]: "🧖🏻‍♀️",
+                [.mediumLight]: "🧖🏼‍♀️",
+                [.medium]: "🧖🏽‍♀️",
+                [.mediumDark]: "🧖🏾‍♀️",
+                [.dark]: "🧖🏿‍♀️"
+            ],
+            .womanInTuxedo:[
+                [.light]: "🤵🏻‍♀️",
+                [.mediumLight]: "🤵🏼‍♀️",
+                [.medium]: "🤵🏽‍♀️",
+                [.mediumDark]: "🤵🏾‍♀️",
+                [.dark]: "🤵🏿‍♀️"
+            ],
+            .womanJudge:[
+                [.light]: "👩🏻‍⚖️",
+                [.mediumLight]: "👩🏼‍⚖️",
+                [.medium]: "👩🏽‍⚖️",
+                [.mediumDark]: "👩🏾‍⚖️",
+                [.dark]: "👩🏿‍⚖️"
+            ],
+            .womanJuggling:[
+                [.light]: "🤹🏻‍♀️",
+                [.mediumLight]: "🤹🏼‍♀️",
+                [.medium]: "🤹🏽‍♀️",
+                [.mediumDark]: "🤹🏾‍♀️",
+                [.dark]: "🤹🏿‍♀️"
+            ],
+            .womanKneeling:[
+                [.light]: "🧎🏻‍♀️",
+                [.mediumLight]: "🧎🏼‍♀️",
+                [.medium]: "🧎🏽‍♀️",
+                [.mediumDark]: "🧎🏾‍♀️",
+                [.dark]: "🧎🏿‍♀️"
+            ],
+            .womanKneelingFacingRight:[
+                [.light]: "🧎🏻‍♀️‍➡️",
+                [.mediumLight]: "🧎🏼‍♀️‍➡️",
+                [.medium]: "🧎🏽‍♀️‍➡️",
+                [.mediumDark]: "🧎🏾‍♀️‍➡️",
+                [.dark]: "🧎🏿‍♀️‍➡️"
+            ],
+            .womanLiftingWeights:[
+                [.light]: "🏋🏻‍♀️",
+                [.mediumLight]: "🏋🏼‍♀️",
+                [.medium]: "🏋🏽‍♀️",
+                [.mediumDark]: "🏋🏾‍♀️",
+                [.dark]: "🏋🏿‍♀️"
+            ],
+            .womanMage:[
+                [.light]: "🧙🏻‍♀️",
+                [.mediumLight]: "🧙🏼‍♀️",
+                [.medium]: "🧙🏽‍♀️",
+                [.mediumDark]: "🧙🏾‍♀️",
+                [.dark]: "🧙🏿‍♀️"
+            ],
+            .womanMechanic:[
+                [.light]: "👩🏻‍🔧",
+                [.mediumLight]: "👩🏼‍🔧",
+                [.medium]: "👩🏽‍🔧",
+                [.mediumDark]: "👩🏾‍🔧",
+                [.dark]: "👩🏿‍🔧"
+            ],
+            .womanMountainBiking:[
+                [.light]: "🚵🏻‍♀️",
+                [.mediumLight]: "🚵🏼‍♀️",
+                [.medium]: "🚵🏽‍♀️",
+                [.mediumDark]: "🚵🏾‍♀️",
+                [.dark]: "🚵🏿‍♀️"
+            ],
+            .womanOfficeWorker:[
+                [.light]: "👩🏻‍💼",
+                [.mediumLight]: "👩🏼‍💼",
+                [.medium]: "👩🏽‍💼",
+                [.mediumDark]: "👩🏾‍💼",
+                [.dark]: "👩🏿‍💼"
+            ],
+            .womanPilot:[
+                [.light]: "👩🏻‍✈️",
+                [.mediumLight]: "👩🏼‍✈️",
+                [.medium]: "👩🏽‍✈️",
+                [.mediumDark]: "👩🏾‍✈️",
+                [.dark]: "👩🏿‍✈️"
+            ],
+            .womanPlayingHandball:[
+                [.light]: "🤾🏻‍♀️",
+                [.mediumLight]: "🤾🏼‍♀️",
+                [.medium]: "🤾🏽‍♀️",
+                [.mediumDark]: "🤾🏾‍♀️",
+                [.dark]: "🤾🏿‍♀️"
+            ],
+            .womanPlayingWaterPolo:[
+                [.light]: "🤽🏻‍♀️",
+                [.mediumLight]: "🤽🏼‍♀️",
+                [.medium]: "🤽🏽‍♀️",
+                [.mediumDark]: "🤽🏾‍♀️",
+                [.dark]: "🤽🏿‍♀️"
+            ],
+            .womanPoliceOfficer:[
+                [.light]: "👮🏻‍♀️",
+                [.mediumLight]: "👮🏼‍♀️",
+                [.medium]: "👮🏽‍♀️",
+                [.mediumDark]: "👮🏾‍♀️",
+                [.dark]: "👮🏿‍♀️"
+            ],
+            .womanPouting:[
+                [.light]: "🙎🏻‍♀️",
+                [.mediumLight]: "🙎🏼‍♀️",
+                [.medium]: "🙎🏽‍♀️",
+                [.mediumDark]: "🙎🏾‍♀️",
+                [.dark]: "🙎🏿‍♀️"
+            ],
+            .womanRaisingHand:[
+                [.light]: "🙋🏻‍♀️",
+                [.mediumLight]: "🙋🏼‍♀️",
+                [.medium]: "🙋🏽‍♀️",
+                [.mediumDark]: "🙋🏾‍♀️",
+                [.dark]: "🙋🏿‍♀️"
+            ],
+            .womanRedHair:[
+                [.light]: "👩🏻‍🦰",
+                [.mediumLight]: "👩🏼‍🦰",
+                [.medium]: "👩🏽‍🦰",
+                [.mediumDark]: "👩🏾‍🦰",
+                [.dark]: "👩🏿‍🦰"
+            ],
+            .womanRowingBoat:[
+                [.light]: "🚣🏻‍♀️",
+                [.mediumLight]: "🚣🏼‍♀️",
+                [.medium]: "🚣🏽‍♀️",
+                [.mediumDark]: "🚣🏾‍♀️",
+                [.dark]: "🚣🏿‍♀️"
+            ],
+            .womanRunning:[
+                [.light]: "🏃🏻‍♀️",
+                [.mediumLight]: "🏃🏼‍♀️",
+                [.medium]: "🏃🏽‍♀️",
+                [.mediumDark]: "🏃🏾‍♀️",
+                [.dark]: "🏃🏿‍♀️"
+            ],
+            .womanRunningFacingRight:[
+                [.light]: "🏃🏻‍♀️‍➡️",
+                [.mediumLight]: "🏃🏼‍♀️‍➡️",
+                [.medium]: "🏃🏽‍♀️‍➡️",
+                [.mediumDark]: "🏃🏾‍♀️‍➡️",
+                [.dark]: "🏃🏿‍♀️‍➡️"
+            ],
+            .womanScientist:[
+                [.light]: "👩🏻‍🔬",
+                [.mediumLight]: "👩🏼‍🔬",
+                [.medium]: "👩🏽‍🔬",
+                [.mediumDark]: "👩🏾‍🔬",
+                [.dark]: "👩🏿‍🔬"
+            ],
+            .womanShrugging:[
+                [.light]: "🤷🏻‍♀️",
+                [.mediumLight]: "🤷🏼‍♀️",
+                [.medium]: "🤷🏽‍♀️",
+                [.mediumDark]: "🤷🏾‍♀️",
+                [.dark]: "🤷🏿‍♀️"
+            ],
+            .womanSinger:[
+                [.light]: "👩🏻‍🎤",
+                [.mediumLight]: "👩🏼‍🎤",
+                [.medium]: "👩🏽‍🎤",
+                [.mediumDark]: "👩🏾‍🎤",
+                [.dark]: "👩🏿‍🎤"
+            ],
+            .womanStanding:[
+                [.light]: "🧍🏻‍♀️",
+                [.mediumLight]: "🧍🏼‍♀️",
+                [.medium]: "🧍🏽‍♀️",
+                [.mediumDark]: "🧍🏾‍♀️",
+                [.dark]: "🧍🏿‍♀️"
+            ],
+            .womanStudent:[
+                [.light]: "👩🏻‍🎓",
+                [.mediumLight]: "👩🏼‍🎓",
+                [.medium]: "👩🏽‍🎓",
+                [.mediumDark]: "👩🏾‍🎓",
+                [.dark]: "👩🏿‍🎓"
+            ],
+            .womanSuperhero:[
+                [.light]: "🦸🏻‍♀️",
+                [.mediumLight]: "🦸🏼‍♀️",
+                [.medium]: "🦸🏽‍♀️",
+                [.mediumDark]: "🦸🏾‍♀️",
+                [.dark]: "🦸🏿‍♀️"
+            ],
+            .womanSupervillain:[
+                [.light]: "🦹🏻‍♀️",
+                [.mediumLight]: "🦹🏼‍♀️",
+                [.medium]: "🦹🏽‍♀️",
+                [.mediumDark]: "🦹🏾‍♀️",
+                [.dark]: "🦹🏿‍♀️"
+            ],
+            .womanSurfing:[
+                [.light]: "🏄🏻‍♀️",
+                [.mediumLight]: "🏄🏼‍♀️",
+                [.medium]: "🏄🏽‍♀️",
+                [.mediumDark]: "🏄🏾‍♀️",
+                [.dark]: "🏄🏿‍♀️"
+            ],
+            .womanSwimming:[
+                [.light]: "🏊🏻‍♀️",
+                [.mediumLight]: "🏊🏼‍♀️",
+                [.medium]: "🏊🏽‍♀️",
+                [.mediumDark]: "🏊🏾‍♀️",
+                [.dark]: "🏊🏿‍♀️"
+            ],
+            .womanTeacher:[
+                [.light]: "👩🏻‍🏫",
+                [.mediumLight]: "👩🏼‍🏫",
+                [.medium]: "👩🏽‍🏫",
+                [.mediumDark]: "👩🏾‍🏫",
+                [.dark]: "👩🏿‍🏫"
+            ],
+            .womanTechnologist:[
+                [.light]: "👩🏻‍💻",
+                [.mediumLight]: "👩🏼‍💻",
+                [.medium]: "👩🏽‍💻",
+                [.mediumDark]: "👩🏾‍💻",
+                [.dark]: "👩🏿‍💻"
+            ],
+            .womanTippingHand:[
+                [.light]: "💁🏻‍♀️",
+                [.mediumLight]: "💁🏼‍♀️",
+                [.medium]: "💁🏽‍♀️",
+                [.mediumDark]: "💁🏾‍♀️",
+                [.dark]: "💁🏿‍♀️"
+            ],
+            .womanVampire:[
+                [.light]: "🧛🏻‍♀️",
+                [.mediumLight]: "🧛🏼‍♀️",
+                [.medium]: "🧛🏽‍♀️",
+                [.mediumDark]: "🧛🏾‍♀️",
+                [.dark]: "🧛🏿‍♀️"
+            ],
+            .womanWalking:[
+                [.light]: "🚶🏻‍♀️",
+                [.mediumLight]: "🚶🏼‍♀️",
+                [.medium]: "🚶🏽‍♀️",
+                [.mediumDark]: "🚶🏾‍♀️",
+                [.dark]: "🚶🏿‍♀️"
+            ],
+            .womanWalkingFacingRight:[
+                [.light]: "🚶🏻‍♀️‍➡️",
+                [.mediumLight]: "🚶🏼‍♀️‍➡️",
+                [.medium]: "🚶🏽‍♀️‍➡️",
+                [.mediumDark]: "🚶🏾‍♀️‍➡️",
+                [.dark]: "🚶🏿‍♀️‍➡️"
+            ],
+            .womanWearingTurban:[
+                [.light]: "👳🏻‍♀️",
+                [.mediumLight]: "👳🏼‍♀️",
+                [.medium]: "👳🏽‍♀️",
+                [.mediumDark]: "👳🏾‍♀️",
+                [.dark]: "👳🏿‍♀️"
+            ],
+            .womanWhiteHair:[
+                [.light]: "👩🏻‍🦳",
+                [.mediumLight]: "👩🏼‍🦳",
+                [.medium]: "👩🏽‍🦳",
+                [.mediumDark]: "👩🏾‍🦳",
+                [.dark]: "👩🏿‍🦳"
+            ],
+            .womanWithHeadscarf:[
+                [.light]: "🧕🏻",
+                [.mediumLight]: "🧕🏼",
+                [.medium]: "🧕🏽",
+                [.mediumDark]: "🧕🏾",
+                [.dark]: "🧕🏿"
+            ],
+            .womanWithVeil:[
+                [.light]: "👰🏻‍♀️",
+                [.mediumLight]: "👰🏼‍♀️",
+                [.medium]: "👰🏽‍♀️",
+                [.mediumDark]: "👰🏾‍♀️",
+                [.dark]: "👰🏿‍♀️"
+            ],
+            .womanWithWhiteCane:[
+                [.light]: "👩🏻‍🦯",
+                [.mediumLight]: "👩🏼‍🦯",
+                [.medium]: "👩🏽‍🦯",
+                [.mediumDark]: "👩🏾‍🦯",
+                [.dark]: "👩🏿‍🦯"
+            ],
+            .womanWithWhiteCaneFacingRight:[
+                [.light]: "👩🏻‍🦯‍➡️",
+                [.mediumLight]: "👩🏼‍🦯‍➡️",
+                [.medium]: "👩🏽‍🦯‍➡️",
+                [.mediumDark]: "👩🏾‍🦯‍➡️",
+                [.dark]: "👩🏿‍🦯‍➡️"
+            ],
+            .womenHoldingHands:[
+                [.light]: "👭🏻",
+                [.light, .mediumLight]: "👩🏻‍🤝‍👩🏼",
+                [.light, .medium]: "👩🏻‍🤝‍👩🏽",
+                [.light, .mediumDark]: "👩🏻‍🤝‍👩🏾",
+                [.light, .dark]: "👩🏻‍🤝‍👩🏿",
+                [.mediumLight, .light]: "👩🏼‍🤝‍👩🏻",
+                [.mediumLight]: "👭🏼",
+                [.mediumLight, .medium]: "👩🏼‍🤝‍👩🏽",
+                [.mediumLight, .mediumDark]: "👩🏼‍🤝‍👩🏾",
+                [.mediumLight, .dark]: "👩🏼‍🤝‍👩🏿",
+                [.medium, .light]: "👩🏽‍🤝‍👩🏻",
+                [.medium, .mediumLight]: "👩🏽‍🤝‍👩🏼",
+                [.medium]: "👭🏽",
+                [.medium, .mediumDark]: "👩🏽‍🤝‍👩🏾",
+                [.medium, .dark]: "👩🏽‍🤝‍👩🏿",
+                [.mediumDark, .light]: "👩🏾‍🤝‍👩🏻",
+                [.mediumDark, .mediumLight]: "👩🏾‍🤝‍👩🏼",
+                [.mediumDark, .medium]: "👩🏾‍🤝‍👩🏽",
+                [.mediumDark]: "👭🏾",
+                [.mediumDark, .dark]: "👩🏾‍🤝‍👩🏿",
+                [.dark, .light]: "👩🏿‍🤝‍👩🏻",
+                [.dark, .mediumLight]: "👩🏿‍🤝‍👩🏼",
+                [.dark, .medium]: "👩🏿‍🤝‍👩🏽",
+                [.dark, .mediumDark]: "👩🏿‍🤝‍👩🏾",
+                [.dark]: "👭🏿"
+            ],
+            .womenWithBunnyEars:[
+                [.light]: "👯🏻‍♀️",
+                [.mediumLight]: "👯🏼‍♀️",
+                [.medium]: "👯🏽‍♀️",
+                [.mediumDark]: "👯🏾‍♀️",
+                [.dark]: "👯🏿‍♀️",
+                [.light, .mediumLight]: "👩🏻‍🐰‍👩🏼",
+                [.light, .medium]: "👩🏻‍🐰‍👩🏽",
+                [.light, .mediumDark]: "👩🏻‍🐰‍👩🏾",
+                [.light, .dark]: "👩🏻‍🐰‍👩🏿",
+                [.mediumLight, .light]: "👩🏼‍🐰‍👩🏻",
+                [.mediumLight, .medium]: "👩🏼‍🐰‍👩🏽",
+                [.mediumLight, .mediumDark]: "👩🏼‍🐰‍👩🏾",
+                [.mediumLight, .dark]: "👩🏼‍🐰‍👩🏿",
+                [.medium, .light]: "👩🏽‍🐰‍👩🏻",
+                [.medium, .mediumLight]: "👩🏽‍🐰‍👩🏼",
+                [.medium, .mediumDark]: "👩🏽‍🐰‍👩🏾",
+                [.medium, .dark]: "👩🏽‍🐰‍👩🏿",
+                [.mediumDark, .light]: "👩🏾‍🐰‍👩🏻",
+                [.mediumDark, .mediumLight]: "👩🏾‍🐰‍👩🏼",
+                [.mediumDark, .medium]: "👩🏾‍🐰‍👩🏽",
+                [.mediumDark, .dark]: "👩🏾‍🐰‍👩🏿",
+                [.dark, .light]: "👩🏿‍🐰‍👩🏻",
+                [.dark, .mediumLight]: "👩🏿‍🐰‍👩🏼",
+                [.dark, .medium]: "👩🏿‍🐰‍👩🏽",
+                [.dark, .mediumDark]: "👩🏿‍🐰‍👩🏾"
+            ],
+            .womenWrestling:[
+                [.light]: "🤼🏻‍♀️",
+                [.mediumLight]: "🤼🏼‍♀️",
+                [.medium]: "🤼🏽‍♀️",
+                [.mediumDark]: "🤼🏾‍♀️",
+                [.dark]: "🤼🏿‍♀️",
+                [.light, .mediumLight]: "👩🏻‍🫯‍👩🏼",
+                [.light, .medium]: "👩🏻‍🫯‍👩🏽",
+                [.light, .mediumDark]: "👩🏻‍🫯‍👩🏾",
+                [.light, .dark]: "👩🏻‍🫯‍👩🏿",
+                [.mediumLight, .light]: "👩🏼‍🫯‍👩🏻",
+                [.mediumLight, .medium]: "👩🏼‍🫯‍👩🏽",
+                [.mediumLight, .mediumDark]: "👩🏼‍🫯‍👩🏾",
+                [.mediumLight, .dark]: "👩🏼‍🫯‍👩🏿",
+                [.medium, .light]: "👩🏽‍🫯‍👩🏻",
+                [.medium, .mediumLight]: "👩🏽‍🫯‍👩🏼",
+                [.medium, .mediumDark]: "👩🏽‍🫯‍👩🏾",
+                [.medium, .dark]: "👩🏽‍🫯‍👩🏿",
+                [.mediumDark, .light]: "👩🏾‍🫯‍👩🏻",
+                [.mediumDark, .mediumLight]: "👩🏾‍🫯‍👩🏼",
+                [.mediumDark, .medium]: "👩🏾‍🫯‍👩🏽",
+                [.mediumDark, .dark]: "👩🏾‍🫯‍👩🏿",
+                [.dark, .light]: "👩🏿‍🫯‍👩🏻",
+                [.dark, .mediumLight]: "👩🏿‍🫯‍👩🏼",
+                [.dark, .medium]: "👩🏿‍🫯‍👩🏽",
+                [.dark, .mediumDark]: "👩🏿‍🫯‍👩🏾"
+            ],
+            .writingHand:[
+                [.light]: "✍🏻",
+                [.mediumLight]: "✍🏼",
+                [.medium]: "✍🏽",
+                [.mediumDark]: "✍🏾",
+                [.dark]: "✍🏿"
             ]
         ]
     }()
@@ -8454,6 +8627,8 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
             0.6
        case .flushedFace:
             0.6
+       case .distortedFace:
+            17.0
        case .pleadingFace:
             11.0
        case .faceHoldingBackTears:
@@ -8600,6 +8775,8 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
             0.6
        case .angerSymbol:
             0.6
+       case .fightCloud:
+            17.0
        case .collision:
             0.6
        case .dizzy:
@@ -9088,6 +9265,8 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
             5.0
        case .troll:
             14.0
+       case .hairyCreature:
+            17.0
        case .personGettingMassage:
             0.6
        case .manGettingMassage:
@@ -9178,6 +9357,8 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
             15.1
        case .manRunningFacingRight:
             15.1
+       case .balletDancer:
+            17.0
        case .womanDancing:
             0.6
        case .manDancing:
@@ -9594,6 +9775,8 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
             1.0
        case .dolphin:
             0.6
+       case .orca:
+            17.0
        case .seal:
             13.0
        case .fish:
@@ -9992,6 +10175,8 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
             0.7
        case .mountain:
             0.7
+       case .landslide:
+            17.0
        case .volcano:
             0.6
        case .mountFuji:
@@ -10712,13 +10897,15 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
             0.6
        case .saxophone:
             0.6
+       case .trumpet:
+            0.6
+       case .trombone:
+            17.0
        case .accordion:
             13.0
        case .guitar:
             0.6
        case .musicalKeyboard:
-            0.6
-       case .trumpet:
             0.6
        case .violin:
             0.6
@@ -10840,10 +11027,12 @@ public enum Emoji: String, Identifiable, Hashable, CaseIterable {
             0.6
        case .label:
             0.7
-       case .moneyBag:
-            0.6
        case .coin:
             13.0
+       case .moneyBag:
+            0.6
+       case .treasureChest:
+            17.0
        case .yenBanknote:
             0.6
        case .dollarBanknote:
@@ -12117,21 +12306,21 @@ public enum EmojiCategory {
       case .activities:
             return [ .jackOLantern, .christmasTree, .fireworks, .sparkler, .firecracker, .sparkles, .balloon, .partyPopper, .confettiBall, .tanabataTree, .pineDecoration, .japaneseDolls, .carpStreamer, .windChime, .moonViewingCeremony, .redEnvelope, .ribbon, .wrappedGift, .reminderRibbon, .admissionTickets, .ticket, .militaryMedal, .trophy, .sportsMedal, .firstPlaceMedal, .secondPlaceMedal, .thirdPlaceMedal, .soccerBall, .baseball, .softball, .basketball, .volleyball, .americanFootball, .rugbyFootball, .tennis, .flyingDisc, .bowling, .cricketGame, .fieldHockey, .iceHockey, .lacrosse, .pingPong, .badminton, .boxingGlove, .martialArtsUniform, .goalNet, .flagInHole, .iceSkate, .fishingPole, .divingMask, .runningShirt, .skis, .sled, .curlingStone, .bullseye, .yoYo, .kite, .waterPistol, .pool8Ball, .crystalBall, .magicWand, .videoGame, .joystick, .slotMachine, .gameDie, .puzzlePiece, .teddyBear, .pinata, .mirrorBall, .nestingDolls, .spadeSuit, .heartSuit, .diamondSuit, .clubSuit, .chessPawn, .joker, .mahjongRedDragon, .flowerPlayingCards, .performingArts, .framedPicture, .artistPalette, .thread, .sewingNeedle, .yarn, .knot]
       case .animalsNature:
-            return [ .monkeyFace, .monkey, .gorilla, .orangutan, .dogFace, .dog, .guideDog, .serviceDog, .poodle, .wolf, .fox, .raccoon, .catFace, .cat, .blackCat, .lion, .tigerFace, .tiger, .leopard, .horseFace, .moose, .donkey, .horse, .unicorn, .zebra, .deer, .bison, .cowFace, .ox, .waterBuffalo, .cow, .pigFace, .pig, .boar, .pigNose, .ram, .ewe, .goat, .camel, .twoHumpCamel, .llama, .giraffe, .elephant, .mammoth, .rhinoceros, .hippopotamus, .mouseFace, .mouse, .rat, .hamster, .rabbitFace, .rabbit, .chipmunk, .beaver, .hedgehog, .bat, .bear, .polarBear, .koala, .panda, .sloth, .otter, .skunk, .kangaroo, .badger, .pawPrints, .turkey, .chicken, .rooster, .hatchingChick, .babyChick, .frontFacingBabyChick, .bird, .penguin, .dove, .eagle, .duck, .swan, .owl, .dodo, .feather, .flamingo, .peacock, .parrot, .wing, .blackBird, .goose, .phoenix, .frog, .crocodile, .turtle, .lizard, .snake, .dragonFace, .dragon, .sauropod, .tRex, .spoutingWhale, .whale, .dolphin, .seal, .fish, .tropicalFish, .blowfish, .shark, .octopus, .spiralShell, .coral, .jellyfish, .crab, .lobster, .shrimp, .squid, .oyster, .snail, .butterfly, .bug, .ant, .honeybee, .beetle, .ladyBeetle, .cricket, .cockroach, .spider, .spiderWeb, .scorpion, .mosquito, .fly, .worm, .microbe, .bouquet, .cherryBlossom, .whiteFlower, .lotus, .rosette, .rose, .wiltedFlower, .hibiscus, .sunflower, .blossom, .tulip, .hyacinth, .seedling, .pottedPlant, .evergreenTree, .deciduousTree, .palmTree, .cactus, .sheafOfRice, .herb, .shamrock, .fourLeafClover, .mapleLeaf, .fallenLeaf, .leafFlutteringInWind, .emptyNest, .nestWithEggs, .mushroom, .leaflessTree]
+            return [ .monkeyFace, .monkey, .gorilla, .orangutan, .dogFace, .dog, .guideDog, .serviceDog, .poodle, .wolf, .fox, .raccoon, .catFace, .cat, .blackCat, .lion, .tigerFace, .tiger, .leopard, .horseFace, .moose, .donkey, .horse, .unicorn, .zebra, .deer, .bison, .cowFace, .ox, .waterBuffalo, .cow, .pigFace, .pig, .boar, .pigNose, .ram, .ewe, .goat, .camel, .twoHumpCamel, .llama, .giraffe, .elephant, .mammoth, .rhinoceros, .hippopotamus, .mouseFace, .mouse, .rat, .hamster, .rabbitFace, .rabbit, .chipmunk, .beaver, .hedgehog, .bat, .bear, .polarBear, .koala, .panda, .sloth, .otter, .skunk, .kangaroo, .badger, .pawPrints, .turkey, .chicken, .rooster, .hatchingChick, .babyChick, .frontFacingBabyChick, .bird, .penguin, .dove, .eagle, .duck, .swan, .owl, .dodo, .feather, .flamingo, .peacock, .parrot, .wing, .blackBird, .goose, .phoenix, .frog, .crocodile, .turtle, .lizard, .snake, .dragonFace, .dragon, .sauropod, .tRex, .spoutingWhale, .whale, .dolphin, .orca, .seal, .fish, .tropicalFish, .blowfish, .shark, .octopus, .spiralShell, .coral, .jellyfish, .crab, .lobster, .shrimp, .squid, .oyster, .snail, .butterfly, .bug, .ant, .honeybee, .beetle, .ladyBeetle, .cricket, .cockroach, .spider, .spiderWeb, .scorpion, .mosquito, .fly, .worm, .microbe, .bouquet, .cherryBlossom, .whiteFlower, .lotus, .rosette, .rose, .wiltedFlower, .hibiscus, .sunflower, .blossom, .tulip, .hyacinth, .seedling, .pottedPlant, .evergreenTree, .deciduousTree, .palmTree, .cactus, .sheafOfRice, .herb, .shamrock, .fourLeafClover, .mapleLeaf, .fallenLeaf, .leafFlutteringInWind, .emptyNest, .nestWithEggs, .mushroom, .leaflessTree]
       case .flags:
             return [ .chequeredFlag, .triangularFlag, .crossedFlags, .blackFlag, .whiteFlag, .rainbowFlag, .transgenderFlag, .pirateFlag, .flagAscensionIsland, .flagAndorra, .flagUnitedArabEmirates, .flagAfghanistan, .flagAntiguaBarbuda, .flagAnguilla, .flagAlbania, .flagArmenia, .flagAngola, .flagAntarctica, .flagArgentina, .flagAmericanSamoa, .flagAustria, .flagAustralia, .flagAruba, .flagAlandIslands, .flagAzerbaijan, .flagBosniaHerzegovina, .flagBarbados, .flagBangladesh, .flagBelgium, .flagBurkinaFaso, .flagBulgaria, .flagBahrain, .flagBurundi, .flagBenin, .flagStBarthelemy, .flagBermuda, .flagBrunei, .flagBolivia, .flagCaribbeanNetherlands, .flagBrazil, .flagBahamas, .flagBhutan, .flagBouvetIsland, .flagBotswana, .flagBelarus, .flagBelize, .flagCanada, .flagCocosKeelingIslands, .flagCongoKinshasa, .flagCentralAfricanRepublic, .flagCongoBrazzaville, .flagSwitzerland, .flagCoteDIvoire, .flagCookIslands, .flagChile, .flagCameroon, .flagChina, .flagColombia, .flagClippertonIsland, .flagSark, .flagCostaRica, .flagCuba, .flagCapeVerde, .flagCuracao, .flagChristmasIsland, .flagCyprus, .flagCzechia, .flagGermany, .flagDiegoGarcia, .flagDjibouti, .flagDenmark, .flagDominica, .flagDominicanRepublic, .flagAlgeria, .flagCeutaMelilla, .flagEcuador, .flagEstonia, .flagEgypt, .flagWesternSahara, .flagEritrea, .flagSpain, .flagEthiopia, .flagEuropeanUnion, .flagFinland, .flagFiji, .flagFalklandIslands, .flagMicronesia, .flagFaroeIslands, .flagFrance, .flagGabon, .flagUnitedKingdom, .flagGrenada, .flagGeorgia, .flagFrenchGuiana, .flagGuernsey, .flagGhana, .flagGibraltar, .flagGreenland, .flagGambia, .flagGuinea, .flagGuadeloupe, .flagEquatorialGuinea, .flagGreece, .flagSouthGeorgiaSouthSandwichIslands, .flagGuatemala, .flagGuam, .flagGuineaBissau, .flagGuyana, .flagHongKongSarChina, .flagHeardMcdonaldIslands, .flagHonduras, .flagCroatia, .flagHaiti, .flagHungary, .flagCanaryIslands, .flagIndonesia, .flagIreland, .flagIsrael, .flagIsleOfMan, .flagIndia, .flagBritishIndianOceanTerritory, .flagIraq, .flagIran, .flagIceland, .flagItaly, .flagJersey, .flagJamaica, .flagJordan, .flagJapan, .flagKenya, .flagKyrgyzstan, .flagCambodia, .flagKiribati, .flagComoros, .flagStKittsNevis, .flagNorthKorea, .flagSouthKorea, .flagKuwait, .flagCaymanIslands, .flagKazakhstan, .flagLaos, .flagLebanon, .flagStLucia, .flagLiechtenstein, .flagSriLanka, .flagLiberia, .flagLesotho, .flagLithuania, .flagLuxembourg, .flagLatvia, .flagLibya, .flagMorocco, .flagMonaco, .flagMoldova, .flagMontenegro, .flagStMartin, .flagMadagascar, .flagMarshallIslands, .flagNorthMacedonia, .flagMali, .flagMyanmarBurma, .flagMongolia, .flagMacaoSarChina, .flagNorthernMarianaIslands, .flagMartinique, .flagMauritania, .flagMontserrat, .flagMalta, .flagMauritius, .flagMaldives, .flagMalawi, .flagMexico, .flagMalaysia, .flagMozambique, .flagNamibia, .flagNewCaledonia, .flagNiger, .flagNorfolkIsland, .flagNigeria, .flagNicaragua, .flagNetherlands, .flagNorway, .flagNepal, .flagNauru, .flagNiue, .flagNewZealand, .flagOman, .flagPanama, .flagPeru, .flagFrenchPolynesia, .flagPapuaNewGuinea, .flagPhilippines, .flagPakistan, .flagPoland, .flagStPierreMiquelon, .flagPitcairnIslands, .flagPuertoRico, .flagPalestinianTerritories, .flagPortugal, .flagPalau, .flagParaguay, .flagQatar, .flagReunion, .flagRomania, .flagSerbia, .flagRussia, .flagRwanda, .flagSaudiArabia, .flagSolomonIslands, .flagSeychelles, .flagSudan, .flagSweden, .flagSingapore, .flagStHelena, .flagSlovenia, .flagSvalbardJanMayen, .flagSlovakia, .flagSierraLeone, .flagSanMarino, .flagSenegal, .flagSomalia, .flagSuriname, .flagSouthSudan, .flagSaoTomePrincipe, .flagElSalvador, .flagSintMaarten, .flagSyria, .flagEswatini, .flagTristanDaCunha, .flagTurksCaicosIslands, .flagChad, .flagFrenchSouthernTerritories, .flagTogo, .flagThailand, .flagTajikistan, .flagTokelau, .flagTimorLeste, .flagTurkmenistan, .flagTunisia, .flagTonga, .flagTurkiye, .flagTrinidadTobago, .flagTuvalu, .flagTaiwan, .flagTanzania, .flagUkraine, .flagUganda, .flagUSOutlyingIslands, .flagUnitedNations, .flagUnitedStates, .flagUruguay, .flagUzbekistan, .flagVaticanCity, .flagStVincentGrenadines, .flagVenezuela, .flagBritishVirginIslands, .flagUSVirginIslands, .flagVietnam, .flagVanuatu, .flagWallisFutuna, .flagSamoa, .flagKosovo, .flagYemen, .flagMayotte, .flagSouthAfrica, .flagZambia, .flagZimbabwe, .flagEngland, .flagScotland, .flagWales]
       case .foodDrink:
             return [ .grapes, .melon, .watermelon, .tangerine, .lemon, .lime, .banana, .pineapple, .mango, .redApple, .greenApple, .pear, .peach, .cherries, .strawberry, .blueberries, .kiwiFruit, .tomato, .olive, .coconut, .avocado, .eggplant, .potato, .carrot, .earOfCorn, .hotPepper, .bellPepper, .cucumber, .leafyGreen, .broccoli, .garlic, .onion, .peanuts, .beans, .chestnut, .gingerRoot, .peaPod, .brownMushroom, .rootVegetable, .bread, .croissant, .baguetteBread, .flatbread, .pretzel, .bagel, .pancakes, .waffle, .cheeseWedge, .meatOnBone, .poultryLeg, .cutOfMeat, .bacon, .hamburger, .frenchFries, .pizza, .hotDog, .sandwich, .taco, .burrito, .tamale, .stuffedFlatbread, .falafel, .egg, .cooking, .shallowPanOfFood, .potOfFood, .fondue, .bowlWithSpoon, .greenSalad, .popcorn, .butter, .salt, .cannedFood, .bentoBox, .riceCracker, .riceBall, .cookedRice, .curryRice, .steamingBowl, .spaghetti, .roastedSweetPotato, .oden, .sushi, .friedShrimp, .fishCakeWithSwirl, .moonCake, .dango, .dumpling, .fortuneCookie, .takeoutBox, .softIceCream, .shavedIce, .iceCream, .doughnut, .cookie, .birthdayCake, .shortcake, .cupcake, .pie, .chocolateBar, .candy, .lollipop, .custard, .honeyPot, .babyBottle, .glassOfMilk, .hotBeverage, .teapot, .teacupWithoutHandle, .sake, .bottleWithPoppingCork, .wineGlass, .cocktailGlass, .tropicalDrink, .beerMug, .clinkingBeerMugs, .clinkingGlasses, .tumblerGlass, .pouringLiquid, .cupWithStraw, .bubbleTea, .beverageBox, .mate, .ice, .chopsticks, .forkAndKnifeWithPlate, .forkAndKnife, .spoon, .kitchenKnife, .jar, .amphora]
       case .objects:
-            return [ .glasses, .sunglasses, .goggles, .labCoat, .safetyVest, .necktie, .tShirt, .jeans, .scarf, .gloves, .coat, .socks, .dress, .kimono, .sari, .onePieceSwimsuit, .briefs, .shorts, .bikini, .womanSClothes, .foldingHandFan, .purse, .handbag, .clutchBag, .shoppingBags, .backpack, .thongSandal, .manSShoe, .runningShoe, .hikingBoot, .flatShoe, .highHeeledShoe, .womanSSandal, .balletShoes, .womanSBoot, .hairPick, .crown, .womanSHat, .topHat, .graduationCap, .billedCap, .militaryHelmet, .rescueWorkerSHelmet, .prayerBeads, .lipstick, .ring, .gemStone, .mutedSpeaker, .speakerLowVolume, .speakerMediumVolume, .speakerHighVolume, .loudspeaker, .megaphone, .postalHorn, .bell, .bellWithSlash, .musicalScore, .musicalNote, .musicalNotes, .studioMicrophone, .levelSlider, .controlKnobs, .microphone, .headphone, .radio, .saxophone, .accordion, .guitar, .musicalKeyboard, .trumpet, .violin, .banjo, .drum, .longDrum, .maracas, .flute, .harp, .mobilePhone, .mobilePhoneWithArrow, .telephone, .telephoneReceiver, .pager, .faxMachine, .battery, .lowBattery, .electricPlug, .laptop, .desktopComputer, .printer, .keyboard, .computerMouse, .trackball, .computerDisk, .floppyDisk, .opticalDisk, .dvd, .abacus, .movieCamera, .filmFrames, .filmProjector, .clapperBoard, .television, .camera, .cameraWithFlash, .videoCamera, .videocassette, .magnifyingGlassTiltedLeft, .magnifyingGlassTiltedRight, .candle, .lightBulb, .flashlight, .redPaperLantern, .diyaLamp, .notebookWithDecorativeCover, .closedBook, .openBook, .greenBook, .blueBook, .orangeBook, .books, .notebook, .ledger, .pageWithCurl, .scroll, .pageFacingUp, .newspaper, .rolledUpNewspaper, .bookmarkTabs, .bookmark, .label, .moneyBag, .coin, .yenBanknote, .dollarBanknote, .euroBanknote, .poundBanknote, .moneyWithWings, .creditCard, .receipt, .chartIncreasingWithYen, .envelope, .eMail, .incomingEnvelope, .envelopeWithArrow, .outboxTray, .inboxTray, .package, .closedMailboxWithRaisedFlag, .closedMailboxWithLoweredFlag, .openMailboxWithRaisedFlag, .openMailboxWithLoweredFlag, .postbox, .ballotBoxWithBallot, .pencil, .blackNib, .fountainPen, .pen, .paintbrush, .crayon, .memo, .briefcase, .fileFolder, .openFileFolder, .cardIndexDividers, .calendar, .tearOffCalendar, .spiralNotepad, .spiralCalendar, .cardIndex, .chartIncreasing, .chartDecreasing, .barChart, .clipboard, .pushpin, .roundPushpin, .paperclip, .linkedPaperclips, .straightRuler, .triangularRuler, .scissors, .cardFileBox, .fileCabinet, .wastebasket, .locked, .unlocked, .lockedWithPen, .lockedWithKey, .key, .oldKey, .hammer, .axe, .pick, .hammerAndPick, .hammerAndWrench, .dagger, .crossedSwords, .bomb, .boomerang, .bowAndArrow, .shield, .carpentrySaw, .wrench, .screwdriver, .nutAndBolt, .gear, .clamp, .balanceScale, .whiteCane, .link, .brokenChain, .chains, .hook, .toolbox, .magnet, .ladder, .shovel, .alembic, .testTube, .petriDish, .dna, .microscope, .telescope, .satelliteAntenna, .syringe, .dropOfBlood, .pill, .adhesiveBandage, .crutch, .stethoscope, .xRay, .door, .elevator, .mirror, .window, .bed, .couchAndLamp, .chair, .toilet, .plunger, .shower, .bathtub, .mouseTrap, .razor, .lotionBottle, .safetyPin, .broom, .basket, .rollOfPaper, .bucket, .soap, .bubbles, .toothbrush, .sponge, .fireExtinguisher, .shoppingCart, .cigarette, .coffin, .headstone, .funeralUrn, .nazarAmulet, .hamsa, .moai, .placard, .identificationCard]
+            return [ .glasses, .sunglasses, .goggles, .labCoat, .safetyVest, .necktie, .tShirt, .jeans, .scarf, .gloves, .coat, .socks, .dress, .kimono, .sari, .onePieceSwimsuit, .briefs, .shorts, .bikini, .womanSClothes, .foldingHandFan, .purse, .handbag, .clutchBag, .shoppingBags, .backpack, .thongSandal, .manSShoe, .runningShoe, .hikingBoot, .flatShoe, .highHeeledShoe, .womanSSandal, .balletShoes, .womanSBoot, .hairPick, .crown, .womanSHat, .topHat, .graduationCap, .billedCap, .militaryHelmet, .rescueWorkerSHelmet, .prayerBeads, .lipstick, .ring, .gemStone, .mutedSpeaker, .speakerLowVolume, .speakerMediumVolume, .speakerHighVolume, .loudspeaker, .megaphone, .postalHorn, .bell, .bellWithSlash, .musicalScore, .musicalNote, .musicalNotes, .studioMicrophone, .levelSlider, .controlKnobs, .microphone, .headphone, .radio, .saxophone, .trumpet, .trombone, .accordion, .guitar, .musicalKeyboard, .violin, .banjo, .drum, .longDrum, .maracas, .flute, .harp, .mobilePhone, .mobilePhoneWithArrow, .telephone, .telephoneReceiver, .pager, .faxMachine, .battery, .lowBattery, .electricPlug, .laptop, .desktopComputer, .printer, .keyboard, .computerMouse, .trackball, .computerDisk, .floppyDisk, .opticalDisk, .dvd, .abacus, .movieCamera, .filmFrames, .filmProjector, .clapperBoard, .television, .camera, .cameraWithFlash, .videoCamera, .videocassette, .magnifyingGlassTiltedLeft, .magnifyingGlassTiltedRight, .candle, .lightBulb, .flashlight, .redPaperLantern, .diyaLamp, .notebookWithDecorativeCover, .closedBook, .openBook, .greenBook, .blueBook, .orangeBook, .books, .notebook, .ledger, .pageWithCurl, .scroll, .pageFacingUp, .newspaper, .rolledUpNewspaper, .bookmarkTabs, .bookmark, .label, .coin, .moneyBag, .treasureChest, .yenBanknote, .dollarBanknote, .euroBanknote, .poundBanknote, .moneyWithWings, .creditCard, .receipt, .chartIncreasingWithYen, .envelope, .eMail, .incomingEnvelope, .envelopeWithArrow, .outboxTray, .inboxTray, .package, .closedMailboxWithRaisedFlag, .closedMailboxWithLoweredFlag, .openMailboxWithRaisedFlag, .openMailboxWithLoweredFlag, .postbox, .ballotBoxWithBallot, .pencil, .blackNib, .fountainPen, .pen, .paintbrush, .crayon, .memo, .briefcase, .fileFolder, .openFileFolder, .cardIndexDividers, .calendar, .tearOffCalendar, .spiralNotepad, .spiralCalendar, .cardIndex, .chartIncreasing, .chartDecreasing, .barChart, .clipboard, .pushpin, .roundPushpin, .paperclip, .linkedPaperclips, .straightRuler, .triangularRuler, .scissors, .cardFileBox, .fileCabinet, .wastebasket, .locked, .unlocked, .lockedWithPen, .lockedWithKey, .key, .oldKey, .hammer, .axe, .pick, .hammerAndPick, .hammerAndWrench, .dagger, .crossedSwords, .bomb, .boomerang, .bowAndArrow, .shield, .carpentrySaw, .wrench, .screwdriver, .nutAndBolt, .gear, .clamp, .balanceScale, .whiteCane, .link, .brokenChain, .chains, .hook, .toolbox, .magnet, .ladder, .shovel, .alembic, .testTube, .petriDish, .dna, .microscope, .telescope, .satelliteAntenna, .syringe, .dropOfBlood, .pill, .adhesiveBandage, .crutch, .stethoscope, .xRay, .door, .elevator, .mirror, .window, .bed, .couchAndLamp, .chair, .toilet, .plunger, .shower, .bathtub, .mouseTrap, .razor, .lotionBottle, .safetyPin, .broom, .basket, .rollOfPaper, .bucket, .soap, .bubbles, .toothbrush, .sponge, .fireExtinguisher, .shoppingCart, .cigarette, .coffin, .headstone, .funeralUrn, .nazarAmulet, .hamsa, .moai, .placard, .identificationCard]
       case .peopleBody:
-            return [ .wavingHand, .raisedBackOfHand, .handWithFingersSplayed, .raisedHand, .vulcanSalute, .rightwardsHand, .leftwardsHand, .palmDownHand, .palmUpHand, .leftwardsPushingHand, .rightwardsPushingHand, .okHand, .pinchedFingers, .pinchingHand, .victoryHand, .crossedFingers, .handWithIndexFingerAndThumbCrossed, .loveYouGesture, .signOfTheHorns, .callMeHand, .backhandIndexPointingLeft, .backhandIndexPointingRight, .backhandIndexPointingUp, .middleFinger, .backhandIndexPointingDown, .indexPointingUp, .indexPointingAtTheViewer, .thumbsUp, .thumbsDown, .raisedFist, .oncomingFist, .leftFacingFist, .rightFacingFist, .clappingHands, .raisingHands, .heartHands, .openHands, .palmsUpTogether, .handshake, .foldedHands, .writingHand, .nailPolish, .selfie, .flexedBiceps, .mechanicalArm, .mechanicalLeg, .leg, .foot, .ear, .earWithHearingAid, .nose, .brain, .anatomicalHeart, .lungs, .tooth, .bone, .eyes, .eye, .tongue, .mouth, .bitingLip, .baby, .child, .boy, .girl, .person, .personBlondHair, .man, .personBeard, .manBeard, .womanBeard, .manRedHair, .manCurlyHair, .manWhiteHair, .manBald, .woman, .womanRedHair, .personRedHair, .womanCurlyHair, .personCurlyHair, .womanWhiteHair, .personWhiteHair, .womanBald, .personBald, .womanBlondHair, .manBlondHair, .olderPerson, .oldMan, .oldWoman, .personFrowning, .manFrowning, .womanFrowning, .personPouting, .manPouting, .womanPouting, .personGesturingNo, .manGesturingNo, .womanGesturingNo, .personGesturingOk, .manGesturingOk, .womanGesturingOk, .personTippingHand, .manTippingHand, .womanTippingHand, .personRaisingHand, .manRaisingHand, .womanRaisingHand, .deafPerson, .deafMan, .deafWoman, .personBowing, .manBowing, .womanBowing, .personFacepalming, .manFacepalming, .womanFacepalming, .personShrugging, .manShrugging, .womanShrugging, .healthWorker, .manHealthWorker, .womanHealthWorker, .student, .manStudent, .womanStudent, .teacher, .manTeacher, .womanTeacher, .judge, .manJudge, .womanJudge, .farmer, .manFarmer, .womanFarmer, .cook, .manCook, .womanCook, .mechanic, .manMechanic, .womanMechanic, .factoryWorker, .manFactoryWorker, .womanFactoryWorker, .officeWorker, .manOfficeWorker, .womanOfficeWorker, .scientist, .manScientist, .womanScientist, .technologist, .manTechnologist, .womanTechnologist, .singer, .manSinger, .womanSinger, .artist, .manArtist, .womanArtist, .pilot, .manPilot, .womanPilot, .astronaut, .manAstronaut, .womanAstronaut, .firefighter, .manFirefighter, .womanFirefighter, .policeOfficer, .manPoliceOfficer, .womanPoliceOfficer, .detective, .manDetective, .womanDetective, .personGuard, .manGuard, .womanGuard, .ninja, .constructionWorker, .manConstructionWorker, .womanConstructionWorker, .personWithCrown, .prince, .princess, .personWearingTurban, .manWearingTurban, .womanWearingTurban, .personWithSkullcap, .womanWithHeadscarf, .personInTuxedo, .manInTuxedo, .womanInTuxedo, .personWithVeil, .manWithVeil, .womanWithVeil, .pregnantWoman, .pregnantMan, .pregnantPerson, .breastFeeding, .womanFeedingBaby, .manFeedingBaby, .personFeedingBaby, .babyAngel, .santaClaus, .mrsClaus, .mxClaus, .superhero, .manSuperhero, .womanSuperhero, .supervillain, .manSupervillain, .womanSupervillain, .mage, .manMage, .womanMage, .fairy, .manFairy, .womanFairy, .vampire, .manVampire, .womanVampire, .merperson, .merman, .mermaid, .elf, .manElf, .womanElf, .genie, .manGenie, .womanGenie, .zombie, .manZombie, .womanZombie, .troll, .personGettingMassage, .manGettingMassage, .womanGettingMassage, .personGettingHaircut, .manGettingHaircut, .womanGettingHaircut, .personWalking, .manWalking, .womanWalking, .personWalkingFacingRight, .womanWalkingFacingRight, .manWalkingFacingRight, .personStanding, .manStanding, .womanStanding, .personKneeling, .manKneeling, .womanKneeling, .personKneelingFacingRight, .womanKneelingFacingRight, .manKneelingFacingRight, .personWithWhiteCane, .personWithWhiteCaneFacingRight, .manWithWhiteCane, .manWithWhiteCaneFacingRight, .womanWithWhiteCane, .womanWithWhiteCaneFacingRight, .personInMotorizedWheelchair, .personInMotorizedWheelchairFacingRight, .manInMotorizedWheelchair, .manInMotorizedWheelchairFacingRight, .womanInMotorizedWheelchair, .womanInMotorizedWheelchairFacingRight, .personInManualWheelchair, .personInManualWheelchairFacingRight, .manInManualWheelchair, .manInManualWheelchairFacingRight, .womanInManualWheelchair, .womanInManualWheelchairFacingRight, .personRunning, .manRunning, .womanRunning, .personRunningFacingRight, .womanRunningFacingRight, .manRunningFacingRight, .womanDancing, .manDancing, .personInSuitLevitating, .peopleWithBunnyEars, .menWithBunnyEars, .womenWithBunnyEars, .personInSteamyRoom, .manInSteamyRoom, .womanInSteamyRoom, .personClimbing, .manClimbing, .womanClimbing, .personFencing, .horseRacing, .skier, .snowboarder, .personGolfing, .manGolfing, .womanGolfing, .personSurfing, .manSurfing, .womanSurfing, .personRowingBoat, .manRowingBoat, .womanRowingBoat, .personSwimming, .manSwimming, .womanSwimming, .personBouncingBall, .manBouncingBall, .womanBouncingBall, .personLiftingWeights, .manLiftingWeights, .womanLiftingWeights, .personBiking, .manBiking, .womanBiking, .personMountainBiking, .manMountainBiking, .womanMountainBiking, .personCartwheeling, .manCartwheeling, .womanCartwheeling, .peopleWrestling, .menWrestling, .womenWrestling, .personPlayingWaterPolo, .manPlayingWaterPolo, .womanPlayingWaterPolo, .personPlayingHandball, .manPlayingHandball, .womanPlayingHandball, .personJuggling, .manJuggling, .womanJuggling, .personInLotusPosition, .manInLotusPosition, .womanInLotusPosition, .personTakingBath, .personInBed, .peopleHoldingHands, .womenHoldingHands, .womanAndManHoldingHands, .menHoldingHands, .kiss, .kissWomanMan, .kissManMan, .kissWomanWoman, .coupleWithHeart, .coupleWithHeartWomanMan, .coupleWithHeartManMan, .coupleWithHeartWomanWoman, .familyManWomanBoy, .familyManWomanGirl, .familyManWomanGirlBoy, .familyManWomanBoyBoy, .familyManWomanGirlGirl, .familyManManBoy, .familyManManGirl, .familyManManGirlBoy, .familyManManBoyBoy, .familyManManGirlGirl, .familyWomanWomanBoy, .familyWomanWomanGirl, .familyWomanWomanGirlBoy, .familyWomanWomanBoyBoy, .familyWomanWomanGirlGirl, .familyManBoy, .familyManBoyBoy, .familyManGirl, .familyManGirlBoy, .familyManGirlGirl, .familyWomanBoy, .familyWomanBoyBoy, .familyWomanGirl, .familyWomanGirlBoy, .familyWomanGirlGirl, .speakingHead, .bustInSilhouette, .bustsInSilhouette, .peopleHugging, .family, .familyAdultAdultChild, .familyAdultAdultChildChild, .familyAdultChild, .familyAdultChildChild, .footprints, .fingerprint]
+            return [ .wavingHand, .raisedBackOfHand, .handWithFingersSplayed, .raisedHand, .vulcanSalute, .rightwardsHand, .leftwardsHand, .palmDownHand, .palmUpHand, .leftwardsPushingHand, .rightwardsPushingHand, .okHand, .pinchedFingers, .pinchingHand, .victoryHand, .crossedFingers, .handWithIndexFingerAndThumbCrossed, .loveYouGesture, .signOfTheHorns, .callMeHand, .backhandIndexPointingLeft, .backhandIndexPointingRight, .backhandIndexPointingUp, .middleFinger, .backhandIndexPointingDown, .indexPointingUp, .indexPointingAtTheViewer, .thumbsUp, .thumbsDown, .raisedFist, .oncomingFist, .leftFacingFist, .rightFacingFist, .clappingHands, .raisingHands, .heartHands, .openHands, .palmsUpTogether, .handshake, .foldedHands, .writingHand, .nailPolish, .selfie, .flexedBiceps, .mechanicalArm, .mechanicalLeg, .leg, .foot, .ear, .earWithHearingAid, .nose, .brain, .anatomicalHeart, .lungs, .tooth, .bone, .eyes, .eye, .tongue, .mouth, .bitingLip, .baby, .child, .boy, .girl, .person, .personBlondHair, .man, .personBeard, .manBeard, .womanBeard, .manRedHair, .manCurlyHair, .manWhiteHair, .manBald, .woman, .womanRedHair, .personRedHair, .womanCurlyHair, .personCurlyHair, .womanWhiteHair, .personWhiteHair, .womanBald, .personBald, .womanBlondHair, .manBlondHair, .olderPerson, .oldMan, .oldWoman, .personFrowning, .manFrowning, .womanFrowning, .personPouting, .manPouting, .womanPouting, .personGesturingNo, .manGesturingNo, .womanGesturingNo, .personGesturingOk, .manGesturingOk, .womanGesturingOk, .personTippingHand, .manTippingHand, .womanTippingHand, .personRaisingHand, .manRaisingHand, .womanRaisingHand, .deafPerson, .deafMan, .deafWoman, .personBowing, .manBowing, .womanBowing, .personFacepalming, .manFacepalming, .womanFacepalming, .personShrugging, .manShrugging, .womanShrugging, .healthWorker, .manHealthWorker, .womanHealthWorker, .student, .manStudent, .womanStudent, .teacher, .manTeacher, .womanTeacher, .judge, .manJudge, .womanJudge, .farmer, .manFarmer, .womanFarmer, .cook, .manCook, .womanCook, .mechanic, .manMechanic, .womanMechanic, .factoryWorker, .manFactoryWorker, .womanFactoryWorker, .officeWorker, .manOfficeWorker, .womanOfficeWorker, .scientist, .manScientist, .womanScientist, .technologist, .manTechnologist, .womanTechnologist, .singer, .manSinger, .womanSinger, .artist, .manArtist, .womanArtist, .pilot, .manPilot, .womanPilot, .astronaut, .manAstronaut, .womanAstronaut, .firefighter, .manFirefighter, .womanFirefighter, .policeOfficer, .manPoliceOfficer, .womanPoliceOfficer, .detective, .manDetective, .womanDetective, .personGuard, .manGuard, .womanGuard, .ninja, .constructionWorker, .manConstructionWorker, .womanConstructionWorker, .personWithCrown, .prince, .princess, .personWearingTurban, .manWearingTurban, .womanWearingTurban, .personWithSkullcap, .womanWithHeadscarf, .personInTuxedo, .manInTuxedo, .womanInTuxedo, .personWithVeil, .manWithVeil, .womanWithVeil, .pregnantWoman, .pregnantMan, .pregnantPerson, .breastFeeding, .womanFeedingBaby, .manFeedingBaby, .personFeedingBaby, .babyAngel, .santaClaus, .mrsClaus, .mxClaus, .superhero, .manSuperhero, .womanSuperhero, .supervillain, .manSupervillain, .womanSupervillain, .mage, .manMage, .womanMage, .fairy, .manFairy, .womanFairy, .vampire, .manVampire, .womanVampire, .merperson, .merman, .mermaid, .elf, .manElf, .womanElf, .genie, .manGenie, .womanGenie, .zombie, .manZombie, .womanZombie, .troll, .hairyCreature, .personGettingMassage, .manGettingMassage, .womanGettingMassage, .personGettingHaircut, .manGettingHaircut, .womanGettingHaircut, .personWalking, .manWalking, .womanWalking, .personWalkingFacingRight, .womanWalkingFacingRight, .manWalkingFacingRight, .personStanding, .manStanding, .womanStanding, .personKneeling, .manKneeling, .womanKneeling, .personKneelingFacingRight, .womanKneelingFacingRight, .manKneelingFacingRight, .personWithWhiteCane, .personWithWhiteCaneFacingRight, .manWithWhiteCane, .manWithWhiteCaneFacingRight, .womanWithWhiteCane, .womanWithWhiteCaneFacingRight, .personInMotorizedWheelchair, .personInMotorizedWheelchairFacingRight, .manInMotorizedWheelchair, .manInMotorizedWheelchairFacingRight, .womanInMotorizedWheelchair, .womanInMotorizedWheelchairFacingRight, .personInManualWheelchair, .personInManualWheelchairFacingRight, .manInManualWheelchair, .manInManualWheelchairFacingRight, .womanInManualWheelchair, .womanInManualWheelchairFacingRight, .personRunning, .manRunning, .womanRunning, .personRunningFacingRight, .womanRunningFacingRight, .manRunningFacingRight, .balletDancer, .womanDancing, .manDancing, .personInSuitLevitating, .peopleWithBunnyEars, .menWithBunnyEars, .womenWithBunnyEars, .personInSteamyRoom, .manInSteamyRoom, .womanInSteamyRoom, .personClimbing, .manClimbing, .womanClimbing, .personFencing, .horseRacing, .skier, .snowboarder, .personGolfing, .manGolfing, .womanGolfing, .personSurfing, .manSurfing, .womanSurfing, .personRowingBoat, .manRowingBoat, .womanRowingBoat, .personSwimming, .manSwimming, .womanSwimming, .personBouncingBall, .manBouncingBall, .womanBouncingBall, .personLiftingWeights, .manLiftingWeights, .womanLiftingWeights, .personBiking, .manBiking, .womanBiking, .personMountainBiking, .manMountainBiking, .womanMountainBiking, .personCartwheeling, .manCartwheeling, .womanCartwheeling, .peopleWrestling, .menWrestling, .womenWrestling, .personPlayingWaterPolo, .manPlayingWaterPolo, .womanPlayingWaterPolo, .personPlayingHandball, .manPlayingHandball, .womanPlayingHandball, .personJuggling, .manJuggling, .womanJuggling, .personInLotusPosition, .manInLotusPosition, .womanInLotusPosition, .personTakingBath, .personInBed, .peopleHoldingHands, .womenHoldingHands, .womanAndManHoldingHands, .menHoldingHands, .kiss, .kissWomanMan, .kissManMan, .kissWomanWoman, .coupleWithHeart, .coupleWithHeartWomanMan, .coupleWithHeartManMan, .coupleWithHeartWomanWoman, .familyManWomanBoy, .familyManWomanGirl, .familyManWomanGirlBoy, .familyManWomanBoyBoy, .familyManWomanGirlGirl, .familyManManBoy, .familyManManGirl, .familyManManGirlBoy, .familyManManBoyBoy, .familyManManGirlGirl, .familyWomanWomanBoy, .familyWomanWomanGirl, .familyWomanWomanGirlBoy, .familyWomanWomanBoyBoy, .familyWomanWomanGirlGirl, .familyManBoy, .familyManBoyBoy, .familyManGirl, .familyManGirlBoy, .familyManGirlGirl, .familyWomanBoy, .familyWomanBoyBoy, .familyWomanGirl, .familyWomanGirlBoy, .familyWomanGirlGirl, .speakingHead, .bustInSilhouette, .bustsInSilhouette, .peopleHugging, .family, .familyAdultAdultChild, .familyAdultAdultChildChild, .familyAdultChild, .familyAdultChildChild, .footprints, .fingerprint]
       case .smileysEmotion:
-            return [ .grinningFace, .grinningFaceWithBigEyes, .grinningFaceWithSmilingEyes, .beamingFaceWithSmilingEyes, .grinningSquintingFace, .grinningFaceWithSweat, .rollingOnTheFloorLaughing, .faceWithTearsOfJoy, .slightlySmilingFace, .upsideDownFace, .meltingFace, .winkingFace, .smilingFaceWithSmilingEyes, .smilingFaceWithHalo, .smilingFaceWithHearts, .smilingFaceWithHeartEyes, .starStruck, .faceBlowingAKiss, .kissingFace, .smilingFace, .kissingFaceWithClosedEyes, .kissingFaceWithSmilingEyes, .smilingFaceWithTear, .faceSavoringFood, .faceWithTongue, .winkingFaceWithTongue, .zanyFace, .squintingFaceWithTongue, .moneyMouthFace, .smilingFaceWithOpenHands, .faceWithHandOverMouth, .faceWithOpenEyesAndHandOverMouth, .faceWithPeekingEye, .shushingFace, .thinkingFace, .salutingFace, .zipperMouthFace, .faceWithRaisedEyebrow, .neutralFace, .expressionlessFace, .faceWithoutMouth, .dottedLineFace, .faceInClouds, .smirkingFace, .unamusedFace, .faceWithRollingEyes, .grimacingFace, .faceExhaling, .lyingFace, .shakingFace, .headShakingHorizontally, .headShakingVertically, .relievedFace, .pensiveFace, .sleepyFace, .droolingFace, .sleepingFace, .faceWithBagsUnderEyes, .faceWithMedicalMask, .faceWithThermometer, .faceWithHeadBandage, .nauseatedFace, .faceVomiting, .sneezingFace, .hotFace, .coldFace, .woozyFace, .faceWithCrossedOutEyes, .faceWithSpiralEyes, .explodingHead, .cowboyHatFace, .partyingFace, .disguisedFace, .smilingFaceWithSunglasses, .nerdFace, .faceWithMonocle, .confusedFace, .faceWithDiagonalMouth, .worriedFace, .slightlyFrowningFace, .frowningFace, .faceWithOpenMouth, .hushedFace, .astonishedFace, .flushedFace, .pleadingFace, .faceHoldingBackTears, .frowningFaceWithOpenMouth, .anguishedFace, .fearfulFace, .anxiousFaceWithSweat, .sadButRelievedFace, .cryingFace, .loudlyCryingFace, .faceScreamingInFear, .confoundedFace, .perseveringFace, .disappointedFace, .downcastFaceWithSweat, .wearyFace, .tiredFace, .yawningFace, .faceWithSteamFromNose, .enragedFace, .angryFace, .faceWithSymbolsOnMouth, .smilingFaceWithHorns, .angryFaceWithHorns, .skull, .skullAndCrossbones, .pileOfPoo, .clownFace, .ogre, .goblin, .ghost, .alien, .alienMonster, .robot, .grinningCat, .grinningCatWithSmilingEyes, .catWithTearsOfJoy, .smilingCatWithHeartEyes, .catWithWrySmile, .kissingCat, .wearyCat, .cryingCat, .poutingCat, .seeNoEvilMonkey, .hearNoEvilMonkey, .speakNoEvilMonkey, .loveLetter, .heartWithArrow, .heartWithRibbon, .sparklingHeart, .growingHeart, .beatingHeart, .revolvingHearts, .twoHearts, .heartDecoration, .heartExclamation, .brokenHeart, .heartOnFire, .mendingHeart, .redHeart, .pinkHeart, .orangeHeart, .yellowHeart, .greenHeart, .blueHeart, .lightBlueHeart, .purpleHeart, .brownHeart, .blackHeart, .greyHeart, .whiteHeart, .kissMark, .hundredPoints, .angerSymbol, .collision, .dizzy, .sweatDroplets, .dashingAway, .hole, .speechBalloon, .eyeInSpeechBubble, .leftSpeechBubble, .rightAngerBubble, .thoughtBalloon, .zzz]
+            return [ .grinningFace, .grinningFaceWithBigEyes, .grinningFaceWithSmilingEyes, .beamingFaceWithSmilingEyes, .grinningSquintingFace, .grinningFaceWithSweat, .rollingOnTheFloorLaughing, .faceWithTearsOfJoy, .slightlySmilingFace, .upsideDownFace, .meltingFace, .winkingFace, .smilingFaceWithSmilingEyes, .smilingFaceWithHalo, .smilingFaceWithHearts, .smilingFaceWithHeartEyes, .starStruck, .faceBlowingAKiss, .kissingFace, .smilingFace, .kissingFaceWithClosedEyes, .kissingFaceWithSmilingEyes, .smilingFaceWithTear, .faceSavoringFood, .faceWithTongue, .winkingFaceWithTongue, .zanyFace, .squintingFaceWithTongue, .moneyMouthFace, .smilingFaceWithOpenHands, .faceWithHandOverMouth, .faceWithOpenEyesAndHandOverMouth, .faceWithPeekingEye, .shushingFace, .thinkingFace, .salutingFace, .zipperMouthFace, .faceWithRaisedEyebrow, .neutralFace, .expressionlessFace, .faceWithoutMouth, .dottedLineFace, .faceInClouds, .smirkingFace, .unamusedFace, .faceWithRollingEyes, .grimacingFace, .faceExhaling, .lyingFace, .shakingFace, .headShakingHorizontally, .headShakingVertically, .relievedFace, .pensiveFace, .sleepyFace, .droolingFace, .sleepingFace, .faceWithBagsUnderEyes, .faceWithMedicalMask, .faceWithThermometer, .faceWithHeadBandage, .nauseatedFace, .faceVomiting, .sneezingFace, .hotFace, .coldFace, .woozyFace, .faceWithCrossedOutEyes, .faceWithSpiralEyes, .explodingHead, .cowboyHatFace, .partyingFace, .disguisedFace, .smilingFaceWithSunglasses, .nerdFace, .faceWithMonocle, .confusedFace, .faceWithDiagonalMouth, .worriedFace, .slightlyFrowningFace, .frowningFace, .faceWithOpenMouth, .hushedFace, .astonishedFace, .flushedFace, .distortedFace, .pleadingFace, .faceHoldingBackTears, .frowningFaceWithOpenMouth, .anguishedFace, .fearfulFace, .anxiousFaceWithSweat, .sadButRelievedFace, .cryingFace, .loudlyCryingFace, .faceScreamingInFear, .confoundedFace, .perseveringFace, .disappointedFace, .downcastFaceWithSweat, .wearyFace, .tiredFace, .yawningFace, .faceWithSteamFromNose, .enragedFace, .angryFace, .faceWithSymbolsOnMouth, .smilingFaceWithHorns, .angryFaceWithHorns, .skull, .skullAndCrossbones, .pileOfPoo, .clownFace, .ogre, .goblin, .ghost, .alien, .alienMonster, .robot, .grinningCat, .grinningCatWithSmilingEyes, .catWithTearsOfJoy, .smilingCatWithHeartEyes, .catWithWrySmile, .kissingCat, .wearyCat, .cryingCat, .poutingCat, .seeNoEvilMonkey, .hearNoEvilMonkey, .speakNoEvilMonkey, .loveLetter, .heartWithArrow, .heartWithRibbon, .sparklingHeart, .growingHeart, .beatingHeart, .revolvingHearts, .twoHearts, .heartDecoration, .heartExclamation, .brokenHeart, .heartOnFire, .mendingHeart, .redHeart, .pinkHeart, .orangeHeart, .yellowHeart, .greenHeart, .blueHeart, .lightBlueHeart, .purpleHeart, .brownHeart, .blackHeart, .greyHeart, .whiteHeart, .kissMark, .hundredPoints, .angerSymbol, .fightCloud, .collision, .dizzy, .sweatDroplets, .dashingAway, .hole, .speechBalloon, .eyeInSpeechBubble, .leftSpeechBubble, .rightAngerBubble, .thoughtBalloon, .zzz]
       case .symbols:
             return [ .atmSign, .litterInBinSign, .potableWater, .wheelchairSymbol, .menSRoom, .womenSRoom, .restroom, .babySymbol, .waterCloset, .passportControl, .customs, .baggageClaim, .leftLuggage, .warning, .childrenCrossing, .noEntry, .prohibited, .noBicycles, .noSmoking, .noLittering, .nonPotableWater, .noPedestrians, .noMobilePhones, .noOneUnderEighteen, .radioactive, .biohazard, .upArrow, .upRightArrow, .rightArrow, .downRightArrow, .downArrow, .downLeftArrow, .leftArrow, .upLeftArrow, .upDownArrow, .leftRightArrow, .rightArrowCurvingLeft, .leftArrowCurvingRight, .rightArrowCurvingUp, .rightArrowCurvingDown, .clockwiseVerticalArrows, .counterclockwiseArrowsButton, .backArrow, .endArrow, .onArrow, .soonArrow, .topArrow, .placeOfWorship, .atomSymbol, .om, .starOfDavid, .wheelOfDharma, .yinYang, .latinCross, .orthodoxCross, .starAndCrescent, .peaceSymbol, .menorah, .dottedSixPointedStar, .khanda, .aries, .taurus, .gemini, .cancer, .leo, .virgo, .libra, .scorpio, .sagittarius, .capricorn, .aquarius, .pisces, .ophiuchus, .shuffleTracksButton, .repeatButton, .repeatSingleButton, .playButton, .fastForwardButton, .nextTrackButton, .playOrPauseButton, .reverseButton, .fastReverseButton, .lastTrackButton, .upwardsButton, .fastUpButton, .downwardsButton, .fastDownButton, .pauseButton, .stopButton, .recordButton, .ejectButton, .cinema, .dimButton, .brightButton, .antennaBars, .wireless, .vibrationMode, .mobilePhoneOff, .femaleSign, .maleSign, .transgenderSymbol, .multiply, .plus, .minus, .divide, .heavyEqualsSign, .infinity, .doubleExclamationMark, .exclamationQuestionMark, .redQuestionMark, .whiteQuestionMark, .whiteExclamationMark, .redExclamationMark, .wavyDash, .currencyExchange, .heavyDollarSign, .medicalSymbol, .recyclingSymbol, .fleurDeLis, .tridentEmblem, .nameBadge, .japaneseSymbolForBeginner, .hollowRedCircle, .checkMarkButton, .checkBoxWithCheck, .checkMark, .crossMark, .crossMarkButton, .curlyLoop, .doubleCurlyLoop, .partAlternationMark, .eightSpokedAsterisk, .eightPointedStar, .sparkle, .copyright, .registered, .tradeMark, .splatter, .keycapRoute, .keycapStar, .keycap0, .keycap1, .keycap2, .keycap3, .keycap4, .keycap5, .keycap6, .keycap7, .keycap8, .keycap9, .keycap10, .inputLatinUppercase, .inputLatinLowercase, .inputNumbers, .inputSymbols, .inputLatinLetters, .aButtonBloodType, .abButtonBloodType, .bButtonBloodType, .clButton, .coolButton, .freeButton, .information, .idButton, .circledM, .newButton, .ngButton, .oButtonBloodType, .okButton, .pButton, .sosButton, .upButton, .vsButton, .japaneseHereButton, .japaneseServiceChargeButton, .japaneseMonthlyAmountButton, .japaneseNotFreeOfChargeButton, .japaneseReservedButton, .japaneseBargainButton, .japaneseDiscountButton, .japaneseFreeOfChargeButton, .japaneseProhibitedButton, .japaneseAcceptableButton, .japaneseApplicationButton, .japanesePassingGradeButton, .japaneseVacancyButton, .japaneseCongratulationsButton, .japaneseSecretButton, .japaneseOpenForBusinessButton, .japaneseNoVacancyButton, .redCircle, .orangeCircle, .yellowCircle, .greenCircle, .blueCircle, .purpleCircle, .brownCircle, .blackCircle, .whiteCircle, .redSquare, .orangeSquare, .yellowSquare, .greenSquare, .blueSquare, .purpleSquare, .brownSquare, .blackLargeSquare, .whiteLargeSquare, .blackMediumSquare, .whiteMediumSquare, .blackMediumSmallSquare, .whiteMediumSmallSquare, .blackSmallSquare, .whiteSmallSquare, .largeOrangeDiamond, .largeBlueDiamond, .smallOrangeDiamond, .smallBlueDiamond, .redTrianglePointedUp, .redTrianglePointedDown, .diamondWithADot, .radioButton, .whiteSquareButton, .blackSquareButton]
       case .travelPlaces:
-            return [ .globeShowingEuropeAfrica, .globeShowingAmericas, .globeShowingAsiaAustralia, .globeWithMeridians, .worldMap, .mapOfJapan, .compass, .snowCappedMountain, .mountain, .volcano, .mountFuji, .camping, .beachWithUmbrella, .desert, .desertIsland, .nationalPark, .stadium, .classicalBuilding, .buildingConstruction, .brick, .rock, .wood, .hut, .houses, .derelictHouse, .house, .houseWithGarden, .officeBuilding, .japanesePostOffice, .postOffice, .hospital, .bank, .hotel, .loveHotel, .convenienceStore, .school, .departmentStore, .factory, .japaneseCastle, .castle, .wedding, .tokyoTower, .statueOfLiberty, .church, .mosque, .hinduTemple, .synagogue, .shintoShrine, .kaaba, .fountain, .tent, .foggy, .nightWithStars, .cityscape, .sunriseOverMountains, .sunrise, .cityscapeAtDusk, .sunset, .bridgeAtNight, .hotSprings, .carouselHorse, .playgroundSlide, .ferrisWheel, .rollerCoaster, .barberPole, .circusTent, .locomotive, .railwayCar, .highSpeedTrain, .bulletTrain, .train, .metro, .lightRail, .station, .tram, .monorail, .mountainRailway, .tramCar, .bus, .oncomingBus, .trolleybus, .minibus, .ambulance, .fireEngine, .policeCar, .oncomingPoliceCar, .taxi, .oncomingTaxi, .automobile, .oncomingAutomobile, .sportUtilityVehicle, .pickupTruck, .deliveryTruck, .articulatedLorry, .tractor, .racingCar, .motorcycle, .motorScooter, .manualWheelchair, .motorizedWheelchair, .autoRickshaw, .bicycle, .kickScooter, .skateboard, .rollerSkate, .busStop, .motorway, .railwayTrack, .oilDrum, .fuelPump, .wheel, .policeCarLight, .horizontalTrafficLight, .verticalTrafficLight, .stopSign, .construction, .anchor, .ringBuoy, .sailboat, .canoe, .speedboat, .passengerShip, .ferry, .motorBoat, .ship, .airplane, .smallAirplane, .airplaneDeparture, .airplaneArrival, .parachute, .seat, .helicopter, .suspensionRailway, .mountainCableway, .aerialTramway, .satellite, .rocket, .flyingSaucer, .bellhopBell, .luggage, .hourglassDone, .hourglassNotDone, .watch, .alarmClock, .stopwatch, .timerClock, .mantelpieceClock, .twelveOClock, .twelveThirty, .oneOClock, .oneThirty, .twoOClock, .twoThirty, .threeOClock, .threeThirty, .fourOClock, .fourThirty, .fiveOClock, .fiveThirty, .sixOClock, .sixThirty, .sevenOClock, .sevenThirty, .eightOClock, .eightThirty, .nineOClock, .nineThirty, .tenOClock, .tenThirty, .elevenOClock, .elevenThirty, .newMoon, .waxingCrescentMoon, .firstQuarterMoon, .waxingGibbousMoon, .fullMoon, .waningGibbousMoon, .lastQuarterMoon, .waningCrescentMoon, .crescentMoon, .newMoonFace, .firstQuarterMoonFace, .lastQuarterMoonFace, .thermometer, .sun, .fullMoonFace, .sunWithFace, .ringedPlanet, .star, .glowingStar, .shootingStar, .milkyWay, .cloud, .sunBehindCloud, .cloudWithLightningAndRain, .sunBehindSmallCloud, .sunBehindLargeCloud, .sunBehindRainCloud, .cloudWithRain, .cloudWithSnow, .cloudWithLightning, .tornado, .fog, .windFace, .cyclone, .rainbow, .closedUmbrella, .umbrella, .umbrellaWithRainDrops, .umbrellaOnGround, .highVoltage, .snowflake, .snowman, .snowmanWithoutSnow, .comet, .fire, .droplet, .waterWave]
+            return [ .globeShowingEuropeAfrica, .globeShowingAmericas, .globeShowingAsiaAustralia, .globeWithMeridians, .worldMap, .mapOfJapan, .compass, .snowCappedMountain, .mountain, .landslide, .volcano, .mountFuji, .camping, .beachWithUmbrella, .desert, .desertIsland, .nationalPark, .stadium, .classicalBuilding, .buildingConstruction, .brick, .rock, .wood, .hut, .houses, .derelictHouse, .house, .houseWithGarden, .officeBuilding, .japanesePostOffice, .postOffice, .hospital, .bank, .hotel, .loveHotel, .convenienceStore, .school, .departmentStore, .factory, .japaneseCastle, .castle, .wedding, .tokyoTower, .statueOfLiberty, .church, .mosque, .hinduTemple, .synagogue, .shintoShrine, .kaaba, .fountain, .tent, .foggy, .nightWithStars, .cityscape, .sunriseOverMountains, .sunrise, .cityscapeAtDusk, .sunset, .bridgeAtNight, .hotSprings, .carouselHorse, .playgroundSlide, .ferrisWheel, .rollerCoaster, .barberPole, .circusTent, .locomotive, .railwayCar, .highSpeedTrain, .bulletTrain, .train, .metro, .lightRail, .station, .tram, .monorail, .mountainRailway, .tramCar, .bus, .oncomingBus, .trolleybus, .minibus, .ambulance, .fireEngine, .policeCar, .oncomingPoliceCar, .taxi, .oncomingTaxi, .automobile, .oncomingAutomobile, .sportUtilityVehicle, .pickupTruck, .deliveryTruck, .articulatedLorry, .tractor, .racingCar, .motorcycle, .motorScooter, .manualWheelchair, .motorizedWheelchair, .autoRickshaw, .bicycle, .kickScooter, .skateboard, .rollerSkate, .busStop, .motorway, .railwayTrack, .oilDrum, .fuelPump, .wheel, .policeCarLight, .horizontalTrafficLight, .verticalTrafficLight, .stopSign, .construction, .anchor, .ringBuoy, .sailboat, .canoe, .speedboat, .passengerShip, .ferry, .motorBoat, .ship, .airplane, .smallAirplane, .airplaneDeparture, .airplaneArrival, .parachute, .seat, .helicopter, .suspensionRailway, .mountainCableway, .aerialTramway, .satellite, .rocket, .flyingSaucer, .bellhopBell, .luggage, .hourglassDone, .hourglassNotDone, .watch, .alarmClock, .stopwatch, .timerClock, .mantelpieceClock, .twelveOClock, .twelveThirty, .oneOClock, .oneThirty, .twoOClock, .twoThirty, .threeOClock, .threeThirty, .fourOClock, .fourThirty, .fiveOClock, .fiveThirty, .sixOClock, .sixThirty, .sevenOClock, .sevenThirty, .eightOClock, .eightThirty, .nineOClock, .nineThirty, .tenOClock, .tenThirty, .elevenOClock, .elevenThirty, .newMoon, .waxingCrescentMoon, .firstQuarterMoon, .waxingGibbousMoon, .fullMoon, .waningGibbousMoon, .lastQuarterMoon, .waningCrescentMoon, .crescentMoon, .newMoonFace, .firstQuarterMoonFace, .lastQuarterMoonFace, .thermometer, .sun, .fullMoonFace, .sunWithFace, .ringedPlanet, .star, .glowingStar, .shootingStar, .milkyWay, .cloud, .sunBehindCloud, .cloudWithLightningAndRain, .sunBehindSmallCloud, .sunBehindLargeCloud, .sunBehindRainCloud, .cloudWithRain, .cloudWithSnow, .cloudWithLightning, .tornado, .fog, .windFace, .cyclone, .rainbow, .closedUmbrella, .umbrella, .umbrellaWithRainDrops, .umbrellaOnGround, .highVoltage, .snowflake, .snowman, .snowmanWithoutSnow, .comet, .fire, .droplet, .waterWave]
         }
     }
 }

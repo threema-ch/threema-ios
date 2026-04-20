@@ -1,48 +1,22 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import XCTest
 @testable import Threema
 @testable import ThreemaFramework
 
 final class AutomaticDeleteTests: XCTestCase {
 
-    private var managedObjectContext: NSManagedObjectContext!
+    private var testDatabase: TestDatabase!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
 
-        (_, managedObjectContext, _) = DatabasePersistentContext.devNullContext()
+        testDatabase = TestDatabase()
     }
 
     /// 1. Create Messages for every `OlderThanOption` case excluding `forever` and `everything`.
     /// 2. Delete Messages on each Iteration and test if the amount before and after matches the desired output.
     func testLoadAndAutomaticDeleteTextMessages() async throws {
         // Setup
-        let entityManager =
-            EntityManager(
-                databaseContext: DatabaseContext(
-                    mainContext: managedObjectContext as! ThreemaManagedObjectContext
-                ),
-                isRemoteSecretEnabled: false
-            )
+        let entityManager = testDatabase.entityManager
         let testBundle = Bundle(for: DBLoadTests.self)
         guard let textsPath = testBundle.url(forResource: "test_texts", withExtension: "json") else {
             XCTFail("Cannot find file with test texts")

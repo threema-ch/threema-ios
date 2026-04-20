@@ -1,29 +1,9 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import AVFoundation
 import CocoaLumberjackSwift
 import FileUtility
 import ThreemaFramework
 
-class AudioMediaManager: AudioMediaManagerProtocol {
+final class AudioMediaManager: AudioMediaManagerProtocol {
 
     static func newRecordingAudioURL() -> URL {
         let fullFileName = "voice_recording_\(DateFormatter.getDateForExport(.now))"
@@ -41,38 +21,60 @@ class AudioMediaManager: AudioMediaManagerProtocol {
         }
     }
 
-    static func concatenateRecordingsAndSave(
-        combine urls: [URL],
-        to audioFile: URL,
-        completion: @escaping () -> Void
-    ) throws -> AVAsset {
-        let composition = AVMutableComposition()
-        
-        for url in urls {
-            let asset = AVURLAsset(url: url)
-        
-            if let track = asset.tracks(withMediaType: .audio).first {
-                let timeRange = CMTimeRange(start: .zero, duration: asset.duration)
-                
-                if let compositionTrack = composition.addMutableTrack(
-                    withMediaType: .audio,
-                    preferredTrackID: kCMPersistentTrackID_Invalid
-                ) {
-                    try compositionTrack.insertTimeRange(timeRange, of: track, at: composition.duration)
+    static func concatenateRecordingsAndSave(combine urls: [URL], to audioFile: URL) async throws -> AVAsset {
+        struct LoadedMetadata: Sendable {
+            let index: Int
+            let url: URL
+            let duration: CMTime
+        }
+
+        // Load asset durations in parallel
+        let loaded: [LoadedMetadata] = try await withThrowingTaskGroup(of: LoadedMetadata.self) { group in
+            for (index, url) in urls.enumerated() {
+                group.addTask {
+                    let asset = AVURLAsset(url: url)
+                    let duration = try await asset.load(.duration)
+                    return LoadedMetadata(index: index, url: url, duration: duration)
                 }
             }
+            var result: [LoadedMetadata] = []
+            for try await item in group {
+                result.append(item)
+            }
+            return result
         }
-        
-        // Remove combined files
+
+        // Restore initial order
+        let ordered = loaded.sorted { $0.index < $1.index }
+
+        let composition = AVMutableComposition()
+
+        for item in ordered {
+            let asset = AVURLAsset(url: item.url)
+            let tracks = try await asset.loadTracks(withMediaType: .audio)
+
+            guard let track = tracks.first else {
+                continue
+            }
+
+            let timeRange = CMTimeRange(start: .zero, duration: item.duration)
+
+            guard let compositionTrack = composition.addMutableTrack(
+                withMediaType: .audio,
+                preferredTrackID: kCMPersistentTrackID_Invalid
+            ) else {
+                continue
+            }
+
+            try compositionTrack.insertTimeRange(timeRange, of: track, at: composition.duration)
+        }
+
+        try await save(composition, to: audioFile)
+
         for url in urls {
             FileUtility.shared.deleteIfExists(at: url)
         }
-        
-        Task {
-            try await save(composition, to: audioFile)
-            completion()
-        }
-            
+
         return composition
     }
 

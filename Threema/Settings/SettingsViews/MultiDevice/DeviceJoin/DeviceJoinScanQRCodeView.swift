@@ -1,55 +1,27 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import SwiftUI
 import ThreemaMacros
 
 struct DeviceJoinScanQRCodeView: View {
-    
-    @Binding var showWizard: Bool
-    
+    @AccessibilityFocusState private var isConnectingViewFocused: Bool
     @Environment(\.openURL) private var openURL
-    
-    @ObservedObject var deviceJoinManager: DeviceJoinManager
-    
-    // MARK: Private state
-    
-    @State private var urlSafeBase64 = ""
-        
-    @State private var successfulScanned = false
 
+    @ObservedObject var deviceJoinManager: DeviceJoinManager
+    @Binding var showWizard: Bool
+    @Binding var path: NavigationPath
+
+    @State private var urlSafeBase64 = ""
+    @State private var successfulScanned = false
     @State private var showRetryError = false
     @State private var retryErrorTitle = ""
     @State private var retryErrorMessage = ""
     @State private var showFatalError = false
     @State private var fatalErrorTitle = ""
-
-    @State private var showVerifyEmojiView = false
-    
-    @AccessibilityFocusState private var isConnectingViewFocused: Bool
-
     @State private var scannerViewModel: QRCodeScannerViewModel
 
-    init(showWizard: Binding<Bool>, deviceJoinManager: DeviceJoinManager) {
+    init(deviceJoinManager: DeviceJoinManager, showWizard: Binding<Bool>, path: Binding<NavigationPath>) {
         self._showWizard = showWizard
+        self._path = path
         let model = QRCodeScannerViewModel(
             mode: .multiDeviceLink,
             audioSessionManager: AudioSessionManager(),
@@ -67,19 +39,6 @@ struct DeviceJoinScanQRCodeView: View {
 
     var body: some View {
         ZStack {
-            // `NavigationLink` is needed for programatic navigation
-            // If button shapes are enabled `NavigationLink` has an non zero size (that cannot be completely removed
-            // by setting the frame, button shape or something similar). Thus we put it behind the other views and hide
-            // it, which also disables interaction. This can be resolved if the minimal target is iOS 16 which provides
-            // new programatic navigation APIs.
-            NavigationLink(
-                destination: DeviceJoinVerifyEmojiView(showWizard: $showWizard).environmentObject(deviceJoinManager),
-                isActive: $showVerifyEmojiView
-            ) {
-                EmptyView()
-            }
-            .hidden()
-
             QRCodeScannerView(model: scannerViewModel)
 
             // Allow entering of URL if build with Xcode
@@ -110,15 +69,15 @@ struct DeviceJoinScanQRCodeView: View {
         .navigationBarBackButtonHidden()
         // Note: This will also influence all views lower in the navigation stack
         .interactiveDismissDisabled(deviceJoinManager.viewState != .scanQRCode)
-        .onChange(of: deviceJoinManager.viewState) { _, nextState in
-            switch nextState {
+        .onChange(of: deviceJoinManager.viewState) {
+            switch deviceJoinManager.viewState {
             // We might go back after an error occurred during connection/scanning
             case .scanQRCode:
                 break
             case .establishRendezvousConnection:
                 isConnectingViewFocused = true
             case .verifyRendezvousConnection:
-                showVerifyEmojiView = true
+                path.append(DeviceJoinRoute.verifyEmoji)
             default:
                 break
             }
@@ -226,11 +185,19 @@ struct DeviceJoinScanQRCodeView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            DeviceJoinScanQRCodeView(showWizard: .constant(true), deviceJoinManager: DeviceJoinManager())
+            DeviceJoinScanQRCodeView(
+                deviceJoinManager: DeviceJoinManager(),
+                showWizard: .constant(true),
+                path: .constant(.init())
+            )
         }
         
         NavigationView {
-            DeviceJoinScanQRCodeView(showWizard: .constant(true), deviceJoinManager: deviceJoinManager2)
+            DeviceJoinScanQRCodeView(
+                deviceJoinManager: deviceJoinManager2,
+                showWizard: .constant(true),
+                path: .constant(.init())
+            )
         }
     }
 }

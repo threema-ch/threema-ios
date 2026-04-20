@@ -1,42 +1,24 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 
 @testable import ThreemaFramework
 
-class GroupTests: XCTestCase {
-    
-    private var dbMainCnx: DatabaseContext!
-    private var dbPreparer: DatabasePreparer!
+final class GroupTests: XCTestCase {
+
+    private var testDatabase: TestDatabase!
+    private var dbPreparer: TestDatabasePreparer!
 
     private var ddLoggerMock: DDLoggerMock!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
-        
-        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        dbPreparer = DatabasePreparer(context: mainCnx)
+
+        testDatabase = TestDatabase()
+        dbPreparer = testDatabase.preparer
+
+        // Workaround to ensure remote secret is initialized
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -49,7 +31,7 @@ class GroupTests: XCTestCase {
 
     func testSaveAndImplicitReload() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
-        let expectedGroupID = MockData.generateGroupID()
+        let expectedGroupID = BytesUtility.generateGroupID()
         let expectedMember01 = "MEMBER01"
         let expectedMember02 = "MEMBER02"
 
@@ -60,15 +42,15 @@ class GroupTests: XCTestCase {
         var member03: ContactEntity!
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: expectedMember01
             )
             let member02 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: expectedMember02
             )
             member03 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER03"
             )
             groupEntity = dbPreparer.createGroupEntity(
@@ -107,7 +89,7 @@ class GroupTests: XCTestCase {
 
         let dateNow = Date()
 
-        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
         entityManager.performAndWaitSave {
             let imageData = entityManager.entityCreator.imageDataEntity(data: Data([0]), size: .zero)
 
@@ -142,7 +124,7 @@ class GroupTests: XCTestCase {
 
     func testGroupIdentityMismatch() throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
-        let expectedGroupID = MockData.generateGroupID()
+        let expectedGroupID = BytesUtility.generateGroupID()
 
         // Setup initial group in DB
         var groupEntity: GroupEntity!
@@ -173,9 +155,9 @@ class GroupTests: XCTestCase {
         XCTAssertEqual(group.groupIdentity.creator.rawValue, myIdentityStoreMock.identity)
 
         // Change group property `GroupEntity.groupId` in DB
-        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
         entityManager.performAndWaitSave {
-            groupEntity.groupID = MockData.generateGroupID()
+            groupEntity.groupID = BytesUtility.generateGroupID()
         }
 
         // Check changed group properties
@@ -185,7 +167,7 @@ class GroupTests: XCTestCase {
 
         // Change group property `Conversation.groupID` in DB
         entityManager.performAndWaitSave {
-            conversation.groupID = MockData.generateGroupID()
+            conversation.groupID = BytesUtility.generateGroupID()
         }
 
         // Check changed group properties
@@ -197,7 +179,7 @@ class GroupTests: XCTestCase {
     func testSortedMembers() throws {
         let myIdentityStoreMock = MyIdentityStoreMock(
             identity: "ECHOECHO",
-            secretKey: MockData.generatePublicKey()
+            secretKey: BytesUtility.generatePublicKey()
         )
         
         var groupEntity: GroupEntity!
@@ -205,53 +187,53 @@ class GroupTests: XCTestCase {
         
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER01"
             )
             member01.setLastName(to: "Muster", sortOrderFirstName: true)
             member01.setFirstName(to: "Hans", sortOrderFirstName: true)
 
             let member02 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER02"
             )
             member02.setLastName(to: "Xmen", sortOrderFirstName: true)
             member02.setFirstName(to: "Amy", sortOrderFirstName: true)
 
             let member03 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER03"
             )
             member03.setLastName(to: "Weber", sortOrderFirstName: true)
 
             let member04 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER04"
             )
             member04.setFirstName(to: "Fritzli", sortOrderFirstName: true)
 
             let member05 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER05"
             )
             let member06 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER06"
             )
 
             let member07 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER07"
             )
             member07.setLastName(to: "Weber 2", sortOrderFirstName: true)
 
             let member08 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER08"
             )
             member08.setFirstName(to: "Fritzli 2", sortOrderFirstName: true)
             
-            let groupID = MockData.generateGroupID()
+            let groupID = BytesUtility.generateGroupID()
 
             groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: "MEMBER03")
             conversation = dbPreparer.createConversation(
@@ -350,7 +332,7 @@ class GroupTests: XCTestCase {
     func testSortedMembersWithMe() {
         let myIdentityStoreMock = MyIdentityStoreMock(
             identity: "ECHOECHO",
-            secretKey: MockData.generatePublicKey()
+            secretKey: BytesUtility.generatePublicKey()
         )
         
         var groupEntity: GroupEntity!
@@ -358,21 +340,21 @@ class GroupTests: XCTestCase {
         
         dbPreparer.save {
             let member01 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER01"
             )
             member01.setFirstName(to: "Em", sortOrderFirstName: true)
             member01.setLastName(to: "il", sortOrderFirstName: true)
 
             let member02 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER02"
             )
             member02.setFirstName(to: "Emi", sortOrderFirstName: true)
             member02.setLastName(to: "ly", sortOrderFirstName: true)
 
             let member03 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER03"
             )
             member03.setFirstName(to: "Emi", sortOrderFirstName: true)
@@ -380,13 +362,13 @@ class GroupTests: XCTestCase {
             member03.publicNickname = "Should not matter"
 
             let member04 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "MEMBER04"
             )
             member04.setFirstName(to: "Em", sortOrderFirstName: true)
             member04.setLastName(to: "ily", sortOrderFirstName: true)
 
-            let groupID = MockData.generateGroupID()
+            let groupID = BytesUtility.generateGroupID()
 
             groupEntity = dbPreparer.createGroupEntity(groupID: groupID, groupCreator: "MEMBER03")
             conversation = dbPreparer.createConversation(
@@ -438,7 +420,7 @@ class GroupTests: XCTestCase {
     func testSortedFirstNameMembersMeCreator() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock(
             identity: "ECHOECHO",
-            secretKey: MockData.generatePublicKey()
+            secretKey: BytesUtility.generatePublicKey()
         )
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -448,7 +430,7 @@ class GroupTests: XCTestCase {
         var members = [ContactEntity]()
 
         let member01 = dbPreparer.createContact(
-            publicKey: MockData.generatePublicKey(),
+            publicKey: BytesUtility.generatePublicKey(),
             identity: "MEMBER01"
         )
         member01.setLastName(to: "Muster", sortOrderFirstName: true)
@@ -456,7 +438,7 @@ class GroupTests: XCTestCase {
         members.append(member01)
 
         let member02 = dbPreparer.createContact(
-            publicKey: MockData.generatePublicKey(),
+            publicKey: BytesUtility.generatePublicKey(),
             identity: "MEMBER02"
         )
         member02.setLastName(to: "Xmen", sortOrderFirstName: true)
@@ -468,14 +450,14 @@ class GroupTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettings,
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             groupPhotoSender: {
                 groupPhotoSenderMock
             }
         )
 
         let groupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
@@ -518,7 +500,7 @@ class GroupTests: XCTestCase {
     func testSortedLastNameMembersMeCreator() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock(
             identity: "ECHOECHO",
-            secretKey: MockData.generatePublicKey()
+            secretKey: BytesUtility.generatePublicKey()
         )
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
@@ -529,7 +511,7 @@ class GroupTests: XCTestCase {
         var members = [ContactEntity]()
 
         let member01 = dbPreparer.createContact(
-            publicKey: MockData.generatePublicKey(),
+            publicKey: BytesUtility.generatePublicKey(),
             identity: "MEMBER01"
         )
         member01.setLastName(to: "Muster", sortOrderFirstName: true)
@@ -537,7 +519,7 @@ class GroupTests: XCTestCase {
         members.append(member01)
 
         let member02 = dbPreparer.createContact(
-            publicKey: MockData.generatePublicKey(),
+            publicKey: BytesUtility.generatePublicKey(),
             identity: "MEMBER02"
         )
         member02.setLastName(to: "Xmen", sortOrderFirstName: true)
@@ -549,14 +531,14 @@ class GroupTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettings,
-            entityManager: EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             groupPhotoSender: {
                 groupPhotoSenderMock
             }
         )
 
         let groupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
@@ -605,14 +587,14 @@ class GroupTests: XCTestCase {
             for member in ["MEMBER01", "MEMBER02"] {
                 members.insert(
                     dbPreparer.createContact(
-                        publicKey: MockData.generatePublicKey(),
+                        publicKey: BytesUtility.generatePublicKey(),
                         identity: member
                     )
                 )
             }
         }
 
-        let expectedGroupID = MockData.generateGroupID()
+        let expectedGroupID = BytesUtility.generateGroupID()
         let (conversation1, groupEntity1) = createGroupInDB(
             groupID: expectedGroupID,
             members: members,
@@ -622,7 +604,7 @@ class GroupTests: XCTestCase {
         dbPreparer.save {
             members.insert(
                 dbPreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: "MEMBER03"
                 )
             )
@@ -634,7 +616,7 @@ class GroupTests: XCTestCase {
         )
 
         let (conversation3, groupEntity3) = createGroupInDB(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             members: members,
             myIdentity: myIdentityStoreMock.identity
         )
@@ -688,7 +670,7 @@ class GroupTests: XCTestCase {
             for member in ["MEMBER01", "MEMBER02"] {
                 members.insert(
                     dbPreparer.createContact(
-                        publicKey: MockData.generatePublicKey(),
+                        publicKey: BytesUtility.generatePublicKey(),
                         identity: member
                     )
                 )
@@ -696,7 +678,7 @@ class GroupTests: XCTestCase {
         }
 
         let (conversation, groupEntity) = createGroupInDB(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             members: members,
             myIdentity: myIdentityStoreMock.identity
         )
@@ -712,7 +694,7 @@ class GroupTests: XCTestCase {
 
         XCTAssertFalse(group.willBeDeleted)
 
-        let em = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+        let em = testDatabase.entityManager
         em.performAndWait {
             em.entityDestroyer.delete(groupEntity: groupEntity)
         }
@@ -734,7 +716,7 @@ class GroupTests: XCTestCase {
             for member in ["MEMBER01", "MEMBER02"] {
                 members.insert(
                     dbPreparer.createContact(
-                        publicKey: MockData.generatePublicKey(),
+                        publicKey: BytesUtility.generatePublicKey(),
                         identity: member
                     )
                 )
@@ -742,7 +724,7 @@ class GroupTests: XCTestCase {
         }
 
         let (conversation, groupEntity) = createGroupInDB(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             members: members,
             myIdentity: myIdentityStoreMock.identity
         )
@@ -758,7 +740,7 @@ class GroupTests: XCTestCase {
 
         XCTAssertFalse(group.willBeDeleted)
 
-        let em = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+        let em = testDatabase.entityManager
         em.performAndWait {
             em.entityDestroyer.delete(conversation: conversation)
         }

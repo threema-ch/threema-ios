@@ -15,10 +15,6 @@ let package = Package(
             name: "ThreemaEssentials",
             targets: ["ThreemaEssentials"]
         ),
-        .library(
-            name: "ThreemaEssentialsTestHelper",
-            targets: ["ThreemaEssentialsTestHelper"]
-        ),
     ],
     dependencies: [
         .package(url: "https://github.com/CocoaLumberjack/CocoaLumberjack.git", exact: "3.8.5"),
@@ -46,11 +42,6 @@ let package = Package(
                 ]),
             ]
         
-        ),
-        .target(
-            name: "ThreemaEssentialsTestHelper",
-            dependencies: ["ThreemaEssentials"],
-            path: "Tests/Helper"
         ),
         .testTarget(
             name: "ThreemaEssentialsTests",

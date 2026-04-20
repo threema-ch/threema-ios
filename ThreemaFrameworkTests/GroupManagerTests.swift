@@ -1,34 +1,11 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import RemoteSecretProtocolTestHelper
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 
 @testable import ThreemaFramework
 
-class GroupManagerTests: XCTestCase {
-    private var databaseCnx: DatabaseContext!
-    private var databasePreparer: DatabasePreparer!
-    
+final class GroupManagerTests: XCTestCase {
     private var ddLoggerMock: DDLoggerMock!
     
     private let groupPhotoSenderMock = GroupPhotoSenderMock()
@@ -36,10 +13,6 @@ class GroupManagerTests: XCTestCase {
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         AppLaunchManager.remoteSecretManager = RemoteSecretManagerMock()
-
-        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        databaseCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        databasePreparer = DatabasePreparer(context: mainCnx)
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -56,7 +29,10 @@ class GroupManagerTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let taskManagerMock = TaskManagerMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
         let groupManager = GroupManager(
@@ -64,7 +40,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: ContactStoreMock(callOnCompletion: true),
             taskManager: taskManagerMock,
             userSettings: UserSettingsMock(),
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: TestDatabase().backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -90,21 +66,24 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -148,13 +127,16 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedNewMembers: Set<String> = ["MEMBER01"]
 
-        for member in expectedNewMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedNewMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
         let groupManager = GroupManager(
@@ -162,7 +144,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -208,14 +190,15 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
         
-        for member in expectedMembers {
-            databasePreparer.save {
-                let contact = databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                let contact = testDatabase.backgroundPreparer.createContact(identity: member)
                 contact.isHidden = member == "MEMBER02"
             }
         }
@@ -225,7 +208,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -275,19 +258,20 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
         
-        for member in expectedMembers {
-            databasePreparer.save {
-                let contact = databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                let contact = testDatabase.backgroundPreparer.createContact(identity: member)
                 contact.isHidden = (member == "MEMBER02")
             }
         }
         
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.backgroundEntityManager
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
@@ -309,7 +293,7 @@ class GroupManagerTests: XCTestCase {
         let expectedNewMembers = expectedMembers.filter { $0 != "MEMBER02" && $0 != "MEMBER04" }
         let leavingMembers = expectedMembers.subtracting(expectedNewMembers)
         
-        let messageID: Data! = try databasePreparer.save {
+        let messageID: Data! = try testDatabase.backgroundPreparer.save {
             let stayingContactEntity = try XCTUnwrap(
                 entityManager.entityFetcher
                     .contactEntity(for: expectedNewMembers.first!)
@@ -320,7 +304,7 @@ class GroupManagerTests: XCTestCase {
             )
 
             let conversation = try XCTUnwrap(groupManager.getConversation(for: expectedGroupIdentity))
-            let textMessage = self.databasePreparer.createTextMessage(
+            let textMessage = testDatabase.backgroundPreparer.createTextMessage(
                 conversation: conversation,
                 isOwn: true,
                 sent: true,
@@ -378,13 +362,19 @@ class GroupManagerTests: XCTestCase {
         userSettingsMock.blacklist = ["MEMBER01"]
         let taskManagerMock = TaskManagerMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedMembers: Set<String> = ["MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
 
-        for member in expectedMembers.filter({ $0 != myIdentityStoreMock.identity }) {
-            databasePreparer.createContact(identity: member)
+            for member in expectedMembers.filter({ $0 != myIdentityStoreMock.identity }) {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
         let groupManager = GroupManager(
@@ -392,7 +382,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: ContactStoreMock(callOnCompletion: true),
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -425,13 +415,19 @@ class GroupManagerTests: XCTestCase {
         userSettingsMock.blacklist = ["MEMBER01"]
         let taskManagerMock = TaskManagerMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
 
-        for member in expectedMembers.filter({ $0 != myIdentityStoreMock.identity }) {
-            databasePreparer.createContact(identity: member)
+            for member in expectedMembers.filter({ $0 != myIdentityStoreMock.identity }) {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
         let groupManager = GroupManager(
@@ -439,7 +435,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: ContactStoreMock(callOnCompletion: true),
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -486,15 +482,18 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupCreator = "MEMBER01"
         let expectedInitialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupCreator)
-        for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupCreator)
+            for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
+            testDatabase.backgroundPreparer.createContact(identity: "MEMBER04")
         }
-        databasePreparer.createContact(identity: "MEMBER04")
 
         for expectedMembers in [Set<String>(["MEMBER02", "MEMBER04"]), Set<String>([])] {
             let expectedGroupIdentity = GroupIdentity(
-                id: MockData.generateGroupID(),
+                id: BytesUtility.generateGroupID(),
                 creator: ThreemaIdentity(expectedGroupCreator)
             )
 
@@ -503,7 +502,7 @@ class GroupManagerTests: XCTestCase {
                 contactStore: ContactStoreMock(callOnCompletion: true),
                 taskManager: TaskManagerMock(),
                 userSettings: UserSettingsMock(),
-                entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+                entityManager: testDatabase.backgroundEntityManager,
                 groupPhotoSender: {
                     self.groupPhotoSenderMock
                 }
@@ -559,19 +558,22 @@ class GroupManagerTests: XCTestCase {
         let expectedGroupCreator = "MEMBER01"
         let expectedInitialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupCreator)
-        for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupCreator)
+            for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
+            testDatabase.backgroundPreparer.createContact(identity: "MEMBER04")
         }
-        databasePreparer.createContact(identity: "MEMBER04")
 
         let expectedMembers: Set<String> = ["MEMBER02", "MEMBER04"]
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(expectedGroupCreator)
         )
         
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.backgroundEntityManager
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: ContactStoreMock(callOnCompletion: true),
@@ -604,12 +606,12 @@ class GroupManagerTests: XCTestCase {
         XCTAssertTrue(initialGrp.isSelfMember)
         XCTAssertFalse(initialGrp.isNoteGroup)
         
-        let messageID: Data! = try databasePreparer.save {
+        let messageID: Data! = try testDatabase.backgroundPreparer.save {
             let member02 = try XCTUnwrap(entityManager.entityFetcher.contactEntity(for: "MEMBER02"))
             let member03 = try XCTUnwrap(entityManager.entityFetcher.contactEntity(for: "MEMBER03"))
 
             let conversation = try XCTUnwrap(groupManager.getConversation(for: expectedGroupIdentity))
-            let textMessage = self.databasePreparer.createTextMessage(
+            let textMessage = testDatabase.backgroundPreparer.createTextMessage(
                 conversation: conversation,
                 isOwn: true,
                 sent: true,
@@ -654,14 +656,20 @@ class GroupManagerTests: XCTestCase {
     func testReceiveGroupSetupWithRevokedMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedInitialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
-        for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+            for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let expectedMembers = expectedInitialMembers.union(Set(arrayLiteral: "MEMBER04"))
 
         let error = NSError(domain: NSURLErrorDomain, code: 404)
@@ -671,7 +679,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: ContactStoreMock(callOnCompletion: true, errorHandler: error),
             taskManager: TaskManagerMock(),
             userSettings: UserSettingsMock(),
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -724,16 +732,22 @@ class GroupManagerTests: XCTestCase {
     func testReceiveGroupSetupWithRevokedMemberPartiallyApplyGroupSetup() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedInitialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
-        for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+            for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
+
+            testDatabase.backgroundPreparer.createContact(identity: "MEMBER05")
         }
-        
-        databasePreparer.createContact(identity: "MEMBER05")
-        
+
         let expectedMembers = expectedInitialMembers.union(Set(arrayLiteral: "MEMBER04", "MEMBER05"))
         
         // A made up error; If we ever check for this in the future we need to change this test.
@@ -744,7 +758,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: ContactStoreMock(callOnCompletion: true, errorHandler: error),
             taskManager: TaskManagerMock(),
             userSettings: UserSettingsMock(),
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -798,14 +812,20 @@ class GroupManagerTests: XCTestCase {
     func testReceiveGroupSetupWithMissingLocalMember() async throws {
         let myIdentityStoreMock = MyIdentityStoreMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedInitialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
-        for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+            for member in expectedInitialMembers.filter({ $0 != myIdentityStoreMock.identity }) {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let expectedMembers = expectedInitialMembers.union(Set(arrayLiteral: "MEMBER04"))
         
         // A made up error; If we ever check for this in the future we need to change this test.
@@ -816,7 +836,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: ContactStoreMock(callOnCompletion: true, errorHandler: expectedError),
             taskManager: TaskManagerMock(),
             userSettings: UserSettingsMock(),
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -862,22 +882,25 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         let expectedName = "Test name 123"
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager: GroupManagerProtocol = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -922,22 +945,25 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         let expectedPhoto: Data = try! Data(contentsOf: ResourceLoader.urlResource("Bild-1-0", "jpg")!)
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -1011,13 +1037,16 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
         let groupManager = GroupManager(
@@ -1025,7 +1054,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -1063,13 +1092,17 @@ class GroupManagerTests: XCTestCase {
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03", "MEMBER04"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
-        for member in expectedMembers {
-            databasePreparer.save {
-                let contact = databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+            for member in expectedMembers {
+                let contact = testDatabase.backgroundPreparer.createContact(identity: member)
                 contact.isHidden = member == "MEMBER02" || member == "MEMBER04"
             }
         }
@@ -1079,7 +1112,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -1132,12 +1165,18 @@ class GroupManagerTests: XCTestCase {
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
         let groupManager = GroupManager(
@@ -1145,7 +1184,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -1184,12 +1223,18 @@ class GroupManagerTests: XCTestCase {
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedMembers: Set<String> = ["MEMBER02", "MEMBER03", myIdentityStoreMock.identity]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
         let groupManager = GroupManager(
@@ -1197,7 +1242,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -1251,19 +1296,22 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator:
             ThreemaIdentity("MEMBER01")
         )
         let leavingMember = "MEMBER03"
         let initialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", leavingMember]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
-        for member in initialMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+            for member in initialMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.backgroundEntityManager
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
@@ -1326,19 +1374,22 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator:
             ThreemaIdentity("MEMBER01")
         )
         let leavingMember = "MEMBER03"
         let initialMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", leavingMember]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
-        for member in initialMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+            for member in initialMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.backgroundEntityManager
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
@@ -1361,11 +1412,11 @@ class GroupManagerTests: XCTestCase {
             groupManager.getGroup(expectedGroupIdentity.id, creator: expectedGroupIdentity.creator.rawValue)
         )
 
-        let messageID: Data! = try databasePreparer.save {
+        let messageID: Data! = try testDatabase.backgroundPreparer.save {
             let leavingContactEntity = try XCTUnwrap(entityManager.entityFetcher.contactEntity(for: leavingMember))
 
             let conversation = try XCTUnwrap(groupManager.getConversation(for: expectedGroupIdentity))
-            let textMessage = self.databasePreparer.createTextMessage(
+            let textMessage = testDatabase.backgroundPreparer.createTextMessage(
                 conversation: conversation,
                 isOwn: true,
                 sender: nil,
@@ -1412,15 +1463,21 @@ class GroupManagerTests: XCTestCase {
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.backgroundEntityManager
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
@@ -1484,14 +1541,15 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
 
-        for member in expectedMembers {
-            databasePreparer.save {
-                let contactEntity = databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                let contactEntity = testDatabase.backgroundPreparer.createContact(identity: member)
                 contactEntity.contactState = member == "MEMBER02" ? .invalid : .active
             }
         }
@@ -1501,7 +1559,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -1541,19 +1599,20 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
 
-        for member in expectedMembers {
-            databasePreparer.save {
-                let contactEntity = databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                let contactEntity = testDatabase.backgroundPreparer.createContact(identity: member)
                 contactEntity.contactState = member == "MEMBER02" ? .invalid : .active
             }
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.backgroundEntityManager
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
@@ -1577,12 +1636,12 @@ class GroupManagerTests: XCTestCase {
 
         // Create two text messages with rejectedBy
         
-        let messageID1: Data! = try databasePreparer.save {
+        let messageID1: Data! = try testDatabase.backgroundPreparer.save {
             let someContactEntity = try XCTUnwrap(
                 entityManager.entityFetcher.contactEntity(for: expectedMembers.randomElement()!)
             )
 
-            let textMessage = self.databasePreparer.createTextMessage(
+            let textMessage = testDatabase.backgroundPreparer.createTextMessage(
                 conversation: grp.conversation,
                 isOwn: true,
                 sender: nil,
@@ -1594,12 +1653,12 @@ class GroupManagerTests: XCTestCase {
             return textMessage.id
         }
         
-        let messageID2: Data! = try databasePreparer.save {
+        let messageID2: Data! = try testDatabase.backgroundPreparer.save {
             let someContactEntity = try XCTUnwrap(
                 entityManager.entityFetcher.contactEntity(for: expectedMembers.randomElement()!)
             )
 
-            let textMessage = self.databasePreparer.createTextMessage(
+            let textMessage = testDatabase.backgroundPreparer.createTextMessage(
                 conversation: grp.conversation,
                 isOwn: true,
                 sender: nil,
@@ -1649,13 +1708,16 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
 
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
         let groupManager = GroupManager(
@@ -1663,7 +1725,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -1702,12 +1764,18 @@ class GroupManagerTests: XCTestCase {
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
 
-        databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
         let groupManager = GroupManager(
@@ -1715,7 +1783,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -1751,24 +1819,28 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER02", "MEMBER03"]
         let notMembers: Set<ThreemaIdentity> = [ThreemaIdentity("NOMEMBER")]
 
-        for member in expectedMembers {
-            guard member != myIdentityStoreMock.identity else {
-                continue
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                guard member != myIdentityStoreMock.identity else {
+                    continue
+                }
+                testDatabase.backgroundPreparer.createContact(identity: member)
             }
-            databasePreparer.createContact(identity: member)
         }
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -1815,22 +1887,25 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         let expectedPhoto: Data = try XCTUnwrap(Data(contentsOf: ResourceLoader.urlResource("Bild-1-0", "jpg")!))
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -1891,22 +1966,25 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         let expectedToMember = Set(["MEMBER01"])
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -1961,23 +2039,26 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         
         let unknownMember = "MEMBER04"
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -2020,7 +2101,7 @@ class GroupManagerTests: XCTestCase {
         
         let startDate = Date()
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
@@ -2035,12 +2116,15 @@ class GroupManagerTests: XCTestCase {
                 expectationPhotoTaskAdded.fulfill()
             }
         }
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.backgroundEntityManager
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
@@ -2122,17 +2206,20 @@ class GroupManagerTests: XCTestCase {
         
         let startDate = Date()
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         let expectedPhoto: Data = try XCTUnwrap(Data(contentsOf: ResourceLoader.urlResource("Bild-1-0", "jpg")!))
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.backgroundEntityManager
         let groupManagerForPreparation = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
@@ -2170,9 +2257,9 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
-                delayedGroupPhotoSenderMock
+                self.groupPhotoSenderMock
             }
         )
         
@@ -2214,16 +2301,19 @@ class GroupManagerTests: XCTestCase {
 
         let startDate = Date()
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
 
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.backgroundEntityManager
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
@@ -2297,16 +2387,19 @@ class GroupManagerTests: XCTestCase {
 
         let lastPeriodicSync = Date(timeIntervalSinceNow: -24 * 60 * 60) // One day in the past
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
 
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.backgroundEntityManager
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
@@ -2354,21 +2447,24 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -2399,19 +2495,25 @@ class GroupManagerTests: XCTestCase {
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
         
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER01", "MEMBER02", "MEMBER03"]
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -2443,13 +2545,16 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers: Set<String> = ["MEMBER01", "MEMBER02", "MEMBER03"]
         
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
         
         let groupManager = GroupManager(
@@ -2457,7 +2562,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -2484,19 +2589,25 @@ class GroupManagerTests: XCTestCase {
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
         
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("MEMBER01"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("MEMBER01")
+        )
         let expectedMembers: Set<String> = [myIdentityStoreMock.identity, "MEMBER01", "MEMBER02", "MEMBER03"]
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -2537,17 +2648,20 @@ class GroupManagerTests: XCTestCase {
             "MEMBER11",
             "MEMBER12",
         ]
-        
-        for member in allMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in allMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -2558,7 +2672,7 @@ class GroupManagerTests: XCTestCase {
         // Group 1: Own
         
         let expectedGroup1 = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
         let expectedMembers1 = Set<String>(allMembers[0..<3])
@@ -2575,7 +2689,7 @@ class GroupManagerTests: XCTestCase {
         // Group 2: Other
         
         let expectedGroup2 = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(allMembers[3])
         )
         let expectedMembers2 = Set<String>(allMembers[3...] + [myIdentityStoreMock.identity])
@@ -2592,7 +2706,7 @@ class GroupManagerTests: XCTestCase {
         // Group 3: Left
         
         let expectedGroup3 = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(allMembers[3])
         )
         let expectedMembers3 = Set<String>(allMembers[3...] + [myIdentityStoreMock.identity])
@@ -2628,7 +2742,7 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
@@ -2637,17 +2751,20 @@ class GroupManagerTests: XCTestCase {
         let expectedMembers = initialMembers.union(Set([newMember]))
         
         // Setup stuff
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -2665,11 +2782,12 @@ class GroupManagerTests: XCTestCase {
 
         // Add open ballot
         
-        var ballot: BallotEntity!
-        databasePreparer.save {
-            ballot = databasePreparer.createBallot(conversation: group.conversation)
-            ballot.creatorID = myIdentityStoreMock.identity
-            ballot.state = NSNumber(integerLiteral: BallotEntity.BallotState.open.rawValue)
+        testDatabase.backgroundPreparer.save {
+            let conversationEntity = testDatabase.backgroundEntityManager.entityFetcher
+                .conversationEntity(with: group.conversationObjectID)!
+            let ballotEntity = testDatabase.backgroundPreparer.createBallot(conversation: conversationEntity)
+            ballotEntity.creatorID = myIdentityStoreMock.identity
+            ballotEntity.state = NSNumber(integerLiteral: BallotEntity.BallotState.open.rawValue)
         }
         
         // Test
@@ -2694,10 +2812,12 @@ class GroupManagerTests: XCTestCase {
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+
+        let testDatabase = TestDatabase()
+        let entityManager = testDatabase.backgroundEntityManager
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
@@ -2747,10 +2867,12 @@ class GroupManagerTests: XCTestCase {
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+
+        let testDatabase = TestDatabase()
+        let entityManager = testDatabase.backgroundEntityManager
         
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
@@ -2772,9 +2894,13 @@ class GroupManagerTests: XCTestCase {
         )
         
         let expectedNewMembers: Set<String> = ["MEMBER01"]
-        for member in expectedNewMembers {
-            databasePreparer.createContact(identity: member)
+
+        testDatabase.backgroundPreparer.save {
+            for member in expectedNewMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
+
         guard let grp = try await groupManager.createOrUpdateDB(
             for: expectedGroupIdentity,
             members: expectedNewMembers,
@@ -2812,19 +2938,23 @@ class GroupManagerTests: XCTestCase {
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
-        
+
+        let testDatabase = TestDatabase()
+        let entityManager = testDatabase.backgroundEntityManager
+
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
         let expectedMembers: Set<String> = ["MEMBER01"]
-        
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
-        
+
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,
             contactStore: contactStoreMock,
@@ -2878,10 +3008,12 @@ class GroupManagerTests: XCTestCase {
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
         let userSettingsMock = UserSettingsMock()
-        let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+
+        let testDatabase = TestDatabase()
+        let entityManager = testDatabase.backgroundEntityManager
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
@@ -2903,9 +3035,13 @@ class GroupManagerTests: XCTestCase {
         )
         
         let expectedNewMembers: Set<String> = ["MEMBER01"]
-        for member in expectedNewMembers {
-            databasePreparer.createContact(identity: member)
+
+        testDatabase.backgroundPreparer.save {
+            for member in expectedNewMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
+
         try await groupManager.createOrUpdateDB(
             for: expectedGroupIdentity,
             members: expectedNewMembers,
@@ -2955,9 +3091,10 @@ class GroupManagerTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let contactStoreMock = ContactStoreMock(callOnCompletion: true)
         let taskManagerMock = TaskManagerMock()
+        let testDatabase = TestDatabase()
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
@@ -2966,7 +3103,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: UserSettingsMock(enableMultiDevice: true),
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -3013,12 +3150,16 @@ class GroupManagerTests: XCTestCase {
 
         let taskManagerMock = TaskManagerMock()
 
-        let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("CREATOR1"))
+        let expectedGroupIdentity = GroupIdentity(
+            id: BytesUtility.generateGroupID(),
+            creator: ThreemaIdentity("CREATOR1")
+        )
         let expectedGroupMembers = Set(["MEMBER01", "MEMBER02", "MEMBER03", myIdentityStoreMock.identity])
 
-        databasePreparer.save {
-            databasePreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
-            databasePreparer.createContact(identity: "MEMBER02")
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            testDatabase.backgroundPreparer.createContact(identity: expectedGroupIdentity.creator.rawValue)
+            testDatabase.backgroundPreparer.createContact(identity: "MEMBER02")
         }
 
         let groupManager = GroupManager(
@@ -3026,7 +3167,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -3052,7 +3193,7 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
@@ -3062,8 +3203,11 @@ class GroupManagerTests: XCTestCase {
 
         // Setup stuff
 
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
         let groupManager = GroupManager(
@@ -3071,7 +3215,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }
@@ -3132,7 +3276,7 @@ class GroupManagerTests: XCTestCase {
         let userSettingsMock = UserSettingsMock()
 
         let expectedGroupIdentity = GroupIdentity(
-            id: MockData.generateGroupID(),
+            id: BytesUtility.generateGroupID(),
             creator: ThreemaIdentity(myIdentityStoreMock.identity)
         )
 
@@ -3143,8 +3287,11 @@ class GroupManagerTests: XCTestCase {
 
         // Setup stuff
 
-        for member in expectedMembers {
-            databasePreparer.createContact(identity: member)
+        let testDatabase = TestDatabase()
+        testDatabase.backgroundPreparer.save {
+            for member in expectedMembers {
+                testDatabase.backgroundPreparer.createContact(identity: member)
+            }
         }
 
         let groupManager = GroupManager(
@@ -3152,7 +3299,7 @@ class GroupManagerTests: XCTestCase {
             contactStore: contactStoreMock,
             taskManager: taskManagerMock,
             userSettings: userSettingsMock,
-            entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupPhotoSender: {
                 self.groupPhotoSenderMock
             }

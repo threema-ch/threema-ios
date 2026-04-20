@@ -74,7 +74,7 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>comgooglemaps</string>
-		<string>threema</string>
+		<string>threemagreen</string>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
@@ -129,15 +129,15 @@
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
-    <key>UILaunchScreen</key>
-    <dict>
-        <key>UIColorName</key>
-        <string>LaunchScreenBackground</string>
-        <key>UIImageName</key>
-        <string>LockCover</string>
-        <key>UIImageRespectsSafeAreaInsets</key>
-        <true/>
-    </dict>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchScreenBackground</string>
+		<key>UIImageName</key>
+		<string>LockCover</string>
+		<key>UIImageRespectsSafeAreaInsets</key>
+		<true/>
+	</dict>
 	<key>UIPrerenderedIcon</key>
 	<true/>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -163,11 +163,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-    <key>UIDesignRequiresCompatibility</key>
-    <true/>
-    <key>NSBonjourServices</key>
-    <array>
-        <string>_privacy-check._tcp</string>
-    </array>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_privacy-check._tcp</string>
+	</array>
 </dict>
 </plist>

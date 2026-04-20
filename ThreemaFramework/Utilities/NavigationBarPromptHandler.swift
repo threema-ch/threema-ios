@@ -1,28 +1,8 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import GroupCalls
 import ThreemaMacros
 
-@objc public class NavigationBarPromptHandler: NSObject {
+@objc public final class NavigationBarPromptHandler: NSObject {
     
     @objc public static var isWebActive = false {
         didSet {
@@ -53,27 +33,27 @@ import ThreemaMacros
     
     @objc public static var name: String? = nil
         
-    @objc public static func getCurrentPrompt(duration: NSNumber?) -> String? {
+    public static func getCurrentPrompt(duration: Int?) -> String? {
         
         if isCallActiveInBackground {
             if let duration {
-                return String.localizedStringWithFormat(
+                return "☎️ " + String.localizedStringWithFormat(
                     "%@ - %@",
-                    DateFormatter.timeFormatted(duration.intValue),
+                    DateFormatter.timeFormatted(duration),
                     name ?? ""
                 )
             }
             else {
-                return name
+                return "☎️ " + (name ?? "")
             }
         }
         
         if isGroupCallActive {
             if let name {
-                return "\(#localize("group_call_title")): \(name)"
+                return "☎️ " + "\(#localize("group_call_title")): \(name)"
             }
             else {
-                return #localize("group_call_title")
+                return"☎️ " + #localize("group_call_title")
             }
         }
         

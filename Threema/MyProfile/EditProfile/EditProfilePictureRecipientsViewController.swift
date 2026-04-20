@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import ThreemaEssentials
 import ThreemaMacros
@@ -29,7 +9,7 @@ final class EditProfilePictureRecipientsViewController: UICollectionViewControll
     
     private enum Constants {
         static var contactsPerRow: Int {
-            UIDevice.current.userInterfaceIdiom == .pad ? 7 : 5
+            AppDelegate.shared().isCompactSizeClass ? 5 : 7
         }
 
         static let sectionInset = NSDirectionalEdgeInsets(top: 0, leading: 20, bottom: 8, trailing: 20)
@@ -57,7 +37,10 @@ final class EditProfilePictureRecipientsViewController: UICollectionViewControll
     private lazy var dataSource = CollectionViewDiffableSimpleHeaderAndFooterDataSource<
         Section,
         Row
-    >(collectionView: self.collectionView) { [weak self] collectionView, indexPath, row -> UICollectionViewCell? in
+    >(collectionView: self.collectionView) {
+        [weak self] collectionView,
+            indexPath,
+            row -> UICollectionViewCell? in
         
         switch row {
         case let .action(kind, selected):
@@ -71,14 +54,13 @@ final class EditProfilePictureRecipientsViewController: UICollectionViewControll
             return kindCell
             
         case let .recipient(contact):
-            let editContactCell: ContactGridContactCell = collectionView
-                .dequeueCell(for: indexPath)
-            editContactCell.configure(for: contact)
+            let editContactCell: SelectedItemGridCell = collectionView.dequeueCell(for: indexPath)
+            let item = SelectableItem(id: contact.objectID, item: .contact(contact), isSelected: false)
+            editContactCell.configure(for: item)
             editContactCell.onClear = { [weak self] in
                 guard let self else {
                     return
                 }
-                
                 contacts.removeAll { $0.identity == contact.identity }
                 configureSnapshot(animated: true)
             }
@@ -153,17 +135,14 @@ final class EditProfilePictureRecipientsViewController: UICollectionViewControll
         target: self,
         action: #selector(cancelButtonTapped)
     )
-    private lazy var saveBarButtonItem = UIBarButtonItem(
-        barButtonSystemItem: .save,
-        target: self,
-        action: #selector(saveButtonTapped)
-    )
+    
+    private lazy var saveBarButtonItem = UIBarButtonItem.saveButton(target: self, selector: #selector(saveButtonTapped))
     
     // MARK: - Sections
     
     private static var recipientsSection: NSCollectionLayoutSection {
         let itemSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1),
+            widthDimension: .fractionalWidth(1.0 / CGFloat(Constants.contactsPerRow)),
             heightDimension: .estimated(80)
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
@@ -173,7 +152,7 @@ final class EditProfilePictureRecipientsViewController: UICollectionViewControll
         )
         let group = NSCollectionLayoutGroup.horizontal(
             layoutSize: groupSize,
-            subitem: item,
+            repeatingSubitem: item,
             count: Constants.contactsPerRow
         )
         group.interItemSpacing = NSCollectionLayoutSpacing.fixed(Constants.contactsInterItemSpacing)
@@ -278,7 +257,7 @@ final class EditProfilePictureRecipientsViewController: UICollectionViewControll
     
     private func registerCells() {
         collectionView.registerCell(ReleasePictureKindCell.self)
-        collectionView.registerCell(ContactGridContactCell.self)
+        collectionView.registerCell(SelectedItemGridCell.self)
         collectionView.registerCell(ContactGridAddButtonCell.self)
         collectionView.register(
             ContactGridHeaderView.self,

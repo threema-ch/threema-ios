@@ -1,45 +1,25 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2018-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import ThreemaFramework
 
-@objc class WebClientSessionStore: NSObject {
+final class WebClientSessionStore {
     
-    @objc static let shared = WebClientSessionStore()
+    static let shared = WebClientSessionStore()
     
     private let entityManager: EntityManager
 
-    override private init() {
+    init() {
         self.entityManager = BusinessInjector.ui.entityManager
     }
     
-    @objc func webClientSessionForHash(_ hash: String) -> WebClientSessionEntity? {
+    func webClientSessionForHash(_ hash: String) -> WebClientSessionEntity? {
         entityManager.entityFetcher.webClientSessionEntity(for: hash)
     }
         
-    @objc func activeWebClientSession() -> WebClientSessionEntity? {
+    func activeWebClientSession() -> WebClientSessionEntity? {
         entityManager.entityFetcher.activeWebClientSessionEntity()
     }
     
-    @objc func allWebClientSessions() -> [WebClientSessionEntity]? {
+    func allWebClientSessions() -> [WebClientSessionEntity]? {
         entityManager.entityFetcher.webClientSessionEntities()
     }
     
@@ -93,7 +73,7 @@ import ThreemaFramework
         return session!
     }
     
-    @objc func updateWebClientSession(session: WebClientSessionEntity, active: Bool) {
+    func updateWebClientSession(session: WebClientSessionEntity, active: Bool) {
         entityManager.performAndWaitSave {
             session.active = NSNumber(value: active) as NSNumber
         }
@@ -146,7 +126,7 @@ import ThreemaFramework
         }
     }
     
-    @objc func setAllWebClientSessionsInactive() {
+    func setAllWebClientSessionsInactive() {
         entityManager.performAndWaitSave {
             if let sessions = self.entityManager.entityFetcher.activeWebClientSessionEntities() {
                 for session in sessions {

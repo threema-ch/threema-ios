@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 // swiftformat:disable blankLinesAroundMark
 
 import Foundation
@@ -31,9 +11,6 @@ extension Colors {
         
         // MARK: TabBar
         update(tabBar: UITabBar.appearance())
-        
-        // MARK: UINavigationBar
-        update(navigationBar: UINavigationBar.appearance())
         
         // MARK: UIToolBar
         update(toolBar: UIToolbar.appearance())
@@ -57,9 +34,16 @@ extension Colors {
         UITextField.appearance().textColor = .label
         
         // MARK: UIBarButtonItem
-        UIBarButtonItem.appearance().tintColor = .primary
-        UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self])
-            .setTitleTextAttributes([.foregroundColor: UIColor.primary], for: .normal)
+        if #available(iOS 26.0, *) {
+            UIBarButtonItem.appearance().tintColor = .label
+            UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self])
+                .setTitleTextAttributes([.foregroundColor: UIColor.label], for: .normal)
+        }
+        else {
+            UIBarButtonItem.appearance().tintColor = .primary
+            UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self])
+                .setTitleTextAttributes([.foregroundColor: UIColor.primary], for: .normal)
+        }
         
         // MARK: UIProgressView
         UIProgressView.appearance().tintColor = .primary
@@ -73,10 +57,10 @@ extension Colors {
 
 // MARK: - Manual updates
 extension Colors {
-    @objc public class func updateKeyboardAppearance(for textInputTraits: UITextInputTraits) {
+    @objc public class func updateKeyboardAppearance(for textInputTraits: AnyObject) {
         if let textField = textInputTraits as? UITextField {
             switch theme {
-            case .light, .undefined:
+            case .light:
                 textField.keyboardAppearance = .light
             case .dark:
                 textField.keyboardAppearance = .dark
@@ -98,7 +82,7 @@ extension Colors {
         }
         if let textView = textInputTraits as? UITextView {
             switch theme {
-            case .light, .undefined:
+            case .light:
                 textView.keyboardAppearance = .light
             case .dark:
                 textView.keyboardAppearance = .dark
@@ -112,53 +96,21 @@ extension Colors {
         tableView.sectionIndexColor = .primary
         tableView.separatorInsetReference = .fromAutomaticInsets
     }
-       
-    /// Check if a call or web session is active and return the correct appearance
-    /// - Returns: Transparent or default UINavigationBarAppearance
-    public class func transparentNavigationBarAppearance() -> UINavigationBarAppearance {
-        guard !NavigationBarPromptHandler.shouldShowPrompt() else {
-            let defaultAppearance = defaultNavigationBarAppearance()
-            defaultAppearance.shadowColor = .clear
-            return defaultAppearance
-        }
-        
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        return appearance
-    }
-
-    @objc public class func defaultNavigationBarAppearance() -> UINavigationBarAppearance {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithDefaultBackground()
-        appearance.backgroundColor = colorForNavigationBackground()
-        return appearance
-    }
     
     @objc public class func colorForNavigationBackground() -> UIColor? {
+        // We do no longer show navigation bar colors when using glass, because they cover the title label.
+        if #available(iOS 26.0, *) {
+            return nil
+        }
+        
         if NavigationBarPromptHandler.isCallActiveInBackground || NavigationBarPromptHandler.isGroupCallActive {
             return .navigationBarCall
         }
         else if NavigationBarPromptHandler.isWebActive {
             return .navigationBarWeb
         }
+        
         return nil
-    }
-    
-    @objc public class func colorForBarTint() -> UIColor? {
-        if NavigationBarPromptHandler.isCallActiveInBackground || NavigationBarPromptHandler.isGroupCallActive {
-            return .navigationBarCall
-        }
-        else if NavigationBarPromptHandler.isWebActive {
-            return .navigationBarWeb
-        }
-        return Colors.backgroundNavigationController
-    }
-            
-    @objc public class func update(navigationBar: UINavigationBar) {
-        navigationBar.barTintColor = colorForBarTint()
-
-        navigationBar.standardAppearance = defaultNavigationBarAppearance()
-        navigationBar.scrollEdgeAppearance = transparentNavigationBarAppearance()
     }
         
     @objc public class func update(tabBar: UITabBar) {
@@ -166,7 +118,7 @@ extension Colors {
         tabBar.isOpaque = false
 
         switch theme {
-        case .light, .undefined:
+        case .light:
             tabBar.barTintColor = .white
             tabBar.barStyle = .default
         case .dark:
@@ -182,12 +134,19 @@ extension Colors {
     }
     
     @objc public class func update(window: UIWindow) {
-        
-        if !UserSettings.shared().useSystemTheme, window.overrideUserInterfaceStyle == .unspecified {
-            window.overrideUserInterfaceStyle = theme == .dark ? .dark : .light
-        }
-        else {
-            if UserSettings.shared().useSystemTheme, window.overrideUserInterfaceStyle != .unspecified {
+        switch UserSettings.shared().interfaceStyle {
+        case UIUserInterfaceStyle.light.rawValue:
+            if window.overrideUserInterfaceStyle != .light {
+                window.overrideUserInterfaceStyle = .light
+            }
+
+        case UIUserInterfaceStyle.dark.rawValue:
+            if window.overrideUserInterfaceStyle != .dark {
+                window.overrideUserInterfaceStyle = .dark
+            }
+
+        default:
+            if window.overrideUserInterfaceStyle != .unspecified {
                 window.overrideUserInterfaceStyle = .unspecified
             }
         }
@@ -197,7 +156,7 @@ extension Colors {
         updateKeyboardAppearance(for: searchBar)
         
         switch theme {
-        case .light, .undefined:
+        case .light:
             searchBar.barStyle = .default
             UITextField.appearance().keyboardAppearance = .default
         case .dark:
@@ -205,10 +164,14 @@ extension Colors {
             UITextField.appearance().keyboardAppearance = .dark
         }
         searchBar.isTranslucent = true
-        
-        UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self])
-            .setTitleTextAttributes([.foregroundColor: UIColor.primary], for: .normal)
-        
+        if #available(iOS 26.0, *) {
+            UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self])
+                .setTitleTextAttributes([.foregroundColor: UIColor.label], for: .normal)
+        }
+        else {
+            UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self])
+                .setTitleTextAttributes([.foregroundColor: UIColor.primary], for: .normal)
+        }
         searchBar.searchTextField.textColor = .label
     }
     

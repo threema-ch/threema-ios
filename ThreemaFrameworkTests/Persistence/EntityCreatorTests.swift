@@ -1,42 +1,19 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CoreData
-import ThreemaEssentialsTestHelper
+import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
-class EntityCreatorTests: XCTestCase {
+final class EntityCreatorTests: XCTestCase {
 
     private let testBundle = Bundle(for: EntityCreatorTests.self)
-    private var context: NSManagedObjectContext!
-    private var databasePreparer: DatabasePreparer!
     private var conversation: ConversationEntity!
     private var entityCreator: EntityCreator!
     private var entityManager: EntityManager!
 
     override func setUp() {
-        let (_, context, backgroundManagedObjectContext) = DatabasePersistentContext.devNullContext()
-                
-        databasePreparer = DatabasePreparer(context: context)
-        
+        let testDatabase = TestDatabase()
+        let databasePreparer = testDatabase.preparer
+
         databasePreparer.save {
             conversation = databasePreparer.createConversation(
                 typing: false,
@@ -46,13 +23,10 @@ class EntityCreatorTests: XCTestCase {
             )
         }
         
-        let databaseContext = DatabaseContext(
-            mainContext: context,
-            backgroundContext: backgroundManagedObjectContext
-        )
-        
-        entityCreator = EntityCreator(managedObjectContext: context)
-        entityManager = EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false)
+        entityCreator = testDatabase.entityManager.entityCreator
+        entityManager = testDatabase.entityManager
+
+        super.setUp()
     }
     
     // MARK: - Own messages
@@ -253,7 +227,7 @@ class EntityCreatorTests: XCTestCase {
         let contactEntity = entityManager.performAndWaitSave {
             let contact = self.entityManager.entityCreator.contactEntity(
                 identity: "ABCDEFGH",
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 sortOrderFirstName: true
             )
             return contact
@@ -281,7 +255,7 @@ class EntityCreatorTests: XCTestCase {
     func testCreateBallotChoiceEntity() throws {
         let ballotChoiceEntity = entityManager.performAndWaitSave {
             // Ensure all required values are set
-            let ballot = self.entityCreator.ballotEntity(id: MockData.generateBallotID())
+            let ballot = self.entityCreator.ballotEntity(id: BytesUtility.generateBallotID())
             let ballotChoice = self.entityCreator.ballotChoiceEntity(ballotEntity: ballot)
             return ballotChoice
         }
@@ -293,7 +267,7 @@ class EntityCreatorTests: XCTestCase {
     func testCreateBallotResultEntity() throws {
         let ballotResultEntity = entityManager.performAndWaitSave {
             
-            let ballot = self.entityCreator.ballotEntity(id: MockData.generateBallotID())
+            let ballot = self.entityCreator.ballotEntity(id: BytesUtility.generateBallotID())
             let ballotChoice = self.entityCreator.ballotChoiceEntity(ballotEntity: ballot)
             let ballotResult = self.entityCreator.ballotResultEntity(
                 participantID: "ABCDEFGH",
@@ -307,7 +281,7 @@ class EntityCreatorTests: XCTestCase {
     }
     
     func testNonceEntity() {
-        let expectedNonce = MockData.generateMessageNonce()
+        let expectedNonce = BytesUtility.generateMessageNonce()
         
         let nonceEntity = entityManager.performAndWaitSave {
             self.entityCreator.nonceEntity(for: expectedNonce)
@@ -441,7 +415,7 @@ class EntityCreatorTests: XCTestCase {
         let expectedWidth: Int? = Int(expectedImage.size.width)
         let expectedThumbnailData: Data? = nil
         let expectedThumbnailSize: CGSize? = nil
-        let expectedEncryptionKey: Data = MockData.generateBlobEncryptionKey()
+        let expectedEncryptionKey: Data = BytesUtility.generateBlobEncryptionKey()
         let expectedOrigin = NSNumber(integerLiteral: 1)
         let expectedCorrelationID = "TestCorrelationID"
         let expectedWebRequestID = "TestWebRequestID"
@@ -500,7 +474,7 @@ class EntityCreatorTests: XCTestCase {
         let expectedHeight: Int? = 400
         let expectedWidth: Int? = 600
         let expectedThumbnailSize: CGSize? = expectedThumbnail.size
-        let expectedEncryptionKey: Data = MockData.generateBlobEncryptionKey()
+        let expectedEncryptionKey: Data = BytesUtility.generateBlobEncryptionKey()
         let expectedOrigin = NSNumber(integerLiteral: 1)
         let expectedCorrelationID = "TestCorrelationID"
         let expectedWebRequestID = "TestWebRequestID"
@@ -558,7 +532,7 @@ class EntityCreatorTests: XCTestCase {
         let expectedWidth: Int? = nil
         let expectedThumbnailData: Data? = nil
         let expectedThumbnailSize: CGSize? = nil
-        let expectedEncryptionKey: Data = MockData.generateBlobEncryptionKey()
+        let expectedEncryptionKey: Data = BytesUtility.generateBlobEncryptionKey()
         let expectedOrigin = NSNumber(integerLiteral: 1)
         let expectedCorrelationID = "TestCorrelationID"
         let expectedWebRequestID = "TestWebRequestID"
@@ -616,7 +590,7 @@ class EntityCreatorTests: XCTestCase {
         let expectedWidth: Int? = nil
         let expectedThumbnailData: Data? = nil
         let expectedThumbnailSize: CGSize? = nil
-        let expectedEncryptionKey: Data = MockData.generateBlobEncryptionKey()
+        let expectedEncryptionKey: Data = BytesUtility.generateBlobEncryptionKey()
         let expectedOrigin = NSNumber(integerLiteral: 1)
         let expectedCorrelationID = "TestCorrelationID"
         let expectedWebRequestID = "TestWebRequestID"

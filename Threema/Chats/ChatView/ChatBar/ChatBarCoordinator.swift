@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import AudioToolbox
 import CocoaLumberjackSwift
 import FileUtility
@@ -61,7 +41,8 @@ final class ChatBarCoordinator {
     var isRecording = false
     
     // MARK: - Private properties
-    
+
+    private let imageSender = ImageURLSenderItemCreator()
     private lazy var documentPicker = DocumentPicker(for: conversation, presenter: chatViewController)
     private var sendMediaAction: SendMediaAction?
     
@@ -541,12 +522,11 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
         
         if containsMemoji {
             guard let image = UIPasteboard.general.image?.pngData(),
-                  let uti = ImageURLSenderItemCreator.getUTI(for: image) as? String else {
+                  let uti = imageSender.getUTI(for: image) as? String else {
                 showPasteError()
                 return false
             }
-            
-            let imageSender = ImageURLSenderItemCreator()
+
             if let senderItem = imageSender.senderItem(from: image, uti: uti) {
                 Task {
                     do {
@@ -585,8 +565,6 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     
     @available(iOS 18.0, *)
     func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph) {
-        
-        let imageSender = ImageURLSenderItemCreator()
         if let senderItem = imageSender.senderItem(from: glyph.imageContent, uti: UTType.png.identifier) {
             Task {
                 do {
@@ -843,16 +821,35 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     }
     
     func sendTypingIndicator(startTyping: Bool) {
-        // Only send typing indicator in groups
-        // Only send typing indicator if the conversation has a contact (equivalent to being a group but we want the
-        // identity to not be optional)
-        // Do not send false twice in a row
-        if !conversation.isGroup, let identity = conversation.contact?.threemaIdentity,
-           (!startTyping && lastTypingIndicatorState) || startTyping {
-            DDLogVerbose("Send typing indicator \(startTyping)")
-            businessInjector.messageSender.sendTypingIndicator(typing: startTyping, toIdentity: identity)
-            lastTypingIndicatorState = startTyping
+
+        // Don't send consecutive false values.
+        guard startTyping || lastTypingIndicatorState else {
+            return
         }
+
+        // Don't send typing indicators in groups.
+        guard !conversation.isGroup else {
+            return
+        }
+
+        // Don't send typing indicators if the conversation doesn't have a contact.
+        guard let identity = conversation.contact?.threemaIdentity else {
+            return
+        }
+
+        // Don't send typing indicators when editing messages.
+        guard messageToEdit == nil else {
+            return
+        }
+
+        // Don't send typing indicators if the chat text view is not a first responder (e.g. emoji is sent).
+        guard chatBar.isTextViewFirstResponder else {
+            return
+        }
+
+        DDLogVerbose("Sending typing indicator state \(startTyping.description.uppercased()) to identity \(identity).")
+        businessInjector.messageSender.sendTypingIndicator(typing: startTyping, toIdentity: identity)
+        lastTypingIndicatorState = startTyping
     }
     
     func stopTypingTimers() {
@@ -861,8 +858,8 @@ extension ChatBarCoordinator: ChatBarViewDelegate {
     
     func updateLayoutForTextChange() {
         UIView.animate(
-            withDuration: ChatViewConfiguration.ChatBar.ContentInsetAnimation.totalDuration,
-            delay: ChatViewConfiguration.ChatBar.ContentInsetAnimation.delay,
+            withDuration: ChatBarConfiguration.ContentInsetAnimation.totalDuration,
+            delay: ChatBarConfiguration.ContentInsetAnimation.delay,
             options: .curveEaseInOut,
             animations: { [weak self] in
                 guard let strongSelf = self else {

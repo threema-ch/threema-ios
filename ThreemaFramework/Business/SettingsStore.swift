@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import Intents
@@ -28,7 +8,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
 
     // MARK: Public Attributes
     
-    public lazy var wallpaperStore = WallpaperStore.shared
+    public lazy var wallpaperStore: WallpaperStoreProtocol = WallpaperStore.shared
 
     // MARK: Private Attributes
 
@@ -69,7 +49,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         self.previewLimit = userSettings.previewLimit
         self.showGalleryPreview = userSettings.showGalleryPreview
         self.showProfilePictures = userSettings.showProfilePictures
-        self.useSystemTheme = userSettings.useSystemTheme
+        self.interfaceStyle = userSettings.interfaceStyle
 
         // Privacy Settings
         self.syncContacts = userSettings.syncContacts
@@ -192,9 +172,9 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         }
     }
 
-    @Published public var useSystemTheme: Bool {
+    @Published public var interfaceStyle: Int {
         didSet {
-            guard userSettings.useSystemTheme != useSystemTheme else {
+            guard userSettings.interfaceStyle != interfaceStyle else {
                 return
             }
             updateUserSettingsAsync()
@@ -518,6 +498,12 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
             guard userSettings.threemaVideoCallQualitySetting != threemaVideoCallQualitySetting else {
                 return
             }
+            
+            NotificationCenter.default.post(
+                name: Notification.Name(kThreemaVideoCallsQualitySettingChanged),
+                object: nil
+            )
+            
             updateUserSettingsAsync()
         }
     }
@@ -855,7 +841,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         compareAndAssign(&userSettings.previewLimit, previewLimit)
         compareAndAssign(&userSettings.showGalleryPreview, showGalleryPreview)
         compareAndAssign(&userSettings.showProfilePictures, showProfilePictures)
-        compareAndAssign(&userSettings.useSystemTheme, useSystemTheme)
+        compareAndAssign(&userSettings.interfaceStyle, interfaceStyle)
 
         // Privacy Settings
         compareAndAssign(&userSettings.syncContacts, syncContacts)
@@ -940,7 +926,7 @@ public final class SettingsStore: SettingsStoreInternalProtocol, SettingsStorePr
         compareAndAssign(&previewLimit, userSettings.previewLimit)
         compareAndAssign(&showGalleryPreview, userSettings.showGalleryPreview)
         compareAndAssign(&showProfilePictures, userSettings.showProfilePictures)
-        compareAndAssign(&useSystemTheme, userSettings.useSystemTheme)
+        compareAndAssign(&interfaceStyle, userSettings.interfaceStyle)
 
         // Privacy Settings
         compareAndAssign(&syncContacts, userSettings.syncContacts)

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2012-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import <CommonCrypto/CommonCrypto.h>
 #import <MobileCoreServices/MobileCoreServices.h>
 
@@ -33,13 +13,11 @@
 #import "MyIdentityStore.h"
 #import "PortraitNavigationController.h"
 #import "ThreemaUtilityObjC.h"
-#import "ContactsViewController.h"
 #import "ProtocolDefines.h"
 #import "PhoneNumberNormalizer.h"
 #import "AbstractGroupMessage.h"
 #import "NSString+Hex.h"
 #import "NewMessageToaster.h"
-#import "SplitViewController.h"
 #import "GatewayAvatarMaker.h"
 #import "ErrorHandler.h"
 #import "TouchIdAuthentication.h"
@@ -52,7 +30,6 @@
 #import "EnterLicenseViewController.h"
 #import "WorkDataFetcher.h"
 
-#import "URLHandler.h"
 #import "MDMSetup.h"
 #import "NSString+Hex.h"
 
@@ -65,7 +42,6 @@
 #import "PushPayloadDecryptor.h"
 #import "Threema-Swift.h"
 #import "ThreemaFramework.h"
-#import "MainTabBarController.h"
 #import <AVFoundation/AVFoundation.h>
 #import <UserNotifications/UserNotifications.h>
 #import <PushKit/PushKit.h>
@@ -100,7 +76,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     NotificationManager *notificationManager;
     NSData *evaluatedPolicyDomainState;
     GroupCallUIHelper *groupCallUIHelper;
-    AppCoordinator *appCoordinator;
+    AppCoordinator *_appCoordinator;
 }
 
 @synthesize window = _window;
@@ -146,6 +122,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     return appDelegate;
 }
 
+- (id)appCoordinator {
+    return _appCoordinator;
+}
+
 #pragma mark - Launching
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)_launchOptions
@@ -177,14 +157,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     [NaClCrypto sharedCrypto];
     [[ServerConnector sharedServerConnector] setIsAppInBackground:[self isAppInBackground]];
 
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    self.window = [[ThemedWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 
     if (ProcessInfoHelper.isRunningForScreenshots) {
         [[UserSettings sharedUserSettings] setIncludeCallsInRecents:false];
         [UIView setAnimationsEnabled:false];
     }
 
-    [Colors initTheme];
+    [Colors resolveTheme];
     [Colors updateWithWindow:_window];
     pendingShortCutItem = [launchOptions objectForKey:UIApplicationLaunchOptionsShortcutItemKey];
 
@@ -286,30 +266,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 #pragma mark - Storyboards
 
-+ (UIStoryboard *)getMainStoryboard {
-    return [UIStoryboard storyboardWithName:@"MainStoryboard" bundle:nil];
-}
-
-+ (UIStoryboard *)getMyIdentityStoryboard {
-    return [UIStoryboard storyboardWithName:@"MyIdentityStoryboard" bundle:nil];
-}
-
-+ (UITabBarController *)getMainTabBarController {
-    AppDelegate *appDelegate = [AppDelegate sharedAppDelegate];
-    UITabBarController *mainTabBar;
-
-    if (SYSTEM_IS_IPAD && [appDelegate.window.rootViewController isKindOfClass:[SplitViewController class]]) {
-        SplitViewController *splitViewController = (SplitViewController*)appDelegate.window.rootViewController;
-        mainTabBar = (UITabBarController*)splitViewController.viewControllers[1];
-    } else {
-        mainTabBar = (UITabBarController*)appDelegate.window.rootViewController;
+- (UITabBarController *)tabBarController {
+    if (_appCoordinator) {
+        return _appCoordinator.tabBarController;
     }
-
-    if ([mainTabBar isKindOfClass:[UITabBarController class]]) {
-        return mainTabBar;
-    } else {
-        return nil;
-    }
+    
+    return nil;
 }
 
 #pragma mark - UI handling
@@ -317,7 +279,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (void)completedIDSetup {
     [self appLaunchWithCompletionHandler:^(BusinessInjector * _Nullable businessInjector, NSError * _Nullable error) {
         isBusinessInjectorReady = businessInjector != nil;
-
+        
         if (error) {
             if ([KeychainManager isKeychainLocked]) {
                 [NotificationManager showNoAccessToDatabaseNotificationWithCompletionHandler:^{
@@ -329,14 +291,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             }
             return;
         }
-
+        
         if (businessInjector == nil) {
             DDLogError(@"Business services are not ready to use");
             return;
         }
-
+        
         [self checkHasPrivateChats];
-
+        
         [self launchPhase3:businessInjector];
     }];
 }
@@ -394,26 +356,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
                     lockView = nil;
                 }
                 else {
-                    if (UserSettings.sharedUserSettings.newNavigationEnabled) {
-                        appCoordinator = [[AppCoordinator alloc] initWithWindow:self.window];
-                    }
-                    else {
-                        if (SYSTEM_IS_IPAD) {
-                            SplitViewController *splitViewController = [[SplitViewController alloc] init];
-                            [splitViewController setup];
-                            self.window.rootViewController = splitViewController;
-                        } else {
-                            UIViewController *currentVC = self.window.rootViewController;
-                            
-                            if (![currentVC isKindOfClass:[MainTabBarController class]]) {
-                                if (currentVC != nil) {
-                                    [currentVC dismissViewControllerAnimated:true completion:nil];
-                                }
-                                UIStoryboard *mainStoryboard = [AppDelegate getMainStoryboard];
-                                self.window.rootViewController = [mainStoryboard instantiateInitialViewController];
-                            }
-                        }
-                    }
+                    _appCoordinator = [[AppCoordinator alloc] initWithWindow:self.window];
                 }
                 
                 // Do not use Sentry for onprem
@@ -475,14 +418,18 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 - (void)handlePresentingScreensWithForce:(BOOL)force {
     // ShouldLoadUIForEnterForeground == false: means UI was never loaded before
     if (shouldLoadUIForEnterForeground == false || force) {
-        if (![NavigationBarPromptHandler isCallActiveInBackground] && [[VoIPCallStateManager shared] currentCallState] != CallStateIdle) {
-            if ([lastViewController.presentedViewController isKindOfClass:[CallViewController class]] || SYSTEM_IS_IPAD) {
+        if (![NavigationBarPromptHandler isCallActiveInBackground]
+            && [[VoIPCallStateManager shared] currentCallState] != CallStateIdle)
+        {
+            UIViewController *viewController = lastViewController.presentedViewController;
+            if ([viewController isKindOfClass:[CallViewController class]]
+                || self.window.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self.window.rootViewController dismissViewControllerAnimated:NO completion:nil];
                 });
             }
         } else {
-            // Do not perform if we are running for screenshots
+            // Do not perform if we are running screenshots
             if (ProcessInfoHelper.isRunningForScreenshots)  {
                 return;
             }
@@ -661,28 +608,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
         [self.window bringSubviewToFront:lockView];
         [self.window snapshotViewAfterScreenUpdates:false];
     }
-    
-}
-
-- (void)updateTheme {
-    if ([[UserSettings sharedUserSettings] useSystemTheme]) {
-        if (UITraitCollection.currentTraitCollection.userInterfaceStyle == UIUserInterfaceStyleDark) {
-            if (Colors.theme != ThemeDark) {
-                [Colors setTheme:ThemeDark];
-            }
-        } else {
-            if (Colors.theme != ThemeLight) {
-                [Colors setTheme:ThemeLight];
-            }
-        }
-        [[NotificationPresenterWrapper shared] colorChanged];
-    }
 }
 
 - (void)setIsWorkContactsLoading:(BOOL)loading {
     isWorkContactsLoading = loading;
-    [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationLoadWorkContacts object:nil];
-
 }
 
 #pragma mark - Server Connection and Notifications
@@ -950,12 +879,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             }
             else {
                 if ([[KKPasscodeLock sharedLock] isPasscodeRequired] && ([[VoIPCallStateManager shared] currentCallState] == CallStateIncomingRinging || [[VoIPCallStateManager shared] currentCallState] == CallStateOutgoingRinging || [[VoIPCallStateManager shared] currentCallState] == CallStateInitializing || [[VoIPCallStateManager shared] currentCallState] == CallStateCalling || [[VoIPCallStateManager shared] currentCallState] == CallStateReconnecting)) {
-                    if ([lastViewController.presentedViewController isKindOfClass:[CallViewController class]] || SYSTEM_IS_IPAD) {
+                    if ([lastViewController.presentedViewController isKindOfClass:[CallViewController class]]
+                        || self.window.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular)
+                    {
                         [self.window.rootViewController dismissViewControllerAnimated:NO completion:nil];
                         [self presentApplicationUI];
                         shouldLoadUI = false;
                     }
-                    if (SYSTEM_IS_IPAD) {
+                    if (self.window.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
                         [[VoIPCallStateManager shared] presentCallViewController];
                         shouldLoadUI = false;
                     }
@@ -1059,8 +990,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
             // set language and mdm description for client version string
             (void)[ThreemaUtility clientVersion];
             
-            [self updateTheme];
-            
+            [Colors resolveTheme];
+            [Colors updateWithWindow:_window];
+            [[NotificationPresenterWrapper shared] colorChanged];
+
             [[ServerConnector sharedServerConnector] setIsAppInBackground:[application applicationState] == UIApplicationStateBackground];
             
             [notificationManager updateUnreadMessagesCount];
@@ -1226,7 +1159,16 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
     isAppLocked = NO;
     startCheckBiometrics = false;
-    
+
+    // Clear the privacy lock view early so that the async block in
+    // applicationDidBecomeActive does not see a stale lockView and
+    // redundantly call presentApplicationUI — which would create a
+    // brand-new AppCoordinator and destroy the current navigation state.
+    if (lockView != nil) {
+        [lockView removeFromSuperview];
+        lockView = nil;
+    }
+
     [self.window.rootViewController dismissViewControllerAnimated:animated completion:nil];
     
     if (isBusinessInjectorReady == NO) {
@@ -1242,12 +1184,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)completeAuthentication {
     [self presentApplicationUI];
-    
+    URLHandler *urlHandler = [URLHandler new];
     if (pendingUrl) {
-        [URLHandler handleURL:pendingUrl];
+        [urlHandler handle:pendingUrl hideAppChooser:NO];
         pendingUrl = nil;
     } else if (pendingShortCutItem) {
-        [URLHandler handleShortCutItem:pendingShortCutItem];
+        (void)[urlHandler handleWithItem:pendingShortCutItem];   
         pendingShortCutItem = nil;
     }
     
@@ -1257,9 +1199,10 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
     }
     
     if (rootToNotificationSettings) {
-        MainTabBarController *mainTabBarController = [AppDelegate getMainTabBarController];
         [UIApplication.sharedApplication.windows.firstObject.rootViewController dismissViewControllerAnimated:false completion:nil];
-        [mainTabBarController showNotificationSettings];
+        
+        [_appCoordinator showNotificationSettings];
+        
         rootToNotificationSettings = nil;
     }
 }
@@ -1350,10 +1293,8 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)closeMainTabBarModalViewsWithCompletion:(nonnull void (^)(void))completion {
-    MainTabBarController *mainTabBar = (MainTabBarController *)[AppDelegate getMainTabBarController];
-    
-    if (mainTabBar.presentedViewController != nil) {
-        [mainTabBar dismissViewControllerAnimated:NO completion:completion];
+    if (_appCoordinator.presentedViewController != nil) {
+        [_appCoordinator dismissModalWithAnimated:NO completion:completion];
     } else {
         completion();
     }
@@ -1368,29 +1309,14 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 }
 
 - (void)removeAllControllersFromRoot {
-    MainTabBarController *mainTabBar = (MainTabBarController *)[AppDelegate getMainTabBarController];
-    for (UINavigationController *navController in mainTabBar.viewControllers) {
-        [navController popToRootViewControllerAnimated:false];
-        navController.viewControllers = @[];
-    }
-    
-    if (SYSTEM_IS_IPAD && [self.window.rootViewController isKindOfClass:[SplitViewController class]]) {
-        SplitViewController *splitViewController = (SplitViewController*)self.window.rootViewController;
-
-        PortraitNavigationController *pNav = splitViewController.viewControllers[0];
-        pNav.viewControllers = @[];
-        
-        splitViewController.viewControllers = @[];
-    }
-    
-    self.window.rootViewController = nil;
+    [_appCoordinator reset];
 }
 
 #pragma mark - EnterLicenseDelegate
 
 - (void)licenseConfirmed {
     [self.window.rootViewController dismissViewControllerAnimated:YES completion:^{
-        [[ServerConnector sharedServerConnector] setIsAppInBackground:[[AppDelegate sharedAppDelegate] isAppInBackground]];
+        [[ServerConnector sharedServerConnector] setIsAppInBackground:[self isAppInBackground]];
         [[ServerConnector sharedServerConnector] connect:ConnectionInitiatorApp onCompletion:nil];
     }];
 }

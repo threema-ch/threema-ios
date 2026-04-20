@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import SwiftUI
 import ThreemaMacros
@@ -69,7 +49,9 @@ final class ContactListContainerViewController: UIViewController {
             [contacts, groups, distributionList]
         }
     }
-    
+
+    private var observers: [any NSObjectProtocol] = []
+
     // MARK: - Lifecycle
     
     init(
@@ -87,22 +69,23 @@ final class ContactListContainerViewController: UIViewController {
         self.searchResultsController = searchResultsController
         self.contactListNavigationItem = navigationItem
         super.init(nibName: nil, bundle: nil)
+        
+        /// Needed to make the search bar appear the first time without scrolling
+        navigationItem.hidesSearchBarWhenScrolling = false
     }
-    
+
+    deinit {
+        observers.forEach { NotificationCenter.default.removeObserver($0) }
+        observers.removeAll()
+    }
+
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        
-        /// Needed to make the search bar appear the first time without scrolling
-        navigationItem.hidesSearchBarWhenScrolling = false
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
         
         /// Resetting to the correct value, since it has already appeared
         navigationItem.hidesSearchBarWhenScrolling = true
@@ -116,7 +99,7 @@ final class ContactListContainerViewController: UIViewController {
 
         switchToViewController(at: ContactListFilterItem.contacts.rawValue)
        
-        NotificationCenter.default.addObserver(
+        let observer = NotificationCenter.default.addObserver(
             forName: Notification.Name(kNotificationColorThemeChanged),
             object: nil,
             queue: nil
@@ -131,12 +114,22 @@ final class ContactListContainerViewController: UIViewController {
                 work.refresh()
             }
         }
+
+        observers.append(observer)
     }
     
     // MARK: - Updates
     
-    public func updateSelection(for destination: ContactsCoordinator.InternalDestination) {
-        
+    public func updateSelection(for destination: ContactListCoordinator.InternalDestination) {
+
+        // Don't switch the underlying tab when search is active.
+        // The search results overlay hides the child VC anyway, and switching it
+        // causes a mismatch: when search is dismissed, the wrong list is shown
+        // while the header still reflects the pre-search tab.
+        guard !searchController.isActive else {
+            return
+        }
+
         switch destination {
         case .contact:
             guard let index = viewControllers.firstIndex(where: {
@@ -154,7 +147,7 @@ final class ContactListContainerViewController: UIViewController {
             }
             switchToViewController(at: index)
 
-        case .group:
+        case .group, .groupFromID:
             guard let index = viewControllers.firstIndex(where: {
                 $0 is GroupListViewController
             }) else {

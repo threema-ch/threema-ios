@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import ThreemaFramework
 import UIKit
@@ -47,10 +27,43 @@ final class ChatBarContainerView: UIView {
     private var catchTapOnDisabledView: UIView?
     
     private lazy var accessoryView: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [topHairlineView])
+        let stackView = UIStackView()
         stackView.axis = .vertical
         
         return stackView
+    }()
+    
+    private lazy var glassAccessoryView: UIView = {
+        guard #available(iOS 26.0, *) else {
+            return UIView()
+        }
+      
+        let glassEffect = UIGlassEffect(style: .regular)
+        
+        let glassEffectView = UIVisualEffectView(effect: glassEffect)
+        glassEffectView.contentView.addSubview(accessoryView)
+        
+        accessoryView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            accessoryView.topAnchor.constraint(
+                equalTo: glassEffectView.contentView.topAnchor
+            ),
+            accessoryView.trailingAnchor.constraint(
+                equalTo: glassEffectView.contentView.trailingAnchor
+            ),
+            accessoryView.leadingAnchor.constraint(
+                equalTo: glassEffectView.contentView.leadingAnchor
+            ),
+            accessoryView.bottomAnchor.constraint(
+                equalTo: glassEffectView.contentView.bottomAnchor
+            ),
+        ])
+        
+        glassEffectView.cornerConfiguration = .uniformCorners(
+            radius: UICornerRadius(floatLiteral: ChatTextViewConfiguration.cornerRadius)
+        )
+
+        return glassEffectView
     }()
     
     private lazy var topHairlineView: UIView = {
@@ -65,11 +78,12 @@ final class ChatBarContainerView: UIView {
     
     init() {
         super.init(frame: .zero)
-        
-        configureLayout()
-        
-        // This should give an effect similar to the one in the tab bar
-        backgroundColor = .tertiarySystemBackground
+        // Due to having different constraints, the configuration for glass happens only after the chat bar was added.
+        if #unavailable(iOS 26.0) {
+            configureOldLayout()
+            // This should give an effect similar to the one in the tab bar
+            backgroundColor = .tertiarySystemBackground
+        }
     }
     
     @available(*, unavailable)
@@ -78,8 +92,26 @@ final class ChatBarContainerView: UIView {
     }
     
     // MARK: Configuration
+
+    private func configureGlassLayout() {
+        translatesAutoresizingMaskIntoConstraints = false
+        
+        addSubview(glassAccessoryView)
+        glassAccessoryView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            glassAccessoryView.topAnchor.constraint(equalTo: topAnchor),
+            glassAccessoryView.leadingAnchor.constraint(
+                equalTo: chatBarView!.glassEffectChatTextView.leadingAnchor
+            ),
+            glassAccessoryView.trailingAnchor.constraint(
+                equalTo: chatBarView!.sendButton.leadingAnchor,
+                constant: -ChatBarConfiguration.textInputButtonSpacing
+            ),
+        ])
+    }
     
-    private func configureLayout() {
+    private func configureOldLayout() {
         translatesAutoresizingMaskIntoConstraints = false
         
         addSubview(accessoryView)
@@ -92,7 +124,7 @@ final class ChatBarContainerView: UIView {
         ])
         
         topHairlineView.translatesAutoresizingMaskIntoConstraints = false
-        
+        accessoryView.addArrangedSubview(topHairlineView)
         NSLayoutConstraint.activate([
             topHairlineView.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
         ])
@@ -107,7 +139,7 @@ final class ChatBarContainerView: UIView {
             blurEffectView.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
         
-        if UIDevice.current.userInterfaceIdiom != .pad {
+        if traitCollection.horizontalSizeClass == .compact {
             // See the definition of `blurEffectView` for more information.
             let window = UIApplication.shared.windows.first
             let bottomPadding = window?.safeAreaInsets.bottom ?? 0
@@ -117,7 +149,7 @@ final class ChatBarContainerView: UIView {
             ])
         }
     }
-    
+
     // MARK: Updates
     
     /// Updates the ChatBarContainerView instance with this chatBarView
@@ -136,11 +168,27 @@ final class ChatBarContainerView: UIView {
         addSubview(chatBarView)
         chatBarView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            chatBarView.topAnchor.constraint(equalTo: accessoryView.bottomAnchor),
             chatBarView.leadingAnchor.constraint(equalTo: leadingAnchor),
             chatBarView.bottomAnchor.constraint(equalTo: bottomAnchor),
             chatBarView.trailingAnchor.constraint(equalTo: trailingAnchor),
         ])
+        
+        if #available(iOS 26.0, *) {
+            configureGlassLayout()
+            
+            NSLayoutConstraint.activate([
+                chatBarView.topAnchor.constraint(
+                    equalTo: glassAccessoryView.bottomAnchor,
+                    constant: ChatBarConfiguration.verticalChatBarTextViewDistance
+                ),
+            ])
+        }
+        else {
+            NSLayoutConstraint.activate([
+                chatBarView.topAnchor.constraint(equalTo: accessoryView.bottomAnchor),
+            ])
+        }
+        
         layoutIfNeeded()
     }
     
@@ -284,8 +332,8 @@ final class ChatBarContainerView: UIView {
         mentionsTableView.tableView.isHidden = true
         
         UIView.animate(
-            withDuration: ChatViewConfiguration.ChatBar.ContentInsetAnimation.totalDuration,
-            delay: ChatViewConfiguration.ChatBar.ContentInsetAnimation.delay,
+            withDuration: ChatBarConfiguration.ContentInsetAnimation.totalDuration,
+            delay: ChatBarConfiguration.ContentInsetAnimation.delay,
             options: .curveEaseInOut,
             animations: { [weak self] in
                 mentionsTableView.tableView.isHidden = false

@@ -1,33 +1,11 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import PromiseKit
-import ThreemaEssentialsTestHelper
+import ThreemaEssentials
 import XCTest
 
 @testable import ThreemaFramework
 
-class TaskExecutionTests: XCTestCase {
-    private var dbMainCnx: DatabaseContext!
-    private var dbBackgroundCnx: DatabaseContext!
-    private var dbPreparer: DatabasePreparer!
+final class TaskExecutionTests: XCTestCase {
+    private var dbPreparer: TestDatabasePreparer!
 
     private var ddLoggerMock: DDLoggerMock!
 
@@ -39,10 +17,11 @@ class TaskExecutionTests: XCTestCase {
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        dbPreparer = DatabasePreparer(context: mainCnx)
+        let testDatabase = TestDatabase()
+        dbPreparer = testDatabase.backgroundPreparer
+
+        // Workaround to ensure remote secret is initialized
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -57,7 +36,7 @@ class TaskExecutionTests: XCTestCase {
         myIdentityStoreMock = MyIdentityStoreMock()
         frameworkInjectorMock = BusinessInjectorMock(
             contactStore: ContactStoreMock(callOnCompletion: true),
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
             serverConnector: serverConnectorMock
@@ -78,7 +57,7 @@ class TaskExecutionTests: XCTestCase {
         msg1.toIdentity = expectedToIdentity1
 
         let task = TaskDefinitionSendAbstractMessage(message: msg1, type: .volatile)
-        task.nonces = [expectedToIdentity1: MockData.generateMessageNonce()]
+        task.nonces = [expectedToIdentity1: BytesUtility.generateMessageNonce()]
 
         let taskExecution = TaskExecution(
             taskContext: cnx,
@@ -139,8 +118,8 @@ class TaskExecutionTests: XCTestCase {
 
         let task = TaskDefinitionSendAbstractMessage(message: msg1, type: .volatile)
         task.nonces = [
-            expectedToIdentity1: MockData.generateMessageNonce(),
-            expectedToIdentity2: MockData.generateMessageNonce(),
+            expectedToIdentity1: BytesUtility.generateMessageNonce(),
+            expectedToIdentity2: BytesUtility.generateMessageNonce(),
         ]
         task.messageAlreadySentTo[expectedToIdentity1] = task.nonces[expectedToIdentity1]
 
@@ -192,7 +171,7 @@ class TaskExecutionTests: XCTestCase {
         let expectedToIdentity1 = "TESTER01"
         let expectedToIdentity2 = "TESTER02"
 
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
 
         dbPreparer.save {
             dbPreparer.createContact(identity: expectedToIdentity1)
@@ -217,8 +196,8 @@ class TaskExecutionTests: XCTestCase {
 
         let task = TaskDefinitionSendAbstractMessage(message: msg1, type: .volatile)
         task.nonces = [
-            expectedToIdentity1: MockData.generateMessageNonce(),
-            expectedToIdentity2: MockData.generateMessageNonce(),
+            expectedToIdentity1: BytesUtility.generateMessageNonce(),
+            expectedToIdentity2: BytesUtility.generateMessageNonce(),
         ]
 
         let taskExecution = TaskExecution(
@@ -282,7 +261,7 @@ class TaskExecutionTests: XCTestCase {
         msg2.toIdentity = "TESTER02"
 
         let task = TaskDefinitionSendAbstractMessage(message: msg1, type: .volatile)
-        task.nonces = [expectedToIdentity1: MockData.generateMessageNonce()]
+        task.nonces = [expectedToIdentity1: BytesUtility.generateMessageNonce()]
 
         let taskExecution = TaskExecution(
             taskContext: cnx,

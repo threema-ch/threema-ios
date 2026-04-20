@@ -1,25 +1,4 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2015-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import "URLSenderItem.h"
-#import "UTIConverter.h"
 #import "UserSettings.h"
 #import "ContactUtil.h"
 #import "FLAnimatedImage.h"
@@ -88,7 +67,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     if (_url) {
         return [_url lastPathComponent];
     } else {
-        if ([_type isEqualToString:UTTYPE_VCARD]) {
+        if ([_type isEqualToString:UTTypeVCard.identifier]) {
             return [self getContactFileName];
         }
         
@@ -96,12 +75,22 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
             return _fileName;
         }
         NSString *postfix = [UTIConverter preferredFileExtensionForMimeType:[self getMimeType]];
-        return [NSString stringWithFormat:@"file.%@", postfix];
+
+        if (postfix) {
+            return [NSString stringWithFormat:@"file.%@", postfix];
+        } else {
+            return @"file";
+        }
     }
 }
 
-- (NSString *)getMimeType {
+- (nonnull NSString *)getMimeType {
     NSString *mimeType = [UTIConverter mimeTypeFromUTI:_type];
+
+    if (!mimeType) {
+        mimeType = @"application/octet-stream";
+    }
+
     if ([mimeType isEqualToString:@"application/octet-stream"] && _url != nil) {
         NSString *uti = [UTIConverter utiForFileURL:_url];
         mimeType = [UTIConverter mimeTypeFromUTI:uti];
@@ -115,8 +104,12 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     // Hack for public.image files shared via screen shots on iOS
     if ([mimeType isEqualToString:@"application/octet-stream"] && [_type isEqualToString:@"public.image"]) {
            mimeType = @"image/jpeg";
-       }
-    
+    }
+
+    if (!mimeType) {
+        mimeType = @"application/octet-stream";
+    }
+
     return mimeType;
 }
 
@@ -128,7 +121,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         return [self getImageThumbnail];
     }
     else if ([UTIConverter isRenderingVideoMimeType:[self getMimeType]]) {
-        return [self getVideoThumnbail];
+        return [self getVideoThumbnail];
     }
     else if ([UTIConverter isImageMimeType:[self getMimeType]]) {
         return [self getImageThumbnail];
@@ -164,7 +157,7 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
     return thumbnail;
 }
 
-- (UIImage *)getVideoThumnbail {
+- (UIImage *)getVideoThumbnail {
     if (self.url == nil) {
         
         NSString *tmpPath = [NSString stringWithFormat:@"%@video.mp4", NSTemporaryDirectory()];
@@ -221,8 +214,30 @@ static const DDLogLevel ddLogLevel = DDLogLevelWarning;
         
         FileUtility *fileUtility = [FileUtility new];
         if (!tmpPath) {
-            NSString *type = [UTIConverter preferredFileExtensionForMimeType:[UTIConverter mimeTypeFromUTI:_type]];
-            tmpPath = [NSString stringWithFormat:@"%@%@.%@", NSTemporaryDirectory(), [fileUtility getTemporarySendableFileNameWithBase:@"audio" directoryURL:[NSURL fileURLWithPath:NSTemporaryDirectory()] pathExtension:type], type];
+            NSString *mimeType = [UTIConverter mimeTypeFromUTI:_type];
+
+            if (!mimeType) {
+                mimeType = @"application/octet-stream";
+            }
+            
+            NSString *fileExtension = [UTIConverter preferredFileExtensionForMimeType:mimeType];
+            NSURL *directoryURL = [NSURL fileURLWithPath:NSTemporaryDirectory()];
+
+            if (fileExtension) {
+                tmpPath = [
+                    NSString stringWithFormat:@"%@%@.%@",
+                    NSTemporaryDirectory(),
+                    [fileUtility getTemporarySendableFileNameWithBase:@"audio" directoryURL:directoryURL pathExtension:fileExtension],
+                    fileExtension
+                ];
+            } else {
+                tmpPath = [
+                    NSString stringWithFormat:@"%@%@",
+                    NSTemporaryDirectory(),
+                    [fileUtility getTemporarySendableFileNameWithBase:@"audio" directoryURL:directoryURL pathExtension:nil]
+                ];
+            }
+
             if ([fileUtility fileExistsAtPath:tmpPath]) {
                 return 0.0;
             }

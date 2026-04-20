@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
@@ -25,9 +5,10 @@ import Intents
 import ThreemaEssentials
 import ThreemaMacros
 import ThreemaProtocols
+import UIKit
 
 /// Business representation of a Threema group
-public class Group: NSObject {
+public final class Group: NSObject {
     
     // These strings are used as static properties for performance reasons
     public static let maxGroupMembers = BundleUtil.object(forInfoDictionaryKey: "ThreemaMaxGroupMembers") as? Int ?? 0
@@ -99,6 +80,8 @@ public class Group: NSObject {
 
     @available(*, deprecated, message: "Do not use anymore, load CoreData conversation separated")
     @objc public let conversation: ConversationEntity
+
+    public let conversationObjectID: NSManagedObjectID
 
     public let groupIdentity: GroupIdentity
     
@@ -345,6 +328,7 @@ public class Group: NSObject {
         self.userSettings = userSettings
         self.pushSettingManager = pushSettingManager
         self.conversation = conversation
+        self.conversationObjectID = conversation.objectID
         self.conversationGroupMyIdentity = conversation.groupMyIdentity
         if let contactEntity = conversation.contact {
             self.conversationContact = Contact(contactEntity: contactEntity)

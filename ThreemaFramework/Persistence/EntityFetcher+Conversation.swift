@@ -1,26 +1,7 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import CoreData
 import Foundation
+import OrderedCollections
 import ThreemaEssentials
 
 extension EntityFetcher {
@@ -30,38 +11,112 @@ extension EntityFetcher {
     @objc public func conversationEntities() -> [ConversationEntity]? {
         fetchEntities(entityName: "Conversation")
     }
-    
+
+    /// Fetches the IDs of conversation entities that are associated with groups or distribution lists or
+    /// conversation contact IDs if the conversations are associated with contacts, that match the specified filtering
+    /// criteria.
+    ///
+    /// The results are ordered by visibility (descending), lastUpdate (descending), and last message date
+    /// (descending). The fetch runs synchronously on the Core Data context and returns an empty list on failure.
+    ///
+    /// - Parameters:
+    ///   - excludeArchived: Exclude archived conversations. Default is `false`.
+    ///   - excludePrivate: Exclude private conversations. Default is `false`.
+    ///   - excludeWithoutLastUpdate: Exclude conversations without last update. Default is `false`.
+    ///
+    /// - Returns: An `Array` of `NSManagedObjectID` for the matching conversation / contact entities.
+    public func conversationOrContactIDs(
+        excludeArchived: Bool = false,
+        excludePrivate: Bool = false,
+        excludeWithoutLastUpdate: Bool = false
+    ) -> [NSManagedObjectID] {
+        managedObjectContext.performAndWait {
+            do {
+                let excludeDistributionLists = !ThreemaEnvironment.distributionListsActive
+                let request = NSFetchRequest<ConversationEntity>(entityName: "Conversation")
+
+                request.predicate = .and(
+                    excludeArchived ? .not(.conversationIsArchived) : nil,
+                    excludePrivate ? .not(.conversationIsPrivate) : nil,
+                    excludeWithoutLastUpdate ? .not(.conversationHasLastUpdate) : nil,
+                    excludeDistributionLists ? .not(.conversationIsDistributionList) : nil
+                )
+
+                request.sortDescriptors = [
+                    NSSortDescriptor(keyPath: \ConversationEntity.visibility, ascending: false),
+                    NSSortDescriptor(keyPath: \ConversationEntity.lastUpdate, ascending: false),
+                    NSSortDescriptor(keyPath: \ConversationEntity.lastMessage?.date, ascending: false),
+                ]
+
+                request.includesPropertyValues = false // We fetch only the IDs
+                request.returnsObjectsAsFaults = true
+                request.relationshipKeyPathsForPrefetching = nil
+
+                let conversations = try managedObjectContext.fetch(request)
+
+                // Use ordered set to prevent duplicate entries (e.g. when (unexpected) two 1:1 conversations with the
+                // same contact exist)
+                var result = OrderedSet<NSManagedObjectID>(minimumCapacity: conversations.count)
+
+                for conversation in conversations {
+                    if !conversation.isGroup, let objectID = conversation.contact?.objectID {
+                        result.append(objectID)
+                    }
+                    else {
+                        result.append(conversation.objectID)
+                    }
+                }
+
+                return result.elements
+            }
+            catch {
+                DDLogError("[EntityFetcher] Failed to fetch items IDs. Error: \(error)")
+                return []
+            }
+        }
+    }
+
+    /// Fetches a `ConversationEntity` with an `NSManagedObjectID`
+    /// - Returns: Optional `ConversationEntity`
+    public func conversationEntity(with objectID: NSManagedObjectID) -> ConversationEntity? {
+        var result: ConversationEntity?
+        do {
+            result = try managedObjectContext.existingObject(with: objectID) as? ConversationEntity
+        }
+        catch {
+            DDLogError("[EntityFetcher] Failed to fetch ConversationEntity with id: \(objectID). Error: \(error)")
+        }
+        return result
+    }
+
     /// Fetches all `ConversationEntity` that are not archived
     /// - Returns: Optional array of `ConversationEntity`
     public func notArchivedConversationEntities() -> [ConversationEntity]? {
-        let predicate = conversationNotArchivedPredicate()
-        return fetchEntities(entityName: "Conversation", predicate: predicate)
+        fetchEntities(entityName: "Conversation", predicate: .not(.conversationIsArchived))
     }
     
     /// Fetches all `ConversationEntity` that belong to groups
     /// - Returns: Optional array of `ConversationEntity`
     public func groupConversationEntities() -> [ConversationEntity]? {
-        let predicate = conversationAllGroupsPredicate()
-        return fetchEntities(entityName: "Conversation", predicate: predicate)
+        fetchEntities(entityName: "Conversation", predicate: .conversationIsGroup)
     }
     
     /// Fetches all `ConversationEntity` that are in the `typing` state and the indicator state has timeout.
     /// - Returns: Array of `ConversationEntity`
+    ///
+    /// - Note: Both `typing` and `lastTypingStart` are transient properties and therefore cannot be filtered
+    ///   by the SQLite store. We fetch all conversations and filter in-memory to guarantee correct results.
     @objc public func typingConversationEntities(timeoutDate: Date) -> [ConversationEntity] {
-        fetchEntities(
-            entityName: "Conversation",
-            predicate: .and(
-                .conversationIsTyping,
-                .conversationTypingIsStale(timeoutDate: timeoutDate)
-            )
-        ) ?? []
+        let all: [ConversationEntity] = fetchEntities(entityName: "Conversation") ?? []
+        return all.filter {
+            $0.typing.boolValue && ($0.lastTypingStart.map { $0 < timeoutDate } ?? false)
+        }
     }
 
     /// Fetches all persisted `ConversationEntity` that are private
     /// - Returns: Optional array of `ConversationEntity`
     public func privateConversationEntities() -> [ConversationEntity]? {
-        let predicate = conversationPrivatePredicate()
-        return fetchEntities(entityName: "Conversation", predicate: predicate)
+        fetchEntities(entityName: "Conversation", predicate: .conversationIsPrivate)
     }
     
     /// Fetches all persisted `ConversationEntity` and sorts them
@@ -115,8 +170,10 @@ extension EntityFetcher {
     /// - Parameter identity: Identity of the contact
     /// - Returns: `ConversationEntity` if it exists
     @objc public func conversationEntity(for identity: String) -> ConversationEntity? {
-        let predicate = conversationContactIdentityPredicate(identity: identity)
-        return fetchEntity(entityName: "Conversation", predicate: predicate)
+        fetchEntity(
+            entityName: "Conversation",
+            predicate: .conversationWithContactIdentity(identity)
+        )
     }
     
     @available(*, deprecated, renamed: "conversationEntity(for:)")
@@ -137,12 +194,14 @@ extension EntityFetcher {
     /// - Parameter groupIdentity: The identity of the group
     /// - Returns: Group-`ConversationEntity` if it exists
     public func conversationEntity(for groupIdentity: GroupIdentity, myIdentity: String?) -> ConversationEntity? {
-        let predicate = conversationGroupPredicate(
-            identity: groupIdentity.creator.rawValue,
-            id: groupIdentity.id,
-            myIdentity: myIdentity
+        fetchEntity(
+            entityName: "Conversation",
+            predicate: .conversationGroup(
+                identity: groupIdentity.creator.rawValue,
+                id: groupIdentity.id,
+                myIdentity: myIdentity
+            )
         )
-        return fetchEntity(entityName: "Conversation", predicate: predicate)
     }
     
     @available(*, deprecated, message: "This is deprecated and will be removed together with the web client code.")
@@ -150,38 +209,62 @@ extension EntityFetcher {
         guard let groupID else {
             return nil
         }
-        let predicate = legacyConversationGroupIDPredicate(id: groupID)
-        return fetchEntity(entityName: "Conversation", predicate: predicate)
+        return fetchEntity(
+            entityName: "Conversation",
+            predicate: .legacyConversationWithGroupID(groupID)
+        )
     }
     
     public func conversationEntity(for distributionListID: Int) -> ConversationEntity? {
-        let predicate = conversationDistributionListPredicate(distributionListID: distributionListID)
-        return fetchEntity(entityName: "Conversation", predicate: predicate)
+        fetchEntity(
+            entityName: "Conversation",
+            predicate: .conversationWithDistributionListID(distributionListID)
+        )
     }
     
     public func conversationEntities(for member: ContactEntity) -> [ConversationEntity]? {
-        let predicate = conversationMemberPredicate(member: member)
-        return fetchEntities(entityName: "Conversation", predicate: predicate)
+        fetchEntities(
+            entityName: "Conversation",
+            predicate: .conversationHasMember(member)
+        )
     }
     
-    @objc public func filteredGroupConversationEntities(by words: [String]) -> [ConversationEntity]? {
-        var predicates = [conversationAllGroupsPredicate()]
-        
-        for word in words where !word.isEmpty {
-            let predicate = NSPredicate(format: "groupName contains[cd] %@", word)
-            predicates.append(predicate)
+    @objc public func filteredGroupConversationEntities(
+        by words: [String],
+        excludeArchived: Bool = false,
+        excludePrivate: Bool = false,
+        excludeWithoutLastUpdate: Bool = false
+    ) -> [ConversationEntity] {
+        do {
+            var groupNamePredicates = [NSPredicate]()
+            for word in words where !word.isEmpty {
+                let predicate = NSPredicate(format: "groupName contains[cd] %@", word)
+                groupNamePredicates.append(predicate)
+            }
+            let request = NSFetchRequest<ConversationEntity>(entityName: "Conversation")
+            request.fetchBatchSize = 100
+            request.predicate = .and(
+                .and(
+                    .conversationIsGroup,
+                    excludeArchived ? .not(.conversationIsArchived) : nil,
+                    excludePrivate ? .not(.conversationIsPrivate) : nil,
+                    excludeWithoutLastUpdate ? .not(.conversationHasLastUpdate) : nil
+                ),
+                .and(groupNamePredicates)
+            )
+            let conversationEntities = try managedObjectContext.performAndWait {
+                try managedObjectContext.fetch(request)
+            }
+            return conversationEntities
         }
-                
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Conversation")
-        fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        fetchRequest.fetchBatchSize = 100
-        
-        return execute(fetchRequest) as? [ConversationEntity]
+        catch {
+            DDLogError("[EntityFetcher] Failed to fetch ConversationEntities. Error: \(error)")
+            return []
+        }
     }
-    
+
     public func archivedConversationEntitiesCount() -> Int {
-        let predicate = conversationArchivedPredicate()
-        return countEntities(entityName: "Conversation", predicate: predicate)
+        countEntities(entityName: "Conversation", predicate: .conversationIsArchived)
     }
     
     /// Fetches the object IDs of conversations matching the passed parameters
@@ -200,32 +283,32 @@ extension EntityFetcher {
         switch scope {
         case .all:
             intermediaryPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: [
-                conversationGroupNamePredicate(name: text),
-                conversationFirstNamePredicate(firstName: text),
-                conversationLastNamePredicate(lastName: text),
-                conversationNickNamePredicate(nickName: text),
-                conversationContactIdentityContainsPredicate(identity: text),
+                .conversationWithGroupName(text),
+                .conversationWithFirstName(text),
+                .conversationWithLastName(text),
+                .conversationWithNickName(text),
+                .conversationContainsContactIdentity(identity: text),
             ])
         case .oneToOne:
             intermediaryPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: [
-                conversationFirstNamePredicate(firstName: text),
-                conversationLastNamePredicate(lastName: text),
-                conversationNickNamePredicate(nickName: text),
-                conversationContactIdentityContainsPredicate(identity: text),
+                .conversationWithFirstName(text),
+                .conversationWithLastName(text),
+                .conversationWithNickName(text),
+                .conversationContainsContactIdentity(identity: text),
             ])
         case .groups:
-            intermediaryPredicate = conversationGroupNamePredicate(name: text)
+            intermediaryPredicate = .conversationWithGroupName(text)
         case .archived:
             let allPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: [
-                conversationGroupNamePredicate(name: text),
-                conversationFirstNamePredicate(firstName: text),
-                conversationLastNamePredicate(lastName: text),
-                conversationNickNamePredicate(nickName: text),
-                conversationContactIdentityContainsPredicate(identity: text),
+                .conversationWithGroupName(text),
+                .conversationWithFirstName(text),
+                .conversationWithLastName(text),
+                .conversationWithNickName(text),
+                .conversationContainsContactIdentity(identity: text),
             ])
             intermediaryPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
                 allPredicate,
-                conversationArchivedPredicate(),
+                .conversationIsArchived,
             ])
         }
         
@@ -233,7 +316,7 @@ extension EntityFetcher {
             if hidePrivateChats {
                 NSCompoundPredicate(andPredicateWithSubpredicates: [
                     intermediaryPredicate,
-                    conversationNotPrivatePredicate(),
+                    .not(.conversationIsPrivate),
                 ])
             }
             else {
@@ -319,12 +402,6 @@ extension EntityFetcher {
     public func matchingConversationsForContactListSearch(
         containing text: String
     ) -> [NSManagedObjectID] {
-               
-        let finalPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-            conversationGroupNamePredicate(name: text),
-            conversationNotPrivatePredicate(),
-        ])
-        
         // We only fetch the managed object ID
         let objectIDExpression = NSExpressionDescription()
         objectIDExpression.name = "objectID"
@@ -333,7 +410,10 @@ extension EntityFetcher {
         
         let propertiesToFetch: [Any] = [objectIDExpression]
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Conversation")
-        fetchRequest.predicate = finalPredicate
+        fetchRequest.predicate = .and(
+            .conversationWithGroupName(text),
+            .not(.conversationIsPrivate)
+        )
         fetchRequest.fetchLimit = 0
         fetchRequest.resultType = .dictionaryResultType
         fetchRequest.propertiesToFetch = propertiesToFetch
@@ -354,76 +434,5 @@ extension EntityFetcher {
         }
         
         return matchingIDs
-    }
-    
-    // MARK: - Predicates
-    
-    func conversationFirstNamePredicate(firstName: String) -> NSPredicate {
-        NSPredicate(format: "groupId == nil AND contact.firstName contains[c] %@", firstName)
-    }
-    
-    func conversationLastNamePredicate(lastName: String) -> NSPredicate {
-        NSPredicate(format: "groupId == nil AND contact.lastName contains[c] %@", lastName)
-    }
-    
-    func conversationNickNamePredicate(nickName: String) -> NSPredicate {
-        NSPredicate(format: "groupId == nil AND contact.publicNickname contains[c] %@", nickName)
-    }
-    
-    func conversationContactIdentityPredicate(identity: String) -> NSPredicate {
-        NSPredicate(format: "groupId == nil AND contact.identity == %@", identity)
-    }
-    
-    func conversationContactIdentityContainsPredicate(identity: String) -> NSPredicate {
-        NSPredicate(format: "groupId == nil AND contact.identity contains[c] %@", identity)
-    }
-    
-    func conversationGroupNamePredicate(name: String) -> NSPredicate {
-        NSPredicate(format: "groupId != nil AND groupName contains[c] %@", name)
-    }
-    
-    func conversationArchivedPredicate() -> NSPredicate {
-        NSPredicate(format: "visibility == %d", ConversationEntity.Visibility.archived.rawValue)
-    }
-    
-    func conversationNotArchivedPredicate() -> NSPredicate {
-        NSPredicate(format: "visibility != %d", ConversationEntity.Visibility.archived.rawValue)
-    }
-    
-    func conversationPrivatePredicate() -> NSPredicate {
-        NSPredicate(format: "category == %d", ConversationEntity.Category.private.rawValue)
-    }
-    
-    func conversationNotPrivatePredicate() -> NSPredicate {
-        NSPredicate(format: "category != %d", ConversationEntity.Category.private.rawValue)
-    }
-    
-    func conversationDistributionListPredicate(distributionListID: Int) -> NSPredicate {
-        NSPredicate(format: "distributionList.distributionListID == %@", distributionListID as NSNumber)
-    }
-    
-    func conversationMemberPredicate(member: ContactEntity) -> NSPredicate {
-        NSPredicate(format: "%@ IN members", member)
-    }
-    
-    func conversationGroupPredicate(identity: String, id: Data, myIdentity: String?) -> NSPredicate {
-        if identity != myIdentity {
-            NSPredicate(format: "contact.identity == %@ AND groupId == %@", identity, id as CVarArg)
-        }
-        else {
-            NSPredicate(format: "contact == nil AND groupId == %@", id as CVarArg)
-        }
-    }
-    
-    func conversationAllGroupsPredicate() -> NSPredicate {
-        NSPredicate(format: "groupId != nil")
-    }
-    
-    func conversationsWithLastUpdatePredicate() -> NSPredicate {
-        NSPredicate(format: "lastUpdate != nil")
-    }
-    
-    func legacyConversationGroupIDPredicate(id: Data) -> NSPredicate {
-        NSPredicate(format: "groupId == %@", id as CVarArg)
     }
 }

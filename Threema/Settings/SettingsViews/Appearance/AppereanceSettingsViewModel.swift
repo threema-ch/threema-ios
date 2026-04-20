@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Combine
 import SwiftUI
 import ThreemaFramework
@@ -29,6 +9,22 @@ final class AppearanceSettingsViewModel: ObservableObject {
 
     enum Theme: String {
         case system, light, dark
+
+        func getUserInterfaceStyle() -> UIUserInterfaceStyle {
+            switch self {
+            case .system: .unspecified
+            case .light: .light
+            case .dark: .dark
+            }
+        }
+
+        func getColorsTheme() -> Colors.Theme {
+            switch self {
+            case .system: UITraitCollection.current.userInterfaceStyle == .dark ? .dark : .light
+            case .light: .light
+            case .dark: .dark
+            }
+        }
     }
 
     enum DisplayOrder: Int, CaseIterable, Identifiable {
@@ -47,7 +43,7 @@ final class AppearanceSettingsViewModel: ObservableObject {
 
     // MARK: - State
 
-    @Published var theme: Theme = .system
+    @Published var selectedTheme: Theme = .system
     @Published var showProfilePictures = true
     @Published var showGalleryPreview = true
     @Published var hideStaleContacts = false
@@ -101,14 +97,15 @@ final class AppearanceSettingsViewModel: ObservableObject {
     // MARK: - Actions
 
     func refresh() {
-        if settingsStore.useSystemTheme {
-            theme = .system
-        }
-        else if Colors.theme == .dark {
-            theme = .dark
-        }
-        else {
-            theme = .light
+        switch settingsStore.interfaceStyle {
+        case UIUserInterfaceStyle.light.rawValue:
+            selectedTheme = .light
+
+        case UIUserInterfaceStyle.dark.rawValue:
+            selectedTheme = .dark
+
+        default:
+            selectedTheme = .system
         }
         showProfilePictures = settingsStore.showProfilePictures
         showGalleryPreview = settingsStore.showGalleryPreview
@@ -132,7 +129,7 @@ final class AppearanceSettingsViewModel: ObservableObject {
     // MARK: - Helpers
 
     private func setupObservers() {
-        $theme
+        $selectedTheme
             .dropFirst()
             .removeDuplicates()
             .sink { [weak self] newTheme in
@@ -183,56 +180,10 @@ final class AppearanceSettingsViewModel: ObservableObject {
     }
 
     private func applyTheme(_ theme: Theme) {
-        switch theme {
-        case .system:
-            systemThemeSelected()
-        case .light:
-            lightThemeSelected()
-        case .dark:
-            darkThemeSelected()
-        }
-
+        settingsStore.interfaceStyle = theme.getUserInterfaceStyle().rawValue
+        Colors.theme = theme.getColorsTheme()
+        Colors.update(window: appDelegate?.window ?? UIWindow.appearance())
         NotificationPresenterWrapper.shared.colorChanged()
-    }
-
-    private func systemThemeSelected() {
-        settingsStore.useSystemTheme = true
-        appDelegate?.window.overrideUserInterfaceStyle = .unspecified
-
-        if UITraitCollection.current.userInterfaceStyle == .dark {
-            if Colors.theme != .dark {
-                Colors.theme = .dark
-            }
-        }
-        else {
-            if Colors.theme != .light {
-                Colors.theme = .light
-            }
-        }
-    }
-
-    private func lightThemeSelected() {
-        settingsStore.useSystemTheme = false
-        switch Colors.theme {
-        case .light:
-            break
-        case .dark, .undefined:
-            Colors.theme = .light
-        }
-
-        appDelegate?.window.overrideUserInterfaceStyle = .light
-    }
-
-    private func darkThemeSelected() {
-        settingsStore.useSystemTheme = false
-        switch Colors.theme {
-        case .dark:
-            break
-        case .light, .undefined:
-            Colors.theme = .dark
-        }
-
-        appDelegate?.window.overrideUserInterfaceStyle = .dark
     }
 }
 
@@ -240,19 +191,18 @@ final class AppearanceSettingsViewModel: ObservableObject {
 
 extension AppearanceSettingsViewModel {
     var themeSelectionAccessibilityLabel: String {
-        if settingsStore.useSystemTheme {
+        switch selectedTheme {
+        case .system:
             String.localizedStringWithFormat(
                 #localize("settings_appearance_theme_selected"),
                 #localize("settings_appearance_system_theme")
             )
-        }
-        else if Colors.theme == .dark {
+        case .dark:
             String.localizedStringWithFormat(
                 #localize("settings_appearance_theme_selected"),
                 #localize("settings_appearance_dark_theme")
             )
-        }
-        else {
+        case .light:
             String.localizedStringWithFormat(
                 #localize("settings_appearance_theme_selected"),
                 #localize("settings_appearance_light_theme")
@@ -262,7 +212,7 @@ extension AppearanceSettingsViewModel {
 
     var systemThemeButtonAccessibilityLabel: String {
         var value = #localize("settings_appearance_system_theme")
-        if settingsStore.useSystemTheme {
+        if selectedTheme == .system {
             value = value + ", " + #localize("settings_appearance_theme_active")
         }
         return value
@@ -270,7 +220,7 @@ extension AppearanceSettingsViewModel {
 
     var lightThemeButtonAccessibilityLabel: String {
         var value = #localize("settings_appearance_light_theme")
-        if !settingsStore.useSystemTheme, Colors.theme == .light {
+        if selectedTheme == .light {
             value = value + ", " + #localize("settings_appearance_theme_active")
         }
         return value
@@ -278,7 +228,7 @@ extension AppearanceSettingsViewModel {
 
     var darkThemeButtonAccessibilityLabel: String {
         var value = #localize("settings_appearance_dark_theme")
-        if !settingsStore.useSystemTheme, Colors.theme == .dark {
+        if selectedTheme == .dark {
             value = value + ", " + #localize("settings_appearance_theme_active")
         }
         return value

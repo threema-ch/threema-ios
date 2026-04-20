@@ -1,47 +1,26 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 @testable import ThreemaFramework
 
 final class PushSettingManagerTests: XCTestCase {
-    private var databaseContext: DatabaseContext!
+    private var testDatabase: TestDatabase!
 
-    override func setUpWithError() throws {
+    override func setUp() {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainContext, _) = DatabasePersistentContext.devNullContext()
-        databaseContext = DatabaseContext(mainContext: mainContext)
+        testDatabase = TestDatabase()
     }
 
     func testSaveAndFind() async throws {
         let userSettingsMock = UserSettingsMock()
 
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
 
         let pushSettingManager = PushSettingManager(
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             markupParser: MarkupParser(),
             taskManager: TaskManagerMock(),
             isWorkApp: false
@@ -70,7 +49,7 @@ final class PushSettingManagerTests: XCTestCase {
         let pushSettingManager = PushSettingManager(
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             markupParser: MarkupParser(),
             taskManager: TaskManagerMock(),
             isWorkApp: false
@@ -91,7 +70,7 @@ final class PushSettingManagerTests: XCTestCase {
         let pushSettingManager = PushSettingManager(
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             markupParser: MarkupParser(),
             taskManager: TaskManagerMock(),
             isWorkApp: false
@@ -122,7 +101,7 @@ final class PushSettingManagerTests: XCTestCase {
         let pushSettingManager = PushSettingManager(
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             markupParser: MarkupParser(),
             taskManager: TaskManagerMock(),
             isWorkApp: false
@@ -132,13 +111,13 @@ final class PushSettingManagerTests: XCTestCase {
         await pushSettingManager.save(pushSetting: PushSetting(identity: ThreemaIdentity("TESTID02")), sync: false)
         await pushSettingManager.save(
             pushSetting: PushSetting(groupIdentity: GroupIdentity(
-                id: MockData.generateGroupID(),
+                id: BytesUtility.generateGroupID(),
                 creator: ThreemaIdentity("TESTID01")
             )),
             sync: false
         )
 
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         await pushSettingManager.save(
             pushSetting: PushSetting(groupIdentity: GroupIdentity(
                 id: groupID,
@@ -192,21 +171,21 @@ final class PushSettingManagerTests: XCTestCase {
         let expectedEncodedUserPushSettingString =
             #"{"_type":0,"identity":{"string":"\#(rawIdentity)"},"mentioned":false,"muted":false}"#
         
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         let fullGroupIdentity = GroupIdentity(id: groupID, creatorID: rawIdentity)
         var groupPushSetting = PushSetting(groupIdentity: fullGroupIdentity)
         groupPushSetting.type = .off
         groupPushSetting.muted = true
         groupPushSetting.mentioned = true
         let expectedEncodedGroupPushSettingString =
-            #"{"_type":1,"groupIdentity":{"creator":{"string":"\#(rawIdentity)"},"id":"\#(groupID.base64EncodedString())"},"mentioned":true,"muted":true}"#
+            try #"{"_type":1,"groupIdentity":\#(encode(groupIdentity: fullGroupIdentity)),"mentioned":true,"muted":true}"#
 
         let userSettingsMock = UserSettingsMock()
 
         let pushSettingManager = PushSettingManager(
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             markupParser: MarkupParser(),
             taskManager: TaskManagerMock(),
             isWorkApp: false
@@ -230,10 +209,10 @@ final class PushSettingManagerTests: XCTestCase {
         let encodedUserPushSettingString =
             #"{"_type":0,"identity":{"string":"\#(rawIdentity)"},"mentioned":false,"muted":true}"#
         
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         let fullGroupIdentity = GroupIdentity(id: groupID, creatorID: rawIdentity)
         let encodedGroupPushSettingString =
-            #"{"_type":1,"groupIdentity":{"creator":{"string":"\#(rawIdentity)"},"id":"\#(groupID.base64EncodedString())"},"mentioned":true,"muted":true}"#
+            try #"{"_type":1,"groupIdentity":\#(encode(groupIdentity: fullGroupIdentity)),"mentioned":true,"muted":true}"#
 
         let userSettingsMock = UserSettingsMock()
         userSettingsMock.pushSettings = [
@@ -244,7 +223,7 @@ final class PushSettingManagerTests: XCTestCase {
         let pushSettingManager = PushSettingManager(
             userSettings: userSettingsMock,
             groupManager: GroupManagerMock(),
-            entityManager: EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             markupParser: MarkupParser(),
             taskManager: TaskManagerMock(),
             isWorkApp: false
@@ -259,5 +238,11 @@ final class PushSettingManagerTests: XCTestCase {
         XCTAssertEqual(actualGroupPushSetting.type, .off)
         XCTAssertEqual(actualGroupPushSetting.mentioned, true)
         XCTAssertEqual(actualGroupPushSetting.muted, true)
+    }
+
+    private func encode(groupIdentity: GroupIdentity) throws -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        return try String(data: encoder.encode(groupIdentity), encoding: .utf8)!
     }
 }

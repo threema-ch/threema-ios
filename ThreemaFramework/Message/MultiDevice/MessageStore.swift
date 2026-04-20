@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
@@ -444,7 +424,12 @@ class MessageStore: MessageStoreProtocol {
         messageProcessorDelegate.incomingMessageFinished(groupAudioMessage)
     }
 
-    func save(groupCreateMessage amsg: GroupCreateMessage) throws -> Promise<Void> {
+    func save(
+        groupCreateMessage amsg: GroupCreateMessage,
+        createdAt: Date,
+        reflectedAt: Date,
+        isOutgoing: Bool
+    ) throws -> Promise<Void> {
         // Validate members, all members must be known contacts, otherwise device is not in sync
         try frameworkInjector.entityManager.performAndWait {
             for identity in (amsg.groupMembers as! [String])
@@ -463,10 +448,18 @@ class MessageStore: MessageStoreProtocol {
         return Promise { seal in
             Task {
                 do {
+                    let systemMessageDate: Date =
+                        if !isOutgoing {
+                            createdAt
+                        }
+                        else {
+                            reflectedAt
+                        }
+                    
                     guard let group = try await frameworkInjector.groupManager.createOrUpdateDB(
                         for: groupIdentity,
                         members: Set<String>(amsg.groupMembers.map { $0 as! String }),
-                        systemMessageDate: amsg.date,
+                        systemMessageDate: systemMessageDate,
                         sourceCaller: .sync
                     ) else {
                         seal.reject(MediatorReflectedProcessorError.groupCreateFailed(groupIdentity: groupIdentity))
@@ -486,14 +479,27 @@ class MessageStore: MessageStoreProtocol {
         }
     }
 
-    func save(groupDeletePhotoMessage amsg: GroupDeletePhotoMessage) -> Promise<Void> {
+    func save(
+        groupDeletePhotoMessage amsg: GroupDeletePhotoMessage,
+        createdAt: Date,
+        reflectedAt: Date,
+        isOutgoing: Bool
+    ) -> Promise<Void> {
         Promise { seal in
             Task {
+                let sentDate: Date =
+                    if !isOutgoing {
+                        createdAt
+                    }
+                    else {
+                        reflectedAt
+                    }
+                
                 do {
                     try await frameworkInjector.groupManager.deletePhoto(
                         groupID: amsg.groupID,
                         creator: amsg.groupCreator,
-                        sentDate: amsg.date,
+                        sentDate: sentDate,
                         send: false
                     )
 
@@ -510,25 +516,50 @@ class MessageStore: MessageStoreProtocol {
         }
     }
 
-    func save(groupLeaveMessage amsg: GroupLeaveMessage) {
+    func save(
+        groupLeaveMessage amsg: GroupLeaveMessage,
+        createdAt: Date,
+        reflectedAt: Date,
+        isOutgoing: Bool
+    ) {
+        let systemMessageDate: Date =
+            if !isOutgoing {
+                createdAt
+            }
+            else {
+                reflectedAt
+            }
         frameworkInjector.groupManager.leaveDB(
             groupID: amsg.groupID,
             creator: amsg.groupCreator,
             member: amsg.fromIdentity,
-            systemMessageDate: amsg.date
+            systemMessageDate: systemMessageDate
         )
         changedConversationAndGroupEntity(groupID: amsg.groupID, groupCreatorIdentity: amsg.groupCreator)
     }
 
-    func save(groupRenameMessage amsg: GroupRenameMessage) -> Promise<Void> {
+    func save(
+        groupRenameMessage amsg: GroupRenameMessage,
+        createdAt: Date,
+        reflectedAt: Date,
+        isOutgoing: Bool
+    ) -> Promise<Void> {
         Promise { seal in
             Task {
                 do {
+                    let systemMessageDate: Date =
+                        if !isOutgoing {
+                            createdAt
+                        }
+                        else {
+                            reflectedAt
+                        }
+                    
                     try await frameworkInjector.groupManager.setName(
                         groupID: amsg.groupID,
                         creator: amsg.groupCreator,
                         name: amsg.name,
-                        systemMessageDate: amsg.date,
+                        systemMessageDate: systemMessageDate,
                         send: false
                     )
 
@@ -866,7 +897,12 @@ class MessageStore: MessageStoreProtocol {
         changedBallot(with: groupBallotVoteMessage.ballotID)
     }
 
-    func save(groupSetPhotoMessage amsg: GroupSetPhotoMessage) -> Promise<Void> {
+    func save(
+        groupSetPhotoMessage amsg: GroupSetPhotoMessage,
+        createdAt: Date,
+        reflectedAt: Date,
+        isOutgoing: Bool
+    ) -> Promise<Void> {
         syncLoadBlob(blobID: amsg.blobID, encryptionKey: amsg.encryptionKey, origin: .public)
             .then { (data: Data?) -> Promise<Void> in
                 guard let data else {
@@ -1268,11 +1304,19 @@ class MessageStore: MessageStoreProtocol {
                     return
                 }
                 
+                let receiveDate: Date =
+                    if !isOutgoing {
+                        createdAt
+                    }
+                    else {
+                        reflectedAt
+                    }
+                
                 await GlobalGroupCallManagerSingleton.shared.handleMessage(
                     rawMessage: decodedCallStartMessage,
                     from: fromIdentity,
                     in: conversationObjectID,
-                    receiveDate: groupCallStartMessage.date
+                    receiveDate: receiveDate
                 )
                 
                 if !isOutgoing {

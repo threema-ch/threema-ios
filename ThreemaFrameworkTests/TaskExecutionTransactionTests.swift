@@ -1,36 +1,15 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import PromiseKit
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 
 @testable import ThreemaFramework
 
-class TaskExecutionTransactionTests: XCTestCase {
-    private var databaseMainCnx: DatabaseContext!
-    private var databaseBackgroundCnx: DatabaseContext!
+final class TaskExecutionTransactionTests: XCTestCase {
+    private var databaseBackgroundCnx: DatabaseContextProtocol!
 
-    private let timeout: Double = 300
+    private let timeout: Double = 10
     
     typealias TestMatrix = [(
         messageTransactionScope: D2d_TransactionScope.Scope,
@@ -45,10 +24,9 @@ class TaskExecutionTransactionTests: XCTestCase {
     
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
-        
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext(isRemoteSecretEnabled: false)
-        databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+
+        let testDatabase = TestDatabase()
+        databaseBackgroundCnx = testDatabase.backgroundContext
     }
     
     func testAlreadyLocked() {
@@ -216,15 +194,26 @@ class TaskExecutionTransactionTests: XCTestCase {
                 expec.fulfill()
             }
 
-            let task = test
-                .0 == .contactSync ? TaskDefinitionUpdateContactSync(deltaSyncContacts: []) : TaskDefinitionProfileSync(
+            let task = test.0 == .contactSync
+                ? TaskDefinitionUpdateContactSync(deltaSyncContacts: [])
+                : TaskDefinitionProfileSync(
                     syncUserProfile: Sync_UserProfile(),
                     profileImage: nil,
                     linkMobileNoPending: false,
                     linkEmailPending: false
                 )
+            
+            /// Inject a zero transaction-response timeout so lockTimeout cases fail immediately
+            /// rather than waiting the production 25 s. Non-timeout cases complete via the mock
+            /// callback before the timeout fires, so this does not affect them.
             let taskExecutionTransaction = TaskExecutionTransactionToTest(
-                taskContext: TaskContext(),
+                taskContext: TaskContext(
+                    logReflectMessageToMediator: .none,
+                    logReceiveMessageAckFromMediator: .none,
+                    logSendMessageToChat: .none,
+                    logReceiveMessageAckFromChat: .none,
+                    transactionResponseTimeoutInSeconds: 0
+                ),
                 taskDefinition: task,
                 backgroundFrameworkInjector: frameworkInjectorMock
             )

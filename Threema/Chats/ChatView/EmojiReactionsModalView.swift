@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Combine
 import SwiftUI
 import ThreemaFramework
@@ -45,9 +25,19 @@ struct EmojiReactionModal: View {
                     canBeRemoved: reaction.canBeRemoved
                 )
             }
+            .apply { view in
+                if #available(iOS 26.0, *) {
+                    view
+                        .cornerRadius(30)
+                        .padding(.top, 5)
+                }
+                else {
+                    view
+                        .cornerRadius(20)
+                        .padding(.top, 10)
+                }
+            }
             .background(Color(UIColor.systemBackground))
-            .cornerRadius(20)
-            .padding(.top, 10)
         }
         else {
             VStack(spacing: 0) {
@@ -104,12 +94,12 @@ struct EmojiReactionModal: View {
                     menuItems
                 }
             }
-            .onChange(of: selectedIndex) { index in
+            .onChange(of: selectedIndex) {
                 Task { @MainActor in
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
                 withAnimation {
-                    scrollView.scrollTo(index, anchor: .center)
+                    scrollView.scrollTo(selectedIndex, anchor: .center)
                 }
             }
             .background {

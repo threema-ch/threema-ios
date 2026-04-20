@@ -1,27 +1,7 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 @testable import ThreemaFramework
 
-class ContactStoreMock: NSObject, ContactStoreProtocol {
+final class ContactStoreMock: NSObject, ContactStoreProtocol {
     private let callOnCompletion: Bool
     private var contact: ContactEntity?
     private let errorHandler: NSError?
@@ -29,6 +9,7 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
     private(set) var numberOfSynchronizeAddressBookCalls = 0
     private(set) var numberOfUpdateStatusCalls = 0
     var markContactAsDeletedCalls = [String]()
+    var addContactCalls = [String]()
 
     required init(callOnCompletion: Bool, _ contact: ContactEntity? = nil, errorHandler: NSError? = nil) {
         self.callOnCompletion = callOnCompletion
@@ -157,7 +138,15 @@ class ContactStoreMock: NSObject, ContactStoreProtocol {
         onCompletion: @escaping (NSObject?, Bool) -> Void,
         onError: ((any Error) -> Void)? = nil
     ) {
-        // no-op
+        if let errorHandler, let onError {
+            onError(errorHandler)
+        }
+        else {
+            addContactCalls.append(identity)
+            if callOnCompletion {
+                onCompletion(contact, true)
+            }
+        }
     }
     
     func addWorkContact(

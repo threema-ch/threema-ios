@@ -1,31 +1,11 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftProtobuf
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
-class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
+final class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
 
     private var frameworkInjectorMock: FrameworkInjectorProtocol!
     private var mediatorMessageProtocol: MediatorMessageProtocolProtocol!
@@ -33,11 +13,9 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainContext, _) = DatabasePersistentContext.devNullContext()
-        let databaseContext = DatabaseContext(mainContext: mainContext)
-
+        let testDatabase = TestDatabase()
         frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false)
+            entityManager: testDatabase.entityManager
         )
 
         mediatorMessageProtocol = MediatorMessageProtocol(deviceGroupKeys: MockMultiDevice.deviceGroupKeys)
@@ -48,7 +26,7 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.fromIdentity = "ECHOECHO"
         expectedMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedMessage.text = "Test text message"
-        expectedMessage.nonce = MockData.generateMessageNonce()
+        expectedMessage.nonce = BytesUtility.generateMessageNonce()
 
         let testEnvelope = try getEnvelopeForIncomingMessage(abstractMessage: expectedMessage)
 
@@ -75,7 +53,7 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         expectedMessage.groupCreator = "MEMBER01"
         expectedMessage.groupMembers = ["MEMBER01", "MEMBER02"]
-        expectedMessage.nonce = MockData.generateMessageNonce()
+        expectedMessage.nonce = BytesUtility.generateMessageNonce()
 
         let testEnvelope = try getEnvelopeForIncomingMessage(abstractMessage: expectedMessage)
 
@@ -107,7 +85,7 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.fromIdentity = "MEMBER01"
         expectedMessage.toIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        expectedMessage.nonce = MockData.generateMessageNonce()
+        expectedMessage.nonce = BytesUtility.generateMessageNonce()
 
         let testEnvelope = try getEnvelopeForIncomingMessage(abstractMessage: expectedMessage)
 
@@ -133,7 +111,7 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedMessage.toIdentity = "ECHOECHO"
         expectedMessage.text = "Test text message"
-        expectedMessage.nonce = MockData.generateMessageNonce()
+        expectedMessage.nonce = BytesUtility.generateMessageNonce()
 
         let testEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedMessage)
 
@@ -155,7 +133,7 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         expectedMessage.groupCreator = frameworkInjectorMock.myIdentityStore.identity
         expectedMessage.groupMembers = ["MEMBER01", "MEMBER02"]
-        expectedMessage.nonce = MockData.generateMessageNonce()
+        expectedMessage.nonce = BytesUtility.generateMessageNonce()
 
         let testEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedMessage)
 
@@ -182,7 +160,7 @@ class MediatorReflectedMessageEncoderDecoderTests: XCTestCase {
         expectedMessage.fromIdentity = frameworkInjectorMock.myIdentityStore.identity
         expectedMessage.toIdentity = "MEMBER01"
         expectedMessage.groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
-        expectedMessage.nonce = MockData.generateMessageNonce()
+        expectedMessage.nonce = BytesUtility.generateMessageNonce()
 
         let testEnvelope = try getEnvelopeForOutgoingMessage(abstractMessage: expectedMessage)
 

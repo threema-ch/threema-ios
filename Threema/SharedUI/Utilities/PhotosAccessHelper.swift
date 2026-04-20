@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
@@ -27,18 +7,18 @@ import ThreemaMacros
 
 let tmpDirectory = "tmpImages/"
 
-@objc class PhotosAccessHelper: NSObject {
+final class PhotosAccessHelper: NSObject {
     
     let completion: ([Any], DKImagePickerController?) -> Void
     weak var pickerController: DKImagePickerController?
     weak var parentViewController: UIViewController?
     
-    @objc init(completion: @escaping (([Any], DKImagePickerController?) -> Void)) {
+    init(completion: @escaping (([Any], DKImagePickerController?) -> Void)) {
         self.completion = completion
         super.init()
     }
     
-    @objc func showPicker(viewController: UIViewController, limit: Int) {
+    func showPicker(viewController: UIViewController, limit: Int) {
         if !PhotosRightsHelper().haveFullAccess() {
             parentViewController = viewController
             let photoLibrary = PHPhotoLibrary.shared()
@@ -69,7 +49,7 @@ let tmpDirectory = "tmpImages/"
         }
     }
     
-    @objc func setupDKImagePickerController(limit: Int) -> DKImagePickerController {
+    func setupDKImagePickerController(limit: Int) -> DKImagePickerController {
         let picker = DKImagePickerController()
         picker.assetType = .allAssets
         picker.showsCancelButton = true
@@ -109,7 +89,7 @@ let tmpDirectory = "tmpImages/"
         completion(assets, pickerController)
     }
     
-    @objc static func getTempDir() -> URL {
+    static func getTempDir() -> URL {
         let fileUtility = FileUtility.shared!
         let tmpDirURL = fileUtility.appTemporaryUnencryptedDirectory
         
@@ -129,7 +109,7 @@ let tmpDirectory = "tmpImages/"
         return tmpDirURL
     }
     
-    @objc static func storeImageToTmpDir(imageData: UIImage) -> URL {
+    static func storeImageToTmpDir(imageData: UIImage) -> URL {
         let tmpDir = getTempDir()
         let fileUtility = FileUtility.shared!
         let fileName = fileUtility.getTemporarySendableFileName(base: "image")
@@ -144,7 +124,7 @@ let tmpDirectory = "tmpImages/"
         return fileURL
     }
     
-    @objc static func storePDFToTmpDir(pdfData: Data) -> URL {
+    static func storePDFToTmpDir(pdfData: Data) -> URL {
         let tmpDir = getTempDir()
         let fileUtility = FileUtility.shared!
         let fileName = fileUtility.getTemporarySendableFileName(base: "Scanned-Documents")

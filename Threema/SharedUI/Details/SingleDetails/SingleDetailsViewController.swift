@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import ThreemaMacros
 import UIKit
@@ -204,13 +184,6 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(navigationBarColorShouldChange),
-            name: Notification.Name(kNotificationNavigationBarColorShouldChange),
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
             selector: #selector(refreshDoNotDisturb),
             name: Notification.Name(kNotificationChangedPushSetting),
             object: nil
@@ -263,11 +236,6 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
 
         NotificationCenter.default.removeObserver(self, name: UIContentSizeCategory.didChangeNotification, object: nil)
         
-        NotificationCenter.default.removeObserver(
-            self,
-            name: Notification.Name(kNotificationNavigationBarColorShouldChange),
-            object: nil
-        )
         NotificationCenter.default.removeObserver(
             self,
             name: NSNotification.Name(kNotificationChangedPushSetting),
@@ -360,15 +328,6 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
         updateHeaderLayout()
     }
 
-    @objc private func navigationBarColorShouldChange() {
-        if NavigationBarPromptHandler.shouldShowPrompt() {
-            navigationBarTitleAppearanceOffset = 158
-        }
-        else {
-            navigationBarTitleAppearanceOffset = 140
-        }
-    }
-
     @objc private func refreshDoNotDisturb(_ notification: Notification) {
         DispatchQueue.main.async {
             guard let pushSetting = notification.object as? PushSetting,
@@ -387,12 +346,11 @@ final class SingleDetailsViewController: ThemedCodeModernGroupedTableViewControl
 extension SingleDetailsViewController {
     private func configureTableView() {
         navigationBarTitle = contactEntity.displayName
-        
+        hideNavigationBarTitleBelowAppearanceOffset = true
+
         // If this is not set to `self` the automatic (dis)appearance of the navigation bar doesn't
         // work, because it is applied in the `UIScrollViewDelegate` in our superclass.
         tableView.delegate = self
-        transparentNavigationBarWhenOnTop = true
-        
         tableView.cellLayoutMarginsFollowReadableWidth = true
         
         dataSource.registerHeaderAndCells()
@@ -412,24 +370,22 @@ extension SingleDetailsViewController {
     private func configureNavigationBar() {
         navigationItem.largeTitleDisplayMode = .never
         
-        let editBarButton = UIBarButtonItem(
-            barButtonSystemItem: .edit,
+        let editBarButton = UIBarButtonItem.editButton(
             target: self,
-            action: #selector(editButtonTapped)
+            selector: #selector(editButtonTapped)
         )
         
         // Check if we are presented in a modal view and the root view controller
         if isPresentedInModalAndRootView {
             navigationItem.leftBarButtonItem = editBarButton
             
-            // Only show done button when presented modally
-            let doneButton = UIBarButtonItem(
-                barButtonSystemItem: .done,
+            // Only show close button when presented modally
+            let closeButton = UIBarButtonItem.closeButton(
                 target: self,
-                action: #selector(doneButtonTapped)
+                selector: #selector(doneButtonTapped)
             )
-            doneButton.accessibilityIdentifier = "SingleDetailsViewControllerDoneButton"
-            navigationItem.rightBarButtonItem = doneButton
+            closeButton.accessibilityIdentifier = "SingleDetailsViewControllerDoneButton"
+            navigationItem.rightBarButtonItem = closeButton
         }
         else {
             // Left bar button is most likely a back button

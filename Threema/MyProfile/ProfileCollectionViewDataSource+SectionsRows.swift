@@ -1,31 +1,11 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import ThreemaMacros
 
 extension ProfileCollectionViewDataSource {
     enum Section {
         case header
-        case safe
-        case idExport
+        case backups
+        case id
         case linking
         case publicKey
         case revokeDelete
@@ -34,15 +14,10 @@ extension ProfileCollectionViewDataSource {
             switch self {
             case .header:
                 [.header]
-            case .safe:
-                [.threemaSafe]
-            case .idExport:
-                if TargetManager.isOnPrem {
-                    [.idExport]
-                }
-                else {
-                    [.idExport, .revocationPassword]
-                }
+            case .backups:
+                [.backups]
+            case .id:
+                TargetManager.isOnPrem ? [] : [.revocationPassword]
             case .linking:
                 [.phone, .mail]
             case .publicKey:
@@ -53,26 +28,25 @@ extension ProfileCollectionViewDataSource {
         }
         
         var footerText: String? {
-            let mdm = MDMSetup()
+            guard let mdm = MDMSetup() else {
+                assertionFailure("MDMSetup should always be available")
+                return nil
+            }
 
             switch self {
             case .header:
                 return nil
                 
-            case .safe:
-                if mdm?.isSafeBackupDisable() ?? false {
+            case .backups:
+                if mdm.disableBackups() {
                     return #localize("disabled_by_device_policy")
                 }
                 else {
-                    return String.localizedStringWithFormat(
-                        #localize("safe_enable_explain_short"),
-                        TargetManager.localizedAppName
-                    )
+                    return #localize("backups_explain_short")
                 }
-                
-            case .idExport:
-                if (mdm?.disableBackups() ?? false) || (mdm?.disableIDExport() ?? false) ||
-                    (mdm?.readonlyProfile() ?? false) {
+
+            case .id:
+                if mdm.disableBackups() || mdm.disableIDExport() || mdm.readonlyProfile() {
                     return #localize("disabled_by_device_policy")
                 }
                 else {
@@ -86,7 +60,7 @@ extension ProfileCollectionViewDataSource {
                 return nil
 
             case .revokeDelete:
-                if mdm?.readonlyProfile() ?? false {
+                if mdm.readonlyProfile() {
                     return #localize("disabled_by_device_policy")
                 }
                 else {
@@ -99,12 +73,12 @@ extension ProfileCollectionViewDataSource {
     enum Row {
         case header
                 
-        case threemaSafe
-        
-        case idExport
+        case backups
+
         case revocationPassword
         
         case phone
+        
         case mail
         
         case publicKey
@@ -115,13 +89,8 @@ extension ProfileCollectionViewDataSource {
             switch self {
             case .header:
                 nil
-            case .threemaSafe:
-                String.localizedStringWithFormat(
-                    #localize("safe_setup_backup_title"),
-                    TargetManager.localizedAppName
-                )
-            case .idExport:
-                #localize("profile_id_export")
+            case .backups:
+                #localize("backups")
             case .revocationPassword:
                 #localize("revocation_password")
             case .phone:
@@ -142,22 +111,9 @@ extension ProfileCollectionViewDataSource {
             case .header:
                 return nil
 
-            case .threemaSafe:
-                let safeManager = SafeManager(
-                    safeConfigManager: SafeConfigManager(),
-                    safeStore: SafeStore(
-                        safeConfigManager: SafeConfigManager(),
-                        serverApiConnector: ServerAPIConnector(),
-                        groupManager: businessInjector.groupManager,
-                        myIdentityStore: businessInjector.myIdentityStore
-                    ),
-                    safeApiService: SafeApiService()
-                )
-                return safeManager.isActivated ? #localize("On") : #localize("Off")
-
-            case .idExport:
+            case .backups:
                 return nil
-                
+
             case .revocationPassword:
                 if let date = businessInjector.myIdentityStore.revocationPasswordSetDate {
                     return DateFormatter.getShortDate(date)
@@ -195,40 +151,49 @@ extension ProfileCollectionViewDataSource {
                 return nil
             }
         }
-
+        
+        var isDestructive: Bool {
+            self == .revokeDelete
+        }
+        
         var isInteractionDisabled: Bool {
-            let mdm = MDMSetup()
+            guard let mdm = MDMSetup() else {
+                assertionFailure("MDMSetup should always be available")
+                return false
+            }
 
             switch self {
             case .header, .publicKey:
                 return false
-            case .threemaSafe:
-                return mdm?.isSafeBackupDisable() ?? false
-            case .idExport:
-                return (mdm?.disableBackups() ?? false) || (mdm?.disableIDExport() ?? false)
+
+            case .backups:
+                return mdm.disableBackups()
+
             case .revocationPassword, .phone, .mail, .revokeDelete:
-                return mdm?.readonlyProfile() ?? false
+                return mdm.readonlyProfile()
             }
         }
         
         static func row(for destination: ProfileCoordinator.InternalDestination) -> Self? {
             switch destination {
-            case .qrCode:
+            case .editProfile, .scanQRCode, .qrCode, .shareID:
                 nil
-            case .shareID:
-                nil
-            case .threemaSafe:
-                .threemaSafe
-            case .idExport:
-                .idExport
+
+            case .backups:
+                .backups
+
             case .revocationPassword:
                 .revocationPassword
+
             case .linkPhone:
                 .phone
+
             case .linkMail:
                 .mail
+
             case .publicKey:
                 .publicKey
+
             case .revokeDelete:
                 .revokeDelete
             }

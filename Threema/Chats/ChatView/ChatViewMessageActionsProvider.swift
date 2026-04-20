@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
@@ -25,12 +5,13 @@ import ThreemaFramework
 import ThreemaMacros
 import UIKit
 
+@MainActor
 enum ChatViewMessageActionsProvider {
  
     // MARK: - Message actions
     
     /// A section of message actions used to create context menus and `UIAccessibilityCustomAction`s
-    public struct MessageActionsSection {
+    @MainActor public struct MessageActionsSection {
         enum SectionType {
             /// Show the first few symbols (~ 3 - 4) in horizontal order in iOS 16+ (see `UIMenu.ElementSize.small`).
             /// Otherwise rendered as `primary`
@@ -68,6 +49,7 @@ enum ChatViewMessageActionsProvider {
     }
     
     /// Intermediary struct used to create actions for context menus and `UIAccessibilityCustomAction`s
+    @MainActor
     public struct MessageAction {
         typealias Handler = () -> Void
         
@@ -345,12 +327,42 @@ enum ChatViewMessageActionsProvider {
         MessageAction(
             title: #localize("forward_menu"),
             image: UIImage(systemName: "arrowshape.turn.up.forward")
+            
         ) {
-            let cgPickerWrapper = ContactGroupPickerWrapper(message: message)
-            cgPickerWrapper.showPicker()
+            let businessInjector = BusinessInjector.ui
+
+            /// Search results view controller
+            let searchResultsModel = RecipientSearchResultsViewModel(businessInjector: businessInjector)
+            let searchResultsViewController = RecipientSearchResultsViewController(model: searchResultsModel)
+
+            /// Message Forwarding view controller composed with the search results view controller
+            let model = MessageForwardingViewModel(businessInjector: businessInjector, message: message)
+
+            let topView = AppDelegate.shared().currentTopViewController()
+            do {
+                let vc = try MessageForwardingViewController(
+                    model: model,
+                    searchResultsViewController: searchResultsViewController,
+                    businessInjector: businessInjector
+                )
+                /// Show screen with a navigation bar
+                let navC = UINavigationController(rootViewController: vc)
+
+                navC.definesPresentationContext = true
+                topView?.present(navC, animated: true)
+            }
+            catch {
+                let vc = UIAlertController(
+                    title: #localize("message_forwarding_error_title"),
+                    message: error.localizedDescription,
+                    preferredStyle: .alert
+                )
+                vc.addAction(.init(title: #localize("ok"), style: .cancel))
+                topView?.present(vc, animated: true)
+            }
         }
     }
-    
+
     /// Provides action that handles sharing a message through the share sheet
     /// - Parameter shareItems: Array of items to be shared with UIActivityViewController
     /// - Returns: MessageAction
@@ -407,7 +419,7 @@ enum ChatViewMessageActionsProvider {
     }
     
     /// Provides action that handles displaying the details of a message
-    /// - Parameter messageID: NSManagedObjectID of the message
+    /// - Parameter handler: Closure to execute when action is selected
     /// - Returns: MessageAction
     private static func detailsAction(handler: @escaping DefaultHandler) -> MessageAction {
         MessageAction(

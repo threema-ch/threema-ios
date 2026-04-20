@@ -1,33 +1,27 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import SDWebImage
 import UIKit
 
-public class BrandingUtils: NSObject {
+public enum BrandingUtils {
     
     // Constants
-    @objc public static let compactNavBarHeight: CGFloat = 44
-    @objc public static let compactPromptNavBarHeight: CGFloat = 78
+    public static let compactNavBarHeight: CGFloat =
+        if #available(iOS 26.0, *) {
+            62
+        }
+        else {
+            44
+        }
+    
+    public static let compactPromptNavBarHeight: CGFloat =
+        if #available(iOS 26.0, *) {
+            88
+        }
+        else {
+            72
+        }
+    
     static let defaultLogoHeight: CGFloat = 15.0
     static let customLogoHeight: CGFloat = 28.0
     static let totalVerticalSafeArea: CGFloat = 32
@@ -55,7 +49,7 @@ public class BrandingUtils: NSObject {
         }
     }
     
-    @objc public static func updateTitleLogo(in navController: UINavigationController?) {
+    public static func updateTitleLogo(in navController: UINavigationController?) {
         guard let navController, let navItem = navController.topViewController?.navigationItem else {
             return
         }
@@ -63,14 +57,14 @@ public class BrandingUtils: NSObject {
         updateTitleLogo(of: navItem, in: navController)
     }
     
-    @objc public static func updateTitleLogo(of navItem: UINavigationItem?, in navController: UINavigationController?) {
+    public static func updateTitleLogo(of navItem: UINavigationItem?, in navController: UINavigationController?) {
         guard let navItem,
               let navController else {
             return
         }
         
         Task {
-            let logo = await self.logo()
+            let logo = await logo()
             
             await MainActor.run {
                 setLogo(logo, of: navItem, navigationController: navController)
@@ -120,27 +114,31 @@ public class BrandingUtils: NSObject {
         wrapView.addSubview(imageView)
         
         // Add to NavBar
-        DispatchQueue.main.async {
-            navigationItem.titleView = wrapView
+        Task { @MainActor in
+            UIView.performWithoutAnimation {
+                navigationItem.titleView = wrapView
+            }
         }
     }
     
     private static func logo() async -> LogoType {
         await withCheckedContinuation { continuation in
-            if TargetManager.isBusinessApp, let logoURLString = Colors.licenseLogoURL {
-                // Not consumer and has logoURL
-                guard let logoURL = URL(string: logoURLString) else {
-                    DDLogError("Generating logo URL failed")
-                    return
-                }
-                
-                SDWebImageManager.shared.loadImage(with: logoURL, progress: nil) { image, _, error, _, _, _ in
-                    error.map { DDLogError("Loading logo failed: \($0)") }
-                    continuation.resume(returning: .custom(image))
-                }
-            }
-            else {
+            guard TargetManager.isBusinessApp, let logoURLString = Colors.licenseLogoURL else {
                 continuation.resume(returning: .default(Colors.threemaLogo))
+                return
+            }
+            
+            // Not consumer and has logoURL
+            guard let logoURL = URL(string: logoURLString) else {
+                DDLogError("Generating logo URL failed")
+                return
+            }
+            
+            SDWebImageManager.shared.loadImage(with: logoURL, progress: nil) { image, _, error, _, _, _ in
+                error.map {
+                    DDLogError("Loading logo failed: \($0)")
+                }
+                continuation.resume(returning: .custom(image))
             }
         }
     }

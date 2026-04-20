@@ -1,28 +1,11 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 
 struct LaunchModalSettingsView: View {
+    @State var showThreemaSafeIntroView = false
     @State var showNotificationReminderView = false
     @State var showNotificationTypeSelectionView = false
+    @State var showRemoteSecretActivateView = false
+    @State var showRemoteSecretDeactivateView = false
     @State var showFeedBackView = false
 
     var body: some View {
@@ -45,6 +28,45 @@ struct LaunchModalSettingsView: View {
                 .sheet(isPresented: $showNotificationTypeSelectionView) {
                     NotificationTypeSelectionView()
                 }
+
+                Button {
+                    showThreemaSafeIntroView.toggle()
+                } label: {
+                    Text(verbatim: "Threema Safe Intro")
+                }
+                .sheet(isPresented: $showThreemaSafeIntroView) {
+                    ThreemaSafeIntroView(
+                        model: ThreemaSafeIntroViewModel(
+                            appFlavor: AppFlavorService(),
+                            userSettings: UserSettings.shared()
+                        )
+                    )
+                }
+                Button {
+                    showRemoteSecretActivateView.toggle()
+                } label: {
+                    Text(verbatim: "Remote Secret Activate")
+                }
+                .sheet(isPresented: $showRemoteSecretActivateView) {
+                    RemoteSecretActivateDeactivateView(
+                        viewModel: RemoteSecretActivateDeactivateViewModel(
+                            type: RemoteSecretActivateDeactivateViewModel.ViewType.activate
+                        )
+                    )
+                }
+
+                Button {
+                    showRemoteSecretDeactivateView.toggle()
+                } label: {
+                    Text(verbatim: "Remote Secret Deactivate")
+                }
+                .sheet(isPresented: $showRemoteSecretDeactivateView) {
+                    RemoteSecretActivateDeactivateView(
+                        viewModel: RemoteSecretActivateDeactivateViewModel(
+                            type: RemoteSecretActivateDeactivateViewModel.ViewType.deactivate
+                        )
+                    )
+                }
             } header: {
                 Text(verbatim: "Show Modals")
             }
@@ -59,7 +81,7 @@ struct LaunchModalSettingsView: View {
                 Button(role: .destructive) {
                     resetSafeIntroShown()
                 } label: {
-                    Text(verbatim: "Safe Intro")
+                    Text(verbatim: "Threema Safe Intro")
                 }
             } header: {
                 Text(verbatim: "Reset")

@@ -1,40 +1,20 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 
 @testable import ThreemaFramework
 
-class MessageDecoderTests: XCTestCase {
-    
-    private var mainCnx: ThreemaManagedObjectContext!
-    var databaseCnx: DatabaseContext!
+final class MessageDecoderTests: XCTestCase {
+
+    private var testDatabase: TestDatabase!
+    private var databaseCnx: DatabaseContextProtocol!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
-        
-        (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        databaseCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
+
+        testDatabase = TestDatabase()
+        databaseCnx = testDatabase.context
     }
 
     override func tearDown() {
@@ -405,7 +385,7 @@ class MessageDecoderTests: XCTestCase {
         var contact: ContactEntity!
         var conversation: ConversationEntity!
         
-        let databasePreparer = DatabasePreparer(context: mainCnx)
+        let databasePreparer = testDatabase.preparer
         databasePreparer.save {
             contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO")
             
@@ -623,11 +603,11 @@ class MessageDecoderTests: XCTestCase {
 
     func testDecodeDeleteGroupMessage() throws {
         var expectedDeleteMessage = CspE2e_DeleteMessage()
-        expectedDeleteMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedDeleteMessage.messageID = try BytesUtility.generateMessageID().littleEndian()
 
         let msg = DeleteGroupMessage()
         msg.groupCreator = "ECHOECHO"
-        msg.groupID = MockData.generateGroupID()
+        msg.groupID = BytesUtility.generateGroupID()
         msg.decoded = expectedDeleteMessage
 
         let result = MessageDecoder.decode(MSGTYPE_GROUP_DELETE, body: msg.body()) as? DeleteGroupMessage
@@ -640,7 +620,7 @@ class MessageDecoderTests: XCTestCase {
 
     func testDecodeDeleteMessage() throws {
         var expectedDeleteMessage = CspE2e_DeleteMessage()
-        expectedDeleteMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedDeleteMessage.messageID = try BytesUtility.generateMessageID().littleEndian()
 
         let msg = DeleteMessage()
         msg.decoded = expectedDeleteMessage
@@ -653,12 +633,12 @@ class MessageDecoderTests: XCTestCase {
 
     func testDecodeEditGroupMessage() throws {
         var expectedEditMessage = CspE2e_EditMessage()
-        expectedEditMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedEditMessage.messageID = try BytesUtility.generateMessageID().littleEndian()
         expectedEditMessage.text = "Test 123"
 
         let msg = EditGroupMessage()
         msg.groupCreator = "ECHOECHO"
-        msg.groupID = MockData.generateGroupID()
+        msg.groupID = BytesUtility.generateGroupID()
         msg.decoded = expectedEditMessage
 
         let result = MessageDecoder.decode(MSGTYPE_GROUP_EDIT, body: msg.body()) as? EditGroupMessage
@@ -672,7 +652,7 @@ class MessageDecoderTests: XCTestCase {
 
     func testDecodeEditMessage() throws {
         var expectedEditMessage = CspE2e_EditMessage()
-        expectedEditMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedEditMessage.messageID = try BytesUtility.generateMessageID().littleEndian()
         expectedEditMessage.text = "Test 123"
 
         let msg = EditMessage()
@@ -687,12 +667,12 @@ class MessageDecoderTests: XCTestCase {
     
     func testDecodeGroupReactionMessage() throws {
         var expectedReactionMessage = CspE2e_Reaction()
-        expectedReactionMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedReactionMessage.messageID = try BytesUtility.generateMessageID().littleEndian()
         expectedReactionMessage.action = .apply(Data("✌🏻".utf8))
 
         let msg = GroupReactionMessage()
         msg.groupCreator = "ECHOECHO"
-        msg.groupID = MockData.generateGroupID()
+        msg.groupID = BytesUtility.generateGroupID()
         msg.decoded = expectedReactionMessage
 
         let result = MessageDecoder.decode(MSGTYPE_GROUP_REACTION, body: msg.body()) as? GroupReactionMessage
@@ -706,7 +686,7 @@ class MessageDecoderTests: XCTestCase {
 
     func testDecodeReactionMessage() throws {
         var expectedReactionMessage = CspE2e_Reaction()
-        expectedReactionMessage.messageID = try MockData.generateMessageID().littleEndian()
+        expectedReactionMessage.messageID = try BytesUtility.generateMessageID().littleEndian()
         expectedReactionMessage.action = .apply(Data("✌🏻".utf8))
 
         let msg = ReactionMessage()

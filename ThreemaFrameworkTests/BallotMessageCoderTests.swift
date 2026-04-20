@@ -1,36 +1,17 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-import ThreemaEssentialsTestHelper
+import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
-class BallotMessageCoderTests: XCTestCase {
-    let preparer = BallotMessagePreparer()
-    lazy var dBContext = DatabaseContext(mainContext: preparer.objectContext, backgroundContext: nil)
-    
+final class BallotMessageCoderTests: XCTestCase {
+    private var preparer: BallotMessagePreparer!
+
     // MARK: Setup & TearDown
     
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
-        
+
+        preparer = BallotMessagePreparer()
+
         // Prepare a DB before each Test
         preparer.prepareDatabase()
     }
@@ -45,7 +26,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Goal: Test impossibility for client to create a Ballot with DisplayModeSummary
         
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
+        let entityManager = preparer.testDatabase.entityManager
         let ballotDecoder = BallotMessageDecoder(entityManager)
         let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
             for: preparer.groupID,
@@ -96,7 +77,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Goal: Test that DisplayMode is List, when nothing is specified
 
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
+        let entityManager = preparer.testDatabase.entityManager
         let ballotDecoder = BallotMessageDecoder(entityManager)
         let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
             for: preparer.groupID,
@@ -146,7 +127,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Goal: Test that Choices have no value for totalVotes after Encoding
 
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
+        let entityManager = preparer.testDatabase.entityManager
         let ballotDecoder = BallotMessageDecoder(entityManager)
         let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
             for: preparer.groupID,
@@ -207,7 +188,7 @@ class BallotMessageCoderTests: XCTestCase {
     func testDecodeMessageCreateBallot() throws {
         // Goal: Test Decoding of incoming message without existing Ballot
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
+        let entityManager = preparer.testDatabase.entityManager
         let ballotDecoder = BallotMessageDecoder(entityManager)
         let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
             for: preparer.groupID,
@@ -313,7 +294,7 @@ class BallotMessageCoderTests: XCTestCase {
         // Goal: Creating a message with no results must not crash
 
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
+        let entityManager = preparer.testDatabase.entityManager
         let ballotDecoder = BallotMessageDecoder(entityManager)
         let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
             for: preparer.groupID,
@@ -376,7 +357,7 @@ class BallotMessageCoderTests: XCTestCase {
         // for participants and no values for participants votes
 
         // Arrange:
-        let entityManager = EntityManager(databaseContext: dBContext, isRemoteSecretEnabled: false)
+        let entityManager = preparer.testDatabase.entityManager
         let ballotDecoder = BallotMessageDecoder(entityManager)
         let conversation = try XCTUnwrap(entityManager.entityFetcher.groupConversationEntity(
             for: preparer.groupID,
@@ -449,13 +430,13 @@ class BallotMessageCoderTests: XCTestCase {
     
     private func createLocalBallot() -> BallotEntity {
         let ballot = BallotEntity(
-            context: preparer.objectContext,
+            context: preparer.testDatabase.context.main,
             assessmentType: .single,
-            id: MockData.generateBallotID(),
+            id: BytesUtility.generateBallotID(),
             state: .open,
             type: .closed
         )
-        ballot.id = MockData.generateBallotID()
+        ballot.id = BytesUtility.generateBallotID()
         ballot.createDate = Date()
         ballot.creatorID = "MyID"
         ballot.title = "TestBallot"
@@ -467,7 +448,7 @@ class BallotMessageCoderTests: XCTestCase {
     private func createChoices(for ballot: BallotEntity) {
         for i in 0..<3 {
             let choice = BallotChoiceEntity(
-                context: preparer.objectContext,
+                context: preparer.testDatabase.context.main,
                 id: NSNumber(integerLiteral: i),
                 ballot: ballot
             )

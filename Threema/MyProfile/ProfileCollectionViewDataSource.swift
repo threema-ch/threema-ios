@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import ThreemaMacros
 
@@ -89,13 +69,13 @@ final class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
         snapshot.appendSections([.header])
         snapshot.appendItems(Section.header.rows)
 
-        // Safe
-        snapshot.appendSections([.safe])
-        snapshot.appendItems(Section.safe.rows)
+        // Backups
+        snapshot.appendSections([.backups])
+        snapshot.appendItems(Section.backups.rows)
         
-        // ID-Export
-        snapshot.appendSections([.idExport])
-        snapshot.appendItems(Section.idExport.rows)
+        // ID
+        snapshot.appendSections([.id])
+        snapshot.appendItems(Section.id.rows)
         
         // Linking
         snapshot.appendSections([.linking])
@@ -151,13 +131,6 @@ final class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
     private func addObservers() {
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(reconfigureSafe),
-            name: Notification.Name(kSafeBackupUIRefresh),
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
             selector: #selector(checkRevocationPassword),
             name: Notification.Name(kRevocationPasswordUIRefresh),
             object: nil
@@ -176,12 +149,13 @@ final class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
             name: Notification.Name(kLinkedEmailUIRefresh),
             object: nil
         )
-    }
-    
-    @objc private func reconfigureSafe() {
-        var snapshot = snapshot()
-        snapshot.reconfigureItems([.threemaSafe])
-        apply(snapshot)
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(reconfigureHeader),
+            name: .profileUIRefresh,
+            object: nil
+        )
     }
     
     private func reconfigureRevocationPassword() {
@@ -199,6 +173,12 @@ final class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
     @objc private func reconfigureLinkedEmail() {
         var snapshot = snapshot()
         snapshot.reconfigureItems([.mail])
+        apply(snapshot)
+    }
+
+    @objc private func reconfigureHeader() {
+        var snapshot = snapshot()
+        snapshot.reconfigureItems([.header])
         apply(snapshot)
     }
 }

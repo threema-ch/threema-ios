@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2015-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import "RandomSeedViewController.h"
 #import "BundleUtil.h"
 #import "MotionEntropyCollector.h"
@@ -81,8 +61,10 @@
 }
 
 - (void)setup {
+    self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+
     _randomDataBackground.layer.cornerRadius = 5.0;
-    
+
     _progressView.tintColor = UIColor.tintColor;
     
     _titleLabel.text = [NSString stringWithFormat:[BundleUtil localizedStringForKey:@"welcome"], TargetManagerObjC.appName];
@@ -109,15 +91,10 @@
     _accessabilityLastProgress = 0.0;
     
     _fingerView.image = [StyleKit finger];
-    
-    _cancelButton.layer.borderWidth = 1;
-    _cancelButton.layer.borderColor = UIColor.tintColor.CGColor;
-    _cancelButton.layer.cornerRadius = 5;
+
+    _cancelButton.cancelStyle = YES;
     _cancelButton.titleLabel.adjustsFontSizeToFitWidth = YES;
     _cancelButton.titleLabel.minimumScaleFactor = 0.6;
-    // With a transparent background, the button is only accessible when the finger is positioned over the text
-    _cancelButton.backgroundColor = [UIColor.blackColor colorWithAlphaComponent:0.02];
-    [_cancelButton setTitleColor:UIColor.tintColor forState:UIControlStateNormal];
     [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"cancel"] forState:UIControlStateNormal];
 }
 

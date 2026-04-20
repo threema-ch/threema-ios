@@ -1,44 +1,26 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaMacros
 import ThreemaProtocols
 import XCTest
 
 @testable import ThreemaFramework
 
-class ContactTests: XCTestCase {
+final class ContactTests: XCTestCase {
 
-    private var dbMainCnx: DatabaseContext!
-    private var dbPreparer: DatabasePreparer!
+    private var testDatabase: TestDatabase!
+    private var dbPreparer: TestDatabasePreparer!
 
     private var ddLoggerMock: DDLoggerMock!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        dbPreparer = DatabasePreparer(context: mainCnx)
+        testDatabase = TestDatabase()
+        dbPreparer = testDatabase.preparer
+
+        // Workaround to ensure remote secret is initialized
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -51,7 +33,7 @@ class ContactTests: XCTestCase {
 
     func testSaveAndImplicitReload() throws {
         let expectedIdentity = ThreemaIdentity("MEMBER01")
-        let expectedPublicKey = MockData.generatePublicKey()
+        let expectedPublicKey = BytesUtility.generatePublicKey()
 
         // Setup initial contact entity in DB
 
@@ -83,7 +65,7 @@ class ContactTests: XCTestCase {
 
         // Change contact entity properties in DB
 
-        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
         entityManager.performAndWaitSave {
             contactEntity.setFirstName(to: "Fritzli", sortOrderFirstName: true)
             contactEntity.setLastName(to: "Bergli", sortOrderFirstName: true)
@@ -106,7 +88,7 @@ class ContactTests: XCTestCase {
 
     func testIdentityMismatch() throws {
         let expectedIdentity = ThreemaIdentity("MEMBER01")
-        let expectedPublicKey = MockData.generatePublicKey()
+        let expectedPublicKey = BytesUtility.generatePublicKey()
 
         // Setup initial contact entity in DB
 
@@ -128,7 +110,7 @@ class ContactTests: XCTestCase {
 
         // Change contact entity properties in DB
 
-        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
         entityManager.performAndWaitSave {
             contactEntity.setIdentity(to: "CONTACT1", sortOrderFirstName: true)
         }
@@ -147,7 +129,7 @@ class ContactTests: XCTestCase {
 
         dbPreparer.save {
             contact1 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "CONTACT1",
                 verificationLevel: .fullyVerified
             )
@@ -158,7 +140,7 @@ class ContactTests: XCTestCase {
             contact1.workContact = NSNumber(booleanLiteral: true)
 
             contact2 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "CONTACT2"
             )
             contact2.publicNickname = "#2"
@@ -168,7 +150,7 @@ class ContactTests: XCTestCase {
             contact2.workContact = NSNumber(booleanLiteral: false)
 
             contact3 = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "CONTACT3"
             )
             contact3.publicNickname = "#3"
@@ -200,7 +182,7 @@ class ContactTests: XCTestCase {
 
     func testDeleteContactEntity() throws {
         let contactEntity = dbPreparer.createContact(
-            publicKey: MockData.generatePublicKey(),
+            publicKey: BytesUtility.generatePublicKey(),
             identity: "ECHOECHO"
         )
 
@@ -224,7 +206,7 @@ class ContactTests: XCTestCase {
     func testDisplayName() {
         dbPreparer.save {
             let contactEntity = self.dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "CONTACT1",
                 verificationLevel: .fullyVerified
             )
@@ -285,7 +267,7 @@ class ContactTests: XCTestCase {
             self.dbPreparer.createContact(identity: "ECHOECHO")
         }
 
-        let em = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+        let em = testDatabase.entityManager
 
         for flag in ThreemaProtocols.Common_CspFeatureMaskFlag.allCases {
             let contactEntity = await em.performSave {

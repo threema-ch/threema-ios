@@ -1,37 +1,17 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
-class TaskDefinitionTests: XCTestCase {
-    private var dbPreparer: DatabasePreparer!
+final class TaskDefinitionTests: XCTestCase {
+    private var dbPreparer: TestDatabasePreparer!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
-        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        dbPreparer = DatabasePreparer(context: mainCnx)
+        let testDatabase = TestDatabase()
+        dbPreparer = testDatabase.preparer
     }
 
     func testTaskDefinitionEncodeDecode() throws {
@@ -68,12 +48,12 @@ class TaskDefinitionTests: XCTestCase {
     func testTaskDefinitionGroupDissolveEncodeDecode() throws {
         let expectedMember = "MEMBER01"
         let expectedNonces = [
-            "ADMIN007": MockData.generateMessageNonce(),
-            expectedMember: MockData.generateMessageNonce(),
+            "ADMIN007": BytesUtility.generateMessageNonce(),
+            expectedMember: BytesUtility.generateMessageNonce(),
         ]
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "ADMIN007",
             members: ["ECHOECHO"]
         )
@@ -107,10 +87,10 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionReflectIncomingMessageEncodeDecode() throws {
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedIdentity = "ECHOECHO"
         let expectedText = "test 123!!!"
-        let expectedNonces = [expectedIdentity: MockData.generateMessageNonce()]
+        let expectedNonces = [expectedIdentity: BytesUtility.generateMessageNonce()]
 
         let expectedAbstractMessage = BoxTextMessage()
         expectedAbstractMessage.messageID = expectedMessageID
@@ -143,7 +123,7 @@ class TaskDefinitionTests: XCTestCase {
         ]
         let expectedNonces: [String: Data] = expectedToIdentities
             .reduce(into: [String: Data]()) { partialResult, identity in
-                partialResult[identity.rawValue] = MockData.generateMessageNonce()
+                partialResult[identity.rawValue] = BytesUtility.generateMessageNonce()
             }
 
         let task = TaskDefinitionRunForwardSecurityRefreshSteps(with: expectedToIdentities)
@@ -164,7 +144,7 @@ class TaskDefinitionTests: XCTestCase {
     func testTaskDefinitionSendDeleteMessageEncodeDecode() throws {
         let expectedReceiverIdentity = ThreemaIdentity("ECHOECHO")
         let expectedDeleteMessage = try CspE2e_DeleteMessage.with { message in
-            message.messageID = try MockData.generateMessageID().littleEndian()
+            message.messageID = try BytesUtility.generateMessageID().littleEndian()
         }
 
         let task = TaskDefinitionSendDeleteEditMessage(
@@ -188,7 +168,7 @@ class TaskDefinitionTests: XCTestCase {
     func testTaskDefinitionSendEditMessageEncodeDecode() throws {
         let expectedReceiverIdentity = ThreemaIdentity("ECHOECHO")
         let expectedEditMessage = try CspE2e_EditMessage.with { message in
-            message.messageID = try MockData.generateMessageID().littleEndian()
+            message.messageID = try BytesUtility.generateMessageID().littleEndian()
             message.text = "Test"
         }
 
@@ -213,7 +193,7 @@ class TaskDefinitionTests: XCTestCase {
     func testTaskDefinitionSendReactionMessageEncodeDecode() throws {
         let expectedReceiverIdentity = ThreemaIdentity("ECHOECHO")
         let expectedReactionMessage = try CspE2e_Reaction.with { message in
-            message.messageID = try MockData.generateMessageID().littleEndian()
+            message.messageID = try BytesUtility.generateMessageID().littleEndian()
             message.action = .apply(Data("😁".utf8))
         }
 
@@ -239,14 +219,14 @@ class TaskDefinitionTests: XCTestCase {
         let expectedToIdentity = "CONTACT2"
         let expectedReceiptType: ReceiptType = .read
         let expectedReceiptMessageIDs = [
-            MockData.generateMessageID(),
-            MockData.generateMessageID(),
+            BytesUtility.generateMessageID(),
+            BytesUtility.generateMessageID(),
         ]
         let expectedReceiptReadDates = [
             Date(),
             Date(),
         ]
-        let expectedNonces = [expectedToIdentity: MockData.generateMessageNonce()]
+        let expectedNonces = [expectedToIdentity: BytesUtility.generateMessageNonce()]
 
         let task = TaskDefinitionSendDeliveryReceiptsMessage(
             fromIdentity: expectedFromIdentity,
@@ -278,7 +258,7 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendMessageEncodeDecode() throws {
-        let expectedNonces = ["ECHOECHO": MockData.generateMessageNonce()]
+        let expectedNonces = ["ECHOECHO": BytesUtility.generateMessageNonce()]
 
         let task = TaskDefinitionSendMessage(sendContactProfilePicture: false)
         task.nonces = expectedNonces
@@ -296,9 +276,9 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendBallotVoteMessageEncodeDecode() throws {
-        let expectedBallotID = MockData.generateBallotID()
+        let expectedBallotID = BytesUtility.generateBallotID()
         let expectedReceiverIdentity = "ECHOECHO"
-        let expectedNonces = ["ECHOECHO": MockData.generateMessageNonce()]
+        let expectedNonces = ["ECHOECHO": BytesUtility.generateMessageNonce()]
 
         let task = TaskDefinitionSendBallotVoteMessage(
             ballotID: expectedBallotID,
@@ -324,11 +304,11 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendBaseMessageEncodeDecode() throws {
-        let expectedMessageID = MockData.generateMessageID()
-        let expectedNonces = ["ADMIN007": MockData.generateMessageNonce()]
+        let expectedMessageID = BytesUtility.generateMessageID()
+        let expectedNonces = ["ADMIN007": BytesUtility.generateMessageNonce()]
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "ADMIN007",
             members: ["ECHOECHO"]
         )
@@ -369,12 +349,12 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendLocationMessageEncodeDecode() throws {
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedMessagePoiAddress = "poi address"
-        let expectedNonces = ["ADMIN007": MockData.generateMessageNonce()]
+        let expectedNonces = ["ADMIN007": BytesUtility.generateMessageNonce()]
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "ADMIN007",
             members: ["ECHOECHO"]
         )
@@ -419,11 +399,11 @@ class TaskDefinitionTests: XCTestCase {
         let expectedMembers = ["MEMBER01", "MEMBER02"]
         var expectedNonces = [String: Data]()
         for identity in expectedToMembers {
-            expectedNonces[identity] = MockData.generateMessageNonce()
+            expectedNonces[identity] = BytesUtility.generateMessageNonce()
         }
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "CREATOR1",
             members: expectedMembers
         )
@@ -470,11 +450,11 @@ class TaskDefinitionTests: XCTestCase {
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
         var expectedNonces = [String: Data]()
         for identity in expectedToMembers {
-            expectedNonces[identity] = MockData.generateMessageNonce()
+            expectedNonces[identity] = BytesUtility.generateMessageNonce()
         }
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "CREATOR1",
             members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
         )
@@ -515,14 +495,14 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendGroupLeaveMessageEncodeDecode() throws {
-        let expectedGroupID = MockData.generateGroupID()
+        let expectedGroupID = BytesUtility.generateGroupID()
         let expectedGroupCreator = "CREATOR1"
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
         let expectedHiddenContacts = ["MEMBER04"]
         var expectedNonces = [String: Data]()
         for identity in expectedToMembers {
-            expectedNonces[identity] = MockData.generateMessageNonce()
+            expectedNonces[identity] = BytesUtility.generateMessageNonce()
         }
 
         let task = TaskDefinitionSendGroupLeaveMessage(sendContactProfilePicture: false)
@@ -557,11 +537,11 @@ class TaskDefinitionTests: XCTestCase {
         let expectedNewName = "New group name"
         var expectedNonces = [String: Data]()
         for identity in expectedToMembers {
-            expectedNonces[identity] = MockData.generateMessageNonce()
+            expectedNonces[identity] = BytesUtility.generateMessageNonce()
         }
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "CREATOR1",
             members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
         )
@@ -607,15 +587,15 @@ class TaskDefinitionTests: XCTestCase {
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
         let expectedSize: UInt32 = 10
-        let expectedBlobID = MockData.generateBlobID()
-        let expectedEncryptionKey = MockData.generateBlobEncryptionKey()
+        let expectedBlobID = BytesUtility.generateBlobID()
+        let expectedEncryptionKey = BytesUtility.generateBlobEncryptionKey()
         var expectedNonces = [String: Data]()
         for identity in expectedToMembers {
-            expectedNonces[identity] = MockData.generateMessageNonce()
+            expectedNonces[identity] = BytesUtility.generateMessageNonce()
         }
         
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "CREATOR1",
             members: ["MEMBER01", "MEMBER02", "MEMBER03", "MEMBER04"]
         )
@@ -662,13 +642,13 @@ class TaskDefinitionTests: XCTestCase {
     }
 
     func testTaskDefinitionSendAbstractMessageEncodeDecode() throws {
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedReceiptType = ReceiptType.read
-        let expectedReceiptMessageIDs = [MockData.generateMessageID(), MockData.generateMessageID()]
+        let expectedReceiptMessageIDs = [BytesUtility.generateMessageID(), BytesUtility.generateMessageID()]
         let expectedFromIdentity = "FROMID01"
         let expectedToIdentity = "ECHOECHO"
         let expectedDate = Date()
-        let expectedNonces = [expectedToIdentity: MockData.generateMessageNonce()]
+        let expectedNonces = [expectedToIdentity: BytesUtility.generateMessageNonce()]
 
         let abstractMessage = DeliveryReceiptMessage()
         abstractMessage.messageID = expectedMessageID
@@ -708,7 +688,7 @@ class TaskDefinitionTests: XCTestCase {
             var sContact = Sync_Contact()
             sContact.identity = SwiftUtils.pseudoRandomString(length: 7)
             sContact.identityType = .regular
-            sContact.publicKey = MockData.generatePublicKey()
+            sContact.publicKey = BytesUtility.generatePublicKey()
             sContact.verificationLevel = .serverVerified
             sContact.nickname = SwiftUtils.pseudoRandomString(length: Int.random(in: 0..<200))
             sContact.firstName = SwiftUtils.pseudoRandomString(length: Int.random(in: 0..<200))
@@ -764,16 +744,16 @@ class TaskDefinitionTests: XCTestCase {
         let expectedToMembers = ["MEMBER03", "MEMBER04"]
         let expectedReceiptType: ReceiptType = .ack
         let expectedReceiptMessageIDs = [
-            MockData.generateMessageID(),
-            MockData.generateMessageID(),
+            BytesUtility.generateMessageID(),
+            BytesUtility.generateMessageID(),
         ]
         var expectedNonces = [String: Data]()
         for identity in expectedToMembers {
-            expectedNonces[identity] = MockData.generateMessageNonce()
+            expectedNonces[identity] = BytesUtility.generateMessageNonce()
         }
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "CREATOR1",
             members: expectedToMembers
         )

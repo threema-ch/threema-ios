@@ -27,6 +27,7 @@
 @import FileUtility;
 ///***** END THREEMA MODIFICATION: Add AppGroup and utils *********/
 
+
 #define PADDING                  10
 
 static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
@@ -71,12 +72,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 - (void)_initialisation {
     
     // Defaults
-    NSNumber *isVCBasedStatusBarAppearanceNum = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"UIViewControllerBasedStatusBarAppearance"];
-    if (isVCBasedStatusBarAppearanceNum) {
-        _isVCBasedStatusBarAppearance = isVCBasedStatusBarAppearanceNum.boolValue;
-    } else {
-        _isVCBasedStatusBarAppearance = YES; // default
-    }
     self.hidesBottomBarWhenPushed = YES;
     _hasBelongedToViewController = NO;
     _photoCount = NSNotFound;
@@ -199,9 +194,11 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     ///***** END THREEMA MODIFICATION *********
     _pagingScrollView.contentSize = [self contentSizeForPagingScrollView];
 	[self.view addSubview:_pagingScrollView];
-	
+
+    UIInterfaceOrientation orientation = [self currentInterfaceOrientation];
+
     // Toolbar
-    _toolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]]];
+    _toolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:orientation]];
     ///***** BEGIN THREEMA MODIFICATION *********
     _toolbar.tintColor = UIColor.primary;
     ///***** END THREEMA MODIFICATION *********
@@ -214,7 +211,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     _toolbar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
     
     // Toolbar
-    _gridToolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]]];
+    _gridToolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:orientation]];
     ///***** BEGIN THREEMA MODIFICATION *********
     _gridToolbar.tintColor = [Colors backgroundView];
     ///***** END THREEMA MODIFICATION *********
@@ -273,18 +270,36 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     
     // Navigation buttons
     if ([self.navigationController.viewControllers objectAtIndex:0] == self || self.navigationController == nil) {
-        // We're first on stack so show done button
-        _doneButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Done", nil) style:UIBarButtonItemStylePlain target:self action:@selector(doneButtonPressed:)];
-        // Set appearance
-        [_doneButton setBackgroundImage:nil forState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
-        [_doneButton setBackgroundImage:nil forState:UIControlStateNormal barMetrics:UIBarMetricsCompact];
-        [_doneButton setBackgroundImage:nil forState:UIControlStateHighlighted barMetrics:UIBarMetricsDefault];
-        [_doneButton setBackgroundImage:nil forState:UIControlStateHighlighted barMetrics:UIBarMetricsCompact];
-        [_doneButton setTitleTextAttributes:[NSDictionary dictionary] forState:UIControlStateNormal];
-        [_doneButton setTitleTextAttributes:[NSDictionary dictionary] forState:UIControlStateHighlighted];
-        /***** BEGIN THREEMA MODIFICATION: 'done' on left *********/
-        self.navigationItem.leftBarButtonItem = _doneButton;
-        /***** END THREEMA MODIFICATION: 'done' on left *********/
+        if (@available(iOS 26, *)) {
+            // We're first on stack so show done button
+            _doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemClose target:self action:@selector(doneButtonPressed:)];
+            // Set appearance
+            [_doneButton setBackgroundImage:nil forState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
+            [_doneButton setBackgroundImage:nil forState:UIControlStateNormal barMetrics:UIBarMetricsCompact];
+            [_doneButton setBackgroundImage:nil forState:UIControlStateHighlighted barMetrics:UIBarMetricsDefault];
+            [_doneButton setBackgroundImage:nil forState:UIControlStateHighlighted barMetrics:UIBarMetricsCompact];
+            [_doneButton setTitleTextAttributes:[NSDictionary dictionary] forState:UIControlStateNormal];
+            [_doneButton setTitleTextAttributes:[NSDictionary dictionary] forState:UIControlStateHighlighted];
+            /***** BEGIN THREEMA MODIFICATION: 'done' on right *********/
+            self.navigationItem.rightBarButtonItem = _doneButton;
+            /***** END THREEMA MODIFICATION: 'done' on left *********/
+        }
+        else {
+            if ([self.navigationController.viewControllers objectAtIndex:0] == self || self.navigationController == nil) {
+                // We're first on stack so show done button
+                _doneButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Done", nil) style:UIBarButtonItemStylePlain target:self action:@selector(doneButtonPressed:)];
+                // Set appearance
+                [_doneButton setBackgroundImage:nil forState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
+                [_doneButton setBackgroundImage:nil forState:UIControlStateNormal barMetrics:UIBarMetricsCompact];
+                [_doneButton setBackgroundImage:nil forState:UIControlStateHighlighted barMetrics:UIBarMetricsDefault];
+                [_doneButton setBackgroundImage:nil forState:UIControlStateHighlighted barMetrics:UIBarMetricsCompact];
+                [_doneButton setTitleTextAttributes:[NSDictionary dictionary] forState:UIControlStateNormal];
+                [_doneButton setTitleTextAttributes:[NSDictionary dictionary] forState:UIControlStateHighlighted];
+                /***** BEGIN THREEMA MODIFICATION: 'done' on left *********/
+                self.navigationItem.leftBarButtonItem = _doneButton;
+                /***** END THREEMA MODIFICATION: 'done' on left *********/
+            }
+        }
     } else {
         // We're not first so show back button
         UIViewController *previousViewController = [self.navigationController.viewControllers objectAtIndex:self.navigationController.viewControllers.count-2];
@@ -436,17 +451,14 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     // Status bar
     if (!_viewHasAppearedInitially) {
         _leaveStatusBarAlone = [self presentingViewControllerPrefersStatusBarHidden];
-        // Check if status bar is hidden on first appear, and if so then ignore it
-        if (CGRectEqualToRect([[UIApplication sharedApplication] statusBarFrame], CGRectZero)) {
-            _leaveStatusBarAlone = YES;
-        }
     }
-    // Set style
-    if (!_leaveStatusBarAlone && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-        _previousStatusBarStyle = [[UIApplication sharedApplication] statusBarStyle];
-        [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent animated:animated];
+    // Set style]
+    if (!_leaveStatusBarAlone && [UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
+        _previousStatusBarStyle = self.preferredStatusBarStyle;
+        _currentStatusBarStyle = UIStatusBarStyleLightContent;
+        [self setNeedsStatusBarAppearanceUpdate];
     }
-    
+
     // Navigation bar appearance
     if (!_viewIsActive && [self.navigationController.viewControllers objectAtIndex:0] != self) {
         [self storePreviousNavBarAppearance];
@@ -528,10 +540,11 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     [self setControlsHidden:NO animated:NO permanent:YES];
     
     // Status bar
-    if (!_leaveStatusBarAlone && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-        [[UIApplication sharedApplication] setStatusBarStyle:_previousStatusBarStyle animated:animated];
+    if (!_leaveStatusBarAlone && [UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
+        _currentStatusBarStyle = _previousStatusBarStyle;
+        [self setNeedsStatusBarAppearanceUpdate];
     }
-    
+
 	// Super
 	[super viewWillDisappear:animated];
     
@@ -572,9 +585,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     navBar.translucent = YES;
     [navBar setBackgroundImage:nil forBarMetrics:UIBarMetricsDefault];
     [navBar setBackgroundImage:nil forBarMetrics:UIBarMetricsCompact];
-    /***** BEGIN THREEMA MODIFICATION: adapt to own style *********/
-    self.navigationItem.scrollEdgeAppearance = [Colors defaultNavigationBarAppearance];
-    /***** END THREEMA MODIFICATION *********/
 }
 
 - (void)storePreviousNavBarAppearance {
@@ -619,9 +629,11 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	_performingLayout = YES;
 	
 	// Toolbar
-	_toolbar.frame = [self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]];
-    _gridToolbar.frame = [self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]];
-    
+    UIInterfaceOrientation orientation = [self currentInterfaceOrientation];
+
+	_toolbar.frame = [self frameForToolbarAtOrientation:orientation];
+    _gridToolbar.frame = [self frameForToolbarAtOrientation:orientation];
+
 	// Remember index
 	NSUInteger indexPriorToLayout = _currentPageIndex;
 	
@@ -1160,27 +1172,32 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 
 - (CGRect)frameForToolbarAtOrientation:(UIInterfaceOrientation)orientation {
     CGFloat height = 44;
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone &&
+    if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone &&
         UIInterfaceOrientationIsLandscape(orientation)) height = 32;
     CGFloat adjust = 0;
-    if (@available(iOS 11.0, *)) {
-        //Account for possible notch
-        /***** BEGIN THREEMA MODIFICATION: Use windows instead of keyWindow *********/
-        UIEdgeInsets safeArea = [[[UIApplication sharedApplication] windows] firstObject].safeAreaInsets;
-        /***** END THREEMA MODIFICATION: Use windows instead of keyWindow *********/
-        adjust = safeArea.bottom;
-    }
+    UIEdgeInsets safeArea = [[[UIApplication sharedApplication] windows] firstObject].safeAreaInsets;
+    adjust = safeArea.bottom;
     return CGRectIntegral(CGRectMake(0, self.view.bounds.size.height - height - adjust, self.view.bounds.size.width, height));
 }
 
 - (CGRect)frameForCaptionView:(MWCaptionView *)captionView atIndex:(NSUInteger)index {
     CGRect pageFrame = [self frameForPageAtIndex:index];
     CGSize captionSize = [captionView sizeThatFits:CGSizeMake(pageFrame.size.width, 0)];
-    CGRect toolBarRect = [self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]];
+    UIInterfaceOrientation orientation = [self currentInterfaceOrientation];
+    CGRect toolBarRect = [self frameForToolbarAtOrientation:orientation];
+    CGFloat originY;
+    // BEGIN THREEMA MODIFICATION
+    if (@available(iOS 26.0, *)) {
+        originY = toolBarRect.origin.y - captionSize.height - 20;
+    } else {
+        originY = toolBarRect.origin.y - captionSize.height;
+    }
+    
     CGRect captionFrame = CGRectMake(pageFrame.origin.x,
-                                     toolBarRect.origin.y - captionSize.height,
+                                     originY,
                                      pageFrame.size.width,
                                      captionSize.height);
+    // END THREEMA MODIFICATION
     return CGRectIntegral(captionFrame);
 }
 
@@ -1594,31 +1611,23 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
     if (!_leaveStatusBarAlone) {
 
         // Hide status bar
-        if (!_isVCBasedStatusBarAppearance) {
-            
-            // Non-view controller based
-            [[UIApplication sharedApplication] setStatusBarHidden:hidden withAnimation:animated ? UIStatusBarAnimationSlide : UIStatusBarAnimationNone];
-            
-        } else {
-            
-            // View controller based so animate away
-            _statusBarShouldBeHidden = hidden;
-            [UIView animateWithDuration:animationDuration animations:^(void) {
-                [self setNeedsStatusBarAppearanceUpdate];
-            } completion:^(BOOL finished) {}];
-            
-        }
+        _statusBarShouldBeHidden = hidden;
 
+        [UIView animateWithDuration:animationDuration animations:^{
+            [self setNeedsStatusBarAppearanceUpdate];
+        }];
     }
-    
+
+    UIInterfaceOrientation orientation = [self currentInterfaceOrientation];
+
     // Toolbar, nav bar and captions
     // Pre-appear animation positions for sliding
     if ([self areControlsHidden] && !hidden && animated) {
-        
+
         // Toolbar
-        _toolbar.frame = CGRectOffset([self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]], 0, animatonOffset);
-        _gridToolbar.frame = CGRectOffset([self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]], 0, animatonOffset);
-        
+        _toolbar.frame = CGRectOffset([self frameForToolbarAtOrientation:orientation], 0, animatonOffset);
+        _gridToolbar.frame = CGRectOffset([self frameForToolbarAtOrientation:orientation], 0, animatonOffset);
+
         // Captions
         for (MWZoomingScrollView *page in _visiblePages) {
             if (page.captionView) {
@@ -1638,8 +1647,8 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
         [self.navigationController.navigationBar setAlpha:alpha];
         
         // Toolbar
-        _toolbar.frame = [self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]];
-        _gridToolbar.frame = [self frameForToolbarAtOrientation:[[UIApplication sharedApplication] statusBarOrientation]];
+        _toolbar.frame = [self frameForToolbarAtOrientation:orientation];
+        _gridToolbar.frame = [self frameForToolbarAtOrientation:orientation];
         if (hidden) _toolbar.frame = CGRectOffset(_toolbar.frame, 0, animatonOffset);
         _toolbar.alpha = alpha;
 
@@ -1676,12 +1685,6 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 }
 
 - (BOOL)prefersStatusBarHidden {
-    /***** BEGIN THREEMA MODIFICATION: always hide status bar in landscape mode on iOS 8.0 *********/
-    if (UIInterfaceOrientationIsLandscape([[UIApplication sharedApplication] statusBarOrientation])) {
-        return YES;
-    }
-    /***** END THREEMA MODIFICATION: always hide status bar in landscape mode on iOS 8.0 *********/
-
     if (!_leaveStatusBarAlone) {
         return _statusBarShouldBeHidden;
     } else {
@@ -1690,7 +1693,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 }
 
 - (UIStatusBarStyle)preferredStatusBarStyle {
-    return UIStatusBarStyleLightContent;
+    return _currentStatusBarStyle ?: UIStatusBarStyleDefault;
 }
 
 - (UIStatusBarAnimation)preferredStatusBarUpdateAnimation {
@@ -1705,7 +1708,7 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 	}
 }
 
-// Enable/disable control visiblity timer
+// Enable/disable control visibility timer
 - (void)hideControlsAfterDelay {
 	if (![self areControlsHidden]) {
         [self cancelControlHiding];
@@ -2057,5 +2060,19 @@ static void * MWVideoPlayerObservation = &MWVideoPlayerObservation;
 }
 
 ///***** END THREEMA MODIFICATION: ModalNavigationControllerDelegate *********/
+
+#pragma mark - Helpers
+
+- (UIInterfaceOrientation)currentInterfaceOrientation {
+    if (self.view.window) {
+        return [[[[self.view window] windowScene] effectiveGeometry] interfaceOrientation] ?: UIInterfaceOrientationUnknown;
+    } else {
+        UIWindow *window = UIApplication.sharedApplication.windows.firstObject;
+        if (window.windowScene) {
+            return window.windowScene.effectiveGeometry.interfaceOrientation;
+        }
+        return UIInterfaceOrientationUnknown;
+    }
+}
 
 @end

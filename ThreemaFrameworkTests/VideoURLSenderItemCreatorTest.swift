@@ -1,45 +1,35 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
+import FileUtility
 import XCTest
 @testable import ThreemaFramework
 
-class VideoURLSenderItemCreatorTest: XCTestCase {
+final class VideoURLSenderItemCreatorTest: XCTestCase {
     
     private let videoName = "Video-1"
-    
+    private var senderItemCreator: VideoURLSenderItemCreator!
+
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
+        
+        FileUtility.updateSharedInstance(with: FileUtility())
+        
+        /// Use low-quality helper so all tests use the fastest preset and avoid
+        /// calling UserSettings.shared() which is unavailable in the test process.
+        let helper = VideoConversionHelper(
+            userSettings: UserSettingsMock(videoQuality: "low"),
+            outputDirectoryURL: FileManager.default.temporaryDirectory
+        )
+        senderItemCreator = VideoURLSenderItemCreator(videoConversionHelper: helper)
     }
     
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        senderItemCreator = nil
     }
     
     func testVideoConversion() throws {
         let testBundle = Bundle(for: VideoURLSenderItemCreatorTest.self)
         let testVideoURL = testBundle.url(forResource: videoName, withExtension: "mp4")
         let asset = AVURLAsset(url: testVideoURL!)
-        
-        let senderItemCreator = VideoURLSenderItemCreator()
+
         let videoURL = senderItemCreator.convertVideo(asset: asset)
         
         let expect = expectation(description: "Video Conversion")
@@ -53,8 +43,14 @@ class VideoURLSenderItemCreatorTest: XCTestCase {
             expect.fulfill()
         }
         
-        waitForExpectations(timeout: 600, handler: nil)
-        let mimeType = UTIConverter.mimeType(fromUTI: UTIConverter.uti(forFileURL: url))
+        waitForExpectations(timeout: 10, handler: nil)
+        guard let url else {
+            return XCTFail("Expected a valid URL")
+        }
+        let uti = UTIConverter.uti(forFileURL: url) ?? UTType.data.identifier
+        guard let mimeType = UTIConverter.mimeType(fromUTI: uti) else {
+            return XCTFail("Expected a mimeType not nil")
+        }
         XCTAssert(UTIConverter.isRenderingVideoMimeType(mimeType))
     }
     
@@ -64,8 +60,6 @@ class VideoURLSenderItemCreatorTest: XCTestCase {
         let testVideoURL = testBundle.url(forResource: videoName, withExtension: "mp4")
         let asset = AVURLAsset(url: testVideoURL!)
         
-        let senderItemCreator = VideoURLSenderItemCreator()
-        
         let expect = expectation(description: "Video Creation")
         
         senderItemCreator.getThumbnail(asset: asset).done { _ in
@@ -74,7 +68,7 @@ class VideoURLSenderItemCreatorTest: XCTestCase {
             XCTFail()
         }
         
-        waitForExpectations(timeout: 600, handler: nil)
+        waitForExpectations(timeout: 10, handler: nil)
     }
     
     func testGarbageURL() {
@@ -88,8 +82,7 @@ class VideoURLSenderItemCreatorTest: XCTestCase {
                 XCTFail("Invalid test parameter \(urlString)")
                 return
             }
-            let creator = VideoURLSenderItemCreator()
-            let item = creator.senderItem(from: url)
+            let item = senderItemCreator.senderItem(from: url)
             XCTAssert(item == nil)
         }
     }

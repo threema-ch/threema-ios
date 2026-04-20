@@ -1,25 +1,5 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
@@ -39,10 +19,13 @@ private enum TestData {
     )
     static let testMessageIDUInt64 = UInt64(0x01_0203_0405_0607).bigEndian
     static let testCause = CspE2eFs_Reject.Cause.unknownSession
-    static let testGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: ThreemaIdentity("ABCDEFGH"))
+    static let testGroupIdentity = GroupIdentity(
+        id: BytesUtility.generateGroupID(),
+        creator: ThreemaIdentity("ABCDEFGH")
+    )
 }
 
-class ForwardSecurityDataInitTests: XCTestCase {
+final class ForwardSecurityDataInitTests: XCTestCase {
     var testProtobufMessage: CspE2eFs_Envelope {
         CspE2eFs_Envelope.with {
             $0.sessionID = TestData.testSessionID.value
@@ -85,7 +68,7 @@ class ForwardSecurityDataInitTests: XCTestCase {
     }
 }
 
-class ForwardSecurityDataAcceptTests: XCTestCase {
+final class ForwardSecurityDataAcceptTests: XCTestCase {
     var testProtobufMessage: CspE2eFs_Envelope {
         CspE2eFs_Envelope.with {
             $0.sessionID = TestData.testSessionID.value
@@ -128,7 +111,7 @@ class ForwardSecurityDataAcceptTests: XCTestCase {
     }
 }
 
-class ForwardSecurityDataMessageTests: XCTestCase {
+final class ForwardSecurityDataMessageTests: XCTestCase {
     var testProtobufMessage: CspE2eFs_Envelope {
         CspE2eFs_Envelope.with {
             $0.sessionID = TestData.testSessionID.value
@@ -242,7 +225,7 @@ class ForwardSecurityDataMessageTests: XCTestCase {
     }
 }
 
-class ForwardSecurityDataRejectTests: XCTestCase {
+final class ForwardSecurityDataRejectTests: XCTestCase {
     var testProtobufMessage: CspE2eFs_Envelope {
         CspE2eFs_Envelope.with {
             $0.sessionID = TestData.testSessionID.value
@@ -342,7 +325,7 @@ class ForwardSecurityDataRejectTests: XCTestCase {
     }
 }
 
-class ForwardSecurityDataTerminateTests: XCTestCase {
+final class ForwardSecurityDataTerminateTests: XCTestCase {
     var testProtobufMessage: CspE2eFs_Envelope {
         CspE2eFs_Envelope.with {
             $0.sessionID = TestData.testSessionID.value

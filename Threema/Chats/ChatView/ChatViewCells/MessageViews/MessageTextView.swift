@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import ThreemaFramework
 import ThreemaMacros
@@ -163,7 +143,11 @@ final class MessageTextView: RTLAligningTextView {
         // Needed to detect and ignore long-presses and pans on the view
         for gestureRecognizer in gestureRecognizers ?? [] {
             // To still allow link interactions, we do not override the delegate
-            guard !(gestureRecognizer.name?.contains("dragAddingItems") ?? false) else {
+            guard let name = gestureRecognizer.name,
+                  name != "",
+                  !(name.contains("dragAddingItems")),
+                  !(name.contains("NameRangeAdjustment")) else {
+                
                 continue
             }
             
@@ -426,47 +410,47 @@ final class MessageTextView: RTLAligningTextView {
 extension MessageTextView: UITextViewDelegate {
     func textView(
         _ textView: UITextView,
-        shouldInteractWith URL: URL,
-        in characterRange: NSRange,
-        interaction: UITextItemInteraction
-    ) -> Bool {
-        guard IDNASafetyHelper.isLegalURL(url: URL, viewController: AppDelegate.shared().currentTopViewController())
-        else {
-            return false
-        }
-        if URL.absoluteString.starts(with: "ThreemaId:") {
-            if interaction == .invokeDefaultAction {
-                let threemaID = String(URL.absoluteString.suffix(8))
-                
+        primaryActionFor textItem: UITextItem,
+        defaultAction: UIAction
+    ) -> UIAction? {
+        switch textItem.content {
+        case let .link(url):
+            guard IDNASafetyHelper.isLegalURL(
+                url: url,
+                viewController: AppDelegate.shared().currentTopViewController()
+            ) else {
+                return nil
+            }
+
+            if url.absoluteString.starts(with: "ThreemaId:") {
+                let threemaID = String(url.absoluteString.suffix(8))
+
                 guard let messageTextViewDelegate else {
                     let msg = "messageTextViewDelegate is unexpectedly nil"
                     assertionFailure(msg)
                     DDLogError("\(msg)")
-                    return false
+                    return nil
                 }
-                
-                messageTextViewDelegate.showContact(identity: threemaID)
+
+                return UIAction(title: defaultAction.title, image: defaultAction.image) { _ in
+                    messageTextViewDelegate.showContact(identity: threemaID)
+                }
             }
-            return false
+
+            if url.scheme == "http" || url.scheme == "https",
+               url.host?.lowercased() == "threema.id" {
+                return UIAction(title: defaultAction.title, image: defaultAction.image) { _ in
+                    URLHandler().handle(url)
+                }
+            }
+
+            return nil
+
+        default:
+            return nil
         }
-        else if URL.scheme == "http" || URL.scheme == "https",
-                URL.host?.lowercased() == "threema.id",
-                interaction == .invokeDefaultAction {
-            URLHandler.handleThreemaDotIDURL(URL, hideAppChooser: false)
-            return false
-        }
-        return true
     }
-    
-    func textView(
-        _ textView: UITextView,
-        shouldInteractWith textAttachment: NSTextAttachment,
-        in characterRange: NSRange,
-        interaction: UITextItemInteraction
-    ) -> Bool {
-        false
-    }
-    
+
     func textViewDidChangeSelection(_ textView: UITextView) {
         guard selectedTextRange != nil else {
             messageTextViewDelegate?.didSelectText(in: nil)

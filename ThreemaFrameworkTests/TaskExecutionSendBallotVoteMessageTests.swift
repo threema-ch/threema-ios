@@ -1,45 +1,25 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 
 @testable import ThreemaFramework
 
-class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
+final class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
 
-    private var dbMainCnx: DatabaseContext!
-    private var dbBackgroundCnx: DatabaseContext!
-    private var dbPreparer: DatabasePreparer!
+    private var testDatabase: TestDatabase!
+    private var dbPreparer: TestDatabasePreparer!
 
     private var ddLoggerMock: DDLoggerMock!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        dbPreparer = DatabasePreparer(context: mainCnx)
+        testDatabase = TestDatabase()
+        dbPreparer = testDatabase.backgroundPreparer
+
+        // Workaround to ensure remote secret is initialized
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -76,7 +56,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let groupManagerMock = GroupManagerMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupManager: groupManagerMock,
             myIdentityStore: myIdentityStoreMock,
             userSettings: UserSettingsMock(enableMultiDevice: true),
@@ -95,7 +75,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
 
         let (ballotID, group) = dbPreparer.save {
             let groupEntity = dbPreparer.createGroupEntity(
-                groupID: MockData.generateGroupID(),
+                groupID: BytesUtility.generateGroupID(),
                 groupCreator: nil
             )
 
@@ -106,7 +86,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
                 conversation.groupMyIdentity = myIdentityStoreMock.identity
 
                 let ballot = frameworkInjectorMock.entityManager.entityCreator
-                    .ballotEntity(id: MockData.generateBallotID())
+                    .ballotEntity(id: BytesUtility.generateBallotID())
                 ballot.createDate = Date()
                 ballot.creatorID = myIdentityStoreMock.identity
                 ballot.conversation = conversation
@@ -191,7 +171,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         }
         
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
@@ -218,7 +198,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             let conversation = dbPreparer.createConversation(typing: false, unreadMessageCount: 0, visibility: .default)
             conversation.contact = contact
 
-            let ballotID = MockData.generateBallotID()
+            let ballotID = BytesUtility.generateBallotID()
             let ballot = frameworkInjectorMock.entityManager.entityCreator.ballotEntity(id: ballotID)
             ballot.createDate = Date()
             ballot.creatorID = frameworkInjectorMock.myIdentityStore.identity
@@ -298,7 +278,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
         let myIdentityStoreMock = MyIdentityStoreMock()
         let groupManagerMock = GroupManagerMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             groupManager: groupManagerMock,
             myIdentityStore: myIdentityStoreMock,
             userSettings: userSettingsMock,
@@ -337,7 +317,7 @@ class TaskExecutionSendBallotVoteMessageTests: XCTestCase {
             conversation.contact = members.first(where: { $0.identity == "MEMBER01" })
             conversation.members?.formUnion(members)
 
-            let ballotID = MockData.generateBallotID()
+            let ballotID = BytesUtility.generateBallotID()
             let ballot = frameworkInjectorMock.entityManager.entityCreator.ballotEntity(id: ballotID)
             ballot.createDate = Date()
             ballot.creatorID = frameworkInjectorMock.myIdentityStore.identity

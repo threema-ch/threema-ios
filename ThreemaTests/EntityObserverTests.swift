@@ -1,48 +1,26 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
-class EntityObserverTests: XCTestCase {
+final class EntityObserverTests: XCTestCase {
 
     private var myIdentityStoreMock: MyIdentityStoreMock!
 
-    private var mainCnx: ThreemaManagedObjectContext!
-    private var backgroundCnx: ThreemaManagedObjectContext!
+    private var testDatabase: TestDatabase!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
         myIdentityStoreMock = MyIdentityStoreMock()
 
-        (_, mainCnx, backgroundCnx) = DatabasePersistentContext
-            .devNullContext(withChildContextForBackgroundProcess: true)
+        testDatabase = TestDatabase()
     }
 
     func testWithoutBusinessAbstraction() throws {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let groupCreatorIdentity = "CREATOR1"
 
-        let dbPreparer = DatabasePreparer(context: mainCnx)
+        let dbPreparer = testDatabase.preparer
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -57,8 +35,7 @@ class EntityObserverTests: XCTestCase {
             }
         }
 
-        let dbCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        let entityManager = EntityManager(databaseContext: dbCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
         let conversation = entityManager.entityFetcher.groupConversationEntity(
             for: groupID,
             creatorID: groupCreatorIdentity, myIdentity: myIdentityStoreMock.identity
@@ -124,7 +101,7 @@ class EntityObserverTests: XCTestCase {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let groupCreatorIdentity = "CREATOR1"
 
-        let dbPreparer = DatabasePreparer(context: mainCnx)
+        let dbPreparer = testDatabase.preparer
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -139,8 +116,7 @@ class EntityObserverTests: XCTestCase {
             }
         }
 
-        let dbCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        let entityManager = EntityManager(databaseContext: dbCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
         let conversation: ConversationEntity = entityManager.entityFetcher.groupConversationEntity(
             for: groupID,
             creatorID: groupCreatorIdentity, myIdentity: myIdentityStoreMock.identity
@@ -193,7 +169,7 @@ class EntityObserverTests: XCTestCase {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let groupCreatorIdentity = "CREATOR1"
 
-        let dbPreparer = DatabasePreparer(context: mainCnx)
+        let dbPreparer = testDatabase.preparer
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -208,8 +184,7 @@ class EntityObserverTests: XCTestCase {
             }
         }
 
-        let dbCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        let entityManager = EntityManager(databaseContext: dbCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
         let conversation: ConversationEntity = entityManager.entityFetcher.groupConversationEntity(
             for: groupID,
             creatorID: groupCreatorIdentity, myIdentity: myIdentityStoreMock.identity
@@ -244,7 +219,7 @@ class EntityObserverTests: XCTestCase {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let groupCreatorIdentity = "CREATOR1"
 
-        let dbPreparer = DatabasePreparer(context: backgroundCnx)
+        let dbPreparer = testDatabase.preparer
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -259,8 +234,7 @@ class EntityObserverTests: XCTestCase {
             }
         }
 
-        let dbCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        let entityManager = EntityManager(databaseContext: dbCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
         let conversation: ConversationEntity = entityManager.entityFetcher.groupConversationEntity(
             for: groupID,
             creatorID: groupCreatorIdentity, myIdentity: myIdentityStoreMock.identity
@@ -296,7 +270,7 @@ class EntityObserverTests: XCTestCase {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let groupCreatorIdentity = "CREATOR1"
 
-        let dbPreparer = DatabasePreparer(context: mainCnx)
+        let dbPreparer = testDatabase.preparer
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -311,8 +285,7 @@ class EntityObserverTests: XCTestCase {
             }
         }
 
-        let dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        let entityManager = EntityManager(databaseContext: dbMainCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
         let conversation: ConversationEntity = entityManager.entityFetcher.groupConversationEntity(
             for: groupID,
             creatorID: groupCreatorIdentity, myIdentity: myIdentityStoreMock.identity
@@ -331,8 +304,7 @@ class EntityObserverTests: XCTestCase {
             expect.fulfill()
         }
 
-        let dbPrivateCnx = DatabaseContext(mainContext: mainCnx)
-        let backgroundEntityManager = EntityManager(databaseContext: dbPrivateCnx, isRemoteSecretEnabled: false)
+        let backgroundEntityManager = testDatabase.backgroundEntityManager
 
         DispatchQueue.global(qos: .default).async {
             backgroundEntityManager.performAndWaitSave {
@@ -355,7 +327,7 @@ class EntityObserverTests: XCTestCase {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let groupCreatorIdentity = "CREATOR1"
 
-        let dbPreparer = DatabasePreparer(context: backgroundCnx)
+        let dbPreparer = testDatabase.preparer
         dbPreparer.save {
             let contact = dbPreparer.createContact(
                 publicKey: BytesUtility.generateRandomBytes(length: 32)!,
@@ -370,8 +342,7 @@ class EntityObserverTests: XCTestCase {
             }
         }
 
-        let dbCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        let entityManager = EntityManager(databaseContext: dbCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
         let conversation: ConversationEntity = entityManager.entityFetcher.groupConversationEntity(
             for: groupID,
             creatorID: groupCreatorIdentity, myIdentity: myIdentityStoreMock.identity

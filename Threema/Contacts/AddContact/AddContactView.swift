@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import SwiftUI
 import ThreemaEssentials
@@ -81,16 +61,25 @@ struct AddContactView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(#localize("cancel")) {
+                    CancelButton {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(#localize("add_button")) {
-                        add()
+                    if #available(iOS 26.0, *) {
+                        Button(role: .confirm) {
+                            add()
+                        }
+                        .accessibilityIdentifier("AddContactModalAddButton")
+                        .disabled(!viewModel.canAdd)
                     }
-                    .accessibilityIdentifier("AddContactModalAddButton")
-                    .disabled(!viewModel.canAdd)
+                    else {
+                        Button(#localize("add_button")) {
+                            add()
+                        }
+                        .accessibilityIdentifier("AddContactModalAddButton")
+                        .disabled(!viewModel.canAdd)
+                    }
                 }
             }
             .alert(alertData?.title ?? "", isPresented: $showAlert, presenting: alertData) { _ in
@@ -178,7 +167,7 @@ struct AddContactView: View {
 
         case let .identityLink(url: url):
             dismissScannerViewAndAddContactView {
-                URLHandler.handleThreemaDotIDURL(url, hideAppChooser: true)
+                URLHandler().handle(url, hideAppChooser: true)
             }
 
         default:

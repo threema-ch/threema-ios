@@ -1,39 +1,19 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 
 @testable import ThreemaFramework
 
-class CallHistoryManagerTests: XCTestCase {
-    private var databaseMainCnx: DatabaseContext!
-    private var databaseBackgroundCnx: DatabaseContext!
+final class CallHistoryManagerTests: XCTestCase {
+    private var databaseMainCnx: DatabaseContextProtocol!
+    private var databaseBackgroundCnx: DatabaseContextProtocol!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
         
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+        let testDatabase = TestDatabase()
+        databaseMainCnx = testDatabase.context
+        databaseBackgroundCnx = testDatabase.backgroundContext
     }
 
     override func tearDownWithError() throws {
@@ -53,7 +33,7 @@ class CallHistoryManagerTests: XCTestCase {
         businessInjectorMock.entityManager.performAndWaitSave {
             _ = businessInjectorMock.entityManager.entityCreator.contactEntity(
                 identity: "ECHOECHO",
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 sortOrderFirstName: true
             )
         }
@@ -95,7 +75,7 @@ class CallHistoryManagerTests: XCTestCase {
         businessInjectorMock.entityManager.performAndWaitSave {
             _ = businessInjectorMock.entityManager.entityCreator.contactEntity(
                 identity: "ECHOECHO",
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 sortOrderFirstName: true
             )
         }

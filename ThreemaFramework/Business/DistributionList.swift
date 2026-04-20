@@ -1,29 +1,10 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaMacros
+import UIKit
 
 /// Business representation of a Threema distribution list
-public class DistributionList: NSObject {
+public final class DistributionList: NSObject {
     
     // MARK: - Public properties
 
@@ -37,8 +18,8 @@ public class DistributionList: NSObject {
         guard !recipients.isEmpty else {
             return #localize("distribution_list_no_recipient_title")
         }
-        
-        return ListFormatter.localizedString(byJoining: recipients.map(\.shortDisplayName))
+        let shortDisplayNames = recipients.map(\.shortDisplayName).sorted()
+        return ListFormatter.localizedString(byJoining: shortDisplayNames)
     }
     
     public var numberOfRecipients: Int {
@@ -56,7 +37,17 @@ public class DistributionList: NSObject {
             )
         }
     }
-    
+
+    @objc public var attributedDisplayName: NSAttributedString {
+        let attributeString = NSMutableAttributedString(string: displayName ?? "")
+        attributeString.addAttribute(
+            .foregroundColor,
+            value: UIColor.label,
+            range: NSMakeRange(0, attributeString.length)
+        )
+        return attributeString
+    }
+
     @objc public private(set) dynamic var willBeDeleted = false
     
     public private(set) var usesNonGeneratedProfilePicture = false

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
@@ -41,6 +21,7 @@ enum TaskExecutionError: Error {
     case reflectMessageInterrupted(message: String?)
     case sendMessageFailed(message: String)
     case sendMessageTimeout(message: String)
+    case sendMessageInterrupted(message: String)
     case wrongTaskDefinitionType
     case invalidContact(message: String)
     case ownContact(message: String)
@@ -183,27 +164,18 @@ class TaskExecution: NSObject {
 
         // Add observer to release the waiting of the server ack, if the task is interrupted
         let task = taskDefinition as? TaskDefinition
-        var isInterruptedObserver: NSKeyValueObservation? =
-            if let task {
-                task.observe(\.isInterrupted) { task, _ in
-                    guard task.isInterrupted else {
-                        return
-                    }
-                    DDLogWarn("\(ltAck.hexString) \(ltAck) \(loggingMsgInfo) is interrupted")
-                    mediatorMessageAck.leave()
-                }
-            }
-            else {
-                nil
-            }
+        let interruptionObserver = observeInterruption(of: task) {
+            DDLogWarn("\(ltAck.hexString) \(ltAck) \(loggingMsgInfo) interrupted")
+            mediatorMessageAck.leave()
+        }
 
         func removeObservers() {
             if let mediatorMessageAckObserver {
                 notificationCenter.removeObserver(mediatorMessageAckObserver)
             }
 
-            if isInterruptedObserver != nil {
-                isInterruptedObserver = nil
+            if let interruptionObserver {
+                interruptionObserver.invalidate()
             }
         }
 
@@ -238,7 +210,7 @@ class TaskExecution: NSObject {
             removeObservers()
             throw TaskExecutionError.reflectMessageTimeout(message: loggingMsgInfo)
         }
-        
+
         removeObservers()
 
         guard let task, !task.isInterrupted else {
@@ -654,7 +626,24 @@ class TaskExecution: NSObject {
         let chatMessageAck = DispatchGroup()
         let notificationCenter = NotificationCenter.default
         var messageAckObserver: NSObjectProtocol?
-                
+
+        // Add observer to release the waiting of the server ack, if the task is interrupted
+        let task = taskDefinition as? TaskDefinition
+        let interruptionObserver = observeInterruption(of: task) {
+            DDLogWarn("\(ltAck.hexString) \(ltAck) \(abstractMessage.loggingDescription) interrupted")
+            chatMessageAck.leave()
+        }
+
+        func removeObservers() {
+            if let messageAckObserver {
+                notificationCenter.removeObserver(messageAckObserver)
+            }
+
+            if let interruptionObserver {
+                interruptionObserver.invalidate()
+            }
+        }
+
         messageAckObserver = notificationCenter.addObserver(
             forName: TaskManager.chatMessageAckObserverName(
                 messageID: abstractMessage.messageID,
@@ -666,7 +655,7 @@ class TaskExecution: NSObject {
             DDLogNotice(
                 "\(ltAck.hexString) \(ltAck) \(abstractMessage.loggingDescription) from \(abstractMessage.toIdentity ?? "?")"
             )
-            notificationCenter.removeObserver(messageAckObserver!)
+            removeObservers()
             chatMessageAck.leave()
         }
         
@@ -677,24 +666,30 @@ class TaskExecution: NSObject {
         )
         if frameworkInjector.serverConnector.send(boxMessage) {
             if abstractMessage.flagDontAck() {
-                notificationCenter.removeObserver(messageAckObserver!)
+                removeObservers()
             }
             else {
                 let result = chatMessageAck.wait(timeout: .now() + .seconds(responseTimeoutInSeconds))
                 if result == .success {
+                    removeObservers()
+
+                    guard let task, !task.isInterrupted else {
+                        throw TaskExecutionError.sendMessageInterrupted(message: abstractMessage.loggingDescription)
+                    }
+
                     if !isAuxMessage, let toIdentity = abstractMessage.toIdentity {
                         // Only non-AuxMessages need their nonces to be reflected and are thus stored
                         try messageAlreadySentTo(identity: toIdentity, nonce: messageNonce(for: toIdentity))
                     }
                 }
                 else {
-                    notificationCenter.removeObserver(messageAckObserver!)
+                    removeObservers()
                     throw TaskExecutionError.sendMessageTimeout(message: abstractMessage.loggingDescription)
                 }
             }
         }
         else {
-            notificationCenter.removeObserver(messageAckObserver!)
+            removeObservers()
             throw TaskExecutionError.sendMessageFailed(message: abstractMessage.loggingDescription)
         }
     }
@@ -1457,5 +1452,24 @@ class TaskExecution: NSObject {
         msg.receiptType = receiptType.rawValue
         msg.receiptMessageIDs = receiptMessageIDs
         return msg
+    }
+
+    /// Observe task interruption.
+    ///
+    /// - Parameters:
+    ///   - task: Task to observe
+    ///   - action: Called when the task is interrupted
+    func observeInterruption(of task: TaskDefinition?, action: @escaping () -> Void) -> NSKeyValueObservation? {
+        if let task {
+            task.observe(\.isInterrupted) { task, _ in
+                guard task.isInterrupted else {
+                    return
+                }
+                action()
+            }
+        }
+        else {
+            nil
+        }
     }
 }

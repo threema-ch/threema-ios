@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CoreData
 import Foundation
 
@@ -197,22 +177,19 @@ extension EntityFetcher {
     // MARK: - Conversations
     
     @available(*, deprecated, message: "Deprecated. Do not use anymore.")
-    @objc public func fetchedResultsControllerForConversationEntities(hidePrivateChats: Bool)
-        -> NSFetchedResultsController<NSFetchRequestResult> {
+    @objc public func fetchedResultsControllerForConversationEntities(
+        hidePrivateChats: Bool
+    ) -> NSFetchedResultsController<NSFetchRequestResult> {
+        let hideDistributionLists = !ThreemaEnvironment.distributionListsActive
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Conversation")
         fetchRequest.relationshipKeyPathsForPrefetching = ["members"]
         fetchRequest.fetchBatchSize = 20
-        
-        var predicates = [NSPredicate]()
-        predicates.append(conversationNotArchivedPredicate())
-        predicates.append(conversationsWithLastUpdatePredicate())
-        
-        if hidePrivateChats {
-            predicates.append(conversationNotPrivatePredicate())
-        }
-        
-        fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        
+        fetchRequest.predicate = .and(
+            .not(.conversationIsArchived),
+            .conversationHasLastUpdate,
+            hideDistributionLists ? .not(.conversationIsDistributionList) : nil,
+            hidePrivateChats ? .not(.conversationIsPrivate) : nil
+        )
         let visibilityDescriptor = NSSortDescriptor(key: "visibility", ascending: false)
         let lastUpdateDescriptor = NSSortDescriptor(key: "lastUpdate", ascending: false)
         let lastMessageDescriptor = NSSortDescriptor(key: "lastMessage.date", ascending: false)
@@ -229,22 +206,19 @@ extension EntityFetcher {
     }
     
     @available(*, deprecated, message: "Deprecated. Do not use anymore.")
-    @objc public func fetchedResultsControllerForArchivedConversationEntities(hidePrivateChats: Bool)
-        -> NSFetchedResultsController<NSFetchRequestResult> {
+    @objc public func fetchedResultsControllerForArchivedConversationEntities(
+        hidePrivateChats: Bool
+    ) -> NSFetchedResultsController<NSFetchRequestResult> {
+        let hideDistributionLists = !ThreemaEnvironment.distributionListsActive
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Conversation")
         fetchRequest.relationshipKeyPathsForPrefetching = ["members"]
         fetchRequest.fetchBatchSize = 20
-        
-        var predicates = [NSPredicate]()
-        predicates.append(conversationArchivedPredicate())
-        predicates.append(conversationsWithLastUpdatePredicate())
-        
-        if hidePrivateChats {
-            predicates.append(conversationNotPrivatePredicate())
-        }
-        
-        fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        
+        fetchRequest.predicate = .and(
+            .conversationIsArchived,
+            .conversationHasLastUpdate,
+            hideDistributionLists ? .not(.conversationIsDistributionList) : nil,
+            hidePrivateChats ? .not(.conversationIsPrivate) : nil
+        )
         let visibilityDescriptor = NSSortDescriptor(key: "visibility", ascending: false)
         let lastUpdateDescriptor = NSSortDescriptor(key: "lastUpdate", ascending: false)
         let lastMessageDescriptor = NSSortDescriptor(key: "lastMessage.date", ascending: false)

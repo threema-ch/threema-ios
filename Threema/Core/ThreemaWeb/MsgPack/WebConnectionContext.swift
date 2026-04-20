@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2018-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ChunkedDC
 import CocoaLumberjackSwift
 import Foundation
@@ -26,7 +6,7 @@ protocol WebConnectionContextDelegate: WCConnection {
     func currentWCSession() -> WCSession
 }
 
-class WebConnectionContext: NSObject, NSCopying {
+final class WebConnectionContext: NSObject, NSCopying {
     var delegate: WebConnectionContextDelegate
     var chunkCache = WebChunkCache(sequenceNumber: WebSequenceNumber(minValue: 0, maxValue: UInt64(UINT32_MAX)))
     var connectionInfoRequest: WebUpdateConnectionInfoRequest?

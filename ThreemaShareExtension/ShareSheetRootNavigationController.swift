@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
@@ -44,7 +24,7 @@ class ShareSheetRootNavigationController: UINavigationController {
     var selectedIdentity: ConversationEntity?
     
     lazy var itemLoader = ItemLoader()
-    var itemSender = ItemSender()
+    lazy var itemSender = ItemSender()
     
     weak var previewViewController: MediaPreviewViewController?
     weak var picker: ContactGroupPickerViewController?
@@ -66,12 +46,9 @@ class ShareSheetRootNavigationController: UINavigationController {
         FileUtilityObjCSetter.setInitialFileUtility()
 
         setAppGroup()
-        Colors.initTheme()
-        
-        if !UserSettings.shared().useSystemTheme {
-            overrideUserInterfaceStyle = UserSettings.shared().darkTheme ? .dark : .light
-        }
-        
+        Colors.resolveTheme()
+        updateUserInterfaceStyle()
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(didBecomeActive),
@@ -105,33 +82,37 @@ class ShareSheetRootNavigationController: UINavigationController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-        Colors.update(navigationBar: navigationBar)
-        
+
         setAppGroup()
-        
         #if DEBUG
             LogManager.initializeGlobalLogger(debug: true)
         #else
             LogManager.initializeGlobalLogger(debug: false)
         #endif
-
         DebugLog.logAppVersion()
-
-        recolorBarButtonItems()
-
-        navigationBar.backgroundColor = Colors.backgroundNavigationController
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        Colors.update(navigationBar: navigationBar)
-        recolorBarButtonItems()
-        
-        super.viewDidAppear(animated)
     }
     
     // MARK: - Private functions
-    
+
+    private func updateUserInterfaceStyle() {
+        switch UserSettings.shared().interfaceStyle {
+        case UIUserInterfaceStyle.light.rawValue:
+            if overrideUserInterfaceStyle != UIUserInterfaceStyle.light {
+                overrideUserInterfaceStyle = .light
+            }
+
+        case UIUserInterfaceStyle.dark.rawValue:
+            if overrideUserInterfaceStyle != UIUserInterfaceStyle.dark {
+                overrideUserInterfaceStyle = .dark
+            }
+
+        default:
+            if overrideUserInterfaceStyle != UIUserInterfaceStyle.unspecified {
+                overrideUserInterfaceStyle = .unspecified
+            }
+        }
+    }
+
     private func setContactsFromIntent() {
         guard let intent = extensionContext?.intent as? INSendMessageIntent,
               let selectedIdentity = intent.conversationIdentifier as String?,
@@ -227,10 +208,9 @@ class ShareSheetRootNavigationController: UINavigationController {
         guard let urlItem = item as? URL else {
             return true
         }
-        let uti = UTIConverter.uti(forFileURL: urlItem)
-        return
-            UTIConverter.type(uti, conformsTo: UTType.image.identifier) || UTIConverter
-                .type(uti, conformsTo: UTType.movie.identifier)
+        let uti = UTIConverter.uti(forFileURL: urlItem) ?? UTType.data.identifier
+        return UTIConverter.type(uti, conformsTo: UTType.image.identifier)
+            || UTIConverter.type(uti, conformsTo: UTType.movie.identifier)
     }
     
     private func presentMediaPreview(with data: [Any]) {
@@ -247,7 +227,6 @@ class ShareSheetRootNavigationController: UINavigationController {
         }
         
         previewViewController.backIsCancel = true
-        previewViewController.sendIsChoose = false
         previewViewController.disableAdd = true
         previewViewController.optionsEnabled = optionsEnabled(itemCount: data.count, item: data.first)
         previewViewController.memoryConstrained = true
@@ -283,12 +262,9 @@ class ShareSheetRootNavigationController: UINavigationController {
         )
         
         pushViewController(previewViewController, animated: true)
-        let title = #localize("cancel")
-        previewViewController.navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: title,
-            style: .plain,
+        previewViewController.navigationItem.leftBarButtonItem = UIBarButtonItem.cancelButton(
             target: self,
-            action: #selector(cancelTapped)
+            selector: #selector(cancelTapped)
         )
     }
     
@@ -315,7 +291,6 @@ class ShareSheetRootNavigationController: UINavigationController {
         picker.enableControlView = false
         picker.rightBarButtonTitle = #localize("next")
         picker.delegateDisablesSearchController = true
-        
         navigationItem.backBarButtonItem = nil
         
         pushViewController(picker, animated: true)
@@ -379,10 +354,6 @@ class ShareSheetRootNavigationController: UINavigationController {
             picker.preselectedConversations = [selectedConversation]
         }
         
-        let backButton = UIBarButtonItem()
-        backButton.title = #localize("back")
-        navigationItem.backBarButtonItem = backButton
-        
         picker.navigationItem.leftBarButtonItem = nil
         
         if textPreview != nil {
@@ -391,29 +362,7 @@ class ShareSheetRootNavigationController: UINavigationController {
         
         pushViewController(picker, animated: true)
         
-        recolorBarButtonItems()
-        
         isModalInPresentation = true
-    }
-    
-    /// This takes the left and right bar button items and sets the tintColor and titleTextAttributes back to something
-    /// that is legible in our share extension
-    private func recolorBarButtonItems() {
-        for viewController in children {
-            let navItem = viewController.navigationItem
-            var items = [UIBarButtonItem]()
-            items.append(contentsOf: navItem.leftBarButtonItems ?? [UIBarButtonItem]())
-            items.append(contentsOf: navItem.rightBarButtonItems ?? [UIBarButtonItem]())
-            
-            for item in items {
-                let attributes: [NSAttributedString.Key: Any] = [
-                    NSAttributedString.Key.foregroundColor: UIColor.tintColor as Any,
-                ]
-                
-                item.setTitleTextAttributes(attributes, for: .normal)
-                item.setTitleTextAttributes(attributes, for: .application)
-            }
-        }
     }
     
     private func presentTextPreview(
@@ -437,23 +386,15 @@ class ShareSheetRootNavigationController: UINavigationController {
             return
         }
         
-        textPreview.navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: #localize("send"),
-            style: .done,
+        let sendButton = UIBarButtonItem.sendButton(target: self, selector: #selector(sendText))
+        sendButton.tintColor = .primary
+        textPreview.navigationItem.rightBarButtonItem = sendButton
+        textPreview.navigationItem.leftBarButtonItem = UIBarButtonItem.cancelButton(
             target: self,
-            action: #selector(sendText)
-        )
-        
-        textPreview.navigationItem.leftBarButtonItem = UIBarButtonItem(
-            title: #localize("cancel"),
-            style: .plain,
-            target: self,
-            action: #selector(cancelTapped)
+            selector: #selector(cancelTapped)
         )
         
         pushViewController(textPreview, animated: true)
-        recolorBarButtonItems()
-        
         BrandingUtils.updateTitleLogo(of: textPreview.navigationItem, in: self)
     }
     
@@ -609,13 +550,6 @@ class ShareSheetRootNavigationController: UINavigationController {
                     LicenseStore.shared().onPremConfigURL = license.onPremServer
                 }
                 
-                // TODO: (IOS-5579) Check if this is still needed with full OPPF caching
-                // After the license is set we can fetch the OPPF
-                // Reset pinned certificates to ensure we (also) use pins from OPPF for OnPrem flavor apps
-                if TargetManager.isOnPrem || TargetManager.isCustomOnPrem {
-                    NotificationCenter.default.post(name: .resetSSLCAHelperCache, object: nil)
-                }
-
                 try AppLaunchManager.shared.business(
                     remoteSecretManager: remoteSecretManager,
                     databaseManager: databaseManager,

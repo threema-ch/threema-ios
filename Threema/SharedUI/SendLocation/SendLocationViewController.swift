@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import CoreLocation
 import Foundation
@@ -25,7 +5,7 @@ import MapKit
 import ThreemaMacros
 import UIKit
 
-class SendLocationViewController: ThemedViewController {
+final class SendLocationViewController: ThemedViewController {
     
     // MARK: - Properties
     
@@ -48,7 +28,8 @@ class SendLocationViewController: ThemedViewController {
         category: .marked,
         detailCategory: "marked"
     )
-    
+
+    private let locationManager = CLLocationManager()
     private let conversation: ConversationEntity
     private let mapsServerInfo: MapsServerInfo?
     
@@ -66,18 +47,10 @@ class SendLocationViewController: ThemedViewController {
     )
     
     // Buttons
-    private lazy var sendButton = UIBarButtonItem(
-        title: #localize("send"),
-        style: .done,
-        target: self,
-        action: #selector(sendButtonAction)
-    )
-    private lazy var cancelButton = UIBarButtonItem(
-        barButtonSystemItem: .cancel,
-        target: self,
-        action: #selector(cancelButtonAction)
-    )
-    
+
+    private lazy var cancelButton = UIBarButtonItem.cancelButton(target: self, selector: #selector(cancelButtonAction))
+    private lazy var sendButton = UIBarButtonItem.sendButton(target: self, selector: #selector(sendButtonAction))
+
     private var refreshControl: UIRefreshControl {
         let refreshControl = UIRefreshControl()
         refreshControl.addTarget(self, action: #selector(refreshTriggered), for: .valueChanged)
@@ -479,13 +452,13 @@ extension SendLocationViewController: UITableViewDelegate {
             updateSendButton()
             
             // If access is denied and user taps, show alert to enable access
-            if CLLocationManager.authorizationStatus() == .denied {
+            if locationManager.authorizationStatus == .denied {
                 showDeniedAlert()
                 return
             }
             
             // If precise location is disabled, show alert
-            if CLLocationManager().accuracyAuthorization == .reducedAccuracy {
+            if locationManager.accuracyAuthorization == .reducedAccuracy {
                 showAccuracyAlert()
             }
             return

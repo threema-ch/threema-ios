@@ -1,51 +1,50 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
+import CocoaLumberjackSwift
 import CoreData
 import Foundation
 
 extension EntityFetcher {
     
     public func distributionListEntity(for id: Int) -> DistributionListEntity? {
-        let predicate = distributionListIDPredicate(id: id)
-        return fetchEntity(entityName: "DistributionList", predicate: predicate)
+        fetchEntity(
+            entityName: "DistributionList",
+            predicate: .distributionListWithID(id)
+        )
     }
     
     public func distributionListEntity(for conversationEntity: ConversationEntity) -> DistributionListEntity? {
-        let predicate = distributionListConversationPredicate(conversationEntity: conversationEntity)
-        return fetchEntity(entityName: "DistributionList", predicate: predicate)
+        fetchEntity(
+            entityName: "DistributionList",
+            predicate: .distributionListWithConversation(conversationEntity)
+        )
     }
     
-    @objc public func filteredDistributionListEntities(by words: [String]) -> [DistributionListEntity]? {
-        var predicates = [contactNotHiddenPredicate()]
-        
-        for word in words where !word.isEmpty {
-            let predicate = NSPredicate(format: "name contains[cd] %@", word)
-            predicates.append(predicate)
+    @objc public func filteredDistributionListEntities(
+        by words: [String],
+        excludePrivate: Bool = false
+    ) -> [DistributionListEntity] {
+        guard ThreemaEnvironment.distributionListsActive else {
+            return []
         }
-                
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "DistributionList")
-        fetchRequest.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
-        fetchRequest.fetchBatchSize = 100
-        
-        return execute(fetchRequest) as? [DistributionListEntity]
+        do {
+            let distributionNames: [NSPredicate] = words
+                .filter { !$0.isEmpty }
+                .map { .distributionListWithName($0) }
+
+            let request = NSFetchRequest<DistributionListEntity>(entityName: "DistributionList")
+            request.fetchBatchSize = 100
+            request.predicate = .and(
+                .and(distributionNames),
+                excludePrivate ? .not(.distributionListIsPrivate) : nil
+            )
+            let distributionListEntities = try managedObjectContext.performAndWait {
+                try managedObjectContext.fetch(request)
+            }
+            return distributionListEntities
+        }
+        catch {
+            DDLogError("[EntityFetcher] Failed to fetch DistributionListEntities. Error: \(error)")
+            return []
+        }
     }
     
     /// Fetches the object IDs of distribution lists matching the passed parameters
@@ -55,12 +54,6 @@ extension EntityFetcher {
     public func matchingDistributionListsForContactListSearch(
         containing text: String
     ) -> [NSManagedObjectID] {
-        
-        let finalPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
-            distributionListNamePredicate(text: text),
-            distributionListNotPrivatePredicate(),
-        ])
-        
         // We only fetch the managed object ID
         let objectIDExpression = NSExpressionDescription()
         objectIDExpression.name = "objectID"
@@ -69,7 +62,10 @@ extension EntityFetcher {
         
         let propertiesToFetch: [Any] = [objectIDExpression]
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "DistributionList")
-        fetchRequest.predicate = finalPredicate
+        fetchRequest.predicate = .and(
+            .distributionListWithName(text),
+            .not(.distributionListIsPrivate)
+        )
         fetchRequest.fetchLimit = 0
         fetchRequest.resultType = .dictionaryResultType
         fetchRequest.propertiesToFetch = propertiesToFetch
@@ -93,20 +89,17 @@ extension EntityFetcher {
 
         return matchingIDs
     }
-    
-    func distributionListIDPredicate(id: Int) -> NSPredicate {
-        NSPredicate(format: "distributionListID == %@", id as NSNumber)
-    }
-    
-    func distributionListConversationPredicate(conversationEntity: ConversationEntity) -> NSPredicate {
-        NSPredicate(format: "conversation == %@", conversationEntity)
-    }
-    
-    func distributionListNamePredicate(text: String) -> NSPredicate {
-        NSPredicate(format: "name contains[c] %@", text)
-    }
-    
-    func distributionListNotPrivatePredicate() -> NSPredicate {
-        NSPredicate(format: "conversation.category != %d", ConversationEntity.Category.private.rawValue)
+
+    /// Fetches a `DistributionListEntity` with an `NSManagedObjectID`
+    /// - Returns: Optional `DistributionListEntity`
+    public func distributionListEntity(with objectID: NSManagedObjectID) -> DistributionListEntity? {
+        var result: DistributionListEntity?
+        do {
+            result = try managedObjectContext.existingObject(with: objectID) as? DistributionListEntity
+        }
+        catch {
+            DDLogError("[EntityFetcher] Failed to fetch DistributionListEntity with id: \(objectID). Error: \(error)")
+        }
+        return result
     }
 }

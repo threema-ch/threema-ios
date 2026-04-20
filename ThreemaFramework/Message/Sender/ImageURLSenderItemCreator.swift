@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import CoreServices
 import FileUtility
@@ -25,10 +5,10 @@ import Foundation
 import PromiseKit
 import UIKit
 
-public class ImageURLSenderItemCreator: NSObject {
-    
+public final class ImageURLSenderItemCreator: NSObject {
+    private let fallbackMimeType = "application/octet-stream"
     private var userSettingsImageSize: ImageSenderItemSize
-    
+
     /// Initialization with the image scale settings chosen by the user
     override public init() {
         guard let settings = UserSettings.shared(),
@@ -67,7 +47,7 @@ public class ImageURLSenderItemCreator: NSObject {
     ///   - image: Must be jpg, gif or png image
     ///   - uti: The UTI of the image in image. The UTI must be validated before passing it into this function
     /// - Returns: An URLSenderItem representing the image
-    @objc public func senderItem(from image: Data, uti: String) -> URLSenderItem? {
+    public func senderItem(from image: Data, uti: String) -> URLSenderItem? {
         guard let img = UIImage(data: image) else {
             return nil
         }
@@ -77,17 +57,17 @@ public class ImageURLSenderItemCreator: NSObject {
         var imageData: Data?
         var renderType: NSNumber = 1
         var finalUti: String = uti
-        
-        if UTIConverter.isGifMimeType(UTIConverter.mimeType(fromUTI: uti)) {
-            
-            if ImageURLSenderItemCreator.isAnimatedSticker(image: img, uti: uti) {
+        let mimeType = UTIConverter.mimeType(fromUTI: uti) ?? fallbackMimeType
+
+        if UTIConverter.isGifMimeType(mimeType) {
+            if isAnimatedSticker(image: img, uti: uti) {
                 renderType = 2
             }
             else {
                 renderType = 1
             }
         }
-        else if ImageURLSenderItemCreator.isPNGSticker(image: img, uti: uti) {
+        else if isPNGSticker(image: img, uti: uti) {
             renderType = 2
 
             guard let convData = MediaConverter.scaleImageData(
@@ -113,9 +93,9 @@ public class ImageURLSenderItemCreator: NSObject {
             finalUti = UTType.jpeg.identifier
         }
         
-        let mimeType = UTIConverter.mimeType(fromUTI: finalUti)
+        let finalMimeType = UTIConverter.mimeType(fromUTI: finalUti) ?? fallbackMimeType
         let filename = FileUtility.shared.getTemporarySendableFileName(base: "image") + "." + (
-            UTIConverter.preferredFileExtension(forMimeType: mimeType) ?? ""
+            UTIConverter.preferredFileExtension(forMimeType: finalMimeType) ?? ""
         )
         
         return URLSenderItem(
@@ -127,15 +107,15 @@ public class ImageURLSenderItemCreator: NSObject {
         )
     }
     
-    @objc public func senderItem(url: URL, uti: String) -> URLSenderItem? {
+    public func senderItem(url: URL, uti: String) -> URLSenderItem? {
         let maxSize: CGFloat = imageMaxSize()
                 
         var imageData: Data?
         var renderType: NSNumber = 1
         var finalUti: String = uti
-        
-        if UTIConverter.isGifMimeType(UTIConverter.mimeType(fromUTI: uti)) {
+        let mimeType = UTIConverter.mimeType(fromUTI: uti) ?? fallbackMimeType
 
+        if UTIConverter.isGifMimeType(mimeType) {
             do {
                 imageData = try Data(contentsOf: url)
                                 
@@ -144,7 +124,7 @@ public class ImageURLSenderItemCreator: NSObject {
                     return nil
                 }
                 
-                if ImageURLSenderItemCreator.isAnimatedSticker(image: image, uti: uti) {
+                if isAnimatedSticker(image: image, uti: uti) {
                     renderType = 2
                 }
                 else {
@@ -161,7 +141,7 @@ public class ImageURLSenderItemCreator: NSObject {
                 return nil
             }
             
-            if ImageURLSenderItemCreator.isPNGSticker(image: scaledImage, uti: uti) {
+            if isPNGSticker(image: scaledImage, uti: uti) {
                 renderType = 2
                 imageData = MediaConverter.pngRepresentation(for: scaledImage)
             }
@@ -177,9 +157,9 @@ public class ImageURLSenderItemCreator: NSObject {
             }
         }
         
-        let mimeType = UTIConverter.mimeType(fromUTI: finalUti)
+        let finalMimeType = UTIConverter.mimeType(fromUTI: finalUti) ?? fallbackMimeType
         let filename = FileUtility.shared.getTemporarySendableFileName(base: "image") + "." + (
-            UTIConverter.preferredFileExtension(forMimeType: mimeType) ?? ""
+            UTIConverter.preferredFileExtension(forMimeType: finalMimeType) ?? ""
         )
         
         return URLSenderItem(
@@ -197,7 +177,7 @@ public class ImageURLSenderItemCreator: NSObject {
     /// - Parameter url: The URL pointing to a valid image in any format readable by UIImage and convertable by
     /// UIImage.jpegData.
     /// - Returns: An URLSenderItem for the image
-    @objc public func senderItem(from url: URL) -> URLSenderItem? {
+    public func senderItem(from url: URL) -> URLSenderItem? {
         guard let scheme = url.scheme else {
             return nil
         }
@@ -205,13 +185,12 @@ public class ImageURLSenderItemCreator: NSObject {
             return nil
         }
         
-        guard var uti = UTIConverter.uti(forFileURL: url) else {
-            return nil
-        }
-        
         do {
+            guard var uti = UTIConverter.uti(forFileURL: url) else {
+                return nil
+            }
             var data = try Data(contentsOf: url)
-            if !ImageURLSenderItemCreator.isAllowedUTI(uti: uti) {
+            if !isAllowedUTI(uti: uti) {
                 guard let image = UIImage(data: data) else {
                     return nil
                 }
@@ -243,37 +222,7 @@ public class ImageURLSenderItemCreator: NSObject {
         }
         return nil
     }
-    
-    /// Create an URLSenderItem from an image represented by an UIImage object
-    /// The image will always be converted to jpg
-    /// - Parameter image: An image
-    /// - Returns: An URLSenderItem for the image
-    @available(
-        *,
-        deprecated,
-        message: "Is only available for to support legacy Objective-C code. Please use any of the other functions"
-    )
-    @objc public func senderItem(fromImage image: UIImage) -> URLSenderItem? {
-        guard let image = MediaConverter.scale(image, toMaxSize: imageMaxSize(image)) else {
-            return nil
-        }
-        
-        let data = MediaConverter.jpegRepresentation(for: image, withQuality: imageCompressionQuality())!
-        let type = kUTTypeJPEG as String
-        let renderType: NSNumber = 1
-        
-        let ext = UTIConverter.preferredFileExtension(forMimeType: UTIConverter.mimeType(fromUTI: type))!
-        let filename = FileUtility.shared.getTemporarySendableFileName(base: "image") + ext
-        
-        return URLSenderItem(
-            data: data,
-            fileName: filename,
-            type: type,
-            renderType: renderType,
-            sendAsFile: true
-        )
-    }
-    
+
     // MARK: - Public static helper functions
     
     /// Checks if the given png UIImage and uti combination could be represented as a sticker (render type 2)
@@ -282,44 +231,45 @@ public class ImageURLSenderItemCreator: NSObject {
     ///   - uti: any uti type
     /// - Returns: True if it can be represented as a sticker and false otherwise (If in ShareExtension, returns always
     /// false due to an issue with screenshots from iOS 26.0)
-    @objc static func isPNGSticker(image: UIImage, uti: String) -> Bool {
+    func isPNGSticker(image: UIImage, uti: String) -> Bool {
         guard AppGroup.getCurrentType() != AppGroupTypeShareExtension else {
             return false
         }
-        
-        if UTIConverter.isPNGImageMimeType(UTIConverter.mimeType(fromUTI: uti)) {
+        let mimeType = UTIConverter.mimeType(fromUTI: uti) ?? fallbackMimeType
+        if UTIConverter.isPNGImageMimeType(mimeType) {
             guard let cgImage = image.cgImage else {
                 return false
             }
             
-            let hasAlpha = ImageURLSenderItemCreator.hasAlpha(image: cgImage)
-            let isTransparent = ImageURLSenderItemCreator.hasTransparentPixel(cgImage: cgImage)
+            let hasAlpha = hasAlpha(image: cgImage)
+            let isTransparent = hasTransparentPixel(cgImage: cgImage)
             
             return hasAlpha && isTransparent
         }
         return false
     }
 
-    @objc static func isAnimatedSticker(image: UIImage, uti: String) -> Bool {
-        if UTIConverter.isGifMimeType(UTIConverter.mimeType(fromUTI: uti)) {
+    func isAnimatedSticker(image: UIImage, uti: String) -> Bool {
+        let mimeType = UTIConverter.mimeType(fromUTI: uti) ?? fallbackMimeType
+        if UTIConverter.isGifMimeType(mimeType) {
             guard let cgImage = image.cgImage else {
                 return false
             }
             
-            let hasAlpha = ImageURLSenderItemCreator.hasAlpha(image: cgImage)
-            let isTransparent = ImageURLSenderItemCreator.hasTransparentPixel(cgImage: cgImage)
+            let hasAlpha = hasAlpha(image: cgImage)
+            let isTransparent = hasTransparentPixel(cgImage: cgImage)
             
             return hasAlpha && isTransparent
         }
         return false
     }
     
-    public static func hasAlpha(image: CGImage) -> Bool {
+    public func hasAlpha(image: CGImage) -> Bool {
         let alpha: CGImageAlphaInfo = image.alphaInfo
         return alpha == .first || alpha == .last || alpha == .premultipliedFirst || alpha == .premultipliedLast
     }
     
-    public static func hasTransparentPixel(cgImage: CGImage) -> Bool {
+    public func hasTransparentPixel(cgImage: CGImage) -> Bool {
         if !(
             cgImage.alphaInfo == .last || cgImage.alphaInfo == .premultipliedLast || cgImage
                 .alphaInfo == .first || cgImage.alphaInfo == .premultipliedFirst
@@ -355,7 +305,7 @@ public class ImageURLSenderItemCreator: NSObject {
     /// that all possible UTTypes for your object are covered.
     /// - Parameter data: any Data object
     /// - Returns: A CFString with the UTType of the Data object.
-    @objc public static func getUTI(for data: Data) -> NSString? {
+    public func getUTI(for data: Data) -> NSString? {
         var values = [UInt8](repeating: 0, count: 1)
         data.copyBytes(to: &values, count: 1)
         switch values[0] {
@@ -371,7 +321,7 @@ public class ImageURLSenderItemCreator: NSObject {
         return nil
     }
     
-    @objc public static func createCorrelationID() -> String {
+    public func createCorrelationID() -> String {
         SwiftUtils.pseudoRandomString(length: 32)
     }
     
@@ -400,7 +350,7 @@ public class ImageURLSenderItemCreator: NSObject {
     }
     
     /// Returns the maximum size of the longest edge of media thumbnails to be sent
-    /// The size should be inbetween 128px and 512px
+    /// The size should be in between 128px and 512px
     @objc public func imageThumbnailMaxSize(_ image: UIImage?) -> CGFloat {
         let thumbnailSize = min(imageMaxSize(image) / 3, 512)
         return max(128, thumbnailSize)
@@ -434,7 +384,7 @@ public class ImageURLSenderItemCreator: NSObject {
     /// Returns true if the given uti is supported by the file message spec
     /// - Parameter uti: any UTI represented as String
     /// - Returns: true if the given uti is supported by the file message spec false otherwise
-    static func isAllowedUTI(uti: String) -> Bool {
+    func isAllowedUTI(uti: String) -> Bool {
         let isJPEG = uti == UTType.jpeg.identifier
         let isGIF = uti == UTType.gif.identifier
         let isPNG = uti == UTType.png.identifier

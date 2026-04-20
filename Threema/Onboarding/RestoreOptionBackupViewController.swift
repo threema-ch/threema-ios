@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2018-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import ThreemaMacros
 import UIKit
@@ -29,7 +9,7 @@ import UIKit
     func restoreCancelled()
 }
 
-class RestoreOptionBackupViewController: IDCreationPageViewController {
+final class RestoreOptionBackupViewController: IDCreationPageViewController {
     
     @IBOutlet var mainContent: UIStackView!
     
@@ -42,15 +22,17 @@ class RestoreOptionBackupViewController: IDCreationPageViewController {
     @IBOutlet var idLabel: UILabel!
 
     @IBOutlet var faqLinkLabel: ZSWTappableLabel!
-    @IBOutlet var cancelButton: UIButton!
-    
+    @IBOutlet var cancelButton: SetupButton!
+
     @objc weak var delegate: RestoreOptionBackupViewControllerDelegate?
     
     @objc var hasDataOnDevice = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        overrideUserInterfaceStyle = .dark
+
         hideKeyboardWhenTappedAround()
         
         // With a transparent background, the button is only accessible when the finger is positioned over the text

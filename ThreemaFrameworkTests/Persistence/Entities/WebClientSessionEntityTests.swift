@@ -1,25 +1,5 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import RemoteSecretProtocolTestHelper
-import ThreemaEssentialsTestHelper
+import ThreemaEssentials
 import XCTest
 @testable import RemoteSecret
 @testable import ThreemaFramework
@@ -38,53 +18,28 @@ final class WebClientSessionEntityTests: XCTestCase {
     
     private func creationTestFull(encrypted: Bool) throws {
         // Arrange
-        let (persistentStoreCoordinator, mainContext, backgroundContext) = DatabasePersistentContext.devNullContext(
-            isRemoteSecretEnabled: encrypted
-        )
-        let dbContext = DatabaseContext(mainContext: mainContext, backgroundContext: backgroundContext)
-
-        let remoteSecretCrypto = try RemoteSecretCrypto(
-            remoteSecret: RemoteSecret(rawValue: Data(repeating: 1, count: 32))
-        )
-        let remoteSecretCryptoMock = RemoteSecretCryptoMock(wrapped: remoteSecretCrypto)
-        let remoteSecretManagerMock = RemoteSecretManagerMock(
-            isRemoteSecretEnabled: encrypted,
-            crypto: remoteSecretCryptoMock
-        )
-        
-        let databaseManagerMock = DatabaseManagerMock(
-            persistentStoreCoordinator: persistentStoreCoordinator,
-            databaseContext: dbContext,
-        )
-
-        let entityManager = PersistenceManager(
-            databaseManager: databaseManagerMock,
-            dirtyObjectManager: DirtyObjectManager(
-                databaseManager: databaseManagerMock,
-                userDefaults: UserDefaults()
-            ),
-            remoteSecretManager: remoteSecretManagerMock
-        ).entityManager
+        let testDatabase = TestDatabase(encrypted: encrypted)
+        let entityManager = testDatabase.entityManager
 
         let active = true
         let browserName = "Test Browser Name"
         let browserVersion: Int32 = 1
-        let initiatorPermanentPublicKey = MockData.generatePublicKey()
+        let initiatorPermanentPublicKey = BytesUtility.generatePublicKey()
         let initiatorPermanentPublicKeyHash = "HASH"
         let lastConnection = Date.now
         let name = "Test name"
         let permanent = true
-        let privateKey = MockData.generatePublicKey()
+        let privateKey = BytesUtility.generatePublicKey()
         let saltyRTCHost = "HOST"
         let saltyRTCPort = 25565
         let selfHosted = false
-        let serverPermanentPublicKey = MockData.generatePublicKey()
+        let serverPermanentPublicKey = BytesUtility.generatePublicKey()
         let version: Int32 = 2
 
         // Act
         let webClientSessionEntity = entityManager.performAndWaitSave {
             WebClientSessionEntity(
-                context: dbContext.main,
+                context: testDatabase.context.main,
                 active: active,
                 browserName: browserName,
                 browserVersion: browserVersion,
@@ -126,11 +81,11 @@ final class WebClientSessionEntityTests: XCTestCase {
         XCTAssertEqual(fetchedWebClientSessionEntity.version, version as NSNumber)
 
         if encrypted {
-            XCTAssertEqual(remoteSecretCryptoMock.decryptCalls, 0)
-            XCTAssertEqual(remoteSecretCryptoMock.encryptCalls, 11)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 0)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 11)
 
             // Test faulting
-            mainContext.refresh(fetchedWebClientSessionEntity, mergeChanges: false)
+            testDatabase.context.main.refresh(fetchedWebClientSessionEntity, mergeChanges: false)
 
             XCTAssertEqual(fetchedWebClientSessionEntity.active, NSNumber(booleanLiteral: active))
             XCTAssertEqual(fetchedWebClientSessionEntity.browserName, browserName)
@@ -148,35 +103,31 @@ final class WebClientSessionEntityTests: XCTestCase {
             XCTAssertEqual(fetchedWebClientSessionEntity.serverPermanentPublicKey, serverPermanentPublicKey)
             XCTAssertEqual(fetchedWebClientSessionEntity.version, version as NSNumber)
 
-            XCTAssertEqual(remoteSecretCryptoMock.decryptCalls, 11)
-            XCTAssertEqual(remoteSecretCryptoMock.encryptCalls, 11)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 11)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 11)
         }
         else {
-            XCTAssertEqual(remoteSecretCryptoMock.decryptCalls, 0)
-            XCTAssertEqual(remoteSecretCryptoMock.encryptCalls, 0)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.decryptCalls, 0)
+            XCTAssertEqual(testDatabase.remoteSecretCryptoMock.encryptCalls, 0)
         }
     }
 
     func testCreationMinimal() throws {
         // Arrange
-        let (_, managedObjectContext, _) = DatabasePersistentContext.devNullContext()
-        let dbContext = DatabaseContext(mainContext: managedObjectContext, backgroundContext: nil)
-        let entityManager = EntityManager(
-            databaseContext: dbContext,
-            isRemoteSecretEnabled: false
-        )
-        
-        let initiatorPermanentPublicKey = MockData.generatePublicKey()
+        let testDatabase = TestDatabase()
+        let entityManager = testDatabase.entityManager
+
+        let initiatorPermanentPublicKey = BytesUtility.generatePublicKey()
         let permanent = true
         let saltyRTCHost = "HOST"
         let saltyRTCPort = 25565
         let selfHosted = false
-        let serverPermanentPublicKey = MockData.generatePublicKey()
+        let serverPermanentPublicKey = BytesUtility.generatePublicKey()
         
         // Act
         let webClientSessionEntity = entityManager.performAndWaitSave {
             WebClientSessionEntity(
-                context: dbContext.main,
+                context: testDatabase.context.main,
                 initiatorPermanentPublicKey: initiatorPermanentPublicKey,
                 permanent: permanent,
                 saltyRTCHost: saltyRTCHost,

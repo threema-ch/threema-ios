@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2017-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import "AppDelegate.h"
 #import "MWPhotoBrowser.h"
 #import "MWPhoto.h"
@@ -41,13 +21,10 @@
 #import "NibUtil.h"
 #import <MediaPlayer/MediaPlayer.h>
 #import "ZSWTappableLabel.h"
-#import "UILabel+Markup.h"
-#import "URLHandler.h"
 #import "ThemedNavigationController.h"
 #import "TypingIndicatorManager.h"
 #import "ModalPresenter.h"
 #import <RSKImageCropper/RSKImageCropViewController.h>
-#import "MainTabBarController.h"
 #import "VideoCaptionView.h"
 #import "PhotoCaptionView.h"
 #import "FileCaptionView.h"
@@ -58,4 +35,5 @@
 #import "SplashViewController.h"
 #import "CompletedIDViewController.h"
 #import "EnterLicenseViewController.h"
-#import "ShareController.h"
+#import "MoveFingerView.h"
+#import "NSData+Base32.h"

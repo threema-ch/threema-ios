@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2019-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
@@ -29,7 +9,7 @@ import Foundation
 /// This depends on `MyIdentityStore.shared()` if no state already exists. We do it this way to get the most recent
 /// version of the `MyIdentityStore` singleton and prevent the usage of any stale version. At the same time this allows
 /// us to just provide static methods.
-public class AppSetup: NSObject {
+public final class AppSetup: NSObject {
     
     // MARK: - Public
     
@@ -65,7 +45,7 @@ public class AppSetup: NSObject {
     // MARK: - Internal
     
     /// Should we skip the animation and directly show the setup wizard for with the existing identity?
-    @objc static var shouldDirectlyShowSetupWizard: Bool {
+    @objc public static var shouldDirectlyShowSetupWizard: Bool {
         // For the second one we might be able to skip to the last screen, but there is no time to really test this
         state == .identityAdded || state == .identitySetupComplete
     }

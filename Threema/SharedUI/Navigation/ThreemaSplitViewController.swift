@@ -1,31 +1,24 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 import UIKit
 
-@objc class ThreemaSplitViewController: UISplitViewController {
+@objc final class ThreemaSplitViewController: UISplitViewController {
     
     private(set) lazy var threemaTabBarController = ThreemaTabBarController()
     private lazy var navigationManager = ThreemaSplitViewNavigationManager()
     
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        guard (presentedViewController is PortraitNavigationController) == false else {
+            return []
+        }
+        
+        if isCollapsed {
+            return .allButUpsideDown
+        }
+        else {
+            return .all
+        }
+    }
+
     // MARK: - Lifecycle Methods
     
     override func viewIsAppearing(_ animated: Bool) {
@@ -42,5 +35,51 @@ import UIKit
             with: self,
             tabBarController: threemaTabBarController
         )
+    }
+    
+    // MARK: - Public functions
+
+    func setViewControllers(
+        _ viewControllers: [UIViewController],
+        for item: ThreemaTab
+    ) {
+        navigationManager.thetaStack.store(
+            stack: viewControllers,
+            for: item
+        )
+    }
+    
+    func switchTabIfNeeded(to item: ThreemaTab) {
+        guard threemaTabBarController.selectedIndex != item.rawValue else {
+            return
+        }
+        
+        threemaTabBarController.selectedIndex = item.rawValue
+    }
+    
+    func navigationController(
+        for item: ThreemaTab
+    ) -> UINavigationController? {
+        if isCollapsed {
+            threemaTabBarController.navigationController(
+                for: item
+            )
+        }
+        else {
+            viewControllers.last as? UINavigationController
+        }
+    }
+    
+    func isTopControllerChat(for contact: ContactEntity?) -> Bool {
+        guard
+            threemaTabBarController.selectedThreemaTab == .conversations,
+            let contact,
+            let navigationController = navigationController(for: .conversations),
+            let chatViewController = navigationController.topViewController as? ChatViewController
+        else {
+            return false
+        }
+        
+        return chatViewController.isChat(for: contact)
     }
 }

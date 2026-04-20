@@ -1,43 +1,16 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2019-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CoreData
 import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
-class EntityDestroyerTests: XCTestCase {
+final class EntityDestroyerTests: XCTestCase {
 
-    var objCnx: ThreemaManagedObjectContext!
-    
-    private var databaseMainCnx: DatabaseContext!
-    private var databaseBackgroundCnx: DatabaseContext!
-    
+    var testDatabase: TestDatabase!
+
     override func setUp() {
         super.setUp()
-        
-        (_, objCnx, _) = DatabasePersistentContext.devNullContext()
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+        testDatabase = TestDatabase()
     }
 
     func testDeleteMediasOlderThan() {
@@ -57,7 +30,7 @@ class EntityDestroyerTests: XCTestCase {
                 olderThan = userCalendar.date(byAdding: .day, value: daysAdd, to: Date())
             }
             
-            let ed = EntityDestroyer(managedObjectContext: objCnx)
+            let ed = testDatabase.entityManager.entityDestroyer
             let count = ed.deleteMedias(olderThan: olderThan)
             
             XCTAssertEqual(count, deleteTest[1]!, "not expected count of deleted medias")
@@ -81,7 +54,7 @@ class EntityDestroyerTests: XCTestCase {
                 olderThan = userCalendar.date(byAdding: .day, value: daysAdd, to: Date())
             }
             
-            let ed = EntityDestroyer(managedObjectContext: objCnx)
+            let ed = testDatabase.entityManager.entityDestroyer
             let count = ed.deleteMessages(olderThan: olderThan)
             
             XCTAssertEqual(count, deleteTest[1]!, "not expected count of deleted messages")
@@ -89,7 +62,7 @@ class EntityDestroyerTests: XCTestCase {
     }
 
     func testDeleteMessageContentOfLocationMessageEntity() throws {
-        let dbPreparer = DatabasePreparer(context: objCnx)
+        let dbPreparer = testDatabase.preparer
         let message = dbPreparer.save {
             dbPreparer.createLocationMessage(
                 conversation: dbPreparer.createConversation(),
@@ -102,10 +75,7 @@ class EntityDestroyerTests: XCTestCase {
             )
         }
 
-        let entityManager = EntityManager(
-            databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil),
-            isRemoteSecretEnabled: false
-        )
+        let entityManager = testDatabase.entityManager
         try entityManager.entityDestroyer.deleteMessageContent(of: message)
 
         XCTAssertEqual(message.latitude, 0)
@@ -116,7 +86,7 @@ class EntityDestroyerTests: XCTestCase {
     }
 
     func testDeleteMessageContentOfTextMessageEntity() throws {
-        let dbPreparer = DatabasePreparer(context: objCnx)
+        let dbPreparer = testDatabase.preparer
         let message = dbPreparer.save {
             dbPreparer.createTextMessage(
                 conversation: dbPreparer.createConversation(),
@@ -127,17 +97,14 @@ class EntityDestroyerTests: XCTestCase {
             )
         }
 
-        let entityManager = EntityManager(
-            databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil),
-            isRemoteSecretEnabled: false
-        )
+        let entityManager = testDatabase.entityManager
         try entityManager.entityDestroyer.deleteMessageContent(of: message)
 
         XCTAssertEqual(message.text, "")
     }
 
     func testDeleteMessageContentOfFileMessageEntity() throws {
-        let dbPreparer = DatabasePreparer(context: objCnx)
+        let dbPreparer = testDatabase.preparer
         let message = dbPreparer.save {
             let data = dbPreparer.createFileDataEntity(data: Data([11, 22]))
             let thumbnail = dbPreparer.createImageDataEntity(data: Data([33]), height: 33, width: 33)
@@ -155,10 +122,7 @@ class EntityDestroyerTests: XCTestCase {
             return message
         }
 
-        let entityManager = EntityManager(
-            databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil),
-            isRemoteSecretEnabled: false
-        )
+        let entityManager = testDatabase.entityManager
         try entityManager.entityDestroyer.deleteMessageContent(of: message)
 
         XCTAssertNil(message.data)
@@ -170,7 +134,7 @@ class EntityDestroyerTests: XCTestCase {
     }
 
     func testDeleteMessageContentOfImageMessageEntity() throws {
-        let dbPreparer = DatabasePreparer(context: objCnx)
+        let dbPreparer = testDatabase.preparer
         let message = dbPreparer.save {
             let image = dbPreparer.createImageDataEntity(data: Data([11, 22]), height: 22, width: 22)
             let thumbnail = dbPreparer.createImageDataEntity(data: Data([33]), height: 33, width: 33)
@@ -185,10 +149,7 @@ class EntityDestroyerTests: XCTestCase {
             return message
         }
 
-        let entityManager = EntityManager(
-            databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil),
-            isRemoteSecretEnabled: false
-        )
+        let entityManager = testDatabase.entityManager
         try entityManager.entityDestroyer.deleteMessageContent(of: message)
 
         XCTAssertNil(message.image)
@@ -196,7 +157,7 @@ class EntityDestroyerTests: XCTestCase {
     }
 
     func testDeleteMessageContentOfVideoMessageEntity() throws {
-        let dbPreparer = DatabasePreparer(context: objCnx)
+        let dbPreparer = testDatabase.preparer
         let message = dbPreparer.save {
             let conversation = dbPreparer.createConversation(
                 typing: false,
@@ -219,10 +180,7 @@ class EntityDestroyerTests: XCTestCase {
             return message
         }
 
-        let entityManager = EntityManager(
-            databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil),
-            isRemoteSecretEnabled: false
-        )
+        let entityManager = testDatabase.entityManager
         try entityManager.entityDestroyer.deleteMessageContent(of: message)
 
         XCTAssertNil(message.video)
@@ -230,8 +188,8 @@ class EntityDestroyerTests: XCTestCase {
     }
 
     func testDeleteBasicConversation() {
-        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
-        
+        let entityManager = testDatabase.entityManager
+
         let deletableContactAndConversation = createContactAndConversation(
             entityManager: entityManager,
             identity: "ECHOECHO"
@@ -259,8 +217,8 @@ class EntityDestroyerTests: XCTestCase {
     }
     
     func testDeleteBasicConversationAndMessages() {
-        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
-        
+        let entityManager = testDatabase.entityManager
+
         let deletableContactAndConversation = createContactAndConversation(
             entityManager: entityManager,
             identity: "ECHOECHO"
@@ -301,11 +259,11 @@ class EntityDestroyerTests: XCTestCase {
         
         // Start Verify Test Correctly Prepared
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
-        XCTAssertEqual(try! databaseMainCnx.main.fetch(fetchMessages).count, 200)
-        
+        XCTAssertEqual(try! testDatabase.context.main.fetch(fetchMessages).count, 200)
+
         fetchMessages.predicate = NSPredicate(format: "conversation = %@", deletableContactAndConversation.conversation)
         
-        let prevMessages = try! databaseMainCnx.main.fetch(fetchMessages)
+        let prevMessages = try! testDatabase.context.main.fetch(fetchMessages)
         XCTAssertEqual(prevMessages.count, 100)
         
         guard let tContact = entityManager.entityFetcher.contactEntity(for: "ECHOECHO") else {
@@ -334,8 +292,8 @@ class EntityDestroyerTests: XCTestCase {
     
     func testDeleteConversationGroupConversationAndMessages() {
         // Prepare Test
-        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
-        
+        let entityManager = testDatabase.entityManager
+
         let deletableContactAndConversation = createContactAndConversation(
             entityManager: entityManager,
             identity: "ECHOECHO"
@@ -349,7 +307,7 @@ class EntityDestroyerTests: XCTestCase {
         
         entityManager.performAndWaitSave {
             for i in 0..<100 {
-                _ = DatabasePreparer(context: self.databaseMainCnx.main)
+                _ = self.testDatabase.preparer
                     .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                         conversation.groupID = BytesUtility.generateRandomBytes(length: 32)!
                         conversation.groupMyIdentity = deletableContactAndConversation.contact.identity
@@ -408,8 +366,8 @@ class EntityDestroyerTests: XCTestCase {
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
         fetchMessages.predicate = NSPredicate(format: "conversation = %@", deletableContactAndConversation.conversation)
         
-        let prevMessages = try! databaseMainCnx.main.fetch(fetchMessages)
-        
+        let prevMessages = try! testDatabase.context.main.fetch(fetchMessages)
+
         XCTAssert(prevMessages.count == 100)
         
         // End Verify Test Correctly Prepared
@@ -430,7 +388,7 @@ class EntityDestroyerTests: XCTestCase {
     }
     
     func testDeleteContactGroupConversationAndMessages() throws {
-        let entityManager = EntityManager(databaseContext: databaseMainCnx, isRemoteSecretEnabled: false)
+        let entityManager = testDatabase.entityManager
 
         let deletableContactAndConversation = createContactAndConversation(
             entityManager: entityManager,
@@ -445,7 +403,7 @@ class EntityDestroyerTests: XCTestCase {
 
         entityManager.performAndWaitSave {
             for i in 0..<10 {
-                _ = DatabasePreparer(context: self.databaseMainCnx.main)
+                _ = self.testDatabase.preparer
                     .createConversation(typing: false, unreadMessageCount: 0, visibility: .default) { conversation in
                         conversation.groupID = BytesUtility.generateRandomBytes(length: 32)!
                         conversation.groupMyIdentity = deletableContactAndConversation.contact.identity
@@ -507,7 +465,7 @@ class EntityDestroyerTests: XCTestCase {
         // Start Verify Test Correctly Prepared
         let fetchMessages = NSFetchRequest<NSFetchRequestResult>(entityName: "Message")
 
-        let prevMessages = try! databaseMainCnx.main.fetch(fetchMessages)
+        let prevMessages = try! testDatabase.context.main.fetch(fetchMessages)
 
         XCTAssert(prevMessages.count == 420)
 
@@ -532,7 +490,7 @@ class EntityDestroyerTests: XCTestCase {
         var conversation: ConversationEntity?
         var lastMessage: BaseMessageEntity?
 
-        let dp = DatabasePreparer(context: objCnx)
+        let dp = testDatabase.preparer
         dp.save {
             conversation = dp.createConversation(
                 typing: false,
@@ -574,10 +532,7 @@ class EntityDestroyerTests: XCTestCase {
 
         let deleteMessage = try XCTUnwrap(lastMessage)
 
-        let entityManager = EntityManager(
-            databaseContext: DatabaseContext(mainContext: objCnx, backgroundContext: nil),
-            isRemoteSecretEnabled: false
-        )
+        let entityManager = testDatabase.entityManager
         entityManager.entityDestroyer.delete(baseMessage: deleteMessage)
 
         XCTAssertNotNil(conversation)
@@ -605,17 +560,17 @@ extension EntityDestroyerTests {
         }
         
         let fetchConversations = NSFetchRequest<NSFetchRequestResult>(entityName: "Conversation")
-        let refetchedConversations = try! databaseMainCnx.main.fetch(fetchConversations)
-        
+        let refetchedConversations = try! testDatabase.context.main.fetch(fetchConversations)
+
         XCTAssertEqual(refetchedConversations.count, conversationsCount)
         
         let fetchContacts = NSFetchRequest<NSFetchRequestResult>(entityName: "Contact")
-        let refetchedContacts = try! databaseMainCnx.main.fetch(fetchContacts)
-        
+        let refetchedContacts = try! testDatabase.context.main.fetch(fetchContacts)
+
         XCTAssertEqual(refetchedContacts.count, totalContactsCount)
         
-        let allMessages = try! databaseMainCnx.main.fetch(fetchMessages) as! [BaseMessageEntity]
-        
+        let allMessages = try! testDatabase.context.main.fetch(fetchMessages) as! [BaseMessageEntity]
+
         XCTAssertEqual(allMessages.count, totalMessagesCount)
         
         for message in allMessages {
@@ -700,7 +655,7 @@ extension EntityDestroyerTests {
     
     private func setupVideoMessages() {
         // Setup DB for testing, insert 10 video messages
-        let dbPreparer = DatabasePreparer(context: objCnx)
+        let dbPreparer = testDatabase.preparer
         dbPreparer.save {
             let thumbnail = dbPreparer.createImageDataEntity(data: Data([22]), height: 22, width: 22)
             

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Combine
 import CryptoKit
@@ -87,14 +67,25 @@ public final actor GroupCallManager {
     /// - Parameters:
     ///   - proposedGroupCall: Proposed call
     ///   - creatorOrigin: Where the proposed call stems from
+    ///   - calledFromExtension: Wether we call this func in an extension context or not
     public func handleNewCallMessage(
         for proposedGroupCall: ProposedGroupCall,
-        creatorOrigin: GroupCallCreatorOrigin
+        creatorOrigin: GroupCallCreatorOrigin,
+        calledFromExtension: Bool
     ) async {
         // TODO: (IOS-3857) Logging
         DDLogNotice("[GroupCall] [Message Processor] \(#function) with callID \(proposedGroupCall.hexCallID)")
         
-        startPeriodicCheckIfNeeded()
+        // As a precautionary measure, it is advisable to refrain from calling the startPeriodicCheckIfNeeded function
+        // from
+        // the extension. This action will initiate a refresh timer that is not appropriate for execution within the
+        // extension’s context.
+        if calledFromExtension {
+            try? await runPeriodicRefresh()
+        }
+        else {
+            startPeriodicCheckIfNeeded()
+        }
         
         let groupModel = proposedGroupCall.groupRepresentation
         
@@ -114,14 +105,23 @@ public final actor GroupCallManager {
             
             switch creatorOrigin {
             case let .remote(threemaID):
-                try await dependencies.groupCallSystemMessageAdapter.post(
-                    .groupCallStartedBy(threemaID),
-                    in: groupModel
-                )
-                showIncomingGroupCallNotification(groupModel: groupModel, senderThreemaID: threemaID)
+                // Started by ourselves in another device
+                if threemaID == localContactModel.identity {
+                    try await dependencies.groupCallSystemMessageAdapter.post(
+                        .groupCallStarted(proposedGroupCall.startMessageReceiveDate),
+                        in: groupModel
+                    )
+                }
+                else {
+                    try await dependencies.groupCallSystemMessageAdapter.post(
+                        .groupCallStartedBy(threemaID, proposedGroupCall.startMessageReceiveDate),
+                        in: groupModel
+                    )
+                    showIncomingGroupCallNotification(groupModel: groupModel, senderThreemaID: threemaID)
+                }
             case .local:
                 try await dependencies.groupCallSystemMessageAdapter.post(
-                    .groupCallStarted,
+                    .groupCallStarted(proposedGroupCall.startMessageReceiveDate),
                     in: groupModel
                 )
             case .db:

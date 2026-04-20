@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import MapKit
@@ -32,12 +12,8 @@ final class SendLocationSearchDataSource: UITableViewDiffableDataSource<SendLoca
     private weak var sendLocationViewController: SendLocationViewController?
     private weak var searchTableView: UITableView?
     private let mapsServerInfo: MapsServerInfo?
-        
-    private static var locationGranted: Bool {
-        CLLocationManager.authorizationStatus() == .authorizedAlways || CLLocationManager
-            .authorizationStatus() == .authorizedWhenInUse
-    }
-    
+    private let locationManager = CLLocationManager()
+
     private static let formatter: MeasurementFormatter = {
         let formatter = MeasurementFormatter()
         formatter.unitOptions = .naturalScale
@@ -95,7 +71,7 @@ final class SendLocationSearchDataSource: UITableViewDiffableDataSource<SendLoca
         snapshot.appendSections([.standardPOI])
         
         // Only add CurrentLocation and MarkedPoi if selectable
-        if SendLocationSearchDataSource.locationGranted {
+        if locationManager.locationGranted {
             snapshot.appendItems([sendLocationVC.currentLocationPOI], toSection: .standardPOI)
         }
         if sendLocationVC.markedLocationPOI.location.coordinate.latitude != 0.1 {
@@ -128,7 +104,7 @@ final class SendLocationSearchDataSource: UITableViewDiffableDataSource<SendLoca
         var snapshot = snapshot()
         
         if !snapshot.itemIdentifiers.contains(sendLocationVC.currentLocationPOI),
-           SendLocationSearchDataSource.locationGranted {
+           locationManager.locationGranted {
             snapshot.appendItems([sendLocationVC.currentLocationPOI], toSection: .standardPOI)
         }
         if snapshot.indexOfItem(sendLocationVC.markedLocationPOI) == nil,
@@ -168,8 +144,8 @@ extension SendLocationSearchDataSource {
         
         var urlString = ""
         
-        if SendLocationSearchDataSource.locationGranted {
-            if let location = CLLocationManager().location {
+        if locationManager.locationGranted {
+            if let location = locationManager.location {
                 urlString = baseString + String(location.coordinate.latitude) + "/" +
                     String(location.coordinate.longitude) + "/" + term + "/"
             }

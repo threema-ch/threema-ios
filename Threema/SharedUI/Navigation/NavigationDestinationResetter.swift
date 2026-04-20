@@ -1,43 +1,40 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 final class NavigationDestinationResetter: NSObject, UINavigationControllerDelegate {
     private weak var rootViewController: UIViewController?
-    private let destinationHolder: (any CurrentDestinationHolding)?
+    private weak var splitViewController: UISplitViewController?
+    private let destinationHolder: (any CurrentDestinationHolderProtocol)?
     
     init(
-        rootViewController: UIViewController?,
-        destinationHolder: any CurrentDestinationHolding
+        rootViewController: UIViewController,
+        splitViewController: UISplitViewController?,
+        destinationHolder: any CurrentDestinationHolderProtocol
     ) {
         self.rootViewController = rootViewController
+        self.splitViewController = splitViewController
         self.destinationHolder = destinationHolder
     }
+    
+    // MARK: - UINavigationControllerDelegate
     
     func navigationController(
         _ navigationController: UINavigationController,
         didShow viewController: UIViewController,
         animated: Bool
     ) {
-        // If we navigate back to the rootViewController, we reset the destination
+        
+        if let statusNavigationController = navigationController as? StatusNavigationController {
+            statusNavigationController.updateNavigationBarContent()
+        }
+    }
+    
+    func navigationController(
+        _ navigationController: UINavigationController,
+        willShow viewController: UIViewController,
+        animated: Bool
+    ) {
+        /// If we navigate back to the rootViewController, we reset the destination
+        /// only if the splitViewController is collapsed
         guard navigationController.topViewController == rootViewController,
-              navigationController.traitCollection.horizontalSizeClass == .compact else {
+              splitViewController?.isCollapsed == true else {
             return
         }
         

@@ -1,36 +1,16 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
 import XCTest
 @testable import Threema
 @testable import ThreemaFramework
 
-class ChatProfileViewTests: XCTestCase {
+final class ChatProfileViewTests: XCTestCase {
     
-    private var managedObjectContext: ThreemaManagedObjectContext!
+    private var testDatabase: TestDatabase!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
-        
-        (_, managedObjectContext, _) = DatabasePersistentContext.devNullContext()
+
+        testDatabase = TestDatabase()
     }
     
     /// Wait for main thread to complete UI updates
@@ -49,7 +29,7 @@ class ChatProfileViewTests: XCTestCase {
         var contact: ContactEntity!
         var conversation: ConversationEntity!
         
-        let databasePreparer = DatabasePreparer(context: managedObjectContext)
+        let databasePreparer = testDatabase.preparer
         databasePreparer.save {
             contact = databasePreparer.createContact(publicKey: Data([1]), identity: "ECHOECHO")
             
@@ -75,10 +55,9 @@ class ChatProfileViewTests: XCTestCase {
 
         let chatProfileView = ChatProfileView(
             for: conversation,
-            entityManager: EntityManager(
-                databaseContext: DatabaseContext(mainContext: managedObjectContext),
-                isRemoteSecretEnabled: false
-            )
+            entityManager: testDatabase.entityManager,
+            initialUnreadCount: 0,
+            isRegularSizeClass: { false }
         ) {
             // no-op
         }
@@ -94,10 +73,9 @@ class ChatProfileViewTests: XCTestCase {
 
         let chatProfileView = ChatProfileView(
             for: conversation,
-            entityManager: EntityManager(
-                databaseContext: DatabaseContext(mainContext: managedObjectContext),
-                isRemoteSecretEnabled: false
-            )
+            entityManager: testDatabase.entityManager,
+            initialUnreadCount: 0,
+            isRegularSizeClass: { false }
         ) {
             // no-op
         }
@@ -117,10 +95,9 @@ class ChatProfileViewTests: XCTestCase {
 
         let chatProfileView = ChatProfileView(
             for: conversation,
-            entityManager: EntityManager(
-                databaseContext: DatabaseContext(mainContext: managedObjectContext),
-                isRemoteSecretEnabled: false
-            )
+            entityManager: testDatabase.entityManager,
+            initialUnreadCount: 0,
+            isRegularSizeClass: { false }
         ) {
             // no-op
         }
@@ -142,7 +119,7 @@ class ChatProfileViewTests: XCTestCase {
         let groupID = BytesUtility.generateRandomBytes(length: ThreemaProtocol.groupIDLength)!
         let groupName = "Foodies"
         let memberNames = ["MEMBER01", "MEMBER02", "MEMBER03"]
-        let databasePreparer = DatabasePreparer(context: managedObjectContext)
+        let databasePreparer = testDatabase.preparer
 
         let members = memberNames.map { name -> ContactEntity in
             databasePreparer.createContact(publicKey: Data([1]), identity: name, verificationLevel: .serverVerified)
@@ -171,10 +148,9 @@ class ChatProfileViewTests: XCTestCase {
         let conversation = createGroupConversation()
         let chatProfileView = ChatProfileView(
             for: conversation,
-            entityManager: EntityManager(
-                databaseContext: DatabaseContext(mainContext: managedObjectContext),
-                isRemoteSecretEnabled: false
-            )
+            entityManager: testDatabase.entityManager,
+            initialUnreadCount: 0,
+            isRegularSizeClass: { false }
         ) {
             // no-op
         }
@@ -190,10 +166,9 @@ class ChatProfileViewTests: XCTestCase {
         let conversation = createGroupConversation()
         _ = ChatProfileView(
             for: conversation,
-            entityManager: EntityManager(
-                databaseContext: DatabaseContext(mainContext: managedObjectContext),
-                isRemoteSecretEnabled: false
-            )
+            entityManager: testDatabase.entityManager,
+            initialUnreadCount: 0,
+            isRegularSizeClass: { false }
         ) {
             // no-op
         }
@@ -208,10 +183,9 @@ class ChatProfileViewTests: XCTestCase {
         let conversation = createGroupConversation()
         _ = ChatProfileView(
             for: conversation,
-            entityManager: EntityManager(
-                databaseContext: DatabaseContext(mainContext: managedObjectContext),
-                isRemoteSecretEnabled: false
-            )
+            entityManager: testDatabase.entityManager,
+            initialUnreadCount: 0,
+            isRegularSizeClass: { false }
         ) {
             // no-op
         }
@@ -227,10 +201,9 @@ class ChatProfileViewTests: XCTestCase {
         let conversation = createGroupConversation()
         _ = ChatProfileView(
             for: conversation,
-            entityManager: EntityManager(
-                databaseContext: DatabaseContext(mainContext: managedObjectContext),
-                isRemoteSecretEnabled: false
-            )
+            entityManager: testDatabase.entityManager,
+            initialUnreadCount: 0,
+            isRegularSizeClass: { false }
         ) {
             // no-op
         }

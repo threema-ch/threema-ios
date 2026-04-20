@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import FileUtility
 import ThreemaFramework
 import ThreemaMacros
@@ -73,7 +53,10 @@ struct PreviewUnavailableViewModel {
             return
         }
         
-        guard let shareableItem else {
+        guard
+            let shareableItem,
+            let topViewController = AppDelegate.shared().currentTopViewController()
+        else {
             return
         }
         
@@ -81,19 +64,17 @@ struct PreviewUnavailableViewModel {
             activityItems: [shareableItem],
             applicationActivities: nil
         )
-        if let currentWindow = AppDelegate.shared().currentTopViewController() {
-            
-            if UIDevice.current.userInterfaceIdiom == .pad {
-                activityViewController.popoverPresentationController?.sourceView = currentWindow.view
-                activityViewController.popoverPresentationController?.sourceRect = CGRectMake(
-                    currentWindow.view.bounds.maxX,
-                    currentWindow.view.bounds.midY,
-                    0,
-                    0
-                )
-            }
-            
-            currentWindow.present(activityViewController, animated: true)
+        
+        if topViewController.traitCollection.horizontalSizeClass == .regular {
+            activityViewController.popoverPresentationController?.sourceView = topViewController.view
+            activityViewController.popoverPresentationController?.sourceRect = CGRectMake(
+                topViewController.view.bounds.maxX,
+                topViewController.view.bounds.midY,
+                0,
+                0
+            )
         }
+        
+        topViewController.present(activityViewController, animated: true)
     }
 }

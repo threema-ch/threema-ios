@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import ThreemaFramework
 
@@ -43,7 +23,7 @@ final class GlobalSearchResultsViewController: ThemedViewController {
         return tableView
     }()
     
-    // This needs to be public since they are set on the `ConversationsViewController`
+    // This needs to be public since they are set on the `ConversationListViewController`
     public lazy var searchScopeButtonTitles: [String] = [
         GlobalSearchConversationScope.all.title,
         GlobalSearchConversationScope.oneToOne.title,
@@ -78,7 +58,6 @@ final class GlobalSearchResultsViewController: ThemedViewController {
         super.viewDidLoad()
         
         configureTableView()
-        addObservers()
     }
     
     // MARK: - Public functions
@@ -100,19 +79,6 @@ final class GlobalSearchResultsViewController: ThemedViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
-    }
-    
-    private func addObservers() {
-        // Add observer for theme changes as `refresh()` in the parent is only called if the view controller is inside a
-        // `ThemedNavigationController`, which is generally no the case for this view controller
-        if navigationController == nil {
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(refresh),
-                name: Notification.Name(kNotificationColorThemeChanged),
-                object: nil
-            )
-        }
     }
     
     // MARK: - Updates

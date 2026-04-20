@@ -1,24 +1,5 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
+import TipKit
 import UIKit
 
 final class SettingsViewController: UIViewController {
@@ -30,14 +11,19 @@ final class SettingsViewController: UIViewController {
     private lazy var collectionView = SettingsCollectionView { [weak self] in
         self?.coordinator?.currentDestination
     } shouldAllowAutoDeselection: { [weak self] in
-        let traitCollection = self?.presentationController?.traitCollection
-        return traitCollection?.horizontalSizeClass == .compact
+        self?.coordinator?.presentingViewController?.isCollapsed == true
     }
 
     private lazy var dataSource = SettingsCollectionViewDataSource(
         collectionView: collectionView,
         coordinator: coordinator
     )
+    
+    // MARK: TipKit
+
+    private var betaFeedbackTip = TipKitManager.ThreemaBetaFeedbackTip()
+    private var tipObservationTask: Task<Void, Never>?
+    private weak var tipPopoverController: TipUIPopoverViewController?
     
     // MARK: - Lifecycle
     
@@ -62,7 +48,17 @@ final class SettingsViewController: UIViewController {
         super.viewIsAppearing(animated)
         updateSelection()
     }
-
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        showBetaFeedbackTip()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        removeTipObserver()
+    }
+    
     // MARK: - Configuration
     
     private func configureView() {
@@ -81,5 +77,32 @@ final class SettingsViewController: UIViewController {
     
     func updateSelection() {
         collectionView.updateSelection(for: traitCollection.horizontalSizeClass)
+    }
+    
+    private func showBetaFeedbackTip() {
+        guard let cell = collectionView.betaFeedbackCell() else {
+            return
+        }
+        
+        tipObservationTask = tipObservationTask ?? Task { @MainActor in
+            for await shouldDisplay in betaFeedbackTip.shouldDisplayUpdates {
+                if shouldDisplay {
+                    let popoverController = TipUIPopoverViewController(betaFeedbackTip, sourceItem: cell)
+                    present(popoverController, animated: true)
+                    tipPopoverController = popoverController
+                }
+                else {
+                    if presentedViewController is TipUIPopoverViewController {
+                        dismiss(animated: true)
+                        tipPopoverController = nil
+                    }
+                }
+            }
+        }
+    }
+    
+    private func removeTipObserver() {
+        tipObservationTask?.cancel()
+        tipObservationTask = nil
     }
 }

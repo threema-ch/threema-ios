@@ -1,28 +1,8 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import UIKit
 
 /// Subclass of UIImageView that should be used everywhere we show a profile picture.
-@objc public class ProfilePictureImageView: UIView {
+@objc public final class ProfilePictureImageView: UIView {
     
     public enum Info {
         case contact(Contact?)
@@ -66,7 +46,7 @@ import UIKit
                 observe(group)
                 
             case .me:
-                setMyPicture()
+                observeMyPicture()
                 
             case .directoryContact:
                 setAndClip(image: ProfilePictureGenerator.directoryContactImage)
@@ -83,6 +63,7 @@ import UIKit
 
     private var typeIconConfiguration: TypeIconConfiguration
     private var profilePictureObserver: NSKeyValueObservation?
+    private var myPictureObserver: NSObjectProtocol?
     
     // MARK: - Overrides
     
@@ -137,6 +118,9 @@ import UIKit
     deinit {
         profilePictureObserver?.invalidate()
         profilePictureObserver = nil
+        if let myPictureObserver {
+            NotificationCenter.default.removeObserver(myPictureObserver)
+        }
     }
     
     @objc public func setContact(contact: Contact) {
@@ -248,10 +232,24 @@ import UIKit
         }
     }
     
-    private func setMyPicture() {
+    private func observeMyPicture() {
         profilePictureObserver?.invalidate()
         profilePictureObserver = nil
         
+        updateMyPicture()
+        
+        if myPictureObserver == nil {
+            myPictureObserver = NotificationCenter.default.addObserver(
+                forName: NSNotification.Name(rawValue: kNotificationProfilePictureChanged),
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.updateMyPicture()
+            }
+        }
+    }
+    
+    private func updateMyPicture() {
         let identityStore = MyIdentityStore.shared()
         
         if let pictureData = identityStore.profilePicture?["ProfilePicture"] as? Data,

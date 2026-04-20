@@ -1,30 +1,10 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 
 protocol CustomContextMenuViewControllerDelegate: AnyObject {
     func dismiss(completion: (() -> Void)?)
 }
 
-class CustomContextMenuViewController: UIViewController {
+final class CustomContextMenuViewController: UIViewController {
     
     typealias Config = CustomContextMenuConfiguration
     
@@ -49,7 +29,7 @@ class CustomContextMenuViewController: UIViewController {
     
     // MARK: - Subviews
     
-    // MARK: AuxiliaryView
+    // MARK: Auxiliary
 
     private lazy var auxiliaryView: UIView = {
         let reactionView = MessageReactionContextMenuUIView(
@@ -96,7 +76,7 @@ class CustomContextMenuViewController: UIViewController {
         return constraints
     }()
     
-    // MARK: SnapshotView
+    // MARK: Snapshot
 
     private var snapshotView: UIView
     
@@ -179,7 +159,7 @@ class CustomContextMenuViewController: UIViewController {
         snapshotContainerHorizontalAlignmentConstraint,
     ] + snapshotContainerSizeConstraints + [snapshotContainerBottomConstraint]
     
-    // MARK: MenuView
+    // MARK: Menu
 
     private lazy var menuView: UIView = {
         let menuView = CustomContextMenuMenuTableView(actions: actions!, menuDelegate: self)
@@ -187,9 +167,22 @@ class CustomContextMenuViewController: UIViewController {
         menuView.setContentCompressionResistancePriority(.required, for: .vertical)
         menuView.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        let containerView = UIView()
-        containerView.addSubview(menuView)
-        containerView.layer.opacity = 0
+        let containerView: UIView
+        
+        if #available(iOS 26.0, *) {
+            containerView = glassBackgroundView
+            glassBackgroundView.contentView.addSubview(menuView)
+            glassBackgroundView.isHidden = true
+            glassBackgroundView.contentView.layer.opacity = 0.0
+            glassBackgroundView.cornerConfiguration = .uniformCorners(
+                radius: UICornerRadius(floatLiteral: menuView.layer.cornerRadius)
+            )
+        }
+        else {
+            containerView = UIView()
+            containerView.addSubview(menuView)
+            containerView.layer.opacity = 0
+        }
         containerView.translatesAutoresizingMaskIntoConstraints = false
         
         containerView.layer.shadowRadius = Config.SnapshotView.shadowRadius
@@ -205,6 +198,21 @@ class CustomContextMenuViewController: UIViewController {
         ])
         
         return containerView
+    }()
+    
+    private lazy var glassBackgroundView: UIVisualEffectView = {
+        if #available(iOS 26.0, *) {
+            let glassEffect = UIGlassEffect(style: .regular)
+            glassEffect.isInteractive = true
+            
+            let blurEffectView = UIVisualEffectView(effect: glassEffect)
+            
+            return blurEffectView
+        }
+        else {
+            // This is not used pre iOS 26
+            fatalError("This should never be reached")
+        }
     }()
     
     private lazy var menuTrailingConstraint = menuView.trailingAnchor
@@ -235,16 +243,27 @@ class CustomContextMenuViewController: UIViewController {
         return constraints
     }()
     
-    // MARK: BlurBackgroundView
+    // MARK: Background
     
-    private lazy var blurBackgroundView: UIVisualEffectView = {
-        let blurEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
-        let blurEffectView = UIVisualEffectView(effect: blurEffect)
-        blurEffectView.frame = view.bounds
-        blurEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        blurEffectView.layer.opacity = 0.0
-      
-        return blurEffectView
+    private lazy var backgroundView: UIView = {
+        if #available(iOS 26.0, *) {
+            let newView = UIView()
+            newView.backgroundColor = .black.withAlphaComponent(0.20)
+            newView.frame = view.bounds
+            newView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            newView.layer.opacity = 0.0
+            
+            return newView
+        }
+        else {
+            let blurEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+            let blurEffectView = UIVisualEffectView(effect: blurEffect)
+            blurEffectView.frame = view.bounds
+            blurEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            blurEffectView.layer.opacity = 0.0
+            
+            return blurEffectView
+        }
     }()
     
     // MARK: - Private properties
@@ -309,7 +328,7 @@ class CustomContextMenuViewController: UIViewController {
         configureSnapshotView()
         
         snapshotContainerView.addSubview(snapshotView)
-        view.addSubview(blurBackgroundView)
+        view.addSubview(backgroundView)
         view.addSubview(snapshotContainerView)
         view.addSubview(menuView)
         if showEmojiPicker {
@@ -319,7 +338,7 @@ class CustomContextMenuViewController: UIViewController {
         NSLayoutConstraint.activate(initialSnapshotConstraints)
         
         snapshotView.addGestureRecognizer(snapshotTapGestureRecognizer)
-        blurBackgroundView.addGestureRecognizer(backgroundTapGestureRecognizer)
+        backgroundView.addGestureRecognizer(backgroundTapGestureRecognizer)
     }
     
     private func configureSnapshotView() {
@@ -342,7 +361,6 @@ class CustomContextMenuViewController: UIViewController {
         view.setNeedsLayout()
         
         UIView.animate(withDuration: 0.2, delay: 0, options: .curveEaseIn) {
-            self.blurBackgroundView.layer.opacity = 1.0
             // First we always want to slightly increase the size of the message bubble
             self.snapshotView.transform = Config.Animation.transformUp
         }
@@ -354,13 +372,19 @@ class CustomContextMenuViewController: UIViewController {
             initialSpringVelocity: 0.1,
             options: .curveEaseIn
         ) {
+            self.backgroundView.layer.opacity = 1.0
             self.snapshotView.transform = self.transform
             self.view.layoutIfNeeded()
         }
-        
-        UIView.animate(withDuration: 0.2, delay: 0.5, options: .curveEaseOut) {
-            self.menuView.layer.opacity = 1.0
-            self.auxiliaryView.layer.opacity = 1.0
+        completion: { _ in
+            UIView.animate(withDuration: 0.2, delay: 0, options: .curveEaseOut) {
+                self.menuView.layer.opacity = 1.0
+                self.auxiliaryView.layer.opacity = 1.0
+                if #available(iOS 26.0, *) {
+                    self.glassBackgroundView.contentView.layer.opacity = 1.0
+                    self.glassBackgroundView.isHidden = false
+                }
+            }
         }
     }
     
@@ -376,6 +400,10 @@ class CustomContextMenuViewController: UIViewController {
         UIView.animate(withDuration: 0.2, delay: 0.0, options: .curveEaseIn) {
             self.menuView.layer.opacity = 0
             self.auxiliaryView.layer.opacity = 0
+            if #available(iOS 26.0, *) {
+                self.glassBackgroundView.contentView.layer.opacity = 0.0
+                self.glassBackgroundView.isHidden = true
+            }
         }
         
         UIView.animate(
@@ -390,7 +418,7 @@ class CustomContextMenuViewController: UIViewController {
         }
         
         UIView.animate(withDuration: 0.32, delay: 0.2, options: .curveEaseIn) {
-            self.blurBackgroundView.layer.opacity = 0.0
+            self.backgroundView.layer.opacity = 0.0
         } completion: { _ in
             // Ensure that this completion hander is called after the last animation is completed
             completion()

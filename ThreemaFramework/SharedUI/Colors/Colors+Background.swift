@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 
 extension Colors {
@@ -35,7 +15,7 @@ extension Colors {
         
     @objc public class var backgroundToolbar: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             .white
         case .dark:
             .black
@@ -52,7 +32,7 @@ extension Colors {
     
     @objc public class var backgroundButton: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray450)
         case .dark:
             UIColor(resource: .gray700)
@@ -65,7 +45,7 @@ extension Colors {
     
     @objc public class var backgroundChevronCircleButton: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray250)
         case .dark:
             UIColor(resource: .gray800)
@@ -74,7 +54,7 @@ extension Colors {
     
     @objc public class var backgroundTintChevronCircleButton: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray550)
         case .dark:
             UIColor(resource: .gray400)
@@ -91,7 +71,7 @@ extension Colors {
     
     @objc public class var backgroundNotification: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             .white
         case .dark:
             .black
@@ -100,7 +80,7 @@ extension Colors {
     
     public class var backgroundWizardBox: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray500)
         case .dark:
             UIColor(resource: .gray700)

@@ -1,24 +1,4 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-import ThreemaEssentialsTestHelper
+import ThreemaEssentials
 import XCTest
 @testable import ThreemaFramework
 
@@ -28,10 +8,9 @@ final class EntityCreatorExtensionTests: XCTestCase {
     private var entityManager: EntityManager!
 
     override func setUpWithError() throws {
-        let (_, mainContext, backgroundContext) = DatabasePersistentContext
-            .devNullContext(withChildContextForBackgroundProcess: true)
+        let testDatabase = TestDatabase()
 
-        let databasePreparer = DatabasePreparer(context: backgroundContext!)
+        let databasePreparer = testDatabase.backgroundPreparer
         databasePreparer.save {
             conversation = databasePreparer.createConversation(
                 typing: false,
@@ -41,19 +20,14 @@ final class EntityCreatorExtensionTests: XCTestCase {
             )
         }
 
-        let databaseContext = DatabaseContext(
-            mainContext: mainContext,
-            backgroundContext: backgroundContext
-        )
-
-        entityManager = EntityManager(databaseContext: databaseContext, isRemoteSecretEnabled: false)
+        entityManager = testDatabase.backgroundEntityManager
     }
 
     // MARK: - Abstract messages
 
     func testCreateTextMessageEntityFromAbstractMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none
@@ -94,7 +68,7 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateTextMessageEntityFromAbstractMessageWithQuote() async throws {
         let expectedText = "Hello world!"
-        let expectedQuotedMessageID = MockData.generateMessageID()
+        let expectedQuotedMessageID = BytesUtility.generateMessageID()
 
         let boxTextMessage = BoxTextMessage()
         boxTextMessage.text = expectedText
@@ -119,7 +93,7 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateTextMessageEntityFromAbstractGroupMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none
@@ -161,15 +135,15 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateImageMessageEntityFromAbstractMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none
 
         // Custom
         let expectedImageSize: UInt32 = 500_000
-        let expectedBlobID = MockData.generateBlobID()
-        let expectedImageNonce = MockData.generateMessageNonce()
+        let expectedBlobID = BytesUtility.generateBlobID()
+        let expectedImageNonce = BytesUtility.generateMessageNonce()
 
         let boxImageMessage = BoxImageMessage()
 
@@ -210,15 +184,15 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateImageMessageEntityFromAbstractGroupMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none
 
         // Custom
         let expectedImageSize: UInt32 = 500_000
-        let expectedBlobID = MockData.generateBlobID()
-        let expectedEncryptionKey = MockData.generateBlobEncryptionKey()
+        let expectedBlobID = BytesUtility.generateBlobID()
+        let expectedEncryptionKey = BytesUtility.generateBlobEncryptionKey()
 
         let groupImageMessage = GroupImageMessage()
 
@@ -260,7 +234,7 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateVideoMessageEntityFromAbstractMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none
@@ -268,8 +242,8 @@ final class EntityCreatorExtensionTests: XCTestCase {
         // Custom
         let expectedDuration: UInt16 = 200
         let expectedSize: UInt32 = 123_456
-        let expectedBlobID = MockData.generateBlobID()
-        let expectedEncryptionKey = MockData.generateBlobEncryptionKey()
+        let expectedBlobID = BytesUtility.generateBlobID()
+        let expectedEncryptionKey = BytesUtility.generateBlobEncryptionKey()
 
         let boxVideoMessage = BoxVideoMessage()
 
@@ -311,7 +285,7 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateVideoMessageEntityFromAbstractGroupMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none
@@ -319,8 +293,8 @@ final class EntityCreatorExtensionTests: XCTestCase {
         // Custom
         let expectedDuration: UInt16 = 200
         let expectedSize: UInt32 = 123_456
-        let expectedBlobID = MockData.generateBlobID()
-        let expectedEncryptionKey = MockData.generateBlobEncryptionKey()
+        let expectedBlobID = BytesUtility.generateBlobID()
+        let expectedEncryptionKey = BytesUtility.generateBlobEncryptionKey()
 
         let groupVideoMessage = GroupVideoMessage()
 
@@ -362,7 +336,7 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateAudioMessageEntityFromAbstractMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none
@@ -370,8 +344,8 @@ final class EntityCreatorExtensionTests: XCTestCase {
         // Custom
         let expectedDuration: UInt16 = 300
         let expectedSize: UInt32 = 12345
-        let expectedBlobID = MockData.generateBlobID()
-        let expectedEncryptionKey = MockData.generateBlobEncryptionKey()
+        let expectedBlobID = BytesUtility.generateBlobID()
+        let expectedEncryptionKey = BytesUtility.generateBlobEncryptionKey()
 
         let boxAudioMessage = BoxAudioMessage()
 
@@ -413,7 +387,7 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateAudioMessageEntityFromAbstractGroupMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none
@@ -421,8 +395,8 @@ final class EntityCreatorExtensionTests: XCTestCase {
         // Custom
         let expectedDuration: UInt16 = 300
         let expectedSize: UInt32 = 12345
-        let expectedBlobID = MockData.generateBlobID()
-        let expectedEncryptionKey = MockData.generateBlobEncryptionKey()
+        let expectedBlobID = BytesUtility.generateBlobID()
+        let expectedEncryptionKey = BytesUtility.generateBlobEncryptionKey()
 
         let groupAudioMessage = GroupAudioMessage()
 
@@ -464,7 +438,7 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateLocationMessageEntityFromAbstractMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none
@@ -518,7 +492,7 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateLocationMessageEntityFromAbstractGroupMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none
@@ -571,7 +545,7 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateBallotMessageEntityFromAbstractMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none
@@ -607,7 +581,7 @@ final class EntityCreatorExtensionTests: XCTestCase {
 
     func testCreateFileMessageEntityFromAbstractMessage() async throws {
         // Basics
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedRemoteSentDate = Date.now - 1
         let expectedFlags = NSNumber(integerLiteral: 12_345_678)
         let expectedForwardSecurityMode = ForwardSecurityMode.none

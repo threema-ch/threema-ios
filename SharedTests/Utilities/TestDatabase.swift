@@ -1,49 +1,29 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import RemoteSecretProtocolTestHelper
 @testable import RemoteSecret
 @testable import ThreemaFramework
 
 struct TestDatabase {
+    // Just the main context without a private context
+    let context: DatabaseContextProtocol
+    let backgroundContext: DatabaseContextProtocol
 
-    let context: DatabaseContext
+    let preparer: TestDatabasePreparer
+    let backgroundPreparer: TestDatabasePreparer
+
     let entityManager: EntityManager
+    let backgroundEntityManager: EntityManager
 
     let remoteSecretCryptoMock: RemoteSecretCryptoMock
     let remoteSecretManagerMock: RemoteSecretManagerMock
+    let databaseManagerMock: DatabaseManagerMock
 
-    init(encrypted: Bool = false, forBackgroundThread: Bool = false) {
-        let (persistentStoreCoordinator, mainContext, backgroundContext) = DatabasePersistentContext.devNullContext(
-            withChildContextForBackgroundProcess: forBackgroundThread,
-            isRemoteSecretEnabled: encrypted
-        )
+    init(encrypted: Bool = false) {
+        self.context = DatabaseContextMock(isRemoteSecretEnabled: encrypted)
+        self.backgroundContext = DatabaseContextMock(mainContext: context.main)
 
-        self.context =
-            if !forBackgroundThread {
-                DatabaseContext(mainContext: mainContext)
-            }
-            else {
-                DatabaseContext(mainContext: mainContext, backgroundContext: backgroundContext)
-            }
+        self.preparer = TestDatabasePreparer(context: context.main)
+        self.backgroundPreparer = TestDatabasePreparer(context: backgroundContext.current)
 
         let remoteSecretCrypto = try! RemoteSecretCrypto(
             remoteSecret: RemoteSecret(rawValue: Data(repeating: 1, count: 32))
@@ -54,18 +34,22 @@ struct TestDatabase {
             crypto: remoteSecretCryptoMock
         )
 
-        let databaseManagerMock = DatabaseManagerMock(
-            persistentStoreCoordinator: persistentStoreCoordinator,
+        self.databaseManagerMock = DatabaseManagerMock(
+            persistentStoreCoordinator: context.main.persistentStoreCoordinator!,
             databaseContext: context,
+            backgroundDatabaseContext: backgroundContext
         )
 
-        self.entityManager = PersistenceManager(
+        let persistenceManager = PersistenceManager(
             databaseManager: databaseManagerMock,
             dirtyObjectManager: DirtyObjectManager(
                 databaseManager: databaseManagerMock,
                 userDefaults: UserDefaults()
             ),
             remoteSecretManager: remoteSecretManagerMock
-        ).entityManager
+        )
+
+        self.entityManager = persistenceManager.entityManager
+        self.backgroundEntityManager = persistenceManager.backgroundEntityManager
     }
 }

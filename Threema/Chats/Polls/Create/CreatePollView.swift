@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 
 struct CreatePollView: View {
@@ -91,8 +71,8 @@ struct CreatePollView: View {
                                             .colorMultiply(.clear)
                                     }
                                 }
-                                .onChange(of: choice.date) { date in
-                                    choice.text = DateFormatter.getDayMonthAndYear(date)
+                                .onChange(of: choice.date) {
+                                    choice.text = DateFormatter.getDayMonthAndYear(choice.date)
                                 }
                         }
                         .moveDisabled(choice.text.isEmpty)
@@ -100,7 +80,7 @@ struct CreatePollView: View {
                     }
                     .onMove(perform: relocate)
                     .onDelete(perform: delete)
-                    .onChange(of: focus) { _ in
+                    .onChange(of: focus) {
                         for (index, choice) in viewModel.choices.enumerated() {
                             guard choice.text.isEmpty else {
                                 continue
@@ -120,6 +100,7 @@ struct CreatePollView: View {
                             
                         } label: {
                             Image(systemName: "arrow.up.and.down.text.horizontal")
+                                .foregroundStyle(Color(.labelInverted))
                                 .accessibilityLabel(viewModel.choicesEditTitle)
                         }
                         .disabled(!viewModel.isEditEnabled)
@@ -148,12 +129,12 @@ struct CreatePollView: View {
             .environment(\.editMode, $editMode)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(viewModel.cancelText) {
+                    CancelButton {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(viewModel.sendText) {
+                    SendButton {
                         sendPoll()
                     }
                     .disabled(!viewModel.isSendEnabled)

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import UIKit
 
 /// Show a distribution list in a list
@@ -30,22 +10,22 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
     private lazy var configuration = CellConfiguration(size: size)
     
     // MARK: - Public properties
-    
+
     override public func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-        
+
         guard hasCheckmark else {
             return
         }
         checkMarkView.isChecked = selected
     }
-    
+
     public var hasCheckmark = false {
         didSet {
             checkMarkView.isHidden = !hasCheckmark
         }
     }
-    
+
     public var size = CellConfiguration.Size.small {
         didSet {
             guard size != oldValue else {
@@ -56,7 +36,7 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
             sizeDidChange()
         }
     }
-    
+
     /// Distribution list to show
     @objc public var distributionList: DistributionList? {
         didSet {
@@ -73,7 +53,7 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
     }
     
     // MARK: - Subviews
-    
+
     private var profilePictureSizeConstraint: NSLayoutConstraint?
     
     private lazy var profilePictureView: ProfilePictureImageView = {
@@ -116,21 +96,21 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
         let label = UILabel()
         label.font = .preferredFont(forTextStyle: .footnote)
         label.textColor = .secondaryLabel
-        
+
         if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
             label.numberOfLines = 2
         }
         
         return label
     }()
-    
+
     private lazy var checkMarkView: CustomCellCheckMarkAccessoryView = {
         let view = CustomCellCheckMarkAccessoryView()
         view.isHidden = !hasCheckmark
-        
+
         return view
     }()
-    
+
     // MARK: Layout stacks
     
     private lazy var firstLineStack: UIStackView = {
@@ -152,12 +132,12 @@ public final class DistributionListCell: ThemedCodeTableViewCell {
     
     private lazy var textStack: UIStackView = {
         let stackView = UIStackView(arrangedSubviews: [firstLineStack, membersListLabel])
-        
+
         stackView.spacing = configuration.verticalSpacing
         stackView.axis = .vertical
         stackView.distribution = .equalSpacing
         stackView.alignment = .fill
-        
+
         return stackView
     }()
     

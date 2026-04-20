@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaMacros
@@ -34,8 +14,8 @@ public struct VoteInfo: Codable {
     let showIntermediateResults: Bool
     
     /// Optional string consisting of the display name of the voter
-    var voterName: String? {
-        let fetcher = BusinessInjector.ui.entityManager.entityFetcher
+    func voterName(businessInjector: BusinessInjectorProtocol) -> String? {
+        let fetcher = businessInjector.entityManager.entityFetcher
         let contact = fetcher.contactEntity(for: voterID)
         return contact?.displayName
     }
@@ -90,7 +70,7 @@ extension SystemMessageEntity {
         case fsIllegalSessionState
         
         /// Localized Message to display
-        public var localizedMessage: String {
+        public func localizedMessage(businessInjector: BusinessInjectorProtocol = BusinessInjector.ui) -> String {
             switch self {
             case let .groupRenamed(name):
                 return String.localizedStringWithFormat(#localize("group_renamed_to_x"), name)
@@ -137,7 +117,7 @@ extension SystemMessageEntity {
                 }
                 
                 if info.showIntermediateResults {
-                    if let voterName = info.voterName {
+                    if let voterName = info.voterName(businessInjector: businessInjector) {
                         if let updatedVote = info.updatedVote,
                            updatedVote == true {
                             return String.localizedStringWithFormat(

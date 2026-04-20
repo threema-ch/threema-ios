@@ -1,27 +1,9 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
+import CoreServices
 import XCTest
+
 @testable import ThreemaFramework
 
-class ImageURLSenderItemCreatorTest: XCTestCase {
+final class ImageURLSenderItemCreatorTest: XCTestCase {
     
     let testBundle = Bundle(for: ImageURLSenderItemCreatorTest.self)
     
@@ -44,117 +26,117 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
     private static let rawFilename = "Bild-7"
     private static let pngScreenshot = "Bild-8"
     
-    let testMatrix: [(String, String, ImageSenderItemSize, CGFloat, CFString, NSNumber)] = [
-        (heic1, "heic", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (heic1, "heic", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (heic1, "heic", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (heic1, "heic", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (heic1, "heic", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (jpg1, "jpg", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (jpg1, "jpg", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (jpg1, "jpg", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (jpg1, "jpg", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (jpg1, "jpg", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (gifStatic, "gif", .original, ImageSenderItemSize.original.resolution, kUTTypeGIF, 1),
-        (gifStatic, "gif", .extraLarge, ImageSenderItemSize.original.resolution, kUTTypeGIF, 1),
-        (gifStatic, "gif", .large, ImageSenderItemSize.original.resolution, kUTTypeGIF, 1),
-        (gifStatic, "gif", .medium, ImageSenderItemSize.original.resolution, kUTTypeGIF, 1),
-        (gifStatic, "gif", .small, ImageSenderItemSize.original.resolution, kUTTypeGIF, 1),
-        (pngRegular, "png", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (pngSticker, "png", .original, ImageSenderItemSize.original.resolution, kUTTypePNG, 2),
-        (pngSticker, "png", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypePNG, 2),
-        (pngSticker, "png", .large, ImageSenderItemSize.large.resolution, kUTTypePNG, 2),
-        (pngSticker, "png", .medium, ImageSenderItemSize.medium.resolution, kUTTypePNG, 2),
-        (pngSticker, "png", .small, ImageSenderItemSize.small.resolution, kUTTypePNG, 2),
-        (pngScreenshot, "png", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (pngScreenshot, "png", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (pngScreenshot, "png", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (pngScreenshot, "png", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (pngScreenshot, "png", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (pngRegular, "png", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "srf", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "srf", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "srf", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "srf", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "srf", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "sr2", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "sr2", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "sr2", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "sr2", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "sr2", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "raf", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "raf", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "raf", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "raf", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "raf", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "pef", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "pef", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "pef", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "pef", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "pef", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "orf", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "orf", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "orf", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "orf", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "orf", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "nef", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "nef", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "nef", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "nef", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "nef", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "mrw", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "mrw", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "mrw", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "mrw", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "mrw", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "erf", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "erf", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "erf", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "erf", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "erf", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "dng", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "dng", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "dng", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "dng", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "dng", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "dcr", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "dcr", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "dcr", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "dcr", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "dcr", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "crw", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "crw", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "crw", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "crw", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "crw", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "cr2", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "cr2", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "cr2", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "cr2", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "cr2", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "arw", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "arw", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "arw", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "arw", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "arw", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "raw", .original, ImageSenderItemSize.original.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "raw", .extraLarge, ImageSenderItemSize.extraLarge.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "raw", .large, ImageSenderItemSize.large.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "raw", .medium, ImageSenderItemSize.medium.resolution, kUTTypeJPEG, 1),
-        (rawFilename, "raw", .small, ImageSenderItemSize.small.resolution, kUTTypeJPEG, 1),
+    let testMatrix: [(String, String, ImageSenderItemSize, CGFloat, String, NSNumber)] = [
+        (heic1, "heic", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (heic1, "heic", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (heic1, "heic", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (heic1, "heic", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (heic1, "heic", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (jpg1, "jpg", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (jpg1, "jpg", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (jpg1, "jpg", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (jpg1, "jpg", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (jpg1, "jpg", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (gifStatic, "gif", .original, ImageSenderItemSize.original.resolution, UTType.gif.identifier, 1),
+        (gifStatic, "gif", .extraLarge, ImageSenderItemSize.original.resolution, UTType.gif.identifier, 1),
+        (gifStatic, "gif", .large, ImageSenderItemSize.original.resolution, UTType.gif.identifier, 1),
+        (gifStatic, "gif", .medium, ImageSenderItemSize.original.resolution, UTType.gif.identifier, 1),
+        (gifStatic, "gif", .small, ImageSenderItemSize.original.resolution, UTType.gif.identifier, 1),
+        (pngRegular, "png", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (pngSticker, "png", .original, ImageSenderItemSize.original.resolution, UTType.png.identifier, 2),
+        (pngSticker, "png", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.png.identifier, 2),
+        (pngSticker, "png", .large, ImageSenderItemSize.large.resolution, UTType.png.identifier, 2),
+        (pngSticker, "png", .medium, ImageSenderItemSize.medium.resolution, UTType.png.identifier, 2),
+        (pngSticker, "png", .small, ImageSenderItemSize.small.resolution, UTType.png.identifier, 2),
+        (pngScreenshot, "png", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (pngScreenshot, "png", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (pngScreenshot, "png", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (pngScreenshot, "png", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (pngScreenshot, "png", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (pngRegular, "png", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "srf", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "srf", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "srf", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "srf", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "srf", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "sr2", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "sr2", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "sr2", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "sr2", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "sr2", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "raf", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "raf", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "raf", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "raf", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "raf", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "pef", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "pef", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "pef", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "pef", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "pef", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "orf", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "orf", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "orf", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "orf", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "orf", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "nef", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "nef", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "nef", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "nef", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "nef", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "mrw", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "mrw", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "mrw", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "mrw", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "mrw", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "erf", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "erf", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "erf", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "erf", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "erf", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "dng", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "dng", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "dng", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "dng", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "dng", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "dcr", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "dcr", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "dcr", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "dcr", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "dcr", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "crw", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "crw", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "crw", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "crw", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "crw", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "cr2", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "cr2", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "cr2", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "cr2", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "cr2", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "arw", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "arw", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "arw", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "arw", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "arw", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "raw", .original, ImageSenderItemSize.original.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "raw", .extraLarge, ImageSenderItemSize.extraLarge.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "raw", .large, ImageSenderItemSize.large.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "raw", .medium, ImageSenderItemSize.medium.resolution, UTType.jpeg.identifier, 1),
+        (rawFilename, "raw", .small, ImageSenderItemSize.small.resolution, UTType.jpeg.identifier, 1),
     ]
     
     func testImageSize() throws {
@@ -195,13 +177,13 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
     }
     
     func testCreateSenderFromUIImage() {
-        let matrix: [(filename: String, String, ImageSenderItemSize, CGFloat, expectedMimeType: CFString, NSNumber)] = [
+        let matrix: [(filename: String, String, ImageSenderItemSize, CGFloat, expectedMimeType: String, NSNumber)] = [
             (
                 ImageURLSenderItemCreatorTest.pngRegular,
                 "png",
                 .original,
                 ImageSenderItemSize.original.resolution,
-                kUTTypeJPEG,
+                UTType.jpeg.identifier,
                 1
             ),
             (
@@ -209,7 +191,7 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
                 "png",
                 .extraLarge,
                 ImageSenderItemSize.extraLarge.resolution,
-                kUTTypeJPEG,
+                UTType.jpeg.identifier,
                 1
             ),
             (
@@ -217,7 +199,7 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
                 "png",
                 .large,
                 ImageSenderItemSize.large.resolution,
-                kUTTypeJPEG,
+                UTType.jpeg.identifier,
                 1
             ),
             (
@@ -225,7 +207,7 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
                 "png",
                 .medium,
                 ImageSenderItemSize.medium.resolution,
-                kUTTypeJPEG,
+                UTType.jpeg.identifier,
                 1
             ),
             (
@@ -233,7 +215,7 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
                 "png",
                 .small,
                 ImageSenderItemSize.small.resolution,
-                kUTTypeJPEG,
+                UTType.jpeg.identifier,
                 1
             ),
             (
@@ -241,7 +223,7 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
                 "png",
                 .original,
                 ImageSenderItemSize.original.resolution,
-                kUTTypeJPEG,
+                UTType.jpeg.identifier,
                 2
             ),
             (
@@ -249,7 +231,7 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
                 "png",
                 .extraLarge,
                 ImageSenderItemSize.extraLarge.resolution,
-                kUTTypeJPEG,
+                UTType.jpeg.identifier,
                 2
             ),
             (
@@ -257,7 +239,7 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
                 "png",
                 .large,
                 ImageSenderItemSize.large.resolution,
-                kUTTypeJPEG,
+                UTType.jpeg.identifier,
                 2
             ),
             (
@@ -265,7 +247,7 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
                 "png",
                 .medium,
                 ImageSenderItemSize.medium.resolution,
-                kUTTypeJPEG,
+                UTType.jpeg.identifier,
                 2
             ),
             (
@@ -273,7 +255,7 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
                 "png",
                 .small,
                 ImageSenderItemSize.small.resolution,
-                kUTTypeJPEG,
+                UTType.jpeg.identifier,
                 2
             ),
         ]
@@ -284,14 +266,8 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
         for item in specialTestMatrix {
             let testImageURL = testBundle.url(forResource: item.0, withExtension: item.1)
             let testImageData = (try? Data(contentsOf: testImageURL!))!
-            guard let image = UIImage(data: testImageData) else {
-                XCTFail("Could not load image")
-                return
-            }
-            
             let itemCreator = ImageURLSenderItemCreator(with: item.2, forceSize: true)
-            
-            let senderItem = itemCreator.senderItem(fromImage: image)
+            let senderItem = itemCreator.senderItem(from: testImageData, uti: UTType.jpeg.identifier)
             XCTAssert(senderItem!.caption == nil)
             XCTAssert(
                 senderItem!.getMimeType() == UTIConverter.mimeType(fromUTI: item.4 as String),
@@ -328,7 +304,7 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
     
     func checkSenderItem(
         senderItem: URLSenderItem,
-        item: (String, String, ImageSenderItemSize, CGFloat, CFString, NSNumber)
+        item: (String, String, ImageSenderItemSize, CGFloat, String, NSNumber)
     ) {
         let testImageURL = testBundle.url(forResource: item.0, withExtension: item.1)
         let testImageData = (try? Data(contentsOf: testImageURL!))!
@@ -364,21 +340,22 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
     }
     
     func testAllowedUTITypes() {
-        let matrix: [(CFString, Bool)] = [
-            (kUTTypePNG, true),
-            (kUTTypeGIF, true),
-            (kUTTypeJPEG, true),
-            (kUTTypeData, false),
-            (kUTTypeBMP, false),
-            (kUTTypeMP3, false),
+        let matrix: [(String, Bool)] = [
+            (UTType.png.identifier, true),
+            (UTType.gif.identifier, true),
+            (UTType.jpeg.identifier, true),
+            (UTType.data.identifier, false),
+            (UTType.bmp.identifier, false),
+            (UTType.mp3.identifier, false),
         ]
         
         for item in matrix {
-            XCTAssert(ImageURLSenderItemCreator.isAllowedUTI(uti: item.0 as String) == item.1)
+            XCTAssert(ImageURLSenderItemCreator().isAllowedUTI(uti: item.0 as String) == item.1)
         }
     }
     
     func testHasAlpha() {
+        let creator = ImageURLSenderItemCreator()
         let testHasAlphaMatrix: [(String, String, ImageSenderItemSize, Bool, Bool)] = [
             (ImageURLSenderItemCreatorTest.pngRegular, "png", .original, false, false),
             (ImageURLSenderItemCreatorTest.pngSticker, "png", .original, true, true),
@@ -390,8 +367,8 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
             let testImageURL = testBundle.url(forResource: item.0, withExtension: item.1)
             let testImageData = (try? Data(contentsOf: testImageURL!))!
             let image = UIImage(data: testImageData)!
-            let hasAlpha = ImageURLSenderItemCreator.hasAlpha(image: image.cgImage!)
-            let hasTransparentPixel = ImageURLSenderItemCreator.hasTransparentPixel(cgImage: image.cgImage!)
+            let hasAlpha = creator.hasAlpha(image: image.cgImage!)
+            let hasTransparentPixel = creator.hasTransparentPixel(cgImage: image.cgImage!)
             XCTAssert(hasAlpha == item.3, "\(item.0) should be \(item.3) but is \(hasAlpha)")
             XCTAssert(hasTransparentPixel == item.4, "\(item.0) Should be \(item.4) but is \(hasTransparentPixel)")
         }
@@ -400,7 +377,7 @@ class ImageURLSenderItemCreatorTest: XCTestCase {
     func testGarbageData() {
         let data = Data(count: 128)
         let creator = ImageURLSenderItemCreator()
-        let item = creator.senderItem(from: data, uti: kUTTypeGIF as String)
+        let item = creator.senderItem(from: data, uti: UTType.gif.identifier)
         XCTAssert(item == nil)
     }
     

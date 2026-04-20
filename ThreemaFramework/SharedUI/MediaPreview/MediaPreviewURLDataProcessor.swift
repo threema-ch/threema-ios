@@ -1,33 +1,15 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
 
-@objc open class MediaPreviewURLDataProcessor: NSObject {
+open class MediaPreviewURLDataProcessor {
     
-    @objc public var addMore: (([Any], [MediaPreviewItem]) -> Void)?
-    @objc public var cancelAction: (() -> Void)?
+    public var addMore: (([Any], [MediaPreviewItem]) -> Void)?
+    public var cancelAction: (() -> Void)?
     public var memoryConstrained = false
     public var sendAsFile = false
+    
+    public init() { }
     
     open func loadItems(dataArray: [Any]) -> (items: [MediaPreviewItem], errors: [PhotosPickerError]) {
         var mediaData = [MediaPreviewItem]()
@@ -59,8 +41,8 @@ import Foundation
         case is URL, is NSURL:
             let url = item as! URL
             let fileSize = Double(FileUtility.shared.fileSizeInBytes(fileURL: url) ?? Int64(kMaxFileSize))
-            let uti = UTIConverter.uti(forFileURL: url)
-            let mimeType = UTIConverter.mimeType(fromUTI: uti)
+            let uti = UTIConverter.uti(forFileURL: url) ?? UTType.data.identifier
+            let mimeType = UTIConverter.mimeType(fromUTI: uti) ?? "application/octet-stream"
             let isVideo = UTIConverter.isVideoMimeType(mimeType) || UTIConverter.isMovieMimeType(mimeType)
             let estimatedVideoFileSize = VideoConversionHelper().getEstimatedVideoFileSize(for: url)
             
@@ -84,9 +66,8 @@ import Foundation
                 ) else {
                 throw PhotosPickerError.fileTooLargeForShareExtension
             }
-            
-            let isPhoto = UTIConverter
-                .isImageMimeType(UTIConverter.mimeType(fromUTI: UTIConverter.uti(forFileURL: url)))
+
+            let isPhoto = UTIConverter.isImageMimeType(mimeType)
             guard !memoryConstrained || !isPhoto || kShareExtensionMaxImageShareSize > fileSize else {
                 throw PhotosPickerError.fileTooLargeForShareExtension
             }
@@ -104,7 +85,8 @@ import Foundation
     }
     
     open func addDataItemFrom(url: URL) -> MediaPreviewItem? {
-        let mimeType = UTIConverter.mimeType(fromUTI: UTIConverter.uti(forFileURL: url))
+        let uti = UTIConverter.uti(forFileURL: url) ?? UTType.data.identifier
+        let mimeType = UTIConverter.mimeType(fromUTI: uti) ?? "application/octet-stream"
         if UTIConverter.isImageMimeType(mimeType) {
             let item = ImagePreviewItem(itemURL: url)
             return item

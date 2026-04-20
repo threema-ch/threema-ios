@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Combine
 import Foundation
@@ -237,7 +217,11 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
         for proposedGroupCall in proposedGroupCalls {
             Task { // TODO: (IOS-4047) Is Task what we want here?
                 // TODO: (IOS-4678) This will also create an actor for the group call and then will be discarded if the app was active before and the call already existed at that point
-                await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .db)
+                await groupCallManager.handleNewCallMessage(
+                    for: proposedGroupCall,
+                    creatorOrigin: .db,
+                    calledFromExtension: AppGroup.getCurrentType() != AppGroupTypeApp
+                )
             }
         }
     }
@@ -310,8 +294,11 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
         )
         
         let senderThreemaID: GroupCallCreatorOrigin = .remote(ThreemaIdentity(senderIdentity))
-        
-        await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: senderThreemaID)
+        await groupCallManager.handleNewCallMessage(
+            for: proposedGroupCall,
+            creatorOrigin: senderThreemaID,
+            calledFromExtension: AppGroup.getCurrentType() != AppGroupTypeApp
+        )
     }
     
     @MainActor
@@ -389,7 +376,8 @@ public final class GlobalGroupCallManagerSingleton: NSObject {
             
             let dbSystemMessage = currentEntityManager.entityCreator.systemMessageEntity(
                 for: .groupCallStartedBy,
-                in: fetchedConversation
+                in: fetchedConversation,
+                setLastUpdate: true
             )
             
             dbSystemMessage.arg = Data(displayName.utf8)
@@ -489,7 +477,11 @@ extension GlobalGroupCallManagerSingleton {
                 dependencies: dependencies
             )
         
-            await groupCallManager.handleNewCallMessage(for: proposedGroupCall, creatorOrigin: .local)
+            await groupCallManager.handleNewCallMessage(
+                for: proposedGroupCall,
+                creatorOrigin: .local,
+                calledFromExtension: false
+            )
         }
     
         public func startAndJoinDebugCall(groupModel: GroupCallThreemaGroupModel) async {

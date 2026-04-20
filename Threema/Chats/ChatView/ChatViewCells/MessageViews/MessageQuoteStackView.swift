@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaFramework
 import ThreemaMacros
 import UIKit
@@ -28,6 +8,11 @@ final class MessageQuoteStackView: UIStackView {
     enum ThumbnailDistribution {
         case fill
         case spaced
+    }
+    
+    enum Placement {
+        case chatBubble
+        case ChatBar
     }
     
     /// Message to quote
@@ -62,7 +47,9 @@ final class MessageQuoteStackView: UIStackView {
     }
     
     // MARK: - Private properties
-    
+
+    var placement: Placement?
+
     private lazy var quoteBar: UIView = {
         let barView = UIView()
         
@@ -76,7 +63,6 @@ final class MessageQuoteStackView: UIStackView {
     private lazy var nameLabel: RTLAligningLabel = {
         let nameLabel = RTLAligningLabel()
         nameLabel.font = ChatViewConfiguration.Quote.nameFont
-        nameLabel.textColor = .secondaryLabel
         nameLabel.adjustsFontForContentSizeCategory = true
         nameLabel.numberOfLines = 0
       
@@ -87,7 +73,6 @@ final class MessageQuoteStackView: UIStackView {
         let quoteLabel = RTLAligningLabel()
         quoteLabel.adjustsFontForContentSizeCategory = true
         quoteLabel.numberOfLines = ChatViewConfiguration.Quote.maxQuoteLines
-        quoteLabel.textColor = .secondaryLabel
         
         return quoteLabel
     }()
@@ -173,6 +158,8 @@ final class MessageQuoteStackView: UIStackView {
         addArrangedSubview(quoteBar)
         addArrangedSubview(nameAndQuoteStackView)
         addArrangedSubview(quoteThumbnailView)
+        
+        updateColors()
     }
     
     private func configureLayout() {
@@ -211,6 +198,15 @@ final class MessageQuoteStackView: UIStackView {
         
         // The image in the quote only gets updated if we set it new again
         updateContent()
+        
+        if #available(iOS 26.0, *), placement == .ChatBar {
+            nameLabel.textColor = .label
+            quoteLabel.textColor = .label
+        }
+        else {
+            nameLabel.textColor = .secondaryLabel
+            quoteLabel.textColor = .secondaryLabel
+        }
     }
     
     private func updateQuoteBarColor() {

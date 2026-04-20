@@ -1,95 +1,68 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Coordinator
 import Foundation
 import ThreemaMacros
 
-@objc public final class ThreemaTabBarController: UITabBarController {
+public enum ThreemaTab: Int, CaseIterable {
+    case contacts
+    case conversations
+    case profile
+    case settings
     
-    public enum TabBarItem: Int, CaseIterable {
-        case contacts
-        case conversations
-        case profile
-        case settings
-        
-        var title: String {
-            switch self {
-            case .contacts:
-                #localize("contacts")
-            case .conversations:
-                #localize("chats_title")
-            case .profile:
-                #localize("myIdentity")
-            case .settings:
-                #localize("settings")
-            }
-        }
-        
-        private var tabBarSymbol: UIImage? {
-            switch self {
-            case .contacts:
-                UIImage(systemName: "person.2.fill")
-            case .conversations:
-                UIImage(systemName: "bubble.left.and.bubble.right.fill")
-            case .profile:
-                UIImage(systemName: "person.circle.fill")
-            case .settings:
-                UIImage(systemName: "gear")
-            }
-        }
-        
-        public var sideBarSymbol: UIImage? {
-            switch self {
-            case .contacts:
-                UIImage(systemName: "person.2")
-            case .conversations:
-                UIImage(systemName: "bubble.left.and.bubble.right")
-            case .profile:
-                UIImage(systemName: "person")
-            case .settings:
-                UIImage(systemName: "gear")
-            }
-        }
-        
-        public var uiTabBarItem: UITabBarItem {
-            UITabBarItem(title: title, image: tabBarSymbol, tag: rawValue)
-        }
-        
-        public init(_ destination: Destination.AppDestination) {
-            switch destination {
-            case .contacts:
-                self = .contacts
-            case .conversations:
-                self = .conversations
-            case .profile:
-                self = .profile
-            case .settings:
-                self = .settings
-            }
+    var title: String {
+        switch self {
+        case .contacts:
+            #localize("contacts")
+        case .conversations:
+            #localize("chats_title")
+        case .profile:
+            #localize("myIdentity")
+        case .settings:
+            #localize("settings")
         }
     }
     
+    private var image: UIImage? {
+        switch self {
+        case .contacts:
+            UIImage(systemName: "person.2.fill")
+        case .conversations:
+            UIImage(systemName: "bubble.left.and.bubble.right.fill")
+        case .profile:
+            UIImage(systemName: "person.circle.fill")
+        case .settings:
+            UIImage(systemName: "gear")
+        }
+    }
+    
+    public var tabBarItem: UITabBarItem {
+        UITabBarItem(title: title, image: image, tag: rawValue)
+    }
+    
+    public init(_ destination: Destination.AppDestination) {
+        switch destination {
+        case .contacts:
+            self = .contacts
+        case .conversations:
+            self = .conversations
+        case .profile:
+            self = .profile
+        case .settings:
+            self = .settings
+        }
+    }
+}
+
+@objc public final class ThreemaTabBarController: UITabBarController {
+    
     // MARK: - Public properties
     
-    public var selectedTabIdentifier: TabBarItem {
-        TabBarItem(rawValue: selectedIndex) ?? .conversations
+    public var selectedThreemaTab: ThreemaTab {
+        ThreemaTab(rawValue: selectedIndex) ?? .conversations
+    }
+    
+    public func navigationController(
+        for tab: ThreemaTab
+    ) -> UINavigationController? {
+        viewControllers?[tab.rawValue] as? UINavigationController
     }
 }

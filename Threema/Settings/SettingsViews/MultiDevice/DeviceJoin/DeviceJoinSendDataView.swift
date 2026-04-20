@@ -1,61 +1,19 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import SwiftUI
 import ThreemaMacros
 
 struct DeviceJoinSendDataView: View {
-    
+    @ObservedObject var deviceJoinManager: DeviceJoinManager
     @Binding var showWizard: Bool
-
-    @EnvironmentObject private var deviceJoinManager: DeviceJoinManager
-
+    @Binding var path: NavigationPath
     @State private var sendingText = #localize("multi_device_join_sending_data")
-    
     @State private var showSendingError = false
     @State private var showThreemaWebError = false
-
-    @State private var showSuccessView = false
 
     var body: some View {
         VStack {
             Spacer()
-            
-            ZStack {
-                // The `ZStack` and `NavigationLink` is needed for programatic navigation
-                // If button shapes are enabled `NavigationLink` has an non zero size (that cannot be completely removed
-                // by setting the frame, button shape or something similar). Thus we put it behind the progress view and
-                // hide it, which also disables interaction. This can be resolved if the minimal target is iOS 16 which
-                // provides new programatic navigation APIs.
-                NavigationLink(
-                    destination: DeviceJoinSuccessView(showWizard: $showWizard),
-                    isActive: $showSuccessView
-                ) {
-                    EmptyView()
-                }
-                .hidden()
-                
-                DeviceJoinProgressView(text: sendingText)
-            }
-
+            DeviceJoinProgressView(text: sendingText)
             Spacer()
         }
         .padding(24)
@@ -63,14 +21,10 @@ struct DeviceJoinSendDataView: View {
         // If this is set higher in the navigation stack this will be overridden by it
         .interactiveDismissDisabled()
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(role: .cancel) {
+            ToolbarItem(placement: .primaryAction) {
+                XMarkCancelButton {
                     deviceJoinManager.deviceJoin.cancel()
                     showWizard = false
-                } label: {
-                    Label(#localize("cancel"), systemImage: "xmark.circle.fill")
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundColor(.secondary)
                 }
             }
         }
@@ -93,12 +47,9 @@ struct DeviceJoinSendDataView: View {
                 }
             }
         }
-        .onChange(of: deviceJoinManager.viewState) { nextState in
-            switch nextState {
-            case .completed:
-                showSuccessView = true
-            default:
-                break
+        .onChange(of: deviceJoinManager.viewState) {
+            if case .completed = deviceJoinManager.viewState {
+                path.append(DeviceJoinRoute.success)
             }
         }
         .onDisappear {

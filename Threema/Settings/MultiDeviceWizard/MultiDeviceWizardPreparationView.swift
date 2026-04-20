@@ -1,33 +1,12 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 import ThreemaMacros
 
 struct MultiDeviceWizardPreparationView: View {
+    @Environment(\.dismiss) var dismiss
     @ObservedObject var wizardVM: MultiDeviceWizardViewModel
-    
-    @Binding var dismiss: Bool
-
+    @Binding var path: NavigationPath
     @State private var animate = false
-    @State private var advance = false
+
     private var animation: Animation {
         Animation.linear(duration: 6.0)
             .repeatForever(autoreverses: false)
@@ -60,7 +39,7 @@ struct MultiDeviceWizardPreparationView: View {
                 }
             }
             Button {
-                dismiss = true
+                dismiss()
                 wizardVM.cancelLinking()
             } label: {
                 Text(#localize("md_wizard_cancel"))
@@ -78,16 +57,10 @@ struct MultiDeviceWizardPreparationView: View {
         .onDisappear {
             animate = false
         }
-        .onChange(of: wizardVM.wizardState) { newValue in
-            if newValue == .identity {
-                advance = true
+        .onChange(of: wizardVM.wizardState) {
+            if wizardVM.wizardState == .identity {
+                path.append(MultiDeviceWizardNavigationRoute.identity)
             }
-        }
-        
-        NavigationLink(isActive: $advance) {
-            MultiDeviceWizardIdentityView(wizardVM: wizardVM, dismiss: $dismiss)
-        } label: {
-            EmptyView()
         }
     }
 }
@@ -96,6 +69,9 @@ struct MultiDeviceWizardPreparationView: View {
 
 struct MultiDeviceWizardTransmissionView_Previews: PreviewProvider {
     static var previews: some View {
-        MultiDeviceWizardPreparationView(wizardVM: MultiDeviceWizardViewModel(), dismiss: .constant(false))
+        MultiDeviceWizardPreparationView(
+            wizardVM: MultiDeviceWizardViewModel(),
+            path: .constant(.init())
+        )
     }
 }

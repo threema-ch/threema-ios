@@ -54,6 +54,7 @@
     BOOL _previousNavBarTranslucent;
     UIBarStyle _previousNavBarStyle;
     UIStatusBarStyle _previousStatusBarStyle;
+    UIStatusBarStyle _currentStatusBarStyle;
     UIColor *_previousNavBarTintColor;
     UIColor *_previousNavBarBarTintColor;
     UIBarButtonItem *_previousViewControllerBackButton;
@@ -70,7 +71,6 @@
     
     // Misc
     BOOL _hasBelongedToViewController;
-    BOOL _isVCBasedStatusBarAppearance;
     BOOL _statusBarShouldBeHidden;
     BOOL _displayActionButton;
     BOOL _leaveStatusBarAlone;

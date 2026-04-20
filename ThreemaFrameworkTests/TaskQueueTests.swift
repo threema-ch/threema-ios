@@ -1,45 +1,24 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import PromiseKit
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 
 @testable import ThreemaFramework
 
-class TaskQueueTests: XCTestCase {
-    private var dbBackgroundCnx: DatabaseContext!
-    private var dbPreparer: DatabasePreparer!
+final class TaskQueueTests: XCTestCase {
+    private var testDatabase: TestDatabase!
+    private var dbPreparer: TestDatabasePreparer!
     private var ddLoggerMock: DDLoggerMock!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext(
-            withChildContextForBackgroundProcess: true
-        )
+        testDatabase = TestDatabase()
+        dbPreparer = testDatabase.backgroundPreparer
 
-        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        dbPreparer = DatabasePreparer(context: mainCnx)
+        // Workaround to ensure remote secret is initialized
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -51,13 +30,10 @@ class TaskQueueTests: XCTestCase {
     }
     
     func testInterrupt() {
-        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(
-            databaseContext: dbBackgroundCnx,
-            isRemoteSecretEnabled: false
-        ))
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: testDatabase.backgroundEntityManager)
 
         let msg = ContactDeletePhotoMessage()
-        msg.messageID = MockData.generateMessageID()
+        msg.messageID = BytesUtility.generateMessageID()
 
         let tq = TaskQueue(
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
@@ -87,13 +63,10 @@ class TaskQueueTests: XCTestCase {
     }
     
     func testInterruptWithExecutingDropOnDisconnectTask() async throws {
-        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(
-            databaseContext: dbBackgroundCnx,
-            isRemoteSecretEnabled: false
-        ))
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: testDatabase.backgroundEntityManager)
 
         let msg = ContactDeletePhotoMessage()
-        msg.messageID = MockData.generateMessageID()
+        msg.messageID = BytesUtility.generateMessageID()
 
         let tq = TaskQueue(
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
@@ -156,10 +129,7 @@ class TaskQueueTests: XCTestCase {
     }
 
     func testSpoolServerConnectorDisconnected() {
-        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(
-            databaseContext: dbBackgroundCnx,
-            isRemoteSecretEnabled: false
-        ))
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: testDatabase.backgroundEntityManager)
 
         let tq = TaskQueue(
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
@@ -176,7 +146,7 @@ class TaskQueueTests: XCTestCase {
 
         dbPreparer.save {
             let contactEntity = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: expectedReceiverIdentity
             )
             dbPreparer.createConversation(contactEntity: contactEntity)
@@ -185,7 +155,7 @@ class TaskQueueTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             myIdentityStore: myIdentityStoreMock,
             serverConnector: serverConnectorMock
         )
@@ -225,7 +195,7 @@ class TaskQueueTests: XCTestCase {
 
         dbPreparer.save {
             let contactEntity = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: expectedReceiverIdentity
             )
             dbPreparer.createConversation(contactEntity: contactEntity)
@@ -234,7 +204,7 @@ class TaskQueueTests: XCTestCase {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let myIdentityStoreMock = MyIdentityStoreMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             myIdentityStore: myIdentityStoreMock,
             serverConnector: serverConnectorMock
         )
@@ -269,7 +239,7 @@ class TaskQueueTests: XCTestCase {
         let expectedError = NSError(domain: "Test domain", code: 1, userInfo: nil)
 
         dbPreparer.createContact(
-            publicKey: MockData.generatePublicKey(),
+            publicKey: BytesUtility.generatePublicKey(),
             identity: expectedReceiver
         )
 
@@ -277,7 +247,7 @@ class TaskQueueTests: XCTestCase {
         let messageProcessorMock = MessageProcessorMock()
         messageProcessorMock.error = expectedError
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             serverConnector: serverConnectorMock,
             messageProcessor: messageProcessorMock
         )
@@ -294,7 +264,7 @@ class TaskQueueTests: XCTestCase {
             )
 
             let message = BoxedMessage()
-            message.messageID = MockData.generateMessageID()
+            message.messageID = BytesUtility.generateMessageID()
             message.fromIdentity = "TESTER01"
             message.toIdentity = expectedReceiver
 
@@ -391,7 +361,7 @@ class TaskQueueTests: XCTestCase {
         }
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
             mediatorReflectedProcessor: mediatorReflectedProcessorMock
@@ -432,7 +402,7 @@ class TaskQueueTests: XCTestCase {
             deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock
         )
@@ -492,7 +462,7 @@ class TaskQueueTests: XCTestCase {
             deviceGroupKeys: MockMultiDevice.deviceGroupKeys
         )
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock
         )
@@ -544,7 +514,7 @@ class TaskQueueTests: XCTestCase {
 
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             serverConnector: serverConnectorMock
         )
 
@@ -609,7 +579,7 @@ class TaskQueueTests: XCTestCase {
     func testDiscardMultiDeviceNotActivated() throws {
         let serverConnectorMock = ServerConnectorMock(connectionState: .loggedIn)
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             serverConnector: serverConnectorMock
         )
 
@@ -650,7 +620,7 @@ class TaskQueueTests: XCTestCase {
             ThreemaError.threemaError("Not logged in", withCode: ThreemaProtocolError.notLoggedIn.rawValue) as? NSError
         }
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock
         )
@@ -852,10 +822,10 @@ class TaskQueueTests: XCTestCase {
         _ expectedTaskDequeue: Bool
     ) {
         let incomingBoxedMessage = BoxedMessage()
-        incomingBoxedMessage.messageID = MockData.generateMessageID()
+        incomingBoxedMessage.messageID = BytesUtility.generateMessageID()
         incomingBoxedMessage.fromIdentity = MyIdentityStoreMock().identity
         incomingBoxedMessage.toIdentity = "ECHECHO"
-        incomingBoxedMessage.nonce = MockData.generateMessageNonce()
+        incomingBoxedMessage.nonce = BytesUtility.generateMessageNonce()
 
         let serverConnectorMock = ServerConnectorMock(
             connectionState: .loggedIn,
@@ -870,7 +840,7 @@ class TaskQueueTests: XCTestCase {
         messageProcessorMock.error = expectedMessageProcessorError
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             messageProcessor: messageProcessorMock,
@@ -1168,13 +1138,13 @@ class TaskQueueTests: XCTestCase {
         print("\(assertTestCaseMessage) start")
 
         var incomingMessage = D2d_IncomingMessage()
-        incomingMessage.messageID = try MockData.generateMessageID().littleEndian()
-        incomingMessage.nonce = MockData.generateMessageNonce()
+        incomingMessage.messageID = try BytesUtility.generateMessageID().littleEndian()
+        incomingMessage.nonce = BytesUtility.generateMessageNonce()
         incomingMessage.type = .text
         var incomingEnvelop = D2d_Envelope()
         incomingEnvelop.incomingMessage = incomingMessage
 
-        let expectedReflectID = MockData.generateReflectID()
+        let expectedReflectID = BytesUtility.generateReflectID()
         var expectedReflectedMessage = Data(BytesUtility.padding([0x80], pad: 0x00, length: 4))
         expectedReflectedMessage.append(Data(BytesUtility.padding([0x08], pad: 0x00, length: 4)))
         expectedReflectedMessage.append(expectedReflectID)
@@ -1222,7 +1192,7 @@ class TaskQueueTests: XCTestCase {
 
         let nonceGuardMock = NonceGuardMock()
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: mediatorMessageProtocolMock,
@@ -1314,7 +1284,7 @@ class TaskQueueTests: XCTestCase {
     func testEncodeDecodeWithAllTaskTypes() throws {
         let expectedContactEntity = dbPreparer.save {
             let expectedContactEntity = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: "ECHOECHO"
             )
             dbPreparer.createConversation(
@@ -1329,7 +1299,7 @@ class TaskQueueTests: XCTestCase {
         }
 
         let (_, groupEntity, conversation) = try dbPreparer.createGroup(
-            groupID: MockData.generateGroupID(),
+            groupID: BytesUtility.generateGroupID(),
             groupCreatorIdentity: "ADMIN007",
             members: ["MEMBER01", "MEMBER02", "MEMBER03"]
         )
@@ -1345,10 +1315,7 @@ class TaskQueueTests: XCTestCase {
         let expectedFromMember = "MEMBER01"
         let expectedToMembers = ["MEMBER02", "MEMBER03"]
 
-        let frameworkInjectorMock = BusinessInjectorMock(entityManager: EntityManager(
-            databaseContext: dbBackgroundCnx,
-            isRemoteSecretEnabled: false
-        ))
+        let frameworkInjectorMock = BusinessInjectorMock(entityManager: testDatabase.backgroundEntityManager)
 
         let tq = TaskQueue(
             frameworkInjectorResolver: FrameworkInjectorResolverMock(frameworkInjector: frameworkInjectorMock)
@@ -1362,9 +1329,9 @@ class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskGroupDissolve, completionHandler: nil)
 
         // Add TaskDefinitionSendAbstractMessage
-        let expectedAbstractMessageID = MockData.generateMessageID()
+        let expectedAbstractMessageID = BytesUtility.generateMessageID()
         let expectedAbstractBallotCreator = "CONTACT1"
-        let expectedAbstractBallotID = MockData.generateBallotID()
+        let expectedAbstractBallotID = BytesUtility.generateBallotID()
         let expectedAbstractBallotJSONChoiceData = Data(repeating: 0x12, count: 10)
 
         let expectedAbstractMessage = BoxBallotVoteMessage()
@@ -1378,7 +1345,7 @@ class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskAbstract, completionHandler: nil)
 
         // Add TaskDefinitionSendBallotVoteMessage
-        let expectedBallotVoteBallotID = MockData.generateBallotID()
+        let expectedBallotVoteBallotID = BytesUtility.generateBallotID()
 
         let taskBallotVote = TaskDefinitionSendBallotVoteMessage(
             ballotID: expectedBallotVoteBallotID,
@@ -1391,7 +1358,7 @@ class TaskQueueTests: XCTestCase {
         // Add TaskDefinitionSendBaseMessage
         let expectedBaseMessageGroupName = "Test group name"
         let expectedBaseMessageIsNoteGroup = false
-        let expectedBaseMessageID = MockData.generateMessageID()
+        let expectedBaseMessageID = BytesUtility.generateMessageID()
 
         let taskBase = TaskDefinitionSendBaseMessage(
             messageID: expectedBaseMessageID,
@@ -1406,7 +1373,7 @@ class TaskQueueTests: XCTestCase {
         // Add TaskDefinitionSendDeleteEditMessage
         let expectedReceiverIdentity = ThreemaIdentity("ECHOECHO")
         let expectedDeleteMessage = try CspE2e_DeleteMessage.with { message in
-            message.messageID = try MockData.generateMessageID().littleEndian()
+            message.messageID = try BytesUtility.generateMessageID().littleEndian()
         }
 
         let taskDeleteEditMessage = TaskDefinitionSendDeleteEditMessage(
@@ -1422,8 +1389,8 @@ class TaskQueueTests: XCTestCase {
         let expectedReceiptToIdentity = "CONTACT2"
         let expectedReceiptType: ReceiptType = .read
         let expectedReceiptMessageIDs = [
-            MockData.generateMessageID(),
-            MockData.generateMessageID(),
+            BytesUtility.generateMessageID(),
+            BytesUtility.generateMessageID(),
         ]
         let expectedReceiptReadDates = [
             Date(),
@@ -1442,7 +1409,7 @@ class TaskQueueTests: XCTestCase {
         try! tq.enqueue(task: taskDeliveryReceipt, completionHandler: nil)
 
         // Add TaskDefinitionSendLocationMessage
-        let expectedLocationMessageID = MockData.generateMessageID()
+        let expectedLocationMessageID = BytesUtility.generateMessageID()
         let expectedLocationPoiAddress = "poi address"
 
         let taskLocation = TaskDefinitionSendLocationMessage(
@@ -1485,8 +1452,8 @@ class TaskQueueTests: XCTestCase {
         
         // Add TaskDefinitionSendGroupSetPhotoMessage
         let expectedGroupSetPhotoSize: UInt32 = 10
-        let expectedGroupSetPhotoBlobID = MockData.generateBlobID()
-        let expectedGroupSetPhotoEncryptionKey = MockData.generateBlobEncryptionKey()
+        let expectedGroupSetPhotoBlobID = BytesUtility.generateBlobID()
+        let expectedGroupSetPhotoEncryptionKey = BytesUtility.generateBlobEncryptionKey()
         
         let taskGroupSetPhoto = TaskDefinitionSendGroupSetPhotoMessage(
             group: expectedGroup,
@@ -1513,8 +1480,8 @@ class TaskQueueTests: XCTestCase {
         // Add TaskDefinitionSendGroupDeliveryReceiptMessage
         let expectedGroupReceiptType: ReceiptType = .ack
         let expectedGroupReceiptMessageIDs = [
-            MockData.generateMessageID(),
-            MockData.generateMessageID(),
+            BytesUtility.generateMessageID(),
+            BytesUtility.generateMessageID(),
         ]
         
         let taskGroupDeliveryReceipt = TaskDefinitionSendGroupDeliveryReceiptsMessage(
@@ -1614,7 +1581,7 @@ class TaskQueueTests: XCTestCase {
         
         // Add TaskDefinitionSendReactionMessage
         var expectedReaction = CspE2e_Reaction()
-        expectedReaction.messageID = try MockData.generateMessageID().littleEndian()
+        expectedReaction.messageID = try BytesUtility.generateMessageID().littleEndian()
         expectedReaction.action = .apply(Data("✌🏻".utf8))
         let expectedReactionReceiver = "ECHOECHO"
         

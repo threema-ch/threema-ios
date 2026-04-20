@@ -54,7 +54,7 @@ Main config file. Other files inherit/reference some of these values.
 | `ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME`  | Name of the accent color defined in `SharedResources/TargetColorsCustomOnPrem`                                                                                             | ✅          | ✅        |
 | `SUPPORT_FAQ_URL`                                 | FAQ URL; Use $(SLASH) for the first of double slashes                                                                                                                      | ✅          | ❌        |
 | `DEVICE_JOIN_DOWNLOAD_URL`                        | URL to download the desktop 2.0 app; Use $(SLASH) for the first of double slashes. Without URL there is a text 'URL is missing'. Only mandatory if multi device is enabled | ✅          | ✅        |
-| `TARGET_MANAGER_KEY`                              | Must be CustomOnPrem, do not change this                                          | ❌          | ✅        |
+| `TARGET_MANAGER_KEY`                              | Must be CustomOnPrem, do not change this                                                                                                                                   | ❌          | ✅        |
 
 
 #### CustomOnPremAppConfig.xcconfig

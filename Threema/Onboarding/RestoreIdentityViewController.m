@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2012-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import "RestoreIdentityViewController.h"
 #import "UIDefines.h"
 #import <MBProgressHUD/MBProgressHUD.h>
@@ -28,6 +8,8 @@
 #import "IntroQuestionView.h"
 #import "NibUtil.h"
 #import "Threema-Swift.h"
+
+@import UniformTypeIdentifiers;
 
 @interface RestoreIdentityViewController () <IntroQuestionDelegate>
 
@@ -43,14 +25,21 @@
 }
 
 - (void)setup {
+    if ([TargetManagerObjC isWork]) {
+        self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
+    }
+    
+    UITraitCollection *darkTraits = [UITraitCollection traitCollectionWithUserInterfaceStyle:UIUserInterfaceStyleDark];
+    UIColor *darkTint = [UIColor.tintColor resolvedColorWithTraitCollection:darkTraits];
+
     UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedScan:)];
     [_scanView addGestureRecognizer:tapGesture];
     _scanView.userInteractionEnabled = YES;
     _scanView.isAccessibilityElement = YES;
     [_scanView setAccessibilityHint: [BundleUtil localizedStringForKey:@"scan_id_backup"]];
     _scanLabel.text = [BundleUtil localizedStringForKey:@"scan_id_backup"];
-    _scanLabel.textColor = UIColor.tintColor;
-    
+    _scanLabel.textColor = darkTint;
+
     self.view.backgroundColor = [UIColor blackColor];
 
     _backupTextView.delegate = self;
@@ -66,7 +55,7 @@
 
     _scanView.layer.cornerRadius = 3;
     _scanView.layer.borderWidth = 1;
-    _scanView.layer.borderColor = UIColor.tintColor.CGColor;
+    _scanView.layer.borderColor = darkTint.CGColor;
     // With a transparent background, the button is only accessible when the finger is positioned over the text
     _scanView.backgroundColor = [UIColor.blackColor colorWithAlphaComponent:0.02];
     _scanView.isAccessibilityElement = YES;
@@ -75,18 +64,18 @@
     _doneButton.layer.cornerRadius = 3;
     
     _cancelButton.layer.borderWidth = 1;
-    _cancelButton.layer.borderColor = UIColor.tintColor.CGColor;
+    _cancelButton.layer.borderColor = darkTint.CGColor;
     _cancelButton.layer.cornerRadius = 3;
     // With a transparent background, the button is only accessible when the finger is positioned over the text
     _cancelButton.backgroundColor = [UIColor.blackColor colorWithAlphaComponent:0.02];
     
     [_doneButton setTitle:[BundleUtil localizedStringForKey:@"Done"] forState:UIControlStateNormal];
     [_cancelButton setTitle:[BundleUtil localizedStringForKey:@"cancel"] forState:UIControlStateNormal];
-    _doneButton.backgroundColor = UIColor.tintColor;
+    _doneButton.backgroundColor = darkTint;
     [_doneButton setTitleColor:Colors.textProminentButtonWizard forState:UIControlStateNormal];
     
-    [_cancelButton setTitleColor:UIColor.tintColor forState:UIControlStateNormal];
-    
+    [_cancelButton setTitleColor:darkTint forState:UIControlStateNormal];
+
     NSString *placeholder = [BundleUtil localizedStringForKey:@"Password"];
     _passwordTextField.attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder attributes:@{NSForegroundColorAttributeName: THREEMA_COLOR_PLACEHOLDER}];
 
@@ -96,13 +85,13 @@
     _titleLabel.text = [BundleUtil localizedStringForKey:@"restore_id_export"];
     _titleLabel.accessibilityIdentifier = @"restore_id_export";
     
-    _scanImageView.image = [[UIImage systemImageNamed:@"qrcode.viewfinder"] imageWithTintColor:UIColor.tintColor];
-    
+    _scanImageView.image = [[UIImage systemImageNamed:@"qrcode.viewfinder"] imageWithTintColor:darkTint];
+
     _backupTextView.accessibilityIdentifier = @"backupTextView";
     
-    _backupTextView.tintColor = UIColor.tintColor;
-    _passwordTextField.tintColor = UIColor.tintColor;
-        
+    _backupTextView.tintColor = darkTint;
+    _passwordTextField.tintColor = darkTint;
+
     UITapGestureRecognizer *mainTapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tappedMainView:)];
     [self.mainContentView addGestureRecognizer:mainTapGesture];
     
@@ -133,7 +122,7 @@
 }
 
 -(UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    if (SYSTEM_IS_IPAD) {
+    if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
         return UIInterfaceOrientationMaskAll;
     }
     
@@ -303,7 +292,7 @@
         enabled = NO;
     }
     
-    if (![[MyIdentityStore sharedMyIdentityStore] isValidBackupFormat:_backupTextView.text]) {
+    if (![IdentityBackupStore isValidBackupFormat:_backupTextView.text]) {
         enabled = NO;
     }
     

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import UIKit
 
 final class ThreemaSplitViewNavigationManager: NSObject {
@@ -27,7 +7,7 @@ final class ThreemaSplitViewNavigationManager: NSObject {
     private(set) lazy var thetaStack = ThetaStack()
     private weak var splitViewController: ThreemaSplitViewController?
     private weak var tabBarController: ThreemaTabBarController?
-    private var previousSelectedTabIdentifier: ThreemaTabBarController.TabBarItem?
+    private var previousSelectedTab: ThreemaTab?
     
     private var secondaryNavigationController: UINavigationController? {
         splitViewController?.viewControllers.last as? UINavigationController
@@ -52,14 +32,14 @@ final class ThreemaSplitViewNavigationManager: NSObject {
     
     // MARK: - Private methods
     
-    private func storeViewControllerStack(for tabIdentifier: ThreemaTabBarController.TabBarItem) {
-        let viewControllersToStore = currentNavigationStack(for: tabIdentifier)
-        thetaStack.store(stack: viewControllersToStore, for: tabIdentifier)
+    private func storeViewControllerStack(for tab: ThreemaTab) {
+        let viewControllersToStore = currentNavigationStack(for: tab)
+        thetaStack.store(stack: viewControllersToStore, for: tab)
     }
     
-    private func currentNavigationStack(for tabIdentifier: ThreemaTabBarController.TabBarItem) -> [UIViewController] {
+    private func currentNavigationStack(for tab: ThreemaTab) -> [UIViewController] {
         /// If this is the currently selected tab, get the current navigation state
-        if tabIdentifier == tabBarController?.selectedTabIdentifier {
+        if tab == tabBarController?.selectedThreemaTab {
             /// In regular mode: navigation is in secondary view controller
             if let secondaryNavigationController {
                 return secondaryNavigationController.viewControllers.filter { !($0 is ThreemaLogoViewController) }
@@ -71,30 +51,30 @@ final class ThreemaSplitViewNavigationManager: NSObject {
         }
         
         /// For non-current tabs, return what's stored in navigationStateStorage
-        return thetaStack.restore(for: tabIdentifier)
+        return thetaStack.restore(for: tab)
     }
     
     private func storeCurrentViewControllerStack() {
-        guard let currentTabIdentifier = tabBarController?.selectedTabIdentifier else {
+        guard let currentTab = tabBarController?.selectedThreemaTab else {
             return
         }
         
-        storeViewControllerStack(for: currentTabIdentifier)
+        storeViewControllerStack(for: currentTab)
     }
     
-    private func restoreViewControllerStack(for tabIdentifier: ThreemaTabBarController.TabBarItem) {
-        let savedStack = thetaStack.restore(for: tabIdentifier)
+    private func restoreViewControllerStack(for tab: ThreemaTab) {
+        let savedStack = thetaStack.restore(for: tab)
         let filteredStack = savedStack.filter { !($0 is ThreemaLogoViewController) }
         
-        replaceNavigationStack(filteredStack, for: tabIdentifier)
+        replaceNavigationStack(filteredStack, for: tab)
     }
     
     private func replaceNavigationStack(
         _ controllers: [UIViewController],
-        for tabIdentifier: ThreemaTabBarController.TabBarItem
+        for tab: ThreemaTab
     ) {
         /// Only restore to UI if this is the currently selected tab
-        guard tabIdentifier == tabBarController?.selectedTabIdentifier else {
+        guard tab == tabBarController?.selectedThreemaTab else {
             return
         }
         
@@ -144,10 +124,10 @@ extension ThreemaSplitViewNavigationManager: UISplitViewControllerDelegate {
         
         /// Store current tab's state before any UI changes
         if let secondaryNavigationController = splitViewController.viewControllers.last as? UINavigationController {
-            let currentTabIdentifier = tabBarController.selectedTabIdentifier
+            let currentTab = tabBarController.selectedThreemaTab
             let viewControllersToStore = secondaryNavigationController.viewControllers
                 .filter { !($0 is ThreemaLogoViewController) }
-            thetaStack.store(stack: viewControllersToStore, for: currentTabIdentifier)
+            thetaStack.store(stack: viewControllersToStore, for: currentTab)
         }
         
         /// Handle the secondary view controller, which is a UINavigationController
@@ -185,7 +165,7 @@ extension ThreemaSplitViewNavigationManager: UISplitViewControllerDelegate {
         guard let tabBarController = primaryViewController as? ThreemaTabBarController else {
             /// Return navigation controller with ``ThreemaLogoViewController`` in a navigation controller
             /// if there is nothing in the secondary controller
-            return ThreemaLogoViewControllerFactory.threemaLogoNavigationController
+            return ThreemaLogoViewControllerFactory.threemaLogoNavigationController()
         }
         
         /// Store current tab's navigation state and pop all tabs to root
@@ -201,9 +181,9 @@ extension ThreemaSplitViewNavigationManager: UISplitViewControllerDelegate {
         }
         
         /// Create secondary navigation controller with current tab's saved state
-        let selectedTabIdentifier = tabBarController.selectedTabIdentifier
+        let selectedTab = tabBarController.selectedThreemaTab
         
-        let savedStack = thetaStack.restore(for: selectedTabIdentifier)
+        let savedStack = thetaStack.restore(for: selectedTab)
         let filteredStack = savedStack.filter { !($0 is ThreemaLogoViewController) }
         
         let secondaryNavigationController: UINavigationController
@@ -212,7 +192,7 @@ extension ThreemaSplitViewNavigationManager: UISplitViewControllerDelegate {
             secondaryNavigationController.viewControllers = filteredStack
         }
         else {
-            secondaryNavigationController = ThreemaLogoViewControllerFactory.threemaLogoNavigationController
+            secondaryNavigationController = ThreemaLogoViewControllerFactory.threemaLogoNavigationController()
         }
         
         return secondaryNavigationController
@@ -282,18 +262,18 @@ extension ThreemaSplitViewNavigationManager: UITabBarControllerDelegate {
             return
         }
         
-        let selectedTabIdentifier = tabBarController.selectedTabIdentifier
-        defer { previousSelectedTabIdentifier = selectedTabIdentifier }
+        let selectedTab = tabBarController.selectedThreemaTab
+        defer { previousSelectedTab = selectedTab }
         
         /// When tapping again on the same tab bar item, the navigation is popped to root.
         /// If that happens and the split view is collapsed, we need to clear up
         /// the stored stack, so it is not incorrectly restored.
-        let isTapOnSameTab = previousSelectedTabIdentifier == selectedTabIdentifier
+        let isTapOnSameTab = previousSelectedTab == selectedTab
         if splitViewController?.isCollapsed == true,
            isTapOnSameTab {
-            thetaStack.store(stack: [], for: selectedTabIdentifier)
+            thetaStack.store(stack: [], for: selectedTab)
         }
         
-        restoreViewControllerStack(for: selectedTabIdentifier)
+        restoreViewControllerStack(for: selectedTab)
     }
 }

@@ -1,28 +1,8 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2019-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import XCTest
 
 import FileUtility
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 #if THREEMA_CUSTOMER
     @testable import Threema
 #elseif THREEMA_WORK
@@ -38,7 +18,7 @@ import ThreemaEssentialsTestHelper
 #endif
 @testable import ThreemaFramework
 
-class DBLoadTests: XCTestCase {
+final class DBLoadTests: XCTestCase {
 
     override func setUp() async throws {
         AppGroup.setAppID(BundleUtil.threemaAppIdentifier())
@@ -853,8 +833,8 @@ class DBLoadTests: XCTestCase {
             message.audio = dbFile
             message.duration = 2
             message.audioSize = 55
-            message.audioBlobID = MockData.generateBlobID()
-            message.encryptionKey = MockData.generateBlobEncryptionKey()
+            message.audioBlobID = BytesUtility.generateBlobID()
+            message.encryptionKey = BytesUtility.generateBlobEncryptionKey()
             message.progress = 100
         }
     }
@@ -891,9 +871,9 @@ class DBLoadTests: XCTestCase {
             message.image = imageDataEntity
             message.thumbnail = thumbnailDataEntity
             
-            message.encryptionKey = MockData.generateBlobEncryptionKey()
-            message.imageBlobID = MockData.generateBlobID()
-            message.imageNonce = MockData.generateMessageNonce()
+            message.encryptionKey = BytesUtility.generateBlobEncryptionKey()
+            message.imageBlobID = BytesUtility.generateBlobID()
+            message.imageNonce = BytesUtility.generateMessageNonce()
             message.imageSize = NSNumber(value: imageDataEntity.data.count)
             message.progress = 100
         }
@@ -931,8 +911,8 @@ class DBLoadTests: XCTestCase {
             message.video = videoDataEntity
             message.thumbnail = thumbnailDataEntity
             
-            message.encryptionKey = MockData.generateBlobEncryptionKey()
-            message.videoBlobID = MockData.generateBlobID()
+            message.encryptionKey = BytesUtility.generateBlobEncryptionKey()
+            message.videoBlobID = BytesUtility.generateBlobID()
             message.duration = 10
             message.videoSize = NSNumber(value: videoDataEntity.data.count)
             message.progress = 100
@@ -2137,7 +2117,7 @@ class DBLoadTests: XCTestCase {
             width: Int(item.getWidth()),
             thumbnailData: item.getThumbnail().pngData(),
             thumbnailSize: item.getThumbnail().size,
-            encryptionKey: MockData.generateBlobEncryptionKey(),
+            encryptionKey: BytesUtility.generateBlobEncryptionKey(),
             origin: NSNumber(integerLiteral: 1),
             in: conversationEntity
         )

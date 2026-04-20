@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import DSWaveformImage
 import DSWaveformImageViews
 import Foundation
@@ -46,31 +26,71 @@ struct VoiceMessageRecorderView: View {
     
     private var minBarHeight: CGFloat {
         if sizeCategory < .large {
-            ChatViewConfiguration.ChatTextView.smallerContentSizeConfigurationCornerRadius * 2
+            if #available(iOS 26.0, *) {
+                // Due to an unknown reason, we need twice the radius on iPads (regardless of compact or regular size
+                // class)
+                if UIDevice.current.userInterfaceIdiom == .pad {
+                    ChatTextViewConfiguration.smallerContentSizeConfigurationCornerRadius * 4
+                }
+                else {
+                    ChatTextViewConfiguration.smallerContentSizeConfigurationCornerRadius * 2
+                }
+            }
+            else {
+                ChatTextViewConfiguration.smallerContentSizeConfigurationCornerRadius * 2
+            }
         }
         else {
-            ChatViewConfiguration.ChatTextView.cornerRadius * 2
+            if #available(iOS 26.0, *) {
+                // Due to an unknown reason, we need twice the radius on iPads (regardless of compact or regular size
+                // class)
+                if UIDevice.current.userInterfaceIdiom == .pad {
+                    ChatTextViewConfiguration.cornerRadius * 4
+                }
+                else {
+                    ChatTextViewConfiguration.cornerRadius * 2
+                }
+            }
+            else {
+                ChatTextViewConfiguration.cornerRadius * 2
+            }
         }
     }
     
     private var leftInset: CGFloat {
         model.recordingState.recordingStopped
             ? minBarHeight
-            : ChatViewConfiguration.ChatBar.textInputButtonSpacing
+            : ChatBarConfiguration.textInputButtonSpacing
     }
     
     // MARK: - Subviews
     
     private var container: some View {
-        HStack(
-            spacing: ChatViewConfiguration.ChatBar.textInputButtonSpacing
+        let spacing =
+            if #available(iOS 26, *) {
+                ChatBarConfiguration.textInputButtonSpacing / 2
+            }
+            else {
+                ChatBarConfiguration.textInputButtonSpacing
+            }
+       
+        return HStack(
+            spacing: spacing
         ) {
             discardButton
             waveFormContainer
             sendButton
         }
-        .padding(.horizontal, ChatViewConfiguration.ChatBar.textInputButtonSpacing)
-        .frame(height: minBarHeight)
+        .apply { view in
+            if #available(iOS 26.0, *) {
+                view
+            }
+            else {
+                view
+                    .padding(.horizontal, ChatBarConfiguration.textInputButtonSpacing)
+            }
+        }
+        .frame(minHeight: minBarHeight)
     }
     
     // MARK: WaveForm
@@ -83,7 +103,8 @@ struct VoiceMessageRecorderView: View {
                     .horizontalFadeOut(fadeLength: model.recordingState == .recording ? 5 : 0)
                     .padding(.vertical, 5)
                 durationView
-            }.applyIf(sizeCategory.isAccessibilityCategory) { _ in
+            }
+            .applyIf(sizeCategory.isAccessibilityCategory) { _ in
                 HStack {
                     durationView
                     Spacer()
@@ -106,15 +127,25 @@ struct VoiceMessageRecorderView: View {
                 playPauseButton
             }
         }
-        .background {
-            RoundedRectangle(cornerRadius: ChatViewConfiguration.ChatTextView.cornerRadius)
-                .fill(Colors.chatBarInput.color)
-                .overlay(
-                    RoundedRectangle(
-                        cornerRadius: ChatViewConfiguration.ChatTextView.cornerRadius
-                    )
-                    .stroke(Colors.hairLine.color, lineWidth: 0.5)
-                )
+        .apply { view in
+            if #available(iOS 26.0, *) {
+                view
+                    .glassEffect()
+                    .clipShape(RoundedRectangle(cornerRadius: ChatTextViewConfiguration.cornerRadius))
+            }
+            else {
+                view
+                    .background {
+                        RoundedRectangle(cornerRadius: ChatTextViewConfiguration.cornerRadius)
+                            .fill(Colors.chatBarInput.color)
+                            .overlay(
+                                RoundedRectangle(
+                                    cornerRadius: ChatTextViewConfiguration.cornerRadius
+                                )
+                                .stroke(Colors.hairLine.color, lineWidth: 0.5)
+                            )
+                    }
+            }
         }
     }
     
@@ -162,10 +193,12 @@ struct VoiceMessageRecorderView: View {
             .tint,
             .tint.opacity(0.2)
         ) {
-            model.stopRecording()
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Task {
+                await model.stopRecording()
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
         }
-        
+
         .accessibilityLabel(#localize("stop"))
         .accessibilityFocused($isStopFocused)
     }
@@ -198,57 +231,113 @@ struct VoiceMessageRecorderView: View {
             .tint,
             .tint
         ) {
-            model.continueRecording()
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Task {
+                await model.continueRecording()
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }
         }
         .scaleEffect(0.6)
         .accessibilityLabel(#localize("record_continue"))
     }
     
     private var sendButton: some View {
-        Button {
-            send()
-        } label: {
-            Image(systemName: "arrow.up.circle.fill")
-                .renderingMode(.template)
-                .imageScale(.large)
-                .font(
-                    .system(
-                        size: UIFontMetrics(
-                            forTextStyle: .body
+        if #available(iOS 26.0, *) {
+            // swiftformat:disable:next all
+            return Button {
+                send()
+            } label: {
+                Image(systemName: "arrow.up")
+                    .renderingMode(.template)
+                    .foregroundStyle(Color(.labelInverted))
+                    .font(
+                        .system(
+                            size: UIFontMetrics(
+                                forTextStyle: .body
+                            )
+                            .scaledValue(
+                                for: ChatBarConfiguration.defaultSize
+                            ),
+                            weight: .semibold
                         )
-                        .scaledValue(
-                            for: ChatViewConfiguration.ChatBar.sendButtonSize
-                        ),
-                        weight: .regular
                     )
-                )
-                .foregroundColor(.accentColor)
+                    .padding(3)
+            }
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.circle)
+            .accessibilityLabel(#localize("send"))
         }
-        .accessibilityLabel(#localize("send"))
+        else {
+            // swiftformat:disable:next all
+            return Button {
+                send()
+            } label: {
+                Image(systemName: "arrow.up.circle.fill")
+                    .renderingMode(.template)
+                    .imageScale(.large)
+                    .font(
+                        .system(
+                            size: UIFontMetrics(
+                                forTextStyle: .body
+                            )
+                            .scaledValue(
+                                for: ChatBarConfiguration.sendButtonSize
+                            ),
+                            weight: .regular
+                        )
+                    )
+                    .foregroundColor(.accentColor)
+            }
+            .accessibilityLabel(#localize("send"))
+        }
     }
     
     private var discardButton: some View {
-        Button {
-            dismiss()
-        } label: {
-            Image(systemName: "xmark.circle.fill")
-                .renderingMode(.template)
-                .imageScale(.large)
-                .font(
-                    .system(
-                        size: UIFontMetrics(
-                            forTextStyle: .body
+        if #available(iOS 26.0, *) {
+            // swiftformat:disable:next all
+            return Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .renderingMode(.template)
+                    .font(
+                        .system(
+                            size: UIFontMetrics(
+                                forTextStyle: .body
+                            )
+                            .scaledValue(
+                                for: ChatBarConfiguration.defaultSize
+                            ),
+                            weight: .regular
                         )
-                        .scaledValue(
-                            for: ChatViewConfiguration.ChatBar.plusButtonSize
-                        ),
-                        weight: .regular
-                    )
-                )
-                .foregroundColor(.gray)
+                    ).padding(4)
+            }
+            .clipShape(Circle())
+            .buttonStyle(.glass)
+            .accessibilityLabel(#localize("quit"))
         }
-        .accessibilityLabel(#localize("quit"))
+        else {
+            // swiftformat:disable:next all
+            return Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .renderingMode(.template)
+                    .imageScale(.large)
+                    .font(
+                        .system(
+                            size: UIFontMetrics(
+                                forTextStyle: .body
+                            )
+                            .scaledValue(
+                                for: ChatBarConfiguration.plusButtonSize
+                            ),
+                            weight: .regular
+                        )
+                    )
+                    .foregroundColor(.gray)
+            }
+            .accessibilityLabel(#localize("quit"))
+        }
     }
     
     // MARK: - Body
@@ -261,7 +350,9 @@ struct VoiceMessageRecorderView: View {
                 }
             }
             .accessibilityAction(.magicTap) {
-                model.handleMagicTap()
+                Task {
+                    await model.handleMagicTap()
+                }
             }
     }
     

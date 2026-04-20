@@ -1,39 +1,15 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2014-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import <Contacts/Contacts.h>
 
 #ifndef Threema_Constants_h
 #define Threema_Constants_h
 
-#pragma mark - iOS version makros
+#pragma mark - iOS version macros
 
 #define SYSTEM_VERSION_EQUAL_TO(v) ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedSame)
 #define SYSTEM_VERSION_GREATER_THAN(v) ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedDescending)
 #define SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(v) ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedAscending)
 #define SYSTEM_VERSION_LESS_THAN(v) ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedAscending)
 #define SYSTEM_VERSION_LESS_THAN_OR_EQUAL_TO(v) ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedDescending)
-
-#define SYSTEM_IS_IPAD ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
-
-#define SYSTEM_IS_IPHONE_X (([[UIDevice currentDevice]userInterfaceIdiom] == UIUserInterfaceIdiomPhone) && ((int)[[UIScreen mainScreen] nativeBounds].size.height) == 2436)
 
 #define THREEMA_FRAMEWORK_IDENTIFIER @"ch.threema.ThreemaFramework"
 
@@ -44,7 +20,6 @@
 #define MEDIA_EXTENSION_AUDIO @"m4a"
 #define MEDIA_EXTENSION_IMAGE @"jpg"
 #define MEDIA_EXTENSION_VIDEO @"mp4"
-#define MEDIA_EXTENSION_GIF @"gif"
 
 #pragma mark - notifications
 
@@ -63,7 +38,6 @@
 
 #define kNotificationMessagesCountChanged @"ThreemaUnreadMessagesCountChanged"
 
-#define kNotificationCreatedIdentity @"ThreemaCreatedIdentity"
 #define kNotificationDestroyedIdentity @"ThreemaDestroyedIdentity"
 #define kNotificationShowProfile @"ThreemaShowProfile"
 
@@ -87,23 +61,13 @@
 #define kPushNotificationEncryptionKey @"PushNotificationEncryptionKey"
 
 #define kNotificationServerMessage @"ThreemaServerMessage"
-#define kNotificationQueueSendComplete @"ThreemaQueueSendComplete"
 #define kNotificationErrorConnectionFailed @"ThreemaErrorConnectionFailed"
 #define kNotificationErrorPublicKeyMismatch @"ThreemaErrorPublicKeyMismatch"
 #define kNotificationErrorRogueDevice @"ThreemaErrorRogueDevice"
 
-#define kNotificationRefreshWorkContactTableView @"RefreshWorkContactTableView"
 #define kNotificationAddressbookSyncronized @"AddressbookSyncronized"
-#define kNotificationRefreshContactSortIndices @"RefreshContactSortIndices"
 #define kNotificationChangedHidePrivateChat @"ChangedHidePrivateChat"
 #define kNotificationChangedPushSetting @"ChangedPushSetting"
-
-#define kNotificationLoadWorkContacts @"LoadWorkContacts"
-
-#define kVoIPCallStartRinging @"ThreemaVoIPCallStartRinging"
-#define kVoIPCallStatusChanged @"ThreemaVoIPCallStatusChanged"
-#define kVoIPCallIncomingCall @"ThreemaVoIPCallIncomingCall"
-#define kVoIPCallStartDebugMode @"ThreemaVoIPCallStartDebugMode"
 
 #define kAppClosedByUserBackgroundTask @"ThreemaAppClosedByUserBackgroundTask"
 #define kAppVoIPBackgroundTask @"ThreemaVoIPBackgroundTask"
@@ -112,7 +76,6 @@
 #define kAppSendingBackgroundTask @"ThreemaSendingBackgroundTask"
 #define kAppAckBackgroundTask @"ThreemaAckBackgroundTask"
 #define kAppPushReplyBackgroundTask @"ThreemaPushReplyBackgroundTask"
-#define kAppCoreDataSaveBackgroundTask @"ThreemaCoreDataSaveBackgroundTask"
 #define kAppCoreDataProcessMessageBackgroundTask @"ThreemaCoreDataProcessMessageTask"
 #define kSafeBackgroundTask @"ThreemaSafeBackgroundTask"
 
@@ -124,7 +87,6 @@
 #define kAppPushReplyBackgroundTaskTime 30
 #define kAppVoIPBackgroundTaskTime 5
 #define kAppAckBackgroundTaskTime 2
-#define kAppCoreDataSaveBackgroundTaskTime 15
 #define kAppSendingBackgroundTaskTime 170
 #define kAppVoIPIncomingCallBackgroundTaskTime 80
 #define kAppCoreDataProcessMessageBackgroundTaskTime 10
@@ -172,11 +134,6 @@ static NSString * const kThreemaVideoCallsQualitySettingChanged = @"ThreemaVideo
 
 
 #pragma mark - UserDefault Keys
-#define kLastPushOverrideSendDate @"LastPushOverrideSendDate"
-#define kShowedTestFlightFeedbackView @"ShowedTestFlightFeedbackView"
-#define kWallpaperKey @"Wallpapers"
-#define kShowed10YearsAnniversaryView @"Showed10YearsAnniversaryView"
-#define kShowedNotificationTypeSelectionView @"showedNotificationTypeSelectionView"
 #define kAppSetupStateKey @"AppSetupState"
 
 #pragma mark - Push notification keys
@@ -204,9 +161,5 @@ extern ThreemaPushNotificationDictionaryCommand const ThreemaPushNotificationDic
 static NSInteger const kMaxFirstOrLastNameLength = 256;
 static NSInteger const kMaxGroupNameLength = 256;
 static NSInteger const kMaxNicknameLength = 32;
-
-#pragma mark - Beta Feedback ID
-
-static NSString * const kBetaFeedbackIdentity = @"*BETAFBK";
 
 #endif

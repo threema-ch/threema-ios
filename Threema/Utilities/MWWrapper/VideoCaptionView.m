@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2014-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import "VideoCaptionView.h"
 #import "Threema-Swift.h"
 
@@ -30,9 +10,12 @@
     UIImage *tmpImage = [UIImage imageNamed:@"threema.video.fill"];
     UIImage *cameraImage = [tmpImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
     UIImageView *imageView = [[UIImageView alloc] initWithImage:cameraImage];
-    imageView.tintColor = [UIColor whiteColor];
+    imageView.tintColor = [UIColor secondaryLabelColor];
 
     imageView.frame = [self rect:imageView.frame centerVerticalIn:rect round:NO];
+    if (@available(iOS 26.0, *)) {
+        imageView.frame = CGRectMake(imageView.frame.origin.x, imageView.frame.origin.y - 10.0, imageView.frame.size.width, imageView.frame.size.height);
+    }
     [view addSubview:imageView];
     
     UILabel *label = [self createLabelInRect:rect];
@@ -46,8 +29,13 @@
     
     [label sizeToFit];
     label.frame = [self rect:label.frame centerVerticalIn:rect round:YES];
-    label.frame = CGRectMake(rect.size.width - label.frame.size.width, label.frame.origin.y, label.frame.size.width, label.frame.size.height);
-    
+    if (@available(iOS 26.0, *)) {
+        label.frame = CGRectMake(rect.size.width - label.frame.size.width - 20.0 - 10.0, label.frame.origin.y - 10.0, label.frame.size.width, label.frame.size.height);
+    }
+    else {
+        label.frame = CGRectMake(rect.size.width - label.frame.size.width, label.frame.origin.y, label.frame.size.width, label.frame.size.height);
+    }
+
     [view addSubview:label];
 
     return view;

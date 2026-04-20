@@ -1,29 +1,9 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import FileUtility
 import RemoteSecretProtocolTestHelper
 import XCTest
 @testable import ThreemaFramework
 
-class WallpaperStoreTest: XCTestCase {
+final class WallpaperStoreTest: XCTestCase {
 
     // MARK: - Setup
 
@@ -35,7 +15,7 @@ class WallpaperStoreTest: XCTestCase {
     private var conversation2: ConversationEntity!
     private var conversationID2: NSManagedObjectID!
     
-    private var mainCnx: ThreemaManagedObjectContext!
+    private var testDatabase: TestDatabase!
     private var entityManager: EntityManager!
     
     private let testImageURL1 = Bundle(for: WallpaperStoreTest.self)
@@ -48,10 +28,12 @@ class WallpaperStoreTest: XCTestCase {
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
 
-        (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        let context = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        entityManager = EntityManager(databaseContext: context, isRemoteSecretEnabled: false)
-        
+        testDatabase = TestDatabase()
+        entityManager = testDatabase.entityManager
+
+        // Workaround to ensure remote secret is initialized
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
+
         conversation1 = createConversation(
             id: "abcdefgh",
             unreadMessageCount: 0,
@@ -72,10 +54,6 @@ class WallpaperStoreTest: XCTestCase {
         testImage1 = UIImage(data: data1)!
         let data2 = try! Data(contentsOf: testImageURL2)
         testImage2 = UIImage(data: data2)!
-        
-        // Workaround to ensure remote secret is initialized
-        let remoteSecretManagerMock = RemoteSecretManagerMock()
-        AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManagerMock)
     }
 
     private func createConversation(
@@ -87,7 +65,7 @@ class WallpaperStoreTest: XCTestCase {
         var contact: ContactEntity!
         var conversation: ConversationEntity!
 
-        let databasePreparer = DatabasePreparer(context: mainCnx)
+        let databasePreparer = testDatabase.preparer
         databasePreparer.save {
             contact = databasePreparer.createContact(publicKey: Data([1]), identity: id)
 

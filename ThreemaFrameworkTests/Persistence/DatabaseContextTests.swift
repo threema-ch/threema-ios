@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CoreData
 import Testing
 @testable import ThreemaFramework
@@ -36,10 +16,13 @@ struct DatabaseContextTests {
     struct DatabaseContextInitialization {
         @Test("Basic main initialization")
         func basicMainInit() async throws {
-            let (persistentCoordinator, _, _) = DatabasePersistentContext.devNullContext()
-            
-            let databaseContext = DatabaseContext(persistentStoreCoordinator: persistentCoordinator)
-            
+            let testDatabase = TestDatabase()
+
+            let databaseContext = DatabaseContext(
+                persistentStoreCoordinator: testDatabase.databaseManagerMock
+                    .persistentStoreCoordinator
+            )
+
             try checkInitializedMainContext(databaseContext)
             
             #expect(databaseContext.main == databaseContext.current)
@@ -54,10 +37,10 @@ struct DatabaseContextTests {
         
         @Test("Basic background child context initialization")
         func basicChildInit() async throws {
-            let (persistentCoordinator, _, _) = DatabasePersistentContext.devNullContext()
-            
+            let testDatabase = TestDatabase()
+
             let databaseContext = DatabaseContext(
-                persistentStoreCoordinator: persistentCoordinator,
+                persistentStoreCoordinator: testDatabase.databaseManagerMock.persistentStoreCoordinator,
                 withChildContextInBackground: true
             )
             
@@ -73,10 +56,10 @@ struct DatabaseContextTests {
         
         @Test("Basic main child context initialization")
         func basicMainChildInit() async throws {
-            let (persistentCoordinator, _, _) = DatabasePersistentContext.devNullContext()
-            
+            let testDatabase = TestDatabase()
+
             let databaseContext = DatabaseContext(
-                persistentStoreCoordinator: persistentCoordinator,
+                persistentStoreCoordinator: testDatabase.databaseManagerMock.persistentStoreCoordinator,
                 withChildContextInBackground: false
             )
             
@@ -96,14 +79,18 @@ struct DatabaseContextTests {
         
         @Test("Direct contexts")
         func fullDirectContexts() throws {
-            let (persistentCoordinator, _, _) = DatabasePersistentContext.devNullContext()
+            let testDatabase = TestDatabase()
 
             // Initially there should be no direct context
-            let mainDatabaseContext = DatabaseContext(persistentStoreCoordinator: persistentCoordinator)
+            let mainDatabaseContext = DatabaseContext(
+                persistentStoreCoordinator: testDatabase.databaseManagerMock
+                    .persistentStoreCoordinator
+            )
             #expect(mainDatabaseContext.directContexts.isEmpty)
             
             // Add direct context and validate that there is no parent
-            let directManagedObjectContext = DatabaseContext.directBackgroundContext(with: persistentCoordinator)
+            let directManagedObjectContext = DatabaseContext
+                .directBackgroundContext(with: testDatabase.databaseManagerMock.persistentStoreCoordinator)
             #expect(directManagedObjectContext.concurrencyType == .privateQueueConcurrencyType)
             #expect(directManagedObjectContext.parent == nil)
             

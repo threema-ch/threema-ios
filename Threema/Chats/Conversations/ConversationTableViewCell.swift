@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Combine
 import GroupCalls
@@ -363,6 +343,14 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
         return stackView
     }()
     
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        
+        let view = UIView()
+        view.backgroundColor = .systemGray4
+        self.selectedBackgroundView = view
+    }
+    
     deinit {
         removeAllObjectObservers()
         NotificationCenter.default.removeObserver(self)
@@ -411,7 +399,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     
     private var group: Group?
     private var contact: Contact?
-    private(set) var navigationController: UINavigationController?
     
     private var groupCallGroupModel: GroupCallThreemaGroupModel?
 
@@ -527,13 +514,6 @@ final class ConversationTableViewCell: ThemedCodeTableViewCell {
     /// - Parameter conversation: ConversationEntity that is shown in this cell
     func setConversation(to conversation: ConversationEntity?) {
         self.conversation = conversation
-    }
-    
-    /// UINavigationController of the TableView this cell is displayed in
-    ///
-    /// - Parameter navigationController: UINavigationController of the TableView this cell is displayed in
-    func setNavigationController(to navigationController: UINavigationController?) {
-        self.navigationController = navigationController
     }
     
     public func updateLastMessagePreview() {

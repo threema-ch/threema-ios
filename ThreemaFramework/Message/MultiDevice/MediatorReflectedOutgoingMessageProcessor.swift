@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
@@ -97,7 +77,7 @@ class MediatorReflectedOutgoingMessageProcessor {
         case is EditGroupMessage:
             return try process(outgoingMessage: omsg, editGroupMessage: amsg as! EditGroupMessage)
         case is GroupCreateMessage:
-            return try process(groupCreateMessage: amsg as! GroupCreateMessage)
+            return try process(outgoingMessage: omsg, groupCreateMessage: amsg as! GroupCreateMessage)
         case is GroupDeletePhotoMessage:
             return try process(outgoingMessage: omsg, groupDeletePhotoMessage: amsg as! GroupDeletePhotoMessage)
         case is GroupRenameMessage:
@@ -117,7 +97,7 @@ class MediatorReflectedOutgoingMessageProcessor {
         case is GroupImageMessage:
             throw MediatorReflectedProcessorError.outgoingMessageTypeIsDeprecated(type: omsg.type)
         case is GroupLeaveMessage:
-            return process(groupLeaveMessage: amsg as! GroupLeaveMessage)
+            return process(outgoingMessage: omsg, groupLeaveMessage: amsg as! GroupLeaveMessage)
         case is GroupLocationMessage:
             return try process(outgoingMessage: omsg, groupLocationMessage: amsg as! GroupLocationMessage)
         case is GroupTextMessage:
@@ -317,9 +297,15 @@ class MediatorReflectedOutgoingMessageProcessor {
     // MARK: Process reflected outgoing group control messages
     
     private func process(
+        outgoingMessage omsg: D2d_OutgoingMessage,
         groupCreateMessage amsg: GroupCreateMessage
     ) throws -> Promise<Void> {
-        try messageStore.save(groupCreateMessage: amsg)
+        try messageStore.save(
+            groupCreateMessage: amsg,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: true
+        )
     }
 
     private func process(
@@ -327,13 +313,24 @@ class MediatorReflectedOutgoingMessageProcessor {
         groupDeletePhotoMessage amsg: GroupDeletePhotoMessage
     ) throws -> Promise<Void> {
         try getGroup(for: omsg)
-        return messageStore.save(groupDeletePhotoMessage: amsg)
+        return messageStore.save(
+            groupDeletePhotoMessage: amsg,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: true
+        )
     }
 
     private func process(
+        outgoingMessage omsg: D2d_OutgoingMessage,
         groupLeaveMessage amsg: GroupLeaveMessage
     ) -> Promise<Void> {
-        messageStore.save(groupLeaveMessage: amsg)
+        messageStore.save(
+            groupLeaveMessage: amsg,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: true
+        )
         return Promise()
     }
 
@@ -342,7 +339,12 @@ class MediatorReflectedOutgoingMessageProcessor {
         groupRenameMessage amsg: GroupRenameMessage
     ) throws -> Promise<Void> {
         try getGroup(for: omsg)
-        return messageStore.save(groupRenameMessage: amsg)
+        return messageStore.save(
+            groupRenameMessage: amsg,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: true
+        )
     }
 
     private func process(
@@ -350,7 +352,12 @@ class MediatorReflectedOutgoingMessageProcessor {
         groupSetPhotoMessage amsg: GroupSetPhotoMessage
     ) throws -> Promise<Void> {
         try getGroup(for: omsg)
-        return messageStore.save(groupSetPhotoMessage: amsg)
+        return messageStore.save(
+            groupSetPhotoMessage: amsg,
+            createdAt: getCreatedAt(for: omsg),
+            reflectedAt: reflectedAt,
+            isOutgoing: true
+        )
     }
     
     private func process(

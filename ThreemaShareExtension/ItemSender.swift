@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import CoreServices
 import Foundation
@@ -50,7 +30,8 @@ class ItemSender: NSObject {
     private var totalSendCount: Int?
     
     private var correlationIDs: [String] = Array()
-    
+    private let imageSender = ImageURLSenderItemCreator()
+
     var shouldCancel = false
     
     private var uploadSema = DispatchSemaphore(value: 0)
@@ -124,7 +105,8 @@ class ItemSender: NSObject {
     private func getMediaSenderItem(url: URL, caption: String?) -> URLSenderItem {
         var senderItem: URLSenderItem
         if sendAsFile {
-            let mimeType = UTIConverter.mimeType(fromUTI: UTIConverter.uti(forFileURL: url))
+            let uti = UTIConverter.uti(forFileURL: url) ?? UTType.data.identifier
+            let mimeType = UTIConverter.mimeType(fromUTI: uti) ?? "application/octet-stream"
             senderItem = URLSenderItem(
                 url: url,
                 type: mimeType,
@@ -134,7 +116,8 @@ class ItemSender: NSObject {
         }
         else {
             guard let item = URLSenderItemCreator.getSenderItem(for: url, maxSize: .large) else {
-                let mimeType = UTIConverter.mimeType(fromUTI: UTIConverter.uti(forFileURL: url)) ?? "unknown type"
+                let uti = UTIConverter.uti(forFileURL: url) ?? UTType.data.identifier
+                let mimeType = UTIConverter.mimeType(fromUTI: uti) ?? "application/octet-stream"
                 let msg = "Could not create sender item for item of type \(mimeType)"
                 DDLogError("\(msg)")
                 fatalError(msg)
@@ -149,7 +132,7 @@ class ItemSender: NSObject {
     
     func sendItemsTo(conversations: Set<ConversationEntity>) {
         recipientConversations = conversations
-        _ = itemCount().done { itemCount in
+        _ = itemCount().done { [imageSender] itemCount in
             self.totalSendCount = self.recipientConversations!.count * itemCount
             self.sentItemCount = 0
             
@@ -158,7 +141,7 @@ class ItemSender: NSObject {
             }
             else if self.itemsToSend != nil {
                 for _ in 0..<self.recipientConversations!.count {
-                    self.correlationIDs.append(ImageURLSenderItemCreator.createCorrelationID())
+                    self.correlationIDs.append(imageSender.createCorrelationID())
                 }
                 self.sendMediaItems()
             }

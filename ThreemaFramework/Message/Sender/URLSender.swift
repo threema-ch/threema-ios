@@ -1,27 +1,7 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 
-@objc public class URLSender: NSObject {
+@objc public final class URLSender: NSObject {
     
     /// Sends the file from url as a file message
     /// - Parameters:
@@ -33,7 +13,8 @@ import Foundation
     @objc public static func sendURL(_ url: URL, asFile: Bool, caption: String?, conversation: ConversationEntity) {
         let senderItem: URLSenderItem?
         if asFile {
-            let mimeType = UTIConverter.mimeType(fromUTI: UTIConverter.uti(forFileURL: url))
+            let uti = UTIConverter.uti(forFileURL: url) ?? UTType.data.identifier
+            let mimeType = UTIConverter.mimeType(fromUTI: uti) ?? "application/octet-stream"
             senderItem = URLSenderItem(url: url, type: mimeType, renderType: 0, sendAsFile: true)
         }
         else {

@@ -1,35 +1,16 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Combine
 import Foundation
+import ThreemaEssentials
 import ThreemaMacros
 
 enum ContactListSearch: Hashable {
-    enum Section {
+    enum Section: Hashable {
         case tokens
         case contacts
         case groups
         case distributionLists
-        case directoryContacts
+        case directoryContacts(companyName: String?)
     
         var localizedTitle: String? {
             switch self {
@@ -41,8 +22,8 @@ enum ContactListSearch: Hashable {
                 #localize("contact_list_search_token_title_groups")
             case .distributionLists:
                 #localize("contact_list_search_token_title_distribution_lists")
-            case .directoryContacts:
-                if let companyName = BusinessInjector.ui.myIdentityStore.companyName {
+            case let .directoryContacts(companyName):
+                if let companyName {
                     String.localizedStringWithFormat(
                         #localize("contact_list_search_token_title_directory_contacts_name"),
                         companyName
@@ -65,24 +46,26 @@ enum ContactListSearch: Hashable {
     }
 }
 
-class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSearch.Section, ContactListSearch.Row> {
+final class ContactListSearchDataSource: UITableViewDiffableDataSource<
+    ContactListSearch.Section,
+    ContactListSearch.Row
+> {
     
     // MARK: - Properties
-    
-    private weak var tableView: UITableView?
-    private weak var businessInjector: BusinessInjectorProtocol?
     
     @Published private var currentSearchText = ""
     private var cancellables = Set<AnyCancellable>()
     private var currentTokens = [ContactListSearchToken]()
+    private var currentContactIDs: Set<ThreemaIdentity> = []
     
-    private lazy var serverAPIConnector = ServerAPIConnector()
+    private let serverAPIConnectorFactory: () -> ServerAPIConnector
+    private lazy var serverAPIConnector = serverAPIConnectorFactory()
     private var currentDirectoryTask: Task<Void, Never>?
     private var nextPage = 0
     private var availablePages = 0
     
     private lazy var directoryFilterTokens: [ContactListSearchToken] = {
-        guard let filters = businessInjector?.myIdentityStore.directoryCategories as? [String: String] else {
+        guard let filters = fetchers.fetchDirectoryCategories() else {
             return []
         }
         
@@ -95,9 +78,15 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
         }
     }()
     
-    init(tableView: UITableView, businessInjector: BusinessInjectorProtocol) {
-        self.tableView = tableView
-        self.businessInjector = businessInjector
+    private let fetchers: ContactListSearchDataSourceFetchers
+    
+    init(
+        tableView: UITableView,
+        fetchers: ContactListSearchDataSourceFetchers,
+        serverAPIConnectorFactory: @escaping () -> ServerAPIConnector
+    ) {
+        self.fetchers = fetchers
+        self.serverAPIConnectorFactory = serverAPIConnectorFactory
         
         super.init(tableView: tableView) { tableView, indexPath, row in
             switch row {
@@ -116,10 +105,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
                 return cell
             
             case let .contact(objectID):
-                let contactEntity = businessInjector.entityManager.performAndWait {
-                    businessInjector.entityManager.entityFetcher.existingObject(with: objectID) as? ContactEntity
-                }
-                guard let contactEntity else {
+                guard let contactEntity = fetchers.fetchContact(objectID) else {
                     // TODO: (IOS-4536) Error
                     fatalError()
                 }
@@ -131,15 +117,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
                 return cell
                 
             case let .group(objectID):
-                let group: Group? = businessInjector.entityManager.performAndWait {
-                    guard let conversation = businessInjector.entityManager.entityFetcher
-                        .existingObject(with: objectID) as? ConversationEntity else {
-                        return nil
-                    }
-                    return businessInjector.groupManager.getGroup(conversation: conversation)
-                }
-                
-                guard let group else {
+                guard let group = fetchers.fetchGroup(objectID) else {
                     // TODO: (IOS-4536) Error
                     fatalError()
                 }
@@ -151,12 +129,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
                 return cell
                 
             case let .distributionList(objectID):
-                let distributionListEntity: DistributionListEntity? = businessInjector.entityManager.performAndWait {
-                    businessInjector.entityManager.entityFetcher
-                        .existingObject(with: objectID) as? DistributionListEntity
-                }
-                
-                guard let distributionListEntity else {
+                guard let distributionListEntity = fetchers.fetchDistributionList(objectID) else {
                     // TODO: (IOS-4536) Error
                     fatalError()
                 }
@@ -209,33 +182,32 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
             }
             .store(in: &cancellables)
         
-        registerCells()
+        registerCells(for: tableView)
         
         defaultRowAnimation = .fade
     }
     
-    private func registerCells() {
+    private func registerCells(for tableView: UITableView) {
         // We register here the header used in `ContactListSearchResultsViewController`. If we extend this we might move
         // this logic over there
-        tableView?.register(
+        tableView.register(
             UITableViewHeaderFooterView.self,
-            forHeaderFooterViewReuseIdentifier: SearchContentConfigurations
-                .contentConfigurationSectionHeaderIdentifier
+            forHeaderFooterViewReuseIdentifier: SearchContentConfigurations.contentConfigurationSectionHeaderIdentifier
         )
         
-        tableView?.register(
+        tableView.register(
             UITableViewCell.self,
             forCellReuseIdentifier: SearchContentConfigurations.contentConfigurationTokenCellIdentifier
         )
-        tableView?.register(
+        tableView.register(
             UITableViewCell.self,
             forCellReuseIdentifier: SearchContentConfigurations.contentConfigurationProgressCellIdentifier
         )
 
-        tableView?.registerCell(ContactCell.self)
-        tableView?.registerCell(GroupCell.self)
-        tableView?.registerCell(DistributionListCell.self)
-        tableView?.registerCell(DirectoryContactCell.self)
+        tableView.registerCell(ContactCell.self)
+        tableView.registerCell(GroupCell.self)
+        tableView.registerCell(DistributionListCell.self)
+        tableView.registerCell(DirectoryContactCell.self)
     }
     
     public func updateSearchResults(for text: String, with tokens: [ContactListSearchToken]) async {
@@ -273,6 +245,9 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
         // Contacts
         if currentTokens.contains(.contacts) || currentTokens.isEmpty, !text.isEmpty {
             loadContacts(snapshot: &snapshot)
+        }
+        else {
+            currentContactIDs = []
         }
         
         // Groups
@@ -349,14 +324,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
         ContactListSearch.Section,
         ContactListSearch.Row
     >) {
-        guard let entityFetcher = businessInjector?.entityManager.entityFetcher else {
-            return
-        }
-        
-        let contactsIDs = entityFetcher.matchingContactsForContactListSearch(
-            containing: currentSearchText,
-            hideStaleContacts: UserSettings.shared().hideStaleContacts
-        )
+        let contactsIDs = fetchers.fetchContactIDsForSearch(currentSearchText)
         
         // We do not show the section if we have no contacts
         guard !contactsIDs.isEmpty else {
@@ -364,8 +332,10 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
         }
         
         let rows: [ContactListSearch.Row] = contactsIDs.map {
-            ContactListSearch.Row.contact($0)
+            ContactListSearch.Row.contact($0.objectID)
         }
+        
+        currentContactIDs = Set(contactsIDs.lazy.map(\.identity))
         
         if !snapshot.sectionIdentifiers.contains(.contacts) {
             snapshot.appendSections([.contacts])
@@ -377,12 +347,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
         ContactListSearch.Section,
         ContactListSearch.Row
     >) {
-        guard let entityFetcher = businessInjector?.entityManager.entityFetcher else {
-            return
-        }
-        
-        let groupConversationIDs = entityFetcher
-            .matchingConversationsForContactListSearch(containing: currentSearchText)
+        let groupConversationIDs = fetchers.fetchConversationsForSearch(currentSearchText)
         
         // We do not show the section if we have no groups
         guard !groupConversationIDs.isEmpty else {
@@ -403,13 +368,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
         ContactListSearch.Section,
         ContactListSearch.Row
     >) {
-        
-        guard let entityFetcher = businessInjector?.entityManager.entityFetcher else {
-            return
-        }
-        
-        let distributionListIDs = entityFetcher
-            .matchingDistributionListsForContactListSearch(containing: currentSearchText)
+        let distributionListIDs = fetchers.fetchDistributionListIDsForSearch(currentSearchText)
         
         // We do not show the section if we have no distribution lists
         guard !distributionListIDs.isEmpty else {
@@ -426,10 +385,6 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
     }
     
     private func loadDirectoryContacts() {
-        guard let businessInjector else {
-            return
-        }
-        
         // Reset current state
         if let currentDirectoryTask {
             currentDirectoryTask.cancel()
@@ -442,9 +397,8 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
             do {
                 let (contacts, paging) = try await serverAPIConnector.searchDirectory(
                     text: query(),
-                    categoryIdentifiers: directoryCategoryIdentifierts(),
-                    page: 0,
-                    businessInjector: businessInjector
+                    categoryIdentifiers: directoryCategoryIdentifiers(),
+                    page: 0
                 )
                 
                 guard let size = paging["size"] as? Double,
@@ -469,7 +423,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
     }
     
     public func loadMoreDirectoryContacts() {
-        guard TargetManager.isBusinessApp, let businessInjector, businessInjector.userSettings.companyDirectory,
+        guard fetchers.isBusinessApp(), fetchers.isCompanyDirectory(), searchCompanyDirectory(),
               currentDirectoryTask == nil,
               nextPage < availablePages else {
             return
@@ -485,9 +439,8 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
             do {
                 let (contacts, paging) = try await serverAPIConnector.searchDirectory(
                     text: query(),
-                    categoryIdentifiers: directoryCategoryIdentifierts(),
-                    page: nextPage,
-                    businessInjector: businessInjector
+                    categoryIdentifiers: directoryCategoryIdentifiers(),
+                    page: nextPage
                 )
                 
                 guard let nextPage = paging["next"] as? Int, let size = paging["size"] as? Double,
@@ -513,23 +466,33 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
     private func applyDirectorySearchResults(contacts: [CompanyDirectoryContact]) {
         var snapshot = snapshot()
         
-        let rows: [ContactListSearch.Row] = contacts.map {
-            ContactListSearch.Row.directoryContact($0)
+        let rows: [ContactListSearch.Row] = contacts.compactMap { directoryContact in
+            /// In case a directory contact is already in the contact section,
+            /// we don't show it in the directory contacts section.
+            guard currentContactIDs.contains(where: {
+                $0.rawValue == directoryContact.id
+            }) == false else {
+                return nil
+            }
+            
+            return ContactListSearch.Row.directoryContact(directoryContact)
         }
         
         removeProgressCell(snapshot: &snapshot)
         
+        let companyName = fetchers.fetchCompanyName()
+        
         if !rows.isEmpty {
-            if !snapshot.sectionIdentifiers.contains(.directoryContacts) {
-                snapshot.appendSections([.directoryContacts])
+            if !snapshot.sectionIdentifiers.contains(.directoryContacts(companyName: companyName)) {
+                snapshot.appendSections([.directoryContacts(companyName: companyName)])
             }
             
-            snapshot.appendItems(rows, toSection: .directoryContacts)
+            snapshot.appendItems(rows, toSection: .directoryContacts(companyName: companyName))
         }
        
-        if snapshot.indexOfSection(.directoryContacts) != nil,
-           snapshot.numberOfItems(inSection: .directoryContacts) == 0 {
-            snapshot.deleteSections([.directoryContacts])
+        if snapshot.indexOfSection(.directoryContacts(companyName: companyName)) != nil,
+           snapshot.numberOfItems(inSection: .directoryContacts(companyName: companyName)) == 0 {
+            snapshot.deleteSections([.directoryContacts(companyName: companyName)])
         }
         
         Task { @MainActor in
@@ -537,7 +500,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
         }
     }
     
-    private func directoryCategoryIdentifierts() -> [String] {
+    private func directoryCategoryIdentifiers() -> [String] {
         var identifiers: [String] = []
         for token in currentTokens {
             if case let .directoryFilterToken(info) = token {
@@ -554,10 +517,13 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
         guard !snapshot.itemIdentifiers.contains(.progress) else {
             return
         }
-        if !snapshot.sectionIdentifiers.contains(.directoryContacts) {
-            snapshot.appendSections([.directoryContacts])
+        
+        let companyName = fetchers.fetchCompanyName()
+        
+        if !snapshot.sectionIdentifiers.contains(.directoryContacts(companyName: companyName)) {
+            snapshot.appendSections([.directoryContacts(companyName: companyName)])
         }
-        snapshot.appendItems([.progress], toSection: .directoryContacts)
+        snapshot.appendItems([.progress], toSection: .directoryContacts(companyName: companyName))
     }
     
     private func removeProgressCell(snapshot: inout NSDiffableDataSourceSnapshot<
@@ -582,7 +548,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
             }
         }
         
-        return TargetManager.isBusinessApp && businessInjector?.userSettings.companyDirectory ?? false &&
+        return fetchers.isBusinessApp() && fetchers.isCompanyDirectory() &&
             (
                 (currentTokens.contains(.directoryContacts) && currentSearchText.count >= 3) ||
                     (currentTokens.contains(.directoryContacts) && !filtered.isEmpty) ||
@@ -593,7 +559,7 @@ class ContactListSearchDataSource: UITableViewDiffableDataSource<ContactListSear
     private func query() -> String {
         let trimmedSearchText = currentSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
         
-        if trimmedSearchText.isEmpty, currentTokens.count == 2 {
+        if trimmedSearchText.isEmpty {
             return "*"
         }
         

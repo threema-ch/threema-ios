@@ -1,46 +1,23 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
-import CocoaLumberjackSwift
 import Foundation
-import ThreemaEssentials
 import ThreemaFramework
 import ThreemaMacros
 
 protocol ContactListSearchResultsDelegate: AnyObject {
-    func present(for destination: ContactsCoordinator.InternalDestination)
+    func present(for destination: ContactListCoordinator.InternalDestination)
+    func handleDirectoryContact(_ directoryContact: CompanyDirectoryContact) async
+    func isDirectoryContactAvailable(for id: String) -> Bool
 }
 
 final class ContactListSearchResultsViewController: ThemedViewController {
     
     // MARK: - Private properties
-        
-    private let businessInjector: BusinessInjectorProtocol
-    private weak var delegate: ContactListSearchResultsDelegate?
     
+    private weak var delegate: ContactListSearchResultsDelegate?
+    private let dataSourceFactory: (UITableView) -> ContactListSearchDataSource
+    private let onDirectoryContactAdded: () -> Void
+    
+    private lazy var dataSource = dataSourceFactory(tableView)
     private weak var searchController: UISearchController?
-   
-    private lazy var dataSource = ContactListSearchDataSource(
-        tableView: tableView,
-        businessInjector: businessInjector
-    )
     
     // MARK: - Views
     
@@ -59,11 +36,13 @@ final class ContactListSearchResultsViewController: ThemedViewController {
     // MARK: - Lifecycle
 
     init(
-        businessInjector: BusinessInjectorProtocol,
-        delegate: ContactListSearchResultsDelegate? = nil
+        delegate: ContactListSearchResultsDelegate?,
+        dataSourceFactory: @escaping (UITableView) -> ContactListSearchDataSource,
+        onDirectoryContactAdded: @escaping () -> Void
     ) {
-        self.businessInjector = businessInjector
         self.delegate = delegate
+        self.dataSourceFactory = dataSourceFactory
+        self.onDirectoryContactAdded = onDirectoryContactAdded
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -81,6 +60,12 @@ final class ContactListSearchResultsViewController: ThemedViewController {
         super.viewDidLoad()
         
         configureTableView()
+    }
+    
+    override func updateColors() {
+        super.updateColors()
+
+        tableView.backgroundColor = Colors.plainBackgroundTableView
     }
     
     // MARK: - Public functions
@@ -129,28 +114,14 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
             delegate?.present(for: .contact(objectID: contactID))
 
         case let .group(conversationID):
-            delegate?.present(for: .group(objectID: conversationID))
+            delegate?.present(for: .groupFromID(conversationID))
 
         case let .distributionList(distributionListID):
             delegate?.present(for: .distributionList(objectID: distributionListID))
 
         case let .directoryContact(directoryContact):
-            addDirectoryContact(directoryContact) { [weak self] contact in
-                guard let contact else {
-                    return
-                }
-                
-                Task { @MainActor in
-                    let entityFetcher = self?.businessInjector.entityManager.entityFetcher
-                    guard let self,
-                          let contactEntity = entityFetcher?.contactEntity(
-                              for: contact.identity.rawValue
-                          ) else {
-                        return
-                    }
-                    
-                    self.delegate?.present(for: .contact(objectID: contactEntity.objectID))
-                }
+            Task { [weak self] in
+                await self?.delegate?.handleDirectoryContact(directoryContact)
             }
 
         case .progress:
@@ -167,11 +138,9 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
             return nil
         }
         
-        let contact = businessInjector.entityManager.performAndWait {
-            self.businessInjector.entityManager.entityFetcher.contactEntity(for: directoryContact.id)
-        }
-        
-        guard contact == nil else {
+        guard delegate?.isDirectoryContactAvailable(
+            for: directoryContact.id
+        ) == false else {
             return nil
         }
         
@@ -179,8 +148,12 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
             style: .normal,
             title: #localize("contact_list_directory_add")
         ) { [weak self] _, _, handler in
-            self?.addDirectoryContact(directoryContact) { _ in
-                handler(true)
+            Task {
+                await self?.delegate?.handleDirectoryContact(directoryContact)
+                
+                await MainActor.run {
+                    handler(true)
+                }
             }
         }
         
@@ -243,42 +216,6 @@ extension ContactListSearchResultsViewController: UITableViewDelegate {
         }
         
         return sectionIdentifiers[sectionIndex]
-    }
-    
-    private func addDirectoryContact(
-        _ directoryContact: CompanyDirectoryContact,
-        completion: @escaping (Contact?) -> Void
-    ) {
-        guard let contact = businessInjector.contactStore
-            .updateAcquaintanceLevelToDirect(
-                for: ThreemaIdentity(directoryContact.id),
-                entityManager: businessInjector.entityManager
-            ) else {
-            businessInjector.contactStore.addWorkContact(
-                with: directoryContact.id,
-                publicKey: directoryContact.pk,
-                firstname: directoryContact.first,
-                lastname: directoryContact.last,
-                csi: directoryContact.csi,
-                jobTitle: directoryContact.jobTitle,
-                department: directoryContact.department,
-                acquaintanceLevel: .direct
-            ) { addedContactEntity in
-                guard let contactEntity = addedContactEntity as? ContactEntity else {
-                    DDLogError("Add work contact failed")
-                    completion(nil)
-                    return
-                }
-                NotificationPresenterWrapper.shared.present(type: .directoryContactAdded)
-                completion(Contact(contactEntity: contactEntity))
-            } onError: { error in
-                DDLogError("Add work contact failed \(error)")
-                completion(nil)
-            }
-            return
-        }
-        
-        completion(contact)
     }
 }
 

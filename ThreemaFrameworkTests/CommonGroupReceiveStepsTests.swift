@@ -1,39 +1,18 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 @testable import ThreemaFramework
 
 final class CommonGroupReceiveStepsTests: XCTestCase {
 
-    private var databaseMainContext: DatabaseContext!
-    private var databasePreparer: DatabasePreparer!
-        
+    private var testDatabase: TestDatabase!
+    private var databasePreparer: TestDatabasePreparer!
+
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
         
-        let (_, mainContext, _) = DatabasePersistentContext.devNullContext()
-        databaseMainContext = DatabaseContext(mainContext: mainContext, backgroundContext: nil)
-        databasePreparer = DatabasePreparer(context: mainContext)
+        testDatabase = TestDatabase()
+        databasePreparer = testDatabase.preparer
     }
 
     // MARK: No group
@@ -42,10 +21,10 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         let expectedResult: CommonGroupReceiveSteps.Result = .discardMessage
         
         let businessInjector = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false)
+            entityManager: testDatabase.entityManager
         )
 
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         let creator = ThreemaIdentity(businessInjector.myIdentityStore.identity)
         let groupIdentity = GroupIdentity(id: groupID, creator: creator)
         
@@ -61,10 +40,10 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         let expectedResult: CommonGroupReceiveSteps.Result = .discardMessage
         
         let businessInjector = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false)
+            entityManager: testDatabase.entityManager
         )
 
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         let creator = ThreemaIdentity("CREATOR1")
         let groupIdentity = GroupIdentity(id: groupID, creator: creator)
         
@@ -89,11 +68,11 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             groupManager: groupManagerMock
         )
         
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         let creator = ThreemaIdentity(businessInjectorMock.myIdentityStore.identity)
         let groupIdentity = GroupIdentity(id: groupID, creator: creator)
         
@@ -111,7 +90,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             var dbMembers = [ContactEntity]()
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: member.rawValue
                 ))
             }
@@ -161,11 +140,11 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
         
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             groupManager: groupManagerMock
         )
         
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         let creator = ThreemaIdentity(businessInjectorMock.myIdentityStore.identity)
         let groupIdentity = GroupIdentity(id: groupID, creator: creator)
         
@@ -183,7 +162,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             var dbMembers = [ContactEntity]()
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: member.rawValue
                 ))
             }
@@ -233,11 +212,11 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             groupManager: groupManagerMock
         )
         
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         let creator = ThreemaIdentity("CREATOR1")
         let groupIdentity = GroupIdentity(id: groupID, creator: creator)
         
@@ -253,14 +232,14 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         databasePreparer.save {
             let dbCreator = databasePreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: creator.rawValue
             )
             
             var dbMembers = [ContactEntity]()
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: member.rawValue
                 ))
             }
@@ -314,11 +293,11 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             groupManager: groupManagerMock
         )
         
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         let creator = ThreemaIdentity("CREATOR1")
         let groupIdentity = GroupIdentity(id: groupID, creator: creator)
         
@@ -334,14 +313,14 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         databasePreparer.save {
             let dbCreator = databasePreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: creator.rawValue
             )
             
             var dbMembers = [ContactEntity]()
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: member.rawValue
                 ))
             }
@@ -397,11 +376,11 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             groupManager: groupManagerMock
         )
         
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         let creator = ThreemaIdentity(businessInjectorMock.myIdentityStore.identity)
         let groupIdentity = GroupIdentity(id: groupID, creator: creator)
         
@@ -419,7 +398,7 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
             var dbMembers = [ContactEntity]()
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: member.rawValue
                 ))
             }
@@ -469,11 +448,11 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             groupManager: groupManagerMock
         )
         
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         let creator = ThreemaIdentity("CREATOR1")
         let groupIdentity = GroupIdentity(id: groupID, creator: creator)
         
@@ -489,14 +468,14 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         databasePreparer.save {
             let dbCreator = databasePreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: creator.rawValue
             )
             
             var dbMembers = [ContactEntity]()
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: member.rawValue
                 ))
             }
@@ -548,11 +527,11 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         let groupManagerMock = GroupManagerMock()
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: databaseMainContext, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.entityManager,
             groupManager: groupManagerMock
         )
         
-        let groupID = MockData.generateGroupID()
+        let groupID = BytesUtility.generateGroupID()
         let creator = ThreemaIdentity("CREATOR1")
         let groupIdentity = GroupIdentity(id: groupID, creator: creator)
         
@@ -568,14 +547,14 @@ final class CommonGroupReceiveStepsTests: XCTestCase {
 
         databasePreparer.save {
             let dbCreator = databasePreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: creator.rawValue
             )
             
             var dbMembers = [ContactEntity]()
             for member in members {
                 dbMembers.append(databasePreparer.createContact(
-                    publicKey: MockData.generatePublicKey(),
+                    publicKey: BytesUtility.generatePublicKey(),
                     identity: member.rawValue
                 ))
             }

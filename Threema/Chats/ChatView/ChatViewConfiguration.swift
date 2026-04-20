@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import UIKit
 
@@ -32,9 +12,22 @@ enum ChatViewConfiguration {
     static let topInset = ChatBubble.defaultTopBottomInset
     
     /// Default (additional) inset at the bottom of the chat (scroll) view
-    static let bottomInset = ChatBubble.defaultTopBottomInset + (ChatBubble.defaultLeadingTrailingInset / 2)
+    static let bottomInset =
+        if #available(iOS 26.0, *) {
+            ChatBubble.defaultTopBottomInset + (ChatBubble.defaultLeadingTrailingInset / 2) + 4
+        }
+        else {
+            ChatBubble.defaultTopBottomInset + (ChatBubble.defaultLeadingTrailingInset / 2)
+        }
+    
     /// Default (additional) inset at the bottom of the chat (scroll) view of group chats
-    static let groupBottomInset = ChatBubble.defaultGroupTopBottomInset + (ChatBubble.defaultLeadingTrailingInset / 2)
+    static let groupBottomInset =
+        if #available(iOS 26.0, *) {
+            ChatBubble.defaultGroupTopBottomInset + (ChatBubble.defaultLeadingTrailingInset / 2) + 4
+        }
+        else {
+            ChatBubble.defaultGroupTopBottomInset + (ChatBubble.defaultLeadingTrailingInset / 2)
+        }
     
     /// Profile on the top in the navigation bar
     enum Profile {
@@ -48,8 +41,38 @@ enum ChatViewConfiguration {
         /// Constant font for members lists
         static let membersListFont = UIFont.systemFont(ofSize: 12)
         
-        /// Combined leading and trailing offset from the navigation width
-        static let combinedLeadingAndTrailingOffset: CGFloat = 2 * 62
+        /// Combined leading and trailing offset from the navigation width (only applies with non-regular horizontal
+        /// size class)
+        static let combinedLeadingAndTrailingOffset: CGFloat =
+            if #available(iOS 26, *) {
+                // Based on iPhone 17 and iOS 26.3
+                2 * 72
+            }
+            else {
+                2 * 62
+            }
+
+        /// Combined leading and trailing offset from the navigation width when the back button has an unread message
+        /// count in it (only applies with non-regular horizontal size class)
+        static let combinedLeadingAndTrailingOffsetWithUnreadMessages: CGFloat =
+            if #available(iOS 26, *) {
+                2 * 90
+            }
+            else {
+                combinedLeadingAndTrailingOffset
+            }
+        
+        /// Combined leading and trailing offset from the navigation width when the horizontal size class is regular
+        /// (e.g. iPad)
+        static let combinedLeadingAndTrailingOffsetRegularSizeClass: CGFloat =
+            if #available(iOS 26, *) {
+                // Based on iPad Air 11" (M3) and iOS 26.1
+                2 * 90
+            }
+            else {
+                2 * 62
+            }
+
         /// Top and bottom content insets
         ///
         /// All content is offset by these insets on top and bottom
@@ -57,6 +80,9 @@ enum ChatViewConfiguration {
         
         /// Space between profile picture and rest of profile information
         static let profilePictureAndInfoSpace: CGFloat = 8
+        
+        /// Height of the profile picture
+        static let profilePictureHeight: CGFloat = 44
         
         /// Height of verification level below name
         static let verificationLevelHeight: CGFloat = 7
@@ -574,68 +600,7 @@ enum ChatViewConfiguration {
         /// Default leading and trailing inset of metadata view
         static let leadingAndTrailingInset: CGFloat = 8
     }
-    
-    enum ChatBar {
-        /// Size of the send button
-        static let sendButtonSize: CGFloat = 26
-        /// Size of the attachment add button (plus button)
-        static let plusButtonSize: CGFloat = 21
-        /// Spacing between the camera and microphone icons
-        static let cameraMicSpacing: CGFloat = 18.0
-        /// Spacing between the attachment add button and the textInputView and the textInputView and the microphone /
-        /// camera / send button
-        static let textInputButtonSpacing: CGFloat = 12
-        /// Vertical distance between border of ChatBar and text view
-        static let verticalChatBarTextViewDistance: CGFloat = 7
-        /// The maximum number of lines before the textInputView start to scroll
-        static let maxNumberOfLinesPortrait = 7
-        /// The maximum number of lines before the textInputView start to scroll for small devices
-        static let maxNumberOfLinesPortraitSmallScreen = 5
-        /// The maximum number of lines before the textInputView start to scroll
-        static let maxNumberOfLinesLandscape = 3
-        /// The maximum number of lines before the textInputView start to scroll for small devices
-        static let maxNumberOfLinesLandscapeSmallScreen = 1.5
-        /// The default value for the height of a single line
-        static let defaultSingleLineHeight: CGFloat = 33.5
-        /// The minimum spacing between the ChatBar and the top of the tableView
-        static let tableViewChatBarMinSpacing: CGFloat = 60.0
-        /// Animation configuration for hiding / showing the send button
-        enum ShowHideSendButtonAnimation {
-            static let totalDuration: CGFloat = 0.25
-            static let fadeDuration: CGFloat = 0.15
-            static let preFadeDelay: CGFloat = 0.1
-        }
-
-        /// Animation shown when the ChatBar changes size
-        enum ContentInsetAnimation {
-            static let totalDuration: CGFloat = 0.25
-            static let delay: CGFloat = 0.15
-        }
-        
-        enum QuoteView {
-            static let topBottomInset: CGFloat = 8
-            static let leadingTrailingInset: CGFloat = 16
-            // The spacing property of the main StackView currently used to layout the quoteview and the dismiss button
-            static let stackViewSpacing: CGFloat = 16
-        }
-    }
-    
-    /// Button with an SF Symbol used in the ChatBarView
-    enum ChatBarButton {
-        static let defaultSize: CGFloat = 17
-    }
-    
-    enum ChatTextView {
-        static let borderWidth = 0.5
-        static let cornerRadius = ChatBubble.cornerRadius
-        static let smallerContentSizeConfigurationCornerRadius = ChatBubble.smallerContentSizeConfigurationCornerRadius
-        static let leadingAndTrailingInset: CGFloat = 10
-        // Ideally they fulfill cornerRadius > 2*minTopAndBottomInset + TextView height with one line of text with
-        // default dynamic type
-        static let minTopAndBottomInset: CGFloat = 4
-        static let textStyle = UIFont.TextStyle.body
-    }
-    
+            
     enum MentionsView {
         static let maxHeight: CGFloat = 250
         /// Animation duration for appearing and disappearing
@@ -681,8 +646,18 @@ enum ChatViewConfiguration {
         static let topBottomInsets = 7.5
         /// Corner radius of the views on the left side
         static let cornerRadius = 5.0
+        /// Content insets for the glass button
+        static let glassButtonInsets = 12.0
+        /// Distance between image and text in glass button
+        static let glassButtonImageTextPadding = 8.0
         /// Distance between the bottom edge of the button and the chat bar
-        static let distanceToChatBar = 15.0
+        static let distanceToChatBar =
+            if #available(iOS 26.0, *) {
+                32.0
+            }
+            else {
+                15.0
+            }
         
         enum ShowHideAnimation {
             static let duration = 0.5
@@ -771,7 +746,14 @@ enum ChatViewConfiguration {
             static let cornerRadius: CGFloat = 14
             
             // SectionToolbar
-            static let toolbarHeight: CGFloat = 60
+            static let toolbarHeight: CGFloat =
+                if #available(iOS 26.0, *) {
+                    30
+                }
+                else {
+                    60
+                }
+
             static let horizontalPadding: CGFloat = 16
             static let itemHeightMargin: CGFloat = 4
             static let yOffsetOnDismissal: CGFloat = 100

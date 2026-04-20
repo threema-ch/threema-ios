@@ -1,25 +1,5 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 
@@ -34,27 +14,20 @@ final class AppSetupStepsTests: XCTestCase {
     private let taskManagerMock = TaskManagerMock()
     private let contactStoreMock = ContactStoreMock(callOnCompletion: true)
     private let userSettingsMock = UserSettingsMock()
-    
-    private var databasePreparer: DatabasePreparer!
+
+    private var databasePreparer: TestDatabasePreparer!
     private var backgroundEntityManager: EntityManager!
     private var businessInjectorMock: FrameworkInjectorProtocol!
     
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
 
-        let remoteSecretManagerMock = RemoteSecretManagerMock()
-        
-        let (_, mainContext, childContext) = DatabasePersistentContext
-            .devNullContext(withChildContextForBackgroundProcess: true)
-        let databaseBackgroundContext = DatabaseContext(mainContext: mainContext, backgroundContext: childContext)
-        databasePreparer = DatabasePreparer(context: mainContext)
-        backgroundEntityManager = EntityManager(
-            databaseContext: databaseBackgroundContext,
-            isRemoteSecretEnabled: remoteSecretManagerMock.isRemoteSecretEnabled
-        )
-        
+        let testDatabase = TestDatabase()
+        databasePreparer = testDatabase.preparer
+        backgroundEntityManager = testDatabase.backgroundEntityManager
+
         // Workaround to ensure remote secret is initialized
-        AppLaunchManager.shared.setRemoteSecretManager(remoteSecretManagerMock)
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
     }
 
     func testBasicRun() async throws {
@@ -208,7 +181,7 @@ final class AppSetupStepsTests: XCTestCase {
     private func createFSEnabledContact(for identity: ThreemaIdentity) -> ContactEntity {
         databasePreparer.save {
             let contact = databasePreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: identity.rawValue
             )
             contact.setFeatureMask(to: 255)
@@ -232,7 +205,7 @@ final class AppSetupStepsTests: XCTestCase {
         and members: [ThreemaIdentity]
     ) async throws -> Group {
         
-        let groupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: creator)
+        let groupIdentity = GroupIdentity(id: BytesUtility.generateGroupID(), creator: creator)
         
         let groupManager = GroupManager(
             myIdentityStore: myIdentityStoreMock,

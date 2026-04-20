@@ -1,29 +1,9 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import QuickLook
 import ThreemaMacros
 
-class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelegate {
+final class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelegate {
     
     @IBOutlet var loadingText: UILabel!
     @IBOutlet var activityIndicator: UIActivityIndicatorView!
@@ -169,10 +149,11 @@ class DocumentPreviewCell: ScreenWidthSizedCell, QLPreviewControllerDelegate {
                 
                 self.smallDocumentNameLabel.text = self.item?.originalFilename
                 self.smallDocumentDescriptionLabel.text = self.getDescription(for: self.item)
-                
-                let uti = UTIConverter.uti(forFileURL: newItem.previewItemURL)
+
+                let url = newItem.previewItemURL ?? URL(fileURLWithPath: "")
+                let uti = UTIConverter.uti(forFileURL: url) ?? UTType.data.identifier
                 let icon = UTIConverter.getDefaultThumbnail(forMimeType: uti)
-                self.smallThumbnailView.image = icon?.withTintColor(.label)
+                self.smallThumbnailView.image = icon.withTintColor(.label)
                 self.smallThumbnailView.contentMode = .center
             }
             self.addTapGestureRecognizer(view: self.smallThumbnailView)

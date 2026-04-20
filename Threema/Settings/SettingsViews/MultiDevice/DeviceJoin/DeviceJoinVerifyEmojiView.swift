@@ -1,36 +1,12 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 import ThreemaMacros
 
 struct DeviceJoinVerifyEmojiView: View {
-
-    @Binding var showWizard: Bool
-    
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    
-    @EnvironmentObject private var deviceJoinManager: DeviceJoinManager
-
+    @ObservedObject var deviceJoinManager: DeviceJoinManager
+    @Binding var showWizard: Bool
+    @Binding var path: NavigationPath
     @State private var showNoMatchAlert = false
-    
     @State private var startSendData = false
     
     var body: some View {
@@ -67,41 +43,29 @@ struct DeviceJoinVerifyEmojiView: View {
                             )
                             .multilineTextAlignment(.center)
                             
-                            Button("ok") {
+                            ThreemaButton(
+                                title: #localize("ok"),
+                                role: .destructive,
+                                style: .borderedProminent,
+                                size: .fullWidth
+                            ) {
                                 deviceJoinManager.deviceJoin.cancel()
                                 showWizard = false
                             }
-                            .buttonStyle(.borderedProminent)
                         }
                     }
                     
                     Spacer(minLength: 24)
-                    
-                    ZStack {
-                        // The `ZStack` and `NavigationLink` is needed for programatic navigation
-                        // If button shapes are enabled `NavigationLink` has an non zero size (that cannot be completely
-                        // removed by setting the frame, button shape or something similar). Thus we put it behind the
-                        // label and hide it, which also disables interaction. This can be resolved if the minimal
-                        // target is iOS 16 which provides new programatic navigation APIs.
-                        NavigationLink(
-                            destination: DeviceJoinSendDataView(showWizard: $showWizard)
-                                .environmentObject(deviceJoinManager),
-                            isActive: $startSendData
-                        ) {
-                            EmptyView()
-                        }
-                        .hidden()
-                        
-                        Label(
-                            String.localizedStringWithFormat(
-                                #localize("multi_device_join_sending_info"),
-                                TargetManager.appName
-                            ),
-                            systemImage: "info.circle"
-                        )
-                        .foregroundColor(.secondary)
-                        .font(.footnote)
-                    }
+
+                    Label(
+                        String.localizedStringWithFormat(
+                            #localize("multi_device_join_sending_info"),
+                            TargetManager.appName
+                        ),
+                        systemImage: "info.circle"
+                    )
+                    .foregroundColor(.secondary)
+                    .font(.footnote)
                 }
                 .padding([.horizontal, .bottom], 24)
                 .frame(minHeight: geometryProxy.size.height)
@@ -111,15 +75,16 @@ struct DeviceJoinVerifyEmojiView: View {
         .navigationBarBackButtonHidden()
         // If this is set higher in the navigation stack this will be overridden by it
         .interactiveDismissDisabled()
+        .onChange(of: startSendData) {
+            if startSendData {
+                path.append(DeviceJoinRoute.sendData)
+            }
+        }
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(role: .cancel) {
+            ToolbarItem(placement: .primaryAction) {
+                XMarkCancelButton {
                     deviceJoinManager.deviceJoin.cancel()
                     showWizard = false
-                } label: {
-                    Label(#localize("cancel"), systemImage: "xmark.circle.fill")
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundColor(.secondary)
                 }
             }
         }
@@ -147,8 +112,11 @@ struct DeviceJoinVerifyEmojiView_Previews: PreviewProvider {
     
     static var previews: some View {
         NavigationView {
-            DeviceJoinVerifyEmojiView(showWizard: .constant(true))
-                .environmentObject(deviceJoinManager)
+            DeviceJoinVerifyEmojiView(
+                deviceJoinManager: deviceJoinManager,
+                showWizard: .constant(true),
+                path: .constant(.init())
+            )
         }
     }
 }

@@ -68,6 +68,12 @@
             ReferencedContainer = "container:Threema.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "-FEATURE_DISTRIBUTION_LISTS_ENABLED 1"
+            isEnabled = "NO">
+         </CommandLineArgument>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "AppStore"

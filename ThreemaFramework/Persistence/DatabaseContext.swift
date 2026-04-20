@@ -1,28 +1,13 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CoreData
 
+@objc public protocol DatabaseContextProtocol {
+    var main: ThreemaManagedObjectContext { get }
+    var current: ThreemaManagedObjectContext { get }
+}
+
 /// Handle Core Data Contexts
-public final class DatabaseContext: NSObject {
-    
+public final class DatabaseContext: NSObject, DatabaseContextProtocol {
+
     /// Direct main context that runs on the main thread
     ///
     /// This is the same context as long as the app runs
@@ -136,23 +121,6 @@ public final class DatabaseContext: NSObject {
             object: nil
         )
     }
-    
-    #if DEBUG
-        /// - Warning: Only use for testing!
-        init(mainContext: ThreemaManagedObjectContext, backgroundContext: ThreemaManagedObjectContext? = nil) {
-            super.init()
-            
-            DatabaseContext.mainContext = mainContext
-            mainContext.automaticallyMergesChangesFromParent = true
-        
-            if let backgroundContext {
-                self.privateContext = backgroundContext
-                privateContext?.mergePolicy = NSMergePolicy.mergeByPropertyStoreTrump
-                privateContext?.parent = mainContext
-                privateContext?.automaticallyMergesChangesFromParent = true
-            }
-        }
-    #endif
     
     @available(*, unavailable)
     override init() {

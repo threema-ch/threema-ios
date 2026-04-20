@@ -1,162 +1,158 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 // swiftformat:disable acronyms
 
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
 
-class OnPremServerInfoProvider: ServerInfoProvider {
+final class OnPremServerInfoProvider: ServerInfoProvider {
+    private let configDownloader: OnPremConfigDownloaderProtocol
+    private let configVerifier: OnPremConfigVerifierProtocol
+    private let licenseStore: LicenseStore
+
+    init(
+        configDownloader: OnPremConfigDownloaderProtocol = OnPremConfigDownloader(),
+        configVerifier: OnPremConfigVerifierProtocol = OnPremConfigVerifier(
+            trustedPublicKeys: BundleUtil
+                .object(forThreemaFrameworkConfigurationKey: "ThreemaOnPremPublicKeys") as? [String]
+        ),
+        licenseStore: LicenseStore = LicenseStore.shared()
+    ) {
+        self.configDownloader = configDownloader
+        self.configVerifier = configVerifier
+        self.licenseStore = licenseStore
+    }
+
     func chatServer(ipv6: Bool, completionHandler: @escaping (ChatServerInfo?, Error?) -> Void) {
-        switch prepareConfigFetcher() {
-        case let .success(fetcher):
-            fetcher.fetch { result in
-                switch result {
-                case let .success(config):
-                    completionHandler(ChatServerInfo(
-                        serverNamePrefix: "",
-                        serverNameSuffix: config.chat.hostname,
-                        serverPorts: config.chat.ports,
-                        useServerGroups: false,
-                        publicKey: config.chat.publicKey,
-                        publicKeyAlt: config.chat.publicKey
-                    ), nil)
-                case let .failure(err):
-                    completionHandler(nil, err)
+        prepareConfigFetcher { configFetcher in
+            switch configFetcher {
+            case let .success(fetcher):
+                fetcher.fetch { result in
+                    switch result {
+                    case let .success(config):
+                        completionHandler(ChatServerInfo(
+                            serverNamePrefix: "",
+                            serverNameSuffix: config.chat.hostname,
+                            serverPorts: config.chat.ports,
+                            useServerGroups: false,
+                            publicKey: config.chat.publicKey,
+                            publicKeyAlt: config.chat.publicKey
+                        ), nil)
+                    case let .failure(err):
+                        completionHandler(nil, err)
+                    }
                 }
+            case let .failure(err):
+                completionHandler(nil, err)
             }
-        case let .failure(err):
-            completionHandler(nil, err)
         }
     }
 
     func directoryServer(ipv6: Bool, completionHandler: @escaping (DirectoryServerInfo?, Error?) -> Void) {
-        switch prepareConfigFetcher() {
-        case let .success(fetcher):
-            fetcher.fetch { result in
-                switch result {
-                case let .success(config):
-                    completionHandler(DirectoryServerInfo(url: config.directory.url), nil)
-                case let .failure(err):
-                    completionHandler(nil, err)
+        prepareConfigFetcher { configFetcher in
+            switch configFetcher {
+            case let .success(fetcher):
+                fetcher.fetch { result in
+                    switch result {
+                    case let .success(config):
+                        completionHandler(DirectoryServerInfo(url: config.directory.url), nil)
+                    case let .failure(err):
+                        completionHandler(nil, err)
+                    }
                 }
+            case let .failure(err):
+                completionHandler(nil, err)
             }
-        case let .failure(err):
-            completionHandler(nil, err)
         }
     }
 
     func blobServer(ipv6: Bool, completionHandler: @escaping (BlobServerInfo?, Error?) -> Void) {
-        switch prepareConfigFetcher() {
-        case let .success(fetcher):
-            fetcher.fetch { result in
-                switch result {
-                case let .success(config):
-                    completionHandler(BlobServerInfo(
-                        downloadURL: config.blob.downloadUrl,
-                        uploadURL: config.blob.uploadUrl,
-                        doneURL: config.blob.doneUrl
-                    ), nil)
-                case let .failure(err):
-                    completionHandler(nil, err)
+        prepareConfigFetcher { configFetcher in
+            switch configFetcher {
+            case let .success(fetcher):
+                fetcher.fetch { result in
+                    switch result {
+                    case let .success(config):
+                        completionHandler(BlobServerInfo(
+                            downloadURL: config.blob.downloadUrl,
+                            uploadURL: config.blob.uploadUrl,
+                            doneURL: config.blob.doneUrl
+                        ), nil)
+                    case let .failure(err):
+                        completionHandler(nil, err)
+                    }
                 }
+            case let .failure(err):
+                completionHandler(nil, err)
             }
-        case let .failure(err):
-            completionHandler(nil, err)
         }
     }
 
     func workServer(ipv6: Bool, completionHandler: @escaping (WorkServerInfo?, Error?) -> Void) {
-        switch prepareConfigFetcher() {
-        case let .success(fetcher):
-            fetcher.fetch { result in
-                switch result {
-                case let .success(config):
-                    if let workConfig = config.work {
-                        completionHandler(WorkServerInfo(url: workConfig.url), nil)
+        prepareConfigFetcher { configFetcher in
+            switch configFetcher {
+            case let .success(fetcher):
+                fetcher.fetch { result in
+                    switch result {
+                    case let .success(config):
+                        if let workConfig = config.work {
+                            completionHandler(WorkServerInfo(url: workConfig.url), nil)
+                        }
+                        else {
+                            completionHandler(nil, OnPremConfigError.missingWorkConfig)
+                        }
+                    case let .failure(err):
+                        completionHandler(nil, err)
                     }
-                    else {
-                        completionHandler(nil, OnPremConfigError.missingWorkConfig)
-                    }
-                case let .failure(err):
-                    completionHandler(nil, err)
                 }
-            }
-        case let .failure(err):
-            // TODO: (IOS-5579) Remove this workaround
-            // A missing configuration URL means it is protected by RS. In this case we try to load a cached work
-            // server URL
-            if let onPremError = err as? OnPremConfigError, onPremError == OnPremConfigError.missingConfigurationURL {
-                if let cachedURL = OnPremCachedWorkServer.urlString {
-                    completionHandler(WorkServerInfo(url: cachedURL), nil)
-                }
-                else {
-                    completionHandler(nil, OnPremConfigError.missingWorkConfig)
-                }
-            }
-            else {
+            case let .failure(err):
                 completionHandler(nil, err)
             }
         }
     }
 
     func avatarServer(ipv6: Bool, completionHandler: @escaping (AvatarServerInfo?, Error?) -> Void) {
-        switch prepareConfigFetcher() {
-        case let .success(fetcher):
-            fetcher.fetch { result in
-                switch result {
-                case let .success(config):
-                    if let avatarConfig = config.avatar {
-                        completionHandler(AvatarServerInfo(url: avatarConfig.url), nil)
+        prepareConfigFetcher { configFetcher in
+            switch configFetcher {
+            case let .success(fetcher):
+                fetcher.fetch { result in
+                    switch result {
+                    case let .success(config):
+                        if let avatarConfig = config.avatar {
+                            completionHandler(AvatarServerInfo(url: avatarConfig.url), nil)
+                        }
+                        else {
+                            completionHandler(nil, OnPremConfigError.missingAvatarConfig)
+                        }
+                    case let .failure(err):
+                        completionHandler(nil, err)
                     }
-                    else {
-                        completionHandler(nil, OnPremConfigError.missingAvatarConfig)
-                    }
-                case let .failure(err):
-                    completionHandler(nil, err)
                 }
+            case let .failure(err):
+                completionHandler(nil, err)
             }
-        case let .failure(err):
-            completionHandler(nil, err)
         }
     }
 
     func safeServer(ipv6: Bool, completionHandler: @escaping (SafeServerInfo?, Error?) -> Void) {
-        switch prepareConfigFetcher() {
-        case let .success(fetcher):
-            fetcher.fetch { result in
-                switch result {
-                case let .success(config):
-                    if let safeConfig = config.safe {
-                        completionHandler(SafeServerInfo(url: safeConfig.url), nil)
+        prepareConfigFetcher { configFetcher in
+            switch configFetcher {
+            case let .success(fetcher):
+                fetcher.fetch { result in
+                    switch result {
+                    case let .success(config):
+                        if let safeConfig = config.safe {
+                            completionHandler(SafeServerInfo(url: safeConfig.url), nil)
+                        }
+                        else {
+                            completionHandler(nil, OnPremConfigError.missingSafeConfig)
+                        }
+                    case let .failure(err):
+                        completionHandler(nil, err)
                     }
-                    else {
-                        completionHandler(nil, OnPremConfigError.missingSafeConfig)
-                    }
-                case let .failure(err):
-                    completionHandler(nil, err)
                 }
+            case let .failure(err):
+                completionHandler(nil, err)
             }
-        case let .failure(err):
-            completionHandler(nil, err)
         }
     }
 
@@ -164,86 +160,98 @@ class OnPremServerInfoProvider: ServerInfoProvider {
         deviceGroupIDFirstByteHex: String,
         completionHandler: @escaping (MediatorServerInfo?, Error?) -> Void
     ) {
-        switch prepareConfigFetcher() {
-        case let .success(fetcher):
-            fetcher.fetch { result in
-                switch result {
-                case let .success(config):
-                    if let mediatorConfig = config.mediator {
-                        let params = "?deviceId={deviceId}&deviceGroupId={deviceGroupId}&scope={origin}"
-                        completionHandler(MediatorServerInfo(
-                            deviceGroupIDFirstByteHex: deviceGroupIDFirstByteHex,
-                            url: mediatorConfig.url,
-                            blob: BlobServerInfo(
-                                downloadURL: mediatorConfig.blob.downloadUrl + params,
-                                uploadURL: mediatorConfig.blob.uploadUrl + params,
-                                doneURL: mediatorConfig.blob.doneUrl + params
-                            )
-                        ), nil)
+        prepareConfigFetcher { configFetcher in
+            switch configFetcher {
+            case let .success(fetcher):
+                fetcher.fetch { result in
+                    switch result {
+                    case let .success(config):
+                        if let mediatorConfig = config.mediator {
+                            let params = "?deviceId={deviceId}&deviceGroupId={deviceGroupId}&scope={origin}"
+                            completionHandler(MediatorServerInfo(
+                                deviceGroupIDFirstByteHex: deviceGroupIDFirstByteHex,
+                                url: mediatorConfig.url,
+                                blob: BlobServerInfo(
+                                    downloadURL: mediatorConfig.blob.downloadUrl + params,
+                                    uploadURL: mediatorConfig.blob.uploadUrl + params,
+                                    doneURL: mediatorConfig.blob.doneUrl + params
+                                )
+                            ), nil)
+                        }
+                        else {
+                            completionHandler(nil, OnPremConfigError.missingMediatorConfig)
+                        }
+                    case let .failure(err):
+                        completionHandler(nil, err)
                     }
-                    else {
-                        completionHandler(nil, OnPremConfigError.missingMediatorConfig)
-                    }
-                case let .failure(err):
-                    completionHandler(nil, err)
                 }
+            case let .failure(err):
+                completionHandler(nil, err)
             }
-        case let .failure(err):
-            completionHandler(nil, err)
         }
     }
 
     func webServer(ipv6: Bool, completionHandler: @escaping (WebServerInfo?, Error?) -> Void) {
-        switch prepareConfigFetcher() {
-        case let .success(fetcher):
-            fetcher.fetch { result in
-                switch result {
-                case let .success(config):
-                    if let webConfig = config.web {
-                        completionHandler(WebServerInfo(
-                            url: webConfig.url,
-                            overrideSaltyRtcHost: webConfig.overrideSaltyRtcHost,
-                            overrideSaltyRtcPort: webConfig.overrideSaltyRtcPort
-                        ), nil)
+        prepareConfigFetcher { configFetcher in
+            switch configFetcher {
+            case let .success(fetcher):
+                fetcher.fetch { result in
+                    switch result {
+                    case let .success(config):
+                        if let webConfig = config.web {
+                            completionHandler(WebServerInfo(
+                                url: webConfig.url,
+                                overrideSaltyRtcHost: webConfig.overrideSaltyRtcHost,
+                                overrideSaltyRtcPort: webConfig.overrideSaltyRtcPort
+                            ), nil)
+                        }
+                        else {
+                            completionHandler(nil, OnPremConfigError.missingWebServerInfoConfig)
+                        }
+                    case let .failure(err):
+                        completionHandler(nil, err)
                     }
-                    else {
-                        completionHandler(nil, OnPremConfigError.missingSafeConfig)
-                    }
-                case let .failure(err):
-                    completionHandler(nil, err)
                 }
+            case let .failure(err):
+                completionHandler(nil, err)
             }
-        case let .failure(err):
-            completionHandler(nil, err)
         }
     }
     
     func rendezvousServer(completionHandler: @escaping (RendezvousServerInfo?, Error?) -> Void) {
-        switch prepareConfigFetcher() {
-        case let .success(fetcher):
-            fetcher.fetch { result in
-                switch result {
-                case let .success(config):
-                    if let rendezvousConfig = config.rendezvous {
-                        completionHandler(RendezvousServerInfo(
-                            url: rendezvousConfig.url
-                        ), nil)
+        prepareConfigFetcher { configFetcher in
+            switch configFetcher {
+            case let .success(fetcher):
+                fetcher.fetch { result in
+                    switch result {
+                    case let .success(config):
+                        if let rendezvousConfig = config.rendezvous {
+                            completionHandler(RendezvousServerInfo(
+                                url: rendezvousConfig.url
+                            ), nil)
+                        }
+                        else {
+                            completionHandler(nil, OnPremConfigError.missingRendezvousConfig)
+                        }
+                    case let .failure(err):
+                        completionHandler(nil, err)
                     }
-                    else {
-                        completionHandler(nil, OnPremConfigError.missingRendezvousConfig)
-                    }
-                case let .failure(err):
-                    completionHandler(nil, err)
                 }
+            case let .failure(err):
+                completionHandler(nil, err)
             }
-        case let .failure(err):
-            completionHandler(nil, err)
         }
     }
 
     func domains(completionHandler: @escaping ([Domain]?, Error?) -> Void) {
-        switch prepareConfigFetcher() {
+        switch prepareCachedConfigFetcher() {
         case let .success(fetcher):
+            guard let fetcher else {
+                // No cached OPPF file found, but default Threema domains must always be included
+                completionHandler(Domain.defaultConfig, nil)
+                return
+            }
+
             fetcher.fetch { result in
                 switch result {
                 case let .success(config):
@@ -254,7 +262,9 @@ class OnPremServerInfoProvider: ServerInfoProvider {
                                 Domain(
                                     $0.fqdn,
                                     spkis: $0.spkis
-                                        .map { [$0.value: DomainSpkisAlgorithm.spskisAlgorithm(string: $0.algorithm)] },
+                                        .map {
+                                            [$0.value: DomainSpkisAlgorithm.spskisAlgorithm(string: $0.algorithm)]
+                                        },
                                     matchMode: DomainMatchMode.matchMode(string: $0.matchMode)
                                 )
                             }
@@ -271,27 +281,20 @@ class OnPremServerInfoProvider: ServerInfoProvider {
                 }
             }
         case let .failure(err):
-            // TODO: (IOS-5579) Remove this workaround
-            // A missing configuration URL means it is protected by RS. In this case we just apply the default pins
-            // After the configuration URL and credentials are decrypted and set a `resetSSLCAHelperCache` notification
-            // should be posted to reload the pinned certificates.
-            if let onPremError = err as? OnPremConfigError, onPremError == OnPremConfigError.missingConfigurationURL {
-                completionHandler(Domain.defaultConfig, nil)
-            }
-            else {
-                completionHandler(nil, err)
-            }
+            completionHandler(nil, err)
         }
     }
     
     func mapsServer(completionHandler: @escaping (MapsServerInfo?, Error?) -> Void) {
-        switch prepareConfigFetcher() {
-        case let .success(fetcher):
-            fetcher.fetch { result in
-                self.handleMapsServerResult(result, completionHandler: completionHandler)
+        prepareConfigFetcher { configFetcher in
+            switch configFetcher {
+            case let .success(fetcher):
+                fetcher.fetch { result in
+                    self.handleMapsServerResult(result, completionHandler: completionHandler)
+                }
+            case let .failure(err):
+                completionHandler(nil, err)
             }
-        case let .failure(err):
-            completionHandler(nil, err)
         }
     }
     
@@ -316,79 +319,131 @@ class OnPremServerInfoProvider: ServerInfoProvider {
             completionHandler(nil, err)
         }
     }
-    
-    private var onPremConfigFetcher: OnPremConfigFetcherProtocol?
 
-    private var lastUsername: String?
-    private var lastPassword: String?
-    private var lastConfigURL: URL?
-    
+    /// Fetch OPPF in the recovery mode.
+    func doRecovery() async throws {
+        await configDownloader.enableRecoveryMode(true)
+
+        try await withCheckedThrowingContinuation { continuation in
+            prepareConfigFetcher { configFetcher in
+                switch configFetcher {
+                case let .success(fetcher):
+                    fetcher.fetch { result in
+                        switch result {
+                        case .success:
+                            continuation.resume()
+                        case let .failure(error):
+                            continuation.resume(throwing: error)
+                        }
+                    }
+                case let .failure(error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    // MARK: - Preparing config fetcher
+
+    private let cachedConfigFetcherQueue =
+        DispatchQueue(label: "ch.threema.OnPremServerInfoProvider.cachedConfigFetcherQueue")
+
+    private var onPremCachedConfigFetcher: OnPremCachedConfigFetcher?
+    private var onPremConfigFetcher: OnPremConfigFetcher?
+
     private let cachedConfigURL = FileUtility.shared.appDataDirectory(
         appGroupID: AppGroup.groupID()
     )!.appendingPathComponent("config.oppf")
 
-    private func prepareConfigFetcher() -> Swift.Result<OnPremConfigFetcherProtocol, Error> {
-        
-        guard let onPremConfigURL = LicenseStore.shared().onPremConfigURL else {
-            return .failure(OnPremConfigError.missingConfigurationURL)
+    /// Preparing cached config fetcher only! This is useful to fetch domains to prevent deadlock,
+    /// because the domains will be loaded within the Task to download the OPPF file.
+    ///
+    /// - Returns: the config fetcher or an error
+    private func prepareCachedConfigFetcher() -> Swift.Result<OnPremConfigFetcherProtocol?, Error> {
+        guard FileUtility.shared.fileExists(atPath: cachedConfigURL.path) else {
+            DDLogWarn(
+                "OnPrem configuration url not accessible and no cached config found"
+            )
+            return .success(nil)
+        }
 
-            // TODO: (IOS-5579) For full OPPF caching we might want to reenable that
-//            guard FileUtility.shared.fileExists(at: cachedConfigURL),
-//                  let threemaOnPremPublicKeys = BundleUtil
-//                  .object(forThreemaFrameworkConfigurationKey: "ThreemaOnPremPublicKeys") as? [String] else {
-//                DDLogError(
-//                    "OnPrem configuration url not accessible and no cached config found. Public keys maybe missing."
-//                )
-//            return .failure(OnPremConfigError.configurationMissing)
-//            }
-//
-//            let configFetcher = OnPremCachedConfigFetcher(
-//                trustedPublicKeys: threemaOnPremPublicKeys,
-//                cacheURL: cachedConfigURL
-//            )
-//            onPremConfigFetcher = configFetcher
-//
-//            return .success(configFetcher)
-        }
-        
-        guard let username = LicenseStore.shared().licenseUsername,
-              let password = LicenseStore.shared().licensePassword else {
-            DDLogError("Missing license username or password")
-            return .failure(OnPremConfigError.missingLicenseInfo)
-        }
-        
-        guard let configURL = URL(string: onPremConfigURL) else {
-            DDLogError("Invalid config URL \(onPremConfigURL)")
-            return .failure(OnPremConfigError.invalidConfigUrl)
-        }
-        
-        if let onPremConfigFetcher {
-            // Check if the username, password or config URL has changed in the meantime
-            if username == lastUsername, password == lastPassword, configURL == lastConfigURL {
-                return .success(onPremConfigFetcher)
+        let cachedConfigFetcher: OnPremConfigFetcherProtocol = cachedConfigFetcherQueue.sync {
+            if let onPremCachedConfigFetcher {
+                return onPremCachedConfigFetcher
             }
+
+            onPremCachedConfigFetcher = OnPremCachedConfigFetcher(
+                configVerifier: configVerifier,
+                cacheURL: cachedConfigURL
+            )
+
+            return onPremCachedConfigFetcher!
         }
-        
-        guard let threemaOnPremPublicKeys = BundleUtil
-            .object(forThreemaFrameworkConfigurationKey: "ThreemaOnPremPublicKeys") as? [String] else {
-            DDLogError("Missing config public keys")
-            return .failure(OnPremConfigError.missingPublicKeys)
+
+        return .success(cachedConfigFetcher)
+    }
+
+    /// Preparing cached or normal config fetcher. If the license set and OnPrem server known or the recovery mode is
+    /// enabled,
+    /// the OPPF file will be downloaded and the cached OPPF file updated.
+    ///
+    /// - Parameter completionHandler: Returns the config fetcher or an error
+    private func prepareConfigFetcher(
+        completionHandler: @escaping (Swift.Result<OnPremConfigFetcherProtocol, Error>) -> Void
+    ) {
+        Task {
+            guard await configDownloader.isRecoveryModeEnabled || licenseStore.onPremConfigURL != nil else {
+
+                // This is happens when the RS is fetched, then we return the config of the cached OPPF
+                guard FileUtility.shared.fileExists(atPath: cachedConfigURL.path) else {
+                    DDLogError(
+                        "OnPrem configuration url not accessible and no cached config found"
+                    )
+                    completionHandler(.failure(OnPremConfigError.missingConfigurationURL))
+                    return
+                }
+
+                if let onPremCachedConfigFetcher {
+                    completionHandler(.success(onPremCachedConfigFetcher))
+                    return
+                }
+
+                onPremCachedConfigFetcher = OnPremCachedConfigFetcher(
+                    configVerifier: configVerifier,
+                    cacheURL: cachedConfigURL
+                )
+
+                completionHandler(.success(onPremCachedConfigFetcher!))
+                return
+            }
+
+            if let onPremConfigFetcher {
+                completionHandler(.success(onPremConfigFetcher))
+                return
+            }
+
+            onPremConfigFetcher = OnPremConfigFetcher(
+                configDownloader: configDownloader,
+                configVerifier: configVerifier,
+                cacheURL: cachedConfigURL,
+                delegate: self
+            )
+
+            completionHandler(.success(onPremConfigFetcher!))
         }
-        
-        onPremConfigFetcher = OnPremConfigFetcher(
-            configURL: configURL,
-            username: username,
-            password: password,
-            trustedPublicKeys: threemaOnPremPublicKeys,
-            cacheURL: cachedConfigURL
-        )
-        lastUsername = username
-        lastPassword = password
-        lastConfigURL = configURL
-        return .success(onPremConfigFetcher!)
     }
 }
 
 protocol OnPremConfigFetcherProtocol {
     func fetch(completionHandler: @escaping (Result<OnPremConfig, Error>) -> Void)
+}
+
+// MARK: - OnPremServerInfoProvider + OnPremConfigFetcherDelegate
+
+extension OnPremServerInfoProvider: OnPremConfigFetcherDelegate {
+    func oppfFileUpdated() {
+        cachedConfigFetcherQueue.sync {
+            onPremCachedConfigFetcher = nil
+        }
+    }
 }

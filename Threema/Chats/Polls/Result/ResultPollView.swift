@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 
 struct ResultPollView: View {
@@ -60,7 +40,15 @@ struct ResultPollView: View {
             }
             
             if let poll = viewModel.poll {
-                ForEach(Array(poll.choices.enumerated()), id: \.1.id) { index, choice in
+                ForEach(
+                    Array(
+                        poll
+                            .choices
+                            .sorted { $0.votes > $1.votes }
+                            .enumerated()
+                    ),
+                    id: \.1.id
+                ) { index, choice in
                     buildChoiceGroup(choice, index: index)
                 }
                 
@@ -77,16 +65,16 @@ struct ResultPollView: View {
         .navigationBarTitleDisplayMode(.inline)
         .applyIf(hasNavigationView) { view in
             view.toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(viewModel.doneTitle) {
+                ToolbarItem(placement: .primaryAction) {
+                    DoneButton {
                         dismiss()
                     }
                     .accessibilityIdentifier("ResultPollViewDoneButton")
                 }
             }
         }
-        .onChange(of: viewModel.isDeleted) { value in
-            guard value else {
+        .onChange(of: viewModel.isDeleted) {
+            guard viewModel.isDeleted else {
                 return
             }
             dismiss()
@@ -162,7 +150,7 @@ struct ResultPollView: View {
     }
     
     @ViewBuilder
-    private func buildNonRespondent(_ voters: [Poll.Voter]) -> some View {
+    private func buildNonRespondent(_ voters: [PollVoter]) -> some View {
         Section(viewModel.noVotesTitle) {
             ForEach(voters) { voter in
                 buildVoterRow(voter)
@@ -171,7 +159,7 @@ struct ResultPollView: View {
     }
     
     @ViewBuilder
-    private func buildVoterRow(_ voter: Poll.Voter) -> some View {
+    private func buildVoterRow(_ voter: PollVoter) -> some View {
         HStack {
             if let image = voter.profilePicture {
                 Image(uiImage: image)

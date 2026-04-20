@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import AVFoundation
 import CocoaLumberjackSwift
 import DSWaveformImage
@@ -56,13 +36,21 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
     private let conversation: ConversationEntity
     
     let recordingMaxDuration = 30 * 60.0
-    var assetDuration: Double { combinedRecordings?.asset.duration.seconds ?? 0.0 }
-    var totalRecordingDuration: Double {
-        if let currentRecorder, let recorderStartTimeInterval {
-            currentRecorder.deviceCurrentTime - recorderStartTimeInterval + recordedDuration
+
+    var assetDuration: Double {
+        get async {
+            await (try? combinedRecordings?.asset.load(.duration).seconds) ?? 0.0
         }
-        else {
-            assetDuration
+    }
+
+    var totalRecordingDuration: Double {
+        get async {
+            if let currentRecorder, let recorderStartTimeInterval {
+                currentRecorder.deviceCurrentTime - recorderStartTimeInterval + recordedDuration
+            }
+            else {
+                await assetDuration
+            }
         }
     }
 
@@ -102,16 +90,18 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         }
         UIApplication.shared.isIdleTimerDisabled = true
 
-        do {
-            if let draftAudioURL {
-                try configureDraft(draftAudioURL: draftAudioURL)
+        Task { @MainActor in
+            do {
+                if let draftAudioURL {
+                    try await configureDraft(draftAudioURL: draftAudioURL)
+                }
+                else {
+                    try await startRecording()
+                }
             }
-            else {
-                try startRecording()
+            catch {
+                throw VoiceMessageError.recordingStartFailed
             }
-        }
-        catch {
-            throw VoiceMessageError.recordingStartFailed
         }
     }
     
@@ -121,8 +111,9 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
             UIApplication.shared.isIdleTimerDisabled = false
         }
     }
-    
-    private func configureDraft(draftAudioURL: URL) throws {
+
+    @MainActor
+    private func configureDraft(draftAudioURL: URL) async throws {
         // We copy the draft into temp dir for processingt
         let copyURl = MediaManager.newRecordingAudioURL()
         do {
@@ -137,8 +128,8 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         let asset = AVAsset(url: copyURl)
         combinedRecordings = (asset, copyURl)
         recordingState = .stopped
-        duration = assetDuration
-        recordedDuration = assetDuration
+        duration = await assetDuration
+        recordedDuration = await assetDuration
     }
     
     // MARK: - Observation
@@ -171,27 +162,39 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         
         switch type {
         case .began:
-            interruptionBegan()
+            Task { @MainActor in
+                await interruptionBegan()
+            }
+
         case .ended:
-            break
+            DDLogInfo("Audio session interruption ended, reactivating...")
+            do {
+                try AVAudioSession.sharedInstance().setActive(true)
+            }
+            catch {
+                DDLogError("Failed to reactivate audio session: \(error)")
+            }
+
         @unknown default:
             break
         }
     }
-    
-    private func interruptionBegan() {
+
+    @MainActor
+    private func interruptionBegan() async {
         switch recordingState {
         case .ready, .stopped, .paused:
             break
         case .recording:
-            stopRecording()
+            await stopRecording()
         case .playing:
             pause()
         }
     }
     
     // MARK: - Recording
-    
+
+    @MainActor
     private func createRecorder() throws -> AVAudioRecorder {
         // We create a new recorder with a new URL
         let url = MediaManager.newRecordingAudioURL()
@@ -214,36 +217,37 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         recorder.stop()
         stopRecordTimer()
         
-        // After stopping we combine the created recording with the existing recoriding if it exists, otherwise we
-        // assign it to be the new existing recording direclty. The updated or new existing recording is then used in
+        // After stopping we combine the created recording with the existing recording if it exists, otherwise we
+        // assign it to be the new existing recording directly. The updated or new existing recording is then used in
         // the player
         // or for sending.
         if let existingRecording = combinedRecordings {
-            do {
-                let combinedURL = MediaManager.newRecordingAudioURL()
-                let asset = try MediaManager.concatenateRecordingsAndSave(
-                    combine: [existingRecording.url, recordingURL],
-                    to: combinedURL
-                ) {
+            Task {
+                defer {
+                    currentRecorder = nil
+                }
+                do {
+                    let combinedURL = MediaManager.newRecordingAudioURL()
+                    let urls = [existingRecording.url, recordingURL]
+                    let asset = try await MediaManager.concatenateRecordingsAndSave(combine: urls, to: combinedURL)
+                    combinedRecordings = (asset, combinedURL)
+                    recordingURL = MediaManager.newRecordingAudioURL()
                     completion?()
                 }
-                combinedRecordings = (asset, combinedURL)
-                recordingURL = MediaManager.newRecordingAudioURL()
-            }
-            catch {
-                DDLogError("[Voice Recorder] Failed to combine recordings: \(error).")
-                NotificationPresenterWrapper.shared.present(type: .recordingFailed)
+                catch {
+                    DDLogError("[Voice Recorder] Failed to combine recordings: \(error).")
+                    NotificationPresenterWrapper.shared.present(type: .recordingFailed)
+                }
             }
         }
         else {
             combinedRecordings = (AVURLAsset(url: recordingURL), recordingURL)
+            currentRecorder = nil
             completion?()
         }
-        
-        currentRecorder = nil
     }
-    
-    private func startRecording() throws {
+
+    private func startRecording() async throws {
         // We disallow recording when in a call
         guard !NavigationBarPromptHandler.isCallActiveInBackground, !NavigationBarPromptHandler.isGroupCallActive else {
             NotificationPresenterWrapper.shared.present(type: .recordingCallRunning)
@@ -252,7 +256,7 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
             return
         }
         
-        guard totalRecordingDuration <= recordingMaxDuration else {
+        guard await totalRecordingDuration <= recordingMaxDuration else {
             NotificationPresenterWrapper.shared.present(type: .recordingTooLong)
             return
         }
@@ -278,25 +282,27 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         recorderStartTimeInterval = recorder.deviceCurrentTime
         startRecordTimer()
     }
-    
-    func continueRecording() {
+
+    @MainActor
+    func continueRecording() async {
         do {
-            try startRecording()
+            try await startRecording()
         }
         catch {
             DDLogError("[Voice Recorder] Failed to continue recording: \(error).")
             NotificationPresenterWrapper.shared.present(type: .recordingFailed)
         }
     }
-    
-    func stopRecording() {
+
+    @MainActor
+    func stopRecording() async {
         guard let recorder = currentRecorder else {
             assertionFailure("[Voice Recorder] Cannot stop if there is no recorder.")
             return
         }
         recorder.pause()
-        
-        recordedDuration = totalRecordingDuration
+
+        recordedDuration = await totalRecordingDuration
         stopRecordTimer()
         recordingState = .paused
     }
@@ -400,10 +406,11 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         guard let player = currentPlayer else {
             return
         }
-
-        let timeStamp = progress * assetDuration
-        player.currentTime = timeStamp
-        updatePlayProgress()
+        Task { @MainActor in
+            let timeStamp = await progress * assetDuration
+            player.currentTime = timeStamp
+            updatePlayProgress()
+        }
     }
         
     func play() {
@@ -505,12 +512,14 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
         let linear = 1 - pow(10, lastAveragePower / 30)
         let value = max(0.5, min(1, linear))
         samples.append(value)
-        
-        duration = totalRecordingDuration
-        
-        if totalRecordingDuration >= recordingMaxDuration {
-            stopRecording()
-            NotificationPresenterWrapper.shared.present(type: .recordingTooLong)
+
+        Task { @MainActor in
+            let total = await totalRecordingDuration
+            duration = total
+            if total >= recordingMaxDuration {
+                await stopRecording()
+                NotificationPresenterWrapper.shared.present(type: .recordingTooLong)
+            }
         }
     }
     
@@ -539,19 +548,22 @@ final class VoiceMessageRecorderViewModel: NSObject, ObservableObject {
 
         let currentPlayTime = player.currentTime / player.duration
         let progress = fmax(0, fmin(1, currentPlayTime))
-        duration = progress * combinedRecordings.asset.duration.seconds
+
+        Task { @MainActor in
+            duration = await (try? progress * combinedRecordings.asset.load(.duration).seconds) ?? 0
+        }
     }
 
     // MARK: - UI
     
-    func handleMagicTap() {
+    func handleMagicTap() async {
         switch recordingState {
         case .ready:
             break
         case .recording:
-            stopRecording()
+            await stopRecording()
         case .stopped:
-            continueRecording()
+            await continueRecording()
         case .playing:
             pause()
         case .paused:

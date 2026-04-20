@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import Photos
@@ -70,24 +50,38 @@ open class VideoPreviewItem: MediaPreviewItem {
             }
         }
     }
-    
+
     public var item: Promise<PreviewType> {
-        Promise<Void>().then(on: itemQueue, flags: [.barrier]) { () -> Promise<PreviewType> in
-            if let transcodedItem = self.transcodedItem {
-                return Promise { $0.fulfill(transcodedItem) }
+        if let transcodedItem {
+            return Promise { $0.fulfill(transcodedItem) }
+        }
+
+        return internalOriginalAsset.then { (asset: AVAsset) -> Promise<PreviewType> in
+            guard let outputURL = MediaConverter.getAssetOutputURL() else {
+                return Promise { $0.reject(MediaPreviewItem.LoadError.unknown) }
             }
-            
-            return self.internalOriginalAsset.then { (asset: AVAsset) -> Promise<URL> in
-                guard let outputURL = MediaConverter.getAssetOutputURL(),
-                      let exportSession = MediaConverter.getAVAssetExportSession(from: asset, outputURL: outputURL)
-                else {
-                    return Promise { $0.reject(MediaPreviewItem.LoadError.unknown) }
+
+            return Promise { seal in
+                Task {
+                    guard let session = await VideoConversionHelper()
+                        .getAVAssetExportSession(from: asset, outputURL: outputURL)
+                    else {
+                        seal.reject(MediaPreviewItem.LoadError.unknown)
+                        return
+                    }
+
+                    self.convertVideo(exportSession: session)
+                        .done { url in
+                            seal.fulfill(url)
+                        }
+                        .catch { error in
+                            seal.reject(error)
+                        }
                 }
-                return self.convertVideo(exportSession: exportSession)
             }
         }
     }
-    
+
     @available(*, deprecated, message: "item should be used instead")
     open func getTranscodedItem() -> URL? {
         let sema = DispatchSemaphore(value: 0)

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import ThreemaEssentials
 import ThreemaProtocols
@@ -25,19 +5,16 @@ import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
-class TaskExecutionProfileSyncTests: XCTestCase {
-    private var dbBackgroundCnx: DatabaseContext!
+final class TaskExecutionProfileSyncTests: XCTestCase {
+    private var dbBackgroundCnx: DatabaseContextProtocol!
 
-    // TODO: (IOS-3875) Timeout
-    private let timeout: Double = 600
+    private let timeout: Double = 1
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
-            .devNullContext(withChildContextForBackgroundProcess: true)
-
-        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+        let testDatabase = TestDatabase()
+        dbBackgroundCnx = testDatabase.backgroundContext
     }
     
     func testAlreadyLocked() {
@@ -253,7 +230,17 @@ class TaskExecutionProfileSyncTests: XCTestCase {
                 linkEmailPending: test.secondConfig.identityStore.linkEmailPending
             )
 
-            task.create(frameworkInjector: frameworkInjectorMock).execute()
+            /// Inject a zero transaction-response timeout so lockTimeout cases fail immediately
+            /// rather than waiting the production 25 s per lock/unlock step.
+            let taskContext = TaskContext(
+                logReflectMessageToMediator: .reflectOutgoingMessageToMediator,
+                logReceiveMessageAckFromMediator: .receiveOutgoingMessageAckFromMediator,
+                logSendMessageToChat: .none,
+                logReceiveMessageAckFromChat: .none,
+                transactionResponseTimeoutInSeconds: 0
+            )
+            task.create(frameworkInjector: frameworkInjectorMock, taskContext: taskContext)
+                .execute()
                 .done {
                     successHandler()
                 }

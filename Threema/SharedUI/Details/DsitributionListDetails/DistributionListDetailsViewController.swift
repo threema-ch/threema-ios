@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import ThreemaMacros
 import UIKit
@@ -255,12 +235,11 @@ final class DistributionListDetailsViewController: ThemedCodeModernGroupedTableV
 extension DistributionListDetailsViewController {
     private func configureTableView() {
         navigationBarTitle = String(distributionList.displayName ?? "")
-        
+        hideNavigationBarTitleBelowAppearanceOffset = true
+
         // If this is not set to `self` the automatic (dis)appearance of the navigation bar doesn't
         // work, because it is applied in the `UIScrollViewDelegate` in our superclass.
         tableView.delegate = self
-        transparentNavigationBarWhenOnTop = true
-
         tableView.cellLayoutMarginsFollowReadableWidth = true
         
         dataSource.registerHeaderAndCells()
@@ -280,10 +259,9 @@ extension DistributionListDetailsViewController {
     private func configureNavigationBar() {
         navigationItem.largeTitleDisplayMode = .never
         
-        let editBarButton = UIBarButtonItem(
-            barButtonSystemItem: .edit,
+        let editBarButton = UIBarButtonItem.editButton(
             target: self,
-            action: #selector(editButtonTapped)
+            selector: #selector(editButtonTapped)
         )
         
         // Check if we are presented in a modal view and we are the root vc of
@@ -293,13 +271,12 @@ extension DistributionListDetailsViewController {
             navigationItem.leftBarButtonItem = editBarButton
 
             // Only show done button when presented modally
-            let doneButton = UIBarButtonItem(
-                barButtonSystemItem: .done,
+            let closeButton = UIBarButtonItem.closeButton(
                 target: self,
-                action: #selector(doneButtonTapped)
+                selector: #selector(doneButtonTapped)
             )
-            doneButton.accessibilityIdentifier = "GroupDetailsViewControllerDoneButton"
-            navigationItem.rightBarButtonItem = doneButton
+            closeButton.accessibilityIdentifier = "GroupDetailsViewControllerDoneButton"
+            navigationItem.rightBarButtonItem = closeButton
         }
         else {
             // Left bar button is most likely a back button

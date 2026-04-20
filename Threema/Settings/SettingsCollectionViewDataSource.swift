@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import SwiftUI
 import ThreemaMacros
@@ -88,9 +68,8 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
             ) as? UICollectionViewListCell else {
                 return nil
             }
-            var content = cell.defaultContentConfiguration()
+            var content = UIListContentConfiguration.valueCell()
             content.text = item.title
-            cell.contentConfiguration = content
 
             if case .network = item {
                 let sc = BusinessInjector.ui.serverConnector
@@ -98,17 +77,22 @@ class SettingsCollectionViewDataSource: UICollectionViewDiffableDataSource<
                     .localized
                     .appending(sc.isIPv6Connection ? " (IPv6)" : "")
                     .appending(sc.isProxyConnection ? " (Proxy)" : "")
-                cell.accessories = [.label(text: statusText)]
+                content.secondaryText = statusText
             }
             else if case .version = item {
-                cell.accessories = [.label(text: ThreemaUtility.appAndBuildVersionPretty)]
+                let versionText = ThreemaUtility.appAndBuildVersionPretty
+                content.secondaryText = versionText
             }
             else if case .workLicense = item {
-                cell.accessories = [.label(text: BusinessInjector.ui.licenseStore.licenseUsername ?? "")]
+                let licenseText = BusinessInjector.ui.licenseStore.licenseUsername ?? ""
+                content.secondaryText = licenseText
             }
             else if case .remoteSecretState = item {
-                cell.accessories = [.label(text: #localize("settings_list_remote_secret_active"))]
+                let stateText = #localize("settings_list_remote_secret_active")
+                content.secondaryText = stateText
             }
+            
+            cell.contentConfiguration = content
 
             return cell
         }

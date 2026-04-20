@@ -1,25 +1,5 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 
@@ -27,21 +7,18 @@ import XCTest
 
 final class TaskExecutionUpdateContactSyncTests: XCTestCase {
 
-    private var dbMainCnx: DatabaseContext!
-    private var dbBackgroundCnx: DatabaseContext!
-    private var dbPreparer: DatabasePreparer!
+    private var testDatabase: TestDatabase!
+    private var dbPreparer: TestDatabasePreparer!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        dbPreparer = DatabasePreparer(context: mainCnx)
+        testDatabase = TestDatabase()
+        dbPreparer = testDatabase.backgroundPreparer
     }
 
     func testSyncContactWithImageUploadAndNoneUpload() throws {
-        let expectedReflectID = MockData.generateReflectID()
+        let expectedReflectID = BytesUtility.generateReflectID()
         let expectedReflectMessage = BytesUtility.generateRandomBytes(length: 24)!
         let contactImage = BytesUtility.generateRandomBytes(length: 10)!
 
@@ -94,7 +71,7 @@ final class TaskExecutionUpdateContactSyncTests: XCTestCase {
         }
 
         let businessInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,
             mediatorMessageProtocol: MediatorMessageProtocolMock(
@@ -112,7 +89,7 @@ final class TaskExecutionUpdateContactSyncTests: XCTestCase {
                         ),
                 ]
             ),
-            blobUploader: BlobUploaderMock(blobIDs: [MockData.generateBlobID()])
+            blobUploader: BlobUploaderMock(blobIDs: [BytesUtility.generateBlobID()])
         )
 
         var sc1 = Sync_Contact()
@@ -132,8 +109,8 @@ final class TaskExecutionUpdateContactSyncTests: XCTestCase {
         )
         dsc2.contactProfilePicture = .updated
         dsc2.contactImage = contactImage
-        dsc2.contactImageBlobID = MockData.generateBlobID()
-        dsc2.contactImageEncryptionKey = MockData.generateBlobEncryptionKey()
+        dsc2.contactImageBlobID = BytesUtility.generateBlobID()
+        dsc2.contactImageEncryptionKey = BytesUtility.generateBlobEncryptionKey()
 
         var deltaSyncContacts = [DeltaSyncContact]()
         deltaSyncContacts.append(dsc1)

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import MBProgressHUD
@@ -55,12 +35,11 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     
     var mediaData: [MediaPreviewItem] = []
     
-    @objc public var backIsCancel = false
-    @objc public var showKeyboard = false
+    public var backIsCancel = false
+    public var showKeyboard = false
     
     var completion: (([Any], Bool, [String]) -> Void)?
     public var optionsEnabled = true
-    public var sendIsChoose = false
     @objc public var disableAdd = false
     public var memoryConstrained = false
     public var conversationDescription: NSAttributedString?
@@ -142,29 +121,34 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
     }
     
     func setupOrUpdateRightBarButtonItem() {
-        var rightBarButtonItem: UIButton
-        
-        if let rbi = navigationItem.rightBarButtonItem?.customView as? UIButton {
-            rightBarButtonItem = rbi
+        if #available(iOS 26.0, *) {
+            let sendButtonItem = UIBarButtonItem.sendButton(target: self, selector: #selector(sendButtonPressed))
+            
+            sendButtonItem.title = #localize("send")
+            sendButtonItem.tintColor = .primary
+            navigationItem.rightBarButtonItem = sendButtonItem
+            navigationItem.rightBarButtonItem?.isEnabled = true
         }
         else {
-            rightBarButtonItem = UIButton()
-            rightBarButtonItem.addTarget(self, action: #selector(sendButtonPressed), for: .touchUpInside)
-        }
-        
-        if sendIsChoose {
-            rightBarButtonItem.setTitle(#localize("next"), for: .normal)
-        }
-        else {
+            var rightBarButtonItem: UIButton
+            
+            if let rbi = navigationItem.rightBarButtonItem?.customView as? UIButton {
+                rightBarButtonItem = rbi
+            }
+            else {
+                rightBarButtonItem = UIButton()
+                rightBarButtonItem.addTarget(self, action: #selector(sendButtonPressed), for: .touchUpInside)
+            }
+           
             rightBarButtonItem.setTitle(#localize("send"), for: .normal)
+            rightBarButtonItem.setTitleColor(.primary, for: .normal)
+            rightBarButtonItem.titleLabel?.font = UIFont
+                .boldSystemFont(ofSize: rightBarButtonItem.titleLabel?.font.pointSize ?? 24.0)
+            rightBarButtonItem.sizeToFit()
+            
+            navigationItem.rightBarButtonItem = UIBarButtonItem(customView: rightBarButtonItem)
+            navigationItem.rightBarButtonItem?.isEnabled = true
         }
-        rightBarButtonItem.setTitleColor(.primary, for: .normal)
-        rightBarButtonItem.titleLabel?.font = UIFont
-            .boldSystemFont(ofSize: rightBarButtonItem.titleLabel?.font.pointSize ?? 24.0)
-        rightBarButtonItem.sizeToFit()
-        
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: rightBarButtonItem)
-        navigationItem.rightBarButtonItem?.isEnabled = true
     }
     
     func setupKeyboardActions() {
@@ -252,24 +236,39 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             UIImage(systemName: "eye")?.applying(symbolWeight: .regular, symbolScale: .large).withTintColor(.primary),
             for: .normal
         )
+        
+        // We set again to make the color correct in ShareExtension
+        trashButton.tintColor = .primary
+        previewButton.tintColor = .primary
     }
     
     /// Setup of navigation items and header view
     private func setupNavigationbar() {
-        // Setup navigation items
-        if !backIsCancel {
-            let items: [UIBarButtonItem]
-            let buttonItem = ChevronBarButtonItem(target: self, action: #selector(backButtonPressed))
-            items = buttonItem.asLeftBarButtonItem()
-            navigationItem.leftBarButtonItems = items
-        }
-        else {
+        if #available(iOS 26.0, *) {
+            // Setup back button
             let backButtonItem = UIBarButtonItem(
                 barButtonSystemItem: .close,
                 target: self,
                 action: #selector(backButtonPressed)
             )
-            navigationItem.leftBarButtonItems = [backButtonItem]
+            navigationItem.leftBarButtonItem = backButtonItem
+        }
+        else {
+            // Setup navigation items
+            if !backIsCancel {
+                let items: [UIBarButtonItem]
+                let buttonItem = ChevronBarButtonItem(target: self, action: #selector(backButtonPressed))
+                items = buttonItem.asLeftBarButtonItem()
+                navigationItem.leftBarButtonItems = items
+            }
+            else {
+                let backButtonItem = UIBarButtonItem(
+                    barButtonSystemItem: .close,
+                    target: self,
+                    action: #selector(backButtonPressed)
+                )
+                navigationItem.leftBarButtonItems = [backButtonItem]
+            }
         }
         
         setupOrUpdateRightBarButtonItem()
@@ -292,8 +291,9 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
             rightBarButtonWidth += rightButton.frame.size.width
         }
         
-        let widthAvailable: CGFloat = UIDevice.current
-            .userInterfaceIdiom == .pad ? viewWidth / 2 : (viewWidth - leftBarButtonWidth - rightBarButtonWidth)
+        let widthAvailable: CGFloat = traitCollection.horizontalSizeClass == .regular
+            ? viewWidth / 2
+            : viewWidth - leftBarButtonWidth - rightBarButtonWidth
         let finalWidth = widthAvailable - (2 * headerViewInset)
         
         let fullHeight: Double = landscape ? 32.0 : 42.0
@@ -305,19 +305,20 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         let headerView = HeaderView(for: mediaData, frame: titleViewSize, tapAction: tapAction)
         headerView.rotate(landscape: landscape, newWidth: titleViewSize.width)
 
-        guard let veryLeftItem = navigationItem.leftBarButtonItems?.first else {
+        guard navigationItem.leftBarButtonItems?.first != nil else {
             DDLogError("Could not get cancel or back item")
             return
         }
         
-        if landscape, UIDevice.current.userInterfaceIdiom != .pad {
-            navigationItem.leftBarButtonItems = [veryLeftItem]
+        if landscape, traitCollection.horizontalSizeClass == .compact {
             navigationItem.titleView = headerView
         }
         else {
             let headerViewItem = UIBarButtonItem(customView: headerView)
-            navigationItem.leftBarButtonItems? = [veryLeftItem, headerViewItem]
-            navigationItem.titleView = nil
+            if #available(iOS 26.0, *) {
+                headerViewItem.hidesSharedBackground = true
+            }
+            navigationItem.titleView = headerView
         }
     }
     
@@ -366,7 +367,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         NotificationCenter.default.removeObserver(self)
     }
     
-    @objc public func initWithMedia(
+    public func initWithMedia(
         dataArray: [Any],
         completion: (([Any], Bool, [String]) -> Void)?,
         itemDelegate: MediaPreviewURLDataProcessor
@@ -381,7 +382,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         resetMediaTo(dataArray: dataArray, reloadData: false)
     }
     
-    @objc public func resetMediaTo(dataArray: [Any], reloadData: Bool) {
+    public func resetMediaTo(dataArray: [Any], reloadData: Bool) {
         guard let itemDelegate else {
             fatalError("ItemDelegate must be set")
         }
@@ -641,7 +642,7 @@ open class MediaPreviewViewController: UIViewController, UIGestureRecognizerDele
         }
     }
     
-    @objc public static func isURLItem(item: MediaPreviewItem) -> Bool {
+    public static func isURLItem(item: MediaPreviewItem) -> Bool {
         item.originalAsset == nil && item.itemURL != nil
     }
     

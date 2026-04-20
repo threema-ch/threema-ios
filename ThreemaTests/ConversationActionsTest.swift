@@ -1,74 +1,41 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import XCTest
 @testable import Threema
 @testable import ThreemaFramework
 
-class ConversationActionsTest: XCTestCase {
+final class ConversationActionsTest: XCTestCase {
     
     // MARK: - Setup
-    
-    private var dbPreparer: DatabasePreparer!
+
+    private var testDatabase: TestDatabase!
     private var businessInjectorMock: BusinessInjectorMock!
     private var backgroundBusinessInjectorMock: BusinessInjectorMock!
     private var notificationManagerMock: NotificationManagerMock!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema")
-        
-        let (_, dbMainCnx, dbBackgroundCnx) = DatabasePersistentContext
-            .devNullContext(withChildContextForBackgroundProcess: true)
 
-        dbPreparer = DatabasePreparer(context: dbMainCnx)
+        testDatabase = TestDatabase()
 
-        let entityManager =
-            EntityManager(
-                databaseContext: DatabaseContext(mainContext: dbMainCnx, backgroundContext: nil),
-                isRemoteSecretEnabled: false
-            )
         businessInjectorMock = BusinessInjectorMock(
             conversationStore: ConversationStore(
                 userSettings: UserSettingsMock(),
                 pushSettingManager: PushSettingManagerMock(),
                 groupManager: GroupManagerMock(),
-                entityManager: entityManager,
+                entityManager: testDatabase.entityManager,
                 taskManager: nil
             ),
-            entityManager: entityManager
+            entityManager: testDatabase.entityManager
         )
 
-        let backgroundEntityManager =
-            EntityManager(
-                databaseContext: DatabaseContext(mainContext: dbMainCnx, backgroundContext: dbBackgroundCnx),
-                isRemoteSecretEnabled: false
-            )
         backgroundBusinessInjectorMock = BusinessInjectorMock(
             conversationStore: ConversationStore(
                 userSettings: UserSettingsMock(),
                 pushSettingManager: PushSettingManagerMock(),
                 groupManager: GroupManagerMock(),
-                entityManager: backgroundEntityManager,
+                entityManager: testDatabase.backgroundEntityManager,
                 taskManager: nil
             ),
-            entityManager: backgroundEntityManager
+            entityManager: testDatabase.backgroundEntityManager
         )
 
         notificationManagerMock = NotificationManagerMock()
@@ -82,13 +49,13 @@ class ConversationActionsTest: XCTestCase {
         var contact: ContactEntity!
         var conversation: ConversationEntity!
         
-        dbPreparer.save {
-            contact = dbPreparer.createContact(
+        testDatabase.preparer.save {
+            contact = testDatabase.preparer.createContact(
                 publicKey: Data([1]),
                 identity: "ECHOECHO"
             )
 
-            conversation = dbPreparer.createConversation(
+            conversation = testDatabase.preparer.createConversation(
                 typing: false,
                 unreadMessageCount: unreadMessageCount,
                 category: category,

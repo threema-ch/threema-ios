@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Combine
 import Foundation
@@ -357,7 +337,11 @@ final class ChatViewSnapshotProvider {
             }
         }
         
-        // This is needed to update the name and profile picture of group messages when deleting selected messages
+        // This is needed to update the name and profile picture of group messages when deleting selected messages.
+        // We use reloadItems instead of reconfigureItems here because during message deletion, the cell type
+        // for a given item may change (e.g. a deleted message returns a closeToZeroHeightCell). The reconfigure
+        // path requires the cell type to remain the same, causing a crash in dequeueReusableCellWithIdentifier:
+        // when there's a mismatch.
         if let prev = previousSnapshotInfo?.snapshot, prev.numberOfItems > newSnapshot.numberOfItems {
             let previousContainsUnreadLine = prev.itemIdentifiers.contains { cellType in
                 if case .unreadLine(state: _) = cellType {
@@ -365,23 +349,23 @@ final class ChatViewSnapshotProvider {
                 }
                 return false
             }
-            
+
             let nextContainsUnreadLine = newSnapshot.itemIdentifiers.contains { cellType in
                 if case .unreadLine(state: _) = cellType {
                     return true
                 }
                 return false
             }
-            
+
             let noLongerUnreadLine = previousContainsUnreadLine &&
                 !nextContainsUnreadLine &&
                 prev.numberOfItems - newSnapshot.numberOfItems == 1
-            
+
             let noLongerTyping = prev.itemIdentifiers.contains(.typingIndicator) && !newSnapshot
                 .itemIdentifiers.contains(.typingIndicator) && prev.numberOfItems - newSnapshot
                 .numberOfItems == 1
             if !noLongerTyping, !noLongerUnreadLine {
-                newSnapshot.reconfigureItems(newSnapshot.itemIdentifiers)
+                newSnapshot.reloadItems(newSnapshot.itemIdentifiers)
             }
         }
         

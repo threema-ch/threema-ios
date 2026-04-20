@@ -1,31 +1,13 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
+import CoreData
 import Foundation
 import ThreemaEssentials
 import ThreemaMacros
 import ThreemaProtocols
+import UIKit
 
 /// Business representation of a Threema Contact
-public class Contact: NSObject {
+public final class Contact: NSObject {
     
     // These strings are used as static properties for performance reasons
     private static let inactiveString = #localize("inactive")
@@ -83,8 +65,11 @@ public class Contact: NSObject {
 
     // MARK: - Public properties
 
+    @available(*, deprecated, message: "Do not use anymore. Associate a contact with a Threema Identity instead.")
+    public let objectID: NSManagedObjectID
+
     public let identity: ThreemaIdentity
-    
+
     // This is not directly referenced, but used in `ContactStore.m:959`ff to filter contacts
     @available(*, deprecated, renamed: "identity", message: "Only use from Objective-C")
     @objc(identity) public let objcIdentity: String
@@ -278,6 +263,7 @@ public class Contact: NSObject {
     ///
     /// - Parameter contactEntity: Core Data object
     @objc public init(contactEntity: ContactEntity) {
+        self.objectID = contactEntity.objectID
         self.identity = ThreemaIdentity(contactEntity.identity)
         self.objcIdentity = contactEntity.identity
         self.publicKey = contactEntity.publicKey

@@ -1,32 +1,18 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 
 protocol CustomContextMenuMenuTableViewDelegate: AnyObject {
     func didSelectAction(completion: @escaping () -> Void)
 }
 
-class CustomContextMenuMenuTableView: UITableView {
+final class CustomContextMenuMenuTableView: UITableView {
     
-    private let config: CustomContextMenuMenuTableViewConfig = .defaultConfig
+    private let config: CustomContextMenuMenuTableViewConfig =
+        if #available(iOS 26.0, *) {
+            .glassConfig
+        }
+        else {
+            .defaultConfig
+        }
     
     private let actions: [ChatViewMessageActionsProvider.MessageActionsSection]
     private weak var menuDelegate: CustomContextMenuMenuTableViewDelegate?
@@ -88,11 +74,26 @@ class CustomContextMenuMenuTableView: UITableView {
     }
     
     private func configureView() {
-        backgroundView = blurBackgroundView
-        backgroundColor = .clear
         
-        separatorInset = .zero
-        separatorEffect = UIVibrancyEffect(blurEffect: blurEffect, style: .separator)
+        if #available(iOS 26.0, *) {
+            backgroundColor = .clear
+            
+            contentInset = UIEdgeInsets(
+                top: config.tableViewInset,
+                left: 0,
+                bottom: -config.tableViewInset,
+                right: 0
+            )
+            
+            separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
+        }
+        else {
+            backgroundView = blurBackgroundView
+            backgroundColor = .clear
+            
+            separatorInset = .zero
+            separatorEffect = UIVibrancyEffect(blurEffect: blurEffect, style: .separator)
+        }
         
         alwaysBounceVertical = false
         showsVerticalScrollIndicator = false
@@ -150,11 +151,13 @@ extension CustomContextMenuMenuTableView: UITableViewDataSource, UITableViewDele
             cell = defaultCell
         }
         
-        if indexPath.row < numberOfRows(inSection: indexPath.section) - 1 {
-            cell.separatorInset = .zero
-        }
-        else {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: bounds.size.width, bottom: 0, right: 0)
+        if #unavailable(iOS 26.0) {
+            if indexPath.row < numberOfRows(inSection: indexPath.section) - 1 {
+                cell.separatorInset = .zero
+            }
+            else {
+                cell.separatorInset = UIEdgeInsets(top: 0, left: bounds.size.width, bottom: 0, right: 0)
+            }
         }
         
         return cell
@@ -167,6 +170,17 @@ extension CustomContextMenuMenuTableView: UITableViewDataSource, UITableViewDele
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        if #available(iOS 26.0, *) {
+            guard section < actions.count - 1 else {
+                // After the last section we only need a bit of space w/o any view
+                // One config.tableViewInset is removed a again with the contentInset. This prevents the menu to scroll
+                // when it fits the screen
+                return config.tableViewInset * 2
+            }
+            
+            return config.sectionSpacingHeight
+        }
+        
         if section < actions.count - 1 {
             return config.sectionSpacingHeight
         }
@@ -175,12 +189,46 @@ extension CustomContextMenuMenuTableView: UITableViewDataSource, UITableViewDele
     }
     
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
-        let blurEffect = UIBlurEffect(style: .systemThinMaterial)
-        let blurEffectView = UIVisualEffectView(effect: blurEffect)
-        blurEffectView.frame = bounds
-        blurEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        blurEffectView.backgroundColor = traitCollection.userInterfaceStyle == .dark ? config
-            .sectionBackgroundColorDark : config.sectionBackgroundColorLight
-        return blurEffectView
+        if #available(iOS 26.0, *) {
+            // Exempt last footer
+            guard section < actions.count - 1 else {
+                return nil
+            }
+            
+            let hairlineView = UIView()
+            hairlineView.backgroundColor = traitCollection.userInterfaceStyle == .dark ? config
+                .sectionBackgroundColorDark : config.sectionBackgroundColorLight
+            hairlineView.translatesAutoresizingMaskIntoConstraints = false
+            
+            let view = UIView()
+            view.backgroundColor = .clear
+            view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            
+            view.addSubview(hairlineView)
+            
+            NSLayoutConstraint.activate([
+                hairlineView.leadingAnchor.constraint(
+                    equalTo: view.leadingAnchor,
+                    constant: config.itemLeadingTrailingInset + config.additionalSeparatorInset
+                ),
+                hairlineView.trailingAnchor.constraint(
+                    equalTo: view.trailingAnchor,
+                    constant: -config.itemLeadingTrailingInset - config.additionalSeparatorInset
+                ),
+                hairlineView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+                hairlineView.heightAnchor.constraint(equalToConstant: 1),
+            ])
+
+            return view
+        }
+        else {
+            let blurEffect = UIBlurEffect(style: .systemThinMaterial)
+            let blurEffectView = UIVisualEffectView(effect: blurEffect)
+            blurEffectView.frame = bounds
+            blurEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            blurEffectView.backgroundColor = traitCollection.userInterfaceStyle == .dark ? config
+                .sectionBackgroundColorDark : config.sectionBackgroundColorLight
+            return blurEffectView
+        }
     }
 }

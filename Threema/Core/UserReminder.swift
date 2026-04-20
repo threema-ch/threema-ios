@@ -1,28 +1,8 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaMacros
 
-@objc class UserReminder: NSObject {
+enum UserReminder {
     private static let debug = false
     private static let timeIntervalDebug = false
     
@@ -117,31 +97,7 @@ import ThreemaMacros
         
         return true
     }
-    
-    @objc static func maybeShowNoteGroupReminder(on viewController: UIViewController) {
-        let doNotShowAgain = AppGroup.userDefaults().bool(forKey: "NoteGroupDoNotShowAgain")
-        
-        guard !doNotShowAgain else {
-            DDLogVerbose("Note group already shown")
-            return
-        }
-        
-        let title = #localize("create_note_group_info_title")
-        let message = #localize("create_note_group_info_text")
-        let titleOk = #localize("remind_me_next_time")
-        let titleCancel = #localize("ok")
-        
-        UIAlertTemplate.showAlert(
-            owner: viewController,
-            title: title,
-            message: message,
-            titleOk: titleOk,
-            titleCancel: titleCancel
-        ) { _ in
-            AppGroup.userDefaults().set(true, forKey: "NoteGroupDoNotShowAgain")
-        }
-    }
-    
+
     static func maybeShowArchiveInfo(on viewController: UIViewController) {
         let key = "ArchiveInfoDoNotShowAgain"
         let doNotShowAgain = AppGroup.userDefaults().bool(forKey: key)
@@ -176,11 +132,10 @@ import ThreemaMacros
         })
     }
     
-    @objc static func markIdentityAsDeleted() {
+    static func markIdentityAsDeleted() {
         AppGroup.userDefaults().removeObject(forKey: "LinkReminderShown")
         AppGroup.userDefaults().removeObject(forKey: "PublicNicknameReminderShown")
         AppGroup.userDefaults().removeObject(forKey: "IdentityCreationDate")
         AppGroup.userDefaults().removeObject(forKey: "PushReminderDoNotShowAgain")
-        AppGroup.userDefaults().removeObject(forKey: "NoteGroupDoNotShowAgain")
     }
 }

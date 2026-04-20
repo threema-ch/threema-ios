@@ -1,42 +1,20 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 @testable import ThreemaFramework
 
-class TaskExecutionSettingsSyncTests: XCTestCase {
-    private var databaseMainCnx: DatabaseContext!
-    private var databaseBackgroundCnx: DatabaseContext!
+final class TaskExecutionSettingsSyncTests: XCTestCase {
+    private var databaseMainCnx: DatabaseContextProtocol!
 
-    private let timeout: Double = 60
+    private let timeout: Double = 1
     
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
-        
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext.devNullContext()
-        databaseMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        databaseBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
+
+        let testDatabase = TestDatabase()
+        databaseMainCnx = testDatabase.context
     }
     
     func testNoDeviceGroupPathKey() {
@@ -58,7 +36,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
                 expec.fulfill()
             }
 
-        waitForExpectations(timeout: 6) { error in
+        waitForExpectations(timeout: timeout) { error in
             XCTAssertNil(error)
             if let expectedError = try? XCTUnwrap(expecError as? TaskExecutionError) {
                 XCTAssertEqual("\(expectedError)", "\(TaskExecutionError.multiDeviceNotRegistered)")
@@ -100,7 +78,7 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
                 expect.fulfill()
             }
 
-        waitForExpectations(timeout: 6) { error in
+        waitForExpectations(timeout: timeout) { error in
             XCTAssertNil(error)
             if let expectedError = try? XCTUnwrap(expectError) {
                 XCTAssertEqual(
@@ -312,12 +290,16 @@ class TaskExecutionSettingsSyncTests: XCTestCase {
                     secondConfig: test.secondConfig.userSettings
                 ))
 
+            /// Inject a zero transaction-response timeout so lockTimeout cases fail immediately
+            /// rather than waiting the production 25 s per lock/unlock step.
             let taskExecutionTransaction = task.create(
                 frameworkInjector: framworkInjectorMock,
                 taskContext: TaskContext(
                     logReflectMessageToMediator: .reflectOutgoingMessageToMediator,
                     logReceiveMessageAckFromMediator: .receiveOutgoingMessageAckFromMediator,
-                    logSendMessageToChat: .none, logReceiveMessageAckFromChat: .none
+                    logSendMessageToChat: .none,
+                    logReceiveMessageAckFromChat: .none,
+                    transactionResponseTimeoutInSeconds: 0
                 )
             )
             

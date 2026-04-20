@@ -1,30 +1,10 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import SwiftUI
 
 protocol ProfilePictureGeneratorProtocol { }
 
 /// Handles the generation of profile pictures
-public class ProfilePictureGenerator: ProfilePictureGeneratorProtocol {
+public final class ProfilePictureGenerator: ProfilePictureGeneratorProtocol {
     
     // MARK: - Public properties
     
@@ -80,8 +60,10 @@ public class ProfilePictureGenerator: ProfilePictureGeneratorProtocol {
     public static func generateImage(for type: ProfilePictureType, color: UIColor) -> UIImage {
         let foregroundColor = UIColor.IDColor.profilePictureForegroundColor(for: color)
         let backgroundColor = color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
-        
-        let image: UIImage? =
+
+        let imageSize = CGSize(width: imageWidth, height: imageWidth)
+
+        let systemImage: UIImage? =
             switch type {
             case .contact, .me:
                 UIImage(systemName: "person.fill")
@@ -96,43 +78,57 @@ public class ProfilePictureGenerator: ProfilePictureGeneratorProtocol {
             case .directoryContact:
                 UIImage(systemName: "building.2.fill")
             }
-        
-        let imageSize = CGSize(width: imageWidth, height: imageWidth)
-        let renderer = UIGraphicsImageRenderer(size: imageSize)
-        
-        let font =
-            if let roundedFontDescriptor = UIFont.systemFont(ofSize: iconHeight / 2, weight: .bold)
-                .fontDescriptor.withDesign(
-                    UIFontDescriptor.SystemDesign.rounded
-                ) {
-                // A size of 0 does't override the existing size
-                UIFont(descriptor: roundedFontDescriptor, size: 0)
+
+        let fontSize = iconHeight / 2
+        guard fontSize > 0 else {
+            return makeFallbackImage(size: imageSize, color: backgroundColor)
+        }
+
+        let baseFont = UIFont.systemFont(ofSize: fontSize, weight: .bold)
+        let font: UIFont =
+            if let rounded = baseFont.fontDescriptor.withDesign(.rounded) {
+                UIFont(descriptor: rounded, size: 0)
             }
             else {
-                UIFont.systemFont(ofSize: iconHeight / 2, weight: .bold)
+                baseFont
             }
-    
+
         let iconString: NSAttributedString
-        
-        if case let .contact(letters) = type, letters != "" {
+
+        if case let .contact(letters) = type, !letters.isEmpty {
             iconString = NSAttributedString(
                 string: letters,
                 attributes: [
-                    NSAttributedString.Key.font: font,
-                    NSAttributedString.Key.foregroundColor: foregroundColor,
+                    .font: font,
+                    .foregroundColor: foregroundColor,
                 ]
             )
         }
         else {
-            let icon = NSTextAttachment()
-            icon.image = image!.withConfiguration(UIImage.SymbolConfiguration(font: font))
+            guard let resolvedImage = systemImage else {
+                return makeFallbackImage(size: imageSize, color: backgroundColor)
+            }
+
+            let configuredImage = resolvedImage
+                .withConfiguration(UIImage.SymbolConfiguration(font: font))
                 .withTintColor(foregroundColor)
+
+            let icon = NSTextAttachment()
+            icon.image = configuredImage
             iconString = NSAttributedString(attachment: icon)
         }
-        
+
         let size = iconString.size()
-        let iconOrigin = CGPoint(x: imageWidth * 0.5 - size.width * 0.5, y: imageWidth * 0.5 - size.height * 0.5)
-       
+        guard size.width > 0, size.height > 0, size.width.isFinite, size.height.isFinite else {
+            return makeFallbackImage(size: imageSize, color: backgroundColor)
+        }
+
+        let iconOrigin = CGPoint(
+            x: imageWidth * 0.5 - size.width * 0.5,
+            y: imageWidth * 0.5 - size.height * 0.5
+        )
+
+        let renderer = UIGraphicsImageRenderer(size: imageSize)
         return renderer.image { context in
             UIColor.white.withAlphaComponent(0.1).setFill()
             context.fill(CGRect(origin: .zero, size: imageSize))
@@ -141,55 +137,69 @@ public class ProfilePictureGenerator: ProfilePictureGeneratorProtocol {
             iconString.draw(in: CGRect(origin: iconOrigin, size: size))
         }
     }
-    
+
     public static func generateGroupCallImage(initials: String, color: UIColor) -> UIImage {
         let foregroundColor = UIColor.white
-        
-        let image: UIImage? = UIImage(systemName: "person.fill")
-        
+
         let imageSize = CGSize(width: imageWidth, height: imageWidth)
-        let renderer = UIGraphicsImageRenderer(size: imageSize)
-        
-        let font =
-            if let roundedFontDescriptor = UIFont.systemFont(ofSize: iconHeight / 2, weight: .bold)
-                .fontDescriptor.withDesign(
-                    UIFontDescriptor.SystemDesign.rounded
-                ) {
-                // A size of 0 does't override the existing size
-                UIFont(descriptor: roundedFontDescriptor, size: 0)
+
+        let fontSize = iconHeight / 2
+        guard fontSize > 0 else {
+            return makeFallbackImage(size: imageSize, color: color)
+        }
+
+        let baseFont = UIFont.systemFont(ofSize: fontSize, weight: .bold)
+        let font: UIFont =
+            if let rounded = baseFont.fontDescriptor.withDesign(.rounded) {
+                UIFont(descriptor: rounded, size: 0)
             }
             else {
-                UIFont.systemFont(ofSize: iconHeight / 2, weight: .bold)
+                baseFont
             }
-    
+
         let iconString: NSAttributedString
-        
-        if initials != "" {
+
+        if !initials.isEmpty {
             iconString = NSAttributedString(
                 string: initials,
                 attributes: [
-                    NSAttributedString.Key.font: font,
-                    NSAttributedString.Key.foregroundColor: foregroundColor,
+                    .font: font,
+                    .foregroundColor: foregroundColor,
                 ]
             )
         }
         else {
-            let icon = NSTextAttachment()
-            icon.image = image!.withConfiguration(UIImage.SymbolConfiguration(font: font))
+            guard let systemImage = UIImage(systemName: "person.fill") else {
+                return makeFallbackImage(size: imageSize, color: color)
+            }
+
+            let configuredImage = systemImage
+                .withConfiguration(UIImage.SymbolConfiguration(font: font))
                 .withTintColor(foregroundColor)
+
+            let icon = NSTextAttachment()
+            icon.image = configuredImage
             iconString = NSAttributedString(attachment: icon)
         }
-        
+
         let size = iconString.size()
-        let iconOrigin = CGPoint(x: imageWidth * 0.5 - size.width * 0.5, y: imageWidth * 0.5 - size.height * 0.5)
-       
+        guard size.width > 0, size.height > 0, size.width.isFinite, size.height.isFinite else {
+            return makeFallbackImage(size: imageSize, color: color)
+        }
+
+        let iconOrigin = CGPoint(
+            x: imageWidth * 0.5 - size.width * 0.5,
+            y: imageWidth * 0.5 - size.height * 0.5
+        )
+
+        let renderer = UIGraphicsImageRenderer(size: imageSize)
         return renderer.image { context in
             color.setFill()
             context.fill(CGRect(origin: .zero, size: imageSize))
             iconString.draw(in: CGRect(origin: iconOrigin, size: size))
         }
     }
-    
+
     public static func addBackground(to image: UIImage) -> UIImage {
         let size = image.size
         let renderer = UIGraphicsImageRenderer(size: size)
@@ -197,6 +207,16 @@ public class ProfilePictureGenerator: ProfilePictureGeneratorProtocol {
             UIColor.white.setFill()
             context.fill(CGRect(origin: .zero, size: size))
             image.draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
+
+    // MARK: Helpers
+
+    private static func makeFallbackImage(size: CGSize, color: UIColor) -> UIImage {
+        let fallbackRenderer = UIGraphicsImageRenderer(size: size)
+        return fallbackRenderer.image { ctx in
+            color.withAlphaComponent(0.25).setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
         }
     }
 }

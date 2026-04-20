@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import ThreemaEssentials
 import ThreemaFramework
@@ -128,11 +108,9 @@ final class EditProfileViewController: UITableViewController {
         target: self,
         action: #selector(cancelButtonTapped)
     )
-    private lazy var saveBarButtonItem = UIBarButtonItem(
-        barButtonSystemItem: .save,
-        target: self,
-        action: #selector(saveButtonTapped)
-    )
+    
+    private lazy var saveBarButtonItem = UIBarButtonItem.saveButton(target: self, selector: #selector(saveButtonTapped))
+    
     private lazy var editProfilePictureView: EditProfilePictureView = {
         let imageUpdated: EditProfilePictureView.ImageUpdated = { [weak self] newImageData -> (UIImage?, Bool) in
             guard let self else {
@@ -187,7 +165,12 @@ final class EditProfileViewController: UITableViewController {
         configureSnapshot()
         addObservers()
     }
-    
+
+    override func viewWillDisappear(_ animated: Bool) {
+        NotificationCenter.default.post(name: .profileUIRefresh, object: nil)
+        super.viewWillDisappear(animated)
+    }
+
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         updateHeaderIfNeeded()

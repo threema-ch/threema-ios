@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2019-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
@@ -25,11 +5,17 @@ import Sentry
 import ThreemaFramework
 import ThreemaMacros
 
-@objc class SentryClient: NSObject {
-    
+@objc final class SentryClient: NSObject {
+
     private static let sentryNotEnabled = "SENTRY_NOT_ENABLED"
     private static var didStart = false
-    
+
+    /// Tracks the active dispatch group used to block Sentry's thread while the crash report
+    /// alert is presented. When the app deactivates (e.g. due to a TestFlight alert), we leave
+    /// the group early to unblock Sentry's thread before willTerminate tries to sync-dispatch
+    /// onto it, which would otherwise cause a deadlock.
+    private var activeDispatchGroup: DispatchGroup?
+
     @objc override init() {
         super.init()
     }
@@ -67,6 +53,11 @@ import ThreemaMacros
             options.enableNetworkTracking = false
             options.enableCaptureFailedRequests = false
             options.appHangTimeoutInterval = TimeInterval(10)
+            
+            // Enable metric kit for sandbox apps
+            if TargetManager.isSandbox {
+                options.enableMetricKit = true
+            }
             
             // Disable breadcrumbs
             options.maxBreadcrumbs = 0
@@ -107,16 +98,27 @@ import ThreemaMacros
         event.user?.geo = nil
         event.user?.ipAddress = nil
         
-        if event.exceptions?.first?.value != nil {
-            event.exceptions?.first?.value = redact(exceptionDescription: event.exceptions!.first!.value)
+        if let value = event.exceptions?.first?.value {
+            event.exceptions?.first?.value = redact(exceptionDescription: value)
         }
         
         var send = false
-        
+
         // Show alert
         let dispatch = DispatchGroup()
         dispatch.enter()
+        activeDispatchGroup = dispatch
+
         DispatchQueue.main.async {
+            // Observe app deactivation so we can leave the group before Sentry's willTerminate
+            // handler tries to sync-dispatch onto the blocked Sentry queue, preventing a deadlock.
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(self.leaveActiveDispatchGroup),
+                name: UIApplication.willResignActiveNotification,
+                object: nil
+            )
+
             let confirm = UIAlertController(
                 title: String.localizedStringWithFormat(
                     #localize("sentry_crash_send_title"),
@@ -131,46 +133,69 @@ import ThreemaMacros
             confirm.addAction(UIAlertAction(
                 title: #localize("sentry_crash_send_yes"),
                 style: .default,
-                handler: { _ in
+                handler: { [weak self] _ in
                     if let textField = confirm.textFields?.first,
                        let text = textField.text,
                        text.isEmpty == false {
-                        // swiftformat:disable:next acronyms
-                        let userFeedback = UserFeedback(eventId: event.eventId)
-                        userFeedback.comments = text
-                        SentrySDK.capture(userFeedback: userFeedback)
+                        let feedback = SentryFeedback(
+                            message: text,
+                            name: nil,
+                            email: nil,
+                            // swiftformat:disable:next acronyms
+                            associatedEventId: event.eventId
+                        )
+                        SentrySDK.capture(feedback: feedback)
                     }
                     send = true
-                    dispatch.leave()
+                    self?.leaveActiveDispatchGroup()
                 }
             ))
             confirm.addAction(UIAlertAction(
                 title: #localize("sentry_crash_send_no"),
                 style: .cancel,
-                handler: { _ in
-                    dispatch.leave()
+                handler: { [weak self] _ in
+                    self?.leaveActiveDispatchGroup()
                 }
             ))
-            
+
             DispatchQueue.main.async {
                 if let vc = AppDelegate.shared()?.currentTopViewController() {
                     vc.present(confirm, animated: true, completion: nil)
                 }
                 else {
-                    dispatch.leave()
+                    self.leaveActiveDispatchGroup()
                 }
             }
         }
-        
+
         dispatch.wait()
-        
+
+        // Clean up observer
+        DispatchQueue.main.async {
+            NotificationCenter.default.removeObserver(
+                self,
+                name: UIApplication.willResignActiveNotification,
+                object: nil
+            )
+        }
+
         if send {
             return event
         }
-        
+
         return nil
     }
     
+    /// Leaves the active dispatch group exactly once. Called from alert action handlers
+    /// and from the willResignActive notification observer to unblock Sentry's thread.
+    @objc private func leaveActiveDispatchGroup() {
+        guard let group = activeDispatchGroup.take() else {
+            return
+        }
+        
+        group.leave()
+    }
+
     private func redact(exceptionDescription: String) -> String {
         let keys = [
             "encryptionKey",

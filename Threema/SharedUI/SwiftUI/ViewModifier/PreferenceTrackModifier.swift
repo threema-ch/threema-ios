@@ -1,24 +1,29 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
+
+struct TrackedFrame: Equatable {
+    let id: String
+    let frame: CGRect
+    let data: Any?
+    var proxy: GeometryProxy? = nil
+
+    static func == (lhs: TrackedFrame, rhs: TrackedFrame) -> Bool {
+        lhs.id == rhs.id && lhs.frame == rhs.frame
+    }
+}
+
+// MARK: - TrackedFrame.Key
+
+extension TrackedFrame {
+    struct Key: PreferenceKey {
+        typealias Value = [TrackedFrame]
+
+        static var defaultValue: [TrackedFrame] = []
+
+        static func reduce(value: inout [TrackedFrame], nextValue: () -> [TrackedFrame]) {
+            value.append(contentsOf: nextValue())
+        }
+    }
+}
 
 struct PreferenceTrackModifier: ViewModifier {
     let id: String

@@ -1,40 +1,22 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 @testable import ThreemaFramework
 
-class GroupMessageProcessorTests: XCTestCase {
-    private var databaseCnx: DatabaseContext!
-    private var databasePreparer: DatabasePreparer!
+final class GroupMessageProcessorTests: XCTestCase {
+    private var testDatabase: TestDatabase!
+    private var databasePreparer: TestDatabasePreparer!
 
     private var ddLoggerMock: DDLoggerMock!
     
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
-        databaseCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        databasePreparer = DatabasePreparer(context: mainCnx)
+        testDatabase = TestDatabase()
+        databasePreparer = testDatabase.preparer
+
+        // Workaround to ensure remote secret is initialized
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
 
         ddLoggerMock = DDLoggerMock()
         DDTTYLogger.sharedInstance?.logFormatter = LogFormatterCustom()
@@ -133,8 +115,8 @@ class GroupMessageProcessorTests: XCTestCase {
             let userSettingsMock = UserSettingsMock()
             let groupManagerMock: GroupManagerProtocolObjc = GroupManagerMock()
 
-            (test[1] as! AbstractGroupMessage).nonce = MockData.generateMessageNonce()
-            (test[1] as! AbstractGroupMessage).groupID = MockData.generateGroupID()
+            (test[1] as! AbstractGroupMessage).nonce = BytesUtility.generateMessageNonce()
+            (test[1] as! AbstractGroupMessage).groupID = BytesUtility.generateGroupID()
             (test[1] as! AbstractGroupMessage).groupCreator = test[2] as? String
             (test[1] as! AbstractGroupMessage).fromIdentity = test[3] as? String
 
@@ -143,7 +125,7 @@ class GroupMessageProcessorTests: XCTestCase {
                 myIdentityStore: myIdentityStoreMock,
                 userSettings: userSettingsMock,
                 groupManager: groupManagerMock as! NSObject,
-                entityManager: EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false),
+                entityManager: testDatabase.entityManager,
                 nonceGuard: NonceGuardMock()
             )
 
@@ -276,7 +258,7 @@ class GroupMessageProcessorTests: XCTestCase {
             let myIdentityStoreMock = MyIdentityStoreMock()
             let userSettingsMock = UserSettingsMock()
             let taskManagerMock = TaskManagerMock()
-            let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+            let entityManager = testDatabase.entityManager
 
             let groupManager = GroupManager(
                 myIdentityStore: myIdentityStoreMock,
@@ -289,7 +271,7 @@ class GroupMessageProcessorTests: XCTestCase {
                 }
             )
 
-            let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: expectedMember01)
+            let expectedGroupIdentity = GroupIdentity(id: BytesUtility.generateGroupID(), creator: expectedMember01)
 
             guard let group = try await groupManager.createOrUpdateDB(
                 for: expectedGroupIdentity,
@@ -487,11 +469,11 @@ class GroupMessageProcessorTests: XCTestCase {
             let testDescription = test[0] as! String
 
             let userSettingsMock = UserSettingsMock()
-            let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+            let entityManager = testDatabase.entityManager
             
             let groupManagerMock = GroupManagerMock(myIdentityStoreMock)
 
-            let expectedGroupIdentity = GroupIdentity(id: MockData.generateGroupID(), creator: expectedCreator)
+            let expectedGroupIdentity = GroupIdentity(id: BytesUtility.generateGroupID(), creator: expectedCreator)
             
             let groupEntity = databasePreparer.save {
                 databasePreparer.createGroupEntity(
@@ -627,7 +609,7 @@ class GroupMessageProcessorTests: XCTestCase {
 
             let userSettingsMock = UserSettingsMock()
             let taskManagerMock = TaskManagerMock()
-            let entityManager = EntityManager(databaseContext: databaseCnx, isRemoteSecretEnabled: false)
+            let entityManager = testDatabase.entityManager
 
             let groupManager = GroupManager(
                 myIdentityStore: myIdentityStoreMock,
@@ -641,7 +623,7 @@ class GroupMessageProcessorTests: XCTestCase {
             )
 
             let expectedGroupIdentity = GroupIdentity(
-                id: MockData.generateGroupID(),
+                id: BytesUtility.generateGroupID(),
                 creator: ThreemaIdentity(test[3] as! String)
             )
 

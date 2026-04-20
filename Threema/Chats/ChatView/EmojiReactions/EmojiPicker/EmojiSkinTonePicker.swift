@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 import ThreemaFramework
 
@@ -26,7 +6,7 @@ enum SkinTonePicker {
     static let backgroundPreferenceID = "skinToneEmojiViewBackground"
     static let coordinateSpaceID = "skinToneEmojiViewCoordinateSpace"
     
-    public class ViewModel: ObservableObject {
+    public final class ViewModel: ObservableObject {
         @Published var frame: CGRect?
         @Published var emojiSelection: (emoji: EmojiVariant, section: EmojiCategory.Section?)?
         @Published var alignment: HorizontalAlignment = .center
@@ -50,11 +30,11 @@ enum SkinTonePicker {
         func body(content: Content) -> some View {
             content
                 .coordinateSpace(name: SkinTonePicker.coordinateSpaceID)
-                .onChange(of: contentSize.height) { _ in
+                .onChange(of: contentSize.height) {
                     deselectEmoji()
                 }
                 .onChange(of: isSearchActive) {
-                    if $0 {
+                    if isSearchActive != nil {
                         deselectEmoji()
                     }
                 } // also when results change

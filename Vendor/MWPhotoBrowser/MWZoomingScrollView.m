@@ -61,11 +61,7 @@
         _photoImageView.isAccessibilityElement = YES;
         _photoImageView.accessibilityTraits = UIAccessibilityTraitImage;
         _photoImageView.userInteractionEnabled = YES;
-        /***** BEGIN THREEMA MODIFICATION: accessibilityIgnoresInvertColors *********/
-        if (@available(iOS 11.0, *)) {
-            _photoImageView.accessibilityIgnoresInvertColors = true;
-        }
-        /***** END THREEMA MODIFICATION: accessibilityIgnoresInvertColors *********/
+        _photoImageView.accessibilityIgnoresInvertColors = true;
 		[self addSubview:_photoImageView];
 		
 		// Loading indicator
@@ -294,7 +290,7 @@
     
     // Calculate Max
     CGFloat maxScale = 3;
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+    if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
         // Let them go a bit bigger on a bigger screen!
         maxScale = 4;
     }

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import Foundation
@@ -62,7 +42,7 @@ import ThreemaMacros
 ///     DDLogNotice("[AppMigration] App migration to version 4.9 successfully finished")
 /// }
 /// ```
-public class AppMigration {
+public final class AppMigration {
 
     private let osPOILog = OSLog(subsystem: "ch.threema.iapp.appMigration", category: .pointsOfInterest)
 
@@ -188,9 +168,13 @@ public class AppMigration {
                 try migrateTo6_9()
                 migratedTo = .v6_9
             }
-            if migratedTo < .v7_0_1 {
-                try migrateTo7_0_1()
-                migratedTo = .v7_0_1
+            if migratedTo < .v7_0_4 {
+                try migrateTo7_0_4()
+                migratedTo = .v7_0_4
+            }
+            if migratedTo < .v7_1 {
+                try migrateTo7_1()
+                migratedTo = .v7_1
             }
 
             // Add here a check if migration is necessary for a particular version...
@@ -698,7 +682,7 @@ public class AppMigration {
             let batch = NSBatchUpdateRequest(entityName: "FileMessage")
             batch.resultType = .statusOnlyResultType
             batch.predicate = NSPredicate(
-                format: "isOwn == false AND type == 1 AND mimeType IN %@", UTIConverter.renderingAudioMimetypes()
+                format: "isOwn == false AND type == 1 AND mimeType IN %@", UTIConverter.renderingAudioMimeTypes()
             )
 
             batch.propertiesToUpdate = ["consumed": Date(timeIntervalSince1970: 0)]
@@ -871,7 +855,9 @@ public class AppMigration {
             myIdentity: ThreemaIdentity(businessInjector.myIdentityStore.identity)
         )
 
-        // Migrate license
+        /// Migrate license
+        /// Before 6.9, we stored it in UserDefaults.
+        /// Now we need to migrate it to Keychain.
         let persistenceKeyLicenseUser = "Threema license username"
         let persistenceKeyLicensePassword = "Threema license password"
         let persistenceKeyDeviceID = "Threema device ID"
@@ -889,6 +875,11 @@ public class AppMigration {
                 deviceID: deviceID,
                 onPremServer: server
             )
+            /// Due to it never being encrypted before, this is going to be
+            /// unencrypted.
+            /// Remote Secret was only introduced in 6.9, and if the customer
+            /// enables it, all the app data is going to be cleared and
+            /// the user needs to go over the onboarding again.
             try businessInjector.keychainManager.storeLicense(license)
         }
 
@@ -909,11 +900,11 @@ public class AppMigration {
         DDLogNotice("[AppMigration] App migration to version 6.9 successfully finished")
     }
     
-    /// Migrate to version 7.0.1
+    /// Migrate to version 7.0.4
     /// - Migrate MDM to app group user defaults
-    private func migrateTo7_0_1() throws {
-        DDLogNotice("[AppMigration] App migration to version 7.0.1 started")
-        os_signpost(.begin, log: osPOILog, name: "7.0.1 migration")
+    private func migrateTo7_0_4() throws {
+        DDLogNotice("[AppMigration] App migration to version 7.0.4 started")
+        os_signpost(.begin, log: osPOILog, name: "7.0.4 migration")
         
         guard let appGroupUserDefaults = AppGroup.userDefaults() else {
             return
@@ -928,7 +919,63 @@ public class AppMigration {
             defaults.removeObject(forKey: threemaMDMKey)
         }
         
-        os_signpost(.end, log: osPOILog, name: "7.0.1 migration")
-        DDLogNotice("[AppMigration] App migration to version 7.0.1 successfully finished")
+        os_signpost(.end, log: osPOILog, name: "7.0.4 migration")
+        DDLogNotice("[AppMigration] App migration to version 7.0.4 successfully finished")
+    }
+
+    private func migrateTo7_1() throws {
+        DDLogNotice("[AppMigration] App migration to version 7.1 started")
+        os_signpost(.begin, log: osPOILog, name: "7.1 migration")
+
+        func migrateUserInterfaceStyleStoringKey() {
+            guard let defaults = AppGroup.userDefaults() else {
+                return
+            }
+
+            let darkThemeKey = "DarkTheme"
+            let useSystemThemeKey = "UseSystemTheme"
+
+            // Only migrate if the old values still exist.
+            guard
+                defaults.object(forKey: darkThemeKey) != nil,
+                defaults.object(forKey: useSystemThemeKey) != nil
+            else {
+                DDLogError(
+                    "[AppMigration] \(darkThemeKey) and/or \(useSystemThemeKey) is missing. Skip user interface style migration."
+                )
+                return
+            }
+
+            let darkTheme = defaults.bool(forKey: darkThemeKey)
+            let useSystemTheme = defaults.bool(forKey: useSystemThemeKey)
+
+            let preferenceInterfaceStyle: Int =
+                if useSystemTheme {
+                    UIUserInterfaceStyle.unspecified.rawValue
+                }
+                else if darkTheme {
+                    UIUserInterfaceStyle.dark.rawValue
+                }
+                else {
+                    UIUserInterfaceStyle.light.rawValue
+                }
+
+            // Update user defaults and in memory property
+            businessInjector.userSettings.interfaceStyle = preferenceInterfaceStyle
+
+            // Remove values stored in the old keys
+            defaults.removeObject(forKey: darkThemeKey)
+            defaults.removeObject(forKey: useSystemThemeKey)
+            defaults.synchronize()
+
+            Colors.resolveTheme()
+        }
+
+        #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+            migrateUserInterfaceStyleStoringKey()
+        #endif
+
+        os_signpost(.end, log: osPOILog, name: "7.1 migration")
+        DDLogNotice("[AppMigration] App migration to version 7.1 successfully finished")
     }
 }

@@ -1,30 +1,10 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import XCTest
 @testable import Threema
 
 /// Performance test for the formatting done in ChatTextView.
 /// The baseline average was done on MacBook Pro (16-inch, 2019) with an 2.6 GHz 6-Core Intel Core i7 and 16 GB 2667 MHz
 /// DDR4 memory. No other applications except Xcode and the simulator were run.
-class ChatTextViewPerformanceTest: XCTestCase {
+final class ChatTextViewPerformanceTest: XCTestCase {
     var mySema = DispatchSemaphore(value: 0)
     
     let options = XCTMeasureOptions()
@@ -289,20 +269,20 @@ class ChatTextViewPerformanceTest: XCTestCase {
 // MARK: - ChatTextViewDelegate
 
 extension ChatTextViewPerformanceTest: ChatTextViewDelegate {
+    func canStartEditing() -> Bool { true }
+    func chatTextViewDidChange(_ textView: ChatTextView) { }
+    func checkIfPastedStringIsMedia() -> Bool { false }
+    func didEndEditing() { }
+
     @available(iOS 18.0, *)
     func processAndSendGlyph(_ glyph: NSAdaptiveImageGlyph) { }
-    
-    func checkIfPastedStringIsMedia() -> Bool { false }
-    
-    func didEndEditing() { }
-    
-    func canStartEditing() -> Bool { true }
-    
+
     func sendText() { }
-    
-    func chatTextView(_ textView: ChatTextView, shouldChangeTextIn range: NSRange, replacementText text: String) { }
-    
-    func chatTextViewDidChange(_ textView: ChatTextView) { }
-    
-    func showContact(identity: String) { }
+    func textView(_ textView: ChatTextView, editMenuFor textRange: UITextRange, suggestedActions: [UIMenuElement])
+        -> UIMenu? { nil }
+    func textView(
+        _ textView: ChatTextView,
+        primaryActionFor textItem: UITextItem,
+        defaultAction: UIAction
+    ) -> UIAction? { nil }
 }

@@ -37,7 +37,7 @@ let package = Package(
             name: "KeychainTestHelper",
             dependencies: [
                 "Keychain",
-                .product(name: "ThreemaEssentialsTestHelper", package: "ThreemaEssentials"),
+                .product(name: "ThreemaEssentials", package: "ThreemaEssentials"),
             ],
             path: "Tests/Helper"
         ),

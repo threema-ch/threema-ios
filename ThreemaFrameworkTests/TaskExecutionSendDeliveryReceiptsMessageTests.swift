@@ -1,41 +1,20 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import XCTest
 @testable import ThreemaFramework
 
 final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
-    private var dbMainCnx: DatabaseContext!
-    private var dbBackgroundCnx: DatabaseContext!
-    private var dbPreparer: DatabasePreparer!
+    private var testDatabase: TestDatabase!
+    private var dbPreparer: TestDatabasePreparer!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
 
-        let (_, mainCnx, backgroundCnx) = DatabasePersistentContext
-            .devNullContext(withChildContextForBackgroundProcess: true)
-        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
-        dbBackgroundCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: backgroundCnx)
-        dbPreparer = DatabasePreparer(context: backgroundCnx!)
+        testDatabase = TestDatabase()
+        dbPreparer = testDatabase.backgroundPreparer
+
+        // Workaround to ensure remote secret is initialized
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
     }
 
     func testContactReadReceiptSendAndDoNotSend() throws {
@@ -49,7 +28,7 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         var contactEntity: ContactEntity!
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: expectedToIdentity
             )
             contactEntity.readReceipt = readReceipt
@@ -62,7 +41,7 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         let messageSenderMock = MessageSenderMock(doSendReadReceiptContacts: [contactEntity])
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             messageSender: messageSenderMock,
             serverConnector: serverConnectorMock
         )
@@ -74,7 +53,7 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
             fromIdentity: MyIdentityStoreMock().identity,
             toIdentity: expectedToIdentity,
             receiptType: .read,
-            receiptMessageIDs: [MockData.generateMessageID()],
+            receiptMessageIDs: [BytesUtility.generateMessageID()],
             receiptReadDates: [Date()],
             excludeFromSending: [Data]()
         )
@@ -118,15 +97,15 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
     ) throws {
         let expectedToIdentity = "ECHOECHO"
 
-        let readReceiptMessageIDs = [MockData.generateMessageID(), MockData.generateMessageID()]
-        let messageReflectID = MockData.generateReflectID()
+        let readReceiptMessageIDs = [BytesUtility.generateMessageID(), BytesUtility.generateMessageID()]
+        let messageReflectID = BytesUtility.generateReflectID()
         let messageReflect = BytesUtility.generateRandomBytes(length: 16)!
         var reflectIDs = [messageReflectID]
 
         var contactEntity: ContactEntity!
         dbPreparer.save {
             contactEntity = dbPreparer.createContact(
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 identity: expectedToIdentity
             )
             contactEntity.readReceipt = readReceipt
@@ -158,7 +137,7 @@ final class TaskExecutionSendDeliveryReceiptsMessageTests: XCTestCase {
         }
 
         let frameworkInjectorMock = BusinessInjectorMock(
-            entityManager: EntityManager(databaseContext: dbBackgroundCnx, isRemoteSecretEnabled: false),
+            entityManager: testDatabase.backgroundEntityManager,
             messageSender: messageSenderMock,
             userSettings: UserSettingsMock(enableMultiDevice: true),
             serverConnector: serverConnectorMock,

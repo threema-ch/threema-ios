@@ -1,30 +1,10 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import PromiseKit
 import ThreemaEssentials
 import ThreemaProtocols
 
-class MediatorReflectedGroupSyncProcessor {
+final class MediatorReflectedGroupSyncProcessor {
     
     private let frameworkInjector: FrameworkInjectorProtocol
 
@@ -35,19 +15,46 @@ class MediatorReflectedGroupSyncProcessor {
     func process(groupSync: D2d_GroupSync) -> Promise<Void> {
         Promise { seal in
             Task {
-                switch groupSync.action {
-                case let .update(groupSyncUpdate):
-                    do {
+                do {
+                    switch groupSync.action {
+                    case .create:
+                        DDLogWarn("D2D group sync create not implemented yet")
+                    case let .delete(sync):
+                        try await delete(groupIdentity: sync.groupIdentity)
+                    case let .update(groupSyncUpdate):
                         try await updateGroupSettings(of: groupSyncUpdate.group)
+                    case .none:
+                        DDLogWarn("D2D group sync is none")
+                    }
 
-                        seal.fulfill_()
-                    }
-                    catch {
-                        seal.reject(error)
-                    }
-                default:
                     seal.fulfill_()
                 }
+                catch {
+                    seal.reject(error)
+                }
+            }
+        }
+    }
+
+    private func delete(groupIdentity commonGroupIdentity: Common_GroupIdentity) async throws {
+        let groupIdentity = try GroupIdentity(commonGroupIdentity: commonGroupIdentity)
+
+        guard let group = frameworkInjector.groupManager.getGroup(
+            groupIdentity.id,
+            creator: groupIdentity.creator.rawValue
+        )
+        else {
+            throw MediatorReflectedProcessorError.groupToDeleteNotExists(groupIdentity: groupIdentity)
+        }
+
+        guard group.state != .active else {
+            throw MediatorReflectedProcessorError.groupToDeleteIsActive(groupIdentity: groupIdentity)
+        }
+
+        await frameworkInjector.entityManager.performSave {
+            if let conversationEntity = self.frameworkInjector.entityManager.entityFetcher
+                .conversationEntity(with: group.conversationObjectID) {
+                self.frameworkInjector.entityManager.entityDestroyer.delete(conversation: conversationEntity)
             }
         }
     }

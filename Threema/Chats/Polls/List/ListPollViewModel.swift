@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 import ThreemaEssentials
 import ThreemaFramework
@@ -29,6 +9,7 @@ final class ListPollViewModel: ObservableObject {
     // MARK: - State
 
     @Published var isLoading = false
+    @Published var showDeleteAlert = false
     @Published var openPollIDs: [NSManagedObjectID] = []
     @Published var closedPollIDs: [NSManagedObjectID] = []
     @Published var selectedPoll: Poll? = nil
@@ -39,18 +20,27 @@ final class ListPollViewModel: ObservableObject {
     let closedBallotsTitle = #localize("ballot_closed_ballots")
     let doneTitle = #localize("Done")
     let navigationTitle = #localize("ballots")
+    let deleteAlertTitle = #localize("ballot_alert_delete_own_open_poll_title")
+    let deleteAlertOkButtonTitle = #localize("ok")
 
     // MARK: - Private properties
     
     private let conversationID: NSManagedObjectID
+    private let entityManager: EntityManager
+    private let onDelete: (([NSManagedObjectID]) -> Void)?
 
-    private lazy var entityManager = BusinessInjector.ui.entityManager
     private lazy var manager = BallotManager(entityManager: entityManager)
     
     // MARK: - Lifecycle
     
-    init(conversationID: NSManagedObjectID) {
+    init(
+        conversationID: NSManagedObjectID,
+        entityManager: EntityManager,
+        onDelete: (([NSManagedObjectID]) -> Void)? = nil
+    ) {
         self.conversationID = conversationID
+        self.entityManager = entityManager
+        self.onDelete = onDelete
     }
     
     // MARK: - Public functions
@@ -80,5 +70,45 @@ final class ListPollViewModel: ObservableObject {
     
     func load(for id: NSManagedObjectID) -> Poll? {
         manager.getPoll(for: id)
+    }
+    
+    func deletePoll(at index: Int, closedPoll: Bool) {
+        let managedObjectID = closedPoll ? closedPollIDs.remove(at: index) : openPollIDs.remove(at: index)
+        guard let ballotEntity = entityManager.entityFetcher.managedObject(with: managedObjectID) as? BallotEntity
+        else {
+            Task {
+                await load()
+            }
+            return
+        }
+        
+        guard closedPoll ||
+            !closedPoll && ballotEntity.creatorID != BusinessInjector().myIdentityStore.identity else {
+            Task {
+                await load()
+            }
+            showDeleteAlert = true
+            return
+        }
+        
+        if let ballotMessagesManagedObjectIDs = ballotEntity.message?.compactMap({ ballotMessageEntity in
+            ballotMessageEntity.objectID
+        }) as? [NSManagedObjectID] {
+            onDelete?(ballotMessagesManagedObjectIDs)
+        }
+                
+        entityManager.performAndWaitSave {
+            
+            ballotEntity.message?.forEach { baseMessageEntity in
+                self.entityManager.entityDestroyer.delete(baseMessage: baseMessageEntity)
+            }
+            self.entityManager.entityDestroyer.delete(ballot: ballotEntity)
+        }
+        
+        guard let conversationEntity = entityManager.entityFetcher
+            .existingObject(with: conversationID) as? ConversationEntity else {
+            return
+        }
+        conversationEntity.updateLastDisplayMessage(with: entityManager)
     }
 }

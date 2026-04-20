@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import QuickLook
 import SwiftUI
 
@@ -48,12 +28,8 @@ struct QuickLookPreviewView: View {
                         )
                         .toolbar {
                             ToolbarItem(placement: .primaryAction) {
-                                Button(role: .cancel) {
+                                XMarkCancelButton {
                                     dismiss()
-                                } label: {
-                                    Label(viewModel.doneButtonTitle, systemImage: "xmark.circle.fill")
-                                        .symbolRenderingMode(.hierarchical)
-                                        .foregroundColor(.secondary)
                                 }
                             }
                         }
@@ -82,11 +58,9 @@ struct ThreemaQLPreviewControllerWrapper: UIViewControllerRepresentable {
         let previewController = ThreemaQLPreviewController()
         previewController.dataSource = context.coordinator
         previewController.delegate = context.coordinator
-        previewController.navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: quickLookPreviewViewModel.doneButtonTitle,
-            style: .done,
+        previewController.navigationItem.rightBarButtonItem = UIBarButtonItem.closeButton(
             target: context.coordinator,
-            action: #selector(Coordinator.didTapDone)
+            selector: #selector(Coordinator.didTapDone)
         )
 
         let navController = UINavigationController(rootViewController: previewController)
@@ -99,7 +73,7 @@ struct ThreemaQLPreviewControllerWrapper: UIViewControllerRepresentable {
         Coordinator(fileURL: fileURL, dismiss: dismiss)
     }
 
-    class Coordinator: NSObject, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
+    final class Coordinator: NSObject, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
         let fileURL: URL
         let dismiss: () -> Void
 

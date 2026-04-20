@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 
 struct ProfilePictureDebugView: View {
@@ -88,6 +68,49 @@ struct ProfilePictureDebugView: View {
                 .background(UIColor.groupTableViewBackground.color)
                 .environment(\.colorScheme, .dark)
                 .preferredColorScheme(.dark)
+            }
+            HStack {
+                VStack {
+                    Text(verbatim: "Directory Contact")
+                    Image(uiImage: ProfilePictureGenerator.generateImage(for: .directoryContact, color: .black))
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(Circle())
+
+                    Text(verbatim: "Distribution List")
+                    Image(uiImage: ProfilePictureGenerator.generateImage(for: .distributionList, color: .black))
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(Circle())
+
+                    Text(verbatim: "Gateway")
+                    Image(uiImage: ProfilePictureGenerator.generateImage(for: .gateway, color: .black))
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(Circle())
+
+                    Text(verbatim: "Group")
+                    Image(uiImage: ProfilePictureGenerator.generateImage(for: .group, color: .black))
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(Circle())
+
+                    Text(verbatim: "Me")
+                    Image(uiImage: ProfilePictureGenerator.generateImage(for: .me, color: .black))
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(Circle())
+
+                    Text(verbatim: "Note Group")
+                    Image(uiImage: ProfilePictureGenerator.generateImage(for: .noteGroup, color: .black))
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(Circle())
+                }
+                .padding()
+                .background(UIColor.systemBackground.color)
+                .environment(\.colorScheme, .light)
+                .preferredColorScheme(.light)
             }
         }
         .navigationTitle(Text(verbatim: "New Profile Picture"))

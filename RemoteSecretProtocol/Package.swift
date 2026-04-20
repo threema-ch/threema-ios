@@ -29,7 +29,6 @@ let package = Package(
             name: "RemoteSecretProtocolTestHelper",
             dependencies: [
                 "RemoteSecretProtocol",
-                .product(name: "ThreemaEssentialsTestHelper", package: "ThreemaEssentials"),
                 .product(name: "ThreemaEssentials", package: "ThreemaEssentials"),
             ],
             path: "Tests/Helper"

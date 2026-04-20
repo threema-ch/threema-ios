@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2024-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 import ThreemaFramework
 
@@ -40,7 +20,7 @@ enum EmojiSectionToolbar {
 
     static let preferenceID = "scrollGridSection"
 
-    class ScrollGridCoordinator: ObservableObject {
+    final class ScrollGridCoordinator: ObservableObject {
         @Published var selectedToolbarSection: EmojiCategory.Section? = .recent
         @Published var nextSectionScrollState: EmojiCategory.Section?
         @Published var canManualScroll = false
@@ -68,17 +48,26 @@ enum EmojiSectionToolbar {
                     })
                     .environmentObject(model)
             }
-            .safeAreaInset(edge: .bottom, content: {
+            .safeAreaInset(edge: .bottom) {
                 EmojiToolBar()
                     .offset(y: toolbarVisible ? 0 : config.yOffsetOnDismissal)
+                    .apply { bar in
+                        if #available(iOS 26.0, *) {
+                            bar
+                                .ignoresSafeArea(.all, edges: [.vertical])
+                        }
+                        else {
+                            bar
+                        }
+                    }
                     .frame(height: config.toolbarHeight)
-                    .onChange(of: model.selectedToolbarSection, perform: { _ in
+                    .onChange(of: model.selectedToolbarSection) {
                         Task { @MainActor in
                             UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         }
-                    })
+                    }
                     .environmentObject(model)
-            })
+            }
         }
     }
     
@@ -91,8 +80,8 @@ enum EmojiSectionToolbar {
                     .simultaneousGesture(DragGesture(coordinateSpace: .global).onChanged { _ in
                         model.canManualScroll = true
                     }, including: .all)
-                    .onChange(of: model.nextSectionScrollState) { section in
-                        if let section {
+                    .onChange(of: model.nextSectionScrollState) {
+                        if let section = model.nextSectionScrollState {
                             proxy.scrollTo(section.id, anchor: .top)
                             model.didSelectEmojiSection(section)
                         }
@@ -143,7 +132,7 @@ extension EmojiSectionToolbar {
         
         var body: some View {
             toolbar { frame in
-                ZStack {
+                ZStack(alignment: .center) {
                     sectionHighlightBackground(in: frame)
                     sections(in: frame)
                 }
@@ -191,6 +180,7 @@ extension EmojiSectionToolbar {
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
         }
         
         private func toolbar(@ViewBuilder _ content: @escaping (CGRect) -> some View) -> some View {

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2018-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import GroupCalls
@@ -51,7 +31,7 @@ public enum HTTPHeaderField: String {
     case authorization = "Authorization"
 }
 
-public class HTTPClient: NSObject {
+public final class HTTPClient: NSObject {
     // MARK: - Properties
 
     fileprivate var user: String?
@@ -124,7 +104,10 @@ public class HTTPClient: NSObject {
     public func delete(url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Swift.Void) {
         let request = urlRequest(for: url, httpMethod: .delete, authorization: authorization)
         let task = urlSessionManager.storedSession(for: self, createAsBackgroundSession: false)
-            .dataTask(with: request, completionHandler: completionHandler)
+            .dataTask(with: request) { data, response, error in
+                self.recoveryOnPremIsNeeded(error)
+                completionHandler(data, response, error)
+            }
         task.resume()
     }
     
@@ -144,28 +127,53 @@ public class HTTPClient: NSObject {
         }
 
         let task = urlSessionManager.storedSession(for: self, createAsBackgroundSession: false)
-            .dataTask(with: request, completionHandler: completionHandler)
+            .dataTask(with: request) { data, response, error in
+                self.recoveryOnPremIsNeeded(error)
+                completionHandler(data, response, error)
+            }
         task.resume()
         
         return task
     }
 
-    /// Only used for testing.
-    public func downloadData(url: URL, delegate: URLSessionDelegate) {
+    public func downloadData(url: URL, contentType: ContentType) async throws -> (Data, URLResponse) {
         var request = urlRequest(for: url, httpMethod: .get, authorization: authorization)
-        request.setValue(ContentType.octetStream.rawValue, forHTTPHeaderField: HTTPHeaderField.accept.rawValue)
-        
-        let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: true)
-            .dataTask(with: request)
-        task.resume()
+        request.setValue(contentType.rawValue, forHTTPHeaderField: HTTPHeaderField.accept.rawValue)
+
+        do {
+            return try await urlSessionManager.storedSession(for: self, createAsBackgroundSession: false)
+                .data(for: request)
+        }
+        catch {
+            recoveryOnPremIsNeeded(error)
+            throw error
+        }
     }
-    
+
+    #if DEBUG
+        /// Only used for testing.
+        public func downloadData(url: URL, delegate: URLSessionDelegate) {
+            var request = urlRequest(for: url, httpMethod: .get, authorization: authorization)
+            request.setValue(ContentType.octetStream.rawValue, forHTTPHeaderField: HTTPHeaderField.accept.rawValue)
+
+            let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: true)
+                .dataTask(with: request)
+            task.resume()
+        }
+    #endif
+
     public func sendDone(url: URL) async throws {
         let request = urlRequest(for: url, httpMethod: .post, authorization: authorization)
 
         // It's just important that there was no error here
-        _ = try await urlSessionManager.storedSession(for: nil, createAsBackgroundSession: false)
-            .data(for: request, delegate: self)
+        do {
+            _ = try await urlSessionManager.storedSession(for: nil, createAsBackgroundSession: false)
+                .data(for: request, delegate: self)
+        }
+        catch {
+            recoveryOnPremIsNeeded(error)
+            throw error
+        }
     }
 
     // MARK: - Upload
@@ -184,9 +192,11 @@ public class HTTPClient: NSObject {
         let task = urlSessionManager.storedSession(for: self, createAsBackgroundSession: false)
             .uploadTask(
                 with: request,
-                from: data,
-                completionHandler: completionHandler
-            )
+                from: data
+            ) { data, response, error in
+                self.recoveryOnPremIsNeeded(error)
+                completionHandler(data, response, error)
+            }
         task.resume()
     }
     
@@ -203,26 +213,30 @@ public class HTTPClient: NSObject {
         var task: URLSessionUploadTask!
         task = urlSessionManager.storedSession(for: self, createAsBackgroundSession: false).uploadTask(
             with: request,
-            from: data,
-            completionHandler: completionHandler
-        )
+            from: data
+        ) { data, response, error in
+            self.recoveryOnPremIsNeeded(error)
+            completionHandler(data, response, error)
+        }
         task.resume()
         return task
     }
-    
-    /// Only used for testing.
-    public func uploadData(url: URL, file: URL, delegate: URLSessionDelegate) {
-        var request = urlRequest(for: url, httpMethod: .put, authorization: authorization)
-        request.setValue(
-            ContentType.octetStream.rawValue,
-            forHTTPHeaderField: HTTPHeaderField.contentType.rawValue
-        )
-        
-        let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: true)
-            .uploadTask(with: request, fromFile: file)
-        task.resume()
-    }
-    
+
+    #if DEBUG
+        /// Only used for testing.
+        public func uploadData(url: URL, file: URL, delegate: URLSessionDelegate) {
+            var request = urlRequest(for: url, httpMethod: .put, authorization: authorization)
+            request.setValue(
+                ContentType.octetStream.rawValue,
+                forHTTPHeaderField: HTTPHeaderField.contentType.rawValue
+            )
+
+            let task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: true)
+                .uploadTask(with: request, fromFile: file)
+            task.resume()
+        }
+    #endif
+
     /// Create upload task, HTTP method is POST.
     ///
     /// - Parameters:
@@ -250,11 +264,11 @@ public class HTTPClient: NSObject {
         var task: URLSessionUploadTask!
         task = urlSessionManager.storedSession(for: delegate, createAsBackgroundSession: false).uploadTask(
             with: request,
-            from: data,
-            completionHandler: { data, response, error in
-                completionHandler(task, data, response, error)
-            }
-        )
+            from: data
+        ) { data, response, error in
+            self.recoveryOnPremIsNeeded(error)
+            completionHandler(task, data, response, error)
+        }
         task.taskDescription = taskDescription
         task.resume()
         return task
@@ -281,7 +295,15 @@ public class HTTPClient: NSObject {
         
         return request
     }
-    
+
+    private func recoveryOnPremIsNeeded(_ error: Error?) {
+        guard let nsError = error as? NSError, nsError.code == NSURLErrorCancelled else {
+            return
+        }
+
+        ServerInfoProviderFactory.recoveryOnPrem()
+    }
+
     /// Invalidates and cancels session for a given delegate
     /// - Parameter delegate: URLSessionDelegate of to be canceled session
     public static func invalidateAndCancelSession(for delegate: URLSessionDelegate) {
@@ -353,12 +375,18 @@ extension HTTPClient: RemoteSecretHTTPClientProtocol {
     public func data(for request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         let session = urlSessionManager.storedSession(for: nil, createAsBackgroundSession: true)
 
-        let (data, urlResponse) = try await session.data(for: request, delegate: self)
-        
-        guard let httpURLResponse = urlResponse as? HTTPURLResponse else {
-            throw RemoteSecretHTTPClientProtocolError.invalidResponse
+        do {
+            let (data, urlResponse) = try await session.data(for: request, delegate: self)
+
+            guard let httpURLResponse = urlResponse as? HTTPURLResponse else {
+                throw RemoteSecretHTTPClientProtocolError.invalidResponse
+            }
+
+            return (data, httpURLResponse)
         }
-        
-        return (data, httpURLResponse)
+        catch {
+            recoveryOnPremIsNeeded(error)
+            throw error
+        }
     }
 }

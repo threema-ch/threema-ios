@@ -1,57 +1,10 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import CoreData
 import Foundation
+import ThreemaEssentials
 
 extension EntityFetcher {
-    
-    enum PredicateFormat {
-        case name
-        case id
-        case titleDepartmentCSI
         
-        var format: String {
-            switch self {
-            case .name:
-                "lastName contains[cd] %@ OR firstName contains[cd] %@ OR publicNickname contains[cd] %@"
-        
-            case .id:
-                "identity contains[c] %@"
-            
-            case .titleDepartmentCSI:
-                "csi contains[cd] %@ OR department contains[cd] %@ OR jobTitle contains[cd] %@"
-            }
-        }
-        
-        func arguments(for searchTerm: String) -> [String] {
-            switch self {
-            case .name, .titleDepartmentCSI:
-                [searchTerm, searchTerm, searchTerm]
-            case .id:
-                [searchTerm]
-            }
-        }
-    }
-    
     /// Fetches all persisted `ContactEntity`
     /// - Returns: Optional array of `ContactEntity`
     @objc public func contactEntities() -> [ContactEntity]? {
@@ -59,13 +12,24 @@ extension EntityFetcher {
     }
     
     @objc public func gatewayContactEntities() -> [ContactEntity]? {
-        let predicate = gatewayContactPredicate()
-        return fetchEntities(entityName: "Contact", predicate: predicate)
+        fetchEntities(entityName: "Contact", predicate: .contactIsGateway)
     }
-    
+
+    /// Fetches a `ContactEntity` with an `NSManagedObjectID`
+    /// - Returns: Optional `ContactEntity`
+    public func contactEntity(with objectID: NSManagedObjectID) -> ContactEntity? {
+        var result: ContactEntity?
+        do {
+            result = try managedObjectContext.existingObject(with: objectID) as? ContactEntity
+        }
+        catch {
+            DDLogError("[EntityFetcher] Failed to fetch ContactEntity with id: \(objectID). Error: \(error)")
+        }
+        return result
+    }
+
     @objc public func contactEntity(for identity: String) -> ContactEntity? {
-        let predicate = contactIDPredicate(identity: identity)
-        return fetchEntity(entityName: "Contact", predicate: predicate)
+        fetchEntity(entityName: "Contact", predicate: .contactWithIdentity(identity))
     }
     
     /// Returns all `ContactEntity` for a given ID
@@ -74,23 +38,24 @@ extension EntityFetcher {
     /// - Parameter identity: Identity of the contacts
     /// - Returns: Optional array of `ContactEntity`
     public func contactEntities(for identity: String) -> [ContactEntity]? {
-        let predicate = contactIDPredicate(identity: identity)
-        return fetchEntities(entityName: "Contact", predicate: predicate)
+        fetchEntities(entityName: "Contact", predicate: .contactWithIdentity(identity))
     }
     
     @objc public func contactEntitiesWithFeatureMaskNil() -> [ContactEntity]? {
-        let predicate = contactFeatureMaskNilPredicate()
-        return fetchEntities(entityName: "Contact", predicate: predicate)
+        fetchEntities(
+            entityName: "Contact",
+            predicate: .contactWithNullFeatureMask(
+                encrypted: managedObjectContext.usesAdditionallyEncryptedModel
+            )
+        )
     }
     
     @objc public func contactEntitiesWithCustomReadReceipt() -> [ContactEntity]? {
-        let predicate = contactCustomReadReceiptPredicate()
-        return fetchEntities(entityName: "Contact", predicate: predicate)
+        fetchEntities(entityName: "Contact", predicate: .contactWithCustomReadReceipt)
     }
     
     public func contactEntitiesWithCustomTypingIndicator() -> [ContactEntity]? {
-        let predicate = contactCustomTypingIndicatorPredicate()
-        return fetchEntities(entityName: "Contact", predicate: predicate)
+        fetchEntities(entityName: "Contact", predicate: .contactWithCustomTypingIndicator)
     }
     
     /// A set of the identities of all contacts
@@ -135,8 +100,7 @@ extension EntityFetcher {
         guard let myIdentity else {
             return nil
         }
-        let predicate = contactIDPredicate(identity: myIdentity)
-        return fetchEntity(entityName: "Contact", predicate: predicate)
+        return fetchEntity(entityName: "Contact", predicate: .contactWithIdentity(myIdentity))
     }
     
     ///  Checks if there are duplicate contacts in the contact table.
@@ -249,8 +213,8 @@ extension EntityFetcher {
         hideStaleContacts: Bool,
         sortOrderFirstName: Bool
     ) -> [ContactEntity]? {
-        var predicates = [contactNotHiddenPredicate()]
-        
+        var predicates: [NSPredicate] = [.contactIsVisible]
+
         switch type {
         case .all:
             break
@@ -271,7 +235,7 @@ extension EntityFetcher {
         }
         
         if hideStaleContacts {
-            predicates.append(contactHideStalePredicate())
+            predicates.append(.contactIsActive)
         }
         
         switch list {
@@ -303,8 +267,8 @@ extension EntityFetcher {
         if hideStaleContacts, let members, !members.isEmpty {
             for member in members {
                 var contactPredicates = [NSPredicate]()
-                contactPredicates.append(contactIDPredicate(identity: member.identity))
-                
+                contactPredicates.append(.contactWithIdentity(member.identity))
+
                 for word in words where !word.isEmpty {
                     let predicate = NSPredicate(
                         format: "firstName contains[cd] %@ or lastName contains[cd] %@ or identity contains[c] %@ or publicNickname contains[cd] %@",
@@ -341,17 +305,18 @@ extension EntityFetcher {
         
         let searchWords = text.components(separatedBy: .whitespaces)
         
-        let predicates = predicate(from: searchWords, for: .name) +
-            predicate(from: searchWords, for: .id) +
-            predicate(from: searchWords, for: .titleDepartmentCSI)
-        
+        let predicates: [NSPredicate] =
+            NSPredicate.predicate(from: searchWords, for: NSPredicate.PredicateFormat.name) +
+            NSPredicate.predicate(from: searchWords, for: NSPredicate.PredicateFormat.id) +
+            NSPredicate.predicate(from: searchWords, for: NSPredicate.PredicateFormat.titleDepartmentCSI)
+
         let intermediaryPredicate = NSCompoundPredicate(
             orPredicateWithSubpredicates: predicates
         )
         
-        var visibilityPredicates = [contactNotHiddenPredicate()]
+        var visibilityPredicates: [NSPredicate] = [.contactIsVisible]
         if hideStaleContacts {
-            visibilityPredicates.append(contactHideStalePredicate())
+            visibilityPredicates.append(.contactIsActive)
         }
         
         let finalPredicate =
@@ -388,60 +353,65 @@ extension EntityFetcher {
         return matchingIDs
     }
     
-    // MARK: - Predicates
-    
-    func predicate(from words: [String], for predicateFormat: PredicateFormat) -> [NSPredicate] {
-        guard words.isEmpty == false else {
-            return []
-        }
+    public func matchingContactIDsForContactListSearch(
+        containing text: String,
+        hideStaleContacts: Bool
+    ) -> [(objectID: NSManagedObjectID, identity: ThreemaIdentity)] {
         
-        var predicates = [NSPredicate]()
+        let searchWords = text.components(separatedBy: .whitespaces)
         
-        for word in words {
-            guard !word.isEmpty else {
-                continue
-            }
-            
-            let predicate = NSPredicate(
-                format: predicateFormat.format,
-                argumentArray: predicateFormat.arguments(for: word)
-            )
-        
-            predicates.append(predicate)
-        }
-        
-        return predicates
-    }
-    
-    func contactIDPredicate(identity: String) -> NSPredicate {
-        NSPredicate(format: "identity == %@", identity)
-    }
-    
-    func contactNotHiddenPredicate() -> NSPredicate {
-        NSPredicate(format: "hidden == nil OR hidden == 0")
-    }
-    
-    func contactHideStalePredicate() -> NSPredicate {
-        NSPredicate(format: "state == %d", ContactEntity.ContactState.active.rawValue)
-    }
-    
-    func contactCustomReadReceiptPredicate() -> NSPredicate {
-        NSPredicate(format: "readReceipts != %ld", ContactEntity.ReadReceipt.default.rawValue)
-    }
-    
-    func contactCustomTypingIndicatorPredicate() -> NSPredicate {
-        NSPredicate(format: "typingIndicators != %ld", ContactEntity.ReadReceipt.default.rawValue)
-    }
-    
-    func contactFeatureMaskNilPredicate() -> NSPredicate {
-        let featureMaskFieldName = ContactEntity.Field.name(
-            for: .featureMask,
-            encrypted: managedObjectContext.usesAdditionallyEncryptedModel
+        let predicates: [NSPredicate] =
+            NSPredicate.predicate(from: searchWords, for: NSPredicate.PredicateFormat.name) +
+            NSPredicate.predicate(from: searchWords, for: NSPredicate.PredicateFormat.id) +
+            NSPredicate.predicate(from: searchWords, for: NSPredicate.PredicateFormat.titleDepartmentCSI)
+
+        let intermediaryPredicate = NSCompoundPredicate(
+            orPredicateWithSubpredicates: predicates
         )
-        return NSPredicate(format: "\(featureMaskFieldName) == nil")
-    }
-    
-    func gatewayContactPredicate() -> NSPredicate {
-        NSPredicate(format: "identity beginswith '*'")
+        
+        var visibilityPredicates: [NSPredicate] = [.contactIsVisible]
+        if hideStaleContacts {
+            visibilityPredicates.append(.contactIsActive)
+        }
+        
+        let finalPredicate =
+            NSCompoundPredicate(andPredicateWithSubpredicates: [intermediaryPredicate] + visibilityPredicates)
+        
+        // We fetch the managed objectID
+        let objectIDExpression = NSExpressionDescription()
+        objectIDExpression.name = "objectID"
+        objectIDExpression.expression = NSExpression.expressionForEvaluatedObject()
+        objectIDExpression.expressionResultType = .objectIDAttributeType
+        
+        // We also add the identity to be fetched
+        let propertiesToFetch: [Any] = [objectIDExpression, "identity"]
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Contact")
+        fetchRequest.predicate = finalPredicate
+        fetchRequest.fetchLimit = 0
+        fetchRequest.resultType = .dictionaryResultType
+        fetchRequest.propertiesToFetch = propertiesToFetch
+        fetchRequest.returnsDistinctResults = true
+        
+        var matchingIDs: [(NSManagedObjectID, ThreemaIdentity)] = []
+        
+        managedObjectContext.performAndWait {
+            if let results = try? fetchRequest.execute() as? [[String: Any]], !results.isEmpty {
+                for result in results {
+                    guard
+                        let objectID = result["objectID"] as? NSManagedObjectID,
+                        let identity = result["identity"] as? String
+                    else {
+                        continue
+                    }
+                    
+                    matchingIDs.append((
+                        objectID,
+                        ThreemaIdentity(rawValue: identity)
+                    ))
+                }
+            }
+        }
+
+        return matchingIDs
     }
 }

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2012-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import <AddressBook/AddressBook.h>
 #import <Contacts/Contacts.h>
 #import "PhoneNumberNormalizer.h"
@@ -55,7 +35,7 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
     NSTimer *checkStatusTimer;
     id<UserSettingsProtocol> userSettings;
     EntityManager *entityManager;
-    // Workaround to prevent too many active synchornizations at the same time (IOS-4791)
+    // Workaround to prevent too many active synchronizations at the same time (IOS-4791)
     BOOL addressBookChangeSynchronizationActive;
 }
 
@@ -1224,7 +1204,6 @@ static const NSTimeInterval minimumSyncInterval = 30;   /* avoid multiple concur
 
             if (hasChanged) {
                 [mediatorSyncableContacts updateNicknameWithIdentity:contact.identity value:contact.publicNickname];
-                [[NSNotificationCenter defaultCenter] postNotificationName:kNotificationRefreshContactSortIndices object:nil];
             }
         }
     }];

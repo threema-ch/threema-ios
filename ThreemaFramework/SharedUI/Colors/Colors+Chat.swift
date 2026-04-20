@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import UIKit
 
@@ -25,7 +5,7 @@ extension Colors {
     
     public class var backgroundChatLines: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray500)
         case .dark:
             UIColor(resource: .gray450)
@@ -34,7 +14,7 @@ extension Colors {
     
     public class func backgroundChatLines(colorTheme: Theme) -> UIColor {
         switch colorTheme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray500)
         case .dark:
             UIColor(resource: .gray450)
@@ -43,7 +23,7 @@ extension Colors {
             
     public class var backgroundChatBar: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray100)
         case .dark:
             UIColor(resource: .gray900)
@@ -52,7 +32,7 @@ extension Colors {
     
     public class var chatBarInput: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             .white
         case .dark:
             UIColor(resource: .gray1000)
@@ -65,7 +45,7 @@ extension Colors {
         
     public class var thumbnailProgressViewColor: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray30)
         case .dark:
             UIColor(resource: .gray850)
@@ -74,7 +54,7 @@ extension Colors {
     
     public class var chatReactionBubble: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray300)
         case .dark:
             UIColor(resource: .gray800)
@@ -83,7 +63,7 @@ extension Colors {
     
     public class var chatReactionBubbleSelected: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray400)
         case .dark:
             UIColor(resource: .gray550)
@@ -92,7 +72,7 @@ extension Colors {
 
     public class var chatReactionBubbleHighlighted: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray350)
         case .dark:
             UIColor(resource: .gray500)
@@ -101,7 +81,7 @@ extension Colors {
     
     public class var chatReactionBubbleTextColor: UIColor {
         switch theme {
-        case .light, .undefined:
+        case .light:
             UIColor(resource: .gray750)
         case .dark:
             UIColor(resource: .gray400)

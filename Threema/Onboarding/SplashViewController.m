@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2015-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import "SplashViewController.h"
 #import <QuartzCore/QuartzCore.h>
 #import "RandomSeedViewController.h"
@@ -32,7 +12,6 @@
 #import "RestoreIdentityViewController.h"
 #import "IntroQuestionView.h"
 #import "EnterLicenseViewController.h"
-#import "Threema-Swift.h"
 #import <StoreKit/StoreKit.h>
 #import "OnboardingPageViewController.h"
 #import "Threema-Swift.h"
@@ -71,6 +50,7 @@
 @implementation SplashViewController {
     MDMSetup *mdmSetup;
     BOOL didWorkApiFetch;
+    BOOL shouldSkipSetup;
     UINavigationController *privacyPolicyNavigationController;
 }
 
@@ -80,6 +60,7 @@
     if (self) {
         mdmSetup = [MDMSetup new];
         didWorkApiFetch = NO;
+        shouldSkipSetup = NO;
     }
     return self;
 }
@@ -183,7 +164,7 @@
 }
 
 -(UIInterfaceOrientationMask)supportedInterfaceOrientations {
-    if (SYSTEM_IS_IPAD) {
+    if (self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular) {
         return UIInterfaceOrientationMaskAll;
     } else {
         return UIInterfaceOrientationMaskPortrait;
@@ -274,6 +255,8 @@
                               hasPreexistingData: [self hasDataOnDevice]
         ];
         
+        // TODO: RootCoordinator: We need to sort this out.
+        // With the `SplashViewControllerDelegate`, we could delegate this.
         [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
             if (error != nil || remoteSecretAndKeychain == nil) {
                 DDLogError(@"Failed to directly show setup wizard: %@", error);
@@ -347,6 +330,8 @@
                               mdmSetup:self->mdmSetup
                               hasPreexistingData: [self hasDataOnDevice]
         ];
+        // TODO: RootCoordinator: We need to sort this out.
+        // With the `SplashViewControllerDelegate`, we could delegate this.
         [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
             if (error != nil || remoteSecretAndKeychain == nil) {
                 // TODO: (IOS-5426) Improve error handling & localize it
@@ -434,35 +419,33 @@
     }
 }
 
-- (void)presentPageViewControllerWithRemoteSecretAndKeychain:(nonnull RemoteSecretAndKeychainObjC *)remoteSecretAndKeychain {
-    SetupConfiguration *setupConfiguration = [[SetupConfiguration alloc] initWithRemoteSecretAndKeychain:remoteSecretAndKeychain mdm:mdmSetup];
-    
-    ConfirmIDViewController *confirmVc = [self.storyboard instantiateViewControllerWithIdentifier:@"ConfirmIDViewController"];
-    
-    SafeViewController *safeVc = [self.storyboard instantiateViewControllerWithIdentifier:@"SafeSetup"];
-    safeVc.setupConfiguration = setupConfiguration;
-    
-    PickNicknameViewController *pickNicknameVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PickNicknameViewController"];
-    pickNicknameVc.setupConfiguration = setupConfiguration;
-    
-    LinkIDViewController *linkIdVc = [self.storyboard instantiateViewControllerWithIdentifier:@"LinkIDViewController"];
-    linkIdVc.setupConfiguration = setupConfiguration;
-    
-    SyncContactsViewController *syncVc = [self.storyboard instantiateViewControllerWithIdentifier:@"SyncContactsViewController"];
-    syncVc.setupConfiguration = setupConfiguration;
-    
+- (void)presentPageViewControllerWithSetupConfiguration:(SetupConfiguration *_Nonnull)setupConfiguration {
     CompletedIDViewController *completedVc = [self.storyboard instantiateViewControllerWithIdentifier:@"CompletedIDViewController"];
     completedVc.delegate = self;
     completedVc.setupConfiguration = setupConfiguration;
 
     OnboardingPageViewController *pageVc = [self.storyboard instantiateViewControllerWithIdentifier:@"OnboardingPageViewController"];
 
-    if ([mdmSetup skipWizard]) {
+    if ([mdmSetup skipWizard] || shouldSkipSetup == YES) {
         pageVc.viewControllers = @[completedVc];
     } else {
+        ConfirmIDViewController *confirmVc = [self.storyboard instantiateViewControllerWithIdentifier:@"ConfirmIDViewController"];
+        
+        PickNicknameViewController *pickNicknameVc = [self.storyboard instantiateViewControllerWithIdentifier:@"PickNicknameViewController"];
+        pickNicknameVc.setupConfiguration = setupConfiguration;
+        
+        LinkIDViewController *linkIdVc = [self.storyboard instantiateViewControllerWithIdentifier:@"LinkIDViewController"];
+        linkIdVc.setupConfiguration = setupConfiguration;
+        
+        SyncContactsViewController *syncVc = [self.storyboard instantiateViewControllerWithIdentifier:@"SyncContactsViewController"];
+        syncVc.setupConfiguration = setupConfiguration;
+        
         if ([mdmSetup isSafeBackupDisable] || ([mdmSetup isSafeBackupForce] && [mdmSetup isSafeBackupPasswordPreset])) {
             pageVc.viewControllers = @[confirmVc, pickNicknameVc, linkIdVc, syncVc, completedVc];
         } else {
+            SafeViewController *safeVc = [self.storyboard instantiateViewControllerWithIdentifier:@"SafeSetup"];
+            safeVc.setupConfiguration = setupConfiguration;
+            
             pageVc.viewControllers = @[confirmVc, safeVc, pickNicknameVc, linkIdVc, syncVc, completedVc];
         }
     }
@@ -478,11 +461,35 @@
 
         [_restoreIdentityViewController.view removeFromSuperview];
         [_restoreIdentityViewController removeFromParentViewController];
+        
+        if (shouldSkipSetup == NO || pageVc == nil) {
+            return;
+        }
+            
+        CompletedIDViewController *completedViewController =
+            pageVc.viewControllers.lastObject;
+        
+        if (completedViewController == nil) {
+            return;
+        }
+        
+        [completedViewController
+            finishAction:completedViewController.finishButton];
     }];
 }
 
+- (void)presentPageViewControllerWithRemoteSecretAndKeychain:(nonnull RemoteSecretAndKeychainObjC *)remoteSecretAndKeychain {
+    SetupConfiguration *setupConfiguration = [[SetupConfiguration alloc] initWithRemoteSecretAndKeychain:remoteSecretAndKeychain mdm:mdmSetup];
+    
+    [self presentPageViewControllerWithSetupConfiguration:setupConfiguration];
+}
+
 - (void)showApplicationUI {
+#if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    return;
+#else
     [[AppDelegate sharedAppDelegate] completedIDSetup];
+#endif
 }
 
 - (void)contactSupport:(NSString *)errorCode {
@@ -677,6 +684,8 @@
                               mdmSetup:self->mdmSetup
                               hasPreexistingData: [self hasDataOnDevice]
         ];
+        // TODO: RootCoordinator: We need to sort this out.
+        // With the `SplashViewControllerDelegate`, we could delegate this.
         [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
             if (error != nil || remoteSecretAndKeychain == nil) {
                 // TODO: (IOS-5426) Improve error handling & localize it
@@ -733,7 +742,7 @@
 
 - (NSString *)getIDBackup {
     NSString *backupData = [IdentityBackupStore loadIdentityBackup];
-    if (backupData != nil && [[MyIdentityStore sharedMyIdentityStore] isValidBackupFormat:backupData]) {
+    if (backupData != nil && [IdentityBackupStore isValidBackupFormat:backupData]) {
         return backupData;
     }
 
@@ -776,6 +785,14 @@
 #pragma mark - IBActions
 
 - (IBAction)setupAction:(id)sender {
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    __weak typeof(self) weakSelf = self;
+    [self.delegate splashViewControllerDidTapSetup:self completionHandler:^{
+        [weakSelf devSetup];
+    }];
+    return;
+    #endif
+    
     _triggeredSetup = YES;
     
     // Check for ID Export, if is business app or if Threema and has no existing ID
@@ -783,12 +800,50 @@
         if ([self checkForIDBackup] == NO) {
             [self showSetupViewController];
             [self slideOut:self fromRightToLeft:YES onCompletion:nil];
-            [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
+            
+            __weak typeof(self) weakSelf = self;
+            [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:^(void){
+                [weakSelf devSetup];
+            }];
         }
     }
 }
 
+- (BOOL)isDevSetup {
+#if DEBUG
+    return YES;
+#else
+    return NO;
+#endif
+}
+
+- (void)devSetup {
+    if ([self isDevSetup] == NO) {
+        return;
+    }
+    
+    __weak typeof(RandomSeedViewController) *weakRandomSeedViewController = _randomSeedViewController;
+    [UIAlertTemplate
+        showAlertWithOwner:self
+        title:@"Skip setup?"
+        message:nil
+        titleOk:@"Yes"
+        actionOk:^(UIAlertAction *action __unused) {
+            shouldSkipSetup = YES;
+            [weakRandomSeedViewController.randomDataView
+                generateRandomSeedWithNumberOfPositionsRequired:200];
+        }
+        titleCancel:@"No"
+        actionCancel:nil
+    ];
+}
+
 - (IBAction)restoreAction:(id)sender {
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewControllerDidTapRestore:self];
+    return;
+    #endif
+    
     [self startRestore];
 }
 
@@ -818,6 +873,25 @@
 #pragma mark - IntroQuestionViewDelegate
 
 - (void)selectedYes:(IntroQuestionView *)sender {
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    if (sender.tag == 1) {
+        // ID Backup question - Yes = use backup
+        [self hideIDBackupQuestion];
+        [self.delegate splashViewController:self didAnswerIDBackupQuestion:YES];
+    }
+    else if (sender.tag == 2) {
+        // ID Exists question - Yes = use existing
+        [self hideIDExistsQuestion];
+        [self.delegate splashViewController:self didAnswerIDExistsQuestion:YES];
+    }
+    else if (sender.tag == 3) {
+        // Remote Secret question - Yes = restore
+        [self hideRemoteSecretExistsQuestion];
+        [self.delegate splashViewController:self didAnswerRemoteSecretQuestion:YES];
+    }
+    return;
+    #endif
+    
     if (sender.tag == 1) {
         [self hideIDBackupQuestion];
 
@@ -838,6 +912,8 @@
                               hasPreexistingData: [self hasDataOnDevice]
         ];
         
+        // TODO: RootCoordinator: We need to sort this out.
+        // With the `SplashViewControllerDelegate`, we could delegate this.
         [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
             if (error != nil || remoteSecretAndKeychain == nil) {
                 DDLogError(@"Failed to directly show setup wizard: %@", error);
@@ -850,6 +926,25 @@
 }
 
 - (void)selectedNo:(IntroQuestionView *)sender {
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    if (sender.tag == 1) {
+        // ID Backup question - No = don't use backup
+        [self hideIDBackupQuestion];
+        [self.delegate splashViewController:self didAnswerIDBackupQuestion:NO];
+    }
+    else if (sender.tag == 2) {
+        // ID Exists question - No = create new
+        [self hideIDExistsQuestion];
+        [self.delegate splashViewController:self didAnswerIDExistsQuestion:NO];
+    }
+    else if (sender.tag == 3) {
+        // Remote Secret question - No = start fresh
+        [self hideRemoteSecretExistsQuestion];
+        [self.delegate splashViewController:self didAnswerRemoteSecretQuestion:NO];
+    }
+    return;
+    #endif
+    
     if (sender.tag == 1) {
         [self hideIDBackupQuestion];
 
@@ -885,6 +980,11 @@
 #pragma mark - RandomSeedViewControllerDelegate
 
 - (void)generatedRandomSeed:(NSData *)seed {
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewController:self didGenerateRandomSeed:seed];
+    return;
+    #endif
+    
     [[MyIdentityStore sharedMyIdentityStore] generateKeyPairWithSeed:seed];
 
     [self createIdentity];
@@ -892,7 +992,28 @@
 
 #pragma mark - CompletedIDDelegate
 
+- (void)completedIDSetupWithConfiguration:(SetupConfiguration *)setupConfiguration {
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewController:self didCompleteIDSetupWith:setupConfiguration completionHandler:^(void){}];
+    return;
+    #endif
+    
+    [self completedIDSetupInternal];
+}
+
+// Legacy method for restore flows that don't have a SetupConfiguration
 - (void)completedIDSetup {
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    // For coordinator flow, create an empty configuration for restore scenarios
+    SetupConfiguration *setupConfiguration = [[SetupConfiguration alloc] initWithRemoteSecretAndKeychain:nil mdm:mdmSetup];
+    [self.delegate splashViewController:self didCompleteIDSetupWith:setupConfiguration completionHandler:^(void){}];
+    return;
+    #endif
+    
+    [self completedIDSetupInternal];
+}
+
+- (void)completedIDSetupInternal {
     // Delete decrypted backup data from application documents folder
     [[FileUtility new] deleteIfExistsAt:[[[FileUtility new] appDocumentsDirectory] URLByAppendingPathComponent:@"safe-backup.json"]];
     
@@ -962,6 +1083,11 @@
 }
 
 - (void)cancelPressed {
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewControllerDidCancelIDCreation:self];
+    return;
+    #endif
+    
     [self slideOut:_randomSeedViewController fromRightToLeft:NO onCompletion:nil];
     [self slideIn:self fromLeftToRight:NO onCompletion:nil];
 }
@@ -970,6 +1096,12 @@
 
 - (void)optionDataKeepLocal {
     _restoreOptionDataViewController.delegate = nil;
+    
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionKeepLocalData];
+    return;
+    #endif
+    
     [self showRestoreOptionBackupViewController];
     [self slideOut:_restoreOptionDataViewController fromRightToLeft:YES onCompletion:nil];
     [self slideIn:_restoreOptionBackupViewController fromLeftToRight:YES onCompletion:nil];
@@ -977,6 +1109,12 @@
 
 - (void)optionDataCancelled {
     _restoreOptionDataViewController.delegate = nil;
+    
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewControllerDidCancelRestore:self];
+    return;
+    #endif
+    
     [self slideOut:_restoreOptionDataViewController fromRightToLeft:NO onCompletion:nil];
     [self slideIn:self fromLeftToRight:NO onCompletion:nil];
 }
@@ -985,6 +1123,12 @@
 
 - (void)restoreSafe {
     _restoreOptionBackupViewController.delegate = nil;
+    
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionSafe];
+    return;
+    #endif
+    
     [self showRestoreSafeViewController:NO];
     [self slideOut:_restoreOptionBackupViewController fromRightToLeft:YES onCompletion:nil];
     [self slideIn:_restoreSafeViewController fromLeftToRight:YES  onCompletion:nil];
@@ -992,6 +1136,12 @@
 
 - (void)restoreIdentityFromSafe {
     _restoreOptionBackupViewController.delegate = nil;
+    
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionSafeIdentityOnly];
+    return;
+    #endif
+    
     [self showRestoreSafeViewController:YES];
     [self slideOut:_restoreOptionBackupViewController fromRightToLeft:YES onCompletion:nil];
     [self slideIn:_restoreSafeViewController fromLeftToRight:YES  onCompletion:nil];
@@ -999,6 +1149,12 @@
 
 - (void)restoreIdentity {
     _restoreOptionBackupViewController.delegate = nil;
+
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewController:self didSelectRestoreOption:RestoreOptionIdBackup];
+    return;
+    #endif
+    
     [self slideOut:_restoreOptionBackupViewController fromRightToLeft:YES onCompletion:nil];
 
     _isRestoreOptionBackupDisplayed = YES;
@@ -1010,8 +1166,14 @@
 }
 
 - (void)restoreCancelled {
-    _isRestoreOptionBackupDisplayed = NO;
     _restoreOptionBackupViewController.delegate = nil;
+    
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewControllerDidCancelRestore:self];
+    return;
+    #endif
+    
+    _isRestoreOptionBackupDisplayed = NO;
     [self slideOut:_restoreOptionBackupViewController fromRightToLeft:NO onCompletion:nil];
 
     if ([self hasDataOnDevice]) {
@@ -1026,6 +1188,12 @@
 
 - (void)restoreSafeCancelledWithShowLocalDataInfo:(BOOL)showLocalDataInfo {
     _restoreSafeViewController.delegate = nil;
+    
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewControllerDidCancelRestore:self];
+    return;
+    #endif
+    
     [self showRestoreOptionBackupViewController];
     [self slideOut:_restoreSafeViewController fromRightToLeft:NO onCompletion:nil];
     [self slideIn:_restoreOptionBackupViewController fromLeftToRight:NO onCompletion:nil];
@@ -1038,6 +1206,11 @@
 - (void)restoreSafeDone {
     _restoreSafeViewController.delegate = nil;
     
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewControllerDidCompleteRestore:self];
+    return;
+    #endif
+    
     [self completedIDSetup];
 }
 
@@ -1045,6 +1218,12 @@
 
 - (void)restoreIdentityCancelled {
     _restoreIdentityViewController.delegate = nil;
+    
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewControllerDidCancelRestore:self];
+    return;
+    #endif
+    
     [self slideOut:_restoreIdentityViewController fromRightToLeft:NO onCompletion:nil];
 
     if (!_triggeredSetup && _isRestoreOptionBackupDisplayed) {
@@ -1058,6 +1237,11 @@
 - (void)restoreIdentityDone {
     _restoreIdentityViewController.delegate = nil;
     
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewControllerDidCompleteRestore:self];
+    return;
+    #endif
+    
     SetupApp *setupApp = [[SetupApp alloc]
                           initWithDelegate: self
                           licenseStore:[LicenseStore sharedLicenseStore]
@@ -1065,6 +1249,9 @@
                           mdmSetup:self->mdmSetup
                           hasPreexistingData:[self hasDataOnDevice]
     ];
+    
+    // TODO: RootCoordinator: We need to sort this out.
+    // With the `SplashViewControllerDelegate`, we could delegate this.
     [setupApp setupRemoteSecretAndKeychainWithCompletionHandler:^(RemoteSecretAndKeychainObjC * _Nullable remoteSecretAndKeychain, NSError * _Nullable error) {
         if (error != nil|| remoteSecretAndKeychain == nil ) {
             exit(EXIT_FAILURE);
@@ -1080,6 +1267,12 @@
 
 - (void)licenseConfirmed {
     [self dismissViewControllerAnimated:YES completion:nil];
+    
+    #if SCENE_DELEGATE_ROOT_COORDINATOR_DEVELOPMENT
+    [self.delegate splashViewControllerDidConfirmLicense:self];
+    return;
+    #endif
+    
     [self checkLicenseAndThreemaMDM];
 }
 
@@ -1109,6 +1302,65 @@
 
 - (void)mailComposeController:(MFMailComposeViewController *)controller didFinishWithResult:(MFMailComposeResult)result error:(nullable NSError *)error {
     [controller dismissViewControllerAnimated:YES completion:nil];
+}
+
+#pragma mark - New Public Methods for Coordinator
+
+- (void)showRandomSeedViewController {
+    _randomSeedViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"RandomSeedViewController"];
+    _randomSeedViewController.delegate = self;
+    [_randomSeedViewController setup];
+    
+    [self slideOut:self fromRightToLeft:YES onCompletion:nil];
+    [self slideIn:_randomSeedViewController fromLeftToRight:YES onCompletion:nil];
+}
+
+- (void)showRestoreIdentityViewControllerWithBackupData:(NSString *)backupData
+                                               password:(NSString *)password
+                                                  error:(NSError *)error {
+    _restoreIdentityViewController = [self.storyboard instantiateViewControllerWithIdentifier:@"RestoreIdentityViewController"];
+    _restoreIdentityViewController.delegate = self;
+    _restoreIdentityViewController.backupData = backupData;
+    _restoreIdentityViewController.passwordData = password;
+    [_restoreIdentityViewController setup];
+    
+    [self slideOut:self fromRightToLeft:YES onCompletion:nil];
+    [self slideIn:_restoreIdentityViewController fromLeftToRight:YES onCompletion:^{
+        if (error != nil) {
+            [_restoreIdentityViewController handleError:error];
+        }
+    }];
+}
+
+- (void)showLoadingHUD {
+    if (self.view != nil) {
+        [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+    }
+}
+
+- (void)hideLoadingHUD {
+    [MBProgressHUD hideHUDForView:self.view animated:YES];
+}
+
+- (void)showIdentityCreationError:(NSError *)error {
+    UIAlertController *errAlert = [UIAlertController alertControllerWithTitle:error.localizedDescription
+                                                                      message:error.localizedFailureReason
+                                                               preferredStyle:UIAlertControllerStyleAlert];
+    [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"try_again"]
+                                                 style:UIAlertActionStyleDefault
+                                               handler:^(__unused UIAlertAction * action) {
+        [self.delegate splashViewControllerDidTapSetup:self completionHandler:^{}];
+    }]];
+    
+    if([MFMailComposeViewController canSendMail]) {
+        [errAlert addAction:[UIAlertAction actionWithTitle:[BundleUtil localizedStringForKey:@"contact_support"]
+                                                     style:UIAlertActionStyleDefault
+                                                   handler:^(__unused UIAlertAction * action) {
+            [self contactSupport:error.localizedDescription];
+        }]];
+    }
+    
+    [self presentViewController:errAlert animated:YES completion:nil];
 }
 
 #pragma mark - RectUtil

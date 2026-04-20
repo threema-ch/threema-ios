@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 
 struct ListPollView: View {
@@ -27,9 +7,18 @@ struct ListPollView: View {
     @StateObject private var viewModel: ListPollViewModel
     
     private var onDisappear: (() -> Void)?
-    
-    init(conversation: ConversationEntity, onDisappear: (() -> Void)? = nil) {
-        _viewModel = StateObject(wrappedValue: ListPollViewModel(conversationID: conversation.objectID))
+
+    init(
+        entityManager: EntityManager,
+        conversation: ConversationEntity,
+        onDisappear: (() -> Void)? = nil,
+        onDelete: (([NSManagedObjectID]) -> Void)? = nil
+    ) {
+        _viewModel = StateObject(wrappedValue: ListPollViewModel(
+            conversationID: conversation.objectID,
+            entityManager: entityManager,
+            onDelete: onDelete
+        ))
         self.onDisappear = onDisappear
     }
     
@@ -48,8 +37,8 @@ struct ListPollView: View {
                 }
             }
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(viewModel.doneTitle) {
+                ToolbarItem(placement: .primaryAction) {
+                    DoneButton {
                         dismiss()
                     }
                     .accessibilityIdentifier("ListPollViewDoneButton")
@@ -72,6 +61,12 @@ struct ListPollView: View {
                     await viewModel.load()
                 }
             }
+            .alert(viewModel.deleteAlertTitle, isPresented: $viewModel.showDeleteAlert) {
+                Button(viewModel.deleteAlertOkButtonTitle, role: .none) {
+                    // Noop
+                }
+            }
+
             .navigationTitle(viewModel.navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .navigationViewStyle(.stack)
@@ -89,6 +84,7 @@ struct ListPollView: View {
                 rowForPoll(poll)
             }
         }
+        .onDelete(perform: deleteOpenPoll)
     }
     
     @ViewBuilder
@@ -98,12 +94,25 @@ struct ListPollView: View {
                 rowForPoll(poll)
             }
         }
+        .onDelete(perform: deleteClosedPoll)
     }
     
     @ViewBuilder
     private func rowForPoll(_ poll: Poll) -> some View {
         PollRowView(title: poll.title, creator: poll.creator?.label, created: poll.created) {
             viewModel.selectPoll(poll)
+        }
+    }
+    
+    func deleteClosedPoll(at offsets: IndexSet) {
+        if let index = offsets.first {
+            viewModel.deletePoll(at: index, closedPoll: true)
+        }
+    }
+    
+    func deleteOpenPoll(at offsets: IndexSet) {
+        if let index = offsets.first {
+            viewModel.deletePoll(at: index, closedPoll: false)
         }
     }
 }

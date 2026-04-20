@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import UIKit
 
 /// Base class for `UITableViewCells` that are implemented in code
@@ -26,9 +6,19 @@ open class ThemedCodeTableViewCell: UITableViewCell {
     /// Constraint for default minimal cell height
     ///
     /// You should normally leave this as-is.
-    public lazy var defaultMinimalHeightConstraint: NSLayoutConstraint = contentView.heightAnchor.constraint(
-        greaterThanOrEqualToConstant: 44
-    )
+    public lazy var defaultMinimalHeightConstraint: NSLayoutConstraint = {
+        let constant =
+            if #available(iOS 26.0, *) {
+                52.0
+            }
+            else {
+                44.0
+            }
+        
+        return contentView.heightAnchor.constraint(
+            greaterThanOrEqualToConstant: constant
+        )
+    }()
     
     private var themeUsedInLastColorsUpdate = Colors.theme
     
@@ -47,7 +37,6 @@ open class ThemedCodeTableViewCell: UITableViewCell {
     
     /// Called during initialization
     open func configureCell() {
-        // The min cell height should normally be 44 pt
         defaultMinimalHeightConstraint.isActive = true
     }
     

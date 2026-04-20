@@ -1,28 +1,8 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 import SwiftUI
 
 /// Adapter class to make SwiftUI-Views useable in Obj-C code
-@objc class SwiftUIAdapter: NSObject {
+@objc final class SwiftUIAdapter: NSObject {
     
     private static var injectedContainer: AppContainer = .defaultValue
         
@@ -33,27 +13,7 @@ import SwiftUI
             alreadyDeleted: true,
             onDismiss: onDismiss
         )
-        let hostingController = UIHostingController(rootView: deleteView)
+        let hostingController = DarkModeUIHostingController(rootView: deleteView)
         return hostingController
-    }
-
-    @available(*, deprecated, message: "Do not use anymore.")
-    @objc static func createNotificationSettingsView() -> UIViewController {
-        let settingsVC = createSettingsView()
-        settingsVC.navigationItem.largeTitleDisplayMode = .never
-        return settingsVC
-    }
-    
-    @available(*, deprecated, message: "Do not use anymore.")
-    @objc static func createSettingsView() -> UIViewController {
-        SettingsView().makeViewController(injectedContainer)
-    }
- 
-    @available(*, deprecated, message: "Do not use anymore.")
-    @objc static func createProfileView(
-        onDismiss: @escaping () -> Void
-    ) -> UIViewController {
-        ProfileView(onDismiss: onDismiss)
-            .makeViewController(injectedContainer)
     }
 }

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2016-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 #import "CaptionView.h"
 #import "MediaBrowserFile.h"
 #import "Threema-Swift.h"
@@ -41,19 +21,48 @@ static const CGFloat defaultCustomViewHeight = 24.0;
         if ([photo respondsToSelector:@selector(sourceReference)]) {
             _message = [photo performSelector:@selector(sourceReference)];
             
-            CGRect customViewRect = CGRectMake(labelPadding, labelPadding, self.bounds.size.width-labelPadding*2, defaultCustomViewHeight);
-            _customView = [self customViewInRect:customViewRect];
-            [self addSubview:_customView];
-            
-            CGRect timeLabelRect = CGRectMake(customViewRect.origin.x, CGRectGetMaxY(customViewRect) + labelPadding, customViewRect.size.width, customViewRect.size.height);
-            _timeLabel = [self createLabelInRect:timeLabelRect];
-            [_timeLabel setText: [DateFormatter shortStyleDateTime:_message.remoteSentDate]];
-            [self addSubview:_timeLabel];
-            
-            // adapt to height of resulting custom view
-            if (_customView.frame.size.height != defaultCustomViewHeight) {
-                _timeLabel.frame = CGRectMake(_timeLabel.frame.origin.x, CGRectGetMaxY(_customView.frame), _timeLabel.frame.size.width, _timeLabel.frame.size.height);
-                self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, self.frame.size.width, CGRectGetMaxY(_timeLabel.frame));
+            if (@available(iOS 26.0, *)) {
+                UIGlassEffect *glassEffect = [[UIGlassEffect alloc] init];
+                UIVisualEffectView *glassView = [[UIVisualEffectView alloc] initWithEffect:glassEffect];
+                glassView.frame =  CGRectMake(labelPadding, labelPadding, self.bounds.size.width - labelPadding*2, defaultCustomViewHeight);
+                glassView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+                glassView.layer.cornerRadius = 20;
+                glassView.clipsToBounds = NO;
+                                
+                CGRect customViewRect = CGRectMake(labelPadding, labelPadding, self.bounds.size.width-labelPadding*2, defaultCustomViewHeight);
+                _customView = [self customViewInRect:customViewRect];
+                [glassView.contentView addSubview:_customView];
+                
+                CGRect timeLabelRect = CGRectMake(0, CGRectGetMaxY(customViewRect) + labelPadding, customViewRect.size.width, customViewRect.size.height);
+                _timeLabel = [self createLabelInRect:timeLabelRect];
+                [_timeLabel setText: [DateFormatter shortStyleDateTime:_message.remoteSentDate]];
+                [glassView.contentView addSubview:_timeLabel];
+                
+                [self addSubview:glassView];
+                
+                // adapt to height of resulting custom view
+                if (_customView.frame.size.height != defaultCustomViewHeight) {
+                    _timeLabel.frame = CGRectMake(_timeLabel.frame.origin.x, CGRectGetMaxY(_customView.frame) + labelPadding, _timeLabel.frame.size.width, _timeLabel.frame.size.height + labelPadding);
+                    _customView.frame = CGRectMake(labelPadding, labelPadding, self.bounds.size.width-labelPadding*4, _customView.frame.size.height);
+                    glassView.frame = CGRectMake(glassView.frame.origin.x, glassView.frame.origin.y, glassView.frame.size.width, CGRectGetMaxY(_timeLabel.frame));
+                    self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, self.frame.size.width, CGRectGetMaxY(_timeLabel.frame));
+                }
+            }
+            else {
+                CGRect customViewRect = CGRectMake(labelPadding, labelPadding, self.bounds.size.width-labelPadding*2, defaultCustomViewHeight);
+                _customView = [self customViewInRect:customViewRect];
+                [self addSubview:_customView];
+                
+                CGRect timeLabelRect = CGRectMake(customViewRect.origin.x, CGRectGetMaxY(customViewRect) + labelPadding, customViewRect.size.width, customViewRect.size.height);
+                _timeLabel = [self createLabelInRect:timeLabelRect];
+                [_timeLabel setText: [DateFormatter shortStyleDateTime:_message.remoteSentDate]];
+                [self addSubview:_timeLabel];
+                
+                // adapt to height of resulting custom view
+                if (_customView.frame.size.height != defaultCustomViewHeight) {
+                    _timeLabel.frame = CGRectMake(_timeLabel.frame.origin.x, CGRectGetMaxY(_customView.frame), _timeLabel.frame.size.width, _timeLabel.frame.size.height);
+                    self.frame = CGRectMake(self.frame.origin.x, self.frame.origin.y, self.frame.size.width, CGRectGetMaxY(_timeLabel.frame));
+                }
             }
         }
     }

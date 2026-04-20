@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import SwiftUI
 import ThreemaMacros
@@ -25,19 +5,70 @@ import ThreemaMacros
 struct ContactsCleanupView: View {
     @StateObject var settingsStore = BusinessInjector.ui.settingsStore as! SettingsStore
 
-    @State private var showLogDisabledError = false
-    @State private var showNoDuplicatesError = false
-    @State private var showDuplicatesInUseError = false
-    @State private var showMultiDeviceEnabledError = false
-    @State private var showUnusedContactsCleanupDone = false
-    @State private var showContactStatsLogged = false
-    @State private var alertMessage = ""
+    @State private var duplicateContactsAreLogged = false
+    
+    @State fileprivate var contactsCleanupAlert: ContactsCleanupAlert? = nil
+
+    enum ContactsCleanupAlert: Hashable, Identifiable {
+        var id: ContactsCleanupAlert {
+            self
+        }
+
+        case logDisabled
+        case noDuplicatesFound
+        case multiDeviceEnabled
+        case contactStatsLogged
+        case noOwnContact
+        case duplicatesInUse(message: String)
+        case contactsCleanupDone(message: String)
+        
+        var title: String {
+            switch self {
+            case .logDisabled, .noDuplicatesFound, .multiDeviceEnabled:
+                #localize("settings_advanced_contacts_cleanup_error_title")
+            case let .duplicatesInUse(message: _):
+                #localize("settings_advanced_contacts_cleanup_in_use_error_title")
+            case let .contactsCleanupDone(message: _):
+                #localize("settings_advanced_contacts_cleanup_success_title")
+            case .contactStatsLogged:
+                ""
+            case .noOwnContact:
+                #localize("settings_advanced_contacts_cleanup_own")
+            }
+        }
+
+        var message: String {
+            switch self {
+            case .logDisabled:
+                #localize("settings_advanced_contacts_cleanup_log_disabled")
+            case .noDuplicatesFound:
+                #localize("settings_advanced_contacts_cleanup_no_duplicates")
+            case let .duplicatesInUse(message: message):
+                message
+            case let .contactsCleanupDone(message: message):
+                message
+            case .multiDeviceEnabled:
+                #localize("settings_advanced_contacts_multi_device_enabled_error")
+            case .contactStatsLogged:
+                #localize("settings_advanced_contacts_cleanup_stats_logged") +
+                    String.localizedStringWithFormat(
+                        #localize("settings_advanced_contacts_cleanup_submit_logs"),
+                        TargetManager.localizedAppName
+                    )
+            case .noOwnContact:
+                #localize("settings_advanced_contacts_cleanup_error_title")
+            }
+        }
+    }
 
     var body: some View {
         List {
             Section {
                 Button {
-                    showContactStatsLogged = logContactStats()
+                    if logContactStats() {
+                        contactsCleanupAlert = .contactStatsLogged
+                        duplicateContactsAreLogged = true
+                    }
                 } label: {
                     HStack {
                         Spacer()
@@ -45,7 +76,7 @@ struct ContactsCleanupView: View {
                         Spacer()
                     }
                 }
-                if SettingsBundleHelper.safeMode {
+                if duplicateContactsAreLogged {
                     Button {
                         cleanupDuplicateContacts()
                     } label: {
@@ -69,53 +100,12 @@ struct ContactsCleanupView: View {
                 Text(#localize("settings_advanced_contacts_cleanup_stats_title"))
             }
         }
-        .alert(
-            #localize("settings_advanced_contacts_cleanup_log_disabled"),
-            isPresented: $showLogDisabledError
-        ) {
-            Button("ok") { }
-        }
-        .alert(
-            #localize("settings_advanced_contacts_cleanup_stats_logged") +
-                String.localizedStringWithFormat(
-                    #localize("settings_advanced_contacts_cleanup_submit_logs"),
-                    TargetManager.localizedAppName
-                ),
-            isPresented: $showContactStatsLogged
-        ) {
-            Button("ok") { }
-        }
-        .alert(
-            #localize("settings_advanced_contacts_cleanup_no_duplicates"),
-            isPresented: $showNoDuplicatesError
-        ) {
-            Button("ok") { }
-        }
-        .alert(
-            #localize("settings_advanced_contacts_cleanup_in_use_error_title"),
-            isPresented: $showDuplicatesInUseError
-        ) {
-            Button("ok") { }
-        } message: {
-            Text(alertMessage)
-        }
-        .alert(
-            #localize("settings_advanced_contacts_cleanup_error_title"),
-            isPresented: $showMultiDeviceEnabledError
-        ) {
-            Button("ok") { }
-        } message: {
-            Text(#localize("settings_advanced_contacts_multi_device_enabled_error"))
-        }
-        .alert(
-            #localize("settings_advanced_contacts_cleanup_success_title"),
-            isPresented: $showUnusedContactsCleanupDone
-        ) {
-            Button(#localize("settings_advanced_contacts_cleanup_success_exit")) {
-                exitSafeMode()
-            }
-        } message: {
-            Text(alertMessage)
+        .alert(item: $contactsCleanupAlert) { alert in
+            Alert(
+                title: Text(alert.title),
+                message: Text(alert.message),
+                dismissButton: .default(Text("ok"))
+            )
         }
     }
     
@@ -136,13 +126,13 @@ struct ContactsCleanupView: View {
         let entityManager = BusinessInjector.ui.entityManager
 
         guard settingsStore.validationLogging else {
-            showLogDisabledError = true
+            contactsCleanupAlert = .logDisabled
             return false
         }
 
         return entityManager.performAndWait {
             guard let duplicates = entityManager.entityFetcher.duplicateContactIdentities() else {
-                showNoDuplicatesError = true
+                contactsCleanupAlert = .noDuplicatesFound
                 DDLogNotice("No duplicate contacts found")
                 return false
             }
@@ -361,6 +351,9 @@ struct ContactsCleanupView: View {
                 NotificationPresenterWrapper.shared.present(type: .generalSuccess)
                 DDLogNotice("Deleted own contact from advanced settings.")
             }
+            else {
+                contactsCleanupAlert = .noOwnContact
+            }
         }
     }
 
@@ -375,14 +368,14 @@ struct ContactsCleanupView: View {
     /// them. In this case, the affected duplicates are not removed and the user has to re-run the
     /// cleanup after deleting the conversations manually.
     private func cleanupDuplicateContacts() {
-        guard SettingsBundleHelper.safeMode, logContactStats() else {
+        guard logContactStats() else {
             return
         }
         
         // prohibit contact cleanup when MD is active, because the cleanup code
         // may not synchronize changes across devices (and the MD scenario was not tested)
         guard !settingsStore.isMultiDeviceRegistered else {
-            showMultiDeviceEnabledError = true
+            contactsCleanupAlert = .multiDeviceEnabled
             return
         }
         
@@ -391,7 +384,7 @@ struct ContactsCleanupView: View {
         entityManager.performAndWaitSave {
  
             guard let duplicates = entityManager.entityFetcher.duplicateContactIdentities() else {
-                showNoDuplicatesError = true
+                contactsCleanupAlert = .noDuplicatesFound
                 DDLogNotice("No duplicate contacts found")
                 return
             }
@@ -477,33 +470,24 @@ struct ContactsCleanupView: View {
                 let contactNames = unremovableContacts.map { #localize("chat").capitalized + ": " + $0.displayName }
                     .joined(separator: "\n")
 
-                alertMessage = String(
+                contactsCleanupAlert = .duplicatesInUse(message: String(
                     format: #localize("settings_advanced_contacts_cleanup_still_used_error"),
                     removableContacts.count,
                     unremovableContacts.count,
                     contactNames
-                )
-                showDuplicatesInUseError = true
+                ))
                 
                 return
             }
                         
-            alertMessage = String(
+            contactsCleanupAlert = .contactsCleanupDone(message: String(
                 format: #localize("settings_advanced_contacts_cleanup_unused_message")
                     + String.localizedStringWithFormat(
                         #localize("settings_advanced_contacts_cleanup_submit_logs"),
                         TargetManager.localizedAppName
                     ),
                 removableContacts.count
-            )
-            showUnusedContactsCleanupDone = true
+            ))
         }
-    }
-    
-    private func exitSafeMode() {
-        SettingsBundleHelper.resetSafeMode()
-        DDLogNotice("Exiting app to leave safe mode")
-        DDLog.flushLog()
-        exit(EXIT_SUCCESS)
     }
 }

@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 
 extension ServerAPIConnector {
@@ -31,7 +11,7 @@ extension ServerAPIConnector {
         text: String,
         categoryIdentifiers: [String],
         page: Int,
-        businessInjector: BusinessInjectorProtocol
+        businessInjector: BusinessInjectorProtocol = BusinessInjector.ui
     ) async throws -> (results: [CompanyDirectoryContact], paging: [String: Any]) {
         try await withCheckedThrowingContinuation { continuation in
             search(
@@ -72,8 +52,13 @@ extension ServerAPIConnector {
         }
     }
     
-    public func fetchBulkIdentityInfo(_ identities: [String]) async throws
-        -> (identities: [Any]?, publicKeys: [Any]?, featureMasks: [Any]?, states: [Any]?, types: [Any]?) {
+    public func fetchBulkIdentityInfo(_ identities: [String]) async throws -> (
+        identities: [Any]?,
+        publicKeys: [Any]?,
+        featureMasks: [Any]?,
+        states: [Any]?,
+        types: [Any]?
+    ) {
         try await withCheckedThrowingContinuation { continuation
             in
             fetchBulkIdentityInfo(identities) { identities, publicKeys, featureMasks, states, types in

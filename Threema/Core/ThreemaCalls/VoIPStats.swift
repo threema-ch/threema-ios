@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2018-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Foundation
 
 protocol VoIPStatsRepresentation {
@@ -32,7 +12,7 @@ protocol VoIPStatsRepresentation {
     case OVERVIEW_AND_DETAILED = 0x03 // OVERVIEW | DETAILED
 }
 
-@objc public class VoIPStatsOptions: NSObject {
+@objc public final class VoIPStatsOptions: NSObject {
     @objc public var transport = false
     @objc public var inboundRtp = false
     @objc public var outboundRtp = false
@@ -91,7 +71,7 @@ enum CodecMimeTypePrimary {
     }
 }
 
-@objc public class VoIPStats: NSObject, VoIPStatsRepresentation {
+@objc public final class VoIPStats: NSObject, VoIPStatsRepresentation {
     private let report: RTCStatisticsReport
     private let options: VoIPStatsOptions
     private let previousState: VoIPStatsState?
@@ -114,7 +94,7 @@ enum CodecMimeTypePrimary {
     
     private var totalFramesReceived: UInt64?
     
-    class BytesTransferred: VoIPStatsRepresentation {
+    final class BytesTransferred: VoIPStatsRepresentation {
         public let sent: UInt64?
         public let received: UInt64?
 
@@ -160,7 +140,7 @@ enum CodecMimeTypePrimary {
         }
     }
     
-    class Candidate: VoIPStatsRepresentation {
+    final class Candidate: VoIPStatsRepresentation {
         public let address: String?
         public let type: String?
         public let protocol_: String?
@@ -194,7 +174,7 @@ enum CodecMimeTypePrimary {
         }
     }
     
-    class CandidatePair: VoIPStatsRepresentation {
+    final class CandidatePair: VoIPStatsRepresentation {
         enum State: String {
             case unknown
             case frozen
@@ -399,7 +379,7 @@ enum CodecMimeTypePrimary {
         }
     }
     
-    class Codec: VoIPStatsRepresentation {
+    final class Codec: VoIPStatsRepresentation {
         
         struct CodecMimeType {
             public let primary: CodecMimeTypePrimary
@@ -556,7 +536,7 @@ enum CodecMimeTypePrimary {
         }
     }
     
-    class InboundRtp: Rtp {
+    final class InboundRtp: Rtp {
         public init(
             _ entry: RTCStatistics,
             codecs: [String: Codec],
@@ -641,7 +621,7 @@ enum CodecMimeTypePrimary {
         }
     }
     
-    class OutboundRtp: Rtp {
+    final class OutboundRtp: Rtp {
         public init(
             _ entry: RTCStatistics,
             codecs: [String: Codec],
@@ -686,7 +666,7 @@ enum CodecMimeTypePrimary {
         }
     }
     
-    class Track: VoIPStatsRepresentation {
+    final class Track: VoIPStatsRepresentation {
         public let kind: String
         public var frameWidth: UInt64?
         public var frameHeight: UInt64?
@@ -787,7 +767,7 @@ enum CodecMimeTypePrimary {
         }
     }
     
-    class RtpTransceiver: VoIPStatsRepresentation {
+    final class RtpTransceiver: VoIPStatsRepresentation {
         
         public let transceiver: RTCRtpTransceiver
 
@@ -946,7 +926,7 @@ enum CodecMimeTypePrimary {
         }
     }
     
-    class RoundTripTime: VoIPStatsRepresentation {
+    final class RoundTripTime: VoIPStatsRepresentation {
         private let latest: Double?
         private var average: Double?
         
@@ -997,7 +977,7 @@ enum CodecMimeTypePrimary {
         }
     }
     
-    class Transport: VoIPStatsRepresentation {
+    final class Transport: VoIPStatsRepresentation {
         public let selectedCandidatePairID: String
         private let bytesTransferred: BytesTransferred
         private let dtlsState: String
@@ -1023,7 +1003,7 @@ enum CodecMimeTypePrimary {
         }
     }
     
-    class Crypto: VoIPStatsRepresentation {
+    final class Crypto: VoIPStatsRepresentation {
         private let dtlsVersion: String
         private let dtlsCipher: String
         private let srtpCipher: String

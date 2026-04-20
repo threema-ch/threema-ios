@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Combine
 import FileUtility
@@ -37,7 +17,7 @@ import WebRTC
 /// TODO: Describe "architecture/dependencies"
 ///
 /// For the view hierarchy see `configureLayout()`
-final class ChatViewController: ThemedViewController {
+final class ChatViewController: UIViewController {
     
     var willMoveToNonNilWindow = false {
         didSet {
@@ -62,7 +42,7 @@ final class ChatViewController: ThemedViewController {
     private var cancellables = Set<AnyCancellable>()
     
     private var chatViewShowsEmojiLongPressInfoTip = false
-
+    
     // MARK: - Model
     
     /// Conversation shown in this chat view
@@ -81,7 +61,7 @@ final class ChatViewController: ThemedViewController {
     private var observerConversation: NSKeyValueObservation?
     
     private let contextMenuController = CustomContextMenuController()
-
+    
     // MARK: - Debug
     
     private let initTime = CACurrentMediaTime()
@@ -119,7 +99,7 @@ final class ChatViewController: ThemedViewController {
     var userInterfaceMode: UserInterfaceMode = .default {
         didSet {
             updateNavigationItem()
-
+            
             switch userInterfaceMode {
             case .default:
                 hideToolbar(animated: true)
@@ -149,10 +129,10 @@ final class ChatViewController: ThemedViewController {
                 
                 tableView.setEditing(false, animated: true)
                 dataSource.deselectAllMessages()
-
+                
                 updateContentInsets()
                 enableKeyboardDismissGestureRecognizer()
-
+                
                 NSLayoutConstraint.deactivate(defaultScrollToBottomButtonConstraints)
                 NSLayoutConstraint.activate(multiselectScrollToBottomButtonConstraints)
                 
@@ -185,6 +165,12 @@ final class ChatViewController: ThemedViewController {
         }
     }
     
+    // While we would be able to access the size class in the view controller's
+    // trait collection, that value would not include the whole picture, only
+    // the current context. In order to correctly assess it, we inject it,
+    // letting the caller decide from where this information will be fetched.
+    private let isRegularSizeClass: () -> Bool
+    
     var cellInteractionEnabled: Bool {
         userInterfaceMode == .default
     }
@@ -205,9 +191,13 @@ final class ChatViewController: ThemedViewController {
     
     // MARK: Header
     
+    private let initialUnreadCount: Int
+    
     private lazy var chatProfileView = ChatProfileView(
         for: conversation,
-        entityManager: entityManager
+        entityManager: entityManager,
+        initialUnreadCount: initialUnreadCount,
+        isRegularSizeClass: isRegularSizeClass
     ) { [weak self] in
         self?.chatProfileViewTapped()
     }
@@ -223,12 +213,7 @@ final class ChatViewController: ThemedViewController {
         return button
     }()
     
-    private lazy var cancelBarButton = UIBarButtonItem(
-        title: #localize("cancel"),
-        style: .done,
-        target: self,
-        action: #selector(endMultiselect)
-    )
+    private lazy var cancelBarButton = UIBarButtonItem.cancelButton(target: self, selector: #selector(endMultiselect))
     
     private lazy var callBarButtonItem: UIBarButtonItem = {
         let button = UIBarButtonItem(
@@ -256,9 +241,16 @@ final class ChatViewController: ThemedViewController {
         return button
     }()
     
-    private lazy var ballotBarButton = BallotWithOpenCountButton { [weak self] _ in
+    private lazy var old_ballotBarButton = Old_BallotWithOpenCountButton { [weak self] _ in
         self?.showBallots()
     }
+    
+    private lazy var ballotBarButton = UIBarButtonItem(
+        image: UIImage(systemName: "chart.pie"),
+        style: .plain,
+        target: self,
+        action: #selector(showBallots)
+    )
     
     private lazy var groupCallBannerView: GroupCallBannerView = {
         let bannerView = GroupCallBannerView(delegate: self)
@@ -287,7 +279,7 @@ final class ChatViewController: ThemedViewController {
         if UIAccessibility.isVoiceOverRunning {
             UIView.setAnimationsEnabled(false)
         }
-
+        
         // This also enables programmatic selection
         // Manual selection only allowed in multiselect mode which is ensured by implementing
         // `tableView(_:willSelectRowAt:)`
@@ -376,14 +368,35 @@ final class ChatViewController: ThemedViewController {
     )
     
     private var showConversationInformation: ShowConversationInformation?
-
-    private lazy var scrollToBottomButton = ScrollToBottomView(
+    
+    private lazy var scrollToBottomButton: UIView =
+        if #available(iOS 26.0, *) {
+            ScrollToBottomButton(
+                unreadMessagesSnapshot: unreadMessagesSnapshot
+            ) { [weak self] in
+                guard let self else {
+                    return
+                }
+                
+                self.scrollToBottomButtonAction()
+            }
+        }
+        else {
+            // We keep the init outside to be able to call `updateColors()`
+            old_ScrollToBottomButton
+        }
+    
+    private lazy var old_ScrollToBottomButton = Old_ScrollToBottomView(
         unreadMessagesSnapshot: unreadMessagesSnapshot
     ) { [weak self] in
         guard let self else {
             return
         }
         
+        scrollToBottomButtonAction()
+    }
+    
+    private func scrollToBottomButtonAction() {
         // We cannot do a layout pass during scrolling (otherwise scrolling might be stopped when updating content
         // insets). Thus we do one now
         view.layoutIfNeeded()
@@ -449,16 +462,33 @@ final class ChatViewController: ThemedViewController {
     
     private lazy var topComposeConstraint = chatBarCoordinator.chatBarContainerView.topAnchor.constraint(
         greaterThanOrEqualTo: tableView.topAnchor,
-        constant: ChatViewConfiguration.ChatBar.tableViewChatBarMinSpacing
+        constant: ChatBarConfiguration.tableViewChatBarMinSpacing
     )
     
-    private lazy var defaultScrollToBottomButtonConstraints: [NSLayoutConstraint] = [
-        scrollToBottomButton.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-        scrollToBottomButton.bottomAnchor.constraint(
-            equalTo: chatBarCoordinator.chatBarContainerView.topAnchor,
-            constant: -ChatViewConfiguration.ScrollToBottomButton.distanceToChatBar
-        ),
-    ]
+    private lazy var defaultScrollToBottomButtonConstraints: [NSLayoutConstraint] =
+        if #available(iOS 26.0, *) {
+            [
+                scrollToBottomButton.trailingAnchor.constraint(
+                    equalTo: view.trailingAnchor,
+                    constant: -ChatViewConfiguration.ScrollToBottomButton.leftRightInsets
+                ),
+                scrollToBottomButton.bottomAnchor.constraint(
+                    equalTo: chatBarCoordinator.chatBarContainerView.topAnchor,
+                    constant: -ChatViewConfiguration.ScrollToBottomButton.distanceToChatBar
+                ),
+            ]
+        }
+        else {
+            [
+                scrollToBottomButton.trailingAnchor.constraint(
+                    equalTo: view.trailingAnchor
+                ),
+                scrollToBottomButton.bottomAnchor.constraint(
+                    equalTo: chatBarCoordinator.chatBarContainerView.topAnchor,
+                    constant: -ChatViewConfiguration.ScrollToBottomButton.distanceToChatBar
+                ),
+            ]
+        }
     
     private lazy var multiselectScrollToBottomButtonConstraints: [NSLayoutConstraint] = [
         scrollToBottomButton.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -496,8 +526,8 @@ final class ChatViewController: ThemedViewController {
                 willEnterForeGroundCompletionTimer = Timer.scheduledTimer(
                     withTimeInterval: ChatViewConfiguration.UnreadMessageLine.completionTimeout,
                     repeats: false
-                ) { _ in
-                    self.willEnterForegroundCompletion = nil
+                ) { [weak self] _ in
+                    self?.willEnterForegroundCompletion = nil
                 }
             }
         }
@@ -585,22 +615,31 @@ final class ChatViewController: ThemedViewController {
     /// - Parameters:
     ///   - conversation: ConversationEntity to display in chat view
     ///   - businessInjector: Business injector to load messages
+    ///   - chatScrollPositionProvider: Handle scroll position restoration
+    ///   - isRegularSizeClass: Inject info about size class
+    ///   - initialUnreadCount: Initial unread count for all messages from all chats (needed for correct chat profile
+    ///                         sizing)
+    ///   - showConversationInformation: Information when chat is opened through a notification
     init(
         for conversation: ConversationEntity,
         businessInjector: BusinessInjectorProtocol = BusinessInjector(),
         chatScrollPositionProvider: ChatScrollPositionProvider = ChatScrollPosition.shared,
+        isRegularSizeClass: @escaping () -> Bool,
+        initialUnreadCount: Int = 0,
         showConversationInformation: ShowConversationInformation? = nil
     ) {
         self.conversation = conversation
         self.businessInjector = businessInjector
         self.entityManager = businessInjector.entityManager
         self.chatScrollPositionProvider = chatScrollPositionProvider
+        self.isRegularSizeClass = isRegularSizeClass
+        self.initialUnreadCount = initialUnreadCount
         self.showConversationInformation = showConversationInformation
         
         super.init(nibName: nil, bundle: nil)
         
         // Tab bar
-        if UIDevice.current.userInterfaceIdiom == .pad {
+        if isRegularSizeClass() {
             hidesBottomBarWhenPushed = false
         }
         else {
@@ -609,17 +648,6 @@ final class ChatViewController: ThemedViewController {
         
         // Configure tableView as early as possible to allow background fetching to take full effect
         configureTableView()
-    }
-    
-    /// Create a new chat view
-    /// - Parameters:
-    ///   - conversation: ConversationEntity to display in chat view
-    ///   - showConversationInformation: ShowConversationInformation used for precomposing content
-    @objc convenience init(
-        conversation: ConversationEntity,
-        showConversationInformation: ShowConversationInformation?
-    ) {
-        self.init(for: conversation, showConversationInformation: showConversationInformation)
     }
     
     @available(*, unavailable)
@@ -651,6 +679,16 @@ final class ChatViewController: ThemedViewController {
         configureToolbar()
         
         // No need to call `updateColors()` here as `ThemedViewController.viewWillAppear()` will call it, too.
+        
+        // We apply a blur behind the chat bar from iOS 26 onwards
+        if #available(iOS 26.0, *) {
+            let interaction = UIScrollEdgeElementContainerInteraction()
+            
+            interaction.scrollView = tableView
+            interaction.edge = .bottom
+            
+            chatBarCoordinator.chatBarContainerView.addInteraction(interaction)
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -764,13 +802,14 @@ final class ChatViewController: ThemedViewController {
 
         // Observe `Conversation.willBeDeleted` to close this view
         observerConversation = conversation.observe(\.willBeDeleted) { [weak self] conversation, _ in
-            guard let strongSelf = self else {
+            guard
+                let self,
+                conversation.willBeDeleted
+            else {
                 return
             }
 
-            if conversation.willBeDeleted {
-                strongSelf.navigationController?.popViewController(animated: true)
-            }
+            navigationController?.popViewController(animated: true)
         }
 
         NotificationCenter.default.addObserver(
@@ -838,14 +877,20 @@ final class ChatViewController: ThemedViewController {
         GlobalGroupCallManagerSingleton.shared
             .globalGroupCallObserver.publisher.pub
             .filter { [weak self] update in
-                guard let strongSelf = self else {
+                guard let self else {
                     return false
                 }
 
-                return strongSelf.businessInjector.runInBackgroundAndWait { backgroundBusinessInjector in
-                    backgroundBusinessInjector.entityManager.performAndWait {
-                        guard let tempConversation = backgroundBusinessInjector.entityManager.entityFetcher
-                            .existingObject(with: strongSelf.conversation.objectID) as? ConversationEntity else {
+                return businessInjector.runInBackgroundAndWait { [weak self] backgroundBusinessInjector in
+                    backgroundBusinessInjector.entityManager.performAndWait { [backgroundBusinessInjector] in
+                        let entityFetcher =
+                            backgroundBusinessInjector.entityManager.entityFetcher
+                        guard
+                            let objectID = self?.conversation.objectID,
+                            let tempConversation = entityFetcher.existingObject(
+                                with: objectID
+                            ) as? ConversationEntity
+                        else {
                             return false
                         }
                         return tempConversation.isEqualTo(
@@ -916,11 +961,17 @@ final class ChatViewController: ThemedViewController {
             topComposeConstraint,
             
             view.safeAreaLayoutGuide.topAnchor.constraint(equalTo: groupCallBannerView.topAnchor, constant: -10),
-            view.leadingAnchor.constraint(equalTo: groupCallBannerView.leadingAnchor, constant: -10),
-            view.trailingAnchor.constraint(equalTo: groupCallBannerView.trailingAnchor, constant: 10),
+            view.safeAreaLayoutGuide.leadingAnchor.constraint(
+                equalTo: groupCallBannerView.leadingAnchor,
+                constant: -10
+            ),
+            view.safeAreaLayoutGuide.trailingAnchor.constraint(
+                equalTo: groupCallBannerView.trailingAnchor,
+                constant: 10
+            ),
         ])
 
-        if UIDevice.current.userInterfaceIdiom == .pad {
+        if #unavailable(iOS 26.0), isRegularSizeClass() {
             // This removes a small gap that would open up between the chat bar and the keyboard accessory view if an
             // iPad is used with an external keyboard
             NSLayoutConstraint.activate([
@@ -943,6 +994,10 @@ final class ChatViewController: ThemedViewController {
     @objc func isPlayingAudioMessage() -> Bool {
         chatViewTableViewVoiceMessageCellDelegate.isMessageCurrentlyPlaying(nil) || chatBarCoordinator.chatBar
             .recordingState == .playing
+    }
+    
+    func isChat(for contact: ContactEntity) -> Bool {
+        contact == conversation.contact
     }
     
     // MARK: - Overrides
@@ -985,10 +1040,12 @@ final class ChatViewController: ThemedViewController {
                 animated: false
             )
         }
+        
+        updateColors()
     }
     
-    override func updateColors() {
-        super.updateColors()
+    private func updateColors() {
+        view.backgroundColor = Colors.backgroundViewController
                 
         for cell in tableView.visibleCells {
             if let chatViewBaseCell = cell as? ChatViewBaseTableViewCell {
@@ -1008,14 +1065,18 @@ final class ChatViewController: ThemedViewController {
         
         chatBarCoordinator.updateColors()
         
-        scrollToBottomButton.updateColors()
+        if #unavailable(iOS 26.0) {
+            old_ScrollToBottomButton.updateColors()
+        }
         
         Colors.update(searchBar: chatSearchController.searchBar as! UISearchBar)
         
-        // We don't want a transparent navigation bar appearance if we are in the process of restoring the scroll
-        // position as this leads to a weird transition when the chat view is pushed in.
-        // Thus we don't use one at all.
-        navigationItem.scrollEdgeAppearance = Colors.defaultNavigationBarAppearance()
+        // We also only need this pre iOS 26. If we show a prompt, the background gets handled in
+        // `StatusNavigationController`.
+        if #unavailable(iOS 26.0),
+           let statusNavigationController = navigationController as? StatusNavigationController {
+            statusNavigationController.updateNavigationBarColor(forceOpaque: true)
+        }
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -1074,8 +1135,9 @@ final class ChatViewController: ThemedViewController {
         if !wallpaperStore.hasCustomWallpaper(for: conversation.objectID),
            wallpaperStore.wallpaperType() == .threema {
             backgroundView.image = nil
-            backgroundView
-                .backgroundColor = UIColor(patternImage: businessInjector.settingsStore.wallpaperStore.defaultWallPaper)
+            backgroundView.backgroundColor = UIColor(
+                patternImage: businessInjector.settingsStore.wallpaperStore.defaultWallPaper
+            )
         }
         else {
             backgroundView.backgroundColor = nil
@@ -1098,14 +1160,25 @@ final class ChatViewController: ThemedViewController {
 extension ChatViewController {
     
     private func configureNavigationItem() {
-        
-        // Note: The back button is set in `ConversationsViewController` and cannot be overridden here
-        
+
+        // Note: The back button is set in `ConversationListViewController` and cannot be overridden here
+
         // Configure chat profile view
         // See `ChatProfileView` why we choose this solution
-        
+
         navigationItem.largeTitleDisplayMode = .never
-        
+
+        // In the regular size class the chat view is shown as a split view detail, so
+        // `updateNavigationBarColor(forceOpaque:)` may not be called reliably. Setting the
+        // appearance on `navigationItem` (per-VC) keeps the bar opaque regardless of any
+        // notification-driven resets on the shared `navigationBar` appearance.
+        if #unavailable(iOS 26.0) {
+            let opaqueAppearance = UINavigationBarAppearance()
+            opaqueAppearance.configureWithOpaqueBackground()
+            navigationItem.standardAppearance = opaqueAppearance
+            navigationItem.scrollEdgeAppearance = opaqueAppearance
+        }
+
         updateNavigationItem()
     }
     
@@ -1199,10 +1272,22 @@ extension ChatViewController {
         
         // Only show ballots icon if we have open polls
         if numberOfOpenBallots > 0 {
-            ballotBarButton.openBallotsCount = UInt(numberOfOpenBallots)
-            
-            if navigationItem.rightBarButtonItems == nil {
-                navigationItem.rightBarButtonItems = ballotBarButton.rightBarButtonItems
+            if #available(iOS 26.0, *) {
+                if navigationItem.rightBarButtonItems == nil {
+                    navigationItem.rightBarButtonItem = ballotBarButton
+                }
+                ballotBarButton.badge = .count(numberOfOpenBallots)
+                ballotBarButton.accessibilityLabel = String.localizedStringWithFormat(
+                    #localize("ballots_with_open_count_accessibility"),
+                    numberOfOpenBallots
+                )
+            }
+            else {
+                old_ballotBarButton.openBallotsCount = UInt(numberOfOpenBallots)
+                
+                if navigationItem.rightBarButtonItems == nil {
+                    navigationItem.rightBarButtonItems = old_ballotBarButton.rightBarButtonItems
+                }
             }
         }
         else if !businessInjector.userSettings.enableThreemaGroupCalls {
@@ -1210,7 +1295,6 @@ extension ChatViewController {
         }
     }
     
-    /// `ChatProfileViewDelegate` method
     func chatProfileViewTapped() {
         let detailsViewController: UIViewController
         
@@ -1256,7 +1340,8 @@ extension ChatViewController {
         
         chatViewTableViewVoiceMessageCellDelegate.pausePlaying()
         GlobalGroupCallManagerSingleton.shared.startGroupCall(
-            in: group, intent: .createOrJoin
+            in: group,
+            intent: .createOrJoin
         )
     }
     
@@ -1275,10 +1360,16 @@ extension ChatViewController {
     }
     
     @objc private func showBallots() {
-        let view = ListPollView(conversation: conversation) { [weak self] in
-            self?.updateOpenBallotsButton()
-        }
-        let pollListController = UIHostingController(rootView: view)
+        let pollListController = UIHostingController(
+            rootView: ListPollView(
+                entityManager: entityManager,
+                conversation: conversation
+            ) { [weak self] in
+                self?.updateOpenBallotsButton()
+            } onDelete: { [weak self] deletedMessagesObjectIDs in
+                self?.willDeleteMessages(with: deletedMessagesObjectIDs)
+            }
+        )
         present(pollListController, animated: true)
     }
     
@@ -1549,8 +1640,9 @@ extension ChatViewController {
                     return
                 }
                 
-                guard let cell = self?.tableView.cellForRow(at: indexPath) as? ChatViewBaseTableViewCell
-                else {
+                guard let cell = self?.tableView.cellForRow(
+                    at: indexPath
+                ) as? ChatViewBaseTableViewCell else {
                     DDLogWarn("Couldn't get cell")
                     return
                 }
@@ -1565,8 +1657,9 @@ extension ChatViewController {
     func jumpToAndSelect(_ messageObjectID: NSManagedObjectID) {
         isJumping = true
         
-        guard let message = entityManager.entityFetcher.existingObject(with: messageObjectID) as? BaseMessageEntity
-        else {
+        guard let message = entityManager.entityFetcher.existingObject(
+            with: messageObjectID
+        ) as? BaseMessageEntity else {
             DDLogWarn(
                 "Unable to load message (\(messageObjectID.uriRepresentation())) to jump to."
             )
@@ -1622,9 +1715,16 @@ extension ChatViewController {
         isJumping = true
         dataSource.loadOldestMessages().ensure {
             self.view.layoutIfNeeded()
-            
-            self.tableView.scrollToRow(at: IndexPath(row: 0, section: 0), at: .top, animated: true)
-            
+
+            if self.tableView.numberOfSections > 0,
+               self.tableView.numberOfRows(inSection: 0) > 0 {
+                self.tableView.scrollToRow(
+                    at: IndexPath(row: 0, section: 0),
+                    at: .top,
+                    animated: true
+                )
+            }
+
             self.completeJumping { _ in
                 self.userIsAtBottomOfTableView = self.isAtBottomOfView
             }
@@ -1664,8 +1764,9 @@ extension ChatViewController {
         
         let scrollPosition: UITableView.ScrollPosition = .top
         
-        if let indexPath = dataSource
-            .indexPath(for: ChatViewDataSource.CellType.message(objectID: unreadMessageMessageObjectID)) {
+        if let indexPath = dataSource.indexPath(
+            for: ChatViewDataSource.CellType.message(objectID: unreadMessageMessageObjectID)
+        ) {
             contentSizeChangeSafeScrollToRow(at: indexPath, at: scrollPosition, animated: animated)
         }
         else {
@@ -1779,8 +1880,8 @@ extension ChatViewController {
                     // We either succeed right away or do this on the next snapshot apply
                     let messageID = message.id
                     DDLogVerbose("willEnterForegroundCompletion setup")
-                    self.willEnterForegroundCompletion = { completion in
-                        self.jump(to: messageID, animated: true, completion: { _ in
+                    self.willEnterForegroundCompletion = { [weak self] completion in
+                        self?.jump(to: messageID, animated: true, completion: { _ in
                             completion?()
                         })
                     }
@@ -2130,6 +2231,7 @@ extension ChatViewController: UITableViewDelegate {
         
         contextMenuController.presentContextMenu(
             chatViewController: self,
+            for: cell,
             on: view,
             with: snapshot,
             snapshotBounds: cell.chatBubbleView.convert(cell.chatBubbleView.bounds, to: view.window),
@@ -2156,7 +2258,9 @@ extension ChatViewController: UITableViewDelegate {
             insetUpdatesBlockedByContextMenu = true
         }
         
-        UIView.animate(withDuration: ChatViewConfiguration.contextMenuBackgroundShowHideAnimationDuration) {
+        UIView.animate(
+            withDuration: ChatViewConfiguration.contextMenuBackgroundShowHideAnimationDuration
+        ) {
             self.hideScrollToBottomButtonAndChatBar()
             self.chatBarCoordinator.chatBar.resignFirstResponder()
         }
@@ -2177,7 +2281,9 @@ extension ChatViewController: UITableViewDelegate {
             }
         }
         
-        UIView.animate(withDuration: ChatViewConfiguration.contextMenuBackgroundShowHideAnimationDuration) {
+        UIView.animate(
+            withDuration: ChatViewConfiguration.contextMenuBackgroundShowHideAnimationDuration
+        ) {
             if self.userInterfaceMode != .multiselect {
                 self.showScrollToBottomButtonAndChatBar()
             }

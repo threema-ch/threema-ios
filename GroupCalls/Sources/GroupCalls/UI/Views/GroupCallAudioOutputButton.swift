@@ -1,29 +1,9 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import AVKit
 import Foundation
 import UIKit
 import WebRTC
 
-class GroupCallAudioOutputButton: UIButton {
+final class GroupCallAudioOutputButton: UIButton {
     
     private typealias buttonConfig = GroupCallUIConfiguration.ToolbarButton
     private var dependencies: Dependencies
@@ -80,14 +60,23 @@ class GroupCallAudioOutputButton: UIButton {
     
     private func configureButton() {
         
-        let initialConfig = UIButton.Configuration.plain()
+        var initialConfig: UIButton.Configuration =
+            if #available(iOS 26.0, *) {
+                .glass()
+            }
+            else {
+                .bordered()
+            }
+        initialConfig.cornerStyle = .capsule
+
+        // Add some color pre glass
+        if #unavailable(iOS 26.0) {
+            initialConfig.baseForegroundColor = buttonConfig.smallerButtonTint
+            initialConfig.baseBackgroundColor = buttonConfig.smallerButtonBackground
+        }
+        
         configuration = updateConfig(config: initialConfig)
         
-        layer.masksToBounds = true
-        layer.cornerRadius = buttonConfig.smallerButtonCornerRadius
-        clipsToBounds = true
-        tintColor = buttonConfig.smallerButtonTint
-        backgroundColor = buttonConfig.smallerButtonBackground
         translatesAutoresizingMaskIntoConstraints = false
         accessibilityLabel = dependencies.groupCallBundleUtil
             .localizedString(for: "group_call_accessibility_audio_output")

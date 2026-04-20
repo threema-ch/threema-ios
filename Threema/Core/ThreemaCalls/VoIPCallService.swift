@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2019-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import Intents
@@ -2066,11 +2046,7 @@ final class VoIPCallService {
         let audioSession = AVAudioSession.sharedInstance()
         if soloAmbient {
             do {
-                try audioSession.setCategory(
-                    .soloAmbient,
-                    mode: .default,
-                    options: [.allowBluetooth, .allowBluetoothA2DP]
-                )
+                try audioSession.setCategory(.soloAmbient, mode: .default, options: .threemaCategoryOptions)
                 try audioSession.overrideOutputAudioPort(speakerActive ? .speaker : .none)
                 try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
             }
@@ -2080,11 +2056,7 @@ final class VoIPCallService {
         }
         else {
             do {
-                try audioSession.setCategory(
-                    .playAndRecord,
-                    mode: .voiceChat,
-                    options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
-                )
+                try audioSession.setCategory(.playAndRecord, mode: .voiceChat, options: .threemaCategoryOptions)
                 try audioSession.overrideOutputAudioPort(speakerActive ? .speaker : .none)
                 try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
             }
@@ -2890,11 +2862,8 @@ extension VoIPCallService: VoIPCallPeerConnectionClientDelegate {
         
         let audioSession = AVAudioSession.sharedInstance()
         do {
-            try audioSession.setCategory(
-                .playAndRecord,
-                mode: speakerActive ? .videoChat : .voiceChat,
-                options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP]
-            )
+            let mode: AVAudioSession.Mode = speakerActive ? .videoChat : .voiceChat
+            try audioSession.setCategory(.playAndRecord, mode: mode, options: .threemaCategoryOptions)
             try audioSession.overrideOutputAudioPort(speakerActive ? .speaker : .none)
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
         }

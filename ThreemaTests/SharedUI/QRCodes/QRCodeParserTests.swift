@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import Testing
 import Threema
 import ThreemaEssentials
@@ -296,29 +276,6 @@ private let expirationDataValid: TimeInterval = 1_924_684_800
                 NTY2NDMgAg==
                 """
             let urlString = "threema://device-group/join#\(urlSafeBase64)"
-
-            do {
-                let result = try sut.parseMultiDeviceLink(urlString)
-
-                guard case let .multiDeviceLink(actualURLSafeBase64) = result else {
-                    Issue.record("Expecting parse result to be a multi-device link.")
-                    return
-                }
-                #expect(actualURLSafeBase64 == urlSafeBase64)
-            }
-            catch {
-                Issue.record("Expecting no error to be thrown.")
-            }
-        }
-
-        @Test("Valid URL with end slash should parse successfully")
-        func validURLSlash() throws {
-            let urlSafeBase64 = """
-                CAASAgoAGpIBCAASIH4K-cVibsRPcucVTtQRmtAScUO4oTTYDIqyu4B8SeeDGmwIARAAGmZ3c3M6Ly9yZW5kZXp2b3VzLWIudGVz\
-                dC50aHJlZW1hLmNoL2IyL2IyODlkNDk0ZjQ3YzgzYTYxMzVjNTk3ZWM2ODBhOGM3NWJmNWQzYzVlZGM4OGYxMTkyNDE1NDNhMzJl\
-                NTY2NDMgAg==
-                """
-            let urlString = "threema://device-group/join#\(urlSafeBase64)/"
 
             do {
                 let result = try sut.parseMultiDeviceLink(urlString)

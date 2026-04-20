@@ -1,29 +1,10 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2022-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import SwiftUI
 import ThreemaMacros
 
 struct MultiDeviceWizardIdentityView: View {
+    @Environment(\.dismiss) var dismiss
     @ObservedObject var wizardVM: MultiDeviceWizardViewModel
-    @Binding var dismiss: Bool
+    @Binding var path: NavigationPath
 
     var identity = MyIdentityStore.shared().identity!
     
@@ -72,7 +53,7 @@ struct MultiDeviceWizardIdentityView: View {
             
             HStack {
                 Button {
-                    dismiss = true
+                    dismiss()
                     wizardVM.cancelLinking()
                 } label: {
                     Text(#localize("md_wizard_cancel"))
@@ -82,9 +63,8 @@ struct MultiDeviceWizardIdentityView: View {
                 
                 Spacer()
                 
-                NavigationLink {
-                    MultiDeviceWizardCodeView(wizardVM: wizardVM, dismissModal: $dismiss)
-                    
+                Button {
+                    path.append(MultiDeviceWizardNavigationRoute.code)
                 } label: {
                     Text(#localize("md_wizard_next"))
                         .bold()
@@ -105,6 +85,9 @@ struct MultiDeviceWizardIdentityView: View {
 
 struct MultiDeviceWizardIdentityView_Previews: PreviewProvider {
     static var previews: some View {
-        MultiDeviceWizardIdentityView(wizardVM: MultiDeviceWizardViewModel(), dismiss: .constant(false))
+        MultiDeviceWizardIdentityView(
+            wizardVM: MultiDeviceWizardViewModel(),
+            path: .constant(.init())
+        )
     }
 }

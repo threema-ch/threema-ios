@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2023-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 import ThreemaProtocols
@@ -75,25 +55,15 @@ final class ConnectionContext<
         let audioConfiguration = RTCAudioSessionConfiguration()
         audioConfiguration.category = AVAudioSession.Category.playAndRecord.rawValue
         audioConfiguration.mode = AVAudioSession.Mode.voiceChat.rawValue
-        audioConfiguration.categoryOptions = AVAudioSession.CategoryOptions(
-            arrayLiteral: .duckOthers,
-            .allowBluetooth,
-            .allowBluetoothA2DP,
-            .allowAirPlay
-        )
-        RTCAudioSessionConfiguration.setWebRTC(audioConfiguration)
-        
+        audioConfiguration.categoryOptions = .threemaCategoryOptions
         do {
-            let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(
-                .playAndRecord,
-                mode: .voiceChat,
-                options: [.duckOthers, .allowBluetooth, .allowBluetoothA2DP, .allowAirPlay]
-            )
+            sharedInstance.lockForConfiguration()
+            defer { sharedInstance.unlockForConfiguration() }
+            RTCAudioSessionConfiguration.setWebRTC(audioConfiguration)
             if shouldActivateSpeaker() == true {
-                try audioSession.overrideOutputAudioPort(.speaker)
+                try sharedInstance.overrideOutputAudioPort(.speaker)
             }
-            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            try sharedInstance.setActive(true)
         }
         catch let error as NSError {
             DDLogError(
@@ -326,23 +296,23 @@ extension ConnectionContext {
         DDLogNotice("[GroupCall] Teardown: ConnectionContext")
         audioTrack?.isEnabled = false
         videoTrack?.isEnabled = false
-        
-        // TODO: (IOS-4161) Restore previous audio session
-        RTCAudioSession.sharedInstance().lockForConfiguration()
+
+        // Stop WebRTC's audio unit before closing the peer connection. `isAudioEnabled` must be set
+        // to false to match the `isAudioEnabled = true` set during initialization, otherwise the
+        // audio unit remains running and leaves WebRTC in an inconsistent state for subsequent calls.
+        rtcAudioSession.isAudioEnabled = false
+
         do {
-            if RTCAudioSession.sharedInstance().isActive {
-                try RTCAudioSession.sharedInstance().setActive(false)
-            }
+            rtcAudioSession.lockForConfiguration()
+            defer { rtcAudioSession.unlockForConfiguration() }
+            try rtcAudioSession.setActive(false)
         }
         catch {
-            DDLogError(
-                "[GroupCall] An error occurred when resetting the shared audio session: \(error)"
-            )
+            DDLogError("[GroupCall] An error occurred when resetting the shared audio session: \(error)")
         }
-        RTCAudioSession.sharedInstance().unlockForConfiguration()
-        
+
         await videoCapturer.stopCapture()
-        
+
         webRTCConnectionContext.teardown()
     }
     

@@ -1,33 +1,13 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2021-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import FileUtility
 import ThreemaEssentials
-import ThreemaEssentialsTestHelper
+
 import ThreemaProtocols
 import XCTest
 
 @testable import ThreemaFramework
 
-class PendingUserNotificationManagerTests: XCTestCase {
-    private var dbMainCnx: DatabaseContext!
+final class PendingUserNotificationManagerTests: XCTestCase {
+    private var dbMainCnx: DatabaseContextProtocol!
 
     override func setUpWithError() throws {
         AppGroup.setGroupID("group.ch.threema") // THREEMA_GROUP_IDENTIFIER @"group.ch.threema"
@@ -41,9 +21,11 @@ class PendingUserNotificationManagerTests: XCTestCase {
         
         PendingUserNotificationManager.clear()
 
-        let (_, mainCnx, _) = DatabasePersistentContext.devNullContext()
+        let testDatabase = TestDatabase()
+        dbMainCnx = testDatabase.context
 
-        dbMainCnx = DatabaseContext(mainContext: mainCnx, backgroundContext: nil)
+        // Workaround to ensure remote secret is initialized
+        AppLaunchManager.shared.setRemoteSecretManager(testDatabase.remoteSecretManagerMock)
     }
 
     func testPendingUserNotificationAbstractMessage() throws {
@@ -202,7 +184,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
         editGroupMessage.fromIdentity = expectedFromIdentity
 
         for abstractMessage in [editMessage, editGroupMessage] {
-            let expectedMessageID = MockData.generateMessageID()
+            let expectedMessageID = BytesUtility.generateMessageID()
             abstractMessage.messageID = expectedMessageID
 
             let userNotificationCenterManagerMock = UserNotificationCenterManagerMock(
@@ -248,9 +230,9 @@ class PendingUserNotificationManagerTests: XCTestCase {
     }
 
     func testPendingUserNotificationStartTimedNotificationEditMessageWithBaseMessage() throws {
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedFromIdentity = "SENDER01"
-        let expectedEditedMessageID = MockData.generateMessageID()
+        let expectedEditedMessageID = BytesUtility.generateMessageID()
 
         let abstractMessage = EditMessage()
         abstractMessage.messageID = expectedMessageID
@@ -267,7 +249,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
             featureMask: 1,
             forwardSecurityState: 1,
             identity: expectedFromIdentity,
-            publicKey: MockData.generatePublicKey(),
+            publicKey: BytesUtility.generatePublicKey(),
             readReceipts: 0,
             typingIndicators: 0,
             verificationLevel: 0,
@@ -334,9 +316,9 @@ class PendingUserNotificationManagerTests: XCTestCase {
     }
 
     func testPendingUserNotificationStartTimedNotificationEditMessageWithBaseMessageAndDeliveredNotification() throws {
-        let expectedMessageID = MockData.generateMessageID()
+        let expectedMessageID = BytesUtility.generateMessageID()
         let expectedFromIdentity = "SENDER01"
-        let expectedEditedMessageID = MockData.generateMessageID()
+        let expectedEditedMessageID = BytesUtility.generateMessageID()
 
         let abstractMessage = EditMessage()
         abstractMessage.messageID = expectedMessageID
@@ -353,7 +335,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
             featureMask: 1,
             forwardSecurityState: 1,
             identity: expectedFromIdentity,
-            publicKey: MockData.generatePublicKey(),
+            publicKey: BytesUtility.generatePublicKey(),
             readReceipts: 0,
             typingIndicators: 0,
             verificationLevel: 0,
@@ -443,8 +425,8 @@ class PendingUserNotificationManagerTests: XCTestCase {
         deleteGroupMessage.fromIdentity = expectedFromIdentity
 
         for abstractMessage in [deleteGroupMessage] {
-            let expectedMessageID = MockData.generateMessageID()
-            let expectedDeletedMessageID = MockData.generateMessageID()
+            let expectedMessageID = BytesUtility.generateMessageID()
+            let expectedDeletedMessageID = BytesUtility.generateMessageID()
             abstractMessage.messageID = expectedMessageID
             let e2eDeleteMessage = try CspE2e_DeleteMessage.with { message in
                 message.messageID = try expectedMessageID.littleEndian()
@@ -458,7 +440,7 @@ class PendingUserNotificationManagerTests: XCTestCase {
                 featureMask: 1,
                 forwardSecurityState: 1,
                 identity: expectedFromIdentity,
-                publicKey: MockData.generatePublicKey(),
+                publicKey: BytesUtility.generatePublicKey(),
                 readReceipts: 0,
                 typingIndicators: 0,
                 verificationLevel: 0,

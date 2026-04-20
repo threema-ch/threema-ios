@@ -1,23 +1,3 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import FileUtility
 import PromiseKit
@@ -29,18 +9,30 @@ enum VideoURLSenderItemCreatorError: Error {
     case generalError
 }
 
-@objc public protocol VideoConversionProgressDelegate {
-    @objc func videoExportSession(exportSession: AVAssetExportSession)
+public protocol VideoConversionProgressDelegate {
+    func videoExportSession(exportSession: AVAssetExportSession)
 }
 
-@objc public class VideoURLSenderItemCreator: NSObject {
+public final class VideoURLSenderItemCreator: NSObject {
     
-    @objc public static let temporaryDirectory = "tmpVideoCreator"
+    public static let temporaryDirectory = "tmpVideoCreator"
     
-    @objc public var encodeProgressDelegate: VideoConversionProgressDelegate?
-    @objc var exportSession: AVAssetExportSession?
-    
+    public var encodeProgressDelegate: VideoConversionProgressDelegate?
+    var exportSession: AVAssetExportSession?
     var timer: Timer? = nil
+
+    private let videoConversionHelper: VideoConversionHelper
+
+    @objc override public init() {
+        self.videoConversionHelper = VideoConversionHelper()
+    }
+
+    #if DEBUG
+        init(videoConversionHelper: VideoConversionHelper) {
+            self.videoConversionHelper = videoConversionHelper
+        }
+    #endif
+
     func getThumbnail(asset: AVAsset) -> Promise<UIImage> {
         Promise { seal in
             guard let thumbnail = MediaConverter.getThumbnailForVideo(asset) else {
@@ -50,38 +42,45 @@ enum VideoURLSenderItemCreatorError: Error {
             seal.resolve(thumbnail, nil)
         }
     }
-        
+
     func getExportSession(asset: AVAsset) -> Promise<AVAssetExportSession> {
         Promise { seal in
-            guard let outputURL = MediaConverter.getAssetOutputURL(),
-                  let exportSession = MediaConverter.getAVAssetExportSession(from: asset, outputURL: outputURL) else {
-                DDLogError("Could not get exportSession for asset \(asset.debugDescription)")
+            guard let outputURL = MediaConverter.getAssetOutputURL() else {
+                DDLogError("Could not get output URL for asset \(asset.debugDescription)")
                 seal.reject(VideoURLSenderItemCreatorError.couldNotCreateExportSession)
                 return
             }
-            
-            self.exportSession = exportSession
-            
-            DispatchQueue.main.async {
-                self.timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
-                    
-                    guard let progress = self.exportSession?.progress else {
-                        timer.invalidate()
-                        return
-                    }
-                    
-                    self.encodeProgressDelegate?.videoExportSession(exportSession: exportSession)
 
-                    if progress > 0.9 {
-                        timer.invalidate()
+            Task {
+                guard let session = await self.videoConversionHelper
+                    .getAVAssetExportSession(from: asset, outputURL: outputURL)
+                else {
+                    seal.reject(VideoURLSenderItemCreatorError.couldNotCreateExportSession)
+                    return
+                }
+
+                self.exportSession = session
+
+                DispatchQueue.main.async {
+                    self.timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+                        guard let progress = self.exportSession?.progress else {
+                            timer.invalidate()
+                            return
+                        }
+
+                        self.encodeProgressDelegate?.videoExportSession(exportSession: session)
+
+                        if progress > 0.9 {
+                            timer.invalidate()
+                        }
                     }
                 }
+
+                seal.fulfill(session)
             }
-            
-            seal.fulfill(exportSession)
         }
     }
-    
+
     override public func observeValue(
         forKeyPath keyPath: String?,
         of object: Any?,
@@ -93,7 +92,7 @@ enum VideoURLSenderItemCreatorError: Error {
         }
     }
     
-    @objc public func getExportSession(for asset: AVAsset) -> AVAssetExportSession? {
+    public func getExportSession(for asset: AVAsset) -> AVAssetExportSession? {
         var newExportSession: AVAssetExportSession?
         let sema = DispatchSemaphore(value: 0)
         
@@ -145,22 +144,25 @@ enum VideoURLSenderItemCreatorError: Error {
         }
     }
     
-    @objc public func senderItem(from videoURL: URL) -> URLSenderItem? {
-        guard let scheme = videoURL.scheme else {
-            return nil
-        }
-        if scheme != "file", FileUtility.shared.fileExists(at: videoURL) == false {
+    public func senderItem(from videoURL: URL) -> URLSenderItem? {
+        guard videoURL.scheme == "file" else {
             return nil
         }
         
-        let asset = AVURLAsset(url: videoURL)
-        if !asset.isExportable {
+        guard FileUtility.shared.fileExists(at: videoURL) == true else {
             return nil
         }
+
+        let asset = AVURLAsset(url: videoURL)
+        
+        guard asset.loadIsExportableSynchronously() else {
+            return nil
+        }
+        
         return senderItem(fromAsset: asset)
     }
     
-    @objc public func senderItem(fromAsset: AVAsset) -> URLSenderItem? {
+    public func senderItem(fromAsset: AVAsset) -> URLSenderItem? {
         var senderItem: URLSenderItem?
         let sema = DispatchSemaphore(value: 0)
         let bgq = DispatchQueue.global(qos: .userInitiated)
@@ -178,7 +180,7 @@ enum VideoURLSenderItemCreatorError: Error {
         return senderItem
     }
     
-    @objc public func senderItem(from asset: AVAsset, on exportSession: AVAssetExportSession) -> URLSenderItem? {
+    public func senderItem(from asset: AVAsset, on exportSession: AVAssetExportSession) -> URLSenderItem? {
         var senderItem: URLSenderItem?
         let sema = DispatchSemaphore(value: 0)
         
@@ -202,7 +204,7 @@ enum VideoURLSenderItemCreatorError: Error {
         return senderItem
     }
     
-    @objc public static func writeToTemporaryDirectory(data: Data) -> URL? {
+    public static func writeToTemporaryDirectory(data: Data) -> URL? {
         let fileUtility = FileUtility.shared!
         let tmpFolder = fileUtility.appTemporaryUnencryptedDirectory
             .appendingPathComponent(VideoURLSenderItemCreator.temporaryDirectory)
@@ -229,7 +231,7 @@ enum VideoURLSenderItemCreatorError: Error {
         return fileURL
     }
     
-    @objc public static func cleanTemporaryDirectory() -> Bool {
+    public static func cleanTemporaryDirectory() -> Bool {
         let fileUtility = FileUtility.shared!
         let tmpFolder = fileUtility.appTemporaryDirectory
             .appendingPathComponent(VideoURLSenderItemCreator.temporaryDirectory)

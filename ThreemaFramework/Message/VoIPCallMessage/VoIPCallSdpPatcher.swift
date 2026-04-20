@@ -1,27 +1,7 @@
-//  _____ _
-// |_   _| |_  _ _ ___ ___ _ __  __ _
-//   | | | ' \| '_/ -_) -_) '  \/ _` |_
-//   |_| |_||_|_| \___\___|_|_|_\__,_(_)
-//
-// Threema iOS Client
-// Copyright (c) 2020-2025 Threema GmbH
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License, version 3,
-// as published by the Free Software Foundation.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program. If not, see <https://www.gnu.org/licenses/>.
-
 import CocoaLumberjackSwift
 import Foundation
 
-public class VoIPCallSdpPatcher: NSObject {
+public final class VoIPCallSdpPatcher: NSObject {
     static let SDP_MEDIA_AUDIO_ANY_RE = "m=audio ([^ ]+) ([^ ]+) (.+)"
     static let SDP_RTPMAP_OPUS_RE = "a=rtpmap:([^ ]+) opus.*"
     static let SDP_RTPMAP_ANY_RE = "a=rtpmap:([^ ]+) .*"
@@ -78,7 +58,7 @@ public class VoIPCallSdpPatcher: NSObject {
         case REWRITE
     }
 
-    public class SdpError: Error {
+    public final class SdpError: Error {
         var type: SdpErrorType
         var description: String
         public init(type: SdpErrorType, description: String) {

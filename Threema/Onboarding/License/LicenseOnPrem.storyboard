@@ -103,7 +103,7 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                                                 <rect key="frame" x="5" y="5" width="200" height="30"/>
                                                                                 <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                                                                                 <color key="tintColor" red="0.24705882370000001" green="0.90196079019999997" blue="0.41176471110000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                                                <accessibility key="accessibilityConfiguration" identifier="licenseUsername"/>
+                                                                                <accessibility key="accessibilityConfiguration" identifier="licensePassword"/>
                                                                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                                                 <fontDescription key="fontDescription" name="HelveticaNeue-Light" family="Helvetica Neue" pointSize="16"/>
                                                                                 <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" keyboardAppearance="alert" secureTextEntry="YES" textContentType="password"/>
@@ -144,7 +144,7 @@ Please enter your credentials. If you do not know your credentials, please conta
                                                                                 <rect key="frame" x="5" y="5" width="200" height="30"/>
                                                                                 <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                                                                                 <color key="tintColor" red="0.24705882370000001" green="0.90196079019999997" blue="0.41176471110000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                                                                <accessibility key="accessibilityConfiguration" identifier="licenseUsername"/>
+                                                                                <accessibility key="accessibilityConfiguration" identifier="licenseServer"/>
                                                                                 <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                                                 <fontDescription key="fontDescription" name="HelveticaNeue-Light" family="Helvetica Neue" pointSize="16"/>
                                                                                 <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" keyboardAppearance="alert" textContentType="url"/>

@@ -93,6 +93,10 @@ final class ProfileCoordinator: NSObject, Coordinator, CurrentDestinationHolderP
                         content.textProperties.color = .secondaryLabel
                     }
                     
+                    if let accessibilityIdentifier = item.accessibilityIdentifier {
+                        cell.accessibilityIdentifier = accessibilityIdentifier
+                    }
+                    
                     cell.contentConfiguration = content
                     cell.accessories = [.disclosureIndicator()]
                     if let text = item.accessoryText {

@@ -1184,27 +1184,30 @@ static const DDLogLevel ddLogLevel = DDLogLevelNotice;
 
 - (void)completeAuthentication {
     [self presentApplicationUI];
-    URLHandler *urlHandler = [URLHandler new];
-    if (pendingUrl) {
-        [urlHandler handle:pendingUrl hideAppChooser:NO];
-        pendingUrl = nil;
-    } else if (pendingShortCutItem) {
-        (void)[urlHandler handleWithItem:pendingShortCutItem];   
-        pendingShortCutItem = nil;
-    }
     
-    if (evaluatedPolicyDomainState != nil) {
-        [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateApp:evaluatedPolicyDomainState];
-        evaluatedPolicyDomainState = nil;
-    }
-    
-    if (rootToNotificationSettings) {
-        [UIApplication.sharedApplication.windows.firstObject.rootViewController dismissViewControllerAnimated:false completion:nil];
+    [self runWhenBusinessReadyWithTask:^{
+        URLHandler *urlHandler = [URLHandler new];
+        if (pendingUrl) {
+            [urlHandler handle:pendingUrl hideAppChooser:NO];
+            pendingUrl = nil;
+        } else if (pendingShortCutItem) {
+            (void)[urlHandler handleWithItem:pendingShortCutItem];
+            pendingShortCutItem = nil;
+        }
         
-        [_appCoordinator showNotificationSettings];
+        if (evaluatedPolicyDomainState != nil) {
+            [[UserSettings sharedUserSettings] setEvaluatedPolicyDomainStateApp:evaluatedPolicyDomainState];
+            evaluatedPolicyDomainState = nil;
+        }
         
-        rootToNotificationSettings = nil;
-    }
+        if (rootToNotificationSettings) {
+            [UIApplication.sharedApplication.windows.firstObject.rootViewController dismissViewControllerAnimated:false completion:nil];
+            
+            [_appCoordinator showNotificationSettings];
+            
+            rootToNotificationSettings = nil;
+        }
+    }];
 }
 
 - (void)tryTouchIdAuthentication {

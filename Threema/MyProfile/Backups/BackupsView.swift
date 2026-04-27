@@ -16,6 +16,7 @@ struct BackupsView: View {
                             .foregroundColor(.secondary)
                     }
                 }
+                .accessibilityIdentifier("threemaSafeButton")
                 .disabled(model.safeIsDisabled)
             } footer: {
                 Text(model.safeSectionFooter)

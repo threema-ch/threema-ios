@@ -261,7 +261,7 @@ import ThreemaMacros
         if TargetManager.isBusinessApp {
             // If we have a license and it is valid, we store it in the keychain.
             // If not we try to load the one stored in keychain
-            if licenseStore.isValid() {
+            if licenseStore.isValid() || ProcessInfoHelper.isRunningForScreenshots {
                 try storeLicense(using: keychainManager)
             }
             else if let license = try keychainManager.loadLicense() {

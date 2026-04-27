@@ -53,6 +53,7 @@ struct FlavorInfoBusinessAppView: View {
                 }
                 .buttonStyle(.threemaWizardProminentButtonStyle)
                 .accessibilityLabel(viewModel.loginNowText)
+                .accessibilityIdentifier("loginButton")
             }
             .accessibilityElement(children: .contain)
             

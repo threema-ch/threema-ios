@@ -36,6 +36,7 @@ struct QrCodeView: View {
                 DoneButton {
                     coordinator?.dismiss()
                 }
+                .accessibilityIdentifier("close")
             }
         }
         .navigationTitle(#localize("profile_qr_code_title"))

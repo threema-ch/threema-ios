@@ -645,7 +645,7 @@ final class VoIPCallService {
         case .end:
             if ProcessInfoHelper.isRunningForScreenshots {
                 dismissCallView()
-                delegate?.finishedProcessingCallQueueElement()
+                delegate?.callFinished()
                 action.completion?()
                 return
             }

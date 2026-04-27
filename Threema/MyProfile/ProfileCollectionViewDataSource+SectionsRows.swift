@@ -174,6 +174,15 @@ extension ProfileCollectionViewDataSource {
             }
         }
         
+        var accessibilityIdentifier: String? {
+            switch self {
+            case .backups:
+                "backupButton"
+            default:
+                nil
+            }
+        }
+        
         static func row(for destination: ProfileCoordinator.InternalDestination) -> Self? {
             switch destination {
             case .editProfile, .scanQRCode, .qrCode, .shareID:

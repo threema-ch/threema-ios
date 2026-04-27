@@ -757,8 +757,14 @@ Process incoming message.
 }
 
 - (void)resolveAddressFor:(LocationMessageEntity*)message onCompletion:(void(^ _Nonnull)(void))onCompletion {
-    // Reverse geocoding (only necessary if there is no POI adress) /
-    if (message.poiAddress != nil) {
+    __block BOOL hasExistingPOIAddress = false;
+    
+    [entityManager performBlockAndWait:^{
+        hasExistingPOIAddress = (message.poiAddress != nil);
+    }];
+    
+    // Reverse geocoding (only necessary if there is no POI address)
+    if (hasExistingPOIAddress) {
         onCompletion();
         return;
     }

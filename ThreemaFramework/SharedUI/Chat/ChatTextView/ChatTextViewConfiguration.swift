@@ -14,7 +14,7 @@ public enum ChatTextViewConfiguration {
 
     public static let smallerContentSizeConfigurationCornerRadius =
         if #available(iOS 26.0, *) {
-            8.0
+            18.5
         }
         else {
             15.5

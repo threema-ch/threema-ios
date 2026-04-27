@@ -26,34 +26,10 @@ struct VoiceMessageRecorderView: View {
     
     private var minBarHeight: CGFloat {
         if sizeCategory < .large {
-            if #available(iOS 26.0, *) {
-                // Due to an unknown reason, we need twice the radius on iPads (regardless of compact or regular size
-                // class)
-                if UIDevice.current.userInterfaceIdiom == .pad {
-                    ChatTextViewConfiguration.smallerContentSizeConfigurationCornerRadius * 4
-                }
-                else {
-                    ChatTextViewConfiguration.smallerContentSizeConfigurationCornerRadius * 2
-                }
-            }
-            else {
-                ChatTextViewConfiguration.smallerContentSizeConfigurationCornerRadius * 2
-            }
+            ChatTextViewConfiguration.smallerContentSizeConfigurationCornerRadius * 2
         }
         else {
-            if #available(iOS 26.0, *) {
-                // Due to an unknown reason, we need twice the radius on iPads (regardless of compact or regular size
-                // class)
-                if UIDevice.current.userInterfaceIdiom == .pad {
-                    ChatTextViewConfiguration.cornerRadius * 4
-                }
-                else {
-                    ChatTextViewConfiguration.cornerRadius * 2
-                }
-            }
-            else {
-                ChatTextViewConfiguration.cornerRadius * 2
-            }
+            ChatTextViewConfiguration.cornerRadius * 2
         }
     }
     
@@ -97,7 +73,10 @@ struct VoiceMessageRecorderView: View {
     
     private var waveFormContainer: some View {
         HStack {
-            Spacer(minLength: leftInset)
+            if model.recordingState.recordingStopped {
+                playPauseButton
+            }
+            
             Group {
                 waveform
                     .horizontalFadeOut(fadeLength: model.recordingState == .recording ? 5 : 0)
@@ -110,10 +89,7 @@ struct VoiceMessageRecorderView: View {
                     Spacer()
                 }
             }
-            Spacer(minLength: minBarHeight)
-        }
-        .foregroundColor(.gray)
-        .overlay(alignment: .trailing) {
+            
             if model.recordingState == .recording {
                 stopButton
             }
@@ -122,11 +98,7 @@ struct VoiceMessageRecorderView: View {
                 addButton
             }
         }
-        .overlay(alignment: .leading) {
-            if model.recordingState.recordingStopped {
-                playPauseButton
-            }
-        }
+        .foregroundColor(.gray)
         .apply { view in
             if #available(iOS 26.0, *) {
                 view

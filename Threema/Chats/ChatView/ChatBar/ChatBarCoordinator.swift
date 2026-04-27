@@ -962,10 +962,12 @@ extension ChatBarCoordinator: PPAssetsActionHelperDelegate {
         chatViewController.dismiss(animated: true, completion: nil)
         
         ServerInfoProviderFactory.makeServerInfoProvider().mapsServer { info, _ in
-            let vc = SendLocationViewController(conversation: chatViewController.conversation, mapsServerInfo: info)
-            let navigationController = ModalNavigationController(rootViewController: vc)
-            navigationController.modalPresentationStyle = .formSheet
-            chatViewController.present(navigationController, animated: true)
+            Task { @MainActor in
+                let vc = SendLocationViewController(conversation: chatViewController.conversation, mapsServerInfo: info)
+                let navigationController = ModalNavigationController(rootViewController: vc)
+                navigationController.modalPresentationStyle = .formSheet
+                chatViewController.present(navigationController, animated: true)
+            }
         }
     }
     

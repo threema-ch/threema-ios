@@ -958,7 +958,6 @@ final class ChatViewController: UIViewController {
             chatBarCoordinator.chatBarContainerView.leadingAnchor.constraint(equalTo: tableView.leadingAnchor),
             chatBarCoordinator.chatBarContainerView.trailingAnchor.constraint(equalTo: tableView.trailingAnchor),
             bottomComposeConstraint,
-            topComposeConstraint,
             
             view.safeAreaLayoutGuide.topAnchor.constraint(equalTo: groupCallBannerView.topAnchor, constant: -10),
             view.safeAreaLayoutGuide.leadingAnchor.constraint(
@@ -971,6 +970,14 @@ final class ChatViewController: UIViewController {
             ),
         ])
 
+        // We only add the top constraint in versions before iOS 26, due to the glass version falling apart when growing
+        // too high.
+        if #unavailable(iOS 26.0) {
+            NSLayoutConstraint.activate([
+                topComposeConstraint,
+            ])
+        }
+        
         if #unavailable(iOS 26.0), isRegularSizeClass() {
             // This removes a small gap that would open up between the chat bar and the keyboard accessory view if an
             // iPad is used with an external keyboard
@@ -2235,7 +2242,7 @@ extension ChatViewController: UITableViewDelegate {
             on: view,
             with: snapshot,
             snapshotBounds: cell.chatBubbleView.convert(cell.chatBubbleView.bounds, to: view.window),
-            chatViewBounds: view.bounds,
+            chatViewBounds: view.safeAreaLayoutGuide.layoutFrame,
             isOwnMessage: cell.messageIsOwnMessage,
             showEmojiPicker: cell.showEmojiPickerContextMenu,
             reactionsManager: cell.reactionsManager,

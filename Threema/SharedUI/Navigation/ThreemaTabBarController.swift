@@ -63,6 +63,10 @@ public enum ThreemaTab: Int, CaseIterable {
     public func navigationController(
         for tab: ThreemaTab
     ) -> UINavigationController? {
-        viewControllers?[tab.rawValue] as? UINavigationController
+        guard let viewControllers, viewControllers.count > tab.rawValue else {
+            return nil
+        }
+        
+        return viewControllers[tab.rawValue] as? UINavigationController
     }
 }

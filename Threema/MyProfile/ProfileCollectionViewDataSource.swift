@@ -160,24 +160,44 @@ final class ProfileCollectionViewDataSource: UICollectionViewDiffableDataSource<
     
     private func reconfigureRevocationPassword() {
         var snapshot = snapshot()
+        
+        guard snapshot.itemIdentifiers.contains(.revocationPassword) else {
+            return
+        }
+        
         snapshot.reconfigureItems([.revocationPassword])
         apply(snapshot)
     }
     
     @objc private func reconfigureLinkedPhone() {
         var snapshot = snapshot()
+        
+        guard snapshot.itemIdentifiers.contains(.phone) else {
+            return
+        }
+        
         snapshot.reconfigureItems([.phone])
         apply(snapshot)
     }
     
     @objc private func reconfigureLinkedEmail() {
         var snapshot = snapshot()
+        
+        guard snapshot.itemIdentifiers.contains(.mail) else {
+            return
+        }
+        
         snapshot.reconfigureItems([.mail])
         apply(snapshot)
     }
 
     @objc private func reconfigureHeader() {
         var snapshot = snapshot()
+        
+        guard snapshot.itemIdentifiers.contains(.header) else {
+            return
+        }
+        
         snapshot.reconfigureItems([.header])
         apply(snapshot)
     }

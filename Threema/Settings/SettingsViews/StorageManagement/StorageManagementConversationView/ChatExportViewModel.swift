@@ -895,7 +895,7 @@ final class ChatExportViewModel: ObservableObject {
                 self.receivedAt = message.date(for: .delivered)
                 self.readAt = message.date(for: .read)
                 self.deletedAt = message.deletedAt
-                self.readAt = message.lastEditedAt
+                self.lastEditedAt = message.lastEditedAt
             }
         }
     }
